@@ -52,8 +52,8 @@ The only manual step each season is updating the All-Pro CSV in January.
 
 app.py                               # Streamlit dashboard (entry point)
 betting/
-  predict.py                         # Weekly prediction pipeline
-  fantasy_model.pkl                  # Trained XGBoost model
+  predict_betting.ipynb               # Weekly ATS prediction pipeline (run via papermill)
+  betting_model.pkl                  # Trained XGBoost model
   predictions_tracker.csv            # All predictions + results
   nfl_allpro_1997_2025.csv           # All-Pro roster data
   sports_betting_agent.ipynb         # Agent development notebook
@@ -63,6 +63,7 @@ fantasy/
   data_pipeline.ipynb                # Pull & join player stats
   features.ipynb                     # Feature engineering
   model.ipynb                        # Train per-position models
+  predict_fantasy.ipynb              # Weekly half-PPR player projections (run via papermill)
   features_dataset.csv               # Engineered feature dataset
 .github/workflows/                   # GitHub Actions automation
 

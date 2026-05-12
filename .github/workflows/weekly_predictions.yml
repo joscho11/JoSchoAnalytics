@@ -56,7 +56,7 @@ jobs:
           fi
 
       - name: Run predictions
-        run: python betting/predict.py ${{ env.MODE }}
+        run: papermill betting/predict_betting.ipynb /tmp/predict_out.ipynb -p MODE ${{ env.MODE }}
 
       - name: Commit updated tracker
         run: |

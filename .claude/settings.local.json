@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3)",
+      "Bash(python *)",
+      "Bash(.venv/Scripts/python --version)",
+      "Bash(.venv/Scripts/pip --version)",
+      "Bash(.venv/Scripts/pip install *)",
+      "Bash(echo \"exit: $?\")",
+      "PowerShell(.venv\\\\Scripts\\\\pip install --verbose streamlit 2>&1 | Select-Object -First 50)",
+      "PowerShell(& \".venv\\\\Scripts\\\\python.exe\" -c \"import sys; print\\(sys.version\\); print\\(sys.executable\\)\")",
+      "PowerShell(& \".venv\\\\Scripts\\\\python.exe\" -m pip install --verbose streamlit 2>&1 | Select-Object -First 80)",
+      "PowerShell(& \".venv\\\\Scripts\\\\python.exe\" -m pip install streamlit 2>&1 | Select-Object -Last 30)",
+      "PowerShell(& \".venv\\\\Scripts\\\\python.exe\" -m pip install -r requirements.txt 2>&1 | Select-Object -Last 20)",
+      "PowerShell(Remove-Item *)",
+      "PowerShell(& \".venv\\\\Scripts\\\\python.exe\" -m pip install -r requirements.txt 2>&1 | Select-Object -Last 15)",
+      "PowerShell(& \".venv\\\\Scripts\\\\python.exe\" -c \"import streamlit, xgboost, papermill, nflreadpy, llama_index; print\\('streamlit:', streamlit.__version__\\); print\\('xgboost:', xgboost.__version__\\); print\\('papermill:', papermill.__version__\\); print\\('All imports OK'\\)\")",
+      "PowerShell(& \".venv\\\\Scripts\\\\python.exe\" -m pip install protobuf 2>&1 | Select-Object -Last 5)",
+      "PowerShell(& \".venv\\\\Scripts\\\\python.exe\" -c \"import sys; sys.path.insert\\(0, r'C:\\\\Users\\\\josep\\\\iCloudDrive\\\\Projects\\\\BettingEdgeContinued\\\\.venv\\\\Lib\\\\site-packages'\\); from google.protobuf import descriptor; print\\('ok'\\)\" 2>&1)",
+      "PowerShell(Get-ChildItem *)"
+    ]
+  }
+}

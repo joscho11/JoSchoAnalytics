@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import json
 import os
+import glob
 import uuid
 import time
 import requests as req
@@ -163,7 +164,7 @@ if not season_active:
     )
 
 # ── Tabs ──────────────────────────────────────────────────────────────────────
-tab1, tab2, tab3 = st.tabs(["🏈 Weekly Predictions", "📈 Season Performance", "❓ Help & Guide"])
+tab1, tab2, tab3, tab4 = st.tabs(["🏈 Weekly Predictions", "📈 Season Performance", "🏆 Fantasy", "❓ Help & Guide"])
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 1: WEEKLY PREDICTIONS
@@ -684,9 +685,92 @@ with tab2:
             st.dataframe(table, hide_index=True, use_container_width=True)
 
 # ══════════════════════════════════════════════════════════════════════════════
-# TAB 3: HELP & GUIDE
+# TAB 3: FANTASY PROJECTIONS
 # ══════════════════════════════════════════════════════════════════════════════
 with tab3:
+
+    st.title("🏆 Fantasy Projections — Half-PPR")
+
+    proj_files = sorted(glob.glob("fantasy/projections_*.csv"), reverse=True)
+
+    if not proj_files:
+        st.info(
+            "No fantasy projections found. "
+            "Open `fantasy/predict_fantasy.ipynb`, set `TARGET_WEEK = 10` and `TARGET_SEASON = 2025` "
+            "in the Parameters cell, and run all cells to generate week 10 projections."
+        )
+    else:
+        # Parse season/week from filenames like projections_2025_week10.csv
+        options = {}
+        for f in proj_files:
+            stem = os.path.basename(f).replace(".csv", "")
+            parts = stem.split("_")
+            s = int(parts[1])
+            w = int(parts[2].replace("week", ""))
+            options[f"Season {s}  ·  Week {w}"] = f
+
+        sel_key = st.selectbox("Week", list(options.keys()), key="fantasy_week_sel")
+        proj_df = pd.read_csv(options[sel_key])
+
+        # Summary metrics
+        c1, c2, c3, c4 = st.columns(4)
+        for col, pos in zip([c1, c2, c3, c4], ["QB", "RB", "WR", "TE"]):
+            pos_sub = proj_df[proj_df["position"] == pos]
+            n   = len(pos_sub)
+            avg = pos_sub["projected_pts"].mean() if n > 0 else 0
+            col.metric(f"{pos}", f"{n} players", f"avg {avg:.1f} pts")
+
+        st.divider()
+
+        ptab_qb, ptab_rb, ptab_wr, ptab_te = st.tabs(["QB", "RB", "WR", "TE"])
+
+        def injury_icon(score):
+            if score >= 0.9:  return "✅"
+            if score >= 0.5:  return "🟡"
+            return "🔴"
+
+        def depth_label(d):
+            try:
+                d = int(d)
+            except (ValueError, TypeError):
+                return str(d)
+            if d == 1: return "Starter"
+            if d == 2: return "Backup"
+            return f"#{d}"
+
+        for ptab, pos in zip([ptab_qb, ptab_rb, ptab_wr, ptab_te], ["QB", "RB", "WR", "TE"]):
+            with ptab:
+                pos_df = (
+                    proj_df[proj_df["position"] == pos]
+                    .sort_values("projected_pts", ascending=False)
+                    .head(20)
+                    .reset_index(drop=True)
+                )
+                pos_df.index += 1
+
+                display = pos_df[["player_display_name", "team", "opponent_team",
+                                   "projected_pts", "implied_team_total",
+                                   "depth_chart_position", "injury_status_score"]].copy()
+                display["Matchup"]   = display["team"] + " vs " + display["opponent_team"]
+                display["Health"]    = display["injury_status_score"].map(injury_icon)
+                display["Depth"]     = display["depth_chart_position"].map(depth_label)
+                display["Proj Pts"]  = display["projected_pts"].round(1)
+                display["Impl Total"] = display["implied_team_total"].round(1)
+                display.rename(columns={"player_display_name": "Player"}, inplace=True)
+
+                st.dataframe(
+                    display[["Player", "Matchup", "Proj Pts", "Impl Total", "Depth", "Health"]],
+                    use_container_width=True,
+                    column_config={
+                        "Proj Pts":   st.column_config.NumberColumn("Proj Pts",   format="%.1f"),
+                        "Impl Total": st.column_config.NumberColumn("Impl Total", format="%.1f"),
+                    }
+                )
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB 4: HELP & GUIDE
+# ══════════════════════════════════════════════════════════════════════════════
+with tab4:
 
     st.title("❓ Help & Guide")
     st.caption("New to sports betting or just not sure how this site works? This page covers everything.")

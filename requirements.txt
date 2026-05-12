@@ -10,6 +10,12 @@ numpy
 polars
 requests
 pyarrow
+matplotlib
+seaborn
+
+# Notebook execution
+papermill
+ipykernel
 
 # LlamaIndex - compatible versions
 llama-index==0.11.0
