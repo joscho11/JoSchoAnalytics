@@ -164,7 +164,7 @@ if not season_active:
     )
 
 # ── Tabs ──────────────────────────────────────────────────────────────────────
-tab1, tab2, tab3, tab4 = st.tabs(["🏈 Weekly Predictions", "📈 Season Performance", "🏆 Fantasy", "❓ Help & Guide"])
+tab1, tab2, tab3, tab4 = st.tabs(["🏈 Weekly Predictions", "📈 Season Performance", "Dev: 🏆 Fantasy", "❓ Help & Guide"])
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 1: WEEKLY PREDICTIONS
@@ -689,7 +689,7 @@ with tab2:
 # ══════════════════════════════════════════════════════════════════════════════
 with tab3:
 
-    st.title("🏆 Fantasy Projections — Half-PPR")
+    st.title("DEV: 🏆 Fantasy Projections — Half-PPR")
 
     proj_files = sorted(glob.glob("fantasy/projections_*.csv"), reverse=True)
 

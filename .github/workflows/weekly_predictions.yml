@@ -44,15 +44,12 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "MODE=${{ github.event.inputs.mode }}" >> $GITHUB_ENV
+          elif [ "${{ github.event.schedule }}" = "0 14 * * 1" ]; then
+            echo "MODE=monday" >> $GITHUB_ENV
+          elif [ "${{ github.event.schedule }}" = "0 2 * * 5" ]; then
+            echo "MODE=thursday" >> $GITHUB_ENV
           else
-            DAY=$(date +%u)   # 1=Mon, 4=Thu, 7=Sun
-            if [ "$DAY" = "1" ]; then
-              echo "MODE=monday" >> $GITHUB_ENV
-            elif [ "$DAY" = "4" ]; then
-              echo "MODE=thursday" >> $GITHUB_ENV
-            else
-              echo "MODE=sunday" >> $GITHUB_ENV
-            fi
+            echo "MODE=sunday" >> $GITHUB_ENV
           fi
 
       - name: Run predictions
