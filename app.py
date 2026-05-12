@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import pandas as pd
 import json
 import os
@@ -12,7 +13,7 @@ st.set_page_config(
 )
 
 def inject_ga(g_id):
-    st.markdown(
+    components.html(
         f"""
         <!-- Google tag (gtag.js) -->
         <script async src="https://www.googletagmanager.com/gtag/js?id={g_id}"></script>
@@ -23,7 +24,7 @@ def inject_ga(g_id):
         gtag('config', '{g_id}');
         </script>
         """,
-        unsafe_allow_html=True
+        height=0
     )
 
 GOOGLE_ANALYTICS_ID = st.secrets.get('GOOGLE_ANALYTICS_ID', '')
