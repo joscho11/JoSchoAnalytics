@@ -50,15 +50,21 @@ The only manual step each season is updating the All-Pro CSV in January.
 
 ## Repo Structure
 
-app.py                          # Streamlit dashboard
-predict.py                      # Weekly prediction pipeline
-BettingEdgeContinued.ipynb      # Main modeling notebook
-DEV_sports_betting_agent.ipynb  # Agent development notebook
-fantasy_model.pkl               # Trained XGBoost model
-predictions_tracker.csv         # All predictions + results
-agent_analysis_2025_week{n}.json # Cached agent output per week
-nfl_allpro_1997_2025.csv        # All-Pro roster data
-.github/workflows/              # GitHub Actions automation
+app.py                               # Streamlit dashboard (entry point)
+betting/
+  predict.py                         # Weekly prediction pipeline
+  fantasy_model.pkl                  # Trained XGBoost model
+  predictions_tracker.csv            # All predictions + results
+  nfl_allpro_1997_2025.csv           # All-Pro roster data
+  sports_betting_agent.ipynb         # Agent development notebook
+  BettingEdgeContinued.ipynb         # Main modeling notebook
+  agent_analysis_2025_week{n}.json   # Cached agent output per week
+fantasy/
+  data_pipeline.ipynb                # Pull & join player stats
+  features.ipynb                     # Feature engineering
+  model.ipynb                        # Train per-position models
+  features_dataset.csv               # Engineered feature dataset
+.github/workflows/                   # GitHub Actions automation
 
 ---
 
@@ -76,5 +82,4 @@ nfl_allpro_1997_2025.csv        # All-Pro roster data
 
 - Replace mock injury/line data with live ESPN and sportsbook APIs
 - Wire agent notebook into GitHub Actions for full end-to-end automation
-- Add historical performance tab to dashboard
-- Track agent vs model accuracy over time to measure if the reasoning layer adds value
+- Track agent vs model accuracy over multiple seasons to measure if the reasoning layer adds value

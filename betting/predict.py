@@ -474,7 +474,9 @@ def update_results(season, week):
     rows = tracker.loc[indices].copy()
     rows = rows.merge(actual, on='game_id', how='left', suffixes=('_old', '_new'))
     rows['actual_margin'] = rows['actual_margin_new']
-    rows = rows.drop(columns=['actual_margin_old', 'actual_margin_new'], errors='ignore')
+    rows['home_score']    = rows['home_score_new']
+    rows['away_score']    = rows['away_score_new']
+    rows = rows.drop(columns=['actual_margin_old', 'actual_margin_new', 'home_score_old', 'home_score_new', 'away_score_old', 'away_score_new'], errors='ignore')
     rows['home_covered']  = (rows['actual_margin'] > rows['spread_line']).astype(int)
     rows['model_correct'] = ((rows['model_edge'] > 0) == (rows['home_covered'] == 1)).astype(int)
 

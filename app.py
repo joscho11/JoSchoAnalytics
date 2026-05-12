@@ -572,7 +572,7 @@ with tab2:
             height=350,
             margin=dict(t=20, b=20)
         )
-        st.plotly_chart(fig_bar, width='stretch')
+        st.plotly_chart(fig_bar, use_container_width=True)
 
         st.divider()
 
@@ -602,7 +602,7 @@ with tab2:
             height=350,
             margin=dict(t=20, b=20)
         )
-        st.plotly_chart(fig_line, width='stretch')
+        st.plotly_chart(fig_line, use_container_width=True)
 
         st.divider()
 
@@ -638,7 +638,7 @@ with tab2:
             height=350,
             margin=dict(t=20, b=20)
         )
-        st.plotly_chart(fig_edge, width='stretch')
+        st.plotly_chart(fig_edge, use_container_width=True)
 
         st.divider()
 
@@ -651,13 +651,13 @@ with tab2:
             st.markdown("**🏆 Best Weeks**")
             best = weekly.nlargest(3, 'pct')[['week_lbl', 'record', 'pct']]
             best.columns = ['Week', 'Record', 'Win %']
-            st.dataframe(best, hide_index=True, width='stretch')
+            st.dataframe(best, hide_index=True, use_container_width=True)
 
         with col_worst:
             st.markdown("**📉 Worst Weeks**")
             worst = weekly.nsmallest(3, 'pct')[['week_lbl', 'record', 'pct']]
             worst.columns = ['Week', 'Record', 'Win %']
-            st.dataframe(worst, hide_index=True, width='stretch')
+            st.dataframe(worst, hide_index=True, use_container_width=True)
 
         st.divider()
 
@@ -665,7 +665,7 @@ with tab2:
         with st.expander("📋 Full season week by week"):
             table = weekly[['week_lbl', 'record', 'pct', 'cum_pct']].copy()
             table.columns = ['Week', 'Record', 'Win %', 'Cumulative %']
-            st.dataframe(table, hide_index=True, width='stretch')
+            st.dataframe(table, hide_index=True, use_container_width=True)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 3: HELP & GUIDE
