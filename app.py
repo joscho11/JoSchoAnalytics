@@ -1,8 +1,9 @@
 import streamlit as st
-import streamlit.components.v1 as components
 import pandas as pd
 import json
 import os
+import uuid
+import requests as req
 from datetime import datetime as dt
 import plotly.graph_objects as go
 
@@ -12,29 +13,33 @@ st.set_page_config(
     layout="wide"
 )
 
-def inject_ga(g_id):
-    components.html(
-        f"""
-        <!-- Google tag (gtag.js) -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id={g_id}"></script>
-        <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){{dataLayer.push(arguments);}}
-        gtag('js', new Date());
-        gtag('config', '{g_id}');
-        </script>
-        """,
-        height=1,
-        scrolling=False
-    )
+def track_pageview(measurement_id, api_secret):
+    if 'ga_client_id' not in st.session_state:
+        st.session_state.ga_client_id = str(uuid.uuid4())
+    try:
+        req.post(
+            "https://www.google-analytics.com/mp/collect",
+            params={"measurement_id": measurement_id, "api_secret": api_secret},
+            json={
+                "client_id": st.session_state.ga_client_id,
+                "events": [{
+                    "name": "page_view",
+                    "params": {
+                        "page_title": "BettingEdge | NFL Predictions",
+                        "page_location": "https://joschobetting.streamlit.app"
+                    }
+                }]
+            },
+            timeout=3
+        )
+    except Exception:
+        pass
 
 GOOGLE_ANALYTICS_ID = st.secrets.get('GOOGLE_ANALYTICS_ID', '')
+GA_API_SECRET       = st.secrets.get('GA_API_SECRET', '')
 
-# DEBUG - remove after confirming GA works
-st.sidebar.caption(f"GA loaded: {bool(GOOGLE_ANALYTICS_ID)}")
-
-if GOOGLE_ANALYTICS_ID:
-    inject_ga(GOOGLE_ANALYTICS_ID)
+if GOOGLE_ANALYTICS_ID and GA_API_SECRET:
+    track_pageview(GOOGLE_ANALYTICS_ID, GA_API_SECRET)
 
 st.markdown("""
     <style>
