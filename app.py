@@ -29,6 +29,9 @@ def inject_ga(g_id):
 
 GOOGLE_ANALYTICS_ID = st.secrets.get('GOOGLE_ANALYTICS_ID', '')
 
+# DEBUG - remove after confirming GA works
+st.sidebar.caption(f"GA loaded: {bool(GOOGLE_ANALYTICS_ID)}")
+
 if GOOGLE_ANALYTICS_ID:
     inject_ga(GOOGLE_ANALYTICS_ID)
 
