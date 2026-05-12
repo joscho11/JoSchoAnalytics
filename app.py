@@ -43,7 +43,8 @@ def track_pageview(measurement_id, api_secret):
 GOOGLE_ANALYTICS_ID = st.secrets.get('GOOGLE_ANALYTICS_ID', '')
 GA_API_SECRET       = st.secrets.get('GA_API_SECRET', '')
 
-if GOOGLE_ANALYTICS_ID and GA_API_SECRET:
+if GOOGLE_ANALYTICS_ID and GA_API_SECRET and 'ga_tracked' not in st.session_state:
+    st.session_state.ga_tracked = True
     track_pageview(GOOGLE_ANALYTICS_ID, GA_API_SECRET)
 
 st.markdown("""
