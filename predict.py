@@ -10,13 +10,16 @@ import nflreadpy as nfl
 from datetime import datetime
 from dataclasses import dataclass, field
 from typing import Tuple, Dict, Any
+from pathlib import Path
 
 # ── Config ────────────────────────────────────────────────────────────────────
+_DIR = Path(__file__).parent
+
 TARGET_SEASON   = 2025
 EDGE_THRESHOLD  = 1.0
-TRACKER_PATH    = 'predictions_tracker.csv'
-ALLPRO_CSV_PATH = 'nfl_allpro_1997_2025.csv'
-MODEL_PATH      = 'fantasy_model.pkl'
+TRACKER_PATH    = str(_DIR / 'predictions_tracker.csv')
+ALLPRO_CSV_PATH = str(_DIR / 'nfl_allpro_1997_2025.csv')
+MODEL_PATH      = str(_DIR / 'fantasy_model.pkl')
 MODE            = sys.argv[1] if len(sys.argv) > 1 else 'thursday'
 
 print(f"Running in {MODE.upper()} mode — {datetime.now().strftime('%Y-%m-%d %H:%M')}")

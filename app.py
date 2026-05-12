@@ -78,7 +78,7 @@ st.markdown("""
 
 @st.cache_data(ttl=3600)
 def load_tracker():
-    df = pd.read_csv('predictions_tracker.csv')
+    df = pd.read_csv('betting/predictions_tracker.csv')
     df['season'] = df['season'].astype(int)
     df['week']   = df['week'].astype(int)
     return df
@@ -86,7 +86,7 @@ def load_tracker():
 df = load_tracker()
 
 def load_agent_analysis(week: int, season: int) -> dict:
-    cache_file = f"agent_analysis_{season}_week{week}.json"
+    cache_file = f"betting/agent_analysis_{season}_week{week}.json"
     if os.path.exists(cache_file):
         with open(cache_file, 'r') as f:
             return json.load(f)

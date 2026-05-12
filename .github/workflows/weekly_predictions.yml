@@ -56,12 +56,12 @@ jobs:
           fi
 
       - name: Run predictions
-        run: python predict.py ${{ env.MODE }}
+        run: python betting/predict.py ${{ env.MODE }}
 
       - name: Commit updated tracker
         run: |
           git config --global user.name  "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add predictions_tracker.csv
+          git add betting/predictions_tracker.csv
           git diff --staged --quiet || git commit -m "Auto (${{ env.MODE }}): week update $(date +'%Y-%m-%d')"
           git push
