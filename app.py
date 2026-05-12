@@ -24,7 +24,8 @@ def inject_ga(g_id):
         gtag('config', '{g_id}');
         </script>
         """,
-        height=0
+        height=1,
+        scrolling=False
     )
 
 GOOGLE_ANALYTICS_ID = st.secrets.get('GOOGLE_ANALYTICS_ID', '')
