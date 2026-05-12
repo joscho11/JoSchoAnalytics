@@ -3,6 +3,7 @@ import pandas as pd
 import json
 import os
 import uuid
+import time
 import requests as req
 from datetime import datetime as dt
 import plotly.graph_objects as go
@@ -16,6 +17,8 @@ st.set_page_config(
 def track_pageview(measurement_id, api_secret):
     if 'ga_client_id' not in st.session_state:
         st.session_state.ga_client_id = str(uuid.uuid4())
+    if 'ga_session_id' not in st.session_state:
+        st.session_state.ga_session_id = str(int(time.time()))
     try:
         req.post(
             "https://www.google-analytics.com/mp/collect",
@@ -26,7 +29,9 @@ def track_pageview(measurement_id, api_secret):
                     "name": "page_view",
                     "params": {
                         "page_title": "BettingEdge | NFL Predictions",
-                        "page_location": "https://joschobetting.streamlit.app"
+                        "page_location": "https://joschobetting.streamlit.app",
+                        "session_id": st.session_state.ga_session_id,
+                        "engagement_time_msec": "100"
                     }
                 }]
             },
