@@ -102,6 +102,31 @@ def load_tracker():
 
 df = load_tracker()
 
+@st.cache_data(ttl=3600)
+def load_actual_fantasy_pts(season: int, week: int) -> dict:
+    try:
+        import nflreadpy as nfl
+        stats = nfl.load_player_stats([season])
+        if hasattr(stats, 'to_pandas'):
+            stats = stats.to_pandas()
+        stats = stats[(stats['season_type'] == 'REG') & (stats['week'] == week)]
+        stats = stats[stats['position'].isin(['QB', 'RB', 'WR', 'TE'])]
+        stats['actual_half_ppr'] = (
+            stats['passing_yards'].fillna(0) * 0.04 +
+            stats['passing_tds'].fillna(0) * 4 +
+            stats['passing_interceptions'].fillna(0) * -2 +
+            stats['rushing_yards'].fillna(0) * 0.1 +
+            stats['rushing_tds'].fillna(0) * 6 +
+            stats['receptions'].fillna(0) * 0.5 +
+            stats['receiving_yards'].fillna(0) * 0.1 +
+            stats['receiving_tds'].fillna(0) * 6 +
+            stats['rushing_fumbles_lost'].fillna(0) * -2 +
+            stats['receiving_fumbles_lost'].fillna(0) * -2
+        )
+        return stats.set_index('player_id')['actual_half_ppr'].to_dict()
+    except Exception:
+        return {}
+
 def load_agent_analysis(week: int, season: int) -> dict:
     cache_file = f"betting/agent_analysis_{season}_week{week}.json"
     if os.path.exists(cache_file):
@@ -689,9 +714,18 @@ with tab2:
 # ══════════════════════════════════════════════════════════════════════════════
 with tab3:
 
-    st.title("DEV: 🏆 Fantasy Projections — Half-PPR")
+    st.title(f"🏆 Week {week} Fantasy Projections — Half-PPR")
 
     proj_files = sorted(glob.glob("fantasy/projections_*.csv"), reverse=True)
+
+    # Build a lookup of available projection files
+    available = {}
+    for f in proj_files:
+        stem  = os.path.basename(f).replace(".csv", "")
+        parts = stem.split("_")
+        s = int(parts[1])
+        w = int(parts[2].replace("week", ""))
+        available[(s, w)] = f
 
     if not proj_files:
         st.info(
@@ -699,26 +733,30 @@ with tab3:
             "Open `fantasy/predict_fantasy.ipynb`, set `TARGET_WEEK = 10` and `TARGET_SEASON = 2025` "
             "in the Parameters cell, and run all cells to generate week 10 projections."
         )
+    elif (season, week) not in available:
+        st.info(
+            f"No fantasy projections available for Season {season} · Week {week}. "
+            f"Available weeks: {', '.join(f'W{w}' for (s, w) in sorted(available) if s == season) or 'none for this season'}. "
+            "Use the sidebar to select a week with projections, or run the fantasy notebook to generate them."
+        )
     else:
-        # Parse season/week from filenames like projections_2025_week10.csv
-        options = {}
-        for f in proj_files:
-            stem = os.path.basename(f).replace(".csv", "")
-            parts = stem.split("_")
-            s = int(parts[1])
-            w = int(parts[2].replace("week", ""))
-            options[f"Season {s}  ·  Week {w}"] = f
+        proj_df = pd.read_csv(available[(season, week)])
 
-        sel_key = st.selectbox("Week", list(options.keys()), key="fantasy_week_sel")
-        proj_df = pd.read_csv(options[sel_key])
+        # Actual results (available after week is played)
+        actuals = load_actual_fantasy_pts(season, week)
+        actuals_in = bool(actuals)
 
-        # Summary metrics
-        c1, c2, c3, c4 = st.columns(4)
-        for col, pos in zip([c1, c2, c3, c4], ["QB", "RB", "WR", "TE"]):
-            pos_sub = proj_df[proj_df["position"] == pos]
-            n   = len(pos_sub)
-            avg = pos_sub["projected_pts"].mean() if n > 0 else 0
-            col.metric(f"{pos}", f"{n} players", f"avg {avg:.1f} pts")
+        # Load cached agent analysis if available
+        fa_path = f"fantasy/agent_analysis_{season}_week{week}.json"
+        fantasy_analysis = None
+        if os.path.exists(fa_path):
+            with open(fa_path) as _f:
+                fantasy_analysis = json.load(_f)
+
+        if actuals_in:
+            st.success(f"Results are in! Actual scores shown alongside projections for Week {week}.")
+        else:
+            st.info("Games not yet played. Actual scores will appear here after the week's results are in.")
 
         st.divider()
 
@@ -729,43 +767,135 @@ with tab3:
             if score >= 0.5:  return "🟡"
             return "🔴"
 
-        def depth_label(d):
-            try:
-                d = int(d)
-            except (ValueError, TypeError):
-                return str(d)
-            if d == 1: return "Starter"
-            if d == 2: return "Backup"
-            return f"#{d}"
+        def ordinal(n):
+            n = int(n)
+            if 11 <= (n % 100) <= 13:
+                return f"{n}th"
+            return f"{n}{['th','st','nd','rd','th'][min(n % 10, 4)]}"
+
+        def rank_color(rank, total=32):
+            ratio = (total - int(rank)) / (total - 1)
+            r = int(255 * (1 - ratio))
+            g = int(82 + 118 * ratio)
+            return f"color: rgb({r},{g},82); font-weight: 600"
+
+        def total_color(val, lo=16.0, hi=30.0):
+            ratio = max(0.0, min(1.0, (val - lo) / (hi - lo)))
+            r = int(255 * (1 - ratio))
+            g = int(82 + 118 * ratio)
+            return f"color: rgb({r},{g},82); font-weight: 600"
 
         for ptab, pos in zip([ptab_qb, ptab_rb, ptab_wr, ptab_te], ["QB", "RB", "WR", "TE"]):
             with ptab:
+                pos_subset = proj_df[proj_df["position"] == pos]
+                if pos == "QB":
+                    pos_subset = pos_subset[pos_subset["depth_chart_position"] == 1]
+                    pos_subset = pos_subset.sort_values("projected_pts", ascending=False).drop_duplicates(subset="team")
+                top_n = 40 if pos in ("RB", "WR") else 20
                 pos_df = (
-                    proj_df[proj_df["position"] == pos]
+                    pos_subset
                     .sort_values("projected_pts", ascending=False)
-                    .head(20)
+                    .head(top_n)
                     .reset_index(drop=True)
                 )
                 pos_df.index += 1
 
-                display = pos_df[["player_display_name", "team", "opponent_team",
-                                   "projected_pts", "implied_team_total",
-                                   "depth_chart_position", "injury_status_score"]].copy()
-                display["Matchup"]   = display["team"] + " vs " + display["opponent_team"]
-                display["Health"]    = display["injury_status_score"].map(injury_icon)
-                display["Depth"]     = display["depth_chart_position"].map(depth_label)
-                display["Proj Pts"]  = display["projected_pts"].round(1)
-                display["Impl Total"] = display["implied_team_total"].round(1)
-                display.rename(columns={"player_display_name": "Player"}, inplace=True)
+                display = pos_df[["player_id", "player_display_name", "team", "opponent_team",
+                                   "projected_pts", "injury_status_score",
+                                   "is_home", "off_epa_roll4", "off_epa_rank",
+                                   "implied_team_total"]].copy()
+                sep = display["is_home"].map(lambda h: "vs" if h == 1 else "@")
+                display["Player"]      = display["player_display_name"] + " - " + display["team"]
+                display["Opponent"]    = sep + " " + display["opponent_team"]
+                display["Health"]      = display["injury_status_score"].map(injury_icon)
+                display["Proj Pts"]    = display["projected_pts"].round(1)
+                display["Off EPA"]     = display["off_epa_roll4"].round(3)
+                display["EPA Rank"]    = display["off_epa_rank"].map(ordinal)
+                display["Team Total"]  = display["implied_team_total"].round(1)
+
+                if actuals_in:
+                    display["Actual Pts"] = display["player_id"].map(actuals).round(1)
+                    tbl_cols = ["Player", "Opponent", "Proj Pts", "Off EPA", "EPA Rank", "Team Total", "Health", "Actual Pts"]
+                else:
+                    tbl_cols = ["Player", "Opponent", "Proj Pts", "Off EPA", "EPA Rank", "Team Total", "Health"]
+
+                tbl = display[tbl_cols].copy()
+
+                def style_table(df, _d=display):
+                    styles = pd.DataFrame("", index=df.index, columns=df.columns)
+                    for i, rank in enumerate(_d["off_epa_rank"]):
+                        styles.iloc[i, df.columns.get_loc("Off EPA")]  = rank_color(rank)
+                        styles.iloc[i, df.columns.get_loc("EPA Rank")] = rank_color(rank)
+                    for i, val in enumerate(_d["implied_team_total"]):
+                        styles.iloc[i, df.columns.get_loc("Team Total")] = total_color(val)
+                    styles["Proj Pts"] = "font-weight: 700; font-size: 15px"
+                    if "Actual Pts" in df.columns:
+                        styles["Actual Pts"] = "font-weight: 700; font-size: 15px"
+                    return styles
+
+                col_config = {
+                    "Proj Pts":   st.column_config.NumberColumn("Proj Pts",   format="%.1f"),
+                    "Off EPA":    st.column_config.NumberColumn("Off EPA",    format="%+.3f"),
+                    "Team Total": st.column_config.NumberColumn("Team Total", format="%.1f"),
+                }
+                if actuals_in:
+                    col_config["Actual Pts"] = st.column_config.NumberColumn("Actual Pts", format="%.1f")
 
                 st.dataframe(
-                    display[["Player", "Matchup", "Proj Pts", "Impl Total", "Depth", "Health"]],
+                    tbl.style.apply(style_table, axis=None),
                     use_container_width=True,
-                    column_config={
-                        "Proj Pts":   st.column_config.NumberColumn("Proj Pts",   format="%.1f"),
-                        "Impl Total": st.column_config.NumberColumn("Impl Total", format="%.1f"),
-                    }
+                    column_config=col_config,
                 )
+
+                # ── Agent Analysis ────────────────────────────────────────────
+                if fantasy_analysis and pos in fantasy_analysis:
+                    pa = fantasy_analysis[pos]
+                    st.markdown("#### 🤖 Agent Analysis")
+
+                    # Headers row
+                    h1, h2 = st.columns(2)
+                    h1.markdown(
+                        "<div style='background:#0d2b0d;border:1px solid #00c853;"
+                        "border-radius:8px;padding:10px 16px'>"
+                        "<span style='color:#00c853;font-weight:700;font-size:13px;"
+                        "letter-spacing:1px'>📈 LIKELY TO OUTPERFORM</span></div>",
+                        unsafe_allow_html=True
+                    )
+                    h2.markdown(
+                        "<div style='background:#2b0d0d;border:1px solid #ff5252;"
+                        "border-radius:8px;padding:10px 16px'>"
+                        "<span style='color:#ff5252;font-weight:700;font-size:13px;"
+                        "letter-spacing:1px'>📉 LIKELY TO UNDERPERFORM</span></div>",
+                        unsafe_allow_html=True
+                    )
+
+                    # Paired rows so each card pair shares the same height
+                    ups = pa.get("upside", [])
+                    dns = pa.get("downside", [])
+                    for up, dn in zip(ups, dns):
+                        card_style = "display:flex;flex-direction:column;justify-content:space-between;" \
+                                     "border-radius:4px;padding:10px 14px;height:100%"
+                        row_html = (
+                            "<div style='display:grid;grid-template-columns:1fr 1fr;"
+                            "gap:8px;align-items:stretch;margin-top:8px'>"
+                            f"<div style='background:#1a2a1a;border-left:3px solid #00c853;{card_style}'>"
+                            f"<b style='color:#e8e8e8'>{up['player']}</b> "
+                            f"<span style='color:#888;font-size:12px'>({up['team']})</span><br>"
+                            f"<span style='color:#aaa;font-size:13px'>{up['reason']}</span>"
+                            f"</div>"
+                            f"<div style='background:#2a1a1a;border-left:3px solid #ff5252;{card_style}'>"
+                            f"<b style='color:#e8e8e8'>{dn['player']}</b> "
+                            f"<span style='color:#888;font-size:12px'>({dn['team']})</span><br>"
+                            f"<span style='color:#aaa;font-size:13px'>{dn['reason']}</span>"
+                            f"</div>"
+                            "</div>"
+                        )
+                        st.markdown(row_html, unsafe_allow_html=True)
+                else:
+                    st.info(
+                        "No agent analysis available for this week. "
+                        "Run `fantasy/fantasy_agent.ipynb` to generate it."
+                    )
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 4: HELP & GUIDE
@@ -953,6 +1083,23 @@ I want to be honest though. One season of data is a small sample. The model has 
 The model pulls play by play and schedule data from nflreadpy going back to 1999. The All-Pro data is a custom CSV I built covering selections from 1997 to 2025, which gets used as a proxy for roster talent.
 
 The agent currently uses mock injury and line movement data for demonstration purposes. Integrating real time APIs for those two data sources is on the roadmap for the 2026 season, which would make the agent's analysis much more accurate.
+        """)
+
+    with st.expander("What is Off EPA in the fantasy tab?"):
+        st.markdown("""
+**Off EPA** stands for Offensive Expected Points Added per play, averaged over the team's last 4 games.
+
+EPA measures how much each play moves the needle toward scoring. A 5-yard gain on 3rd and 4 is worth a lot more EPA than a 5-yard gain on 1st and 10. So EPA per play is a better measure of offensive efficiency than yards or points, because it accounts for down, distance, and field position.
+
+The number shown is the rolling 4-game average for that player's team:
+
+- **Positive (e.g. +0.15)** — the offense has been efficient recently, generating more value per play than expected
+- **Near zero (e.g. +0.01)** — average offense
+- **Negative (e.g. -0.12)** — the offense has been struggling, losing value on plays relative to expectation
+
+League average hovers near 0. Values above +0.10 are strong, below -0.10 are poor.
+
+This matters for fantasy because players on efficient offenses tend to see more opportunities in positive game scripts and convert them at a higher rate. It's one of the stronger game-context signals in the model, ranking in the top 25 features for every position.
         """)
 
     with st.expander("Is this financial advice?"):

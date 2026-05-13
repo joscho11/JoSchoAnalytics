@@ -1,0 +1,149 @@
+{
+  "QB": {
+    "upside": [
+      {
+        "player": "Jaxson Dart",
+        "team": "NYG",
+        "reason": "A 25.0 implied team total is elite for a QB projected at just 16.3, signaling Vegas expects significant Giants scoring against Chicago. His rushing upside in a projected shootout makes him a strong bet to clear projection."
+      },
+      {
+        "player": "Drake Maye",
+        "team": "NE",
+        "reason": "A 25.5 implied team total paired with a top-5 offensive EPA rank suggests the Patriots will be scoring heavily in Tampa, giving Maye more volume and TD equity than his 19.8 projection reflects."
+      },
+      {
+        "player": "Jalen Hurts",
+        "team": "PHI",
+        "reason": "A 23.5 implied team total against a Packers defense in a game expected to be competitive gives Hurts strong rushing-TD equity, and his projection feels light relative to the Eagles' scoring environment."
+      }
+    ],
+    "downside": [
+      {
+        "player": "Bo Nix",
+        "team": "DEN",
+        "reason": "A 16.5 implied team total is among the lowest on the slate, yet he's projected for 21.1 points \u2014 a major mismatch suggesting Denver's scoring volume won't support that ceiling against the Raiders."
+      },
+      {
+        "player": "Trevor Lawrence",
+        "team": "JAX",
+        "reason": "An 18.0 implied team total against a tough Houston defense doesn't align with an 18.6 projection; low scoring volume caps his realistic ceiling this week."
+      },
+      {
+        "player": "Lamar Jackson",
+        "team": "BAL",
+        "reason": "A middling 22.0 team total combined with a recent offensive EPA dip (rank #17) heading into a tough Vikings matchup makes the 19.0 projection look optimistic this week."
+      }
+    ]
+  },
+  "RB": {
+    "upside": [
+      {
+        "player": "De'Von Achane",
+        "team": "MIA",
+        "reason": "Miami's 29.5 implied team total is the highest on the slate, yet Achane is projected just 14.1. In a projected shootout with Buffalo, his pass-game usage and goal-line touches give him significant scoring equity that the projection underweights."
+      },
+      {
+        "player": "Ashton Jeanty",
+        "team": "LV",
+        "reason": "Vegas implies 26.0 points for the Raiders, well above what a 12.6 projection suggests for the lead back. As the clear workhorse in a game script that should feature heavy RB volume, Jeanty has a clear path to outperform."
+      },
+      {
+        "player": "Kyren Williams",
+        "team": "LA",
+        "reason": "The Rams carry the #1 EPA offense into SF with a 22.0 implied total, yet Williams sits at just 12.5. As the bell-cow on the league's most efficient offense, his floor and TD equity look undersold this week."
+      }
+    ],
+    "downside": [
+      {
+        "player": "RJ Harvey",
+        "team": "DEN",
+        "reason": "Denver's 16.5 implied team total is among the lowest on the slate, capping scoring opportunities. A 14.3 projection in a low-volume scoring environment with Dobbins also siphoning touches is hard to justify."
+      },
+      {
+        "player": "J.K. Dobbins",
+        "team": "DEN",
+        "reason": "Same 16.5 implied total problem, and he's splitting a backfield with Harvey. A 13.5 projection in a low-total game with no clear lead-back role is overstated."
+      },
+      {
+        "player": "Josh Jacobs",
+        "team": "GB",
+        "reason": "Limited practice status is a real downside flag, and he draws a tough Eagles front. Even at a modest 11.2 projection, the health risk plus matchup makes a miss likely."
+      }
+    ]
+  },
+  "WR": {
+    "upside": [
+      {
+        "player": "Jaylen Waddle",
+        "team": "MIA",
+        "reason": "Miami carries a massive 29.5 implied team total vs Buffalo, yet Waddle is only projected for 12.1. That kind of scoring environment typically forces Miami to throw, giving Waddle major ceiling relative to his projection."
+      },
+      {
+        "player": "Terry McLaurin",
+        "team": "WAS",
+        "reason": "Washington's 29.0 implied total is among the highest on the slate, but McLaurin sits at just 10.4 projected. In a likely shootout with Detroit, his target share in a high-volume passing script gives clear upside on this number."
+      },
+      {
+        "player": "Drake London",
+        "team": "ATL",
+        "reason": "A 27.5 implied team total vs Indianapolis is elite scoring context, and even at Limited status London is the clear alpha target earner. The Vegas-projection gap is too wide to ignore in a projected high-scoring game."
+      }
+    ],
+    "downside": [
+      {
+        "player": "Jakobi Meyers",
+        "team": "JAX",
+        "reason": "An 18.0 implied team total in Houston is one of the lowest on the slate, yet Meyers carries a lofty 15.2 projection. Low-scoring road game script against a tough division defense caps the realistic ceiling well below that number."
+      },
+      {
+        "player": "Amon-Ra St. Brown",
+        "team": "DET",
+        "reason": "Limited health tag heading into a Washington matchup is a real downside flag at a 16.1 projection. Any snap or route reduction in a game Detroit could control on the ground makes hitting that line harder than the model suggests."
+      },
+      {
+        "player": "Jaxon Smith-Njigba",
+        "team": "SEA",
+        "reason": "Seattle's 18.8 implied team total is bottom-tier on the slate and the offense ranks #19 in rolling EPA. Limited team scoring volume vs Arizona makes the 11.0 projection a stretch without a long touchdown."
+      }
+    ]
+  },
+  "TE": {
+    "upside": [
+      {
+        "player": "Hunter Henry",
+        "team": "NE",
+        "reason": "Patriots carry a robust 25.5 implied team total and a top-5 offensive EPA rank, yet Henry is only projected for 7.2 points. That scoring environment in Tampa points to upside on his projection."
+      },
+      {
+        "player": "Kyle Pitts",
+        "team": "ATL",
+        "reason": "Atlanta's 27.5 implied team total is among the highest on the slate, but Pitts sits at just 8.3 projected. High-scoring game scripts typically inflate red-zone and middle-of-field targets for him."
+      },
+      {
+        "player": "Zach Ertz",
+        "team": "WAS",
+        "reason": "Washington has the slate's highest implied team total at 29.0, yet Ertz is only projected for 7.8. With a weak offensive EPA, the path to points runs through short, high-percentage targets where Ertz thrives."
+      }
+    ],
+    "downside": [
+      {
+        "player": "Harold Fannin Jr.",
+        "team": "CLE",
+        "reason": "Cleveland's 18.0 implied team total and #26 offensive EPA rank are a brutal combo for a TE projected at 12.7. That projection looks aggressive against a low-scoring Jets matchup."
+      },
+      {
+        "player": "Brock Bowers",
+        "team": "LV",
+        "reason": "Despite a 26.0 team total, the Raiders rank #27 in offensive EPA and have been inefficient moving the ball. An 11.6 projection feels rich given how poorly this offense is functioning into Denver's defense."
+      },
+      {
+        "player": "Dawson Knox",
+        "team": "BUF",
+        "reason": "Limited health designation is a clear downside flag, and he shares a room with Kincaid who carries the same 7.2 projection. Target volume is unlikely to support that number if he's snap-restricted."
+      }
+    ]
+  },
+  "season": 2025,
+  "week": 10,
+  "generated_at": "2026-05-12T23:59:16.308401"
+}

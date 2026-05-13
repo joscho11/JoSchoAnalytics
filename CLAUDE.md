@@ -42,7 +42,7 @@ pip install -r requirements.txt
 
 ### Core Files
 - **`betting/predict_betting.ipynb`** — The prediction pipeline. Pulls live NFL data via `nflreadpy`, engineers features, loads `betting/betting_model.pkl`, computes predicted margin vs. Vegas spread to find edges, and commits results to `betting/predictions_tracker.csv`. Run via papermill; `MODE` is the papermill parameter.
-- **`app.py`** — Streamlit dashboard with 3 tabs: Weekly Predictions, Season Performance, Help & Guide. Reads `betting/predictions_tracker.csv` and cached `betting/agent_analysis_2025_week{n}.json` files for LLM agent reasoning overlays.
+- **`app.py`** — Streamlit dashboard with 3 tabs: Weekly Predictions, Season Performance, Help & Guide. Reads `betting/predictions_tracker.csv` and cached `betting/agent_analysis_2025_week{n}.json` files for LLM agent reasoning overlays. Fantasy tab shows per-week projections with an "Actual Pts" column that populates automatically after the week is played (fetched live from nflreadpy via `load_actual_fantasy_pts`, cached 1 hour).
 - **`betting/betting_model.pkl`** — Pre-trained XGBoost `sklearn` pipeline (includes `preprocessor` step with OneHotEncoder + StandardScaler). Not retrained in `predict_betting.ipynb`.
 - **`betting/predictions_tracker.csv`** — Master log of all predictions and outcomes. Auto-committed by GitHub Actions.
 
@@ -130,9 +130,40 @@ The notebook is structured in 4 parts + a master rebuild cell. Run cells top-to-
 ### Editing data_pipeline.ipynb
 The notebook file exceeds the Read tool's token limit. **Always edit it via `python << 'PYEOF'` here-doc with `json.load/dump`** — do not use the NotebookEdit or Read tools. Use forward-slash paths (not `r"C:\..."`) inside here-docs to avoid unicode escape errors on Windows.
 
-### features.ipynb — TODO
-- Impute `coach_win_pct` / `opp_coach_win_pct` nulls (median fill or add `is_new_coach` binary flag)
-- Rolling week-1 nulls for off/def metrics will naturally fill with rolling logic already in features.ipynb
+### predict_fantasy.ipynb — Pipeline Structure
+
+| Cell | Section | What it does |
+|------|---------|--------------|
+| 0 | Title / usage | Markdown — papermill run instructions |
+| 1 | Parameters | `TARGET_SEASON`, `TARGET_WEEK`, `POS_FILTER` (papermill-tagged) |
+| 2 | Setup | Imports, `INJURY_MAP`, `PRACTICE_MAP`, path constants |
+| 3 | Load Models | Loads per-position `.pkl` files from `models/` |
+| 4 | Detect Week | Auto-detects next unplayed week if `TARGET_WEEK` is None |
+| 5 | Upcoming Schedule | Pulls game context (spread, total, weather, home/away) for target week |
+| 6 | Player History | Takes each player's most recent row from `features_dataset.csv` as rolling form; filters to `season >= TARGET_SEASON - 1` to drop retired/stale players |
+| 7 | Injury & Depth Refresh | Updates injury scores from `nfl.load_injuries()`; depth chart from `nfl.load_depth_charts()`; drops players with `injury_status_score == 0` (ruled Out) |
+| 8 | Generate Projections | Runs per-position models; assembles output DataFrame |
+| 9 | Save Output | Writes `projections_{season}_week{week}.csv` |
+
+**Key fixes (2026-05-13):**
+- `PRACTICE_MAP` keys updated to match nflreadpy's actual values (`"Did Not Participate In Practice"` etc.)
+- Injury column renamed from `practice_primary_status` → `practice_status` to match nflreadpy schema
+- Stale player filter: `latest["season"] >= TARGET_SEASON - 1` (drops anyone last seen 2+ seasons ago)
+- Out player filter: drops players with `injury_status_score == 0` before projecting
+
+### features.ipynb — Structure
+
+| Cell | Section | What it does |
+|------|---------|--------------|
+| 0 | Title | Markdown header |
+| 1 | Setup | Imports, load `raw_dataset.csv` |
+| 2–3 | Target Variable | Computes `fantasy_points_half_ppr`; shifts to create `target_half_ppr` (next week's score) |
+| 4–5 | Rolling Features | 3/5-game rolling averages + trend (3-week avg minus 5-week avg) for usage/production cols |
+| 6 | Pts Allowed vs Position | Weekly pts allowed per team per position (matchup difficulty) |
+| 7 | Coach Features | Imputes `coach_win_pct` / `opp_coach_win_pct` nulls; adds `is_new_coach` binary flag |
+| 8–9 | SOS & Team Rankings | `opp_season_win_pct`, `opp_win_pct_roll4`; per-week `off_epa_rank`, `sos_rank` |
+| 10–11 | Cleanup & Save | Drops null-target rows and week-1 rookies; saves `features_dataset.csv` |
+| 12 | Inspection | Display shape and sample rows |
 
 **Key constraints:**
 - Never shuffle train/test split across seasons — always split on season boundaries to avoid leakage.
