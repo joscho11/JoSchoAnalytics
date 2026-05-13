@@ -127,6 +127,66 @@ def load_actual_fantasy_pts(season: int, week: int) -> dict:
     except Exception:
         return {}
 
+@st.cache_data(ttl=3600)
+def load_actual_qb_yards(season: int, week: int) -> tuple[dict, dict]:
+    try:
+        import nflreadpy as nfl
+        stats = nfl.load_player_stats([season])
+        if hasattr(stats, 'to_pandas'):
+            stats = stats.to_pandas()
+        stats = stats[(stats['season_type'] == 'REG') & (stats['week'] == week)]
+        stats = stats[stats['position'] == 'QB']
+        pass_yds = stats.set_index('player_id')['passing_yards'].fillna(0).to_dict()
+        rush_yds = stats.set_index('player_id')['rushing_yards'].fillna(0).to_dict()
+        return pass_yds, rush_yds
+    except Exception:
+        return {}, {}
+
+@st.cache_data(ttl=3600)
+def load_actual_rb_yards(season: int, week: int) -> tuple[dict, dict]:
+    try:
+        import nflreadpy as nfl
+        stats = nfl.load_player_stats([season])
+        if hasattr(stats, 'to_pandas'):
+            stats = stats.to_pandas()
+        stats = stats[(stats['season_type'] == 'REG') & (stats['week'] == week)]
+        stats = stats[stats['position'] == 'RB']
+        rush = stats.set_index('player_id')['rushing_yards'].fillna(0).to_dict()
+        rec  = stats.set_index('player_id')['receiving_yards'].fillna(0).to_dict()
+        return rush, rec
+    except Exception:
+        return {}, {}
+
+@st.cache_data(ttl=3600)
+def load_actual_wr_stats(season: int, week: int) -> tuple[dict, dict]:
+    try:
+        import nflreadpy as nfl
+        stats = nfl.load_player_stats([season])
+        if hasattr(stats, 'to_pandas'):
+            stats = stats.to_pandas()
+        stats = stats[(stats['season_type'] == 'REG') & (stats['week'] == week)]
+        stats = stats[stats['position'] == 'WR']
+        rec_yds = stats.set_index('player_id')['receiving_yards'].fillna(0).to_dict()
+        recs    = stats.set_index('player_id')['receptions'].fillna(0).to_dict()
+        return rec_yds, recs
+    except Exception:
+        return {}, {}
+
+@st.cache_data(ttl=3600)
+def load_actual_te_stats(season: int, week: int) -> tuple[dict, dict]:
+    try:
+        import nflreadpy as nfl
+        stats = nfl.load_player_stats([season])
+        if hasattr(stats, 'to_pandas'):
+            stats = stats.to_pandas()
+        stats = stats[(stats['season_type'] == 'REG') & (stats['week'] == week)]
+        stats = stats[stats['position'] == 'TE']
+        rec_yds = stats.set_index('player_id')['receiving_yards'].fillna(0).to_dict()
+        recs    = stats.set_index('player_id')['receptions'].fillna(0).to_dict()
+        return rec_yds, recs
+    except Exception:
+        return {}, {}
+
 def load_agent_analysis(week: int, season: int) -> dict:
     cache_file = f"betting/agent_analysis_{season}_week{week}.json"
     if os.path.exists(cache_file):
@@ -716,7 +776,7 @@ with tab3:
 
     st.title(f"🏆 Week {week} Fantasy Projections — Half-PPR")
 
-    proj_files = sorted(glob.glob("fantasy/projections_*.csv"), reverse=True)
+    proj_files = sorted(glob.glob("fantasy/projections/projections_*.csv"), reverse=True)
 
     # Build a lookup of available projection files
     available = {}
@@ -745,6 +805,10 @@ with tab3:
         # Actual results (available after week is played)
         actuals = load_actual_fantasy_pts(season, week)
         actuals_in = bool(actuals)
+        actual_qb_pass_yds, actual_qb_rush_yds = load_actual_qb_yards(season, week) if actuals_in else ({}, {})
+        actual_rush_yds, actual_rb_rec_yds = load_actual_rb_yards(season, week) if actuals_in else ({}, {})
+        actual_wr_rec_yds, actual_wr_recs  = load_actual_wr_stats(season, week) if actuals_in else ({}, {})
+        actual_te_rec_yds, actual_te_recs  = load_actual_te_stats(season, week) if actuals_in else ({}, {})
 
         # Load cached agent analysis if available
         fa_path = f"fantasy/agent_analysis_{season}_week{week}.json"
@@ -754,9 +818,9 @@ with tab3:
                 fantasy_analysis = json.load(_f)
 
         if actuals_in:
-            st.success(f"Results are in! Actual scores shown alongside projections for Week {week}.")
+            st.success(f"Results are in! Actual Pts, Actual Rush Yds, and Actual Rec Yds are now shown alongside projections for Week {week}.")
         else:
-            st.info("Games not yet played. Actual scores will appear here after the week's results are in.")
+            st.info("Games not yet played. Actual Pts, Actual Rush Yds, and Actual Rec Yds will appear here once the week's results are in.")
 
         st.divider()
 
@@ -800,10 +864,28 @@ with tab3:
                 )
                 pos_df.index += 1
 
+                has_qb_stats = pos == "QB" and "pred_qb_pass_yards" in pos_df.columns
+                has_rb_yds   = pos == "RB" and "pred_rush_yards" in pos_df.columns
+                has_wr_stats = pos == "WR" and "pred_wr_rec_yards" in pos_df.columns
+                has_te_stats = pos == "TE" and "pred_te_rec_yards" in pos_df.columns
+
                 display = pos_df[["player_id", "player_display_name", "team", "opponent_team",
                                    "projected_pts", "injury_status_score",
                                    "is_home", "off_epa_roll4", "off_epa_rank",
                                    "implied_team_total"]].copy()
+                if has_qb_stats:
+                    display["Proj Pass Yds"] = pos_df["pred_qb_pass_yards"].round(0).astype(int)
+                    display["Proj Rush Yds"] = pos_df["pred_qb_rush_yards"].round(0).astype(int)
+                if has_rb_yds:
+                    display["Proj Rush Yds"] = pos_df["pred_rush_yards"].round(0).astype(int)
+                    display["Proj Rec Yds"]  = pos_df["pred_rec_yards"].round(0).astype(int)
+                if has_wr_stats:
+                    display["Proj Receptions"] = pos_df["pred_wr_receptions"].round(1)
+                    display["Proj Rec Yds"]    = pos_df["pred_wr_rec_yards"].round(0).astype(int)
+                if has_te_stats:
+                    display["Proj Receptions"] = pos_df["pred_te_receptions"].round(1)
+                    display["Proj Rec Yds"]    = pos_df["pred_te_rec_yards"].round(0).astype(int)
+
                 sep = display["is_home"].map(lambda h: "vs" if h == 1 else "@")
                 display["Player"]      = display["player_display_name"] + " - " + display["team"]
                 display["Opponent"]    = sep + " " + display["opponent_team"]
@@ -813,11 +895,56 @@ with tab3:
                 display["EPA Rank"]    = display["off_epa_rank"].map(ordinal)
                 display["Team Total"]  = display["implied_team_total"].round(1)
 
-                if actuals_in:
-                    display["Actual Pts"] = display["player_id"].map(actuals).round(1)
-                    tbl_cols = ["Player", "Opponent", "Proj Pts", "Off EPA", "EPA Rank", "Team Total", "Health", "Actual Pts"]
+                if has_qb_stats:
+                    base_cols = ["Player", "Opponent", "Proj Pts", "Proj Pass Yds", "Proj Rush Yds", "Off EPA", "EPA Rank", "Team Total", "Health"]
+                elif has_rb_yds:
+                    base_cols = ["Player", "Opponent", "Proj Pts", "Proj Rush Yds", "Proj Rec Yds", "Off EPA", "EPA Rank", "Team Total", "Health"]
+                elif has_wr_stats or has_te_stats:
+                    base_cols = ["Player", "Opponent", "Proj Pts", "Proj Receptions", "Proj Rec Yds", "Off EPA", "EPA Rank", "Team Total", "Health"]
                 else:
-                    tbl_cols = ["Player", "Opponent", "Proj Pts", "Off EPA", "EPA Rank", "Team Total", "Health"]
+                    base_cols = ["Player", "Opponent", "Proj Pts", "Off EPA", "EPA Rank", "Team Total", "Health"]
+
+                if actuals_in:
+                    _actual_raw = display["player_id"].map(actuals)
+                    display["Actual Pts"] = _actual_raw.apply(
+                        lambda x: "DNP" if pd.isna(x) else f"{x:.1f}"
+                    )
+                    if has_qb_stats:
+                        display["Actual Pass Yds"] = display["player_id"].map(actual_qb_pass_yds).apply(
+                            lambda x: "DNP" if pd.isna(x) else f"{int(x)}"
+                        )
+                        display["Actual Rush Yds"] = display["player_id"].map(actual_qb_rush_yds).apply(
+                            lambda x: "DNP" if pd.isna(x) else f"{int(x)}"
+                        )
+                        tbl_cols = base_cols + ["Actual Pts", "Actual Pass Yds", "Actual Rush Yds"]
+                    elif has_rb_yds:
+                        display["Actual Rush Yds"] = display["player_id"].map(actual_rush_yds).apply(
+                            lambda x: "DNP" if pd.isna(x) else f"{int(x)}"
+                        )
+                        display["Actual Rec Yds"] = display["player_id"].map(actual_rb_rec_yds).apply(
+                            lambda x: "DNP" if pd.isna(x) else f"{int(x)}"
+                        )
+                        tbl_cols = base_cols + ["Actual Pts", "Actual Rush Yds", "Actual Rec Yds"]
+                    elif has_wr_stats:
+                        display["Actual Receptions"] = display["player_id"].map(actual_wr_recs).apply(
+                            lambda x: "DNP" if pd.isna(x) else f"{int(x)}"
+                        )
+                        display["Actual Rec Yds"] = display["player_id"].map(actual_wr_rec_yds).apply(
+                            lambda x: "DNP" if pd.isna(x) else f"{int(x)}"
+                        )
+                        tbl_cols = base_cols + ["Actual Pts", "Actual Receptions", "Actual Rec Yds"]
+                    elif has_te_stats:
+                        display["Actual Receptions"] = display["player_id"].map(actual_te_recs).apply(
+                            lambda x: "DNP" if pd.isna(x) else f"{int(x)}"
+                        )
+                        display["Actual Rec Yds"] = display["player_id"].map(actual_te_rec_yds).apply(
+                            lambda x: "DNP" if pd.isna(x) else f"{int(x)}"
+                        )
+                        tbl_cols = base_cols + ["Actual Pts", "Actual Receptions", "Actual Rec Yds"]
+                    else:
+                        tbl_cols = base_cols + ["Actual Pts"]
+                else:
+                    tbl_cols = base_cols
 
                 tbl = display[tbl_cols].copy()
 
@@ -838,8 +965,26 @@ with tab3:
                     "Off EPA":    st.column_config.NumberColumn("Off EPA",    format="%+.3f"),
                     "Team Total": st.column_config.NumberColumn("Team Total", format="%.1f"),
                 }
+                if has_qb_stats:
+                    col_config["Proj Pass Yds"] = st.column_config.NumberColumn("Proj Pass Yds", format="%d")
+                    col_config["Proj Rush Yds"] = st.column_config.NumberColumn("Proj Rush Yds", format="%d")
+                if has_qb_stats and actuals_in:
+                    col_config["Actual Pass Yds"] = st.column_config.TextColumn("Actual Pass Yds")
+                    col_config["Actual Rush Yds"]  = st.column_config.TextColumn("Actual Rush Yds")
+                if has_rb_yds:
+                    col_config["Proj Rush Yds"] = st.column_config.NumberColumn("Proj Rush Yds", format="%d")
+                    col_config["Proj Rec Yds"]  = st.column_config.NumberColumn("Proj Rec Yds",  format="%d")
+                if has_rb_yds and actuals_in:
+                    col_config["Actual Rush Yds"] = st.column_config.TextColumn("Actual Rush Yds")
+                    col_config["Actual Rec Yds"]  = st.column_config.TextColumn("Actual Rec Yds")
+                if (has_wr_stats or has_te_stats):
+                    col_config["Proj Receptions"] = st.column_config.NumberColumn("Proj Receptions", format="%.1f")
+                    col_config["Proj Rec Yds"]    = st.column_config.NumberColumn("Proj Rec Yds",    format="%d")
+                if (has_wr_stats or has_te_stats) and actuals_in:
+                    col_config["Actual Receptions"] = st.column_config.TextColumn("Actual Receptions")
+                    col_config["Actual Rec Yds"]    = st.column_config.TextColumn("Actual Rec Yds")
                 if actuals_in:
-                    col_config["Actual Pts"] = st.column_config.NumberColumn("Actual Pts", format="%.1f")
+                    col_config["Actual Pts"] = st.column_config.TextColumn("Actual Pts")
 
                 st.dataframe(
                     tbl.style.apply(style_table, axis=None),

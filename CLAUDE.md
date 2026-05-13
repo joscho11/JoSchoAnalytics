@@ -42,7 +42,7 @@ pip install -r requirements.txt
 
 ### Core Files
 - **`betting/predict_betting.ipynb`** — The prediction pipeline. Pulls live NFL data via `nflreadpy`, engineers features, loads `betting/betting_model.pkl`, computes predicted margin vs. Vegas spread to find edges, and commits results to `betting/predictions_tracker.csv`. Run via papermill; `MODE` is the papermill parameter.
-- **`app.py`** — Streamlit dashboard with 3 tabs: Weekly Predictions, Season Performance, Help & Guide. Reads `betting/predictions_tracker.csv` and cached `betting/agent_analysis_2025_week{n}.json` files for LLM agent reasoning overlays. Fantasy tab shows per-week projections with an "Actual Pts" column that populates automatically after the week is played (fetched live from nflreadpy via `load_actual_fantasy_pts`, cached 1 hour).
+- **`app.py`** — Streamlit dashboard with 3 tabs: Weekly Predictions, Season Performance, Help & Guide. Reads `betting/predictions_tracker.csv` and cached `betting/agent_analysis_2025_week{n}.json` files for LLM agent reasoning overlays. Fantasy tab shows per-week projections per position with projected and actual stat columns (pass yds, rush yds, receptions, rec yds) that populate automatically after the week is played (fetched live from nflreadpy, cached 1 hour). Players who didn't play show "DNP" in all actual columns.
 - **`betting/betting_model.pkl`** — Pre-trained XGBoost `sklearn` pipeline (includes `preprocessor` step with OneHotEncoder + StandardScaler). Not retrained in `predict_betting.ipynb`.
 - **`betting/predictions_tracker.csv`** — Master log of all predictions and outcomes. Auto-committed by GitHub Actions.
 
@@ -137,19 +137,45 @@ The notebook file exceeds the Read tool's token limit. **Always edit it via `pyt
 | 0 | Title / usage | Markdown — papermill run instructions |
 | 1 | Parameters | `TARGET_SEASON`, `TARGET_WEEK`, `POS_FILTER` (papermill-tagged) |
 | 2 | Setup | Imports, `INJURY_MAP`, `PRACTICE_MAP`, path constants |
-| 3 | Load Models | Loads per-position `.pkl` files from `models/` |
-| 4 | Detect Week | Auto-detects next unplayed week if `TARGET_WEEK` is None |
-| 5 | Upcoming Schedule | Pulls game context (spread, total, weather, home/away) for target week |
-| 6 | Player History | Takes each player's most recent row from `features_dataset.csv` as rolling form; filters to `season >= TARGET_SEASON - 1` to drop retired/stale players |
-| 7 | Injury & Depth Refresh | Updates injury scores from `nfl.load_injuries()`; depth chart from `nfl.load_depth_charts()`; drops players with `injury_status_score == 0` (ruled Out) |
-| 8 | Generate Projections | Runs per-position models; assembles output DataFrame |
-| 9 | Save Output | Writes `projections_{season}_week{week}.csv` |
+| 3 | Stat model names | Defines `QB/RB/WR/TE_STAT_NAMES` lists for per-stat prop models |
+| 4 | Load Models | Loads main per-position `.pkl` files from `models/`; then loads all 8 per-stat models (e.g. `rb_rush_yards_model.pkl`) into `QB/RB/WR/TE_STAT_MODELS` dicts |
+| 5 | Detect Week | Auto-detects next unplayed week if `TARGET_WEEK` is None |
+| 6 | Upcoming Schedule | Pulls game context (spread, total, weather, home/away) for target week |
+| 7 | Player History | Takes each player's most recent row from `features_dataset.csv` as rolling form; filters to `season >= TARGET_SEASON - 1` to drop retired/stale players |
+| 8 | Helper — display names | Joins `player_display_name` from nflreadpy for readable output |
+| 9 | Build feature rows | Merges player history with schedule context; handles missing cols with 0 fill |
+| 10 | Injury status | Maps `injury_status` / `practice_status` strings to numeric scores via `INJURY_MAP` / `PRACTICE_MAP` |
+| 11 | Depth chart | Loads `nfl.load_depth_charts()`; caps snapshot to before target week's first game to avoid retroactive promotions |
+| 12 | Drop Out players | Removes players with `injury_status_score == 0` (ruled Out) |
+| 13 | Generate Projections | Runs main per-position models for `pred_pts`; runs per-stat models appending `pred_qb_pass_yards`, `pred_rb_rush_yards`, `pred_rb_rec_yards`, `pred_wr_receptions`, `pred_wr_rec_yards`, `pred_te_receptions`, `pred_te_rec_yards` columns |
+| 14 | Assemble output | Builds display DataFrame with `Proj Pts` + position-specific stat projection columns |
+| 15 | Save Output | Writes `fantasy/projections/projections_{season}_week{week:02d}.csv` |
 
 **Key fixes (2026-05-13):**
 - `PRACTICE_MAP` keys updated to match nflreadpy's actual values (`"Did Not Participate In Practice"` etc.)
 - Injury column renamed from `practice_primary_status` → `practice_status` to match nflreadpy schema
 - Stale player filter: `latest["season"] >= TARGET_SEASON - 1` (drops anyone last seen 2+ seasons ago)
 - Out player filter: drops players with `injury_status_score == 0` before projecting
+- Depth chart snapshot capped to before `players["gameday"].min()` — prevents retroactive runs from using post-promotion depth charts (e.g. Shedeur Sanders appearing as CLE starter before his first game)
+
+### Per-Stat Prop Models (`fantasy/models/`)
+
+Eight additional XGBoost regressors trained to predict individual stats for prop betting reference. Trained with same train/test split as main models (2020–2024 train, 2025 holdout). Target for each is the stat in week W+1 (same shift-by-one pattern as `target_half_ppr`).
+
+| Model file | Position | Stat predicted | Notes |
+|-----------|---------|----------------|-------|
+| `qb_pass_yards_model.pkl` | QB | passing yards | |
+| `qb_rush_yards_model.pkl` | QB | rushing yards | |
+| `rb_rush_yards_model.pkl` | RB | rushing yards | |
+| `rb_rec_yards_model.pkl` | RB | receiving yards | |
+| `wr_receptions_model.pkl` | WR | receptions | |
+| `wr_rec_yards_model.pkl` | WR | receiving yards | |
+| `te_receptions_model.pkl` | TE | receptions | |
+| `te_rec_yards_model.pkl` | TE | receiving yards | |
+
+Each pkl is `{'model': XGBRegressor, 'feature_cols': list}` — same structure as main models. Note: per-stat projections are independent models; their values will not sum exactly to the main `Proj Pts` prediction.
+
+Trained and saved in `fantasy/model.ipynb` Step 2b (RB), 2c (WR), 2d (TE), 2e (QB).
 
 ### features.ipynb — Structure
 
