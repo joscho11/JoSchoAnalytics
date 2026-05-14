@@ -149,7 +149,9 @@ The notebook file exceeds the Read tool's token limit. **Always edit it via `pyt
 | 12 | Drop Out players | Removes players with `injury_status_score == 0` (ruled Out) |
 | 13 | Generate Projections | Runs main per-position models for `pred_pts`; runs per-stat models appending `pred_qb_pass_yards`, `pred_rb_rush_yards`, `pred_rb_rec_yards`, `pred_wr_receptions`, `pred_wr_rec_yards`, `pred_te_receptions`, `pred_te_rec_yards` columns |
 | 14 | Assemble output | Builds display DataFrame with `Proj Pts` + position-specific stat projection columns |
-| 15 | Save Output | Writes `fantasy/projections/projections_{season}_week{week:02d}.csv` |
+| 15 | Save Output | Writes `fantasy/fantasy_projections/projections_{season}_week{week:02d}.csv` |
+| 16 | Projection Analysis | Distribution of projected pts by position; prop stat leaders (top 5 per stat); top-10 position scorecards with inline prop stats |
+| 17 | Model Performance Summary | 2025 weeks 10–17 MAE, bias, correlation, and top-12 hit rate by position; prop stat model accuracy table with betting usability notes |
 
 **Key fixes (2026-05-13):**
 - `PRACTICE_MAP` keys updated to match nflreadpy's actual values (`"Did Not Participate In Practice"` etc.)
@@ -159,6 +161,8 @@ The notebook file exceeds the Read tool's token limit. **Always edit it via `pyt
 - Depth chart snapshot capped to before `players["gameday"].min()` — prevents retroactive runs from using post-promotion depth charts (e.g. Shedeur Sanders appearing as CLE starter before his first game)
 
 ### Per-Stat Prop Models (`fantasy/models/`)
+
+Output projections are saved to `fantasy/fantasy_projections/projections_{season}_week{week:02d}.csv`.
 
 Eight additional XGBoost regressors trained to predict individual stats for prop betting reference. Trained with same train/test split as main models (2020–2024 train, 2025 holdout). Target for each is the stat in week W+1 (same shift-by-one pattern as `target_half_ppr`).
 

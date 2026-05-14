@@ -187,6 +187,7 @@ def load_actual_te_stats(season: int, week: int) -> tuple[dict, dict]:
     except Exception:
         return {}, {}
 
+@st.cache_data(ttl=3600)
 def load_agent_analysis(week: int, season: int) -> dict:
     cache_file = f"betting/agent_analysis_{season}_week{week}.json"
     if os.path.exists(cache_file):
@@ -249,7 +250,7 @@ if not season_active:
     )
 
 # ── Tabs ──────────────────────────────────────────────────────────────────────
-tab1, tab2, tab3, tab4 = st.tabs(["🏈 Weekly Predictions", "📈 Season Performance", "Dev: 🏆 Fantasy", "❓ Help & Guide"])
+tab1, tab2, tab3, tab4 = st.tabs(["🏈 Weekly Predictions", "📈 Season Performance", "🏆 Fantasy", "❓ Help & Guide"])
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 1: WEEKLY PREDICTIONS
@@ -336,15 +337,40 @@ with tab1:
 
         filtered_df = filtered_df.sort_values('model_edge', key=abs, ascending=False)
 
+        def fmt(val):
+            return f"{val:+.1f}"
+
+        def name_style(is_rec):
+            weight = "700" if is_rec else "400"
+            color  = "white" if is_rec else "#aaa"
+            return weight, color
+
+        def stat_box(val, is_rec=False, is_result=False):
+            bg    = "#1e2a3a"
+            color = "white"
+            return (
+                f"<div style='text-align:center;background:{bg};border-radius:6px;"
+                f"padding:6px 0;font-size:14px;font-weight:600;color:{color};"
+                f"height:32px;line-height:20px'>{val}</div>"
+            )
+
+        def bet_box(team):
+            return (
+                f"<div style='background:#1e2a3a;border-left:3px solid #4a6080;"
+                f"border-radius:4px;padding:0 8px;font-size:12px;font-weight:700;"
+                f"color:white;text-align:center;height:32px;line-height:32px'>"
+                f"BET {team}</div>"
+            )
+
+        def empty_box():
+            return "<div style='height:32px'></div>"
+
         for _, row in filtered_df.iterrows():
             home      = row['home_team']
             away      = row['away_team']
             spread    = row['spread_line']
             predicted = row['predicted_margin']
             edge      = row['model_edge']
-
-            def fmt(val):
-                return f"{val:+.1f}"
 
             home_is_favored = spread > 0
 
@@ -395,31 +421,6 @@ with tab1:
                 bot_score = "—"
 
             result_label = ("✅ WIN" if correct else "❌ LOSS") if results_in else ""
-
-            def name_style(is_rec):
-                weight = "700" if is_rec else "400"
-                color  = "white" if is_rec else "#aaa"
-                return weight, color
-
-            def stat_box(val, is_rec=False, is_result=False):
-                bg    = "#1e2a3a"
-                color = "white"
-                return (
-                    f"<div style='text-align:center;background:{bg};border-radius:6px;"
-                    f"padding:6px 0;font-size:14px;font-weight:600;color:{color};"
-                    f"height:32px;line-height:20px'>{val}</div>"
-                )
-
-            def bet_box(team):
-                return (
-                    f"<div style='background:#1e2a3a;border-left:3px solid #4a6080;"
-                    f"border-radius:4px;padding:0 8px;font-size:12px;font-weight:700;"
-                    f"color:white;text-align:center;height:32px;line-height:32px'>"
-                    f"BET {team}</div>"
-                )
-
-            def empty_box():
-                return "<div style='height:32px'></div>"
 
             with st.container():
                 st.markdown(
@@ -515,21 +516,9 @@ with tab1:
         st.divider()
         st.subheader(f"📊 Week {week}: Agent vs Model")
 
-        def get_confidence_local(home, away):
-            key  = f"{home}_{away}"
-            text = game_analysis.get(key, '')
-            if '🟢' in text:
-                return 'HIGH'
-            elif '🟡' in text:
-                return 'MEDIUM'
-            elif '🔴' in text or 'SKIP' in text.upper():
-                return 'SKIP'
-            else:
-                return 'NO_ANALYSIS'
-
         week_df_eval = week_df.copy()
         week_df_eval['agent_confidence'] = week_df_eval.apply(
-            lambda r: get_confidence_local(r['home_team'], r['away_team']), axis=1
+            lambda r: get_confidence(r['home_team'], r['away_team'], game_analysis), axis=1
         )
 
         if results_in:
@@ -776,16 +765,19 @@ with tab3:
 
     st.title(f"🏆 Week {week} Fantasy Projections — Half-PPR")
 
-    proj_files = sorted(glob.glob("fantasy/projections/projections_*.csv"), reverse=True)
+    proj_files = sorted(glob.glob("fantasy/fantasy_projections/projections_*.csv"), reverse=True)
 
     # Build a lookup of available projection files
     available = {}
     for f in proj_files:
-        stem  = os.path.basename(f).replace(".csv", "")
-        parts = stem.split("_")
-        s = int(parts[1])
-        w = int(parts[2].replace("week", ""))
-        available[(s, w)] = f
+        try:
+            stem  = os.path.basename(f).replace(".csv", "")
+            parts = stem.split("_")
+            s = int(parts[1])
+            w = int(parts[2].replace("week", ""))
+            available[(s, w)] = f
+        except (IndexError, ValueError):
+            continue
 
     if not proj_files:
         st.info(
@@ -818,18 +810,19 @@ with tab3:
                 fantasy_analysis = json.load(_f)
 
         if actuals_in:
-            st.success(f"Results are in! Actual Pts, Actual Rush Yds, and Actual Rec Yds are now shown alongside projections for Week {week}.")
+            st.success(f"Results are in! Actual stats are now shown alongside projections for Week {week}.")
         else:
-            st.info("Games not yet played. Actual Pts, Actual Rush Yds, and Actual Rec Yds will appear here once the week's results are in.")
+            st.info("Games not yet played. Actual stats will appear here once the week's results are in.")
 
         st.divider()
 
         ptab_qb, ptab_rb, ptab_wr, ptab_te = st.tabs(["QB", "RB", "WR", "TE"])
 
         def injury_icon(score):
-            if score >= 0.9:  return "✅"
-            if score >= 0.5:  return "🟡"
-            return "🔴"
+            if score >= 0.9:   return "✅"
+            if score >= 0.5:   return "🟡"
+            if score > 0:      return "⚠️"
+            return "❌"
 
         def ordinal(n):
             n = int(n)
@@ -874,17 +867,17 @@ with tab3:
                                    "is_home", "off_epa_roll4", "off_epa_rank",
                                    "implied_team_total"]].copy()
                 if has_qb_stats:
-                    display["Proj Pass Yds"] = pos_df["pred_qb_pass_yards"].round(0).astype(int)
-                    display["Proj Rush Yds"] = pos_df["pred_qb_rush_yards"].round(0).astype(int)
+                    display["Proj Pass Yds"] = pos_df["pred_qb_pass_yards"].fillna(0).round(0).astype(int)
+                    display["Proj Rush Yds"] = pos_df["pred_qb_rush_yards"].fillna(0).round(0).astype(int)
                 if has_rb_yds:
-                    display["Proj Rush Yds"] = pos_df["pred_rush_yards"].round(0).astype(int)
-                    display["Proj Rec Yds"]  = pos_df["pred_rec_yards"].round(0).astype(int)
+                    display["Proj Rush Yds"] = pos_df["pred_rush_yards"].fillna(0).round(0).astype(int)
+                    display["Proj Rec Yds"]  = pos_df["pred_rec_yards"].fillna(0).round(0).astype(int)
                 if has_wr_stats:
-                    display["Proj Receptions"] = pos_df["pred_wr_receptions"].round(1)
-                    display["Proj Rec Yds"]    = pos_df["pred_wr_rec_yards"].round(0).astype(int)
+                    display["Proj Receptions"] = pos_df["pred_wr_receptions"].fillna(0).round(1)
+                    display["Proj Rec Yds"]    = pos_df["pred_wr_rec_yards"].fillna(0).round(0).astype(int)
                 if has_te_stats:
-                    display["Proj Receptions"] = pos_df["pred_te_receptions"].round(1)
-                    display["Proj Rec Yds"]    = pos_df["pred_te_rec_yards"].round(0).astype(int)
+                    display["Proj Receptions"] = pos_df["pred_te_receptions"].fillna(0).round(1)
+                    display["Proj Rec Yds"]    = pos_df["pred_te_rec_yards"].fillna(0).round(0).astype(int)
 
                 sep = display["is_home"].map(lambda h: "vs" if h == 1 else "@")
                 display["Player"]      = display["player_display_name"] + " - " + display["team"]
@@ -906,40 +899,22 @@ with tab3:
 
                 if actuals_in:
                     _actual_raw = display["player_id"].map(actuals)
-                    display["Actual Pts"] = _actual_raw.apply(
-                        lambda x: "DNP" if pd.isna(x) else f"{x:.1f}"
-                    )
+                    display["Actual Pts"] = pd.to_numeric(_actual_raw, errors="coerce").round(1)
                     if has_qb_stats:
-                        display["Actual Pass Yds"] = display["player_id"].map(actual_qb_pass_yds).apply(
-                            lambda x: "DNP" if pd.isna(x) else f"{int(x)}"
-                        )
-                        display["Actual Rush Yds"] = display["player_id"].map(actual_qb_rush_yds).apply(
-                            lambda x: "DNP" if pd.isna(x) else f"{int(x)}"
-                        )
+                        display["Actual Pass Yds"] = pd.to_numeric(display["player_id"].map(actual_qb_pass_yds), errors="coerce")
+                        display["Actual Rush Yds"] = pd.to_numeric(display["player_id"].map(actual_qb_rush_yds), errors="coerce")
                         tbl_cols = base_cols + ["Actual Pts", "Actual Pass Yds", "Actual Rush Yds"]
                     elif has_rb_yds:
-                        display["Actual Rush Yds"] = display["player_id"].map(actual_rush_yds).apply(
-                            lambda x: "DNP" if pd.isna(x) else f"{int(x)}"
-                        )
-                        display["Actual Rec Yds"] = display["player_id"].map(actual_rb_rec_yds).apply(
-                            lambda x: "DNP" if pd.isna(x) else f"{int(x)}"
-                        )
+                        display["Actual Rush Yds"] = pd.to_numeric(display["player_id"].map(actual_rush_yds),    errors="coerce")
+                        display["Actual Rec Yds"]  = pd.to_numeric(display["player_id"].map(actual_rb_rec_yds),  errors="coerce")
                         tbl_cols = base_cols + ["Actual Pts", "Actual Rush Yds", "Actual Rec Yds"]
                     elif has_wr_stats:
-                        display["Actual Receptions"] = display["player_id"].map(actual_wr_recs).apply(
-                            lambda x: "DNP" if pd.isna(x) else f"{int(x)}"
-                        )
-                        display["Actual Rec Yds"] = display["player_id"].map(actual_wr_rec_yds).apply(
-                            lambda x: "DNP" if pd.isna(x) else f"{int(x)}"
-                        )
+                        display["Actual Receptions"] = pd.to_numeric(display["player_id"].map(actual_wr_recs),    errors="coerce")
+                        display["Actual Rec Yds"]    = pd.to_numeric(display["player_id"].map(actual_wr_rec_yds), errors="coerce")
                         tbl_cols = base_cols + ["Actual Pts", "Actual Receptions", "Actual Rec Yds"]
                     elif has_te_stats:
-                        display["Actual Receptions"] = display["player_id"].map(actual_te_recs).apply(
-                            lambda x: "DNP" if pd.isna(x) else f"{int(x)}"
-                        )
-                        display["Actual Rec Yds"] = display["player_id"].map(actual_te_rec_yds).apply(
-                            lambda x: "DNP" if pd.isna(x) else f"{int(x)}"
-                        )
+                        display["Actual Receptions"] = pd.to_numeric(display["player_id"].map(actual_te_recs),    errors="coerce")
+                        display["Actual Rec Yds"]    = pd.to_numeric(display["player_id"].map(actual_te_rec_yds), errors="coerce")
                         tbl_cols = base_cols + ["Actual Pts", "Actual Receptions", "Actual Rec Yds"]
                     else:
                         tbl_cols = base_cols + ["Actual Pts"]
@@ -960,31 +935,49 @@ with tab3:
                         styles["Actual Pts"] = "font-weight: 700; font-size: 15px"
                     return styles
 
+                _dnp_note = "Blank = player did not play (DNP) in this game."
                 col_config = {
-                    "Proj Pts":   st.column_config.NumberColumn("Proj Pts",   format="%.1f"),
-                    "Off EPA":    st.column_config.NumberColumn("Off EPA",    format="%+.3f"),
-                    "Team Total": st.column_config.NumberColumn("Team Total", format="%.1f"),
+                    "Player":     st.column_config.TextColumn("Player",
+                                      help="Player name and NFL team."),
+                    "Opponent":   st.column_config.TextColumn("Opponent",
+                                      help="This week's opponent. '@' = away game, 'vs' = home game. Note: column sorts alphabetically — meaningful numeric sort not available for matchup labels."),
+                    "EPA Rank":   st.column_config.TextColumn("EPA Rank",
+                                      help="Team's offensive EPA rank among all 32 NFL teams this season (1 = best offense, 32 = worst). Note: sorts alphabetically due to a Streamlit limitation — use Off EPA for accurate numeric sorting."),
+                    "Health":     st.column_config.TextColumn("Health",
+                                      help="Player's injury status from the weekly NFL injury report.\n\n✅ Healthy  🟡 Questionable  ⚠️ Doubtful  ❌ Out\n\nNote: sorts alphabetically due to a Streamlit limitation."),
+                    "Proj Pts":   st.column_config.NumberColumn("Proj Pts",   format="%.1f",
+                                      help="Projected half-PPR fantasy points for this week, generated by our XGBoost model. Half-PPR scoring: 0.5 pts per reception, 1 pt per 10 rush/rec yards, 6 pts per TD."),
+                    "Off EPA":    st.column_config.NumberColumn("Off EPA",    format="%+.3f",
+                                      help="Team's offensive Expected Points Added (EPA) per play, averaged over the last 4 games. EPA measures how many points each play is worth above expectation. Higher = more efficient offense."),
+                    "Team Total": st.column_config.NumberColumn("Team Total", format="%.1f",
+                                      help="Vegas implied team total — the number of points Vegas expects this team to score. Derived by splitting the game over/under based on the point spread. Higher = Vegas expects more scoring, which generally means more fantasy opportunity."),
                 }
                 if has_qb_stats:
-                    col_config["Proj Pass Yds"] = st.column_config.NumberColumn("Proj Pass Yds", format="%d")
-                    col_config["Proj Rush Yds"] = st.column_config.NumberColumn("Proj Rush Yds", format="%d")
-                if has_qb_stats and actuals_in:
-                    col_config["Actual Pass Yds"] = st.column_config.TextColumn("Actual Pass Yds")
-                    col_config["Actual Rush Yds"]  = st.column_config.TextColumn("Actual Rush Yds")
+                    col_config["Proj Pass Yds"] = st.column_config.NumberColumn("Proj Pass Yds", format="%d",
+                                      help="Projected passing yards for this game, from a separate XGBoost model trained specifically on QB passing stats. Useful as a reference for pass yards prop bets.")
+                    col_config["Proj Rush Yds"] = st.column_config.NumberColumn("Proj Rush Yds", format="%d",
+                                      help="Projected rushing yards for this game, from a separate XGBoost model trained on QB rushing stats. Useful as a reference for rush yards prop bets.")
                 if has_rb_yds:
-                    col_config["Proj Rush Yds"] = st.column_config.NumberColumn("Proj Rush Yds", format="%d")
-                    col_config["Proj Rec Yds"]  = st.column_config.NumberColumn("Proj Rec Yds",  format="%d")
-                if has_rb_yds and actuals_in:
-                    col_config["Actual Rush Yds"] = st.column_config.TextColumn("Actual Rush Yds")
-                    col_config["Actual Rec Yds"]  = st.column_config.TextColumn("Actual Rec Yds")
+                    col_config["Proj Rush Yds"] = st.column_config.NumberColumn("Proj Rush Yds", format="%d",
+                                      help="Projected rushing yards for this game, from a separate XGBoost model trained on RB rushing stats. Useful as a reference for rush yards prop bets.")
+                    col_config["Proj Rec Yds"]  = st.column_config.NumberColumn("Proj Rec Yds",  format="%d",
+                                      help="Projected receiving yards for this game, from a separate XGBoost model trained on RB receiving stats. Useful as a reference for receiving yards prop bets.")
                 if (has_wr_stats or has_te_stats):
-                    col_config["Proj Receptions"] = st.column_config.NumberColumn("Proj Receptions", format="%.1f")
-                    col_config["Proj Rec Yds"]    = st.column_config.NumberColumn("Proj Rec Yds",    format="%d")
-                if (has_wr_stats or has_te_stats) and actuals_in:
-                    col_config["Actual Receptions"] = st.column_config.TextColumn("Actual Receptions")
-                    col_config["Actual Rec Yds"]    = st.column_config.TextColumn("Actual Rec Yds")
+                    col_config["Proj Receptions"] = st.column_config.NumberColumn("Proj Receptions", format="%.1f",
+                                      help="Projected number of receptions for this game, from a separate XGBoost model. Useful as a reference for receptions prop bets.")
+                    col_config["Proj Rec Yds"]    = st.column_config.NumberColumn("Proj Rec Yds",    format="%d",
+                                      help="Projected receiving yards for this game, from a separate XGBoost model. Useful as a reference for receiving yards prop bets.")
                 if actuals_in:
-                    col_config["Actual Pts"] = st.column_config.TextColumn("Actual Pts")
+                    col_config["Actual Pts"]        = st.column_config.NumberColumn("Actual Pts",        format="%.1f",
+                                      help=f"Actual half-PPR fantasy points scored in this game. {_dnp_note}")
+                    col_config["Actual Pass Yds"]   = st.column_config.NumberColumn("Actual Pass Yds",   format="%d",
+                                      help=f"Actual passing yards recorded in this game. {_dnp_note}")
+                    col_config["Actual Rush Yds"]   = st.column_config.NumberColumn("Actual Rush Yds",   format="%d",
+                                      help=f"Actual rushing yards recorded in this game. {_dnp_note}")
+                    col_config["Actual Rec Yds"]    = st.column_config.NumberColumn("Actual Rec Yds",    format="%d",
+                                      help=f"Actual receiving yards recorded in this game. {_dnp_note}")
+                    col_config["Actual Receptions"] = st.column_config.NumberColumn("Actual Receptions", format="%.1f",
+                                      help=f"Actual number of receptions recorded in this game. {_dnp_note}")
 
                 st.dataframe(
                     tbl.style.apply(style_table, axis=None),
@@ -1187,7 +1180,107 @@ There's also a best and worst weeks section and a full season table if you want 
 
     st.divider()
 
-    # ── Section 3: Behind the Scenes ─────────────────────────────────────────
+    # ── Section 3: Fantasy Projections ───────────────────────────────────────
+    st.subheader("🏆 Fantasy Projections")
+
+    with st.expander("How do the fantasy projections work?"):
+        st.markdown("""
+The Fantasy tab uses a separate machine learning system from the betting model. There are four XGBoost models — one for each position (QB, RB, WR, TE) — each trained on NFL player stats from 2020 through 2024 with the 2025 season held out as a real-world test.
+
+Each model predicts **half-PPR fantasy points** for the upcoming week based on roughly 80 features, including:
+
+- The player's recent production (3 and 5-game rolling averages for targets, carries, receiving yards, etc.)
+- Their team's offensive efficiency (EPA per play, yards per play, red zone rate)
+- The opponent's defensive quality (EPA allowed, pass rate faced, red zone defense)
+- Vegas implied team total — how many points Vegas expects the team to score
+- Injury and availability status for the player and their key teammates
+- Depth chart position
+- Home/away split, weather, and surface
+
+The models are retrained each offseason as more data becomes available.
+        """)
+
+    with st.expander("How accurate are the fantasy projections?"):
+        st.markdown("""
+The models were evaluated on the 2025 season (weeks 10–17) against a simple 3-week rolling average baseline:
+
+| Position | Model MAE | Baseline MAE | Improvement |
+|----------|-----------|--------------|-------------|
+| QB | 7.1 pts | 7.5 pts | ✅ Better |
+| RB | 4.5 pts | 4.6 pts | ✅ Better |
+| WR | 3.9 pts | 4.1 pts | ✅ Better |
+| TE | 3.3 pts | 3.5 pts | ✅ Better |
+
+MAE (Mean Absolute Error) is the average number of points the projection was off by. So for WR, the model was off by about 3.9 points on average. Given the inherent variance in fantasy football, this is a reasonable result — but any individual week can be much higher or lower.
+
+The projections are most useful as a relative ranking tool rather than a precise point forecast. A player projected at 18 points is likely to outscore one projected at 10, but the exact numbers should be treated as estimates.
+        """)
+
+    with st.expander("What are the prop stat columns?"):
+        st.markdown("""
+In addition to projected fantasy points, each position tab shows position-specific stat projections from eight separate XGBoost models:
+
+| Column | Position | What it predicts |
+|--------|----------|-----------------|
+| Proj Pass Yds | QB | Passing yards |
+| Proj Rush Yds | QB / RB | Rushing yards |
+| Proj Rec Yds | RB / WR / TE | Receiving yards |
+| Proj Receptions | WR / TE | Number of receptions |
+
+These prop stat models were trained on the same data as the main models but with each individual stat as the target. They're useful as a rough reference when looking at player prop bets on sportsbooks (e.g. over/under pass yards, reception totals).
+
+A few things to keep in mind:
+- The prop projections are **independent** models — their values won't perfectly add up to the fantasy point total
+- QB passing yards has the highest error (~70 yards off on average), so treat it as directional
+- RB and TE receiving yards are the most accurate prop models (~10–14 yards MAE)
+        """)
+
+    with st.expander("What do the column headers mean?"):
+        st.markdown("""
+**Player** — Player name and their NFL team.
+
+**Opponent** — This week's opponent. `@` means away game, `vs` means home game.
+
+**Proj Pts** — Projected half-PPR fantasy points. Half-PPR scoring: 0.5 pts per reception, 1 pt per 10 rush or receiving yards, 6 pts per TD.
+
+**Off EPA** — The team's offensive efficiency over the last 4 games, measured in Expected Points Added per play. Higher is better. See "What is Off EPA?" below for a full explanation.
+
+**EPA Rank** — Where the team's offense ranks among all 32 teams this season (1st = best, 32nd = worst). Color-coded green to red.
+
+**Team Total** — Vegas implied team total: how many points Vegas expects this team to score. Higher means more expected scoring opportunity for that team's players.
+
+**Health** — The player's injury status from the NFL injury report: ✅ Healthy · 🟡 Questionable · ⚠️ Doubtful · ❌ Out. Players officially ruled Out are removed from the projections entirely.
+
+**Actual Pts / Actual [stat]** — Once the week's games are played, actual fantasy points and stats fill in automatically. A blank cell means the player did not play (DNP) in that game.
+        """)
+
+    with st.expander("What is Off EPA?"):
+        st.markdown("""
+**Off EPA** stands for Offensive Expected Points Added per play, averaged over the team's last 4 games.
+
+EPA measures how much each play moves the needle toward scoring. A 5-yard gain on 3rd and 4 is worth a lot more EPA than a 5-yard gain on 1st and 10. So EPA per play is a better measure of offensive efficiency than yards or points, because it accounts for down, distance, and field position.
+
+- **Positive (e.g. +0.15)** — the offense has been efficient recently, generating more value per play than expected
+- **Near zero (e.g. +0.01)** — average offense
+- **Negative (e.g. -0.12)** — the offense has been struggling
+
+League average hovers near 0. Values above +0.10 are strong, below -0.10 are poor.
+
+This matters for fantasy because players on efficient offenses tend to see more opportunities in positive game scripts and convert them at a higher rate. It's one of the stronger predictors in the model for every position.
+        """)
+
+    with st.expander("How often do fantasy projections update?"):
+        st.markdown("""
+Fantasy projections are generated each week as part of the same automated pipeline that runs the betting predictions.
+
+The projection file for each week is saved once and doesn't change after that — it reflects the injury and depth chart data available at the time it was run. Actual stats fill in automatically after each game is played, pulling live from nflreadpy and caching for 1 hour.
+
+If you're looking at a past week, the actuals shown are the real NFL stats for that game.
+        """)
+
+    st.divider()
+
+    # ── Section 4: Behind the Scenes ─────────────────────────────────────────
     st.subheader("🔧 Behind the Scenes")
 
     with st.expander("How does the prediction model work?"):
@@ -1228,23 +1321,6 @@ I want to be honest though. One season of data is a small sample. The model has 
 The model pulls play by play and schedule data from nflreadpy going back to 1999. The All-Pro data is a custom CSV I built covering selections from 1997 to 2025, which gets used as a proxy for roster talent.
 
 The agent currently uses mock injury and line movement data for demonstration purposes. Integrating real time APIs for those two data sources is on the roadmap for the 2026 season, which would make the agent's analysis much more accurate.
-        """)
-
-    with st.expander("What is Off EPA in the fantasy tab?"):
-        st.markdown("""
-**Off EPA** stands for Offensive Expected Points Added per play, averaged over the team's last 4 games.
-
-EPA measures how much each play moves the needle toward scoring. A 5-yard gain on 3rd and 4 is worth a lot more EPA than a 5-yard gain on 1st and 10. So EPA per play is a better measure of offensive efficiency than yards or points, because it accounts for down, distance, and field position.
-
-The number shown is the rolling 4-game average for that player's team:
-
-- **Positive (e.g. +0.15)** — the offense has been efficient recently, generating more value per play than expected
-- **Near zero (e.g. +0.01)** — average offense
-- **Negative (e.g. -0.12)** — the offense has been struggling, losing value on plays relative to expectation
-
-League average hovers near 0. Values above +0.10 are strong, below -0.10 are poor.
-
-This matters for fantasy because players on efficient offenses tend to see more opportunities in positive game scripts and convert them at a higher rate. It's one of the stronger game-context signals in the model, ranking in the top 25 features for every position.
         """)
 
     with st.expander("Is this financial advice?"):
