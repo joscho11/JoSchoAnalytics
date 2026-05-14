@@ -45,6 +45,7 @@ pip install -r requirements.txt
 - **`app.py`** — Streamlit dashboard with 3 tabs: Weekly Predictions, Season Performance, Help & Guide. Reads `betting/predictions_tracker.csv` and cached `betting/agent_analysis_2025_week{n}.json` files for LLM agent reasoning overlays. Fantasy tab shows per-week projections per position with projected and actual stat columns (pass yds, rush yds, receptions, rec yds) that populate automatically after the week is played (fetched live from nflreadpy, cached 1 hour). Players who didn't play show "DNP" in all actual columns.
 - **`betting/betting_model.pkl`** — Pre-trained XGBoost `sklearn` pipeline (includes `preprocessor` step with OneHotEncoder + StandardScaler). Not retrained in `predict_betting.ipynb`.
 - **`betting/predictions_tracker.csv`** — Master log of all predictions and outcomes. Auto-committed by GitHub Actions.
+- **`betting/model_comparison.ipynb`** — Model comparison notebook (32 cells). Rebuilds the exact 79-feature production dataset from scratch, evaluates 5 model architectures + 3 ensemble variants + walk-forward CV. See dedicated section below.
 
 ### Feature Groups (betting/predict_betting.ipynb — helpers cell)
 1. Schedule context: temperature, wind, surface, playoff flag, final-week flag
@@ -64,11 +65,54 @@ Developed in `betting/sports_betting_agent.ipynb`. Uses LlamaIndex `ReActAgent` 
 ### Automation
 `.github/workflows/weekly_predictions.yml` runs `betting/predict_betting.ipynb` via papermill on three cron schedules (Mon 9am ET, Thu 9pm ET, Sun 7am ET) and commits the updated tracker. Supports manual dispatch with mode selection.
 
+## Model Comparison Notebook (`betting/model_comparison.ipynb`)
+
+**Purpose:** Compare 5 model architectures on the exact 79-feature dataset used by the production pkl, with ensemble variants and walk-forward cross-validation.
+
+### Cell Structure (32 cells)
+
+| Cells | Section |
+|-------|---------|
+| 0–1 | Title, config (`TRAIN_SEASONS=2014-2022`, `TEST_SEASONS=[2023,2024]`) |
+| 2 | Imports (xgboost, lightgbm, torch, sklearn, nflreadpy) |
+| 3–11 | Data loading + full feature engineering pipeline (mirrors BettingEdge_v2.ipynb) |
+| 12 | Feature matrix assembly, 79 `FEATURE_COLS`, train/test split, `roof_raw`/`surface_raw` saved before encoding |
+| 13–14 | Real injury data from `nfl.load_injuries()` — Out=1.0, Doubtful=0.75 weighting |
+| 15–24 | 5 models: XGBoost (prod pkl), Random Forest, Ridge, LightGBM, MLP (PyTorch) |
+| 25–26 | Ensemble: avg, weighted blend (tuned on 2022 holdout), Ridge meta-learner stack |
+| 27 | Comparison table with 3 confidence tiers: all bets, medium (≥1pt edge), high (≥3pt edge) |
+| 28 | Feature importance charts (XGBoost prod + Random Forest) |
+| 29–30 | Walk-forward CV: 5 folds (test years 2020–2024), all models + ensemble variants |
+| 31 | Analysis markdown |
+
+### Key Constraints
+
+- **FinalCfg dataclass** must be defined before `joblib.load("betting_model.pkl")` — it's embedded in the pkl. Definition is in cell 16.
+- **`roof_raw` / `surface_raw`** — raw categorical strings saved before local OrdinalEncoding in cell 12. The production pipeline has its own encoder; pass raw strings to it, not locally-encoded integers.
+- **Trailing space** in `"allpro_diff_home_def_away_off_3_years "` is intentional — matches the production pkl's column name exactly. Do not remove it.
+- **ALLPRO_CSV** path tries both `nfl_allpro_1997_2025.csv` (CWD=`betting/`) and `betting/nfl_allpro_1997_2025.csv` (CWD=project root) — handled in cell 1.
+- **LightGBM early stopping** uses a 15% held-out slice of training data, not the test set — changed in cell 22 to avoid test label leakage.
+- **XGBoost (cv)** in the walk-forward CV is retrained from scratch each fold with the same hyperparameters as the production pkl. It is NOT the pre-trained pkl — that would be in-sample for all folds.
+- **Editing:** Use Python + `json.load/dump` (same approach as `data_pipeline.ipynb`). The notebook is too large for the Read/NotebookEdit tools.
+
+### Walk-Forward CV Results (2026-05-14, 5 folds 2020–2024)
+
+| Model | Mean ATS | Std | Notes |
+|-------|----------|-----|-------|
+| LightGBM | 52.4% | 3.9% | Highest ceiling (55.4%), worst floor (44.9% in 2023) |
+| Ridge | 52.0% | 3.6% | Best MAE (9.87), strongest single fold (57.5% in 2024) |
+| MLP | 51.6% | 1.3% | Most consistent — never below 50.2% |
+| XGBoost (cv) | 51.5% | 2.3% | Confirms production edge comes from injury features |
+| Random Forest | 49.4% | 2.1% | Below 50% mean — not competitive |
+
+Break-even: 52.4% ATS. 2023 was a universally hard season (all models underperformed fold 4).
+
 ## Key Constraints
 - The XGBoost model pipeline expects a `preprocessor` named step — don't change the pkl structure without retraining.
 - `betting/nfl_allpro_1997_2025.csv` must be updated manually each January for the new season.
 - Agent analysis JSON files are cached by week; regenerating them requires re-running the agent notebook and costs API calls.
 - The dashboard reads the tracker CSV directly — column names and structure in `betting/predictions_tracker.csv` must stay consistent with `app.py` expectations.
+- **Fantasy projection CSVs MUST live in `fantasy/fantasy_projections/`** — never move them to `fantasy/` or any other location. `app.py` reads from `fantasy/fantasy_projections/projections_*.csv` and `predict_fantasy.ipynb` writes there via `_DIR / "fantasy_projections"`. Do not reorganize this path.
 
 ## Fantasy Model (`fantasy/`)
 

@@ -17,7 +17,13 @@
       "PowerShell(& \".venv\\\\Scripts\\\\python.exe\" -c \"import streamlit, xgboost, papermill, nflreadpy, llama_index; print\\('streamlit:', streamlit.__version__\\); print\\('xgboost:', xgboost.__version__\\); print\\('papermill:', papermill.__version__\\); print\\('All imports OK'\\)\")",
       "PowerShell(& \".venv\\\\Scripts\\\\python.exe\" -m pip install protobuf 2>&1 | Select-Object -Last 5)",
       "PowerShell(& \".venv\\\\Scripts\\\\python.exe\" -c \"import sys; sys.path.insert\\(0, r'C:\\\\Users\\\\josep\\\\iCloudDrive\\\\Projects\\\\BettingEdgeContinued\\\\.venv\\\\Lib\\\\site-packages'\\); from google.protobuf import descriptor; print\\('ok'\\)\" 2>&1)",
-      "PowerShell(Get-ChildItem *)"
+      "PowerShell(Get-ChildItem *)",
+      "PowerShell(\\(Get-Item \"betting/betting_model.pkl\"\\).Length; Get-Content \"betting/betting_model.pkl\" -TotalCount 3)",
+      "Bash(Remove-Item *)",
+      "Bash(mkdir -p fantasy/fantasy_projections)",
+      "Bash(mv fantasy/projections_2025_week*.csv fantasy/fantasy_projections/)",
+      "Bash(papermill fantasy/breakout_players.ipynb /tmp/breakout_out.ipynb)",
+      "Bash(jupyter nbconvert *)"
     ]
   }
 }

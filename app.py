@@ -5,6 +5,8 @@ import os
 import glob
 import uuid
 import time
+import html as _html
+import re as _re
 import requests as req
 from datetime import datetime as dt
 import plotly.graph_objects as go
@@ -56,11 +58,11 @@ st.markdown("""
     }
     details summary {
         font-size: 11px !important;
-        color: #aaa !important;
-        background-color: #2d3748 !important;
+        color: var(--conf-color, #aaa) !important;
+        background-color: var(--conf-bg, #2d3748) !important;
         border-radius: 6px !important;
         padding: 4px 10px !important;
-        border: 1px solid #4a5568 !important;
+        border: 1px solid var(--conf-border, #4a5568) !important;
         width: fit-content !important;
     }
     details summary:hover {
@@ -74,10 +76,13 @@ st.markdown("""
     }
     details > div {
         background-color: #1a2332 !important;
-        border: 1px solid #4a5568 !important;
+        border: 1px solid var(--conf-border, #4a5568) !important;
         border-top: none !important;
         border-radius: 0 0 6px 6px !important;
         padding: 10px !important;
+        font-size: 13px !important;
+        line-height: 1.6 !important;
+        color: #ddd !important;
     }
     .st-expander {
         border: none !important;
@@ -218,6 +223,19 @@ def load_agent_analysis(week: int, season: int) -> dict:
             return json.load(f)
     return None
 
+def _md_to_html(text: str) -> str:
+    """Convert simple agent-analysis markdown to HTML for use inside a <details> block."""
+    escaped = _html.escape(text)
+    escaped = _re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', escaped)
+    lines = []
+    for line in escaped.split('\n'):
+        stripped = line.strip()
+        if stripped.startswith('- '):
+            lines.append(f'&bull;&nbsp;{stripped[2:]}')
+        else:
+            lines.append(stripped)
+    return '<br>'.join(lines)
+
 def get_confidence(home, away, game_analysis):
     key  = f"{home}_{away}"
     text = game_analysis.get(key, '')
@@ -266,9 +284,11 @@ now           = dt.now()
 season_active = (now.month >= 9) or (now.month <= 2)
 
 if not season_active:
+    current_season = now.year - 1 if now.month < 9 else now.year
+    next_season    = current_season + 1
     st.info(
-        "🏈 **NFL Offseason**: The 2025 season has concluded. Look at WEEK 10 for demo agent analysis. "
-        "Predictions will return when the 2026 season kicks off in September. "
+        f"🏈 **NFL Offseason**: The {current_season} season has concluded. Look at WEEK 10 for demo agent analysis. "
+        f"Predictions will return when the {next_season} season kicks off in September. "
         "Browse past predictions using the sidebar."
     )
 
@@ -369,8 +389,8 @@ with tab1:
             return weight, color
 
         def stat_box(val, is_rec=False, is_result=False):
-            bg    = "#1e2a3a"
-            color = "white"
+            bg    = "#1a3a2a" if is_rec else "#1e2a3a"
+            color = "#00c853" if is_rec else "white"
             return (
                 f"<div style='text-align:center;background:{bg};border-radius:6px;"
                 f"padding:6px 0;font-size:14px;font-weight:600;color:{color};"
@@ -524,13 +544,20 @@ with tab1:
                     btn_bg    = "#1e1e1e"
                     btn_label = "⚪ Matchup Analysis"
 
+                content_html = (
+                    _md_to_html(game_text) if game_text
+                    else "<em style='color:#888'>No analysis yet. Run the notebook to generate.</em>"
+                )
                 col_btn, _ = st.columns([1, 3])
                 with col_btn:
-                    with st.expander(btn_label):
-                        if game_text:
-                            st.markdown(game_text)
-                        else:
-                            st.caption("No analysis yet. Run the notebook to generate.")
+                    st.markdown(
+                        f"<details style='--conf-color:{btn_color};"
+                        f"--conf-bg:{btn_bg};--conf-border:{btn_color}'>"
+                        f"<summary>{btn_label}</summary>"
+                        f"<div>{content_html}</div>"
+                        f"</details>",
+                        unsafe_allow_html=True
+                    )
 
                 st.divider()
 
