@@ -102,6 +102,29 @@ def load_tracker():
 
 df = load_tracker()
 
+# ── Live accuracy stats (used in Help tab) ────────────────────────────────────
+_completed = df[df['model_correct'].notna()]
+_overall_correct = int(_completed['model_correct'].sum())
+_overall_total   = len(_completed)
+_overall_pct     = round(_overall_correct / _overall_total * 100, 1) if _overall_total > 0 else 0
+
+_hc_correct, _hc_total = 0, 0
+for _af in glob.glob("betting/agent_analysis_*.json"):
+    try:
+        _stem = os.path.basename(_af).replace('.json', '').split('_')
+        _s, _w = int(_stem[2]), int(_stem[3].replace('week', ''))
+        _wdf = df[(df['season'] == _s) & (df['week'] == _w) & df['model_correct'].notna()]
+        with open(_af) as _f:
+            _ga = json.load(_f)
+        for _, _r in _wdf.iterrows():
+            _text = _ga.get(f"{_r['home_team']}_{_r['away_team']}", '')
+            if '🟢' in _text:
+                _hc_total += 1
+                _hc_correct += int(_r['model_correct'])
+    except Exception:
+        pass
+_hc_pct = round(_hc_correct / _hc_total * 100, 1) if _hc_total > 0 else None
+
 @st.cache_data(ttl=3600)
 def load_actual_fantasy_pts(season: int, week: int) -> dict:
     try:
@@ -782,8 +805,8 @@ with tab3:
     if not proj_files:
         st.info(
             "No fantasy projections found. "
-            "Open `fantasy/predict_fantasy.ipynb`, set `TARGET_WEEK = 10` and `TARGET_SEASON = 2025` "
-            "in the Parameters cell, and run all cells to generate week 10 projections."
+            f"Open `fantasy/predict_fantasy.ipynb`, set `TARGET_WEEK = {week}` and `TARGET_SEASON = {season}` "
+            f"in the Parameters cell, and run all cells to generate Week {week} projections."
         )
     elif (season, week) not in available:
         st.info(
@@ -815,6 +838,12 @@ with tab3:
             st.info("Games not yet played. Actual stats will appear here once the week's results are in.")
 
         st.divider()
+
+        player_search = st.text_input(
+            "🔍 Search player",
+            placeholder="e.g. Mahomes, Jefferson, Kelce…",
+            key="fantasy_search"
+        )
 
         ptab_qb, ptab_rb, ptab_wr, ptab_te = st.tabs(["QB", "RB", "WR", "TE"])
 
@@ -849,12 +878,13 @@ with tab3:
                     pos_subset = pos_subset[pos_subset["depth_chart_position"] == 1]
                     pos_subset = pos_subset.sort_values("projected_pts", ascending=False).drop_duplicates(subset="team")
                 top_n = 40 if pos in ("RB", "WR") else 20
-                pos_df = (
-                    pos_subset
-                    .sort_values("projected_pts", ascending=False)
-                    .head(top_n)
-                    .reset_index(drop=True)
-                )
+                pos_df = pos_subset.sort_values("projected_pts", ascending=False)
+                if player_search:
+                    mask = pos_df["player_display_name"].str.contains(player_search, case=False, na=False)
+                    pos_df = pos_df[mask]
+                else:
+                    pos_df = pos_df.head(top_n)
+                pos_df = pos_df.reset_index(drop=True)
                 pos_df.index += 1
 
                 has_qb_stats = pos == "QB" and "pred_qb_pass_yards" in pos_df.columns
@@ -1095,14 +1125,15 @@ The model is trying to predict the margin of victory and figure out which side o
         """)
 
     with st.expander("How do you actually make money betting?"):
-        st.markdown("""
+        _hc_line = f" and **{_hc_pct}%** on high confidence picks" if _hc_pct is not None else ""
+        st.markdown(f"""
 Honestly it's really hard and most people lose money. I want to be upfront about that.
 
 Standard sportsbook odds are around 110 to win 100. That means you need to win about 52.4% of your bets just to break even. Most casual bettors don't hit that number.
 
 To be profitable over time you need to consistently win more than 52.4%, bet games where there's real edge instead of gut feeling, and manage your bankroll properly. A common rule is never betting more than 2 to 5% of your total bankroll on a single game.
 
-The model is currently at 53.85% ATS overall and 55.71% on high confidence picks. Both are above break even, which is encouraging. But I want to be clear that past performance doesn't guarantee anything going forward. There will be bad weeks.
+The model is currently at **{_overall_pct}% ATS** overall ({_overall_correct}/{_overall_total}){_hc_line}. Both are above break even, which is encouraging. But I want to be clear that past performance doesn't guarantee anything going forward. There will be bad weeks.
 
 Never bet more than you can afford to lose.
         """)
@@ -1308,12 +1339,18 @@ The idea is that raw model predictions are a starting point. The agent adds a la
         """)
 
     with st.expander("How accurate is the model?"):
-        st.markdown("""
-On random test data the model hit 53.85% ATS overall and 55.71% on high confidence picks. The 2025 season weeks 10-17 were also essentially real-world data for the model, so the results are promising. The break even threshold at standard sportsbook odds is 52.4%, so both numbers are above that.
+        _best_week = _completed.groupby(['season','week'])['model_correct'].agg(['sum','count'])
+        _best_week['pct'] = _best_week['sum'] / _best_week['count']
+        _bw = _best_week['pct'].idxmax() if not _best_week.empty else None
+        _bw_str = (f"Season {_bw[0]} Week {_bw[1]} was the strongest week so far at "
+                   f"{int(_best_week.loc[_bw,'sum'])} out of {int(_best_week.loc[_bw,'count'])} correct. "
+                   ) if _bw else ""
+        _hc_line2 = f" and **{_hc_pct}%** on high confidence picks" if _hc_pct is not None else ""
+        st.markdown(f"""
+The model has gone **{_overall_pct}% ATS** across {_overall_total} completed games ({_overall_correct} correct){_hc_line2}. The break even threshold at standard sportsbook odds is 52.4%, so both numbers are above that.
 
-Week 10 was the strongest week so far at 11 out of 14 correct.
-
-I want to be honest though. One season of data is a small sample. The model has shown real edge but I wouldn't read too much into any single week or even a single season. The goal is to track this over multiple seasons and see if the edge holds up.
+{_bw_str}
+I want to be honest though. Past performance doesn't guarantee anything going forward. There will be bad weeks. The goal is to track this over multiple seasons and see if the edge holds up.
         """)
 
     with st.expander("What data does it use?"):
