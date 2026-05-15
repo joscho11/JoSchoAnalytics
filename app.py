@@ -98,7 +98,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=300)
 def load_tracker():
     df = pd.read_csv('betting/predictions_tracker.csv')
     df['season'] = df['season'].astype(int)
@@ -108,8 +108,9 @@ def load_tracker():
 df = load_tracker()
 
 # ── Live accuracy stats (used in Help tab) ────────────────────────────────────
-_completed = df[df['model_correct'].notna()]
-_overall_correct = int(_completed['model_correct'].sum())
+_acc_col   = 'ens_model_correct' if 'ens_model_correct' in df.columns and df['ens_model_correct'].notna().any() else 'model_correct'
+_completed = df[df[_acc_col].notna()]
+_overall_correct = int(_completed[_acc_col].sum())
 _overall_total   = len(_completed)
 _overall_pct     = round(_overall_correct / _overall_total * 100, 1) if _overall_total > 0 else 0
 
@@ -118,14 +119,14 @@ for _af in glob.glob("betting/agent_analysis_*.json"):
     try:
         _stem = os.path.basename(_af).replace('.json', '').split('_')
         _s, _w = int(_stem[2]), int(_stem[3].replace('week', ''))
-        _wdf = df[(df['season'] == _s) & (df['week'] == _w) & df['model_correct'].notna()]
+        _wdf = df[(df['season'] == _s) & (df['week'] == _w) & df[_acc_col].notna()]
         with open(_af) as _f:
             _ga = json.load(_f)
         for _, _r in _wdf.iterrows():
             _text = _ga.get(f"{_r['home_team']}_{_r['away_team']}", '')
             if '🟢' in _text:
                 _hc_total += 1
-                _hc_correct += int(_r['model_correct'])
+                _hc_correct += int(_r[_acc_col])
     except Exception:
         pass
 _hc_pct = round(_hc_correct / _hc_total * 100, 1) if _hc_total > 0 else None
@@ -362,7 +363,7 @@ st.sidebar.markdown("""
 """, unsafe_allow_html=True)
 
 st.sidebar.title("BettingEdge")
-st.sidebar.caption("XGBoost ATS Predictor")
+st.sidebar.caption("NFL ATS Prediction System")
 st.sidebar.divider()
 
 seasons = sorted(df['season'].unique(), reverse=True)
@@ -407,8 +408,9 @@ with tab1:
 
     st.title(f"🏈 Week {week} Predictions: {season} Season")
 
+    _wk_correct_col = 'ens_model_correct' if ('ens_model_correct' in week_df.columns and week_df['ens_model_correct'].notna().any()) else 'model_correct'
     if results_in:
-        correct = int(week_df['model_correct'].sum())
+        correct = int(week_df[_wk_correct_col].sum())
         total   = len(week_df)
         st.success(
             f"Results are in! Week {week} ATS record: "
@@ -432,16 +434,20 @@ with tab1:
     st.divider()
     col1, col2, col3, col4 = st.columns(4)
 
-    filtered_df  = week_df[week_df['model_edge'].abs() >= edge_threshold].copy()
+    _primary_edge = 'ens_model_edge'       if ('ens_model_edge'       in week_df.columns and week_df['ens_model_edge'].notna().any())       else 'model_edge'
+    _pred_col     = 'ens_predicted_margin' if ('ens_predicted_margin' in week_df.columns and week_df['ens_predicted_margin'].notna().any()) else 'predicted_margin'
+    _correct_col  = 'ens_model_correct'    if ('ens_model_correct'    in week_df.columns and week_df['ens_model_correct'].notna().any())    else 'model_correct'
+    filtered_df  = week_df[week_df[_primary_edge].abs() >= edge_threshold].copy()
     hidden_count = len(week_df) - len(filtered_df)
 
     col1.metric("Total Games", len(week_df))
     col2.metric("Showing",     len(filtered_df),
                 help=f"Games with |edge| ≥ {edge_threshold} pts")
-    col3.metric("Avg Edge",    f"{week_df['model_edge'].abs().mean():.1f} pts")
+    col3.metric("Avg Ensemble Edge",
+                f"{week_df[_primary_edge].abs().mean():.1f} pts")
 
     if results_in and len(filtered_df) > 0:
-        sc = int(filtered_df['model_correct'].sum())
+        sc = int(filtered_df[_correct_col].sum())
         col4.metric("ATS Record", f"{sc}/{len(filtered_df)} ({sc/len(filtered_df)*100:.0f}%)")
     else:
         col4.metric("ATS Record", "Pending")
@@ -463,6 +469,21 @@ with tab1:
         </div>
     """, unsafe_allow_html=True)
 
+    _has_consensus_col = 'consensus_tier' in week_df.columns and week_df['consensus_tier'].notna().any()
+    if _has_consensus_col:
+        st.markdown("""
+            <div style='display:flex;gap:16px;align-items:center;margin-bottom:12px;flex-wrap:wrap;'>
+                <span style='font-size:11px;color:#888;letter-spacing:1px;text-transform:uppercase;'>Model Consensus:</span>
+                <span style='font-size:12px;background:#1a3a1a;border:1px solid #00c853;
+                            border-radius:4px;padding:2px 8px;color:#00c853;'>HIGH</span>
+                <span style='font-size:12px;background:#3a3a1a;border:1px solid #ffd600;
+                            border-radius:4px;padding:2px 8px;color:#ffd600;'>MED</span>
+                <span style='font-size:12px;background:#2a2a2a;border:1px solid #888;
+                            border-radius:4px;padding:2px 8px;color:#888;'>PASS</span>
+                <span style='font-size:11px;color:#555;'>All 3 models agree direction · Ensemble edge ≥3 pts = HIGH, ≥1 pt = MED</span>
+            </div>
+        """, unsafe_allow_html=True)
+
     st.subheader("Game Predictions")
 
     if week_df.empty:
@@ -480,7 +501,7 @@ with tab1:
                 f"Lower the slider to see all games."
             )
 
-        filtered_df = filtered_df.sort_values('model_edge', key=abs, ascending=False)
+        filtered_df = filtered_df.sort_values(_primary_edge, key=abs, ascending=False)
 
         def fmt(val):
             return f"{val:+.1f}"
@@ -514,8 +535,9 @@ with tab1:
             home      = row['home_team']
             away      = row['away_team']
             spread    = row['spread_line']
-            predicted = row['predicted_margin']
-            edge      = row['model_edge']
+            predicted = row[_pred_col]
+            edge      = row[_primary_edge]
+            tier      = str(row['consensus_tier']) if _has_consensus_col and pd.notna(row.get('consensus_tier')) else ''
 
             home_is_favored = spread > 0
 
@@ -548,7 +570,7 @@ with tab1:
             bot_is_rec = rec_team == bot_team
 
             results_available = results_in and pd.notna(row['actual_margin'])
-            correct           = (row['model_correct'] == 1) if results_in else False
+            correct           = (row[_correct_col] == 1) if results_in else False
             actual            = row['actual_margin'] if results_available else None
 
             if results_available:
@@ -567,11 +589,19 @@ with tab1:
 
             result_label = ("✅ WIN" if correct else "❌ LOSS") if results_in else ""
 
+            if tier == 'HIGH':
+                tier_html = "&nbsp;&nbsp;<span style='background:#1a3a1a;border:1px solid #00c853;border-radius:4px;padding:1px 6px;font-size:11px;color:#00c853'>HIGH</span>"
+            elif tier == 'MEDIUM':
+                tier_html = "&nbsp;&nbsp;<span style='background:#3a3a1a;border:1px solid #ffd600;border-radius:4px;padding:1px 6px;font-size:11px;color:#ffd600'>MED</span>"
+            else:
+                tier_html = ''
+
             with st.container():
                 st.markdown(
                     f"<div style='font-size:13px;color:#888;margin-bottom:6px'>"
                     f"<b style='color:#ccc'>{away} @ {home}</b>"
                     f"&nbsp;&nbsp;·&nbsp;&nbsp;{row['gameday']}"
+                    f"{tier_html}"
                     f"{'&nbsp;&nbsp;·&nbsp;&nbsp;<b>' + result_label + '</b>' if result_label else ''}"
                     f"</div>",
                     unsafe_allow_html=True
@@ -674,27 +704,27 @@ with tab1:
         )
 
         if results_in:
-            model_correct = int(week_df_eval['model_correct'].sum())
+            model_correct = int(week_df_eval[_correct_col].sum())
             model_total   = len(week_df_eval)
             model_pct     = round(model_correct / model_total * 100, 1)
 
             high_df      = week_df_eval[week_df_eval['agent_confidence'] == 'HIGH']
-            high_correct = int(high_df['model_correct'].sum())
+            high_correct = int(high_df[_correct_col].sum())
             high_total   = len(high_df)
             high_pct     = round(high_correct / high_total * 100, 1) if high_total > 0 else 0
 
             med_df      = week_df_eval[week_df_eval['agent_confidence'] == 'MEDIUM']
-            med_correct = int(med_df['model_correct'].sum())
+            med_correct = int(med_df[_correct_col].sum())
             med_total   = len(med_df)
             med_pct     = round(med_correct / med_total * 100, 1) if med_total > 0 else 0
 
             bet_df      = week_df_eval[week_df_eval['agent_confidence'].isin(['HIGH', 'MEDIUM'])]
-            bet_correct = int(bet_df['model_correct'].sum())
+            bet_correct = int(bet_df[_correct_col].sum())
             bet_total   = len(bet_df)
             bet_pct     = round(bet_correct / bet_total * 100, 1) if bet_total > 0 else 0
 
             skip_df      = week_df_eval[week_df_eval['agent_confidence'] == 'SKIP']
-            skip_correct = int(skip_df['model_correct'].sum())
+            skip_correct = int(skip_df[_correct_col].sum())
             skip_total   = len(skip_df)
             skip_pct     = round(skip_correct / skip_total * 100, 1) if skip_total > 0 else 0
 
@@ -744,37 +774,65 @@ with tab2:
     else:
 
         # ── Season summary metrics ────────────────────────────────────
-        total_correct = int(season_df['model_correct'].sum())
+        _s_edge    = 'ens_model_edge'    if ('ens_model_edge'    in season_df.columns and season_df['ens_model_edge'].notna().any())    else 'model_edge'
+        _s_correct = 'ens_model_correct' if ('ens_model_correct' in season_df.columns and season_df['ens_model_correct'].notna().any()) else 'model_correct'
+
+        total_correct = int(season_df[_s_correct].sum())
         total_games   = len(season_df)
         total_pct     = round(total_correct / total_games * 100, 1)
 
-        high_edge_df  = season_df[season_df['model_edge'].abs() >= 3]
-        he_correct    = int(high_edge_df['model_correct'].sum())
+        high_edge_df  = season_df[season_df[_s_edge].abs() >= 3]
+        he_correct    = int(high_edge_df[_s_correct].sum())
         he_total      = len(high_edge_df)
         he_pct        = round(he_correct / he_total * 100, 1) if he_total > 0 else 0
 
-        med_edge_df   = season_df[(season_df['model_edge'].abs() >= 1) & (season_df['model_edge'].abs() < 3)]
-        me_correct    = int(med_edge_df['model_correct'].sum())
+        med_edge_df   = season_df[(season_df[_s_edge].abs() >= 1) & (season_df[_s_edge].abs() < 3)]
+        me_correct    = int(med_edge_df[_s_correct].sum())
         me_total      = len(med_edge_df)
         me_pct        = round(me_correct / me_total * 100, 1) if me_total > 0 else 0
 
-        low_edge_df   = season_df[season_df['model_edge'].abs() < 1]
-        le_correct    = int(low_edge_df['model_correct'].sum())
+        low_edge_df   = season_df[season_df[_s_edge].abs() < 1]
+        le_correct    = int(low_edge_df[_s_correct].sum())
         le_total      = len(low_edge_df)
         le_pct        = round(le_correct / le_total * 100, 1) if le_total > 0 else 0
 
         c1, c2, c3, c4 = st.columns(4)
-        c1.metric("Season ATS",          f"{total_correct}/{total_games}", f"{total_pct}%")
-        c2.metric("High Edge (3+ pts)",  f"{he_correct}/{he_total}",       f"{he_pct}%")
-        c3.metric("Med Edge (1-3 pts)",  f"{me_correct}/{me_total}",       f"{me_pct}%")
-        c4.metric("Low Edge (<1 pt)",    f"{le_correct}/{le_total}",       f"{le_pct}%")
+        c1.metric("Season ATS",                f"{total_correct}/{total_games}", f"{total_pct}%")
+        c2.metric("High Ens Edge (3+ pts)",    f"{he_correct}/{he_total}",       f"{he_pct}%")
+        c3.metric("Med Ens Edge (1-3 pts)",    f"{me_correct}/{me_total}",       f"{me_pct}%")
+        c4.metric("Low Ens Edge (<1 pt)",      f"{le_correct}/{le_total}",       f"{le_pct}%")
+
+        _has_ens   = 'ens_model_correct'   in season_df.columns and season_df['ens_model_correct'].notna().any()
+        _has_ridge = 'ridge_model_correct' in season_df.columns and season_df['ridge_model_correct'].notna().any()
+        _has_ct    = 'consensus_tier'      in season_df.columns and season_df['consensus_tier'].notna().any()
+
+        if _has_ens or _has_ridge:
+            st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
+            st.caption("Model breakdown (games with new pipeline predictions)")
+            mc1, mc2, mc3 = st.columns(3)
+            mc1.metric("XGBoost ATS", f"{total_correct}/{total_games}", f"{total_pct}%",
+                       help="XGBoost model — one of three votes in consensus tier.")
+            if _has_ridge:
+                _ridge_sub = season_df[season_df['ridge_model_correct'].notna()]
+                _ridge_c   = int(_ridge_sub['ridge_model_correct'].sum())
+                _ridge_t   = len(_ridge_sub)
+                _ridge_pct = round(_ridge_c / _ridge_t * 100, 1) if _ridge_t > 0 else 0
+                mc2.metric("Ridge ATS", f"{_ridge_c}/{_ridge_t}", f"{_ridge_pct}%",
+                           help="Ridge regression — one of three votes in consensus tier.")
+            if _has_ens:
+                _ens_sub = season_df[season_df['ens_model_correct'].notna()]
+                _ens_c   = int(_ens_sub['ens_model_correct'].sum())
+                _ens_t   = len(_ens_sub)
+                _ens_pct = round(_ens_c / _ens_t * 100, 1) if _ens_t > 0 else 0
+                mc3.metric("Ensemble ATS", f"{_ens_c}/{_ens_t}", f"{_ens_pct}%",
+                           help="Ensemble (0.75 XGBoost + 0.25 Ridge) — sets the confidence threshold.")
 
         st.divider()
 
         # ── Week-by-week summary ──────────────────────────────────────
         weekly = season_df.groupby('week').agg(
-            correct=('model_correct', 'sum'),
-            total=('model_correct', 'count')
+            correct=(_s_correct, 'sum'),
+            total=(_s_correct, 'count')
         ).reset_index()
         weekly['pct']      = (weekly['correct'] / weekly['total'] * 100).round(1)
         weekly['record']   = weekly['correct'].astype(str) + '-' + (weekly['total'] - weekly['correct']).astype(str)
@@ -880,6 +938,61 @@ with tab2:
             margin=dict(t=20, b=20)
         )
         st.plotly_chart(fig_edge, use_container_width=True)
+
+        if _has_ct:
+            st.divider()
+            st.subheader("Consensus Tier Accuracy")
+            st.caption("All 3 models agree on direction · Ensemble edge ≥3 pts = HIGH, ≥1 pt = MEDIUM, else PASS")
+
+            _ct_high = season_df[season_df['consensus_tier'] == 'HIGH']
+            _ct_med  = season_df[season_df['consensus_tier'] == 'MEDIUM']
+            _ct_pass = season_df[season_df['consensus_tier'] == 'PASS']
+
+            _ch_c = int(_ct_high[_s_correct].sum()); _ch_t = len(_ct_high)
+            _cm_c = int(_ct_med[_s_correct].sum());  _cm_t = len(_ct_med)
+            _cp_c = int(_ct_pass[_s_correct].sum()); _cp_t = len(_ct_pass)
+
+            _ch_pct = round(_ch_c / _ch_t * 100, 1) if _ch_t > 0 else 0
+            _cm_pct = round(_cm_c / _cm_t * 100, 1) if _cm_t > 0 else 0
+            _cp_pct = round(_cp_c / _cp_t * 100, 1) if _cp_t > 0 else 0
+
+            ct1, ct2, ct3 = st.columns(3)
+            ct1.metric("HIGH Tier",   f"{_ch_c}/{_ch_t}", f"{_ch_pct}%",
+                       help="All 3 models agree + Ensemble edge ≥3 pts. Highest expected accuracy.")
+            ct2.metric("MEDIUM Tier", f"{_cm_c}/{_cm_t}", f"{_cm_pct}%",
+                       help="All 3 models agree + Ensemble edge 1–3 pts.")
+            ct3.metric("PASS Tier",   f"{_cp_c}/{_cp_t}", f"{_cp_pct}%",
+                       help="Models disagree or low edge — skipped. Lower % here = better filtering.")
+
+            _ct_data = pd.DataFrame([
+                {'Tier': 'HIGH',   'Correct': _ch_c, 'Total': _ch_t, 'Pct': _ch_pct},
+                {'Tier': 'MEDIUM', 'Correct': _cm_c, 'Total': _cm_t, 'Pct': _cm_pct},
+                {'Tier': 'PASS',   'Correct': _cp_c, 'Total': _cp_t, 'Pct': _cp_pct},
+            ])
+            fig_ct = go.Figure()
+            fig_ct.add_trace(go.Bar(
+                x=_ct_data['Tier'],
+                y=_ct_data['Pct'],
+                text=[f"{r['Correct']}/{r['Total']} ({r['Pct']}%)" for _, r in _ct_data.iterrows()],
+                textposition='outside',
+                marker_color=['#00c853', '#ffd600', '#888888'],
+                hovertemplate='%{x}<br>%{text}<extra></extra>'
+            ))
+            fig_ct.add_hline(
+                y=50, line_dash="dash", line_color="#888",
+                annotation_text="Break even", annotation_position="right"
+            )
+            fig_ct.update_layout(
+                plot_bgcolor='rgba(0,0,0,0)',
+                paper_bgcolor='rgba(0,0,0,0)',
+                font_color='white',
+                yaxis=dict(range=[0, 100], title='ATS Win %', gridcolor='#2d3748'),
+                xaxis=dict(gridcolor='#2d3748'),
+                showlegend=False,
+                height=350,
+                margin=dict(t=20, b=20)
+            )
+            st.plotly_chart(fig_ct, use_container_width=True)
 
         st.divider()
 
@@ -2011,18 +2124,20 @@ If you're looking at a past week, the actuals shown are the real NFL stats for t
 
     with st.expander("How does the prediction model work?"):
         st.markdown("""
-The model is an XGBoost pipeline trained on over 4,300 NFL games going back 15+ seasons.
+The prediction system uses three models trained on over 4,300 NFL games going back 15+ seasons. The primary model is an **Ensemble (fixed75)** — a fixed-weight blend of 75% XGBoost and 25% Ridge regression. A standalone **XGBoost** model and a standalone **Ridge** model serve as the two additional votes.
+
+Each game is evaluated by all three models. A prediction is marked **HIGH confidence** when all three agree on direction and the Ensemble edge is 3+ points. **MEDIUM** when they agree with 1+ point edge. Otherwise it's a **PASS**.
 
 I engineered 79 features for each game. The main ones are rolling EPA (Expected Points Added) which measures offensive and defensive efficiency, strength of schedule, All-Pro roster quality as a proxy for talent, injury impact, QB changes, coaching history, and home field advantage.
 
-The model predicts the margin of victory for the home team. That predicted margin gets compared to the Vegas spread to calculate edge. If the model says home team wins by 10 and the spread is 7.5, the edge is 2.5 points in favor of betting the home team.
+Each model predicts the margin of victory for the home team. That predicted margin gets compared to the Vegas spread to calculate edge. If the Ensemble predicts the home team wins by 10 and the spread is 7.5, the edge is 2.5 points in favor of betting the home team.
 
-The model is retrained periodically as new data comes in and the All-Pro data gets updated manually each January.
+Models are retrained periodically as new data comes in and the All-Pro data gets updated manually each January.
         """)
 
     with st.expander("What is the LLM agent and what does it do?"):
         st.markdown("""
-The agent is built on top of the XGBoost model using LlamaIndex and Anthropic's Claude API.
+The agent is built on top of the prediction models using LlamaIndex and Anthropic's Claude API.
 
 It has 5 tools it can call: model predictions, injury reports, line movement data, historical head to head matchups going back to 2015, and a model confidence analyzer.
 
@@ -2034,7 +2149,7 @@ The idea is that raw model predictions are a starting point. The agent adds a la
         """)
 
     with st.expander("How accurate is the model?"):
-        _best_week = _completed.groupby(['season','week'])['model_correct'].agg(['sum','count'])
+        _best_week = _completed.groupby(['season','week'])[_acc_col].agg(['sum','count'])
         _best_week['pct'] = _best_week['sum'] / _best_week['count']
         _bw = _best_week['pct'].idxmax() if not _best_week.empty else None
         _bw_str = (f"Season {_bw[0]} Week {_bw[1]} was the strongest week so far at "

@@ -17,7 +17,7 @@ This repo is the full system — the model, the automation, the dashboard, and a
 ## How It Works
 
 **The Model**
-XGBoost trained on 4,300+ NFL games across 15+ seasons. I engineered 79 features covering rolling EPA, strength of schedule, All-Pro roster quality, injury impact, QB changes, and coaching history. The model predicts the margin of victory and compares it against the Vegas spread to find edge.
+A three-model system trained on 4,300+ NFL games across 15+ seasons. The primary model is an MLP (neural network), with XGBoost and a fixed-weight ensemble as secondary signals. All three vote on direction — agreement unlocks high/medium confidence tiers. I engineered 79 features covering rolling EPA, strength of schedule, All-Pro roster quality, injury impact, QB changes, and coaching history. Each model predicts the margin of victory and compares it against the Vegas spread to find edge.
 
 **The Agent**
 On top of the raw predictions, I built a ReActAgent using LlamaIndex and the Anthropic Claude API. It has 5 tools: model predictions, injury reports, line movement, historical matchups, and model confidence analysis. Each week it synthesizes all of that into per-game reasoning — flagging when sharp money conflicts with the model, when injuries change the picture, or when historical trends back up the prediction.
@@ -39,7 +39,7 @@ The only manual step each season is updating the All-Pro CSV in January.
 
 | Component | Tech |
 |-----------|------|
-| Prediction model | XGBoost, Scikit-learn |
+| Prediction models | MLP (PyTorch), XGBoost, Scikit-learn |
 | Feature engineering | nflreadpy, pandas, NumPy |
 | LLM agent | LlamaIndex, Anthropic Claude API |
 | Dashboard | Streamlit |
