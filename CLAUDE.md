@@ -41,9 +41,12 @@ pip install -r requirements.txt
 ## Architecture
 
 ### Core Files
-- **`betting/predict_betting.ipynb`** — The prediction pipeline. Pulls live NFL data via `nflreadpy`, engineers features, loads `betting/betting_model.pkl`, computes predicted margin vs. Vegas spread to find edges, and commits results to `betting/predictions_tracker.csv`. Run via papermill; `MODE` is the papermill parameter.
+- **`betting/predict_betting.ipynb`** — The prediction pipeline. Pulls live NFL data via `nflreadpy`, engineers features, loads all three models from `betting/models/`, computes predicted margin vs. Vegas spread to find edges, and commits results to `betting/predictions_tracker.csv`. Run via papermill; `MODE` is the papermill parameter.
 - **`app.py`** — Streamlit dashboard with 3 tabs: Weekly Predictions, Season Performance, Help & Guide. Reads `betting/predictions_tracker.csv` and cached `betting/agent_analysis_2025_week{n}.json` files for LLM agent reasoning overlays. Fantasy tab shows per-week projections per position with projected and actual stat columns (pass yds, rush yds, receptions, rec yds) that populate automatically after the week is played (fetched live from nflreadpy, cached 1 hour). Players who didn't play show "DNP" in all actual columns.
-- **`betting/betting_model.pkl`** — Pre-trained XGBoost `sklearn` pipeline (includes `preprocessor` step with OneHotEncoder + StandardScaler). Not retrained in `predict_betting.ipynb`.
+- **`betting/models/`** — All trained model pkl files:
+  - `xgboost_prod_model.pkl` — Original XGBoost sklearn pipeline (preprocessor + regressor). Kept as secondary signal.
+  - `mlp_prod_model.pkl` — Primary production MLP (256→128→64, Huber loss, trained 2014–2024). Includes `scaler`, `feature_cols`, `roof_surface_encoder`.
+  - `ensemble_prod_model.pkl` — Ensemble (fixed75): 0.75 XGBoost + 0.25 Ridge, trained 2014–2024. Includes `scaler`, `feature_cols`, `roof_surface_encoder`.
 - **`betting/predictions_tracker.csv`** — Master log of all predictions and outcomes. Auto-committed by GitHub Actions.
 - **`betting/model_comparison.ipynb`** — Model comparison notebook (32 cells). Rebuilds the exact 79-feature production dataset from scratch, evaluates 5 model architectures + 3 ensemble variants + walk-forward CV. See dedicated section below.
 
@@ -191,7 +194,7 @@ The notebook file exceeds the Read tool's token limit. **Always edit it via `pyt
 | 10 | Injury status | Maps `injury_status` / `practice_status` strings to numeric scores via `INJURY_MAP` / `PRACTICE_MAP` |
 | 11 | Depth chart | Loads `nfl.load_depth_charts()`; caps snapshot to before target week's first game to avoid retroactive promotions |
 | 12 | Drop Out players | Removes players with `injury_status_score == 0` (ruled Out) |
-| 13 | Generate Projections | Runs main per-position models for `pred_pts`; runs per-stat models appending `pred_qb_pass_yards`, `pred_rb_rush_yards`, `pred_rb_rec_yards`, `pred_wr_receptions`, `pred_wr_rec_yards`, `pred_te_receptions`, `pred_te_rec_yards` columns |
+| 13 | Generate Projections | Runs main per-position models for `pred_pts`; runs per-stat models appending `pred_qb_pass_yards`, `pred_qb_rush_yards`, `pred_rush_yards`, `pred_rec_yards`, `pred_wr_receptions`, `pred_wr_rec_yards`, `pred_te_receptions`, `pred_te_rec_yards` columns |
 | 14 | Assemble output | Builds display DataFrame with `Proj Pts` + position-specific stat projection columns |
 | 15 | Save Output | Writes `fantasy/fantasy_projections/projections_{season}_week{week:02d}.csv` |
 | 16 | Projection Analysis | Distribution of projected pts by position; prop stat leaders (top 5 per stat); top-10 position scorecards with inline prop stats |
@@ -245,3 +248,45 @@ Trained and saved in `fantasy/model.ipynb` Step 2b (RB), 2c (WR), 2d (TE), 2e (Q
 - Always use `features_dataset.csv` as model input, not `raw_dataset.csv` (raw contains current-week stats that leak the target).
 - `betting/nfl_allpro_1997_2025.csv` must be updated each January before re-running `data_pipeline.ipynb`.
 - All rolling features in `data_pipeline.ipynb` use `shift(1).rolling(n, min_periods=1)` — never `shift(fill_value=0)` which leaks across group boundaries.
+
+
+
+● Here's the full state:
+
+  Last change: Reverted the season filter edits in app.py — the Season Performance tab is back to single-season view only.
+
+  ---
+  MLP as primary model — yes, wired in. In predict_betting.ipynb cell 8, run_predictions() runs all 3 models and sorts output by abs(mlp_model_edge). So MLP drives the ranking. XGBoost is still computed as a secondary signal.
+
+  Ensemble 75 as high-confidence gate — partially. The consensus_tier logic is:
+
+  def consensus_tier(row):
+      sides = [row['recommendation'], row['mlp_recommendation'], row['ens_recommendation']]
+      unique_sides = set(s for s in sides if s != 'PASS')
+      agree = len(unique_sides) == 1
+      edge  = abs(row['mlp_model_edge'])   # ← MLP edge is the threshold
+      if agree and edge >= 3: return 'HIGH'
+      if agree and edge >= 1: return 'MEDIUM'
+      return 'PASS'
+
+  So all 3 models must agree on direction, and MLP edge ≥ 3pt = HIGH, ≥ 1pt = MEDIUM. Ensemble (fixed75) is one of the 3 votes, not the sole gate. The numerical threshold is MLP, not ensemble.
+
+  What's not done yet: app.py still uses model_edge (XGBoost) for everything in the Season Performance tab — it doesn't display mlp_model_edge, ens_model_edge, or consensus_tier anywhere. The tracker CSV will have those columns once the pipeline runs, but the dashboard doesn't read them yet.
+
+✻ Cooked for 1m 11s · 2 shells still running
+
+❯ why not                                                                                                                                                                                                                                                                                                              
+
+● Honestly, we just never got to it. The previous session was: wire models into the pipeline → reorganize pkl files → then the season filter detour got reverted before anything else happened.
+
+  The tracker CSV will already have mlp_model_edge, ens_model_edge, and consensus_tier columns once the pipeline runs next week — but app.py doesn't read them yet, so they're invisible on the dashboard.
+
+  Want me to update the dashboard now? The main things to wire up would be:
+
+  1. Weekly Predictions tab — show consensus_tier (HIGH/MEDIUM/PASS) badge on each game card instead of or alongside the current edge display
+  2. Season Performance tab — show MLP ATS accuracy alongside XGBoost, and break out HIGH/MEDIUM/PASS tier performance using consensus_tier
+  3. Season summary metrics — add mlp_model_correct and ens_model_correct columns to the scorecards
+
+  The tracker may not have those columns for historical weeks (they'd be null for anything before next run), so we'd need graceful fallback. Worth doing?
+
+  where we left off

@@ -1,3 +1,6 @@
+# Utility script: prints every cell of BettingEdge_v2.ipynb to stdout.
+# Useful for inspecting the notebook structure without opening Jupyter.
+# Run from the project root: python check_v2_pipeline.py
 import json, sys
 with open("betting/BettingEdge_v2.ipynb", encoding="utf-8", errors="replace") as f:
     nb = json.load(f)

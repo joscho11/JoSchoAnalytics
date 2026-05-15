@@ -1,0 +1,101 @@
+{
+  "league_name": "Catonsville FF 2018",
+  "league_id": "1255197436951932928",
+  "franchise_players": {
+    "HHayes9":       [{"name":"DeAndre Hopkins", "pos":"WR","seasons":["2023","2024"]},{"name":"Matthew Stafford","pos":"QB","seasons":["2023","2025"]},{"name":"Rashee Rice",      "pos":"WR","seasons":["2023","2025"]},{"name":"Stefon Diggs",     "pos":"WR","seasons":["2023","2025"]},{"name":"Alvin Kamara",    "pos":"RB","seasons":["2024","2025"]},{"name":"Darnell Mooney",  "pos":"WR","seasons":["2024","2025"]}],
+    "JoScho":        [{"name":"Saquon Barkley",  "pos":"RB","seasons":["2023","2024"]},{"name":"Joe Mixon",        "pos":"RB","seasons":["2023","2024"]},{"name":"Dalton Kincaid",  "pos":"TE","seasons":["2023","2024"]},{"name":"Jameis Winston",  "pos":"QB","seasons":["2023","2024"]},{"name":"Kenneth Walker",  "pos":"RB","seasons":["2023","2025"]},{"name":"Josh Jacobs",     "pos":"RB","seasons":["2024","2025"]}],
+    "twp13":         [{"name":"Jalen Hurts",     "pos":"QB","seasons":["2023","2025"]},{"name":"Bijan Robinson",  "pos":"RB","seasons":["2023","2025"]},{"name":"DJ Moore",         "pos":"WR","seasons":["2024","2025"]},{"name":"Tyler Allgeier",  "pos":"RB","seasons":["2024","2025"]}],
+    "MilanPandey":   [{"name":"George Pickens",  "pos":"WR","seasons":["2023","2025"]},{"name":"Brian Robinson",  "pos":"RB","seasons":["2023","2025"]},{"name":"Darren Waller",   "pos":"TE","seasons":["2023","2025"]},{"name":"Blake Corum",     "pos":"RB","seasons":["2024","2025"]}],
+    "joshuasurprise":[{"name":"Bo Nix",          "pos":"QB","seasons":["2024","2025"]},{"name":"Keenan Allen",    "pos":"WR","seasons":["2024","2025"]},{"name":"Kareem Hunt",     "pos":"RB","seasons":["2024","2025"]},{"name":"Chuba Hubbard",  "pos":"RB","seasons":["2024","2025"]}],
+    "stormduckkk":   [{"name":"Travis Kelce",    "pos":"TE","seasons":["2024","2025"]},{"name":"Lamar Jackson",  "pos":"QB","seasons":["2024","2025"]},{"name":"Jerry Jeudy",     "pos":"WR","seasons":["2023","2025"]}],
+    "theted123":     [{"name":"Chris Godwin",    "pos":"WR","seasons":["2023","2025"]},{"name":"Trey McBride",   "pos":"TE","seasons":["2023","2025"]},{"name":"Jaylen Waddle",  "pos":"WR","seasons":["2024","2025"]}],
+    "GarnerRandazzo":[{"name":"David Montgomery","pos":"RB","seasons":["2023","2024"]},{"name":"Hunter Henry",   "pos":"TE","seasons":["2024","2025"]}],
+    "GrantL69":      [{"name":"Alexander Mattison","pos":"RB","seasons":["2023","2024"]},{"name":"Jordan Love",    "pos":"QB","seasons":["2023","2024"]}],
+    "stn99":         [{"name":"Joe Burrow",      "pos":"QB","seasons":["2024","2025"]}],
+    "menglish8":     [],
+    "awf3":          []
+  },
+  "seasons": {
+    "2023": {
+      "league_id": "992595151463714816",
+      "champion": {
+        "username": "MilanPandey",
+        "team_name": "WhyBuddyPregnant?",
+        "roster_id": 10
+      },
+      "runner_up": {
+        "username": "awf3",
+        "team_name": "Mouse Rat",
+        "roster_id": 1
+      },
+      "standings": [
+        {"roster_id": 10, "username": "MilanPandey",   "team_name": "WhyBuddyPregnant?", "wins": 17, "losses": 11, "fpts": 1421.42, "fpts_against": 1440.42, "playoff_finish": 1},
+        {"roster_id": 1,  "username": "awf3",          "team_name": "Mouse Rat",                        "wins": 15, "losses": 13, "fpts": 1315.24, "fpts_against": 1340.36, "playoff_finish": 2},
+        {"roster_id": 6,  "username": "HHayes9",       "team_name": "",                                 "wins": 14, "losses": 14, "fpts": 1426.00, "fpts_against": 1273.06, "playoff_finish": 3},
+        {"roster_id": 11, "username": "twp13",         "team_name": "Jerry's Wharf Rats",               "wins": 15, "losses": 13, "fpts": 1350.80, "fpts_against": 1298.92, "playoff_finish": 4},
+        {"roster_id": 2,  "username": "GarnerRandazzo","team_name": "Damardiac Arrest",                 "wins": 21, "losses": 7,  "fpts": 1527.02, "fpts_against": 1307.68, "playoff_finish": 5},
+        {"roster_id": 5,  "username": "stn99",         "team_name": "Goff on Deez Nuts",                "wins": 21, "losses": 7,  "fpts": 1466.60, "fpts_against": 1219.26, "playoff_finish": 6},
+        {"roster_id": 4,  "username": "JoScho",        "team_name": "The 100$ FAAB man",                "wins": 16, "losses": 12, "fpts": 1372.68, "fpts_against": 1344.46, "playoff_finish": 7},
+        {"roster_id": 3,  "username": "menglish8",     "team_name": "Najee Germany",                    "wins": 17, "losses": 10, "fpts": 1391.16, "fpts_against": 1364.66, "playoff_finish": 8},
+        {"roster_id": 7,  "username": "stormduckkk",   "team_name": "Josh johnsons 18th team",          "wins": 10, "losses": 18, "fpts": 1229.84, "fpts_against": 1289.76, "playoff_finish": null},
+        {"roster_id": 12, "username": "James Traynor", "team_name": "—",                     "wins": 9,  "losses": 18, "fpts": 1221.06, "fpts_against": 1391.56, "playoff_finish": null},
+        {"roster_id": 9,  "username": "GrantL69",      "team_name": "🤡🤡",        "wins": 6,  "losses": 22, "fpts": 1181.02, "fpts_against": 1432.16, "playoff_finish": null},
+        {"roster_id": 8,  "username": "theted123",     "team_name": "Nick Chubb is a bitch",            "wins": 6,  "losses": 22, "fpts": 1177.48, "fpts_against": 1378.02, "playoff_finish": null}
+      ]
+    },
+    "2024": {
+      "league_id": "1121784826350161920",
+      "champion": {
+        "username": "awf3",
+        "team_name": "CTESPN",
+        "roster_id": 1
+      },
+      "runner_up": {
+        "username": "joshuasurprise",
+        "team_name": "The Joshua surprise",
+        "roster_id": 12
+      },
+      "standings": [
+        {"roster_id": 1,  "username": "awf3",           "team_name": "CTESPN",                            "wins": 16, "losses": 12, "fpts": 1460.56, "fpts_against": 1386.14, "playoff_finish": 1},
+        {"roster_id": 12, "username": "joshuasurprise", "team_name": "The Joshua surprise",               "wins": 15, "losses": 13, "fpts": 1329.14, "fpts_against": 1292.40, "playoff_finish": 2},
+        {"roster_id": 6,  "username": "HHayes9",        "team_name": "",                                  "wins": 12, "losses": 16, "fpts": 1430.98, "fpts_against": 1442.64, "playoff_finish": 3},
+        {"roster_id": 7,  "username": "stormduckkk",    "team_name": "Geor'quarius Spivey",               "wins": 14, "losses": 14, "fpts": 1347.40, "fpts_against": 1288.12, "playoff_finish": 4},
+        {"roster_id": 5,  "username": "stn99",          "team_name": "Drew Peabals",                      "wins": 17, "losses": 11, "fpts": 1481.90, "fpts_against": 1516.76, "playoff_finish": 5},
+        {"roster_id": 2,  "username": "GarnerRandazzo", "team_name": "Super Jamario Bros",                "wins": 19, "losses": 9,  "fpts": 1454.58, "fpts_against": 1290.84, "playoff_finish": 6},
+        {"roster_id": 4,  "username": "JoScho",         "team_name": "glhf everyone!",                    "wins": 19, "losses": 9,  "fpts": 1606.14, "fpts_against": 1338.99, "playoff_finish": 7},
+        {"roster_id": 3,  "username": "menglish8",      "team_name": "Tyhjen Untaequizziorus",            "wins": 19, "losses": 9,  "fpts": 1472.04, "fpts_against": 1406.76, "playoff_finish": 8},
+        {"roster_id": 10, "username": "MilanPandey",    "team_name": "WhyBuddyPregnant?", "wins": 11, "losses": 17, "fpts": 1295.90, "fpts_against": 1406.38, "playoff_finish": null},
+        {"roster_id": 9,  "username": "GrantL69",       "team_name": "CeeDee's Nuts🥵",       "wins": 9,  "losses": 19, "fpts": 1233.96, "fpts_against": 1331.86, "playoff_finish": null},
+        {"roster_id": 11, "username": "twp13",          "team_name": "Jerry's Wharf Rats",                "wins": 9,  "losses": 19, "fpts": 1142.72, "fpts_against": 1267.00, "playoff_finish": null},
+        {"roster_id": 8,  "username": "theted123",      "team_name": "Cracker of the Day",                "wins": 8,  "losses": 20, "fpts": 1234.54, "fpts_against": 1521.96, "playoff_finish": null}
+      ]
+    },
+    "2025": {
+      "league_id": "1255197436951932928",
+      "champion": {
+        "username": "theted123",
+        "team_name": "",
+        "roster_id": 8
+      },
+      "runner_up": {
+        "username": "GarnerRandazzo",
+        "team_name": "Makin it Rayne",
+        "roster_id": 2
+      },
+      "standings": [
+        {"roster_id": 8,  "username": "theted123",      "team_name": "",                                  "wins": 21, "losses": 7,  "fpts": 1506.80, "fpts_against": 1326.58, "playoff_finish": 1},
+        {"roster_id": 2,  "username": "GarnerRandazzo", "team_name": "Makin it Rayne",                    "wins": 15, "losses": 13, "fpts": 1428.62, "fpts_against": 1380.84, "playoff_finish": 2},
+        {"roster_id": 1,  "username": "awf3",           "team_name": "Bible Study > Playing WR",          "wins": 15, "losses": 13, "fpts": 1472.26, "fpts_against": 1384.84, "playoff_finish": 3},
+        {"roster_id": 10, "username": "MilanPandey",    "team_name": "WhyBuddyPregnant?", "wins": 19, "losses": 9,  "fpts": 1589.34, "fpts_against": 1351.92, "playoff_finish": 4},
+        {"roster_id": 11, "username": "twp13",          "team_name": "Jerry's Wharf Rats",                "wins": 18, "losses": 10, "fpts": 1322.64, "fpts_against": 1213.62, "playoff_finish": 5},
+        {"roster_id": 3,  "username": "menglish8",      "team_name": "Jaboowins",                         "wins": 19, "losses": 9,  "fpts": 1483.00, "fpts_against": 1333.96, "playoff_finish": 6},
+        {"roster_id": 9,  "username": "GrantL69",       "team_name": "Swift Kelce 2028",                  "wins": 11, "losses": 17, "fpts": 1262.06, "fpts_against": 1236.52, "playoff_finish": 7},
+        {"roster_id": 4,  "username": "JoScho",         "team_name": "W Eatery",                          "wins": 15, "losses": 13, "fpts": 1322.32, "fpts_against": 1325.24, "playoff_finish": 8},
+        {"roster_id": 12, "username": "joshuasurprise", "team_name": "Drake and the Joshes",              "wins": 11, "losses": 17, "fpts": 1190.04, "fpts_against": 1225.18, "playoff_finish": null},
+        {"roster_id": 7,  "username": "stormduckkk",    "team_name": "I chase brown kids",                "wins": 9,  "losses": 18, "fpts": 1234.44, "fpts_against": 1331.98, "playoff_finish": null},
+        {"roster_id": 5,  "username": "stn99",          "team_name": "Sam",                               "wins": 8,  "losses": 20, "fpts": 1100.96, "fpts_against": 1565.30, "playoff_finish": null},
+        {"roster_id": 6,  "username": "HHayes9",        "team_name": "Foyesade Oluokun",                  "wins": 6,  "losses": 21, "fpts": 1189.52, "fpts_against": 1426.02, "playoff_finish": null}
+      ]
+    }
+  }
+}

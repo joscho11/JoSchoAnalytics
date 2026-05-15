@@ -23,7 +23,13 @@
       "Bash(mkdir -p fantasy/fantasy_projections)",
       "Bash(mv fantasy/projections_2025_week*.csv fantasy/fantasy_projections/)",
       "Bash(papermill fantasy/breakout_players.ipynb /tmp/breakout_out.ipynb)",
-      "Bash(jupyter nbconvert *)"
+      "Bash(jupyter nbconvert *)",
+      "WebFetch(domain:api.sleeper.app)",
+      "Bash(pkill -f \"streamlit run app.py\")",
+      "Read(//c/Users/joey/iCloudDrive/Projects/**)",
+      "Bash(pip show *)",
+      "Bash(del analysis_temp.py)",
+      "Bash(papermill betting/model_comparison.ipynb /tmp/model_comparison_out.ipynb --no-progress-bar)"
     ]
   }
 }

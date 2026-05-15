@@ -27,3 +27,7 @@ python-dotenv
 # Visualization (notebooks only)
 matplotlib
 seaborn
+
+# Model comparison notebook only (not needed for CI)
+lightgbm
+torch
