@@ -478,8 +478,8 @@ with tab1:
                             border-radius:4px;padding:2px 8px;color:#00c853;'>HIGH</span>
                 <span style='font-size:12px;background:#3a3a1a;border:1px solid #ffd600;
                             border-radius:4px;padding:2px 8px;color:#ffd600;'>MED</span>
-                <span style='font-size:12px;background:#2a2a2a;border:1px solid #888;
-                            border-radius:4px;padding:2px 8px;color:#888;'>PASS</span>
+                <span style='font-size:12px;background:#3a1a1a;border:1px solid #ff5252;
+                            border-radius:4px;padding:2px 8px;color:#ff5252;'>PASS</span>
                 <span style='font-size:11px;color:#555;'>All 3 models agree direction · Ensemble edge ≥3 pts = HIGH, ≥1 pt = MED</span>
             </div>
         """, unsafe_allow_html=True)
@@ -593,6 +593,8 @@ with tab1:
                 tier_html = "&nbsp;&nbsp;<span style='background:#1a3a1a;border:1px solid #00c853;border-radius:4px;padding:1px 6px;font-size:11px;color:#00c853'>HIGH</span>"
             elif tier == 'MEDIUM':
                 tier_html = "&nbsp;&nbsp;<span style='background:#3a3a1a;border:1px solid #ffd600;border-radius:4px;padding:1px 6px;font-size:11px;color:#ffd600'>MED</span>"
+            elif tier == 'PASS':
+                tier_html = "&nbsp;&nbsp;<span style='background:#3a1a1a;border:1px solid #ff4444;border-radius:4px;padding:1px 6px;font-size:11px;color:#ff4444'>PASS</span>"
             else:
                 tier_html = ''
 
@@ -2126,7 +2128,13 @@ If you're looking at a past week, the actuals shown are the real NFL stats for t
         st.markdown("""
 The prediction system uses three models trained on over 4,300 NFL games going back 15+ seasons. The primary model is an **Ensemble (fixed75)** — a fixed-weight blend of 75% XGBoost and 25% Ridge regression. A standalone **XGBoost** model and a standalone **Ridge** model serve as the two additional votes.
 
-Each game is evaluated by all three models. A prediction is marked **HIGH confidence** when all three agree on direction and the Ensemble edge is 3+ points. **MEDIUM** when they agree with 1+ point edge. Otherwise it's a **PASS**.
+Each game is evaluated by all three models. The result is assigned one of three tiers:
+
+- **HIGH** — all three models agree on the same side *and* the Ensemble edge is 3+ points
+- **MEDIUM** — all three models agree on the same side *and* the Ensemble edge is 1–3 points
+- **PASS** — the models disagree on direction, *or* they agree but the Ensemble edge is under 1 point
+
+Agreement alone isn't enough to get a HIGH or MEDIUM — the Ensemble still needs to show a meaningful edge. And a big edge alone isn't enough either — all three models need to point the same way.
 
 I engineered 79 features for each game. The main ones are rolling EPA (Expected Points Added) which measures offensive and defensive efficiency, strength of schedule, All-Pro roster quality as a proxy for talent, injury impact, QB changes, coaching history, and home field advantage.
 

@@ -35,7 +35,9 @@
       "Bash(python -c ' *)",
       "Read(//tmp/**)",
       "Bash(git checkout *)",
-      "Bash(python3 *)"
+      "Bash(python3 *)",
+      "Bash(mv \"betting/BettingEdgeContinued.ipynb\" \"betting/archive/BettingEdgeContinued.ipynb\")",
+      "Bash(mv \"betting/BettingEdge_v2.ipynb\" \"betting/archive/BettingEdge_v2.ipynb\")"
     ]
   }
 }
