@@ -594,22 +594,12 @@ with tab1:
             edge      = row[_primary_edge]
             tier      = str(row['consensus_tier']) if _has_consensus_col and pd.notna(row.get('consensus_tier')) else ''
 
-            home_is_favored = spread > 0
-
-            if home_is_favored:
-                top_team      = home
-                bot_team      = away
-                top_spread    = fmt(-spread)
-                bot_spread    = fmt(spread)
-                top_predicted = fmt(predicted)
-                bot_predicted = fmt(-predicted)
-            else:
-                top_team      = away
-                bot_team      = home
-                top_spread    = fmt(spread)
-                bot_spread    = fmt(-spread)
-                top_predicted = fmt(-predicted)
-                bot_predicted = fmt(predicted)
+            top_team      = home
+            bot_team      = away
+            top_spread    = fmt(-spread)
+            bot_spread    = fmt(spread)
+            top_predicted = fmt(predicted)
+            bot_predicted = fmt(-predicted)
 
             if edge > 0:
                 rec_team  = home
@@ -633,11 +623,11 @@ with tab1:
                 away_score = row.get('away_score', None)
                 has_scores = pd.notna(home_score) and pd.notna(away_score)
                 if has_scores:
-                    top_score = f"{int(home_score)}" if home_is_favored else f"{int(away_score)}"
-                    bot_score = f"{int(away_score)}" if home_is_favored else f"{int(home_score)}"
+                    top_score = f"{int(home_score)}"
+                    bot_score = f"{int(away_score)}"
                 else:
-                    top_score = fmt(actual if home_is_favored else -actual)
-                    bot_score = fmt(-actual if home_is_favored else actual)
+                    top_score = fmt(actual)
+                    bot_score = fmt(-actual)
             else:
                 top_score = "—"
                 bot_score = "—"
