@@ -352,18 +352,43 @@ def get_confidence(home, away, game_analysis):
         return 'NO_ANALYSIS'
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
-st.sidebar.markdown("""
-    <div style='text-align: center; padding: 10px;'>
-        <div style='display: inline-block; background: #013369; color: white;
-                    border-radius: 50%; width: 60px; height: 60px;
-                    line-height: 60px; font-size: 24px; font-weight: bold;'>
-            JS
+st.sidebar.image("assets/logo.svg", use_container_width=True)
+st.sidebar.divider()
+
+st.sidebar.markdown(
+    """
+    <div style="text-align:center; padding: 8px 0 4px 0;">
+        <a href="https://venmo.com/u/JoScho" target="_blank" style="
+            display: inline-block;
+            background-color: #3D95CE;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+            padding: 8px 18px;
+            border-radius: 8px;
+            text-decoration: none;
+            letter-spacing: 0.3px;
+        ">💙 Tip Jar — Venmo @JoScho</a>
+        <div style="font-size: 11px; color: #888; margin-top: 6px;">
+            If you find this useful, buy me a coffee ☕
         </div>
     </div>
-""", unsafe_allow_html=True)
+    """,
+    unsafe_allow_html=True
+)
 
-st.sidebar.title("BettingEdge")
-st.sidebar.caption("NFL ATS Prediction System")
+st.sidebar.markdown(
+    """
+    <div style="padding: 2px 4px 6px 4px;">
+        <p style="font-size:12px;color:#aaa;line-height:1.65;margin:0">
+            ML model trained on NFL data since 2014. Predicts each game vs the Vegas spread.
+            <b style="color:#3D95CE">52.4% ATS</b> is break-even.
+        </p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
 st.sidebar.divider()
 
 seasons = sorted(df['season'].unique(), reverse=True)
@@ -382,6 +407,26 @@ edge_threshold = st.sidebar.slider(
     help="Only show games where model disagrees with spread by at least this many points"
 )
 
+# ── UI helpers ───────────────────────────────────────────────────────────────
+def metric_card(label, value, sub=None, color="blue"):
+    border = {"green": "#00c853", "red": "#ff5252", "blue": "#3D95CE"}.get(color, "#3D95CE")
+    sub_html = f"<div style='font-size:13px;color:#aaa;margin-top:3px'>{sub}</div>" if sub else ""
+    return (
+        f"<div style='background:#1e2a3a;border-left:4px solid {border};border-radius:6px;"
+        f"padding:14px 16px;margin-bottom:4px;'>"
+        f"<div style='font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px;"
+        f"margin-bottom:6px'>{label}</div>"
+        f"<div style='font-size:22px;font-weight:700;color:white;line-height:1.1'>{value}</div>"
+        f"{sub_html}</div>"
+    )
+
+_MODE_BADGE_COLORS = {
+    'monday':   '#ffd600',
+    'thursday': '#ff9800',
+    'sunday':   '#00c853',
+    'backfill': '#3D95CE',
+}
+
 # ── Offseason banner ──────────────────────────────────────────────────────────
 now           = dt.now()
 season_active = (now.month >= 9) or (now.month <= 2)
@@ -396,7 +441,7 @@ if not season_active:
     )
 
 # ── Tabs ──────────────────────────────────────────────────────────────────────
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["🏈 Weekly Predictions", "📈 Season Performance", "🏆 Fantasy", "🏅 League History 🚧", "❓ Help & Guide"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["🏈 Weekly Predictions", "📈 Season Performance", "🏆 Fantasy", "🏅 League History", "❓ Help & Guide"])
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 1: WEEKLY PREDICTIONS
@@ -429,7 +474,14 @@ with tab1:
             'backfill': ('🔵', 'Backfilled',        'Historical predictions'),
         }
         icon, label, desc = mode_labels.get(mode, ('⚪', 'Manual Run', ''))
-        st.caption(f"{icon} **{label}** — {desc} · Last updated: {logged_at}")
+        _badge_color = _MODE_BADGE_COLORS.get(mode, '#888')
+        st.markdown(
+            f"<span style='background:{_badge_color}22;border:1px solid {_badge_color};"
+            f"border-radius:20px;padding:3px 12px;font-size:12px;font-weight:600;"
+            f"color:{_badge_color}'>{icon} {label}</span>"
+            f"<span style='font-size:12px;color:#666;margin-left:10px'>{desc} · updated {logged_at}</span>",
+            unsafe_allow_html=True
+        )
 
     st.divider()
     col1, col2, col3, col4 = st.columns(4)
@@ -440,17 +492,20 @@ with tab1:
     filtered_df  = week_df[week_df[_primary_edge].abs() >= edge_threshold].copy()
     hidden_count = len(week_df) - len(filtered_df)
 
-    col1.metric("Total Games", len(week_df))
-    col2.metric("Showing",     len(filtered_df),
-                help=f"Games with |edge| ≥ {edge_threshold} pts")
-    col3.metric("Avg Ensemble Edge",
-                f"{week_df[_primary_edge].abs().mean():.1f} pts")
+    col1.markdown(metric_card("Total Games", len(week_df)), unsafe_allow_html=True)
+    col2.markdown(metric_card("Showing", len(filtered_df), f"edge ≥ {edge_threshold} pts"), unsafe_allow_html=True)
+    _avg_edge = week_df[_primary_edge].abs().mean()
+    col3.markdown(metric_card("Avg Ensemble Edge", f"{_avg_edge:.1f} pts",
+                              color="green" if _avg_edge >= 1.5 else "blue"), unsafe_allow_html=True)
 
     if results_in and len(filtered_df) > 0:
-        sc = int(filtered_df[_correct_col].sum())
-        col4.metric("ATS Record", f"{sc}/{len(filtered_df)} ({sc/len(filtered_df)*100:.0f}%)")
+        sc  = int(filtered_df[_correct_col].sum())
+        pct = sc / len(filtered_df) * 100
+        col4.markdown(metric_card("ATS Record", f"{sc}/{len(filtered_df)}",
+                                  f"{pct:.0f}%",
+                                  color="green" if pct >= 52.4 else "red"), unsafe_allow_html=True)
     else:
-        col4.metric("ATS Record", "Pending")
+        col4.markdown(metric_card("ATS Record", "Pending"), unsafe_allow_html=True)
 
     st.divider()
 
@@ -520,12 +575,12 @@ with tab1:
                 f"height:32px;line-height:20px'>{val}</div>"
             )
 
-        def bet_box(team):
+        def bet_box(team, color="#3D95CE"):
             return (
-                f"<div style='background:#1e2a3a;border-left:3px solid #4a6080;"
-                f"border-radius:4px;padding:0 8px;font-size:12px;font-weight:700;"
-                f"color:white;text-align:center;height:32px;line-height:32px'>"
-                f"BET {team}</div>"
+                f"<div style='background:{color}22;border:1.5px solid {color};"
+                f"border-radius:6px;padding:0 10px;font-size:13px;font-weight:800;"
+                f"color:{color};text-align:center;height:32px;line-height:32px;"
+                f"letter-spacing:0.5px'>▶ {team}</div>"
             )
 
         def empty_box():
@@ -632,7 +687,7 @@ with tab1:
                 )
                 a1.markdown(stat_box(top_spread),                       unsafe_allow_html=True)
                 a2.markdown(stat_box(top_predicted, is_rec=top_is_rec), unsafe_allow_html=True)
-                a4.markdown(bet_box(top_team) if top_is_rec else empty_box(), unsafe_allow_html=True)
+                a4.markdown(bet_box(top_team, rec_color) if top_is_rec else empty_box(), unsafe_allow_html=True)
 
                 st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
 
@@ -650,7 +705,7 @@ with tab1:
                 )
                 b1.markdown(stat_box(bot_spread),                       unsafe_allow_html=True)
                 b2.markdown(stat_box(bot_predicted, is_rec=bot_is_rec), unsafe_allow_html=True)
-                b4.markdown(bet_box(bot_team) if bot_is_rec else empty_box(), unsafe_allow_html=True)
+                b4.markdown(bet_box(bot_team, rec_color) if bot_is_rec else empty_box(), unsafe_allow_html=True)
 
                 game_key  = f"{home}_{away}"
                 game_text = game_analysis.get(game_key, None)
@@ -799,10 +854,17 @@ with tab2:
         le_pct        = round(le_correct / le_total * 100, 1) if le_total > 0 else 0
 
         c1, c2, c3, c4 = st.columns(4)
-        c1.metric("Season ATS",                f"{total_correct}/{total_games}", f"{total_pct}%")
-        c2.metric("High Ens Edge (3+ pts)",    f"{he_correct}/{he_total}",       f"{he_pct}%")
-        c3.metric("Med Ens Edge (1-3 pts)",    f"{me_correct}/{me_total}",       f"{me_pct}%")
-        c4.metric("Low Ens Edge (<1 pt)",      f"{le_correct}/{le_total}",       f"{le_pct}%")
+        c1.markdown(metric_card("Season ATS", f"{total_correct}/{total_games}", f"{total_pct}%",
+                                color="green" if total_pct >= 52.4 else "red"), unsafe_allow_html=True)
+        c2.markdown(metric_card("High Edge (3+ pts)", f"{he_correct}/{he_total}",
+                                f"{he_pct}%" if he_total > 0 else "—",
+                                color="green" if he_pct >= 52.4 else "red"), unsafe_allow_html=True)
+        c3.markdown(metric_card("Med Edge (1-3 pts)", f"{me_correct}/{me_total}",
+                                f"{me_pct}%" if me_total > 0 else "—",
+                                color="green" if me_pct >= 52.4 else "red"), unsafe_allow_html=True)
+        c4.markdown(metric_card("Low Edge (<1 pt)", f"{le_correct}/{le_total}",
+                                f"{le_pct}%" if le_total > 0 else "—",
+                                color="green" if le_pct >= 52.4 else "red"), unsafe_allow_html=True)
 
         _has_ens   = 'ens_model_correct'   in season_df.columns and season_df['ens_model_correct'].notna().any()
         _has_ridge = 'ridge_model_correct' in season_df.columns and season_df['ridge_model_correct'].notna().any()
@@ -812,22 +874,22 @@ with tab2:
             st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
             st.caption("Model breakdown (games with new pipeline predictions)")
             mc1, mc2, mc3 = st.columns(3)
-            mc1.metric("XGBoost ATS", f"{total_correct}/{total_games}", f"{total_pct}%",
-                       help="XGBoost model — one of three votes in consensus tier.")
+            mc1.markdown(metric_card("XGBoost ATS", f"{total_correct}/{total_games}", f"{total_pct}%",
+                                     color="green" if total_pct >= 52.4 else "red"), unsafe_allow_html=True)
             if _has_ridge:
                 _ridge_sub = season_df[season_df['ridge_model_correct'].notna()]
                 _ridge_c   = int(_ridge_sub['ridge_model_correct'].sum())
                 _ridge_t   = len(_ridge_sub)
                 _ridge_pct = round(_ridge_c / _ridge_t * 100, 1) if _ridge_t > 0 else 0
-                mc2.metric("Ridge ATS", f"{_ridge_c}/{_ridge_t}", f"{_ridge_pct}%",
-                           help="Ridge regression — one of three votes in consensus tier.")
+                mc2.markdown(metric_card("Ridge ATS", f"{_ridge_c}/{_ridge_t}", f"{_ridge_pct}%",
+                                         color="green" if _ridge_pct >= 52.4 else "red"), unsafe_allow_html=True)
             if _has_ens:
                 _ens_sub = season_df[season_df['ens_model_correct'].notna()]
                 _ens_c   = int(_ens_sub['ens_model_correct'].sum())
                 _ens_t   = len(_ens_sub)
                 _ens_pct = round(_ens_c / _ens_t * 100, 1) if _ens_t > 0 else 0
-                mc3.metric("Ensemble ATS", f"{_ens_c}/{_ens_t}", f"{_ens_pct}%",
-                           help="Ensemble (0.75 XGBoost + 0.25 Ridge) — sets the confidence threshold.")
+                mc3.markdown(metric_card("Ensemble ATS", f"{_ens_c}/{_ens_t}", f"{_ens_pct}%",
+                                         color="green" if _ens_pct >= 52.4 else "red"), unsafe_allow_html=True)
 
         st.divider()
 
@@ -2185,5 +2247,19 @@ No. This is a personal data science project. I built it to explore whether a mac
 Nothing on this site should be taken as betting or financial advice. Sports betting involves real financial risk. Always bet responsibly.
         """)
 
-    st.divider()
-    st.caption("Built by Joseph Schoenbaum · [GitHub](https://github.com/joscho11/BettingEdgeContinued) · [Dashboard](https://joschobetting.streamlit.app)")
+    st.markdown("""
+        <div style='text-align:center;padding:28px 0 12px 0;border-top:1px solid #2d3748;margin-top:12px'>
+            <div style='font-size:11px;color:#444;margin-bottom:10px;letter-spacing:0.3px'>
+                Not financial advice. Sports betting involves real risk. Bet responsibly.
+            </div>
+            <div style='font-size:13px;color:#666'>
+                Built by <b style='color:#999'>Joseph Schoenbaum</b>
+                &nbsp;·&nbsp;
+                <a href='https://github.com/joscho11/BettingEdgeContinued'
+                   style='color:#3D95CE;text-decoration:none'>GitHub</a>
+                &nbsp;·&nbsp;
+                <a href='https://venmo.com/u/JoScho'
+                   style='color:#3D95CE;text-decoration:none'>💙 Venmo @JoScho</a>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)

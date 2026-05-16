@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 
 BettingEdge is an NFL Against-the-Spread (ATS) prediction system combining:
-- A three-model ensemble: Ensemble fixed75 (primary), XGBoost, and Ridge as confidence voters
+- Ensemble fixed75 as primary model (edge-setter), with XGBoost, Ridge, and LightGBM as the three direction voters
 - A Claude-powered LLM agent (via LlamaIndex) for qualitative game reasoning
 - A Streamlit dashboard for visualization (deployed at joschobetting.streamlit.app)
 - GitHub Actions for weekly automated predictions (Mon/Thu/Sun)
@@ -46,7 +46,8 @@ pip install -r requirements.txt
 - **`app.py`** — Streamlit dashboard with 3 tabs: Weekly Predictions, Season Performance, Help & Guide. Reads `betting/predictions_tracker.csv` and cached `betting/agent_analysis_2025_week{n}.json` files for LLM agent reasoning overlays. Fantasy tab shows per-week projections per position with projected and actual stat columns (pass yds, rush yds, receptions, rec yds) that populate automatically after the week is played (fetched live from nflreadpy, cached 1 hour). Players who didn't play show "DNP" in all actual columns.
 - **`betting/models/`** — All trained model pkl files:
   - `ensemble_prod_model.pkl` — **Primary model.** Ensemble fixed75: 0.75 XGBoost + 0.25 Ridge, trained 2014–2024. Sets the edge threshold and output sort order. Includes `scaler`, `feature_cols`, `roof_surface_encoder`, `xgb_model`, `ridge_model`, `xgb_weight`.
-  - `xgboost_prod_model.pkl` — XGBoost sklearn pipeline (preprocessor + regressor). Acts as one of three confidence voters.
+  - `xgboost_prod_model.pkl` — XGBoost sklearn pipeline (preprocessor + regressor). One of three direction voters.
+  - `lgbm_prod_model.pkl` — LightGBM regressor. Third direction voter; independent signal from XGBoost (leaf-wise growth). Saved as `{'model': LGBMRegressor, 'feature_cols': list}`.
   - (Ridge is extracted from `ensemble_prod_model.pkl["ridge_model"]` at runtime — no separate pkl needed.)
 - **`betting/archive/`** — Old model files and retired notebooks: `betting_model.pkl` (original XGBoost pkl), `BettingEdge_v2.ipynb`, `BettingEdgeContinued.ipynb`.
 - **`betting/predictions_tracker.csv`** — Master log of all predictions and outcomes. Auto-committed by GitHub Actions.
@@ -100,24 +101,23 @@ Developed in `betting/sports_betting_agent.ipynb`. Uses LlamaIndex `ReActAgent` 
 - **XGBoost (cv)** in walk-forward CV is retrained from scratch each fold. It is NOT the pre-trained pkl — that would be in-sample for all folds.
 - **Editing:** Use Python + `json.load/dump`. The notebook is too large for the Read/NotebookEdit tools.
 
-### Walk-Forward CV Results (2026-05-14, 6 folds 2020–2025)
+### Walk-Forward CV Results (2026-05-15, 6 folds 2020–2025)
 
 | Model | Mean ATS | Std | Notes |
 |-------|----------|-----|-------|
-| Ensemble fixed75 | 52.8% | 3.1% | **Production model** — best mean, 0.75 XGB + 0.25 Ridge |
-| LightGBM | 52.4% | 3.9% | Highest ceiling (55.4%), worst floor (44.9% in 2023) |
-| Ridge | 52.0% | 3.6% | Best MAE (9.87), strongest single fold (57.5% in 2024) |
-| XGBoost (cv) | 51.5% | 2.3% | Confirms production edge comes from injury features |
-| Random Forest | 49.4% | 2.1% | Below 50% mean — not competitive |
+| LightGBM | 53.0% | 4.1% | **CV winner** — highest mean, but highest floor risk (44.2% in 2023). Direction voter. |
+| Ridge | 52.1% | 2.9% | Best MAE (9.83), strongest single fold (56.5% in 2024). Direction voter. |
+| Random Forest | 51.3% | 2.5% | Below break-even mean — not in production |
+| XGBoost (cv) | 51.2% | 1.8% | CV-retrained standalone; prod pkl (in ensemble) adds more signal |
 
-Break-even: 52.4% ATS. 2023 was a universally hard season (all models underperformed fold 4). MLP removed from production after walk-forward showed 50.1% mean ATS (below break-even).
+Break-even: 52.4% ATS. 2023 was a universally hard season (all models underperformed fold 4). MLP removed from production after walk-forward showed 50.1% mean ATS (below break-even). Ensemble fixed75 is not in the CV loop — it is the edge-setter, not a direction voter.
 
 ## Key Constraints
 - The XGBoost model pipeline expects a `preprocessor` named step — don't change the pkl structure without retraining.
 - `betting/nfl_allpro_1997_2025.csv` must be updated manually each January for the new season.
 - Agent analysis JSON files are cached by week; regenerating them requires re-running the agent notebook and costs API calls.
 - The dashboard reads the tracker CSV directly — column names and structure in `betting/predictions_tracker.csv` must stay consistent with `app.py` expectations.
-- **Production model is Ensemble fixed75** — `ens_model_edge` drives the edge threshold and sort order. XGBoost and Ridge are the two other votes in `consensus_tier`. `consensus_tier` = HIGH when all 3 agree + `abs(ens_model_edge) ≥ 3pt`; MEDIUM when agree + `≥ 1pt`; PASS otherwise.
+- **Production model is Ensemble fixed75** — `ens_model_edge` drives the edge threshold and sort order. XGBoost, Ridge, and LightGBM are the three direction voters in `consensus_tier`. `consensus_tier` = HIGH when all 3 agree + `abs(ens_model_edge) ≥ 3pt`; MEDIUM when agree + `≥ 1pt`; PASS otherwise.
 - **MLP has been removed** — deleted from `betting/models/`, stripped from `predict_betting.ipynb`. Walk-forward CV showed 50.1% mean ATS (below 52.4% break-even). Do not re-add it.
 - **Fantasy projection CSVs MUST live in `fantasy/fantasy_projections/`** — never move them to `fantasy/` or any other location. `app.py` reads from `fantasy/fantasy_projections/projections_*.csv` and `predict_fantasy.ipynb` writes there via `_DIR / "fantasy_projections"`. Do not reorganize this path.
 
@@ -133,7 +133,7 @@ A half-PPR fantasy football points prediction system for NFL skill position play
 
 **Datasets:**
 - `raw_dataset.csv` — 34,907 rows × 84 columns (output of `data_pipeline.ipynb`)
-- `features_dataset.csv` — 30,213 rows × 88 columns (output of `features.ipynb`; drops last week of each season + week-1 players with no rolling history)
+- `features_dataset.csv` — 39,607 rows × 97 columns (output of `features.ipynb`; drops last week of each season + week-1 players with no rolling history)
 
 Target: `target_half_ppr` (half-PPR points in week W+1).
 
@@ -143,10 +143,15 @@ Target: `target_half_ppr` (half-PPR points in week W+1).
 
 | Position | Train rows | Test rows | MAE | RMSE | Baseline MAE |
 |----------|-----------|-----------|-----|------|--------------|
-| QB | 2,723 | 571 | 7.11 | 8.77 | 7.49 |
-| RB | 6,536 | 1,397 | 4.49 | 6.57 | 4.59 |
-| WR | 10,464 | 2,215 | 3.92 | 5.39 | 4.06 |
-| TE | 5,162 | 1,145 | 3.26 | 4.74 | 3.48 |
+| QB | 2,781 | 571 | 6.99 | 8.60 | 7.49 |
+| RB | 6,652 | 1,397 | 4.48 | 6.45 | 4.59 |
+| WR | 10,643 | 2,215 | 3.91 | 5.37 | 4.06 |
+| TE | 5,265 | 1,145 | 3.17 | 4.64 | 3.48 |
+
+### Known Next Improvements
+
+- **Include 2025 in training** — currently `TRAIN_SEASONS = [2020–2024]` with 2025 as the holdout. Once the 2025 season is complete, move it into training and use 2026 (or a rolling holdout) for evaluation. Update `TRAIN_SEASONS` in `model.ipynb` cell 3, retrain with `retrain_models.py`, and update the holdout results table above. This is the highest-ROI change remaining — it adds ~3,000 rows per model.
+- **Rebuild raw_dataset.csv annually** — re-run `data_pipeline.ipynb` each offseason to pull fresh nflreadpy data (new season stats, updated injury history, depth charts). Then re-run `features.ipynb` and retrain.
 
 ### data_pipeline.ipynb — Feature Groups
 
@@ -252,3 +257,42 @@ Trained and saved in `fantasy/model.ipynb` Step 2b (RB), 2c (WR), 2d (TE), 2e (Q
 - Always use `features_dataset.csv` as model input, not `raw_dataset.csv` (raw contains current-week stats that leak the target).
 - `betting/nfl_allpro_1997_2025.csv` must be updated each January before re-running `data_pipeline.ipynb`.
 - All rolling features in `data_pipeline.ipynb` use `shift(1).rolling(n, min_periods=1)` — never `shift(fill_value=0)` which leaks across group boundaries.
+
+## DFS Lineup Optimizer (`fantasy/dfs/`)
+
+ILP-based DraftKings NFL Classic lineup optimizer. Uses our weekly fantasy `projected_pts` as the value signal and solves salary-capped roster selection as a binary integer program. Requires `pulp` (added to `requirements.txt`).
+
+### Notebooks
+
+| Notebook | Purpose |
+|----------|---------|
+| `optimizer.ipynb` | Documents the ILP formulation, all helper functions, and fuzzy name-matching logic. Reference / library notebook. |
+| `dfs_pipeline.ipynb` | Weekly workflow: load DK salary CSV → merge projections → analyze player pool → optimize lineup → export. Papermill-compatible with `CSV_PATH`, `SEASON`, `WEEK`, `BUDGET`, `LOCKED`, `EXCLUDED` parameters. |
+
+**To run each week:**
+```bash
+papermill fantasy/dfs/dfs_pipeline.ipynb /tmp/dfs_out.ipynb -p CSV_PATH dk_salaries.csv
+```
+Download the salary CSV from any DK NFL Classic contest lobby → *Export to CSV*.
+
+### How It Works
+
+- `merge_projections()` fuzzy-matches DK player names to our `projected_pts` (cutoff 0.72 on normalised strings). Unmatched players fall back to DK's season `AvgPointsPerGame`, flagged as `dk_avg` in the pool table.
+- **DST always uses DK's season average** — no team-defense model yet.
+- ILP maximises total projected points subject to: 1 QB / 2+ RB / 3+ WR / 1+ TE / 1 DST / 9 total / $50k cap / max 8 from one team. The FLEX slot is filled implicitly by the solver.
+
+### Key Constraints
+
+- **Run `predict_fantasy.ipynb` first** — the pipeline reads `fantasy/fantasy_projections/projections_{season}_week{week:02d}.csv`. No projection file = no optimizer input.
+- **Name matching is fuzzy** — review `dk_avg`-flagged players in the pipeline output before finalising the lineup.
+- **Edit notebooks via Python `json.load/dump`** — same constraint as all other notebooks in this repo.
+
+### Next Steps
+
+1. **DST projection model** — train on defensive EPA allowed, implied team total, home/away, and surface. Replace the `dk_avg` fallback for DST so all 9 slots use our model.
+2. **Multi-lineup GPP generator** — produce N distinct lineups for tournament play using ownership-diversity constraints (force variation in at least the FLEX pick and one anchor position across lineups).
+3. **Game-stacking constraints** — add optional ILP constraints to co-select 2+ players from the same game (QB + WR1 + opponent pass-catcher), exploiting positive score correlation in high-total matchups.
+4. **Ownership leverage weighting** — scale `proj_pts` by inverse projected ownership so the optimizer differentiates from the field in large-field GPPs.
+5. **Salary movement signal** — compare current DK salary to prior-week salary; large drops may indicate recency information (injury, role change) the season average hasn't priced in yet.
+6. **Automated salary fetching** — replace the manual CSV download with a scraper or third-party API so the pipeline runs fully programmatically.
+7. **End-to-end automation** — chain `predict_fantasy.ipynb` → `dfs_pipeline.ipynb` in a single papermill call or GitHub Actions step so DFS lineups generate automatically after weekly projections update.

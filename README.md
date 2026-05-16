@@ -17,7 +17,7 @@ This repo is the full system — the model, the automation, the dashboard, and a
 ## How It Works
 
 **The Model**
-A three-model system trained on 4,300+ NFL games across 15+ seasons. The primary model is an MLP (neural network), with XGBoost and a fixed-weight ensemble as secondary signals. All three vote on direction — agreement unlocks high/medium confidence tiers. I engineered 79 features covering rolling EPA, strength of schedule, All-Pro roster quality, injury impact, QB changes, and coaching history. Each model predicts the margin of victory and compares it against the Vegas spread to find edge.
+A four-model system trained on 4,300+ NFL games across 15+ seasons. The primary model is **Ensemble fixed75** — a fixed-weight blend of 75% XGBoost and 25% Ridge — which sets the edge threshold and game ranking. XGBoost, Ridge, and LightGBM serve as the three direction voters: when all three agree on a side and the Ensemble edge is large enough, the game is rated HIGH or MEDIUM confidence. I engineered 79 features covering rolling EPA, strength of schedule, All-Pro roster quality, injury impact, QB changes, and coaching history. Each model predicts the margin of victory and compares it against the Vegas spread to find edge.
 
 **The Agent**
 On top of the raw predictions, I built a ReActAgent using LlamaIndex and the Anthropic Claude API. It has 5 tools: model predictions, injury reports, line movement, historical matchups, and model confidence analysis. Each week it synthesizes all of that into per-game reasoning — flagging when sharp money conflicts with the model, when injuries change the picture, or when historical trends back up the prediction.
@@ -39,7 +39,7 @@ The only manual step each season is updating the All-Pro CSV in January.
 
 | Component | Tech |
 |-----------|------|
-| Prediction models | MLP (PyTorch), XGBoost, Scikit-learn |
+| Prediction models | XGBoost, LightGBM, Scikit-learn (Ridge) |
 | Feature engineering | nflreadpy, pandas, NumPy |
 | LLM agent | LlamaIndex, Anthropic Claude API |
 | Dashboard | Streamlit |
@@ -54,15 +54,16 @@ The only manual step each season is updating the All-Pro CSV in January.
 app.py                               # Streamlit dashboard (entry point)
 betting/
   predict_betting.ipynb              # Weekly ATS prediction pipeline (run via papermill)
+  model_comparison.ipynb             # Model architecture comparison + walk-forward CV
   models/
-    xgboost_prod_model.pkl           # Original XGBoost model (secondary signal)
-    mlp_prod_model.pkl               # Primary MLP model (256→128→64)
-    ensemble_prod_model.pkl          # Ensemble: 0.75 XGBoost + 0.25 Ridge
+    ensemble_prod_model.pkl          # Primary model: Ensemble fixed75 (0.75 XGB + 0.25 Ridge)
+    xgboost_prod_model.pkl           # XGBoost direction voter
+    lgbm_prod_model.pkl              # LightGBM direction voter
   predictions_tracker.csv            # All predictions + results
   nfl_allpro_1997_2025.csv           # All-Pro roster data
   sports_betting_agent.ipynb         # Agent development notebook
-  BettingEdgeContinued.ipynb         # Main modeling notebook
   agent_analysis_2025_week{n}.json   # Cached agent output per week
+  archive/                           # Retired notebooks and model files
 fantasy/
   data_pipeline.ipynb                # Pull & join player stats
   features.ipynb                     # Feature engineering
@@ -78,9 +79,8 @@ fantasy/
 
 | Metric | Value |
 |--------|-------|
-| Overall ATS | 53.85% |
-| High-confidence ATS | 55.71% |
-| Best week | 11/14 (Week 10) |
+| Overall ATS | 57.85% (70/121) |
+| Best week | 11/16 (Week 13) |
 
 ---
 

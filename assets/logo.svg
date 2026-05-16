@@ -1,0 +1,64 @@
+<svg width="220" height="80" viewBox="0 0 220 80" xmlns="http://www.w3.org/2000/svg">
+
+  <!-- Football body -->
+  <ellipse cx="36" cy="40" rx="22" ry="14" fill="#7a4219" stroke="#a0622e" stroke-width="0.8" transform="rotate(-20 36 40)"/>
+  <!-- Laces -->
+  <line x1="36" y1="27" x2="36" y2="53" stroke="white" stroke-width="1.4" opacity="0.9" transform="rotate(-20 36 40)"/>
+  <line x1="30" y1="35" x2="42" y2="35" stroke="white" stroke-width="0.9" opacity="0.9" transform="rotate(-20 36 40)"/>
+  <line x1="30" y1="40" x2="42" y2="40" stroke="white" stroke-width="0.9" opacity="0.9" transform="rotate(-20 36 40)"/>
+  <line x1="30" y1="45" x2="42" y2="45" stroke="white" stroke-width="0.9" opacity="0.9" transform="rotate(-20 36 40)"/>
+
+  <!-- Upward trend line over football -->
+  <polyline
+    points="14,58 24,46 34,52 50,30 58,20"
+    fill="none"
+    stroke="#3D95CE"
+    stroke-width="2.6"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <!-- Arrow head -->
+  <polygon points="58,20 50,24 54,30" fill="#3D95CE"/>
+  <!-- Glow dot -->
+  <circle cx="58" cy="20" r="3" fill="#3D95CE" opacity="0.45"/>
+
+  <!-- BETTING text -->
+  <text
+    x="76"
+    y="34"
+    font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif"
+    font-size="21"
+    font-weight="300"
+    fill="#d0dce8"
+    letter-spacing="3"
+  >BETTING</text>
+
+  <!-- EDGE text -->
+  <text
+    x="76"
+    y="62"
+    font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif"
+    font-size="27"
+    font-weight="800"
+    fill="#3D95CE"
+    letter-spacing="4"
+  >EDGE</text>
+
+  <!-- Separator line -->
+  <line x1="76" y1="40" x2="210" y2="40" stroke="#3D95CE" stroke-width="0.6" opacity="0.3"/>
+
+  <!-- JS monogram badge -->
+  <circle cx="204" cy="15" r="10" fill="#3D95CE" opacity="0.15"/>
+  <circle cx="204" cy="15" r="10" fill="none" stroke="#3D95CE" stroke-width="0.8" opacity="0.5"/>
+  <text
+    x="204"
+    y="19"
+    font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif"
+    font-size="9"
+    font-weight="700"
+    fill="#3D95CE"
+    text-anchor="middle"
+    letter-spacing="0.5"
+  >JS</text>
+
+</svg>
