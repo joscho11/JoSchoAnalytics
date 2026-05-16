@@ -9,14 +9,17 @@ import sys
 import pandas as pd
 import numpy as np
 import joblib
+from pathlib import Path
 from xgboost import XGBRegressor
 from sklearn.metrics import mean_absolute_error, root_mean_squared_error
 
 # ── Constants ──────────────────────────────────────────────────────────────────
+_HERE = Path(__file__).parent
+
 RANDOM_SEED   = 42
-DATA_PATH     = "features_dataset.csv"
-RAW_PATH      = "raw_dataset.csv"
-MODEL_DIR     = "models"
+DATA_PATH     = _HERE / "features_dataset.csv"
+RAW_PATH      = _HERE / "raw_dataset.csv"
+MODEL_DIR     = _HERE / "models"
 TRAIN_SEASONS = [2020, 2021, 2022, 2023, 2024]
 TEST_SEASON   = 2025
 POSITIONS     = ["QB", "RB", "WR", "TE"]
@@ -99,17 +102,21 @@ for pos in POSITIONS:
     new_pred = model.predict(X_test)
     new_mae  = mean_absolute_error(y_test, new_pred)
     rmse     = root_mean_squared_error(y_test, new_pred)
-    baseline = mean_absolute_error(y_test, test["fantasy_points_half_ppr_roll3"])
+    if "fantasy_points_half_ppr_roll3" in test.columns:
+        baseline_mae = mean_absolute_error(y_test, test["fantasy_points_half_ppr_roll3"])
+    else:
+        baseline_mae = None
 
     save_path = os.path.join(MODEL_DIR, f"{pos.lower()}_model.pkl")
     joblib.dump({"model": model, "feature_cols": pos_feats}, save_path)
 
-    old_str = f"{old_mae:.2f}" if old_mae is not None else "  N/A"
-    delta   = f" ({'+' if new_mae > old_mae else ''}{new_mae - old_mae:.2f})" if old_mae else ""
+    old_str      = f"{old_mae:.2f}" if old_mae is not None else "  N/A"
+    delta        = f" ({new_mae - old_mae:+.2f})" if old_mae else ""
+    baseline_str = f"{baseline_mae:.2f}" if baseline_mae is not None else "  N/A"
     print(f"  {pos:<3} {len(pos_feats):>5} {len(X_train):>6} {len(X_test):>5}  "
-          f"{old_str:>7}  {new_mae:.2f}{delta:<10}  {baseline:.2f}   {rmse:.2f}")
+          f"{old_str:>7}  {new_mae:.2f}{delta:<10}  {baseline_str:>8}   {rmse:.2f}")
 
-    results[pos] = {"mae": new_mae, "rmse": rmse, "baseline": baseline}
+    results[pos] = {"mae": new_mae, "rmse": rmse, "baseline": baseline_mae}
 
 # ── Step 2: Retrain per-stat prop models ───────────────────────────────────────
 print("\n=== Step 2: Per-stat prop models ===")

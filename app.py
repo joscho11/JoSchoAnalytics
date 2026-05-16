@@ -9,7 +9,10 @@ import html as _html
 import re as _re
 import requests as req
 from datetime import datetime as dt
+from pathlib import Path
 import plotly.graph_objects as go
+
+_HERE = Path(__file__).parent
 
 st.set_page_config(
     page_title="BettingEdge | NFL Predictions",
@@ -100,7 +103,7 @@ st.markdown("""
 
 @st.cache_data(ttl=300)
 def load_tracker():
-    df = pd.read_csv('betting/predictions_tracker.csv')
+    df = pd.read_csv(str(_HERE / 'betting' / 'predictions_tracker.csv'))
     df['season'] = df['season'].astype(int)
     df['week']   = df['week'].astype(int)
     return df
@@ -115,7 +118,7 @@ _overall_total   = len(_completed)
 _overall_pct     = round(_overall_correct / _overall_total * 100, 1) if _overall_total > 0 else 0
 
 _hc_correct, _hc_total = 0, 0
-for _af in glob.glob("betting/agent_analysis_*.json"):
+for _af in glob.glob(str(_HERE / "betting" / "agent_analysis_*.json")):
     try:
         _stem = os.path.basename(_af).replace('.json', '').split('_')
         _s, _w = int(_stem[2]), int(_stem[3].replace('week', ''))
@@ -352,7 +355,7 @@ def get_confidence(home, away, game_analysis):
         return 'NO_ANALYSIS'
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
-st.sidebar.image("assets/logo.svg", use_container_width=True)
+st.sidebar.image(str(_HERE / "assets" / "logo.svg"), use_container_width=True)
 st.sidebar.divider()
 
 st.sidebar.markdown(
@@ -456,10 +459,14 @@ with tab1:
     _wk_correct_col = 'ens_model_correct' if ('ens_model_correct' in week_df.columns and week_df['ens_model_correct'].notna().any()) else 'model_correct'
     if results_in:
         correct = int(week_df[_wk_correct_col].sum())
-        total   = len(week_df)
+        total   = int(week_df[_wk_correct_col].notna().sum())
+        _n_settled = total
+        _n_total   = len(week_df)
+        _partial   = _n_settled < _n_total
+        _banner_suffix = f" ({_n_settled} of {_n_total} games settled)" if _partial else ""
         st.success(
-            f"Results are in! Week {week} ATS record: "
-            f"**{correct}-{total - correct}** ({correct/total*100:.0f}%)"
+            f"{'Some results are in!' if _partial else 'Results are in!'} Week {week} ATS record: "
+            f"**{correct}-{total - correct}** ({correct/total*100:.0f}%){_banner_suffix}"
         )
     else:
         st.info("Games not yet played. Check back after the week's results are in.")
@@ -615,7 +622,7 @@ with tab1:
             bot_is_rec = rec_team == bot_team
 
             results_available = results_in and pd.notna(row['actual_margin'])
-            correct           = (row[_correct_col] == 1) if results_in else False
+            correct           = (row[_correct_col] == 1) if results_available else False
             actual            = row['actual_margin'] if results_available else None
 
             if results_available:
@@ -632,7 +639,7 @@ with tab1:
                 top_score = "—"
                 bot_score = "—"
 
-            result_label = ("✅ WIN" if correct else "❌ LOSS") if results_in else ""
+            result_label = ("✅ WIN" if correct else "❌ LOSS") if results_available else ""
 
             if tier == 'HIGH':
                 tier_html = "&nbsp;&nbsp;<span style='background:#1a3a1a;border:1px solid #00c853;border-radius:4px;padding:1px 6px;font-size:11px;color:#00c853'>HIGH</span>"
@@ -861,12 +868,19 @@ with tab2:
         _has_lgbm  = 'lgbm_model_correct'  in season_df.columns and season_df['lgbm_model_correct'].notna().any()
         _has_ct    = 'consensus_tier'      in season_df.columns and season_df['consensus_tier'].notna().any()
 
-        if _has_ens or _has_ridge or _has_lgbm:
+        _has_xgb  = 'model_correct' in season_df.columns and season_df['model_correct'].notna().any()
+
+        if _has_ens or _has_ridge or _has_lgbm or _has_xgb:
             st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
             st.caption("Individual model ATS (direction voters)")
             mc1, mc2, mc3, mc4 = st.columns(4)
-            mc1.markdown(metric_card("XGBoost ATS", f"{total_correct}/{total_games}", f"{total_pct}%",
-                                     color="green" if total_pct >= 52.4 else "red"), unsafe_allow_html=True)
+            if _has_xgb:
+                _xgb_sub = season_df[season_df['model_correct'].notna()]
+                _xgb_c   = int(_xgb_sub['model_correct'].sum())
+                _xgb_t   = len(_xgb_sub)
+                _xgb_pct = round(_xgb_c / _xgb_t * 100, 1) if _xgb_t > 0 else 0
+                mc1.markdown(metric_card("XGBoost ATS", f"{_xgb_c}/{_xgb_t}", f"{_xgb_pct}%",
+                                         color="green" if _xgb_pct >= 52.4 else "red"), unsafe_allow_html=True)
             if _has_ridge:
                 _ridge_sub = season_df[season_df['ridge_model_correct'].notna()]
                 _ridge_c   = int(_ridge_sub['ridge_model_correct'].sum())
@@ -920,8 +934,8 @@ with tab2:
             hovertemplate='%{x}<br>ATS: %{text}<br>Win%%: %{y}%<extra></extra>'
         ))
         fig_bar.add_hline(
-            y=50, line_dash="dash", line_color="#888",
-            annotation_text="Break even (50%)", annotation_position="right"
+            y=52.4, line_dash="dash", line_color="#888",
+            annotation_text="Break even (52.4%)", annotation_position="right"
         )
         fig_bar.update_layout(
             plot_bgcolor='rgba(0,0,0,0)',
@@ -950,8 +964,8 @@ with tab2:
             hovertemplate='%{x}<br>Cumulative Win%%: %{y}%<extra></extra>'
         ))
         fig_line.add_hline(
-            y=50, line_dash="dash", line_color="#888",
-            annotation_text="Break even (50%)", annotation_position="right"
+            y=52.4, line_dash="dash", line_color="#888",
+            annotation_text="Break even (52.4%)", annotation_position="right"
         )
         fig_line.update_layout(
             plot_bgcolor='rgba(0,0,0,0)',
@@ -986,8 +1000,8 @@ with tab2:
             hovertemplate='%{x}<br>%{text}<extra></extra>'
         ))
         fig_edge.add_hline(
-            y=50, line_dash="dash", line_color="#888",
-            annotation_text="Break even", annotation_position="right"
+            y=52.4, line_dash="dash", line_color="#888",
+            annotation_text="Break even (52.4%)", annotation_position="right"
         )
         fig_edge.update_layout(
             plot_bgcolor='rgba(0,0,0,0)',
@@ -1041,8 +1055,8 @@ with tab2:
                 hovertemplate='%{x}<br>%{text}<extra></extra>'
             ))
             fig_ct.add_hline(
-                y=50, line_dash="dash", line_color="#888",
-                annotation_text="Break even", annotation_position="right"
+                y=52.4, line_dash="dash", line_color="#888",
+                annotation_text="Break even (52.4%)", annotation_position="right"
             )
             fig_ct.update_layout(
                 plot_bgcolor='rgba(0,0,0,0)',
@@ -1090,7 +1104,7 @@ with tab3:
 
     st.title(f"🏆 Week {week} Fantasy Projections — Half-PPR")
 
-    proj_files = sorted(glob.glob("fantasy/fantasy_projections/projections_*.csv"), reverse=True)
+    proj_files = sorted(glob.glob(str(_HERE / "fantasy" / "fantasy_projections" / "projections_*.csv")), reverse=True)
 
     # Build a lookup of available projection files
     available = {}
@@ -1354,14 +1368,14 @@ with tab3:
                             "<div style='display:grid;grid-template-columns:1fr 1fr;"
                             "gap:8px;align-items:stretch;margin-top:8px'>"
                             f"<div style='background:#1a2a1a;border-left:3px solid #00c853;{card_style}'>"
-                            f"<b style='color:#e8e8e8'>{up['player']}</b> "
-                            f"<span style='color:#888;font-size:12px'>({up['team']})</span><br>"
-                            f"<span style='color:#aaa;font-size:13px'>{up['reason']}</span>"
+                            f"<b style='color:#e8e8e8'>{_html.escape(up['player'])}</b> "
+                            f"<span style='color:#888;font-size:12px'>({_html.escape(up['team'])})</span><br>"
+                            f"<span style='color:#aaa;font-size:13px'>{_html.escape(up['reason'])}</span>"
                             f"</div>"
                             f"<div style='background:#2a1a1a;border-left:3px solid #ff5252;{card_style}'>"
-                            f"<b style='color:#e8e8e8'>{dn['player']}</b> "
-                            f"<span style='color:#888;font-size:12px'>({dn['team']})</span><br>"
-                            f"<span style='color:#aaa;font-size:13px'>{dn['reason']}</span>"
+                            f"<b style='color:#e8e8e8'>{_html.escape(dn['player'])}</b> "
+                            f"<span style='color:#888;font-size:12px'>({_html.escape(dn['team'])})</span><br>"
+                            f"<span style='color:#aaa;font-size:13px'>{_html.escape(dn['reason'])}</span>"
                             f"</div>"
                             "</div>"
                         )
@@ -2003,7 +2017,7 @@ Standard sportsbook odds are around 110 to win 100. That means you need to win a
 
 To be profitable over time you need to consistently win more than 52.4%, bet games where there's real edge instead of gut feeling, and manage your bankroll properly. A common rule is never betting more than 2 to 5% of your total bankroll on a single game.
 
-The model is currently at **{_overall_pct}% ATS** overall ({_overall_correct}/{_overall_total}){_hc_line}. Both are above break even, which is encouraging. But I want to be clear that past performance doesn't guarantee anything going forward. There will be bad weeks.
+The model is currently at **{_overall_pct}% ATS** overall ({_overall_correct}/{_overall_total}){_hc_line}. {"Both are above break even, which is encouraging." if _hc_pct is not None else "This is above break even, which is encouraging."} But I want to be clear that past performance doesn't guarantee anything going forward. There will be bad weeks.
 
 Never bet more than you can afford to lose.
         """)
@@ -2228,8 +2242,9 @@ The idea is that raw model predictions are a starting point. The agent adds a la
                    f"{int(_best_week.loc[_bw,'sum'])} out of {int(_best_week.loc[_bw,'count'])} correct. "
                    ) if _bw else ""
         _hc_line2 = f" and **{_hc_pct}%** on high confidence picks" if _hc_pct is not None else ""
+        _be_comment2 = "Both numbers are above that." if _hc_pct is not None else "That number is above break even."
         st.markdown(f"""
-The model has gone **{_overall_pct}% ATS** across {_overall_total} completed games ({_overall_correct} correct){_hc_line2}. The break even threshold at standard sportsbook odds is 52.4%, so both numbers are above that.
+The model has gone **{_overall_pct}% ATS** across {_overall_total} completed games ({_overall_correct} correct){_hc_line2}. The break even threshold at standard sportsbook odds is 52.4%, so {_be_comment2}
 
 {_bw_str}
 I want to be honest though. Past performance doesn't guarantee anything going forward. There will be bad weeks. The goal is to track this over multiple seasons and see if the edge holds up.

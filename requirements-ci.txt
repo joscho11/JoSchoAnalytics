@@ -1,0 +1,11 @@
+# CI requirements — only packages needed by predict_betting.ipynb
+# Keep this lean: torch, llama-index, streamlit, pulp, etc. are NOT needed here.
+pandas>=2.0,<3.0
+numpy>=1.24,<2.0
+xgboost>=2.0,<4.0
+scikit-learn>=1.4,<2.0
+lightgbm>=4.0,<5.0
+joblib
+nflreadpy>=0.1.5
+papermill
+ipykernel

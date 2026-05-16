@@ -16,9 +16,6 @@ streamlit>=1.30,<2.0
 plotly
 requests
 
-# DFS optimizer
-pulp
-
 # Notebook execution
 papermill
 ipykernel
@@ -33,5 +30,5 @@ matplotlib
 seaborn
 
 # Model comparison notebook only (not needed for CI)
-lightgbm
+lightgbm>=4.0,<5.0
 torch

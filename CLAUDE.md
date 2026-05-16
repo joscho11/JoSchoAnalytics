@@ -287,6 +287,46 @@ Download the salary CSV from any DK NFL Classic contest lobby → *Export to CSV
 - **Name matching is fuzzy** — review `dk_avg`-flagged players in the pipeline output before finalising the lineup.
 - **Edit notebooks via Python `json.load/dump`** — same constraint as all other notebooks in this repo.
 
+## Next Session Plan (2026-05-15)
+
+Work through these steps in order — each feeds the next.
+
+1. **Fix remaining known issues** (see section below) — especially `starter_qb_availability` and `opp_def` join, which affect feature quality and must be done *before* retraining so you only retrain once.
+2. **Regenerate data + retrain fantasy models** — the cross-season leakage fixes to `features.ipynb` and `data_pipeline.ipynb` are in code but won't take effect until the pipeline is re-run:
+   - `papermill fantasy/data_pipeline.ipynb /tmp/out.ipynb` → fresh `raw_dataset.csv`
+   - `papermill fantasy/features.ipynb /tmp/out.ipynb` → fresh `features_dataset.csv`
+   - `python fantasy/retrain_models.py` → retrain all 12 PKLs
+3. **Markdown + documentation agent** — run an agent to clean up stale notebook cell descriptions, update the CLAUDE.md CV results table with retrained numbers, and remove any remaining references to old model architectures.
+4. **Final code review** — fresh review after all changes and regeneration are complete.
+
+## Known Issues — Not Yet Fixed
+
+These were identified in a full code review (2026-05-15) but require design decisions or significant refactoring. Address before next season.
+
+### Betting Pipeline (`predict_betting.ipynb`)
+
+- **Injury–AllPro name matching is fragile (High)** — `inj_all` is merged to `allpro_wh` on `full_name` string. Name format differences ("Patrick Mahomes II" vs "Patrick Mahomes", accents, suffixes) cause silent mismatches that zero out `home_inj_ap_wt`/`away_inj_ap_wt` for affected players. Fix: join on GSIS player ID instead of name string.
+
+- **`league_rolling_avg_abs_margin_by_week` train/inference mismatch (Medium)** — Training uses a cross-season weekly average (all Week 1 games across 2014–2025). Inference takes `.iloc[-1]` from the current season's completed weeks — a fundamentally different computation. This feature means something different at train vs. predict time. Fix: standardise to a consistent definition (e.g., prior-season average margin for the same week number).
+
+### Fantasy Pipeline (`predict_fantasy.ipynb`)
+
+- **`opp_def` join key is semantically wrong (Medium)** — `opp_def` pulls the last row where a team appears as `opponent_team` in `features_dataset.csv`. But defensive metrics on a player row describe the defense *that player faced*, not the team labelled `opponent_team`. Defensive context at inference time is stale and semantically incorrect. Fix: rebuild defensive rolling metrics from nflreadpy PBP at inference time, same as `data_pipeline.ipynb` Step 3.
+
+- **`coach_win_pct`, `is_new_coach`, `opp_season_win_pct` are stale at inference (Medium)** — All three are pulled from each player's last historical row in `features_dataset.csv` rather than being recomputed for the upcoming week. A coach who had <10 games two seasons ago still shows `is_new_coach=1`. Fix: join current-season coach win% and opponent win% live at inference, same way `opp_def` is joined.
+
+- **`starter_qb_availability` is always 1.0 — `starter_proxy` uses targets for QBs (High)** — `data_pipeline.ipynb` identifies QB1 by highest season targets, but QBs have 0 targets. The join silently fails for all teams, and `starter_qb_availability` defaults to 1.0 everywhere regardless of actual QB injury status. Fix: use depth chart rank or `nfl.load_depth_charts()` to identify the starting QB instead of targets.
+
+- **`snap_pct` rolling groupby may have cross-season leakage (Low)** — All other rolling computations in `data_pipeline.ipynb` were fixed to `groupby(["team", "season"])` (2026-05-15), but the `snap_pct` cell could not be confirmed due to file size. Inspect and fix if it uses `groupby("team")` alone.
+
+### App (`app.py`)
+
+- **Sleeper API makes up to 180 serial HTTP calls on cache miss (Medium)** — `_fetch_sleeper_history` loops 18 weeks × up to 10 seasons with sequential requests. On first load or cache miss the app can appear hung for minutes. Fix: parallelise with `concurrent.futures.ThreadPoolExecutor` or add a per-season early-exit when the API returns empty.
+
+- **DK lineup upload CSV format may be wrong (Medium)** — `dfs_pipeline.ipynb` exports only a `Name` column. DraftKings' actual lineup import format requires position slots as separate columns (QB, RB, RB, WR, WR, WR, TE, FLEX, DST). Verify against DK's current template before using the export.
+
+---
+
 ### Next Steps
 
 1. **DST projection model** — train on defensive EPA allowed, implied team total, home/away, and surface. Replace the `dk_avg` fallback for DST so all 9 slots use our model.

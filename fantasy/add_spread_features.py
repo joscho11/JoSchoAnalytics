@@ -46,12 +46,14 @@ game_ctx = pd.concat([home, away], ignore_index=True)[
 df = df.drop(columns=["total_line", "team_spread"], errors="ignore")
 df = df.merge(game_ctx, on=["season", "week", "team"], how="left")
 
-null_total  = df["total_line"].isna().mean()
-null_spread = df["team_spread"].isna().mean()
-print(f"  total_line  null rate: {null_total:.1%}")
-print(f"  team_spread null rate: {null_spread:.1%}")
+spread_null_rate = df["team_spread"].isna().mean()
+total_null_rate  = df["total_line"].isna().mean()
+print(f"  team_spread null rate: {spread_null_rate:.1%}")
+print(f"  total_line  null rate: {total_null_rate:.1%}")
+if spread_null_rate > 0.05 or total_null_rate > 0.05:
+    raise ValueError(f"Null rate too high — schedule merge likely failed. Not saving.")
 
-# Fill nulls with medians (early-season games occasionally missing lines)
+# Fill residual nulls with medians (early-season games occasionally missing lines)
 df["total_line"]  = df["total_line"].fillna(df["total_line"].median())
 df["team_spread"] = df["team_spread"].fillna(0.0)
 
@@ -122,9 +124,9 @@ for pos in POSITIONS:
                 os.path.join(MODEL_DIR, f"{pos.lower()}_model.pkl"))
 
     old_str = f"{old_mae:.2f}" if old_mae else "  N/A"
-    delta   = f"({'+' if new_mae >= (old_mae or new_mae) else ''}{new_mae - old_mae:.2f})" if old_mae else ""
+    delta   = f" ({new_mae - old_mae:+.2f})" if old_mae else ""
     print(f"  {pos:<3} {len(pos_feats):>5} {len(X_train):>6} {len(X_test):>5}  "
-          f"{old_str:>7}  {new_mae:.2f} {delta:<10}  {baseline:.2f}")
+          f"{old_str:>7}  {new_mae:.2f}{delta:<10}  {baseline:.2f}")
 
 print(f"\n=== Per-stat prop models ===")
 print(f"{'Model':<25} {'MAE':>7}  {'Old MAE':>7}")
@@ -178,7 +180,7 @@ for pos, model_name, raw_col in STAT_SPECS:
                 os.path.join(MODEL_DIR, f"{model_name}_model.pkl"))
 
     old_str = f"{old_mae:.2f}" if old_mae else "  N/A"
-    delta   = f"({'+' if new_mae >= (old_mae or new_mae) else ''}{new_mae - old_mae:.2f})" if old_mae else ""
-    print(f"  {model_name:<23} {new_mae:>7.2f}  {old_str:>7} {delta}")
+    delta   = f" ({new_mae - old_mae:+.2f})" if old_mae else ""
+    print(f"  {model_name:<23} {new_mae:>7.2f}  {old_str:>7}{delta}")
 
 print("\nDone.")
