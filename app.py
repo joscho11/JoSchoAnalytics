@@ -2188,21 +2188,25 @@ If you're looking at a past week, the actuals shown are the real NFL stats for t
 
     with st.expander("How does the prediction model work?"):
         st.markdown("""
-The prediction system uses three models trained on over 4,300 NFL games going back 15+ seasons. The primary model is an **Ensemble (fixed75)** — a fixed-weight blend of 75% XGBoost and 25% Ridge regression. A standalone **XGBoost** model and a standalone **Ridge** model serve as the two additional votes.
+The prediction system uses four models trained on over 4,300 NFL games going back 15+ seasons.
 
-Each game is evaluated by all three models. The result is assigned one of three tiers:
+**The primary model** is the **Ensemble (fixed75)** — a fixed-weight blend of 75% XGBoost and 25% Ridge regression. It sets the predicted edge for each game and determines the sort order.
 
-- **HIGH** — all three models agree on the same side *and* the Ensemble edge is 3+ points
-- **MEDIUM** — all three models agree on the same side *and* the Ensemble edge is 1–3 points
-- **PASS** — the models disagree on direction, *or* they agree but the Ensemble edge is under 1 point
+**The three direction voters** are **XGBoost**, **Ridge**, and **LightGBM** — three independent models that each predict which side of the spread they favor. LightGBM grows trees leaf-first rather than level-first, giving it a genuinely different perspective from XGBoost.
 
-Agreement alone isn't enough to get a HIGH or MEDIUM — the Ensemble still needs to show a meaningful edge. And a big edge alone isn't enough either — all three models need to point the same way.
+Each game is evaluated by all four models. The consensus tier is assigned based on voter agreement plus Ensemble edge size:
+
+- **HIGH** — all three voters agree on direction *and* the Ensemble edge is 3+ points
+- **MEDIUM** — all three voters agree on direction *and* the Ensemble edge is 1–3 points
+- **PASS** — the voters disagree on direction, *or* they agree but the Ensemble edge is under 1 point
+
+Agreement alone isn't enough — the Ensemble still needs to show a meaningful edge. And a big edge alone isn't enough — all three voters need to point the same way.
 
 I engineered 79 features for each game. The main ones are rolling EPA (Expected Points Added) which measures offensive and defensive efficiency, strength of schedule, All-Pro roster quality as a proxy for talent, injury impact, QB changes, coaching history, and home field advantage.
 
 Each model predicts the margin of victory for the home team. That predicted margin gets compared to the Vegas spread to calculate edge. If the Ensemble predicts the home team wins by 10 and the spread is 7.5, the edge is 2.5 points in favor of betting the home team.
 
-Models are retrained periodically as new data comes in and the All-Pro data gets updated manually each January.
+Models are retrained each offseason as new data comes in. The All-Pro roster data is updated manually each January.
         """)
 
     with st.expander("What is the LLM agent and what does it do?"):
@@ -2235,9 +2239,11 @@ I want to be honest though. Past performance doesn't guarantee anything going fo
 
     with st.expander("What data does it use?"):
         st.markdown("""
-The model pulls play by play and schedule data from nflreadpy going back to 1999. The All-Pro data is a custom CSV I built covering selections from 1997 to 2025, which gets used as a proxy for roster talent.
+The model pulls play-by-play and schedule data from nflreadpy going back to 1999. Real weekly injury reports (from `nfl.load_injuries()`) feed directly into the feature set — Out and Doubtful players reduce a team's weighted All-Pro score, which is one of the stronger predictors.
 
-The agent currently uses mock injury and line movement data for demonstration purposes. Integrating real time APIs for those two data sources is on the roadmap for the 2026 season, which would make the agent's analysis much more accurate.
+The All-Pro data is a custom CSV covering selections from 1997 to 2025. It's used as a proxy for roster talent: players are weighted over a 3-year lookback (4/2/1) so recent selections matter more. This gets updated manually each January.
+
+The agent currently uses mock injury and line movement data for demonstration purposes. Integrating real-time APIs for those two sources is on the roadmap for the 2026 season.
         """)
 
     with st.expander("Is this financial advice?"):
