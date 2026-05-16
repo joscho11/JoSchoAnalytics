@@ -40,7 +40,17 @@
       "Bash(mv \"betting/BettingEdge_v2.ipynb\" \"betting/archive/BettingEdge_v2.ipynb\")",
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "WebSearch",
+      "Bash(pip install *)",
+      "WebFetch(domain:www.draftkings.com)",
+      "WebFetch(domain:dfshub.com)",
+      "WebFetch(domain:7edge.ai)",
+      "WebFetch(domain:www.lineups.com)",
+      "WebFetch(domain:sportsdata.io)",
+      "WebFetch(domain:www.4for4.com)",
+      "Bash(papermill fantasy/dfs/dfs_pipeline.ipynb /tmp/dfs_out.ipynb -p CSV_PATH \"fantasy/dfs/dk_salaries_2025_week10_synthetic.csv\" -p SEASON 2025 -p WEEK 10 -p USE_ROTOGURU False)",
+      "Bash(Write-Host \"Deleted temp files\")"
     ]
   }
 }

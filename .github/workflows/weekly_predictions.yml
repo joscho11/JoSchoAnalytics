@@ -27,6 +27,10 @@ on:
         required: false
         type: number
 
+concurrency:
+  group: predictions
+  cancel-in-progress: false
+
 jobs:
   predict:
     runs-on: ubuntu-latest
@@ -75,6 +79,7 @@ jobs:
           path: /tmp/predict_out.ipynb
 
       - name: Commit updated tracker
+        if: success()
         run: |
           git config --global user.name  "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"

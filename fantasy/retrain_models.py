@@ -20,8 +20,9 @@ RANDOM_SEED   = 42
 DATA_PATH     = _HERE / "features_dataset.csv"
 RAW_PATH      = _HERE / "raw_dataset.csv"
 MODEL_DIR     = _HERE / "models"
+# UPDATE ANNUALLY: add completed season to TRAIN_SEASONS; TEST_SEASON auto-derives.
 TRAIN_SEASONS = [2020, 2021, 2022, 2023, 2024]
-TEST_SEASON   = 2025
+TEST_SEASON   = max(TRAIN_SEASONS) + 1
 POSITIONS     = ["QB", "RB", "WR", "TE"]
 
 np.random.seed(RANDOM_SEED)
@@ -96,8 +97,13 @@ for pos in POSITIONS:
         old_pred = old_m["model"].predict(test[old_m["feature_cols"]])
         old_mae  = mean_absolute_error(y_test, old_pred)
 
+    val_cut = int(len(X_train) * 0.85)
+    X_tr85, y_tr85 = X_train.iloc[:val_cut], y_train.iloc[:val_cut]
+    X_val,  y_val  = X_train.iloc[val_cut:], y_train.iloc[val_cut:]
+
     model = XGBRegressor(**XGB_PARAMS)
-    model.fit(X_train, y_train, eval_set=[(X_test, y_test)], verbose=False)
+    model.fit(X_tr85, y_tr85, eval_set=[(X_val, y_val)],
+              early_stopping_rounds=25, verbose=False)
 
     new_pred = model.predict(X_test)
     new_mae  = mean_absolute_error(y_test, new_pred)
@@ -141,8 +147,11 @@ def train_stat_model(features_df, pos, stat_name, target_col, pos_feats):
     X_tr, y_tr = train[pos_feats], train[tgt]
     X_te, y_te = test[pos_feats],  test[tgt]
 
+    val_cut_s = int(len(X_tr) * 0.85)
     model = XGBRegressor(**XGB_PARAMS)
-    model.fit(X_tr, y_tr, eval_set=[(X_te, y_te)], verbose=False)
+    model.fit(X_tr.iloc[:val_cut_s], y_tr.iloc[:val_cut_s],
+              eval_set=[(X_tr.iloc[val_cut_s:], y_tr.iloc[val_cut_s:])],
+              early_stopping_rounds=25, verbose=False)
 
     preds = np.clip(model.predict(X_te), 0, None)
     mae  = mean_absolute_error(y_te, preds)

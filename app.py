@@ -11,6 +11,7 @@ import requests as req
 from datetime import datetime as dt
 from pathlib import Path
 import plotly.graph_objects as go
+import concurrent.futures as _cf
 
 _HERE = Path(__file__).parent
 
@@ -103,12 +104,20 @@ st.markdown("""
 
 @st.cache_data(ttl=300)
 def load_tracker():
-    df = pd.read_csv(str(_HERE / 'betting' / 'predictions_tracker.csv'))
+    path = str(_HERE / 'betting' / 'predictions_tracker.csv')
+    df = pd.read_csv(path)
     df['season'] = df['season'].astype(int)
     df['week']   = df['week'].astype(int)
     return df
 
-df = load_tracker()
+try:
+    df = load_tracker()
+except FileNotFoundError:
+    st.error("predictions_tracker.csv not found. Run the prediction pipeline first.")
+    st.stop()
+except Exception as _load_err:
+    st.error(f"Failed to load predictions data: {_load_err}")
+    st.stop()
 
 # ── Live accuracy stats (used in Help tab) ────────────────────────────────────
 _acc_col   = 'ens_model_correct' if 'ens_model_correct' in df.columns and df['ens_model_correct'].notna().any() else 'model_correct'
@@ -126,7 +135,7 @@ for _af in glob.glob(str(_HERE / "betting" / "agent_analysis_*.json")):
         with open(_af) as _f:
             _ga = json.load(_f)
         for _, _r in _wdf.iterrows():
-            _text = _ga.get(f"{_r['home_team']}_{_r['away_team']}", '')
+            _text = _ga.get('game_analysis', {}).get(f"{_r['home_team']}_{_r['away_team']}", '')
             if '🟢' in _text:
                 _hc_total += 1
                 _hc_correct += int(_r[_acc_col])
@@ -176,15 +185,20 @@ def load_actual_stats(season: int, week: int) -> dict:
             'te_rec_yds':  _col('TE', 'receiving_yards'),
             'te_recs':     _col('TE', 'receptions'),
         }
-    except Exception:
+    except Exception as _e:
+        import logging as _logging
+        _logging.warning(f"load_actual_stats({season}, {week}) failed: {_e}")
         return {}
 
 @st.cache_data(ttl=3600)
 def load_agent_analysis(week: int, season: int) -> dict:
-    cache_file = f"betting/agent_analysis_{season}_week{week}.json"
+    cache_file = str(_HERE / "betting" / f"agent_analysis_{season}_week{week}.json")
     if os.path.exists(cache_file):
-        with open(cache_file, 'r') as f:
-            return json.load(f)
+        try:
+            with open(cache_file, 'r') as f:
+                return json.load(f)
+        except (json.JSONDecodeError, OSError):
+            return None
     return None
 
 @st.cache_data(ttl=3600)
@@ -280,16 +294,29 @@ def _fetch_sleeper_history(start_league_id: str) -> dict:
         champ = _by_rid(champion_rid)  if champion_rid  else {"username": "?", "team_name": ""}
         ruup  = _by_rid(runner_up_rid) if runner_up_rid else {"username": "?", "team_name": ""}
 
-        # Fetch weekly matchups
+        # Fetch weekly matchups — parallelised to avoid 18 serial HTTP calls per season
         _lg_settings  = info.get("settings") or {}
         _playoff_start = int(_lg_settings.get("playoff_week_start") or 15)
+
+        def _fetch_wk(wk):
+            try:
+                r = req.get(
+                    f"https://api.sleeper.app/v1/league/{current_id}/matchups/{wk}",
+                    timeout=15,
+                )
+                r.raise_for_status()
+                return wk, r.json()
+            except Exception:
+                return wk, None
+
+        with _cf.ThreadPoolExecutor(max_workers=18) as _pool:
+            _wk_data = dict(_pool.map(_fetch_wk, range(1, 19)))
+
         _matchups_season: list = []
         for _wk in range(1, 19):
-            _wk_raw = _sleeper_get(
-                f"https://api.sleeper.app/v1/league/{current_id}/matchups/{_wk}"
-            )
+            _wk_raw = _wk_data.get(_wk)
             if not _wk_raw or not isinstance(_wk_raw, list):
-                break
+                continue
             _grps: dict = {}
             for _entry in _wk_raw:
                 if not isinstance(_entry, dict):
@@ -437,14 +464,19 @@ season_active = (now.month >= 9) or (now.month <= 2)
 if not season_active:
     current_season = now.year - 1 if now.month < 9 else now.year
     next_season    = current_season + 1
+    _agent_files   = sorted(glob.glob(str(_HERE / "betting" / f"agent_analysis_{current_season}_week*.json")))
+    _demo_hint     = ""
+    if _agent_files:
+        _demo_wk = os.path.basename(_agent_files[-1]).replace('.json', '').split('week')[-1]
+        _demo_hint = f" Look at Week {_demo_wk} for demo agent analysis."
     st.info(
-        f"🏈 **NFL Offseason**: The {current_season} season has concluded. Look at WEEK 10 for demo agent analysis. "
+        f"🏈 **NFL Offseason**: The {current_season} season has concluded.{_demo_hint} "
         f"Predictions will return when the {next_season} season kicks off in September. "
         "Browse past predictions using the sidebar."
     )
 
 # ── Tabs ──────────────────────────────────────────────────────────────────────
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["🏈 Weekly Predictions", "📈 Season Performance", "🏆 Fantasy", "🏅 League History", "❓ Help & Guide"])
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["🏈 Weekly Predictions", "📈 Season Performance", "🏆 Fantasy", "🎯 DFS", "🏅 League History", "❓ Help & Guide"])
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 1: WEEKLY PREDICTIONS
@@ -506,9 +538,11 @@ with tab1:
                               color="green" if _avg_edge >= 1.5 else "blue"), unsafe_allow_html=True)
 
     if results_in and len(filtered_df) > 0:
-        sc  = int(filtered_df[_correct_col].sum())
-        pct = sc / len(filtered_df) * 100
-        col4.markdown(metric_card("ATS Record", f"{sc}/{len(filtered_df)}",
+        _settled_mask = filtered_df[_correct_col].notna()
+        sc  = int(filtered_df.loc[_settled_mask, _correct_col].sum())
+        _n_settled_filt = _settled_mask.sum()
+        pct = sc / _n_settled_filt * 100 if _n_settled_filt > 0 else 0
+        col4.markdown(metric_card("ATS Record", f"{sc}/{_n_settled_filt}",
                                   f"{pct:.0f}%",
                                   color="green" if pct >= 52.4 else "red"), unsafe_allow_html=True)
     else:
@@ -622,7 +656,7 @@ with tab1:
             bot_is_rec = rec_team == bot_team
 
             results_available = results_in and pd.notna(row['actual_margin'])
-            correct           = (row[_correct_col] == 1) if results_available else False
+            _row_correct      = (row[_correct_col] == 1) if results_available else False
             actual            = row['actual_margin'] if results_available else None
 
             if results_available:
@@ -639,7 +673,7 @@ with tab1:
                 top_score = "—"
                 bot_score = "—"
 
-            result_label = ("✅ WIN" if correct else "❌ LOSS") if results_available else ""
+            result_label = ("✅ WIN" if _row_correct else "❌ LOSS") if results_available else ""
 
             if tier == 'HIGH':
                 tier_html = "&nbsp;&nbsp;<span style='background:#1a3a1a;border:1px solid #00c853;border-radius:4px;padding:1px 6px;font-size:11px;color:#00c853'>HIGH</span>"
@@ -758,28 +792,29 @@ with tab1:
         )
 
         if results_in:
-            model_correct = int(week_df_eval[_correct_col].sum())
-            model_total   = len(week_df_eval)
-            model_pct     = round(model_correct / model_total * 100, 1)
+            _eval_settled = week_df_eval[_correct_col].notna()
+            model_correct = int(week_df_eval.loc[_eval_settled, _correct_col].sum())
+            model_total   = int(_eval_settled.sum())
+            model_pct     = round(model_correct / model_total * 100, 1) if model_total > 0 else 0
 
             high_df      = week_df_eval[week_df_eval['agent_confidence'] == 'HIGH']
             high_correct = int(high_df[_correct_col].sum())
-            high_total   = len(high_df)
+            high_total   = int(high_df[_correct_col].notna().sum())
             high_pct     = round(high_correct / high_total * 100, 1) if high_total > 0 else 0
 
             med_df      = week_df_eval[week_df_eval['agent_confidence'] == 'MEDIUM']
             med_correct = int(med_df[_correct_col].sum())
-            med_total   = len(med_df)
+            med_total   = int(med_df[_correct_col].notna().sum())
             med_pct     = round(med_correct / med_total * 100, 1) if med_total > 0 else 0
 
             bet_df      = week_df_eval[week_df_eval['agent_confidence'].isin(['HIGH', 'MEDIUM'])]
             bet_correct = int(bet_df[_correct_col].sum())
-            bet_total   = len(bet_df)
+            bet_total   = int(bet_df[_correct_col].notna().sum())
             bet_pct     = round(bet_correct / bet_total * 100, 1) if bet_total > 0 else 0
 
             skip_df      = week_df_eval[week_df_eval['agent_confidence'] == 'SKIP']
             skip_correct = int(skip_df[_correct_col].sum())
-            skip_total   = len(skip_df)
+            skip_total   = int(skip_df[_correct_col].notna().sum())
             skip_pct     = round(skip_correct / skip_total * 100, 1) if skip_total > 0 else 0
 
             c1, c2, c3, c4 = st.columns(4)
@@ -832,22 +867,22 @@ with tab2:
         _s_correct = 'ens_model_correct' if ('ens_model_correct' in season_df.columns and season_df['ens_model_correct'].notna().any()) else 'model_correct'
 
         total_correct = int(season_df[_s_correct].sum())
-        total_games   = len(season_df)
-        total_pct     = round(total_correct / total_games * 100, 1)
+        total_games   = int(season_df[_s_correct].notna().sum())
+        total_pct     = round(total_correct / total_games * 100, 1) if total_games > 0 else 0
 
         high_edge_df  = season_df[season_df[_s_edge].abs() >= 3]
         he_correct    = int(high_edge_df[_s_correct].sum())
-        he_total      = len(high_edge_df)
+        he_total      = int(high_edge_df[_s_correct].notna().sum())
         he_pct        = round(he_correct / he_total * 100, 1) if he_total > 0 else 0
 
         med_edge_df   = season_df[(season_df[_s_edge].abs() >= 1) & (season_df[_s_edge].abs() < 3)]
         me_correct    = int(med_edge_df[_s_correct].sum())
-        me_total      = len(med_edge_df)
+        me_total      = int(med_edge_df[_s_correct].notna().sum())
         me_pct        = round(me_correct / me_total * 100, 1) if me_total > 0 else 0
 
         low_edge_df   = season_df[season_df[_s_edge].abs() < 1]
         le_correct    = int(low_edge_df[_s_correct].sum())
-        le_total      = len(low_edge_df)
+        le_total      = int(low_edge_df[_s_correct].notna().sum())
         le_pct        = round(le_correct / le_total * 100, 1) if le_total > 0 else 0
 
         c1, c2, c3, c4 = st.columns(4)
@@ -1024,9 +1059,9 @@ with tab2:
             _ct_med  = season_df[season_df['consensus_tier'] == 'MEDIUM']
             _ct_pass = season_df[season_df['consensus_tier'] == 'PASS']
 
-            _ch_c = int(_ct_high[_s_correct].sum()); _ch_t = len(_ct_high)
-            _cm_c = int(_ct_med[_s_correct].sum());  _cm_t = len(_ct_med)
-            _cp_c = int(_ct_pass[_s_correct].sum()); _cp_t = len(_ct_pass)
+            _ch_c = int(_ct_high[_s_correct].sum()); _ch_t = int(_ct_high[_s_correct].notna().sum())
+            _cm_c = int(_ct_med[_s_correct].sum());  _cm_t = int(_ct_med[_s_correct].notna().sum())
+            _cp_c = int(_ct_pass[_s_correct].sum()); _cp_t = int(_ct_pass[_s_correct].notna().sum())
 
             _ch_pct = round(_ch_c / _ch_t * 100, 1) if _ch_t > 0 else 0
             _cm_pct = round(_cm_c / _cm_t * 100, 1) if _cm_t > 0 else 0
@@ -1147,11 +1182,14 @@ with tab3:
         actual_te_recs     = _actuals.get('te_recs',     {})
 
         # Load cached agent analysis if available
-        fa_path = f"fantasy/agent_analysis_{season}_week{week}.json"
+        fa_path = str(_HERE / "fantasy" / f"agent_analysis_{season}_week{week}.json")
         fantasy_analysis = None
-        if os.path.exists(fa_path):
-            with open(fa_path) as _f:
-                fantasy_analysis = json.load(_f)
+        try:
+            if os.path.exists(fa_path):
+                with open(fa_path) as _f:
+                    fantasy_analysis = json.load(_f)
+        except (IOError, json.JSONDecodeError):
+            fantasy_analysis = None
 
         if actuals_in:
             st.success(f"Results are in! Actual stats are now shown alongside projections for Week {week}.")
@@ -1175,12 +1213,16 @@ with tab3:
             return "❌"
 
         def ordinal(n):
+            if pd.isna(n):
+                return "—"
             n = int(n)
             if 11 <= (n % 100) <= 13:
                 return f"{n}th"
             return f"{n}{['th','st','nd','rd','th'][min(n % 10, 4)]}"
 
         def rank_color(rank, total=32):
+            if pd.isna(rank):
+                return ""
             ratio = (total - int(rank)) / (total - 1)
             r = int(255 * (1 - ratio))
             g = int(82 + 118 * ratio)
@@ -1192,6 +1234,12 @@ with tab3:
             g = int(82 + 118 * ratio)
             return f"color: rgb({r},{g},82); font-weight: 600"
 
+        _early_req = ["position", "depth_chart_position", "projected_pts"]
+        _early_missing = [c for c in _early_req if c not in proj_df.columns]
+        if _early_missing:
+            st.warning(f"Projection CSV is missing columns: {_early_missing}. Re-run predict_fantasy.ipynb.")
+            st.stop()
+
         for ptab, pos in zip([ptab_qb, ptab_rb, ptab_wr, ptab_te], ["QB", "RB", "WR", "TE"]):
             with ptab:
                 pos_subset = proj_df[proj_df["position"] == pos]
@@ -1201,7 +1249,7 @@ with tab3:
                 top_n = 40 if pos in ("RB", "WR") else 20
                 pos_df = pos_subset.sort_values("projected_pts", ascending=False)
                 if player_search:
-                    mask = pos_df["player_display_name"].str.contains(player_search, case=False, na=False)
+                    mask = pos_df["player_display_name"].str.contains(player_search, case=False, na=False, regex=False)
                     pos_df = pos_df[mask]
                 else:
                     pos_df = pos_df.head(top_n)
@@ -1213,10 +1261,15 @@ with tab3:
                 has_wr_stats = pos == "WR" and "pred_wr_rec_yards" in pos_df.columns
                 has_te_stats = pos == "TE" and "pred_te_rec_yards" in pos_df.columns
 
-                display = pos_df[["player_id", "player_display_name", "team", "opponent_team",
-                                   "projected_pts", "injury_status_score",
-                                   "is_home", "off_epa_roll4", "off_epa_rank",
-                                   "implied_team_total"]].copy()
+                _req_cols = ["player_id", "player_display_name", "team", "opponent_team",
+                             "projected_pts", "injury_status_score",
+                             "is_home", "off_epa_roll4", "off_epa_rank",
+                             "implied_team_total"]
+                _missing_req = [c for c in _req_cols if c not in pos_df.columns]
+                if _missing_req:
+                    st.warning(f"Projection CSV is missing columns: {_missing_req}. Re-run predict_fantasy.ipynb.")
+                    continue
+                display = pos_df[_req_cols].copy()
                 if has_qb_stats:
                     display["Proj Pass Yds"] = pos_df["pred_qb_pass_yards"].fillna(0).round(0).astype(int)
                     display["Proj Rush Yds"] = pos_df["pred_qb_rush_yards"].fillna(0).round(0).astype(int)
@@ -1387,9 +1440,47 @@ with tab3:
                     )
 
 # ══════════════════════════════════════════════════════════════════════════════
-# TAB 4: LEAGUE HISTORY
+# TAB 4: DFS
 # ══════════════════════════════════════════════════════════════════════════════
 with tab4:
+
+    st.title("🎯 DFS Optimizer")
+    st.caption("DraftKings NFL Classic lineup optimizer — powered by the same weekly projections as the Fantasy tab.")
+
+    st.divider()
+
+    st.info(
+        "**Coming soon — launching with the 2026 NFL season.**\n\n"
+        "The DFS optimizer is currently in development. When live, this tab will let you:\n\n"
+        "- Browse this week's projected DraftKings points for every skill-position player\n"
+        "- Upload your DraftKings salary CSV (exported from any NFL Classic contest)\n"
+        "- Generate an ILP-optimized 9-player lineup (QB / 2 RB / 3 WR / 1 TE / FLEX / DST)\n"
+        "- Lock or exclude specific players and re-run in one click\n"
+        "- Download the finished lineup ready for DraftKings import\n\n"
+        "Projections are converted to full DraftKings Classic scoring automatically, "
+        "including the full-PPR reception bonus and milestone bonuses "
+        "(300+ passing yards, 100+ rushing yards, 100+ receiving yards)."
+    )
+
+    st.divider()
+
+    col_a, col_b, col_c = st.columns(3)
+    with col_a:
+        st.metric("Scoring", "DK Classic (full PPR)")
+    with col_b:
+        st.metric("Salary cap", "$50,000")
+    with col_c:
+        st.metric("Roster slots", "9 (QB/2RB/3WR/TE/FLEX/DST)")
+
+    st.caption(
+        "Under the hood: `fantasy/dfs/dfs_pipeline.ipynb` — "
+        "integer linear program via PuLP, projections from our per-position XGBoost models."
+    )
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB 5: LEAGUE HISTORY
+# ══════════════════════════════════════════════════════════════════════════════
+with tab5:
 
     st.title("🏅 Fantasy League History")
 
@@ -1674,7 +1765,8 @@ with tab4:
                     _h2h[_kh][_rh["username"]] = _h2h[_kh].get(_rh["username"], 0) + 1
                     _h2h[_kh].setdefault(_rh["opp"], 0)
 
-                _mgrs_sorted = sorted(_all_managers)
+                _h2h_managers = sorted(set(r["username"] for r in _filt_records)) if _season_filter != "All Time" else _all_managers
+                _mgrs_sorted = _h2h_managers
                 _matrix_rows = []
                 for _um in _mgrs_sorted:
                     _row_d = {"Manager": _um}
@@ -1696,8 +1788,12 @@ with tab4:
                 _rc_scope = _season_filter if _season_filter != "All Time" else "all-time"
                 st.subheader("Manager Report Cards")
 
-                _sel_mgr = st.selectbox("Select a manager", _all_managers, key="lh_manager")
-                _mgr_games = [r for r in _filt_records if r["username"] == _sel_mgr]
+                if not _h2h_managers:
+                    st.info("No managers found for this filter.")
+                    _sel_mgr = None
+                else:
+                    _sel_mgr = st.selectbox("Select a manager", _h2h_managers, key="lh_manager")
+                _mgr_games = [r for r in _filt_records if r["username"] == _sel_mgr] if _sel_mgr else []
 
                 # Season history always shows full career (not filtered)
                 _mgr_season_rows: dict = {}
@@ -1950,9 +2046,9 @@ with tab4:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# TAB 5: HELP & GUIDE
+# TAB 6: HELP & GUIDE
 # ══════════════════════════════════════════════════════════════════════════════
-with tab5:
+with tab6:
 
     st.title("❓ Help & Guide")
     st.caption("New to sports betting or just not sure how this site works? This page covers everything.")
