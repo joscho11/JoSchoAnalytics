@@ -868,12 +868,13 @@ with tab2:
 
         _has_ens   = 'ens_model_correct'   in season_df.columns and season_df['ens_model_correct'].notna().any()
         _has_ridge = 'ridge_model_correct' in season_df.columns and season_df['ridge_model_correct'].notna().any()
+        _has_lgbm  = 'lgbm_model_correct'  in season_df.columns and season_df['lgbm_model_correct'].notna().any()
         _has_ct    = 'consensus_tier'      in season_df.columns and season_df['consensus_tier'].notna().any()
 
-        if _has_ens or _has_ridge:
+        if _has_ens or _has_ridge or _has_lgbm:
             st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
-            st.caption("Model breakdown (games with new pipeline predictions)")
-            mc1, mc2, mc3 = st.columns(3)
+            st.caption("Individual model ATS (direction voters)")
+            mc1, mc2, mc3, mc4 = st.columns(4)
             mc1.markdown(metric_card("XGBoost ATS", f"{total_correct}/{total_games}", f"{total_pct}%",
                                      color="green" if total_pct >= 52.4 else "red"), unsafe_allow_html=True)
             if _has_ridge:
@@ -883,12 +884,19 @@ with tab2:
                 _ridge_pct = round(_ridge_c / _ridge_t * 100, 1) if _ridge_t > 0 else 0
                 mc2.markdown(metric_card("Ridge ATS", f"{_ridge_c}/{_ridge_t}", f"{_ridge_pct}%",
                                          color="green" if _ridge_pct >= 52.4 else "red"), unsafe_allow_html=True)
+            if _has_lgbm:
+                _lgbm_sub = season_df[season_df['lgbm_model_correct'].notna()]
+                _lgbm_c   = int(_lgbm_sub['lgbm_model_correct'].sum())
+                _lgbm_t   = len(_lgbm_sub)
+                _lgbm_pct = round(_lgbm_c / _lgbm_t * 100, 1) if _lgbm_t > 0 else 0
+                mc3.markdown(metric_card("LightGBM ATS", f"{_lgbm_c}/{_lgbm_t}", f"{_lgbm_pct}%",
+                                         color="green" if _lgbm_pct >= 52.4 else "red"), unsafe_allow_html=True)
             if _has_ens:
                 _ens_sub = season_df[season_df['ens_model_correct'].notna()]
                 _ens_c   = int(_ens_sub['ens_model_correct'].sum())
                 _ens_t   = len(_ens_sub)
                 _ens_pct = round(_ens_c / _ens_t * 100, 1) if _ens_t > 0 else 0
-                mc3.markdown(metric_card("Ensemble ATS", f"{_ens_c}/{_ens_t}", f"{_ens_pct}%",
+                mc4.markdown(metric_card("Ensemble ATS", f"{_ens_c}/{_ens_t}", f"{_ens_pct}%",
                                          color="green" if _ens_pct >= 52.4 else "red"), unsafe_allow_html=True)
 
         st.divider()
