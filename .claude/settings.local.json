@@ -37,7 +37,10 @@
       "Bash(git checkout *)",
       "Bash(python3 *)",
       "Bash(mv \"betting/BettingEdgeContinued.ipynb\" \"betting/archive/BettingEdgeContinued.ipynb\")",
-      "Bash(mv \"betting/BettingEdge_v2.ipynb\" \"betting/archive/BettingEdge_v2.ipynb\")"
+      "Bash(mv \"betting/BettingEdge_v2.ipynb\" \"betting/archive/BettingEdge_v2.ipynb\")",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)"
     ]
   }
 }
