@@ -51,10 +51,10 @@ pip install -r requirements.txt
   - (Ridge is extracted from `ensemble_prod_model.pkl["ridge_model"]` at runtime — no separate pkl needed.)
 - **`betting/archive/`** — Old model files and retired notebooks: `betting_model.pkl` (original XGBoost pkl), `BettingEdge_v2.ipynb`, `BettingEdgeContinued.ipynb`.
 - **`betting/predictions_tracker.csv`** — Master log of all predictions and outcomes. Auto-committed by GitHub Actions.
-- **`betting/model_comparison.ipynb`** — Model comparison notebook (32 cells). Rebuilds the exact 79-feature production dataset from scratch, evaluates 5 model architectures + 3 ensemble variants + walk-forward CV. See dedicated section below.
+- **`betting/model_comparison.ipynb`** — Model comparison notebook (32 cells). Rebuilds the exact 77-feature production dataset from scratch, evaluates 5 model architectures + 3 ensemble variants + walk-forward CV. See dedicated section below.
 
 ### Feature Groups (betting/predict_betting.ipynb — helpers cell)
-1. Schedule context: temperature, wind, surface, playoff flag, final-week flag
+1. Schedule context: surface, playoff flag, final-week flag
 2. Rolling PBP stats: EPA, yards/play (5-game windows)
 3. Strength of schedule: opponent win% (rolling 3-game and season-long)
 4. All-Pro roster quality: weighted 3-year lookback, offense/defense split
@@ -69,11 +69,11 @@ Developed in `betting/sports_betting_agent.ipynb`. Uses LlamaIndex `ReActAgent` 
 - Live schedule, PBP, and stats pulled from `nflreadpy` at prediction time
 
 ### Automation
-`.github/workflows/weekly_predictions.yml` runs `betting/predict_betting.ipynb` via papermill on three cron schedules (Mon 9am ET, Thu 9pm ET, Sun 9am ET) and commits the updated tracker. Supports manual dispatch with mode selection.
+`.github/workflows/weekly_predictions.yml` runs `betting/predict_betting.ipynb` via papermill on three cron schedules (Tue 9am ET, Thu 9pm ET, Sun 9am ET) and commits the updated tracker. Supports manual dispatch with mode selection.
 
 ## Model Comparison Notebook (`betting/model_comparison.ipynb`)
 
-**Purpose:** Compare model architectures on the exact 79-feature dataset used by production pkl, with ensemble variants and walk-forward cross-validation.
+**Purpose:** Compare model architectures on the exact 77-feature dataset used by production pkl, with ensemble variants and walk-forward cross-validation.
 
 ### Cell Structure
 
@@ -82,7 +82,7 @@ Developed in `betting/sports_betting_agent.ipynb`. Uses LlamaIndex `ReActAgent` 
 | 0–1 | Title, config (`TRAIN_SEASONS=2014-2022`, `TEST_SEASONS=[2023,2024]`) |
 | 2 | Imports (xgboost, lightgbm, sklearn, nflreadpy) |
 | 3–11 | Data loading + full feature engineering pipeline (mirrors BettingEdge_v2.ipynb) |
-| 12 | Feature matrix assembly, 79 `FEATURE_COLS`, train/test split, `roof_raw`/`surface_raw` saved before encoding |
+| 12 | Feature matrix assembly, 77 `FEATURE_COLS`, train/test split, `roof_raw`/`surface_raw` saved before encoding |
 | 13–14 | Real injury data from `nfl.load_injuries()` — Out=1.0, Doubtful=0.75 weighting |
 | 15–24 | 4 models: XGBoost (prod pkl), Random Forest, Ridge, LightGBM |
 | 25–26 | Ensemble: avg, weighted blend (tuned on 2022 holdout), Ridge meta-learner stack |
