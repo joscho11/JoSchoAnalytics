@@ -2,8 +2,8 @@ name: Weekly NFL Predictions
 
 on:
   schedule:
-    # Monday 9am ET = 14:00 UTC (EST) / 13:00 UTC (EDT during season — runs 1hr late in DST)
-    - cron: '0 14 * * 1'
+    # Tuesday 9am ET = 14:00 UTC (EST) / 13:00 UTC (EDT during season — runs 1hr late in DST)
+    - cron: '0 14 * * 2'
     # Thursday 9pm ET = 02:00 UTC Friday (EST) / 01:00 UTC (EDT during season — runs 1hr late in DST)
     - cron: '0 2 * * 5'
     # Sunday 9am ET = 14:00 UTC (EST) / 13:00 UTC (EDT during season — runs 1hr late in DST)
@@ -18,7 +18,7 @@ on:
         default: 'thursday'
         type: choice
         options:
-          - monday
+          - tuesday
           - thursday
           - sunday
           - backfill
@@ -60,8 +60,8 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "MODE=${{ github.event.inputs.mode }}" >> $GITHUB_ENV
-          elif [ "${{ github.event.schedule }}" = "0 14 * * 1" ]; then
-            echo "MODE=monday" >> $GITHUB_ENV
+          elif [ "${{ github.event.schedule }}" = "0 14 * * 2" ]; then
+            echo "MODE=tuesday" >> $GITHUB_ENV
           elif [ "${{ github.event.schedule }}" = "0 2 * * 5" ]; then
             echo "MODE=thursday" >> $GITHUB_ENV
           else

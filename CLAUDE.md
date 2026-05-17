@@ -20,7 +20,7 @@ Runs on port 8501. Requires `betting/predictions_tracker.csv` and any cached `be
 
 **Run the prediction pipeline:**
 ```bash
-papermill betting/predict_betting.ipynb /tmp/out.ipynb -p MODE monday    # Update results + new predictions
+papermill betting/predict_betting.ipynb /tmp/out.ipynb -p MODE tuesday   # Update results + new predictions
 papermill betting/predict_betting.ipynb /tmp/out.ipynb -p MODE thursday  # Refresh with injury data
 papermill betting/predict_betting.ipynb /tmp/out.ipynb -p MODE sunday    # Final predictions
 papermill betting/predict_betting.ipynb /tmp/out.ipynb -p MODE backfill -p TARGET_WEEK 14  # Backfill a specific week
