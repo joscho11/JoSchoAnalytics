@@ -330,7 +330,15 @@ These were identified in a full code review (2026-05-15) but require design deci
 
 - ~~**`TEAM_MAP` missing pre-2002 abbreviations (Low)**~~ — **Fixed 2026-05-18.** Added `"ARZ": "ARI"`, `"BLT": "BAL"`, `"CLV": "CLE"`, `"HST": "HOU"`, `"JAC": "JAX"` to cell 6.
 
-- ~~**`TARGET_SEASON` needed manual update each year (Low)**~~ — **Fixed 2026-05-18.** Cell 2 now defaults `TARGET_SEASON = None`; cell 10 auto-detects the season from the current date (`year if month >= 7 else year - 1`).
+- ~~**`TARGET_SEASON` needed manual update each year (Low)**~~ — **Fixed 2026-05-18.** Cell 2 now defaults `TARGET_SEASON = None`; cell 10 auto-detects the season from the current date (`year if month >= 9 else year - 1`). Cutoff is September — July/August have no schedule yet.
+
+- ~~**SOS and Group 5 rolling features are current-season only (train used multi-season) (Medium)**~~ — **Fixed 2026-05-18.** Cell 8 now builds `_hist_rolling` from `coach_hist_df` filtered to `(season == target_season AND week < target_week) OR season == target_season - 1`. Groups 3 (SOS) and 5 (win%, scoring, cover rate) use `_hist_rolling` instead of `history`. Mirrors the `pbp_s` pattern already used in Groups 2 and 6; anchors week-1 features to prior-year results instead of zero-filling.
+
+- ~~**Push handling is a train/inference mismatch after prior fix (Medium)**~~ — **Fixed 2026-05-18.** Reverted the earlier `np.where(..., NaN)` push fix back to `.astype(int)` to match training. Training code uses `(result > spread_line).astype(int)` which scores push=0 for home and push=1 for away. Keeping inference consistent with training is higher priority than semantic correctness until models are retrained with NaN logic.
+
+- ~~**`update_results` print denominator includes push games (Low)**~~ — **Fixed 2026-05-18.** Changed `total = len(rows)` to `total = int(rows['model_correct'].notna().sum())` so push games (where `model_correct=NaN`) don't inflate the denominator.
+
+- ~~**Season auto-detect cutoff was `month >= 7` — fires during offseason (Low)**~~ — **Fixed 2026-05-18.** Changed to `month >= 9`. Schedules publish in late August/early September; July–August triggers a misleading "Season is over" error.
 
 - ~~**Injury–AllPro name matching is fragile (High)**~~ — **Fixed 2026-05-16.** `predict_betting.ipynb` cell 8 now normalizes both sides before joining: strips Unicode accents (`NFD` decomposition), lowercases, removes suffixes (Jr./Sr./II/III/IV/V) and punctuation. Confirmed fix: "Odell Beckham Jr." (AllPro) now matches "Odell Beckham" (injury report).
 
