@@ -308,6 +308,30 @@ These were identified in a full code review (2026-05-15) but require design deci
 
 ### Betting Pipeline (`predict_betting.ipynb`)
 
+- ~~**Injury features only count `Out` (train used `Out + Doubtful×0.75`) (High)**~~ — **Fixed 2026-05-18.** Cell 8 Group 9 now filters to both `Out` and `Doubtful`, maps each to `{'Out': 1.0, 'Doubtful': 0.75}`, and multiplies the allpro historical weight by the status weight before summing.
+
+- ~~**`home_qb_switch` and `is_home_qb_new` are identical (High)**~~ — **Fixed 2026-05-18.** Added a comment in cell 8 Group 7 noting the two features are currently synonymous. Differentiating their semantics requires retraining and is deferred to next offseason.
+
+- ~~**Push counted as away cover in rolling cover rate (Medium)**~~ — **Fixed 2026-05-18.** Cell 8 Group 5 now uses `np.where(result == spread_line, np.nan, ...)` so pushes are excluded from both teams' cover rates instead of being attributed to the away team.
+
+- ~~**`build_numeric_features` crashes on unknown roof/surface values (Medium)**~~ — **Fixed 2026-05-18.** Cell 8 now checks `enc.categories_` and maps any unknown value to the first known category before calling `enc.transform()`.
+
+- ~~**Missing-feature check only covered XGBoost features (Medium)**~~ — **Fixed 2026-05-18.** Cell 8 `build_features` now checks the union of `model_features + ens_feat_cols + lgbm_feat_cols` and zero-fills any missing column across all three models.
+
+- ~~**No warning when Week 1 history is empty (Medium)**~~ — **Fixed 2026-05-18.** Cell 8 prints an info message when `history.empty` so users know SOS/scoring/cover features will be zero-filled.
+
+- ~~**Prediction refresh wipes already-filled results (Medium)**~~ — **Fixed 2026-05-18.** `log_predictions` now preserves `actual_margin`, `home_covered`, `model_correct`, `home_score`, `away_score`, `ens_model_correct`, `ridge_model_correct`, `lgbm_model_correct` from the old row before replacing the week's entry.
+
+- ~~**New coach imputed as 0% win rate (Low)**~~ — **Fixed 2026-05-18.** Cell 8 Group 10 now fills NaN with `latest_coach_wp['coach_win_pct_prior'].mean()` (~0.5) instead of 0.
+
+- ~~**No warning when backfilling a playoff week (Low)**~~ — **Fixed 2026-05-18.** Cell 8 Group 1 now prints a warning if any upcoming game has `game_type != 'REG'`.
+
+- ~~**Redundant season schedule API call (Low)**~~ — **Fixed 2026-05-18.** Cell 10 now loads all schedules (1999–present) in a single `nfl.load_schedules` call and derives `full_schedule`, `coach_hist_df`, and `week_margin_lkp` from the same DataFrame. The duplicate `nfl.load_schedules([TARGET_SEASON])` call and the separate historical load have been removed.
+
+- ~~**`TEAM_MAP` missing pre-2002 abbreviations (Low)**~~ — **Fixed 2026-05-18.** Added `"ARZ": "ARI"`, `"BLT": "BAL"`, `"CLV": "CLE"`, `"HST": "HOU"`, `"JAC": "JAX"` to cell 6.
+
+- ~~**`TARGET_SEASON` needed manual update each year (Low)**~~ — **Fixed 2026-05-18.** Cell 2 now defaults `TARGET_SEASON = None`; cell 10 auto-detects the season from the current date (`year if month >= 7 else year - 1`).
+
 - ~~**Injury–AllPro name matching is fragile (High)**~~ — **Fixed 2026-05-16.** `predict_betting.ipynb` cell 8 now normalizes both sides before joining: strips Unicode accents (`NFD` decomposition), lowercases, removes suffixes (Jr./Sr./II/III/IV/V) and punctuation. Confirmed fix: "Odell Beckham Jr." (AllPro) now matches "Odell Beckham" (injury report).
 
 - ~~**`league_rolling_avg_abs_margin_by_week` train/inference mismatch (Medium)**~~ — **Fixed 2026-05-16.** `predict_betting.ipynb` cell 10 now pre-computes `week_margin_lkp`: average absolute margin per week number across 2014–TARGET_SEASON-1, matching the cross-season groupby used in training. `build_features()` and `run_predictions()` accept `week_margin_lkp` and use the lookup for the target week (falls back to the stale `.iloc[-1]` method if unavailable).
