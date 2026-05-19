@@ -7,6 +7,7 @@ import uuid
 import time
 import html as _html
 import re as _re
+import itertools as _it
 import requests as req
 from datetime import datetime as dt
 from pathlib import Path
@@ -119,6 +120,29 @@ except Exception as _load_err:
     st.error(f"Failed to load predictions data: {_load_err}")
     st.stop()
 
+@st.cache_data(ttl=300)
+def _compute_hc_stats(acc_col: str, _df: pd.DataFrame) -> tuple:
+    hc_correct, hc_total = 0, 0
+    for af in glob.glob(str(_HERE / "betting" / "agent_analysis_*.json")):
+        try:
+            stem = os.path.basename(af).replace('.json', '').split('_')
+            s, w = int(stem[2]), int(stem[3].replace('week', ''))
+            wdf = _df[(_df['season'] == s) & (_df['week'] == w) & _df[acc_col].notna()]
+            with open(af) as f:
+                ga = json.load(f)
+            for _, r in wdf.iterrows():
+                text = ga.get('game_analysis', {}).get(f"{r['home_team']}_{r['away_team']}", '')
+                if '🟢' in text:
+                    hc_total += 1
+                    hc_correct += int(float(r[acc_col]))
+        except Exception:
+            pass
+    return hc_correct, hc_total
+
+@st.cache_data(ttl=3600)
+def _load_proj_csv(path: str) -> pd.DataFrame:
+    return pd.read_csv(path)
+
 # ── Live accuracy stats (used in Help tab) ────────────────────────────────────
 _acc_col   = 'ens_model_correct' if 'ens_model_correct' in df.columns and df['ens_model_correct'].notna().any() else 'model_correct'
 _completed = df[df[_acc_col].notna()]
@@ -126,21 +150,7 @@ _overall_correct = int(_completed[_acc_col].sum())
 _overall_total   = len(_completed)
 _overall_pct     = round(_overall_correct / _overall_total * 100, 1) if _overall_total > 0 else 0
 
-_hc_correct, _hc_total = 0, 0
-for _af in glob.glob(str(_HERE / "betting" / "agent_analysis_*.json")):
-    try:
-        _stem = os.path.basename(_af).replace('.json', '').split('_')
-        _s, _w = int(_stem[2]), int(_stem[3].replace('week', ''))
-        _wdf = df[(df['season'] == _s) & (df['week'] == _w) & df[_acc_col].notna()]
-        with open(_af) as _f:
-            _ga = json.load(_f)
-        for _, _r in _wdf.iterrows():
-            _text = _ga.get('game_analysis', {}).get(f"{_r['home_team']}_{_r['away_team']}", '')
-            if '🟢' in _text:
-                _hc_total += 1
-                _hc_correct += int(_r[_acc_col])
-    except Exception:
-        pass
+_hc_correct, _hc_total = _compute_hc_stats(_acc_col, df)
 _hc_pct = round(_hc_correct / _hc_total * 100, 1) if _hc_total > 0 else None
 
 @st.cache_data(ttl=3600)
@@ -259,8 +269,10 @@ def _fetch_sleeper_history(start_league_id: str) -> dict:
                     champion_rid  = w
                     runner_up_rid = l
                 if p:
-                    playoff_finish[w] = p
-                    playoff_finish[l] = p + 1
+                    if w not in playoff_finish or p < playoff_finish[w]:
+                        playoff_finish[w] = p
+                    if l not in playoff_finish or p + 1 < playoff_finish[l]:
+                        playoff_finish[l] = p + 1
 
         standings = []
         for ro in rosters_raw:
@@ -462,7 +474,7 @@ now           = dt.now()
 season_active = (now.month >= 9) or (now.month <= 2)
 
 if not season_active:
-    current_season = now.year - 1 if now.month < 9 else now.year
+    current_season = now.year - 1
     next_season    = current_season + 1
     _agent_files   = sorted(glob.glob(str(_HERE / "betting" / f"agent_analysis_{current_season}_week*.json")))
     _demo_hint     = ""
@@ -504,8 +516,9 @@ with tab1:
         st.info("Games not yet played. Check back after the week's results are in.")
 
     if not week_df.empty and 'mode' in week_df.columns:
-        mode      = week_df['mode'].iloc[-1]
-        logged_at = week_df['logged_at'].iloc[-1]
+        _latest   = week_df.sort_values('logged_at').iloc[-1]
+        mode      = _latest['mode']
+        logged_at = _latest['logged_at']
         mode_labels = {
             'monday':   ('🟡', 'Early Lines',       'Updated Monday with initial lines'),
             'thursday': ('🟠', 'Injury Reports In', 'Updated Thursday with injury data'),
@@ -687,8 +700,8 @@ with tab1:
             with st.container():
                 st.markdown(
                     f"<div style='font-size:13px;color:#888;margin-bottom:6px'>"
-                    f"<b style='color:#ccc'>{away} @ {home}</b>"
-                    f"&nbsp;&nbsp;·&nbsp;&nbsp;{row['gameday']}"
+                    f"<b style='color:#ccc'>{_html.escape(str(away))} @ {_html.escape(str(home))}</b>"
+                    f"&nbsp;&nbsp;·&nbsp;&nbsp;{_html.escape(str(row['gameday']))}"
                     f"{tier_html}"
                     f"{'&nbsp;&nbsp;·&nbsp;&nbsp;<b>' + result_label + '</b>' if result_label else ''}"
                     f"</div>",
@@ -798,22 +811,22 @@ with tab1:
             model_pct     = round(model_correct / model_total * 100, 1) if model_total > 0 else 0
 
             high_df      = week_df_eval[week_df_eval['agent_confidence'] == 'HIGH']
-            high_correct = int(high_df[_correct_col].sum())
+            high_correct = int(high_df[_correct_col].fillna(0).sum())
             high_total   = int(high_df[_correct_col].notna().sum())
             high_pct     = round(high_correct / high_total * 100, 1) if high_total > 0 else 0
 
             med_df      = week_df_eval[week_df_eval['agent_confidence'] == 'MEDIUM']
-            med_correct = int(med_df[_correct_col].sum())
+            med_correct = int(med_df[_correct_col].fillna(0).sum())
             med_total   = int(med_df[_correct_col].notna().sum())
             med_pct     = round(med_correct / med_total * 100, 1) if med_total > 0 else 0
 
             bet_df      = week_df_eval[week_df_eval['agent_confidence'].isin(['HIGH', 'MEDIUM'])]
-            bet_correct = int(bet_df[_correct_col].sum())
+            bet_correct = int(bet_df[_correct_col].fillna(0).sum())
             bet_total   = int(bet_df[_correct_col].notna().sum())
             bet_pct     = round(bet_correct / bet_total * 100, 1) if bet_total > 0 else 0
 
             skip_df      = week_df_eval[week_df_eval['agent_confidence'] == 'SKIP']
-            skip_correct = int(skip_df[_correct_col].sum())
+            skip_correct = int(skip_df[_correct_col].fillna(0).sum())
             skip_total   = int(skip_df[_correct_col].notna().sum())
             skip_pct     = round(skip_correct / skip_total * 100, 1) if skip_total > 0 else 0
 
@@ -1166,7 +1179,7 @@ with tab3:
             "Use the sidebar to select a week with projections, or run the fantasy notebook to generate them."
         )
     else:
-        proj_df = pd.read_csv(available[(season, week)])
+        proj_df = _load_proj_csv(available[(season, week)])
 
         # Actual results (available after week is played)
         _actuals       = load_actual_stats(season, week)
@@ -1234,6 +1247,22 @@ with tab3:
             g = int(82 + 118 * ratio)
             return f"color: rgb({r},{g},82); font-weight: 600"
 
+        def make_style_table(display_df):
+            def _style(df):
+                styles = pd.DataFrame("", index=df.index, columns=df.columns)
+                if "Off EPA" in df.columns and "EPA Rank" in df.columns:
+                    for i, rank in enumerate(display_df["off_epa_rank"]):
+                        styles.iloc[i, df.columns.get_loc("Off EPA")]  = rank_color(rank)
+                        styles.iloc[i, df.columns.get_loc("EPA Rank")] = rank_color(rank)
+                if "Team Total" in df.columns:
+                    for i, val in enumerate(display_df["implied_team_total"]):
+                        styles.iloc[i, df.columns.get_loc("Team Total")] = total_color(val)
+                styles["Proj Pts"] = "font-weight: 700; font-size: 15px"
+                if "Actual Pts" in df.columns:
+                    styles["Actual Pts"] = "font-weight: 700; font-size: 15px"
+                return styles
+            return _style
+
         _early_req = ["position", "depth_chart_position", "projected_pts"]
         _early_missing = [c for c in _early_req if c not in proj_df.columns]
         if _early_missing:
@@ -1283,7 +1312,7 @@ with tab3:
                     display["Proj Receptions"] = pos_df["pred_te_receptions"].fillna(0).round(1)
                     display["Proj Rec Yds"]    = pos_df["pred_te_rec_yards"].fillna(0).round(0).astype(int)
 
-                sep = display["is_home"].map(lambda h: "vs" if h == 1 else "@")
+                sep = display["is_home"].map(lambda h: "vs" if h in (1, True, 1.0) else "@")
                 display["Player"]      = display["player_display_name"] + " - " + display["team"]
                 display["Opponent"]    = sep + " " + display["opponent_team"]
                 display["Health"]      = display["injury_status_score"].map(injury_icon)
@@ -1326,18 +1355,7 @@ with tab3:
                     tbl_cols = base_cols
 
                 tbl = display[tbl_cols].copy()
-
-                def style_table(df, _d=display):
-                    styles = pd.DataFrame("", index=df.index, columns=df.columns)
-                    for i, rank in enumerate(_d["off_epa_rank"]):
-                        styles.iloc[i, df.columns.get_loc("Off EPA")]  = rank_color(rank)
-                        styles.iloc[i, df.columns.get_loc("EPA Rank")] = rank_color(rank)
-                    for i, val in enumerate(_d["implied_team_total"]):
-                        styles.iloc[i, df.columns.get_loc("Team Total")] = total_color(val)
-                    styles["Proj Pts"] = "font-weight: 700; font-size: 15px"
-                    if "Actual Pts" in df.columns:
-                        styles["Actual Pts"] = "font-weight: 700; font-size: 15px"
-                    return styles
+                style_fn = make_style_table(display)
 
                 _dnp_note = "Blank = player did not play (DNP) in this game."
                 col_config = {
@@ -1384,7 +1402,7 @@ with tab3:
                                       help=f"Actual number of receptions recorded in this game. {_dnp_note}")
 
                 st.dataframe(
-                    tbl.style.apply(style_table, axis=None),
+                    tbl.style.apply(style_fn, axis=None),
                     use_container_width=True,
                     column_config=col_config,
                 )
@@ -1414,22 +1432,27 @@ with tab3:
                     # Paired rows so each card pair shares the same height
                     ups = pa.get("upside", [])
                     dns = pa.get("downside", [])
-                    for up, dn in zip(ups, dns):
+                    for up, dn in _it.zip_longest(ups, dns):
                         card_style = "display:flex;flex-direction:column;justify-content:space-between;" \
                                      "border-radius:4px;padding:10px 14px;height:100%"
-                        row_html = (
-                            "<div style='display:grid;grid-template-columns:1fr 1fr;"
-                            "gap:8px;align-items:stretch;margin-top:8px'>"
+                        up_html = (
                             f"<div style='background:#1a2a1a;border-left:3px solid #00c853;{card_style}'>"
                             f"<b style='color:#e8e8e8'>{_html.escape(up['player'])}</b> "
                             f"<span style='color:#888;font-size:12px'>({_html.escape(up['team'])})</span><br>"
                             f"<span style='color:#aaa;font-size:13px'>{_html.escape(up['reason'])}</span>"
                             f"</div>"
+                        ) if up else "<div></div>"
+                        dn_html = (
                             f"<div style='background:#2a1a1a;border-left:3px solid #ff5252;{card_style}'>"
                             f"<b style='color:#e8e8e8'>{_html.escape(dn['player'])}</b> "
                             f"<span style='color:#888;font-size:12px'>({_html.escape(dn['team'])})</span><br>"
                             f"<span style='color:#aaa;font-size:13px'>{_html.escape(dn['reason'])}</span>"
                             f"</div>"
+                        ) if dn else "<div></div>"
+                        row_html = (
+                            "<div style='display:grid;grid-template-columns:1fr 1fr;"
+                            "gap:8px;align-items:stretch;margin-top:8px'>"
+                            + up_html + dn_html +
                             "</div>"
                         )
                         st.markdown(row_html, unsafe_allow_html=True)
@@ -1556,6 +1579,9 @@ with tab5:
 
             _all_managers = sorted(set(r["username"] for r in _game_records))
 
+            # Compute manager list once, before sub-tabs (used in both C and D)
+            _h2h_managers = sorted(set(r["username"] for r in _filt_records)) if _season_filter != "All Time" else _all_managers
+
             # Sub-tabs
             _lhA, _lhB, _lhC, _lhD, _lhE, _lhF = st.tabs([
                 "🏆 All-Time Records",
@@ -1602,7 +1628,7 @@ with tab5:
                         "Manager":      _u2,
                         "Titles":       _stats["titles"],
                         "Finals":       _stats["titles"] + _stats["finals"],
-                        "Best Finish":  _stats["best"] if _stats["best"] < 99 else "DNQ",
+                        "Best Finish":  str(_stats["best"]) if _stats["best"] < 99 else "DNQ",
                         "Seasons":      _stats["seasons"],
                         "W":            _stats["wins"],
                         "L":            _stats["losses"],
@@ -1653,9 +1679,11 @@ with tab5:
                         _sa1, _sb1 = _m1["score_a"], _m1["score_b"]
                         if _sa1 < 5 and _sb1 < 5:
                             continue
+                        if _sa1 == _sb1:
+                            continue
                         _hi1, _lo1 = max(_sa1, _sb1), min(_sa1, _sb1)
-                        _win1 = _ua1 if _sa1 >= _sb1 else _ub1
-                        _los1 = _ub1 if _sa1 >= _sb1 else _ua1
+                        _win1 = _ua1 if _sa1 > _sb1 else _ub1
+                        _los1 = _ub1 if _sa1 > _sb1 else _ua1
                         _margins.append({
                             "season": _m1["season"], "week": _m1["week"],
                             "winner": _win1, "loser": _los1,
@@ -1765,7 +1793,6 @@ with tab5:
                     _h2h[_kh][_rh["username"]] = _h2h[_kh].get(_rh["username"], 0) + 1
                     _h2h[_kh].setdefault(_rh["opp"], 0)
 
-                _h2h_managers = sorted(set(r["username"] for r in _filt_records)) if _season_filter != "All Time" else _all_managers
                 _mgrs_sorted = _h2h_managers
                 _matrix_rows = []
                 for _um in _mgrs_sorted:
