@@ -8,7 +8,7 @@ Live dashboard: [joschobetting.streamlit.app](https://joschobetting.streamlit.ap
 
 I built this because I wanted to know if a data-driven model could actually find an edge against the spread. Not just predict winners — anyone can do that — but consistently beat the number Vegas sets.
 
-The answer so far: yes. The ATS model sits at **57.85% overall** with **high-confidence picks at 55.71%+**. Not retire-off-this numbers, but enough to be interesting.
+The answer so far: yes. The ATS model sits at **57.85% overall** with **HIGH-confidence picks at 58.3%** and **MEDIUM-confidence picks at 66.7%**. Not retire-off-this numbers, but enough to be interesting.
 
 This repo is the full system — ATS predictions, fantasy football projections, a DFS lineup optimizer, and an LLM agent that explains *why* it likes or fades each game.
 
@@ -22,7 +22,7 @@ A three-voter ensemble trained on 4,300+ NFL games across 15+ seasons.
 
 - **Ensemble fixed75** (primary) — 75% XGBoost + 25% Ridge, trained 2014–2024. Sets the edge threshold and game ranking.
 - **XGBoost, Ridge, LightGBM** — three independent direction voters. When all three agree on a side and the Ensemble edge is ≥ 3pts → **HIGH** confidence. ≥ 1pt → **MEDIUM**. Otherwise → **PASS**.
-- **79 features** covering rolling EPA, yards/play, strength of schedule, All-Pro roster quality, injury impact, coaching win%, surface, and weather.
+- **79 features** covering rolling EPA, yards/play, strength of schedule, All-Pro roster quality, injury impact, coaching win%, and surface.
 
 Walk-forward CV results (6 folds, test years 2020–2025):
 
@@ -73,7 +73,7 @@ GitHub Actions runs the prediction pipeline on three schedules:
 
 | Time | Action |
 |------|--------|
-| Monday 9am ET | Previous week results filled in; new week predictions generated |
+| Tuesday 9am ET | Previous week results filled in; new week predictions generated |
 | Thursday 9pm ET | Predictions refreshed with injury report data |
 | Sunday 9am ET | Final predictions locked |
 

@@ -130,9 +130,15 @@ def _compute_hc_stats(acc_col: str, _df: pd.DataFrame) -> tuple:
             wdf = _df[(_df['season'] == s) & (_df['week'] == w) & _df[acc_col].notna()]
             with open(af) as f:
                 ga = json.load(f)
+            _gc = ga.get('game_confidence', {})
+            _ga = ga.get('game_analysis',   {})
             for _, r in wdf.iterrows():
-                text = ga.get('game_analysis', {}).get(f"{r['home_team']}_{r['away_team']}", '')
-                if '🟢' in text:
+                key  = f"{r['home_team']}_{r['away_team']}"
+                conf = _gc.get(key) if _gc else None
+                if conf is None:
+                    text = _ga.get(key, '')
+                    conf = 'HIGH' if '🟢' in text else None
+                if conf == 'HIGH':
                     hc_total += 1
                     hc_correct += int(float(r[acc_col]))
         except Exception:
@@ -381,8 +387,11 @@ def _md_to_html(text: str) -> str:
             lines.append(stripped)
     return '<br>'.join(lines)
 
-def get_confidence(home, away, game_analysis):
-    key  = f"{home}_{away}"
+def get_confidence(home, away, game_analysis, game_confidence=None):
+    key = f"{home}_{away}"
+    if game_confidence and key in game_confidence:
+        return game_confidence[key]
+    # fall back to emoji detection for cache files written before game_confidence was added
     text = game_analysis.get(key, '')
     if '🟢' in text:
         return 'HIGH'
@@ -437,13 +446,14 @@ seasons = sorted(df['season'].unique(), reverse=True)
 season  = st.sidebar.selectbox("Season", seasons, key="season_select")
 
 weeks   = sorted(df[df['season'] == season]['week'].unique(), reverse=True)
-week    = st.sidebar.selectbox("Week", weeks, key="week_select")
+_default_week_idx = next((i for i, w in enumerate(weeks) if w == 10), 0)
+week    = st.sidebar.selectbox("Week", weeks, index=_default_week_idx, key="week_select")
 
 edge_threshold = st.sidebar.slider(
     "Min Edge (pts)",
     min_value=0.0,
     max_value=5.0,
-    value=1.0,
+    value=0.0,
     step=0.5,
     key="edge_slider",
     help="Only show games where model disagrees with spread by at least this many points"
@@ -563,8 +573,9 @@ with tab1:
 
     st.divider()
 
-    cached        = load_agent_analysis(week, season)
-    game_analysis = cached.get('game_analysis', {}) if cached else {}
+    cached          = load_agent_analysis(week, season)
+    game_analysis   = cached.get('game_analysis',   {}) if cached else {}
+    game_confidence = cached.get('game_confidence', {}) if cached else {}
 
     st.markdown("""
         <div style='display:flex;gap:16px;align-items:center;margin-bottom:12px;flex-wrap:wrap;'>
@@ -801,7 +812,7 @@ with tab1:
 
         week_df_eval = week_df.copy()
         week_df_eval['agent_confidence'] = week_df_eval.apply(
-            lambda r: get_confidence(r['home_team'], r['away_team'], game_analysis), axis=1
+            lambda r: get_confidence(r['home_team'], r['away_team'], game_analysis, game_confidence), axis=1
         )
 
         if results_in:
@@ -2115,7 +2126,7 @@ Edge is the gap between what the model predicts and what Vegas set as the spread
 
 If the model thinks the Chiefs will win by 10 but the spread is only 7.5, that's a 2.5 point edge on the Chiefs. The model is saying Vegas underpriced the Chiefs.
 
-The bigger the edge, the more the model disagrees with the market. Games with a small edge (under 1 point) are basically coin flips in the model's eyes. That's why the default filter on this site hides those games.
+The bigger the edge, the more the model disagrees with the market. Games with a small edge (under 1 point) are basically coin flips in the model's eyes. Use the Min Edge slider in the sidebar to filter down to only the games where the model has real conviction.
 
 You want to be betting games where the model has conviction, not games where it's a coin flip.
         """)
@@ -2193,16 +2204,16 @@ Click the Matchup Analysis button on any card to read the full reasoning.
         st.markdown("""
 The Min Edge slider controls which games show up on the page.
 
-At 0.0 you see every game. At 1.0 (the default) you only see games where the model disagrees with Vegas by at least 1 point. At 3.0 you're only seeing the high conviction plays.
+At 0.0 (the default) you see every game. At 1.0 you only see games where the model disagrees with Vegas by at least 1 point. At 3.0 you're only seeing the high conviction plays.
 
-I'd recommend keeping it at 1.0 as a starting point. Games under 1 point edge are basically too close to call and not worth the risk.
+Slide it up to filter down to your highest-confidence plays.
         """)
 
     with st.expander("How often does the site update?"):
         st.markdown("""
 During the season the site runs on an automated schedule through GitHub Actions.
 
-Monday morning it posts early predictions for the upcoming week using the initial Vegas lines. Thursday night it refreshes those predictions after injury reports come out. Sunday morning it locks in final predictions before kickoff. The following Monday it fills in the results from the previous week and the cycle starts over.
+Tuesday morning it fills in the previous week's results and posts initial predictions for the upcoming week using the opening Vegas lines. Thursday night it refreshes those predictions after injury reports drop. Sunday morning it locks in final predictions before kickoff. Then the cycle repeats on Tuesday.
 
 During the offseason the site just shows historical data from past seasons. Everything spins back up when the season kicks off in September.
         """)
@@ -2214,6 +2225,29 @@ The Season Performance tab is where you can see how the model has done across th
 It shows a week by week bar chart of ATS win percentage, a cumulative trend line showing how accuracy has moved over time, and a breakdown of how high edge games performed compared to low edge games.
 
 There's also a best and worst weeks section and a full season table if you want to dig into the numbers.
+        """)
+
+    with st.expander("What is the Fantasy tab?"):
+        st.markdown("""
+The Fantasy tab shows weekly half-PPR fantasy projections for every active QB, RB, WR, and TE. Each position has its own subtab.
+
+You can filter by team or health status and see projected fantasy points alongside position-specific stat projections (passing yards, rushing yards, receptions, receiving yards). Once the week's games are played, actual stats fill in automatically.
+
+See the Fantasy Projections section below for more detail on how the models work.
+        """)
+
+    with st.expander("What is the DFS tab?"):
+        st.markdown("""
+The DFS tab is a DraftKings NFL Classic lineup optimizer launching with the 2026 season.
+
+Upload your DraftKings salary CSV and the optimizer generates the highest-projected legal 9-player lineup under the $50,000 salary cap. See the DFS Optimizer section below for a full breakdown.
+        """)
+
+    with st.expander("What is the League History tab?"):
+        st.markdown("""
+The League History tab pulls historical data from your Sleeper fantasy league.
+
+Enter your Sleeper league ID and it shows season-by-season standings, matchup results, and all-time records for every manager. Good for settling debates about who's actually been the best manager over time.
         """)
 
     st.divider()
@@ -2240,14 +2274,14 @@ The models are retrained each offseason as more data becomes available.
 
     with st.expander("How accurate are the fantasy projections?"):
         st.markdown("""
-The models were evaluated on the 2025 season (weeks 10–17) against a simple 3-week rolling average baseline:
+The models were evaluated on the full 2025 holdout season against a simple 3-week rolling average baseline:
 
 | Position | Model MAE | Baseline MAE | Improvement |
 |----------|-----------|--------------|-------------|
-| QB | 7.1 pts | 7.5 pts | ✅ Better |
+| QB | 7.0 pts | 7.5 pts | ✅ Better |
 | RB | 4.5 pts | 4.6 pts | ✅ Better |
 | WR | 3.9 pts | 4.1 pts | ✅ Better |
-| TE | 3.3 pts | 3.5 pts | ✅ Better |
+| TE | 3.2 pts | 3.5 pts | ✅ Better |
 
 MAE (Mean Absolute Error) is the average number of points the projection was off by. So for WR, the model was off by about 3.9 points on average. Given the inherent variance in fantasy football, this is a reasonable result — but any individual week can be much higher or lower.
 
@@ -2318,12 +2352,67 @@ If you're looking at a past week, the actuals shown are the real NFL stats for t
 
     st.divider()
 
-    # ── Section 4: Behind the Scenes ─────────────────────────────────────────
+    # ── Section 4: DFS Optimizer ──────────────────────────────────────────────
+    st.subheader("🎯 DFS Optimizer")
+
+    with st.expander("What is the DFS Optimizer?"):
+        st.markdown("""
+The DFS tab is a DraftKings NFL Classic lineup optimizer launching with the 2026 season.
+
+It takes this site's weekly fantasy projections and solves for the highest-projected legal lineup under the $50,000 salary cap using an integer linear program. The optimizer fills all 9 roster slots — QB, 2 RB, 3 WR, TE, FLEX, DST — subject to DraftKings' constraints.
+
+The workflow each week is:
+1. Download your DraftKings salary CSV from any NFL Classic contest lobby
+2. Upload it in the DFS tab
+3. The optimizer fuzzy-matches DK player names to our projected points and solves the lineup
+4. Lock or exclude specific players and re-run if you want to tweak it
+5. Download the finished lineup ready for DraftKings import
+
+Note that DST currently uses DraftKings' season average since there is no team-defense projection model yet. That's listed as a known limitation in the tab.
+        """)
+
+    with st.expander("How does the optimizer actually work?"):
+        st.markdown("""
+Under the hood it's an integer linear program (ILP) solved with the PuLP library.
+
+The optimizer treats each player as a binary variable — either in the lineup (1) or out (0) — and maximizes total projected points subject to hard constraints:
+
+- Exactly 1 QB
+- At least 2 RBs
+- At least 3 WRs
+- At least 1 TE
+- Exactly 1 DST
+- Exactly 9 total players (the FLEX slot is filled implicitly by the solver)
+- Total salary ≤ $50,000
+- No more than 8 players from the same team
+
+The solver finds the globally optimal combination given those constraints in under a second. It's not greedy — it considers every valid roster combination simultaneously.
+
+Projections are converted to full DraftKings Classic scoring (full PPR, milestone bonuses for 300+ passing yards, 100+ rushing yards, 100+ receiving yards).
+        """)
+
+    st.divider()
+
+    # ── Section 5: League History ─────────────────────────────────────────────
+    st.subheader("🏅 League History")
+
+    with st.expander("What is the League History tab?"):
+        st.markdown("""
+The League History tab pulls your Sleeper fantasy league's historical data and displays it in one place.
+
+Enter your Sleeper league ID (found in your league's URL: `sleeper.com/leagues/{ID}/league`) and the tab loads standings, matchup results, and season-by-season records for every manager in the league.
+
+You can filter by season or view all-time records across every year your league has existed. It's useful for settling debates about who's actually been the best manager historically versus just the most recent champion.
+        """)
+
+    st.divider()
+
+    # ── Section 6: Behind the Scenes ─────────────────────────────────────────
     st.subheader("🔧 Behind the Scenes")
 
     with st.expander("How does the prediction model work?"):
         st.markdown("""
-The prediction system uses four models trained on over 4,300 NFL games going back 15+ seasons.
+The prediction system uses four models trained on over 3,000 NFL games spanning 11 seasons (2014–2024).
 
 **The primary model** is the **Ensemble (fixed75)** — a fixed-weight blend of 75% XGBoost and 25% Ridge regression. It sets the predicted edge for each game and determines the sort order.
 

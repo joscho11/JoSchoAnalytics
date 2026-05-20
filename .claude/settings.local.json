@@ -59,7 +59,10 @@
       "Bash(mkdir -p /tmp)",
       "Read(//c/Users/josep/AppData/Local/Temp/**)",
       "Bash(grep -E \"coach_win_pct_roll3|OK|FAIL|error|Error|ran|ok$\")",
-      "Bash(Write-Host \"Cleaned up temp files\")"
+      "Bash(Write-Host \"Cleaned up temp files\")",
+      "Bash(echo \"Exit: $?\")",
+      "Bash(echo \"exit $?\")",
+      "Bash(Write-Output \"Done\")"
     ]
   }
 }

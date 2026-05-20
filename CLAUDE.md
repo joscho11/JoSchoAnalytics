@@ -102,24 +102,25 @@ Developed in `betting/sports_betting_agent.ipynb`. Uses LlamaIndex `ReActAgent` 
 
 | Cells | Section |
 |-------|---------|
-| 0–1 | Title, config (`TRAIN_SEASONS=2014-2022`, `TEST_SEASONS=[2023,2024]`) |
-| 2 | Imports (xgboost, lightgbm, sklearn, nflreadpy) |
-| 3–11 | Data loading + full feature engineering pipeline (mirrors BettingEdge_v2.ipynb) |
-| 12 | Feature matrix assembly, 79 `FEATURE_COLS`, train/test split, `roof_raw`/`surface_raw` saved before encoding |
-| 13–14 | Real injury data from `nfl.load_injuries()` — Out=1.0, Doubtful=0.75 weighting |
-| 15–24 | 4 models: XGBoost (prod pkl), Random Forest, Ridge, LightGBM |
-| 25–26 | Ensemble: avg, weighted blend (tuned on 2022 holdout), Ridge meta-learner stack |
-| 27 | Comparison table with 3 confidence tiers: all bets, medium (≥1pt edge), high (≥3pt edge) |
-| 28 | Feature importance charts (XGBoost prod + Random Forest) |
-| 29–35 | Walk-forward CV: 6 folds (test years 2020–2025), all models + Ensemble fixed75 |
-| 39–42 | Production retrain section — Ensemble fixed75 only |
+| 0–2 | Title, config markdown, config code (`TRAIN_SEASONS=2014-2022`, `TEST_SEASONS=[2023,2024,2025]`) |
+| 3–4 | Imports (xgboost, lightgbm, sklearn, nflreadpy) |
+| 5–14 | Data loading + full feature engineering pipeline (mirrors BettingEdge_v2.ipynb) |
+| 15–16 | Feature matrix assembly, 79 `FEATURE_COLS`, train/test split, `roof_raw`/`surface_raw` saved before encoding |
+| 17–18 | Real injury data from `nfl.load_injuries()` — Out=1.0, Doubtful=0.75 weighting |
+| 19–26 | 4 models: XGBoost prod pkl (FinalCfg defined in cell 20), Random Forest, Ridge, LightGBM |
+| 27–28 | MLP (raw cells — disabled, not executed in production) |
+| 29–30 | Ensemble: avg, weighted blend (tuned on 2022 holdout), Ridge meta-learner stack |
+| 31–33 | Comparison table + feature importance charts (XGBoost prod + Random Forest) |
+| 34–36 | Walk-forward CV: 6 folds (test years 2020–2025), all models + CV analysis |
+| 39–41 | Production retrain section — Ensemble fixed75 + LightGBM |
+| 42–43 | 2025 season live test + production setup notes |
 
 ### Key Constraints
 
 - **FinalCfg dataclass** must be defined before `joblib.load("xgboost_prod_model.pkl")` — it's embedded in the pkl. Definition is in cell 20.
-- **`roof_raw` / `surface_raw`** — raw categorical strings saved before local OrdinalEncoding in cell 12. The production pipeline has its own encoder; pass raw strings to it, not locally-encoded integers.
+- **`roof_raw` / `surface_raw`** — raw categorical strings saved before local OrdinalEncoding in cell 16. The production pipeline has its own encoder; pass raw strings to it, not locally-encoded integers.
 - **Trailing space** in `"allpro_diff_home_def_away_off_3_years "` is intentional — matches the production pkl's column name exactly. Do not remove it.
-- **ALLPRO_CSV** path tries both `nfl_allpro_1997_2025.csv` (CWD=`betting/`) and `betting/nfl_allpro_1997_2025.csv` (CWD=project root) — handled in cell 1.
+- **ALLPRO_CSV** path tries both `nfl_allpro_1997_2025.csv` (CWD=`betting/`) and `betting/nfl_allpro_1997_2025.csv` (CWD=project root) — handled in cell 2 (config).
 - **LightGBM early stopping** uses a 15% held-out slice of training data, not the test set — to avoid test label leakage.
 - **XGBoost (cv)** in walk-forward CV is retrained from scratch each fold. It is NOT the pre-trained pkl — that would be in-sample for all folds.
 - **Editing:** Use Python + `json.load/dump`. The notebook is too large for the Read/NotebookEdit tools.
@@ -214,23 +215,16 @@ The notebook file exceeds the Read tool's token limit. **Always edit it via `pyt
 | Cell | Section | What it does |
 |------|---------|--------------|
 | 0 | Title / usage | Markdown — papermill run instructions |
-| 1 | Parameters | `TARGET_SEASON`, `TARGET_WEEK`, `POS_FILTER` (papermill-tagged) |
-| 2 | Setup | Imports, `INJURY_MAP`, `PRACTICE_MAP`, path constants |
-| 3 | Stat model names | Defines `QB/RB/WR/TE_STAT_NAMES` lists for per-stat prop models |
-| 4 | Load Models | Loads main per-position `.pkl` files from `models/`; then loads all 8 per-stat models (e.g. `rb_rush_yards_model.pkl`) into `QB/RB/WR/TE_STAT_MODELS` dicts |
-| 5 | Detect Week | Auto-detects next unplayed week if `TARGET_WEEK` is None |
-| 6 | Upcoming Schedule | Pulls game context (spread, total, weather, home/away) for target week |
-| 7 | Player History & Live Defensive Metrics | Takes each player's most recent row from `features_dataset.csv` as rolling form; filters to `season >= TARGET_SEASON - 1`. Also builds live `opp_def` from `nfl.load_pbp([TARGET_SEASON])`: last 4 completed games per team → rolling defensive means. Falls back to `features_dataset.csv` if PBP unavailable. |
-| 8 | Helper — display names | Joins `player_display_name` from nflreadpy for readable output |
-| 9 | Build feature rows | Merges player history with schedule context; handles missing cols with 0 fill |
-| 10 | Injury status | Maps `injury_status` / `practice_status` strings to numeric scores via `INJURY_MAP` / `PRACTICE_MAP` |
-| 11 | Depth chart | Loads `nfl.load_depth_charts()`; caps snapshot to before target week's first game to avoid retroactive promotions |
-| 12 | Drop Out players | Removes players with `injury_status_score == 0` (ruled Out) |
-| 13 | Generate Projections | Runs main per-position models for `pred_pts`; runs per-stat models appending `pred_qb_pass_yards`, `pred_qb_rush_yards`, `pred_rush_yards`, `pred_rec_yards`, `pred_wr_receptions`, `pred_wr_rec_yards`, `pred_te_receptions`, `pred_te_rec_yards` columns |
-| 14 | Assemble output | Builds display DataFrame with `Proj Pts` + position-specific stat projection columns |
-| 15 | Save Output | Writes `fantasy/fantasy_projections/projections_{season}_week{week:02d}.csv` |
-| 16 | Projection Analysis | Distribution of projected pts by position; prop stat leaders (top 5 per stat); top-10 position scorecards with inline prop stats |
-| 17 | Model Performance Summary | 2025 weeks 10–17 MAE, bias, correlation, and top-12 hit rate by position; prop stat model accuracy table with betting usability notes |
+| 1–2 | Parameters | `TARGET_SEASON`, `TARGET_WEEK`, `POS_FILTER` (papermill-tagged) |
+| 3–4 | Setup | Imports, `INJURY_MAP`, `PRACTICE_MAP`, path constants |
+| 5–6 | Load Models | Loads main per-position `.pkl` files from `models/`; then loads all 8 per-stat models (e.g. `rb_rush_yards_model.pkl`) into `QB/RB/WR/TE_STAT_MODELS` dicts |
+| 7–8 | Detect Week | Auto-detects next unplayed week if `TARGET_WEEK` is None |
+| 9–10 | Upcoming Schedule | Pulls game context (spread, total, weather, home/away) for target week |
+| 11–12 | Player History & Live Defensive Metrics | Takes each player's most recent row from `features_dataset.csv` as rolling form; filters to `season >= TARGET_SEASON - 1`. Builds live `opp_def` from `nfl.load_pbp([TARGET_SEASON])`: last 4 completed games per team → rolling defensive means. Computes live coach win%, `opp_season_win_pct`. Joins display names, merges feature rows, fills missing cols with 0. Falls back to `features_dataset.csv` if PBP unavailable. |
+| 13–14 | Injury & Depth Chart | Maps `injury_status` / `practice_status` strings to numeric scores via `INJURY_MAP` / `PRACTICE_MAP`. Loads `nfl.load_depth_charts()`; caps snapshot to before target week's first game to avoid retroactive promotions. Removes players with `injury_status_score == 0` (ruled Out). |
+| 15–16 | Generate Projections | Runs main per-position models for `pred_pts`; runs per-stat models appending `pred_qb_pass_yards`, `pred_qb_rush_yards`, `pred_rush_yards`, `pred_rec_yards`, `pred_wr_receptions`, `pred_wr_rec_yards`, `pred_te_receptions`, `pred_te_rec_yards` columns. Assembles display DataFrame with `Proj Pts`. Writes `fantasy/fantasy_projections/projections_{season}_week{week:02d}.csv`. |
+| 17–18 | Projection Analysis | Distribution of projected pts by position; prop stat leaders (top 5 per stat); top-10 position scorecards with inline prop stats |
+| 19 | Model Performance Summary | 2025 weeks 10–17 MAE, bias, correlation, and top-12 hit rate by position; prop stat model accuracy table with betting usability notes |
 
 **Key fixes (2026-05-13):**
 - `PRACTICE_MAP` keys updated to match nflreadpy's actual values (`"Did Not Participate In Practice"` etc.)
@@ -270,14 +264,14 @@ Trained and saved in `fantasy/model.ipynb` Step 2b (RB), 2c (WR), 2d (TE), 2e (Q
 | Cell | Section | What it does |
 |------|---------|--------------|
 | 0 | Title | Markdown header |
-| 1 | Setup | Imports, load `raw_dataset.csv` |
-| 2–3 | Target Variable | Computes `fantasy_points_half_ppr`; shifts to create `target_half_ppr` (next week's score) |
-| 4–5 | Rolling Features | 3/5-game rolling averages + trend (3-week avg minus 5-week avg) for usage/production cols |
-| 6 | Pts Allowed vs Position | Weekly pts allowed per team per position (matchup difficulty) |
-| 7 | Coach Features | Imputes `coach_win_pct` / `opp_coach_win_pct` nulls; adds `is_new_coach` binary flag |
-| 8–9 | SOS & Team Rankings | `opp_season_win_pct`, `opp_win_pct_roll4`; per-week `off_epa_rank`, `sos_rank` |
-| 10–11 | Cleanup & Save | Drops null-target rows and week-1 rookies; saves `features_dataset.csv` |
-| 12 | Inspection | Display shape and sample rows |
+| 1–2 | Setup | Imports, load `raw_dataset.csv` |
+| 3–5 | Target Variable | Computes `fantasy_points_half_ppr`; shifts to create `target_half_ppr` (next week's score) |
+| 6–8 | Rolling Features | 3/5-game rolling averages + trend (3-week avg minus 5-week avg) for usage/production cols |
+| 9–10 | Pts Allowed vs Position | Weekly pts allowed per team per position (matchup difficulty) |
+| 11–12 | Coach Features | Imputes `coach_win_pct` / `opp_coach_win_pct` nulls; adds `is_new_coach` binary flag |
+| 13–17 | SOS & Team Rankings | `opp_season_win_pct`, `opp_win_pct_roll4`; Vegas spread features; per-week `off_epa_rank`, `sos_rank`; drops null-target rows |
+| 18–19 | Cleanup & Save | Saves `features_dataset.csv` |
+| 20–21 | Inspection | Display shape and sample rows |
 
 **Key constraints:**
 - Never shuffle train/test split across seasons — always split on season boundaries to avoid leakage.
