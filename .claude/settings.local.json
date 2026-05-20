@@ -62,7 +62,10 @@
       "Bash(Write-Host \"Cleaned up temp files\")",
       "Bash(echo \"Exit: $?\")",
       "Bash(echo \"exit $?\")",
-      "Bash(Write-Output \"Done\")"
+      "Bash(Write-Output \"Done\")",
+      "Bash(.venv\\\\Scripts\\\\python.exe -m pip show polars nflreadpy)",
+      "Bash(findstr \"Name Version\")",
+      "Bash(.venv\\\\Scripts\\\\pip.exe show *)"
     ]
   }
 }
