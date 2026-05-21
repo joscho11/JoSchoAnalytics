@@ -8,7 +8,7 @@ Live dashboard: [joschobetting.streamlit.app](https://joschobetting.streamlit.ap
 
 I built this because I wanted to know if a data-driven model could actually find an edge against the spread. Not just predict winners — anyone can do that — but consistently beat the number Vegas sets.
 
-The answer so far: yes. The ATS model sits at **57.85% overall** with **HIGH-confidence picks at 58.3%** and **MEDIUM-confidence picks at 66.7%**. Not retire-off-this numbers, but enough to be interesting.
+The answer so far: yes. Across the 2025 live test (weeks 10–17, 121 games), the ATS model sits at **56.4% overall**, with **HIGH-confidence picks at 64.7%** (11/17) and **MEDIUM-confidence picks at 59.5%** (25/42). Break-even after vig is 52.4%.
 
 This repo is the full system — ATS predictions, fantasy football projections, a DFS lineup optimizer, and an LLM agent that explains *why* it likes or fades each game.
 
@@ -22,18 +22,19 @@ A three-voter ensemble trained on 4,300+ NFL games across 15+ seasons.
 
 - **Ensemble fixed75** (primary) — 75% XGBoost + 25% Ridge, trained 2014–2024. Sets the edge threshold and game ranking.
 - **XGBoost, Ridge, LightGBM** — three independent direction voters. When all three agree on a side and the Ensemble edge is ≥ 3pts → **HIGH** confidence. ≥ 1pt → **MEDIUM**. Otherwise → **PASS**.
-- **79 features** covering rolling EPA, yards/play, strength of schedule, All-Pro roster quality, injury impact, coaching win%, and surface.
+- **35 production features** selected from 85 engineered (rolling EPA, yards/play, strength of schedule, All-Pro roster quality, injury impact, coach win%, QB passer rating, sack/turnover/3rd-down rates). The feature set was trimmed in May 2026 via a walk-forward ablation — dropping the 50 lowest-importance features improved XGBoost CV mean ATS by +1.6pp.
+- **Tuned hyperparameters** (May 2026): Ridge α=50, XGBoost reg_alpha=2 / reg_lambda=5. Confirmed across 3 seeds.
 
-Walk-forward CV results (6 folds, test years 2020–2025):
+Walk-forward CV results (6 folds, test years 2020–2025, 35-feature subset, tuned hyperparameters):
 
 | Model | Mean ATS | Std | Notes |
 |-------|----------|-----|-------|
-| LightGBM | 53.0% | 4.1% | CV winner — direction voter |
-| Ridge | 52.1% | 2.9% | Best MAE; direction voter |
-| Random Forest | 51.3% | 2.5% | Not in production |
-| XGBoost (cv) | 51.2% | 1.8% | CV-retrained; prod pkl adds more signal |
+| Random Forest | 57.1% | 2.9% | Highest mean — but highest variance; not in production |
+| XGBoost (cv) | 56.9% | 1.9% | **CV winner on risk-adjusted basis** — direction voter |
+| LightGBM | 56.5% | 1.7% | Most consistent — direction voter |
+| Ridge | 55.6% | 2.0% | Direction voter + linear component of the ensemble |
 
-Break-even is 52.4% ATS.
+Break-even is 52.4% ATS. The full ablation, hyperparameter sweep, and seed-stability check live in `betting/experiments/`.
 
 ### Fantasy Football Projections
 
@@ -81,12 +82,16 @@ The only manual step each season is updating the All-Pro CSV in January.
 
 ---
 
-## Results (2025 Season)
+## Results (2025 Season, Weeks 10–17, 121 games)
 
-| Metric | Value |
-|--------|-------|
-| Overall ATS | 57.85% (70/121) |
-| Best week | 11/16 (Week 13) |
+| Tier | Games | Correct | Win % |
+|------|-------|---------|-------|
+| **HIGH** (all 3 voters agree + ensemble edge ≥ 3pt) | 17 | 11 | **64.7%** |
+| **MEDIUM** (all 3 voters agree + ensemble edge ≥ 1pt) | 42 | 25 | **59.5%** |
+| PASS | 62 | 30 | 48.4% |
+| **Overall (Ensemble)** | **117** | **66** | **56.4%** |
+
+Best week: 9/14 (Week 14, 64.3%).
 
 ---
 
@@ -120,6 +125,11 @@ betting/
   predictions_tracker.csv              # All predictions + results (auto-committed)
   nfl_allpro_1997_2025.csv             # All-Pro roster data (updated manually each January)
   agent_analysis_2025_week{n}.json     # Cached agent output per week
+  experiments/                         # Reusable analysis scripts + result snapshots
+    tune_hyperparams.py                # Walk-forward hyperparameter sweep across 5 models
+    tune_xgb_seeds.py                  # Multi-seed XGBoost stability check
+    feature_ablation.py                # Importance-ranked feature subset CV study
+    *.json / feature_importance_ranking.csv  # Result snapshots
   archive/                             # Retired notebooks and model files
 fantasy/
   data_pipeline.ipynb                  # Pull & join player stats from nflreadpy

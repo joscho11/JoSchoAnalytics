@@ -446,7 +446,7 @@ seasons = sorted(df['season'].unique(), reverse=True)
 season  = st.sidebar.selectbox("Season", seasons, key="season_select")
 
 weeks   = sorted(df[df['season'] == season]['week'].unique(), reverse=True)
-_default_week_idx = next((i for i, w in enumerate(weeks) if w == 17), 0)
+_default_week_idx = next((i for i, w in enumerate(weeks) if w == 10), 0)
 week    = st.sidebar.selectbox("Week", weeks, index=_default_week_idx, key="week_select")
 
 edge_threshold = st.sidebar.slider(
@@ -663,8 +663,12 @@ with tab1:
             bot_team      = away
             top_spread    = fmt(-spread)
             bot_spread    = fmt(spread)
-            top_predicted = fmt(predicted)
-            bot_predicted = fmt(-predicted)
+            # Display predictions in sportsbook style (favorite shows negative, underdog positive)
+            # to match how the SPREAD column is displayed. Internally `predicted` is the model's
+            # home_margin estimate (positive = home wins), so we negate for the home team's display
+            # and pass through for the away team.
+            top_predicted = fmt(-predicted)
+            bot_predicted = fmt(predicted)
 
             if edge > 0:
                 rec_team  = home
@@ -2178,7 +2182,7 @@ Each card shows one matchup for the week. Here's what the columns mean:
 
 **SPREAD** is the Vegas line. A negative number means that team is favored.
 
-**PREDICTED** is what the model thinks the margin will be. Compare this to the spread to understand the edge.
+**PREDICTED** is the model's version of the line — also shown sportsbook-style (favorite negative, underdog positive). When the model's number is *more* extreme than the Vegas spread on a side, that's where the edge is. Example: Vegas has SEA -7 but the model says SEA -11.3 — the model likes SEA by 4.3 more points than Vegas, so it recommends betting SEA.
 
 **SCORE** shows the final score after the game is played. It's blank until results come in.
 
@@ -2426,9 +2430,9 @@ Each game is evaluated by all four models. The consensus tier is assigned based 
 
 Agreement alone isn't enough — the Ensemble still needs to show a meaningful edge. And a big edge alone isn't enough — all three voters need to point the same way.
 
-I engineered 79 features for each game. The main ones are rolling EPA (Expected Points Added) which measures offensive and defensive efficiency, strength of schedule, All-Pro roster quality as a proxy for talent, injury impact, QB changes, coaching history, and home field advantage.
+I engineered 85 features for each game, then trimmed to the top 35 most-predictive ones via a walk-forward ablation study. The main features are rolling EPA (Expected Points Added) which measures offensive and defensive efficiency, strength of schedule, All-Pro roster quality as a proxy for talent, injury impact, QB changes, coaching history, and home field advantage.
 
-Each model predicts the margin of victory for the home team. That predicted margin gets compared to the Vegas spread to calculate edge. If the Ensemble predicts the home team wins by 10 and the spread is 7.5, the edge is 2.5 points in favor of betting the home team.
+Each model predicts the margin of victory for the home team. That predicted margin gets compared to the Vegas spread to calculate edge. If the Ensemble predicts the home team wins by 10 and Vegas had them at -7.5, the edge is 2.5 points in favor of betting the home team. The displayed PREDICTED line on each game card is shown in sportsbook style (favorite negative, underdog positive) so it lines up visually with the SPREAD column.
 
 Models are retrained each offseason as new data comes in. The All-Pro roster data is updated manually each January.
         """)
