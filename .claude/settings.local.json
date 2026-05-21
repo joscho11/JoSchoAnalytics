@@ -65,7 +65,17 @@
       "Bash(Write-Output \"Done\")",
       "Bash(.venv\\\\Scripts\\\\python.exe -m pip show polars nflreadpy)",
       "Bash(findstr \"Name Version\")",
-      "Bash(.venv\\\\Scripts\\\\pip.exe show *)"
+      "Bash(.venv\\\\Scripts\\\\pip.exe show *)",
+      "Read(//c/Users/josep/**)",
+      "Bash(git show *)",
+      "Bash(rm old_nb.ipynb)",
+      "Bash(papermill betting/model_comparison.ipynb /tmp/mc_out.ipynb --no-progress-bar)",
+      "Bash(git log *)",
+      "Bash(grep -iB1 -A3 \"passer_rating\\\\|qbr_prev\\\\|pr_prev\")",
+      "Bash(papermill betting/model_comparison.ipynb /tmp/model_comparison_out.ipynb)",
+      "Bash(where papermill *)",
+      "Bash(dir \"c:\\\\Users\\\\Josep\\\\Desktop\\\\random_stuff\\\\BettingEdgeContinued\\\\\" /b *.md 2>&1)",
+      "Bash(tee hyperparam_sweep_log.txt)"
     ]
   }
 }

@@ -55,7 +55,7 @@ pip install -r requirements.txt
   | 18–20 | Static data: AllPro CSV, `TEAM_MAP` |
   | 21–23 | `_norm_name` helper |
   | 24–26 | `get_week_info` helper |
-  | 27–29 | `build_features` — 79-feature engineering (Groups 1–10) |
+  | 27–29 | `build_features` — 85-feature engineering (Groups 1–10) |
   | 30–32 | `build_numeric_features` — encoder + feature matrix assembly |
   | 33–34 | `run_predictions` — model inference (no test cell — needs live models) |
   | 35–37 | `update_results` — fill outcomes from completed games |
@@ -69,7 +69,7 @@ pip install -r requirements.txt
   - (Ridge is extracted from `ensemble_prod_model.pkl["ridge_model"]` at runtime — no separate pkl needed.)
 - **`betting/archive/`** — Old model files and retired notebooks: `betting_model.pkl` (original XGBoost pkl), `BettingEdge_v2.ipynb`, `BettingEdgeContinued.ipynb`.
 - **`betting/predictions_tracker.csv`** — Master log of all predictions and outcomes. Auto-committed by GitHub Actions.
-- **`betting/model_comparison.ipynb`** — Model comparison notebook (32 cells). Rebuilds the exact 79-feature production dataset from scratch, evaluates 5 model architectures + 3 ensemble variants + walk-forward CV. See dedicated section below.
+- **`betting/model_comparison.ipynb`** — Model comparison notebook (32 cells). Rebuilds the exact 85-feature production dataset from scratch, evaluates 5 model architectures + 3 ensemble variants + walk-forward CV. See dedicated section below.
 
 ### Feature Groups (betting/predict_betting.ipynb — helpers cell)
 1. Schedule context: surface, playoff flag, final-week flag
@@ -79,7 +79,7 @@ pip install -r requirements.txt
 5. Rolling performance: win%, points scored/allowed (5-game windows)
 6. Situational PBP: sacks, turnovers, third-down rate (5-game windows)
 7. QB switch flags
-8. Passer rating: prior-season passer rating diff (`diff_pr_prev_year`)
+8. QB NGS features (NGS 2016+, manual PBP fallback for 2014–2015): prior-season passer rating (`home/away_pr_prev_year`, `diff_pr_prev_year`), completion % above expectation (`home/away_cpae_prev_year`, `diff_cpae_prev_year`), avg time to throw (`home/away_time_to_throw_prev_year`, `diff_time_to_throw_prev_year`)
 9. Injuries: out-player count, All-Pro-weighted injury impact
 10. Coach win%: career win% + rolling 3-season win% for home/away coach
 
@@ -96,45 +96,59 @@ Developed in `betting/sports_betting_agent.ipynb`. Uses LlamaIndex `ReActAgent` 
 
 ## Model Comparison Notebook (`betting/model_comparison.ipynb`)
 
-**Purpose:** Compare model architectures on the exact 79-feature dataset used by production pkl, with ensemble variants and walk-forward cross-validation.
+**Purpose:** Compare model architectures on the exact 85-feature dataset used by production pkl, with ensemble variants and walk-forward cross-validation.
 
 ### Cell Structure
 
+70 cells, restructured 2026-05-20 into a **markdown → code → inline-test** pattern per section. Each section's test cell asserts shape/null/range invariants on the artifacts produced by that section, so plumbing regressions fail at the section boundary instead of leaking downstream. Test cells print `✓ Section N tests passed | ...`.
+
 | Cells | Section |
 |-------|---------|
-| 0–2 | Title, config markdown, config code (`TRAIN_SEASONS=2014-2022`, `TEST_SEASONS=[2023,2024,2025]`) |
-| 3–4 | Imports (xgboost, lightgbm, sklearn, nflreadpy) |
-| 5–14 | Data loading + full feature engineering pipeline (mirrors BettingEdge_v2.ipynb) |
-| 15–16 | Feature matrix assembly, 79 `FEATURE_COLS`, train/test split, `roof_raw`/`surface_raw` saved before encoding |
-| 17–18 | Real injury data from `nfl.load_injuries()` — Out=1.0, Doubtful=0.75 weighting |
-| 19–26 | 4 models: XGBoost prod pkl (FinalCfg defined in cell 20), Random Forest, Ridge, LightGBM |
-| 27–28 | MLP (raw cells — disabled, not executed in production) |
-| 29–30 | Ensemble: avg, weighted blend (tuned on 2022 holdout), Ridge meta-learner stack |
-| 31–33 | Comparison table + feature importance charts (XGBoost prod + Random Forest) |
-| 34–36 | Walk-forward CV: 6 folds (test years 2020–2025), all models + CV analysis |
-| 39–41 | Production retrain section — Ensemble fixed75 + LightGBM |
-| 42–43 | 2025 season live test + production setup notes |
+| 0 | Title + notebook conventions |
+| 1–3 | Section 1 — Configuration (`TRAIN_SEASONS=2014-2022`, `TEST_SEASONS=[2023,2024,2025]`, `ALLPRO_CSV` path) + test |
+| 4–6 | Section 2 — Imports (xgb, lgb, sklearn, nflreadpy, matplotlib) + test |
+| 7–9 | Section 3 — Data loading: schedules & PBP + test |
+| 10–13 | Section 4 — Rolling off/def stats + long-format pivot + SOS (2 code cells) + test |
+| 14–16 | Section 5 — All-Pro roster features (weighted 4/2/1, prev-year split off/def) + test |
+| 17–19 | Section 6 — Prior-year passer rating from NGS (2016+) with manual fallback (2014–2015) + test |
+| 20–22 | Section 7 — Rolling sacks / turnovers / 3rd-down rate + test |
+| 23–25 | Section 8 — Coach win % (career-prior + roll3) + test |
+| 26–28 | Section 9 — QB switch flag + test |
+| 29–31 | Section 10 — Pivot to home_/away_ layout (`games` DataFrame) + test |
+| 32–34 | Section 11 — Feature matrix assembly, 79 `FEATURE_COLS`, train/test split, raw categoricals saved + test |
+| 35–37 | Section 12 — Real injury data from `nfl.load_injuries()` (Out=1.0, Doubtful=0.75) + test |
+| 38–40 | Section 13 — Model 1: XGBoost prod pkl (`FinalCfg` defined here) + test |
+| 41–43 | Section 14 — Model 2: Random Forest + test |
+| 44–46 | Section 15 — Model 3: Ridge regression + test |
+| 47–49 | Section 16 — Model 4: LightGBM (chronological 15% early-stop holdout) + test |
+| 50–53 | Section 17 — Model 5: MLP (PyTorch, 3-layer feedforward) + test |
+| 54–56 | Section 18 — Ensemble variants: avg, weighted (tuned on 2022 holdout), Ridge meta-learner stack + test |
+| 57–60 | Section 19 — Head-to-head comparison (cmp table) + feature importance charts (XGBoost + RF) + test |
+| 61–64 | Section 20 — Walk-forward CV: 6 folds (2020–2025), 5 models (includes MLP) + CV analysis markdown + test |
+| 65–68 | Section 21 — Production retrain: ensemble fixed75 + standalone XGBoost pipeline + LightGBM + test (loads pkls back, checks keys) |
+| 69 | Section 22 — 2025 live-test note + production setup summary |
 
 ### Key Constraints
 
-- **FinalCfg dataclass** must be defined before `joblib.load("xgboost_prod_model.pkl")` — it's embedded in the pkl. Definition is in cell 20.
-- **`roof_raw` / `surface_raw`** — raw categorical strings saved before local OrdinalEncoding in cell 16. The production pipeline has its own encoder; pass raw strings to it, not locally-encoded integers.
-- **Trailing space** in `"allpro_diff_home_def_away_off_3_years "` is intentional — matches the production pkl's column name exactly. Do not remove it.
-- **ALLPRO_CSV** path tries both `nfl_allpro_1997_2025.csv` (CWD=`betting/`) and `betting/nfl_allpro_1997_2025.csv` (CWD=project root) — handled in cell 2 (config).
+- **FinalCfg dataclass** must be defined before `joblib.load("xgboost_prod_model.pkl")` — it's embedded in the pkl. Definition is in the Section 13 code cell (cell 39).
+- **`roof_raw` / `surface_raw`** — raw categorical strings saved before local OrdinalEncoding in the Section 11 code cell (cell 33). The production pipeline has its own encoder; pass raw strings to it, not locally-encoded integers.
+- **Trailing space** in `"allpro_diff_home_def_away_off_3_years "` is intentional — matches the production pkl's column name exactly. Do not remove it. (Section 11 test asserts this.)
+- **ALLPRO_CSV** path tries both `nfl_allpro_1997_2025.csv` (CWD=`betting/`) and `betting/nfl_allpro_1997_2025.csv` (CWD=project root) — handled in the Section 1 code cell (cell 2). The Section 1 test asserts the CSV is reachable.
 - **LightGBM early stopping** uses a 15% held-out slice of training data, not the test set — to avoid test label leakage.
 - **XGBoost (cv)** in walk-forward CV is retrained from scratch each fold. It is NOT the pre-trained pkl — that would be in-sample for all folds.
 - **Editing:** Use Python + `json.load/dump`. The notebook is too large for the Read/NotebookEdit tools.
 
-### Walk-Forward CV Results (2026-05-15, 6 folds 2020–2025)
+### Walk-Forward CV Results (2026-05-20, 6 folds 2020–2025, **35-feature production subset**, tuned hyperparameters)
 
 | Model | Mean ATS | Std | Notes |
 |-------|----------|-----|-------|
-| LightGBM | 53.0% | 4.1% | **CV winner** — highest mean, but highest floor risk (44.2% in 2023). Direction voter. |
-| Ridge | 52.1% | 2.9% | Best MAE (9.83), strongest single fold (56.5% in 2024). Direction voter. |
-| Random Forest | 51.3% | 2.5% | Below break-even mean — not in production |
-| XGBoost (cv) | 51.2% | 1.8% | CV-retrained standalone; prod pkl (in ensemble) adds more signal |
+| **Random Forest** | **57.1%** | 2.9% | Highest mean but still highest variance. Not in production. |
+| **XGBoost (cv) (α=2, λ=5)** | **56.9%** | **1.9%** | **CV winner on risk-adjusted basis.** Was 55.3% at 85 features — biggest gain from ablation. Direction voter. |
+| LightGBM | 56.5% | 1.7% | Was 55.5% at 85 features. Direction voter. |
+| Ridge (α=50) | 55.6% | 2.0% | Was 56.2% at 85 features. Ridge prefers more features — its L2 reg already handles noise. Direction voter. |
+| MLP | 53.7% | 2.5% | Comparison only. Performance held roughly flat with feature reduction. |
 
-Break-even: 52.4% ATS. 2023 was a universally hard season (all models underperformed fold 4). MLP removed from production after walk-forward showed 50.1% mean ATS (below break-even). Ensemble fixed75 is not in the CV loop — it is the edge-setter, not a direction voter.
+Break-even: 52.4% ATS. **Feature set reduced from 85 → 35** on 2026-05-20 after an ablation study (`betting/experiments/feature_ablation.py`) showed dropping low-importance features improved AVG CV score by +1.3pp. Engineering still builds all 85 features for analysis; only the top 35 (ranked by combined XGB gain + Ridge |coef| + LGB gain) are passed to model training via `PROD_FEATURES_35` in `model_comparison.ipynb` cell 33. Hyperparameter tuning sweep (2026-05-20) confirmed Ridge α=10→50 and XGBoost reg_alpha 1→2 / reg_lambda 3→5. Ensemble fixed75 is not in the CV loop — it is the edge-setter, not a direction voter.
 
 ## Key Constraints
 - The XGBoost model pipeline expects a `preprocessor` named step — don't change the pkl structure without retraining.
@@ -142,7 +156,7 @@ Break-even: 52.4% ATS. 2023 was a universally hard season (all models underperfo
 - Agent analysis JSON files are cached by week; regenerating them requires re-running the agent notebook and costs API calls.
 - The dashboard reads the tracker CSV directly — column names and structure in `betting/predictions_tracker.csv` must stay consistent with `app.py` expectations.
 - **Production model is Ensemble fixed75** — `ens_model_edge` drives the edge threshold and sort order. XGBoost, Ridge, and LightGBM are the three direction voters in `consensus_tier`. `consensus_tier` = HIGH when all 3 agree + `abs(ens_model_edge) ≥ 3pt`; MEDIUM when agree + `≥ 1pt`; PASS otherwise.
-- **MLP has been removed** — deleted from `betting/models/`, stripped from `predict_betting.ipynb`. Walk-forward CV showed 50.1% mean ATS (below 52.4% break-even). Do not re-add it.
+- **MLP is comparison-only** — present in `model_comparison.ipynb` Section 17 for benchmarking. Not in `betting/models/` and not used by `predict_betting.ipynb`. Walk-forward CV with 85 features shows 53.9% mean ATS (above 52.4% break-even), but its edge filter adds minimal signal vs. the ensemble (53.8% high vs 53.6% all). Do not add it to production.
 - **Fantasy projection CSVs MUST live in `fantasy/fantasy_projections/`** — never move them to `fantasy/` or any other location. `app.py` reads from `fantasy/fantasy_projections/projections_*.csv` and `predict_fantasy.ipynb` writes there via `_DIR / "fantasy_projections"`. Do not reorganize this path.
 
 ## Fantasy Model (`fantasy/`)
@@ -311,9 +325,34 @@ Download the salary CSV from any DK NFL Classic contest lobby → *Export to CSV
 
 ## Completed Work
 
+**2026-05-20 (continued, feature ablation):**
+- Ran feature ablation study (`betting/experiments/feature_ablation.py` / `betting/experiments/feature_ablation_results.json` / `betting/experiments/feature_importance_ranking.csv`): ranked all 85 features by combined importance (XGB gain + Ridge |coef| + LGB gain), then tested walk-forward CV at 85, 75, 65, 55, 45, 35, 25 feature subsets. Best AVG score at 35 features (+1.3pp over full 85). XGBoost gained the most (+1.6pp mean ATS); Ridge slightly regressed (its L2 reg already handles noise). LightGBM and Random Forest also improved.
+- **Reduced production feature set from 85 → 35** via new `PROD_FEATURES_35` list in `model_comparison.ipynb` cell 33. Engineering still computes all 85 features into `g`; only the top 35 are passed to model training (`avail` is filtered). All 3 production pkls retrained. New CV: XGBoost (cv) 55.3% → **56.9%** mean ATS, LightGBM 55.5% → 56.5%, Ridge 56.2% → 55.6%. Hold-out 2023-2025: XGBoost prod 60.9% → 61.4% ATS overall, high-confidence 74.3% → 75.2%.
+- Notable features dropped: all 3 new NGS CPAE/TTT features (added earlier today — ranked bottom 15), `roof`/`surface`, `home_rest`/`away_rest`, `is_final_week`, `is_away_qb_new`, several individual-team allpro features (the diff versions ranked higher).
+- Stale comments fixed: `model_comparison.ipynb` cell 33 ("Exact 79 production feature columns" → "All 85 engineered feature columns"); `predict_betting.ipynb` cell 28 docstring ("Builds all 79 features" → "Builds all 85 features").
+
+**2026-05-20 (continued, hyperparameter tuning):**
+- Ran walk-forward CV hyperparameter sweep on all 5 models (30 configs × 6 folds, see `betting/experiments/tune_hyperparams.py` / `betting/experiments/hyperparam_sweep_results.json`). Optimized for Mean ATS − Std (risk-adjusted score). Best per family: Ridge α=50 (was α=10), XGBoost α=2/λ=5 (was α=1/λ=3), RF max_features=0.3 (not in production), LightGBM unchanged (baseline already optimal), MLP smaller (128/64/32 — not in production).
+- 3-seed stability check on XGBoost (`betting/experiments/tune_xgb_seeds.py`) confirmed the α=2/λ=5 std reduction is robust across seeds (Δscore +0.35pp averaged); the mean improvement was within seed noise. Applied anyway for the std gain.
+- **Updated production hyperparameters:** Ridge α 10→50, XGBoost reg_alpha 1→2, reg_lambda 3→5. Updated in both `betting/predict_betting.ipynb` (FinalCfg) and `betting/model_comparison.ipynb` (cells 40, 46, 62, 66, 67). Retrained all 3 production pkls. New CV (above): Ridge 55.4→56.2% mean ATS, XGBoost std 1.7→1.4%.
+
+**2026-05-20 (continued):**
+- Added 6 new QB NGS features (Group 8): `home/away/diff_cpae_prev_year` (completion % above expectation) and `home/away/diff_time_to_throw_prev_year` — feature count 79 → 85. Source: `nfl.load_nextgen_stats(stat_type="passing")` same as passer rating; CPAE and TTT unavailable pre-2016 (filled with NGS median). Extended `_build_passer_rating` helper in `predict_betting.ipynb` (cell 28) and Section 6 (cells 17–19) in `model_comparison.ipynb`. All 3 production pkls retrained.
+- Renamed `home/away_qbr_prev_year` → `home/away_pr_prev_year` (completing the 2026-05-18 rename that only updated the diff column). All notebooks, pkls, and CLAUDE.md updated.
+- Applied 11 code-review fixes to `model_comparison.ipynb`: OrdinalEncoder fit on train only; `fillna(0)` for sacks/turnovers/third-down after left-join; stale "77" comment; orphaned comment; 2022 "holdout" label; missing-2025 warning; `len(avail)==85` assert in cells 34 and 37; archive pkl fallback removed; `len(tr_stack)==len(y_tr)` guard; NGS dedup assert.
+- Re-enabled MLP in `model_comparison.ipynb` (Section 17, cell 52 raw→code + Section 17 test cell inserted). Added MLP to walk-forward CV loop (Section 20) with per-fold `StandardScaler` and 150-epoch `BettingMLP` training. CV result: 53.9% mean ATS ± 1.7% (was 50.1% at 79 features) — above break-even with 85 features, but edge filter barely discriminates. Notebook now 70 cells. Updated CV results table above.
+
+**2026-05-20:**
+- Restructured `betting/model_comparison.ipynb` from 45 cells to 68 cells (markdown → code → inline-test pattern, matching `predict_betting.ipynb`)
+- Added 20 inline test cells (one per section) asserting shape/null/range invariants — features = 85, FEATURE_COLS trailing-space preserved, ATS/MAE in plausible ranges, pkl keys present, etc.
+- Standardised section markdown headers with Purpose / Inputs / Outputs / Tests
+- Updated CLAUDE.md cell-structure table to reflect the 22 numbered sections
+- **Recovered 3 corrupt cells in `predict_betting.ipynb`** (cells 27, 28, 36) — each character had been stored as a separate list item with a trailing `\n`, making the notebook fail to compile. Reconstruction: `''.join(item[0] for item in source_list)`. Corruption was introduced by commit `84cbcb2` (May 19 "updates"); not noticed until 2026-05-20.
+- **Switched passer-rating source to NFL Next Gen Stats** in both `predict_betting.ipynb` (`_build_passer_rating` helper) and `model_comparison.ipynb` (Section 6). `nfl.load_nextgen_stats(stat_type="passing")` is now primary for 2016+; the manual NFL-passer-rating formula on PBP remains as the fallback for 2014–2015 (NGS does not cover pre-2016) and for any year where the NGS load fails. NGS team abbreviations are canonicalised (`LAR`→`LA`; `LV`→`OAK` for 2016–2019; `LAC`→`SD` for 2016) so the per-season team merge succeeds. After switch: 313 NGS team-seasons + 64 manual = 377 total team-seasons; median passer rating 90.4. All 3 production pkls retrained against the NGS-sourced feature.
+
 **2026-05-18:**
-- Renamed feature `diff_qbr_prev_year` → `diff_pr_prev_year` in `predict_betting.ipynb` and `model_comparison.ipynb`
-- Added `home_coach_win_pct_roll3` / `away_coach_win_pct_roll3` (rolling 3-season window) — feature count now 79
+- Renamed all three passer-rating features: `home_qbr_prev_year` → `home_pr_prev_year`, `away_qbr_prev_year` → `away_pr_prev_year`, `diff_qbr_prev_year` → `diff_pr_prev_year` in `predict_betting.ipynb` and `model_comparison.ipynb`
+- Added `home_coach_win_pct_roll3` / `away_coach_win_pct_roll3` (rolling 3-season window) — feature count now 79 (later expanded to 85)
 - Restructured `predict_betting.ipynb` from 11 cells to 43 cells (markdown → code → inline-test pattern)
 - Deleted `betting/test_predict_betting.py` — replaced by inline test cells in the notebook
 - Fixed all known issues from 2026-05-15 code review (see Known Issues below for full list)

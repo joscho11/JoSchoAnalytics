@@ -1,0 +1,896 @@
+{
+  "results": {
+    "85": {
+      "XGBoost": {
+        "mean": 0.553420320833674,
+        "std": 0.02080762180025071,
+        "min": 0.519298245614035,
+        "max": 0.5824561403508772,
+        "mae": 9.633944352467855,
+        "score": 0.5326126990334232
+      },
+      "Ridge": {
+        "mean": 0.562253580834121,
+        "std": 0.026160254993789833,
+        "min": 0.5263157894736842,
+        "max": 0.5964912280701754,
+        "mae": 9.694536526997885,
+        "score": 0.5360933258403312
+      },
+      "LightGBM": {
+        "mean": 0.5582522308353917,
+        "std": 0.030650780532793197,
+        "min": 0.49473684210526314,
+        "max": 0.5859649122807018,
+        "mae": 9.657332869292551,
+        "score": 0.5276014503025984
+      },
+      "AVG": {
+        "mean": 0.5579753775010622,
+        "score": 0.532102491725451
+      }
+    },
+    "75": {
+      "XGBoost": {
+        "mean": 0.5551767659370427,
+        "std": 0.015772091914182856,
+        "min": 0.5263157894736842,
+        "max": 0.5754385964912281,
+        "mae": 9.652581214904785,
+        "score": 0.5394046740228599
+      },
+      "Ridge": {
+        "mean": 0.5610860493293026,
+        "std": 0.026983200763718317,
+        "min": 0.519298245614035,
+        "max": 0.5929824561403508,
+        "mae": 9.68103297551473,
+        "score": 0.5341028485655843
+      },
+      "LightGBM": {
+        "mean": 0.5557963446235359,
+        "std": 0.027372695697352734,
+        "min": 0.5087719298245614,
+        "max": 0.6,
+        "mae": 9.65752675112966,
+        "score": 0.5284236489261831
+      },
+      "AVG": {
+        "mean": 0.5573530532966271,
+        "score": 0.5339770571715424
+      }
+    },
+    "65": {
+      "XGBoost": {
+        "mean": 0.5646440185931783,
+        "std": 0.018066851107206752,
+        "min": 0.5333333333333333,
+        "max": 0.5894736842105263,
+        "mae": 9.6053417523702,
+        "score": 0.5465771674859715
+      },
+      "Ridge": {
+        "mean": 0.568347076742942,
+        "std": 0.0269285508798604,
+        "min": 0.5263157894736842,
+        "max": 0.5929824561403508,
+        "mae": 9.661015192667643,
+        "score": 0.5414185258630817
+      },
+      "LightGBM": {
+        "mean": 0.5623089555835415,
+        "std": 0.020260739049505275,
+        "min": 0.5263157894736842,
+        "max": 0.5894736842105263,
+        "mae": 9.647978003835,
+        "score": 0.5420482165340362
+      },
+      "AVG": {
+        "mean": 0.5651000169732207,
+        "score": 0.5433479699610299
+      }
+    },
+    "55": {
+      "XGBoost": {
+        "mean": 0.5647872703295141,
+        "std": 0.023127654021418125,
+        "min": 0.519298245614035,
+        "max": 0.5859649122807018,
+        "mae": 9.60124127070109,
+        "score": 0.541659616308096
+      },
+      "Ridge": {
+        "mean": 0.5641512185353692,
+        "std": 0.024812963678249596,
+        "min": 0.5228070175438596,
+        "max": 0.5929824561403508,
+        "mae": 9.652692317962646,
+        "score": 0.5393382548571196
+      },
+      "LightGBM": {
+        "mean": 0.566472089564715,
+        "std": 0.030499634465956844,
+        "min": 0.5017543859649123,
+        "max": 0.5929824561403508,
+        "mae": 9.651272323918002,
+        "score": 0.5359724550987581
+      },
+      "AVG": {
+        "mean": 0.5651368594765328,
+        "score": 0.5389901087546579
+      }
+    },
+    "45": {
+      "XGBoost": {
+        "mean": 0.5641942384540509,
+        "std": 0.01905728849426105,
+        "min": 0.5263157894736842,
+        "max": 0.5789473684210527,
+        "mae": 9.62254810333252,
+        "score": 0.5451369499597899
+      },
+      "Ridge": {
+        "mean": 0.5557615612586803,
+        "std": 0.02073914843298987,
+        "min": 0.5157894736842106,
+        "max": 0.5754385964912281,
+        "mae": 9.656015555063883,
+        "score": 0.5350224128256904
+      },
+      "LightGBM": {
+        "mean": 0.5604870620273742,
+        "std": 0.017471597612001507,
+        "min": 0.5333333333333333,
+        "max": 0.5859649122807018,
+        "mae": 9.637847564380648,
+        "score": 0.5430154644153727
+      },
+      "AVG": {
+        "mean": 0.5601476205800351,
+        "score": 0.5410582757336178
+      }
+    },
+    "35": {
+      "XGBoost": {
+        "mean": 0.5718723217804184,
+        "std": 0.020058378125538803,
+        "min": 0.5333333333333333,
+        "max": 0.5964912280701754,
+        "mae": 9.610222498575846,
+        "score": 0.5518139436548796
+      },
+      "Ridge": {
+        "mean": 0.5564404109826026,
+        "std": 0.020141494283832103,
+        "min": 0.5263157894736842,
+        "max": 0.5789473684210527,
+        "mae": 9.626904646555582,
+        "score": 0.5362989166987705
+      },
+      "LightGBM": {
+        "mean": 0.5648547779207692,
+        "std": 0.017408033570959876,
+        "min": 0.5333333333333333,
+        "max": 0.5836431226765799,
+        "mae": 9.640410262468407,
+        "score": 0.5474467443498093
+      },
+      "AVG": {
+        "mean": 0.5643891702279301,
+        "score": 0.5451865349011532
+      }
+    },
+    "25": {
+      "XGBoost": {
+        "mean": 0.5729988925050116,
+        "std": 0.02785913232220046,
+        "min": 0.5228070175438596,
+        "max": 0.6,
+        "mae": 9.608216285705566,
+        "score": 0.5451397601828111
+      },
+      "Ridge": {
+        "mean": 0.5470672127287519,
+        "std": 0.030520582082246745,
+        "min": 0.5035211267605634,
+        "max": 0.5929824561403508,
+        "mae": 9.619783083597818,
+        "score": 0.5165466306465052
+      },
+      "LightGBM": {
+        "mean": 0.5667032182879664,
+        "std": 0.025250162604404533,
+        "min": 0.5228070175438596,
+        "max": 0.5947955390334573,
+        "mae": 9.604335094401756,
+        "score": 0.541453055683562
+      },
+      "AVG": {
+        "mean": 0.5622564411739099,
+        "score": 0.5343798155042928
+      }
+    }
+  },
+  "ranking": [
+    {
+      "feature": "spread_line",
+      "xgb_gain_norm": 1.0,
+      "ridge_abs_coef_norm": 1.0,
+      "lgb_gain_norm": 1.0,
+      "combined": 1.0,
+      "rank": 1
+    },
+    {
+      "feature": "sack_diff",
+      "xgb_gain_norm": 0.37610405683517456,
+      "ridge_abs_coef_norm": 0.2602607011795044,
+      "lgb_gain_norm": 0.23474644583624277,
+      "combined": 0.29037040128364056,
+      "rank": 2
+    },
+    {
+      "feature": "sack_diff_reverse",
+      "xgb_gain_norm": 0.413885235786438,
+      "ridge_abs_coef_norm": 0.26026129722595215,
+      "lgb_gain_norm": 0.18052985360897542,
+      "combined": 0.2848921288737885,
+      "rank": 3
+    },
+    {
+      "feature": "scoring_diff",
+      "xgb_gain_norm": 0.5422704815864563,
+      "ridge_abs_coef_norm": 0.0019388165092095733,
+      "lgb_gain_norm": 0.15359154569376218,
+      "combined": 0.23260028238849081,
+      "rank": 4
+    },
+    {
+      "feature": "home_coach_win_pct_roll3",
+      "xgb_gain_norm": 0.344474732875824,
+      "ridge_abs_coef_norm": 0.03038017824292183,
+      "lgb_gain_norm": 0.09089926871096146,
+      "combined": 0.1552513970018594,
+      "rank": 5
+    },
+    {
+      "feature": "scoring_diff_reverse",
+      "xgb_gain_norm": 0.41674527525901794,
+      "ridge_abs_coef_norm": 0.0019388177897781134,
+      "lgb_gain_norm": 0.04545859429079453,
+      "combined": 0.15471422981168878,
+      "rank": 6
+    },
+    {
+      "feature": "home_coach_win_pct_prior",
+      "xgb_gain_norm": 0.28030017018318176,
+      "ridge_abs_coef_norm": 0.09593959897756577,
+      "lgb_gain_norm": 0.07188972659644026,
+      "combined": 0.14937650106925612,
+      "rank": 7
+    },
+    {
+      "feature": "away_rolling_allowed_play_count",
+      "xgb_gain_norm": 0.16987106204032898,
+      "ridge_abs_coef_norm": 0.24223507940769196,
+      "lgb_gain_norm": 0.029296087957745003,
+      "combined": 0.14713408143564238,
+      "rank": 8
+    },
+    {
+      "feature": "away_rolling_allowed_avg_yards",
+      "xgb_gain_norm": 0.18492679297924042,
+      "ridge_abs_coef_norm": 0.21223443746566772,
+      "lgb_gain_norm": 0.04236967102050654,
+      "combined": 0.1465103054555253,
+      "rank": 9
+    },
+    {
+      "feature": "home_rolling_win_pct",
+      "xgb_gain_norm": 0.3222804367542267,
+      "ridge_abs_coef_norm": 0.07582218945026398,
+      "lgb_gain_norm": 0.011983741644325384,
+      "combined": 0.13669546091665907,
+      "rank": 10
+    },
+    {
+      "feature": "diff_active_allpro_weighted",
+      "xgb_gain_norm": 0.2948957681655884,
+      "ridge_abs_coef_norm": 0.07494653761386871,
+      "lgb_gain_norm": 0.02308100668757028,
+      "combined": 0.1309744325219554,
+      "rank": 11
+    },
+    {
+      "feature": "epa_home_off_away_def_rolling_diff",
+      "xgb_gain_norm": 0.18986189365386963,
+      "ridge_abs_coef_norm": 0.1448890119791031,
+      "lgb_gain_norm": 0.054507559990613984,
+      "combined": 0.12975281690747517,
+      "rank": 12
+    },
+    {
+      "feature": "diff_active_allpro_prev_year",
+      "xgb_gain_norm": 0.21984952688217163,
+      "ridge_abs_coef_norm": 0.143469899892807,
+      "lgb_gain_norm": 0.008315659090085687,
+      "combined": 0.12387836195502144,
+      "rank": 13
+    },
+    {
+      "feature": "away_season_sos_opponent_avg",
+      "xgb_gain_norm": 0.19754467904567719,
+      "ridge_abs_coef_norm": 0.10812958329916,
+      "lgb_gain_norm": 0.06067460075911307,
+      "combined": 0.12211628521778989,
+      "rank": 14
+    },
+    {
+      "feature": "diff_allpro_last_3_years_weighted",
+      "xgb_gain_norm": 0.2651491165161133,
+      "ridge_abs_coef_norm": 0.05409303680062294,
+      "lgb_gain_norm": 0.026940409729859473,
+      "combined": 0.11539418644043513,
+      "rank": 15
+    },
+    {
+      "feature": "allpro_diff_home_off_away_def_3_years",
+      "xgb_gain_norm": 0.1856846958398819,
+      "ridge_abs_coef_norm": 0.09938599914312363,
+      "lgb_gain_norm": 0.03147935638758784,
+      "combined": 0.10551668130667091,
+      "rank": 16
+    },
+    {
+      "feature": "home_defense_allpro_prev_year",
+      "xgb_gain_norm": 0.2057318240404129,
+      "ridge_abs_coef_norm": 0.10441390424966812,
+      "lgb_gain_norm": 0.005868798827780331,
+      "combined": 0.10533817818948066,
+      "rank": 17
+    },
+    {
+      "feature": "away_offense_allpro_prev_year",
+      "xgb_gain_norm": 0.22414138913154602,
+      "ridge_abs_coef_norm": 0.08249706774950027,
+      "lgb_gain_norm": 0.0071578298396870075,
+      "combined": 0.10459875975671756,
+      "rank": 18
+    },
+    {
+      "feature": "season_sos_diff",
+      "xgb_gain_norm": 0.17786459624767303,
+      "ridge_abs_coef_norm": 0.08970044553279877,
+      "lgb_gain_norm": 0.04473325428358265,
+      "combined": 0.10409943202135148,
+      "rank": 19
+    },
+    {
+      "feature": "third_down_diff",
+      "xgb_gain_norm": 0.2194797396659851,
+      "ridge_abs_coef_norm": 0.02288828231394291,
+      "lgb_gain_norm": 0.06890551015263684,
+      "combined": 0.10375784590683344,
+      "rank": 20
+    },
+    {
+      "feature": "epa_home_def_away_off_rolling_diff",
+      "xgb_gain_norm": 0.18500582873821259,
+      "ridge_abs_coef_norm": 0.09026310592889786,
+      "lgb_gain_norm": 0.03393416086566191,
+      "combined": 0.10306770099445099,
+      "rank": 21
+    },
+    {
+      "feature": "is_playoff",
+      "xgb_gain_norm": 0.22714300453662872,
+      "ridge_abs_coef_norm": 0.0807298794388771,
+      "lgb_gain_norm": 0.0,
+      "combined": 0.10262429714202881,
+      "rank": 22
+    },
+    {
+      "feature": "play_count_home_def_away_off_rolling_diff",
+      "xgb_gain_norm": 0.18397937715053558,
+      "ridge_abs_coef_norm": 0.06883098185062408,
+      "lgb_gain_norm": 0.05368206863516304,
+      "combined": 0.10216414254544091,
+      "rank": 23
+    },
+    {
+      "feature": "home_allpro_last_3_years_weighted",
+      "xgb_gain_norm": 0.2264965921640396,
+      "ridge_abs_coef_norm": 0.059950605034828186,
+      "lgb_gain_norm": 0.019756493587342758,
+      "combined": 0.10206789692873686,
+      "rank": 24
+    },
+    {
+      "feature": "away_rolling_avg_yards",
+      "xgb_gain_norm": 0.2032642513513565,
+      "ridge_abs_coef_norm": 0.04019647464156151,
+      "lgb_gain_norm": 0.06248625883259615,
+      "combined": 0.10198232951693482,
+      "rank": 25
+    },
+    {
+      "feature": "home_rolling_allowed_avg_epa",
+      "xgb_gain_norm": 0.16239537298679352,
+      "ridge_abs_coef_norm": 0.11206919699907303,
+      "lgb_gain_norm": 0.027677555584203224,
+      "combined": 0.10071404434021679,
+      "rank": 26
+    },
+    {
+      "feature": "away_defense_allpro_3_years",
+      "xgb_gain_norm": 0.17348188161849976,
+      "ridge_abs_coef_norm": 0.10354850441217422,
+      "lgb_gain_norm": 0.021591431838626024,
+      "combined": 0.09954060347290646,
+      "rank": 27
+    },
+    {
+      "feature": "away_coach_win_pct_prior",
+      "xgb_gain_norm": 0.21739588677883148,
+      "ridge_abs_coef_norm": 0.0147432005032897,
+      "lgb_gain_norm": 0.06555189278931337,
+      "combined": 0.09923032451739218,
+      "rank": 28
+    },
+    {
+      "feature": "home_recent_sos_opponent_avg",
+      "xgb_gain_norm": 0.17888689041137695,
+      "ridge_abs_coef_norm": 0.07134956866502762,
+      "lgb_gain_norm": 0.0453813502194822,
+      "combined": 0.09853926728176872,
+      "rank": 29
+    },
+    {
+      "feature": "away_pr_prev_year",
+      "xgb_gain_norm": 0.21922549605369568,
+      "ridge_abs_coef_norm": 0.03147106245160103,
+      "lgb_gain_norm": 0.04175369814145627,
+      "combined": 0.09748342260754128,
+      "rank": 30
+    },
+    {
+      "feature": "away_rolling_avg_epa",
+      "xgb_gain_norm": 0.20140866935253143,
+      "ridge_abs_coef_norm": 0.037097614258527756,
+      "lgb_gain_norm": 0.05328397313881995,
+      "combined": 0.0972634201583898,
+      "rank": 31
+    },
+    {
+      "feature": "away_injured_count",
+      "xgb_gain_norm": 0.18371503055095673,
+      "ridge_abs_coef_norm": 0.07821741700172424,
+      "lgb_gain_norm": 0.02908696869074708,
+      "combined": 0.09700646711408895,
+      "rank": 32
+    },
+    {
+      "feature": "home_rolling_play_count",
+      "xgb_gain_norm": 0.19119998812675476,
+      "ridge_abs_coef_norm": 0.05015140399336815,
+      "lgb_gain_norm": 0.043214534836616025,
+      "combined": 0.09485531022734307,
+      "rank": 33
+    },
+    {
+      "feature": "avg_yards_home_off_away_def_rolling_diff",
+      "xgb_gain_norm": 0.17349624633789062,
+      "ridge_abs_coef_norm": 0.08388916403055191,
+      "lgb_gain_norm": 0.027114456695426163,
+      "combined": 0.0948332865377627,
+      "rank": 34
+    },
+    {
+      "feature": "allpro_diff_home_off_away_def_prev_year",
+      "xgb_gain_norm": 0.1777763068675995,
+      "ridge_abs_coef_norm": 0.09983254969120026,
+      "lgb_gain_norm": 0.006010911808554288,
+      "combined": 0.09453992775617175,
+      "rank": 35
+    },
+    {
+      "feature": "away_defense_allpro_prev_year",
+      "xgb_gain_norm": 0.15301460027694702,
+      "ridge_abs_coef_norm": 0.1172647625207901,
+      "lgb_gain_norm": 0.012475678813611762,
+      "combined": 0.09425167557006257,
+      "rank": 36
+    },
+    {
+      "feature": "home_rolling_avg_yards",
+      "xgb_gain_norm": 0.18071120977401733,
+      "ridge_abs_coef_norm": 0.07008834928274155,
+      "lgb_gain_norm": 0.028317227585091257,
+      "combined": 0.09303893136414358,
+      "rank": 37
+    },
+    {
+      "feature": "away_recent_sos_opponent_avg",
+      "xgb_gain_norm": 0.17111138999462128,
+      "ridge_abs_coef_norm": 0.06634753197431564,
+      "lgb_gain_norm": 0.0395461349640208,
+      "combined": 0.09233501649412572,
+      "rank": 38
+    },
+    {
+      "feature": "home_season_sos_opponent_avg",
+      "xgb_gain_norm": 0.20194576680660248,
+      "ridge_abs_coef_norm": 0.014228155836462975,
+      "lgb_gain_norm": 0.05710012160495415,
+      "combined": 0.09109134622002805,
+      "rank": 39
+    },
+    {
+      "feature": "home_rolling_allowed_play_count",
+      "xgb_gain_norm": 0.17262209951877594,
+      "ridge_abs_coef_norm": 0.054415587335824966,
+      "lgb_gain_norm": 0.04412116201558741,
+      "combined": 0.090386281714966,
+      "rank": 40
+    },
+    {
+      "feature": "is_home_qb_new",
+      "xgb_gain_norm": 0.22920109331607819,
+      "ridge_abs_coef_norm": 0.03270083665847778,
+      "lgb_gain_norm": 0.008651079110854637,
+      "combined": 0.0901843313947498,
+      "rank": 41
+    },
+    {
+      "feature": "home_qb_switch",
+      "xgb_gain_norm": 0.2250857800245285,
+      "ridge_abs_coef_norm": 0.032706793397665024,
+      "lgb_gain_norm": 0.011096324706027502,
+      "combined": 0.08962962898411671,
+      "rank": 42
+    },
+    {
+      "feature": "home_rolling_avg_epa",
+      "xgb_gain_norm": 0.21966566145420074,
+      "ridge_abs_coef_norm": 0.014728207141160965,
+      "lgb_gain_norm": 0.03216699043791746,
+      "combined": 0.0888536184359963,
+      "rank": 43
+    },
+    {
+      "feature": "away_coach_win_pct_roll3",
+      "xgb_gain_norm": 0.2017049640417099,
+      "ridge_abs_coef_norm": 0.0072810291312634945,
+      "lgb_gain_norm": 0.05212617041294696,
+      "combined": 0.08703738987983904,
+      "rank": 44
+    },
+    {
+      "feature": "away_offense_allpro_3_years",
+      "xgb_gain_norm": 0.1772596836090088,
+      "ridge_abs_coef_norm": 0.07028946280479431,
+      "lgb_gain_norm": 0.012016755226780019,
+      "combined": 0.08652196721352771,
+      "rank": 45
+    },
+    {
+      "feature": "diff_allpro_prev_year",
+      "xgb_gain_norm": 0.17284901440143585,
+      "ridge_abs_coef_norm": 0.07179956138134003,
+      "lgb_gain_norm": 0.014475517099915606,
+      "combined": 0.08637469762756383,
+      "rank": 46
+    },
+    {
+      "feature": "home_allpro_prev_year",
+      "xgb_gain_norm": 0.17120550572872162,
+      "ridge_abs_coef_norm": 0.08451520651578903,
+      "lgb_gain_norm": 0.0033469405626557823,
+      "combined": 0.08635588178552861,
+      "rank": 47
+    },
+    {
+      "feature": "div_game",
+      "xgb_gain_norm": 0.20182742178440094,
+      "ridge_abs_coef_norm": 0.048965662717819214,
+      "lgb_gain_norm": 0.005399832860329753,
+      "combined": 0.08539764408790369,
+      "rank": 48
+    },
+    {
+      "feature": "total_line",
+      "xgb_gain_norm": 0.1504608541727066,
+      "ridge_abs_coef_norm": 0.07870420813560486,
+      "lgb_gain_norm": 0.022999116445842818,
+      "combined": 0.08405472625138476,
+      "rank": 49
+    },
+    {
+      "feature": "home_time_to_throw_prev_year",
+      "xgb_gain_norm": 0.17499397695064545,
+      "ridge_abs_coef_norm": 0.05118310824036598,
+      "lgb_gain_norm": 0.024735216299539727,
+      "combined": 0.08363743258842028,
+      "rank": 50
+    },
+    {
+      "feature": "home_offense_allpro_3_years",
+      "xgb_gain_norm": 0.1931154876947403,
+      "ridge_abs_coef_norm": 0.03840207681059837,
+      "lgb_gain_norm": 0.017283188319442234,
+      "combined": 0.0829335855166904,
+      "rank": 51
+    },
+    {
+      "feature": "diff_pr_prev_year",
+      "xgb_gain_norm": 0.19522574543952942,
+      "ridge_abs_coef_norm": 0.0036453839857131243,
+      "lgb_gain_norm": 0.046718194209052134,
+      "combined": 0.08186310997357402,
+      "rank": 52
+    },
+    {
+      "feature": "cover_rate_diff",
+      "xgb_gain_norm": 0.17680706083774567,
+      "ridge_abs_coef_norm": 0.05768388509750366,
+      "lgb_gain_norm": 0.010967961028661261,
+      "combined": 0.08181963565463686,
+      "rank": 53
+    },
+    {
+      "feature": "home_defense_allpro_3_years",
+      "xgb_gain_norm": 0.17581285536289215,
+      "ridge_abs_coef_norm": 0.053171344101428986,
+      "lgb_gain_norm": 0.014392535148016018,
+      "combined": 0.08112558068763925,
+      "rank": 54
+    },
+    {
+      "feature": "league_rolling_avg_abs_margin_by_week",
+      "xgb_gain_norm": 0.19482052326202393,
+      "ridge_abs_coef_norm": 0.01675598882138729,
+      "lgb_gain_norm": 0.03063379916160225,
+      "combined": 0.08073676855235934,
+      "rank": 55
+    },
+    {
+      "feature": "sos_diff",
+      "xgb_gain_norm": 0.1961885392665863,
+      "ridge_abs_coef_norm": 0.0040202452801167965,
+      "lgb_gain_norm": 0.0388699911336734,
+      "combined": 0.07969292476113088,
+      "rank": 56
+    },
+    {
+      "feature": "allpro_diff_home_def_away_off_3_years ",
+      "xgb_gain_norm": 0.19218294322490692,
+      "ridge_abs_coef_norm": 0.017458878457546234,
+      "lgb_gain_norm": 0.026972144339525345,
+      "combined": 0.0788713195237993,
+      "rank": 57
+    },
+    {
+      "feature": "diff_injured_count",
+      "xgb_gain_norm": 0.19897758960723877,
+      "ridge_abs_coef_norm": 0.02145366556942463,
+      "lgb_gain_norm": 0.015185481873022313,
+      "combined": 0.07853891172901352,
+      "rank": 58
+    },
+    {
+      "feature": "turnover_diff",
+      "xgb_gain_norm": 0.19236738979816437,
+      "ridge_abs_coef_norm": 0.006557393819093704,
+      "lgb_gain_norm": 0.03642142337508023,
+      "combined": 0.07844873442234933,
+      "rank": 59
+    },
+    {
+      "feature": "away_allpro_last_3_years_weighted",
+      "xgb_gain_norm": 0.19557584822177887,
+      "ridge_abs_coef_norm": 0.015469573438167572,
+      "lgb_gain_norm": 0.023519379208259243,
+      "combined": 0.0781882644725417,
+      "rank": 60
+    },
+    {
+      "feature": "avg_yards_home_def_away_off_rolling_diff",
+      "xgb_gain_norm": 0.14439859986305237,
+      "ridge_abs_coef_norm": 0.05817672610282898,
+      "lgb_gain_norm": 0.030623867732111815,
+      "combined": 0.07773306456599773,
+      "rank": 61
+    },
+    {
+      "feature": "home_rolling_allowed_avg_yards",
+      "xgb_gain_norm": 0.15655755996704102,
+      "ridge_abs_coef_norm": 0.039991360157728195,
+      "lgb_gain_norm": 0.03499187594092823,
+      "combined": 0.07718026659699591,
+      "rank": 62
+    },
+    {
+      "feature": "third_down_diff_reverse",
+      "xgb_gain_norm": 0.1737399697303772,
+      "ridge_abs_coef_norm": 0.02288825809955597,
+      "lgb_gain_norm": 0.031008867572784243,
+      "combined": 0.0758790318009058,
+      "rank": 63
+    },
+    {
+      "feature": "home_pr_prev_year",
+      "xgb_gain_norm": 0.16394922137260437,
+      "ridge_abs_coef_norm": 0.026260320097208023,
+      "lgb_gain_norm": 0.03398479439373938,
+      "combined": 0.07473144404608716,
+      "rank": 64
+    },
+    {
+      "feature": "away_qb_switch",
+      "xgb_gain_norm": 0.1892494112253189,
+      "ridge_abs_coef_norm": 0.03455939516425133,
+      "lgb_gain_norm": 0.0,
+      "combined": 0.0746029367049535,
+      "rank": 65
+    },
+    {
+      "feature": "home_cpae_prev_year",
+      "xgb_gain_norm": 0.1829296052455902,
+      "ridge_abs_coef_norm": 0.011943471617996693,
+      "lgb_gain_norm": 0.026170257071253897,
+      "combined": 0.07368111224293618,
+      "rank": 66
+    },
+    {
+      "feature": "away_rolling_play_count",
+      "xgb_gain_norm": 0.14353418350219727,
+      "ridge_abs_coef_norm": 0.04444202035665512,
+      "lgb_gain_norm": 0.03237102464317375,
+      "combined": 0.07344907865086892,
+      "rank": 67
+    },
+    {
+      "feature": "away_time_to_throw_prev_year",
+      "xgb_gain_norm": 0.16310912370681763,
+      "ridge_abs_coef_norm": 0.03969704359769821,
+      "lgb_gain_norm": 0.01692363743762209,
+      "combined": 0.07324327073090618,
+      "rank": 68
+    },
+    {
+      "feature": "play_count_home_off_away_def_rolling_diff",
+      "xgb_gain_norm": 0.16534270346164703,
+      "ridge_abs_coef_norm": 0.028729073703289032,
+      "lgb_gain_norm": 0.0214074801318675,
+      "combined": 0.07182641661540766,
+      "rank": 69
+    },
+    {
+      "feature": "turnover_diff_reverse",
+      "xgb_gain_norm": 0.18420752882957458,
+      "ridge_abs_coef_norm": 0.006557424087077379,
+      "lgb_gain_norm": 0.022725642228860886,
+      "combined": 0.07116353031818709,
+      "rank": 70
+    },
+    {
+      "feature": "diff_cpae_prev_year",
+      "xgb_gain_norm": 0.16196760535240173,
+      "ridge_abs_coef_norm": 0.016558190807700157,
+      "lgb_gain_norm": 0.034155659402202346,
+      "combined": 0.07089381665812293,
+      "rank": 71
+    },
+    {
+      "feature": "home_injured_count",
+      "xgb_gain_norm": 0.1465887427330017,
+      "ridge_abs_coef_norm": 0.04981052875518799,
+      "lgb_gain_norm": 0.01437665481153922,
+      "combined": 0.07025864209990963,
+      "rank": 72
+    },
+    {
+      "feature": "away_rolling_allowed_avg_epa",
+      "xgb_gain_norm": 0.16932663321495056,
+      "ridge_abs_coef_norm": 0.0038493019528687,
+      "lgb_gain_norm": 0.036352377220475046,
+      "combined": 0.06984276939911424,
+      "rank": 73
+    },
+    {
+      "feature": "allpro_diff_home_def_away_off_prev_year",
+      "xgb_gain_norm": 0.18446500599384308,
+      "ridge_abs_coef_norm": 0.008195660077035427,
+      "lgb_gain_norm": 0.004258906925437557,
+      "combined": 0.06563985549235268,
+      "rank": 74
+    },
+    {
+      "feature": "is_final_week",
+      "xgb_gain_norm": 0.19571517407894135,
+      "ridge_abs_coef_norm": 0.0006702604587189853,
+      "lgb_gain_norm": 0.0,
+      "combined": 0.06546180943648021,
+      "rank": 75
+    },
+    {
+      "feature": "home_rest",
+      "xgb_gain_norm": 0.1518738716840744,
+      "ridge_abs_coef_norm": 0.03653614968061447,
+      "lgb_gain_norm": 0.004891627760924091,
+      "combined": 0.06443388055834412,
+      "rank": 76
+    },
+    {
+      "feature": "home_offense_allpro_prev_year",
+      "xgb_gain_norm": 0.16185453534126282,
+      "ridge_abs_coef_norm": 0.027368122711777687,
+      "lgb_gain_norm": 0.0036038163223769144,
+      "combined": 0.06427549332111762,
+      "rank": 77
+    },
+    {
+      "feature": "away_cpae_prev_year",
+      "xgb_gain_norm": 0.16236895322799683,
+      "ridge_abs_coef_norm": 0.009896851144731045,
+      "lgb_gain_norm": 0.017221916718562755,
+      "combined": 0.06316257152401088,
+      "rank": 78
+    },
+    {
+      "feature": "diff_time_to_throw_prev_year",
+      "xgb_gain_norm": 0.15853776037693024,
+      "ridge_abs_coef_norm": 0.008347363211214542,
+      "lgb_gain_norm": 0.022485581781778095,
+      "combined": 0.0631235681462001,
+      "rank": 79
+    },
+    {
+      "feature": "away_rolling_win_pct",
+      "xgb_gain_norm": 0.17812572419643402,
+      "ridge_abs_coef_norm": 0.0011786628747358918,
+      "lgb_gain_norm": 0.008694254300601572,
+      "combined": 0.06266621514876926,
+      "rank": 80
+    },
+    {
+      "feature": "surface",
+      "xgb_gain_norm": 0.16230596601963043,
+      "ridge_abs_coef_norm": 0.018901146948337555,
+      "lgb_gain_norm": 0.005064285230388543,
+      "combined": 0.06209046854964571,
+      "rank": 81
+    },
+    {
+      "feature": "roof",
+      "xgb_gain_norm": 0.16519662737846375,
+      "ridge_abs_coef_norm": 0.0032638225238770247,
+      "lgb_gain_norm": 0.008953452393511831,
+      "combined": 0.05913796533647508,
+      "rank": 82
+    },
+    {
+      "feature": "away_allpro_prev_year",
+      "xgb_gain_norm": 0.15126889944076538,
+      "ridge_abs_coef_norm": 0.016011584550142288,
+      "lgb_gain_norm": 0.009353755561958058,
+      "combined": 0.05887807860919181,
+      "rank": 83
+    },
+    {
+      "feature": "away_rest",
+      "xgb_gain_norm": 0.1278100460767746,
+      "ridge_abs_coef_norm": 0.013617977499961853,
+      "lgb_gain_norm": 0.0031400469627265054,
+      "combined": 0.04818935684648765,
+      "rank": 84
+    },
+    {
+      "feature": "is_away_qb_new",
+      "xgb_gain_norm": 0.0,
+      "ridge_abs_coef_norm": 0.03455543890595436,
+      "lgb_gain_norm": 0.0,
+      "combined": 0.011518479635318121,
+      "rank": 85
+    }
+  ]
+}
