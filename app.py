@@ -446,7 +446,7 @@ seasons = sorted(df['season'].unique(), reverse=True)
 season  = st.sidebar.selectbox("Season", seasons, key="season_select")
 
 weeks   = sorted(df[df['season'] == season]['week'].unique(), reverse=True)
-_default_week_idx = next((i for i, w in enumerate(weeks) if w == 10), 0)
+_default_week_idx = next((i for i, w in enumerate(weeks) if w == 17), 0)
 week    = st.sidebar.selectbox("Week", weeks, index=_default_week_idx, key="week_select")
 
 edge_threshold = st.sidebar.slider(
