@@ -141,8 +141,8 @@ fantasy/
   models/                              # Per-position + per-stat XGBoost pkl files
   fantasy_projections/                 # Weekly projection CSVs (projections_{season}_week{n}.csv)
   dfs/
-    optimizer.ipynb                    # ILP formulation + helper functions reference
-    dfs_pipeline.ipynb                 # Weekly DFS workflow (papermill-compatible)
+    optimizer.ipynb                    # TBD - ILP formulation + helper functions reference
+    dfs_pipeline.ipynb                 # TBD - Weekly DFS workflow (papermill-compatible)
 .github/workflows/
   weekly_predictions.yml               # Monday/Thursday/Sunday automation
 ```
