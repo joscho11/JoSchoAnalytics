@@ -42,7 +42,7 @@ pip install -r requirements.txt
 ## Architecture
 
 ### Core Files
-- **`betting/predict_betting.ipynb`** — The prediction pipeline. 43 cells using a markdown → code → inline-test pattern for each section. Pulls live NFL data via `nflreadpy`, engineers features, loads all three models from `betting/models/`, computes predicted margin vs. Vegas spread to find edges, and commits results to `betting/predictions_tracker.csv`. Run via papermill; `MODE` is the papermill parameter. (`betting/test_predict_betting.py` was deleted 2026-05-18 — replaced by the inline test cells.)
+- **`betting/predict_betting.ipynb`** — The prediction pipeline. 43 cells using a markdown → code → inline-test pattern for each section. Pulls live NFL data via `nflreadpy`, loads the shared feature-engineering pipeline from `betting/features.ipynb`, loads all three models from `betting/models/`, computes predicted margin vs. Vegas spread to find edges, and commits results to `betting/predictions_tracker.csv`. Run via papermill; `MODE` is the papermill parameter. (`betting/test_predict_betting.py` was deleted 2026-05-18 — replaced by the inline test cells.)
 
   | Cells | Section |
   |-------|---------|
@@ -55,12 +55,13 @@ pip install -r requirements.txt
   | 18–20 | Static data: AllPro CSV, `TEAM_MAP` |
   | 21–23 | `_norm_name` helper |
   | 24–26 | `get_week_info` helper |
-  | 27–29 | `build_features` — 85-feature engineering (Groups 1–10) |
-  | 30–32 | `build_numeric_features` — encoder + feature matrix assembly |
+  | 27–29 | `build_features` — loaded from `features.ipynb` via json-exec (Phase 1, 2026-05-23) |
+  | 30–32 | `build_numeric_features` — also loaded from `features.ipynb` (acknowledged in cell 31; tested inline in cell 32) |
   | 33–34 | `run_predictions` — model inference (no test cell — needs live models) |
   | 35–37 | `update_results` — fill outcomes from completed games |
   | 38–40 | `log_predictions` — write to tracker CSV |
   | 41–42 | Run Pipeline — execution cell |
+- **`betting/features.ipynb`** — **Single source of truth** for the 85-feature engineering pipeline (Groups 1–10) shared by `predict_betting.ipynb` (and, after Phase 2, `model_comparison.ipynb`). 51 cells using the markdown → code → inline-test pattern, with synthetic-data tests per group. Public names exposed after load: `build_features`, `build_numeric_features`, the per-group `_build_*` helpers, `FEATURE_COLS_85`, `PROD_FEATURES_35`, `TEAM_MAP`, `norm_name`, `canonicalize_ngs_team`. **Loading pattern** (used by `predict_betting.ipynb` cell 28): set `RUN_TESTS = False` then exec every code cell from the notebook json — see [editing notebooks](#editing-the-shared-features-notebook) below. The synthetic-data tests inside run when the notebook is opened standalone (RUN_TESTS=True by default), and are skipped during production runs.
 - **`app.py`** — Streamlit dashboard with 3 tabs: Weekly Predictions, Season Performance, Help & Guide. Reads `betting/predictions_tracker.csv` and cached `betting/agent_analysis_2025_week{n}.json` files for LLM agent reasoning overlays. Fantasy tab shows per-week projections per position with projected and actual stat columns (pass yds, rush yds, receptions, rec yds) that populate automatically after the week is played (fetched live from nflreadpy, cached 1 hour). Players who didn't play show "DNP" in all actual columns.
 - **`betting/models/`** — All trained model pkl files:
   - `ensemble_prod_model.pkl` — **Primary model.** Ensemble fixed75: 0.75 XGBoost + 0.25 Ridge, trained 2014–2024. Sets the edge threshold and output sort order. Includes `scaler`, `feature_cols`, `roof_surface_encoder`, `xgb_model`, `ridge_model`, `xgb_weight`.
@@ -330,6 +331,20 @@ Download the salary CSV from any DK NFL Classic contest lobby → *Export to CSV
 - **Edit notebooks via Python `json.load/dump`** — same constraint as all other notebooks in this repo.
 
 ## Completed Work
+
+**2026-05-23 (feature-engineering dedup, Phase 1):**
+- Created `betting/features.ipynb` (51 cells, markdown → code → inline-test pattern) as the **single source of truth** for the 85-feature engineering pipeline. Public surface: `build_features`, `build_numeric_features`, all 10 `_build_*` per-group helpers, `FEATURE_COLS_85`, `PROD_FEATURES_35`, `TEAM_MAP`, `norm_name`, `canonicalize_ngs_team`. Each per-group helper has its own test cell exercising synthetic schedule + PBP + AllPro fixtures (Andy Reid wins 4/4 → roll3 = 1.0, KC offense AllPro 2024 → weight 4 in 2025, etc.). All 14 test cells pass.
+- **Slimmed `predict_betting.ipynb` cell 28 from 36 KB → 1.2 KB** — replaced the giant `build_features` definition with a json-load + exec loop that pulls every code cell from `features.ipynb` into the kernel's namespace. Set `RUN_TESTS = False` before the load so the synth tests inside `features.ipynb` skip during production runs. Cell 31 (`build_numeric_features`) became a one-line acknowledgement; cell 34 (`run_predictions`) gained a `required_features=list(dict.fromkeys(model_features + ens_feat_cols + lgbm_feat_cols))` arg to preserve the prior missing-column warning behaviour exactly.
+- Verified end-to-end: `papermill betting/predict_betting.ipynb -p MODE thursday` runs cleanly through all imports, the new loader, every inline test, model loads, schedule loading (285 current-season games), and only stops at the "season is over" check (correct in May 2026). The existing test cells inside `predict_betting.ipynb` still pass against the loaded-from-features functions: `✓ build_features: 1 game row, 119 columns, key features present`.
+- **Phase 2a (same day) — dedup constants + pure helpers in `model_comparison.ipynb`.** Added a json+exec loader block at the end of Section 2 (cell 5) that pulls every code cell of `features.ipynb` into the kernel namespace, plus a verification assertion in Section 2's test (cell 6). Removed three local duplicates: cell 15's `TEAM_MAP` (was 12 entries; the shared version has 17, with 5 extra pre-2002 abbrevs absent from the AllPro CSV — verified no-op on training data); cell 18's `_canonicalize_ngs_team` (replaced by the shared `canonicalize_ngs_team`, aliased back to the underscore name in the loader); cell 33's `FEATURE_COLS` and `PROD_FEATURES_35` lists. Net diff: `-372 lines` from mc. **Verified pkl byte-equivalence** by snapshotting current md5s, running mc end-to-end (full retrain), and confirming all 3 pkls (`ensemble_prod_model.pkl`, `xgboost_prod_model.pkl`, `lgbm_prod_model.pkl`) hash to the exact baseline values (`+0` size delta on each). First retrain showed pkl drift; root-caused to having reordered `PROD_FEATURES_35` in `features.ipynb` for "readability" — list order determines `X_tr` column order which determines pkl bytes. Restored canonical ablation-study order (memory `[[feature-list-order-is-contract]]`). Second retrain matched md5s exactly.
+- **Phase 2b (deferred / pending decision)** — the per-group `_build_*` function logic still differs in shape between the two notebooks (mc uses `shift(1).rolling(5)` over all games; predict_betting uses `rolling(5).nth(-1)` on the latest team-game — equivalent values, different code shape). Dedup'ing those would require adding training-mode variants to `features.ipynb` and re-running the pkl byte-equivalence check. Lower-priority than Phase 2a because the constants and pure helpers were the highest-drift surface; per-group logic changes already require retraining and tend to be caught by reviewers grepping both notebooks.
+- Why this matters: previously the 85-feature build existed in two places (`predict_betting.ipynb` cell 28 and `model_comparison.ipynb` Sections 4–11) that had to stay hand-synced. Drift had caused corrupt-cell incidents, stale comments, and ongoing risk. With features.ipynb as source of truth, edits land in one place and a 14-cell test suite catches plumbing breakage immediately.
+
+### Editing the shared features notebook
+
+- `betting/features.ipynb` is ~80 KB but well within Read/NotebookEdit tool limits. Edit cells via the notebook tools or `json.load/dump`, either is fine.
+- After editing, run it standalone via `papermill betting/features.ipynb /tmp/_out.ipynb` to verify all 14 inline tests still pass. The papermill run takes ~5 seconds.
+- If you change any name in the public surface (`build_features`, `FEATURE_COLS_85`, etc.), update the loader in `predict_betting.ipynb` cell 28 and the cell-structure tables in this CLAUDE.md.
 
 **2026-05-20 (continued, feature ablation):**
 - Ran feature ablation study (`betting/experiments/feature_ablation.py` / `betting/experiments/feature_ablation_results.json` / `betting/experiments/feature_importance_ranking.csv`): ranked all 85 features by combined importance (XGB gain + Ridge |coef| + LGB gain), then tested walk-forward CV at 85, 75, 65, 55, 45, 35, 25 feature subsets. Best AVG score at 35 features (+1.3pp over full 85). XGBoost gained the most (+1.6pp mean ATS); Ridge slightly regressed (its L2 reg already handles noise). LightGBM and Random Forest also improved.

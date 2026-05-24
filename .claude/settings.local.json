@@ -75,7 +75,9 @@
       "Bash(papermill betting/model_comparison.ipynb /tmp/model_comparison_out.ipynb)",
       "Bash(where papermill *)",
       "Bash(dir \"c:\\\\Users\\\\Josep\\\\Desktop\\\\random_stuff\\\\BettingEdgeContinued\\\\\" /b *.md 2>&1)",
-      "Bash(tee hyperparam_sweep_log.txt)"
+      "Bash(tee hyperparam_sweep_log.txt)",
+      "Bash(tee betting/_mc_run.log)",
+      "Bash(awk '{print $5, $6, $7, $8}')"
     ]
   }
 }

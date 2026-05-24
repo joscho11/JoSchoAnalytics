@@ -115,8 +115,9 @@ Best week: 9/14 (Week 14, 64.3%).
 ```
 app.py                                 # Streamlit dashboard (entry point)
 betting/
-  predict_betting.ipynb                # Weekly ATS prediction pipeline (run via papermill)
-  model_comparison.ipynb               # Model architecture comparison + walk-forward CV
+  features.ipynb                       # Shared 85-feature engineering (single source of truth)
+  predict_betting.ipynb                # Weekly ATS prediction pipeline (run via papermill; loads features.ipynb)
+  model_comparison.ipynb               # Model architecture comparison + walk-forward CV (loads features.ipynb)
   sports_betting_agent.ipynb           # Agent development notebook
   models/
     ensemble_prod_model.pkl            # Primary model: Ensemble fixed75 (0.75 XGB + 0.25 Ridge)
