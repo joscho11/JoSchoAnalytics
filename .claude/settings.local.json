@@ -77,7 +77,9 @@
       "Bash(dir \"c:\\\\Users\\\\Josep\\\\Desktop\\\\random_stuff\\\\BettingEdgeContinued\\\\\" /b *.md 2>&1)",
       "Bash(tee hyperparam_sweep_log.txt)",
       "Bash(tee betting/_mc_run.log)",
-      "Bash(awk '{print $5, $6, $7, $8}')"
+      "Bash(awk '{print $5, $6, $7, $8}')",
+      "Bash(ls /tmp/review/ 2>&1 | head -5)",
+      "Read(//c/tmp/review/**)"
     ]
   }
 }
