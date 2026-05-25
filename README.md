@@ -34,7 +34,15 @@ Walk-forward CV results (6 folds, test years 2020 through 2025, 35-feature subse
 | LightGBM | 56.5% | 1.7% | Most consistent. Direction voter. |
 | Ridge | 55.6% | 2.0% | Direction voter + linear component of the ensemble. |
 
+![Walk-forward CV results across 5 models, 2020 through 2025](betting/images/model_cv_results.png)
+
 Break-even is 52.4% ATS. The full ablation, hyperparameter sweep, and seed-stability check live in `betting/experiments/`.
+
+![Head-to-head model comparison on the 2023 through 2025 test set](betting/images/model_comparison_results.png)
+
+The most important features by combined XGBoost gain + Ridge |coef| + LightGBM gain:
+
+![Feature importance ranking across all three voter models](betting/images/model_comparison_importance.png)
 
 ### Fantasy Football Projections
 
