@@ -1154,6 +1154,94 @@ with tab2:
 
         st.divider()
 
+        # ── Season at a Glance ────────────────────────────────────────
+        st.subheader("Season at a Glance")
+        st.caption("Profit math assumes flat unit stakes at -110 odds (bet 110 to win 100). Day-of-week breakdown excludes pushes.")
+
+        # Hypothetical profit at -110 odds — three subsets
+        def _units_profit(sub):
+            graded = sub[sub[_s_correct].notna()]
+            wins = int(graded[_s_correct].sum())
+            losses = int(len(graded) - wins)
+            return wins * 100 - losses * 110, wins, losses
+
+        _high_sub = season_df[season_df[_s_edge].abs() >= 3]
+        _med_or_high_sub = season_df[season_df[_s_edge].abs() >= 1]
+        _profit_high, _h_w, _h_l = _units_profit(_high_sub)
+        _profit_hm,   _hm_w, _hm_l = _units_profit(_med_or_high_sub)
+        _profit_all,  _a_w, _a_l = _units_profit(season_df)
+
+        p1, p2, p3 = st.columns(3)
+        p1.markdown(metric_card("Profit (HIGH only)",
+                                f"{_h_w}-{_h_l}", f"{_profit_high:+,} units",
+                                color="green" if _profit_high > 0 else "red"),
+                    unsafe_allow_html=True)
+        p2.markdown(metric_card("Profit (HIGH + MED)",
+                                f"{_hm_w}-{_hm_l}", f"{_profit_hm:+,} units",
+                                color="green" if _profit_hm > 0 else "red"),
+                    unsafe_allow_html=True)
+        p3.markdown(metric_card("Profit (all picks)",
+                                f"{_a_w}-{_a_l}", f"{_profit_all:+,} units",
+                                color="green" if _profit_all > 0 else "red"),
+                    unsafe_allow_html=True)
+
+        st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+
+        # Day-of-week performance
+        if 'gameday' in season_df.columns:
+            _dow_df = season_df.copy()
+            _dow_df['gameday_dt'] = pd.to_datetime(_dow_df['gameday'], errors='coerce')
+            _dow_df['dow'] = _dow_df['gameday_dt'].dt.day_name()
+            _dow_df = _dow_df[_dow_df[_s_correct].notna()]
+            if len(_dow_df) > 0:
+                _dow_order = ['Thursday', 'Friday', 'Saturday', 'Sunday', 'Monday']
+                _dow_rows = []
+                for d in _dow_order:
+                    sub = _dow_df[_dow_df['dow'] == d]
+                    if len(sub) == 0:
+                        continue
+                    c = int(sub[_s_correct].sum()); t = len(sub)
+                    _dow_rows.append({
+                        'Day': d, 'Record': f"{c}-{t-c}", 'Games': t,
+                        'Win %': round(c / t * 100, 1)
+                    })
+                if _dow_rows:
+                    dow_table = pd.DataFrame(_dow_rows)
+                    dow_col, streak_col = st.columns(2)
+                    with dow_col:
+                        st.markdown("**📅 By day of week**")
+                        st.dataframe(dow_table, hide_index=True, use_container_width=True)
+                    with streak_col:
+                        # Streaks — sort by gameday + game_id for deterministic order
+                        _str_df = season_df.sort_values(['gameday', 'game_id'] if 'game_id' in season_df.columns else ['gameday'])
+                        _str_df = _str_df[_str_df[_s_correct].notna()]
+                        longest_w = longest_l = cur_w = cur_l = 0
+                        for v in _str_df[_s_correct].values:
+                            if v == 1:
+                                cur_w += 1; cur_l = 0
+                                longest_w = max(longest_w, cur_w)
+                            else:
+                                cur_l += 1; cur_w = 0
+                                longest_l = max(longest_l, cur_l)
+                        # Current streak (from end)
+                        cur_streak_n = 0; cur_streak_kind = ''
+                        for v in _str_df[_s_correct].values[::-1]:
+                            if cur_streak_kind == '':
+                                cur_streak_kind = 'W' if v == 1 else 'L'
+                                cur_streak_n = 1
+                            elif (cur_streak_kind == 'W' and v == 1) or (cur_streak_kind == 'L' and v == 0):
+                                cur_streak_n += 1
+                            else:
+                                break
+                        st.markdown("**🔥 Streaks**")
+                        sk1, sk2 = st.columns(2)
+                        sk1.metric("Longest W streak", longest_w)
+                        sk2.metric("Longest L streak", longest_l)
+                        cur_label = f"{cur_streak_n} {cur_streak_kind}" if cur_streak_kind else "—"
+                        st.metric("Current streak (most-recent first)", cur_label)
+
+        st.divider()
+
         # ── Full season table ─────────────────────────────────────────
         with st.expander("📋 Full season week by week"):
             table = weekly[['week_lbl', 'record', 'pct', 'cum_pct']].copy()
