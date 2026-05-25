@@ -81,7 +81,11 @@
       "Bash(ls /tmp/review/ 2>&1 | head -5)",
       "Read(//c/tmp/review/**)",
       "Bash(tee betting/_fetch_full_log.txt)",
-      "Bash(tee betting/_mc_weather_run.log)"
+      "Bash(tee betting/_mc_weather_run.log)",
+      "Bash(tee betting/_mc_sweep_run.log)",
+      "Bash(tee betting/_mc_thresh_run.log)",
+      "Bash(PYTHONIOENCODING=utf-8 python -c ' *)",
+      "Bash(grep -E '__pycache__|\\\\.pyc$')"
     ]
   }
 }

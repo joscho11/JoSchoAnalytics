@@ -70,7 +70,9 @@ Streamlit app with three tabs:
 
 ### Automation
 
-GitHub Actions runs the prediction pipeline on three schedules:
+Two GitHub Actions workflows:
+
+**`weekly_predictions.yml`** runs the prediction pipeline on three schedules:
 
 | Time | Action |
 |------|--------|
@@ -78,17 +80,19 @@ GitHub Actions runs the prediction pipeline on three schedules:
 | Thursday 9pm ET | Predictions refreshed with injury report data |
 | Sunday 9am ET | Final predictions locked |
 
+**`test.yml`** runs on every push and PR to `main` — executes `features.ipynb` end-to-end via papermill, validating all 15 inline tests (constants order-hashes, per-group feature builders, build_features integration). Catches regressions in seconds instead of on the next Tuesday cron.
+
 The only manual step each season is updating the All-Pro CSV in January.
 
 ---
 
-## Results (2025 Season, Weeks 10–17, 121 games)
+## Results (2025 Season, Weeks 10–17, 117 graded games)
 
 | Tier | Games | Correct | Win % |
 |------|-------|---------|-------|
 | **HIGH** (all 3 voters agree + ensemble edge ≥ 3pt) | 17 | 11 | **64.7%** |
 | **MEDIUM** (all 3 voters agree + ensemble edge ≥ 1pt) | 42 | 25 | **59.5%** |
-| PASS | 62 | 30 | 48.4% |
+| PASS | 58 | 30 | 51.7% |
 | **Overall (Ensemble)** | **117** | **66** | **56.4%** |
 
 Best week: 9/14 (Week 14, 64.3%).
@@ -125,11 +129,13 @@ betting/
     lgbm_prod_model.pkl                # LightGBM direction voter
   predictions_tracker.csv              # All predictions + results (auto-committed)
   nfl_allpro_1997_2025.csv             # All-Pro roster data (updated manually each January)
+  nfl_weather_2014_2025.csv            # Kickoff-hour temp/wind per outdoor game (Meteostat-sourced)
   agent_analysis_2025_week{n}.json     # Cached agent output per week
   experiments/                         # Reusable analysis scripts + result snapshots
     tune_hyperparams.py                # Walk-forward hyperparameter sweep across 5 models
     tune_xgb_seeds.py                  # Multi-seed XGBoost stability check
     feature_ablation.py                # Importance-ranked feature subset CV study
+    fetch_weather.py                   # Pulls kickoff-hour weather → nfl_weather_*.csv (annual refresh)
     *.json / feature_importance_ranking.csv  # Result snapshots
   archive/                             # Retired notebooks and model files
 fantasy/
@@ -144,16 +150,27 @@ fantasy/
   dfs/
     optimizer.ipynb                    # TBD - ILP formulation + helper functions reference
     dfs_pipeline.ipynb                 # TBD - Weekly DFS workflow (papermill-compatible)
+memory/                                # Persistent notes for future contributors (preferences + project context)
 .github/workflows/
-  weekly_predictions.yml               # Monday/Thursday/Sunday automation
+  weekly_predictions.yml               # Tuesday/Thursday/Sunday automation (runs predict_betting.ipynb)
+  test.yml                             # Push/PR CI — runs features.ipynb inline tests on every change
 ```
 
 ---
 
 ## What's Next
 
-1. **DST projection model** — replace the `dk_avg` fallback for DST in the DFS optimizer with a trained model
-2. **Multi-lineup GPP generator** — produce N distinct lineups with ownership-diversity constraints for tournament play
-3. **Game-stacking constraints** — ILP constraints to co-select QB + WR + opponent pass-catcher in high-total games
-4. **Automated salary fetching** — replace the manual DK CSV download with a scraper or API
-5. **End-to-end automation** — chain `predict_fantasy.ipynb` → `dfs_pipeline.ipynb` in GitHub Actions so DFS lineups generate automatically
+After a series of May 2026 experiments confirmed the ATS model is approximately at its architectural ceiling (weather features, ensemble re-weighting, and consensus-tier changes all tested and rejected — see `CLAUDE.md` for details), the highest-leverage improvements are around **execution infrastructure**, not model tuning:
+
+1. **Closing Line Value (CLV) tracking** — Leading indicator of long-term profitability, more predictive than ATS% over short samples. Add a `closing_line` column to the tracker; compute CLV per pick.
+2. **Multi-book line shopping** — Same pick at DraftKings -3.5 (-110) vs FanDuel -3.5 (-105) is a ~2% implied-edge improvement. Across hundreds of bets, this moves the needle more than further model tuning.
+3. **Totals model** — Independent edge stream using the same data infrastructure. Wind features (which don't help spreads) have clear signal on totals — the weather CSV (`betting/nfl_weather_2014_2025.csv`) is already built and ready.
+4. **Kelly fractional sizing** — Stop equal-staking within tiers; let bet size scale with edge magnitude.
+5. **Player props model** — Lower-efficiency market, higher edge potential. Per-stat fantasy projection models already exist; the leap to "is the prop line over/under our predicted stat" is small.
+
+DFS optimizer follow-ups (lower priority — already functional):
+6. **DST projection model** — replace the `dk_avg` fallback for DST in the DFS optimizer with a trained model
+7. **Multi-lineup GPP generator** — produce N distinct lineups with ownership-diversity constraints for tournament play
+8. **Game-stacking constraints** — ILP constraints to co-select QB + WR + opponent pass-catcher in high-total games
+9. **Automated salary fetching** — replace the manual DK CSV download with a scraper or API
+10. **End-to-end automation** — chain `predict_fantasy.ipynb` → `dfs_pipeline.ipynb` in GitHub Actions so DFS lineups generate automatically

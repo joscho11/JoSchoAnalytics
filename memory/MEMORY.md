@@ -1,2 +1,3 @@
-- [Prefer .ipynb over .py for new files](prefer-ipynb-not-py.md) — repo is notebook-centric; new shared code goes in .ipynb with inline tests, consumed via `%run`.
+- [Prefer .ipynb over .py for new files](prefer-ipynb-not-py.md) — repo is notebook-centric; new shared code goes in .ipynb with inline tests, consumed via json+exec from another notebook.
 - [Feature list order is contract](feature-list-order-is-contract.md) — PROD_FEATURES_35 / FEATURE_COLS_85 order = X_tr column order = pkl identity; never reorder for readability.
+- [BettingEdge model experiments May 2026](bettingedge-model-experiments-2026-05.md) — rejected experiments: weather features, ensemble re-weighting, consensus filter removal, ULTRA tier. Don't re-run.

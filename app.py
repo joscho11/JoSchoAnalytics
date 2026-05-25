@@ -2424,8 +2424,8 @@ The prediction system uses four models trained on over 3,000 NFL games spanning 
 
 Each game is evaluated by all four models. The consensus tier is assigned based on voter agreement plus Ensemble edge size:
 
-- **HIGH** — all three voters agree on direction *and* the Ensemble edge is 3+ points
-- **MEDIUM** — all three voters agree on direction *and* the Ensemble edge is 1–3 points
+- **HIGH** — all three voters agree on direction *and* the Ensemble edge is 3+ points (≥ 3 puts a game in HIGH, not MEDIUM)
+- **MEDIUM** — all three voters agree on direction *and* the Ensemble edge is 1+ points (but under 3)
 - **PASS** — the voters disagree on direction, *or* they agree but the Ensemble edge is under 1 point
 
 Agreement alone isn't enough — the Ensemble still needs to show a meaningful edge. And a big edge alone isn't enough — all three voters need to point the same way.

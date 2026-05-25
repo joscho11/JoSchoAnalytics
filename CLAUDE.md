@@ -70,7 +70,7 @@ pip install -r requirements.txt
   - (Ridge is extracted from `ensemble_prod_model.pkl["ridge_model"]` at runtime — no separate pkl needed.)
 - **`betting/archive/`** — Old model files and retired notebooks: `betting_model.pkl` (original XGBoost pkl), `BettingEdge_v2.ipynb`, `BettingEdgeContinued.ipynb`.
 - **`betting/predictions_tracker.csv`** — Master log of all predictions and outcomes. Auto-committed by GitHub Actions.
-- **`betting/model_comparison.ipynb`** — Model comparison notebook (32 cells). Rebuilds the exact 85-feature production dataset from scratch, evaluates 5 model architectures + 3 ensemble variants + walk-forward CV. See dedicated section below.
+- **`betting/model_comparison.ipynb`** — Model comparison notebook (70 cells). Rebuilds the exact 85-feature production dataset from scratch, evaluates 5 model architectures + 3 ensemble variants + walk-forward CV. As of 2026-05-24, Section 18 (cell 55) also contains a comprehensive ensemble-variant sweep and a consensus-tier threshold analysis — both produced negative results documented in the Completed Work entries. See dedicated section below.
 
 ### Feature Groups (betting/predict_betting.ipynb — helpers cell)
 1. Schedule context: surface, playoff flag, final-week flag
@@ -118,7 +118,7 @@ Developed in `betting/sports_betting_agent.ipynb`. Uses LlamaIndex `ReActAgent` 
 | 23–25 | Section 8 — Coach win % (career-prior + roll3) + test |
 | 26–28 | Section 9 — QB switch flag + test |
 | 29–31 | Section 10 — Pivot to home_/away_ layout (`games` DataFrame) + test |
-| 32–34 | Section 11 — Feature matrix assembly, 79 `FEATURE_COLS`, train/test split, raw categoricals saved + test |
+| 32–34 | Section 11 — Feature matrix assembly (85-feature `FEATURE_COLS`), train/test split, raw categoricals saved + test |
 | 35–37 | Section 12 — Real injury data from `nfl.load_injuries()` (Out=1.0, Doubtful=0.75) + test |
 | 38–40 | Section 13 — Model 1: XGBoost prod pkl (`FinalCfg` defined here) + test |
 | 41–43 | Section 14 — Model 2: Random Forest + test |
@@ -164,7 +164,7 @@ Break-even: 52.4% ATS. **Feature set reduced from 85 → 35** on 2026-05-20 afte
   bot_predicted = fmt(predicted)    # away team display
   ```
   **Do NOT flip these back to the "natural" model orientation.** Users expect sportsbook-style display. The underlying model output, `model_edge` columns, `consensus_tier` logic, and all correctness/backtesting math operate on the unmodified home_margin convention — only the per-team display is flipped. The same pattern applies to SPREAD (`top_spread = fmt(-spread)`, `bot_spread = fmt(spread)`) since `spread_line` in the tracker is the Vegas-predicted home margin, not the sportsbook line.
-- **Production model is Ensemble fixed75** — `ens_model_edge` drives the edge threshold and sort order. XGBoost, Ridge, and LightGBM are the three direction voters in `consensus_tier`. `consensus_tier` = HIGH when all 3 agree + `abs(ens_model_edge) ≥ 3pt`; MEDIUM when agree + `≥ 1pt`; PASS otherwise.
+- **Production model is Ensemble fixed75** — `ens_model_edge` drives the edge threshold and sort order. XGBoost, Ridge, and LightGBM are the three direction voters in `consensus_tier`. `consensus_tier` = HIGH when all 3 agree + `abs(ens_model_edge) ≥ 3pt`; MEDIUM when agree + `≥ 1pt`; PASS otherwise. (A 2026-05-24 experiment to drop the voter-agreement filter and add an ULTRA tier was tried and **rejected** — see Completed Work entry for that date. Test-set evidence said the filter added zero accuracy; live 2025 evidence said it added ~3pp on MEDIUM. Conservative read on borderline evidence keeps the original tier rule.)
 - **MLP is comparison-only** — present in `model_comparison.ipynb` Section 17 for benchmarking. Not in `betting/models/` and not used by `predict_betting.ipynb`. Walk-forward CV with 85 features shows 53.9% mean ATS (above 52.4% break-even), but its edge filter adds minimal signal vs. the ensemble (53.8% high vs 53.6% all). Do not add it to production.
 - **Fantasy projection CSVs MUST live in `fantasy/fantasy_projections/`** — never move them to `fantasy/` or any other location. `app.py` reads from `fantasy/fantasy_projections/projections_*.csv` and `predict_fantasy.ipynb` writes there via `_DIR / "fantasy_projections"`. Do not reorganize this path.
 
@@ -335,7 +335,7 @@ Download the salary CSV from any DK NFL Classic contest lobby → *Export to CSV
 ## Completed Work
 
 **2026-05-23 (feature-engineering dedup, Phase 1):**
-- Created `betting/features.ipynb` (51 cells, markdown → code → inline-test pattern) as the **single source of truth** for the 85-feature engineering pipeline. Public surface: `build_features`, `build_numeric_features`, all 10 `_build_*` per-group helpers, `FEATURE_COLS_85`, `PROD_FEATURES_35`, `TEAM_MAP`, `norm_name`, `canonicalize_ngs_team`. Each per-group helper has its own test cell exercising synthetic schedule + PBP + AllPro fixtures (Andy Reid wins 4/4 → roll3 = 1.0, KC offense AllPro 2024 → weight 4 in 2025, etc.). All 14 test cells pass.
+- Created `betting/features.ipynb` (initially 51 cells; now 53 after same-day code-review fixes added a cleanup cell pair, see entry below) with markdown → code → inline-test pattern as the **single source of truth** for the 85-feature engineering pipeline. Public surface: `build_features`, `build_numeric_features`, all 10 `_build_*` per-group helpers, `FEATURE_COLS_85`, `PROD_FEATURES_35`, `TEAM_MAP`, `norm_name`, `canonicalize_ngs_team`. Each per-group helper has its own test cell exercising synthetic schedule + PBP + AllPro fixtures (Andy Reid wins 4/4 → roll3 = 1.0, KC offense AllPro 2024 → weight 4 in 2025, etc.). All 14 test cells pass.
 - **Slimmed `predict_betting.ipynb` cell 28 from 36 KB → 1.2 KB** — replaced the giant `build_features` definition with a json-load + exec loop that pulls every code cell from `features.ipynb` into the kernel's namespace. Set `RUN_TESTS = False` before the load so the synth tests inside `features.ipynb` skip during production runs. Cell 31 (`build_numeric_features`) became a one-line acknowledgement; cell 34 (`run_predictions`) gained a `required_features=list(dict.fromkeys(model_features + ens_feat_cols + lgbm_feat_cols))` arg to preserve the prior missing-column warning behaviour exactly.
 - Verified end-to-end: `papermill betting/predict_betting.ipynb -p MODE thursday` runs cleanly through all imports, the new loader, every inline test, model loads, schedule loading (285 current-season games), and only stops at the "season is over" check (correct in May 2026). The existing test cells inside `predict_betting.ipynb` still pass against the loaded-from-features functions: `✓ build_features: 1 game row, 119 columns, key features present`.
 - **Phase 2a (same day) — dedup constants + pure helpers in `model_comparison.ipynb`.** Added a json+exec loader block at the end of Section 2 (cell 5) that pulls every code cell of `features.ipynb` into the kernel namespace, plus a verification assertion in Section 2's test (cell 6). Removed three local duplicates: cell 15's `TEAM_MAP` (was 12 entries; the shared version has 17, with 5 extra pre-2002 abbrevs absent from the AllPro CSV — verified no-op on training data); cell 18's `_canonicalize_ngs_team` (replaced by the shared `canonicalize_ngs_team`, aliased back to the underscore name in the loader); cell 33's `FEATURE_COLS` and `PROD_FEATURES_35` lists. Net diff: `-372 lines` from mc. **Verified pkl byte-equivalence** by snapshotting current md5s, running mc end-to-end (full retrain), and confirming all 3 pkls (`ensemble_prod_model.pkl`, `xgboost_prod_model.pkl`, `lgbm_prod_model.pkl`) hash to the exact baseline values (`+0` size delta on each). First retrain showed pkl drift; root-caused to having reordered `PROD_FEATURES_35` in `features.ipynb` for "readability" — list order determines `X_tr` column order which determines pkl bytes. Restored canonical ablation-study order (memory `[[feature-list-order-is-contract]]`). Second retrain matched md5s exactly.
@@ -349,12 +349,37 @@ Download the salary CSV from any DK NFL Classic contest lobby → *Export to CSV
   - **Cell 37 (passer-rating test)**: now hermetic — uses a synthetic NGS stub (KC=102.5 / BUF=88.3 ratings, etc.), no network call, deterministic in any CI environment.
   - **Cells 50–51 (new)**: closing markdown + code cell that `globals().pop()`s `_synth_schedule`, `_synth_pbp`, `_synth_allpro` when loaded with `RUN_TESTS=False`. Keeps consumer namespaces from accumulating test scaffolding. Total cell count: 51 → 53.
   - **Both consumer loaders** (`predict_betting.ipynb` cell 28 + `model_comparison.ipynb` cell 5): unified the path-resolution to use a `_FEATURE_NB_CANDIDATES` list with `next(p for p if p.exists())`. Same pattern in both files. Works whether CWD is project root or `betting/`. Cleanup switched from fragile `del` to idempotent `globals().pop(name, None)`. Error message now lists every path tried.
-- Verified: `papermill betting/features.ipynb` runs all 14 inline tests (all pass, including the now-hermetic passer-rating test). `papermill betting/predict_betting.ipynb -p MODE thursday` still runs through to the "season is over" check. mc retrain still produces byte-identical pkls.
+- Verified: `papermill betting/features.ipynb` runs all 15 inline tests (1 imports-smoke + 14 RUN_TESTS-gated, all pass, including the now-hermetic passer-rating test). `papermill betting/predict_betting.ipynb -p MODE thursday` still runs through to the "season is over" check. mc retrain still produces byte-identical pkls.
 
 **2026-05-24 (CI safety net + order-hash regression check):**
 - Added `.github/workflows/test.yml` — a 2nd GitHub Actions workflow that runs `papermill betting/features.ipynb` on every push and PR against `main`. Fast (~30s), fully offline (synth tests don't touch nflreadpy), uploads the failed notebook as an artifact on failure. Closes the gap where breakage on `main` was only caught by the Tuesday cron run.
 - Tightened the constants test in `features.ipynb` cell 8 with an **order-hash check**: locks the canonical orders of `FEATURE_COLS_85` (md5 `c1822ba8…`) and `PROD_FEATURES_35` (md5 `ac880107…`). If either list is reordered, the assertion fails with a clear message ("If intentional, retrain pkls and update the expected hash"). This is the exact bug-class hit during Phase 2a (memory [[feature-list-order-is-contract]]) — now caught automatically before merge.
 - Why this matters: Phase 1+2a+review-fixes added clean structure but increased the cost of a silent regression. Pkl byte-equivalence had been verified by hand twice this week. With CI in place, the verification runs on every push — no future contributor (including future-me) has to remember to do it.
+
+**2026-05-24 (model-improvement experiments — REJECTED; production unchanged):**
+
+Ran a series of model-improvement experiments. **None were shipped.** Saved as memory note `[[bettingedge-model-experiments-2026-05]]` to avoid re-running.
+
+1. **Ensemble weight sweep** — tested XGB+Ridge weights 0.50→0.90, XGB+LGBM variants, three-way blends, Ridge meta-learner stack on 855-game test set. **All variants within statistical noise** of current 0.75 XGB + 0.25 Ridge (SE ~2.8pp on n=238 HIGH-tier). LightGBM in the BLEND hurts (it belongs in the consensus tier, not the predicted margin). **Conclusion: 0.75 weight is essentially optimal. Don't retune.**
+
+2. **Consensus filter removal + ULTRA tier addition** — proposed switch from 3-of-3 voter agreement + edge threshold to pure edge-only with new ULTRA tier at ≥5pt.
+   - Test-set evidence (n=855, 2023-2025): consensus filter added ~0pp on average across all edge cutoffs.
+   - Live 2025 evidence (n=117): consensus filter looked helpful — removing it dropped MEDIUM from 59.5% (n=42) to 56.5% (n=62). Within standard error, but real direction.
+   - ULTRA tier on live 2025: only **2 games hit ≥5pt edge across 7 weeks** (test set predicted ~8.5% rate / ~1.4 games/week; actual was 0.3 games/week — 4× lower). Tier label that fires this rarely isn't useful for staking or UX.
+   - **Implemented end-to-end** (predict_betting cell 34 rewritten, tracker backfilled with new tier labels, app.py updated for 4 tiers including ULTRA badge / Season Performance / Help section, README updated, CLAUDE.md updated).
+   - **User correctly pushed back:** "is this really worth doing after looking at the 2025 data". Live data > test set when they conflict for production decisions with real money. ULTRA fires too rarely to be actionable.
+   - **Fully reverted same day.** Restored 3-tier consensus rule everywhere. Tracker re-backfilled. app.py / README / CLAUDE.md restored. No net change to production from this experiment.
+
+3. **Weather feature addition** — built `betting/nfl_weather_2014_2025.csv` (Meteostat-sourced, 99.96% coverage, kickoff-hour accurate, verified vs known events). Tested adding `temp_f` + `wind_mph` to PROD_FEATURES_35. **All 5 models flat or worse** in walk-forward CV (XGBoost -0.7pp, RF -1.0pp). Vegas already prices weather in; rolling EPA / coach win% / AllPro indirectly capture weather effects; wind has spread signal but it's small and noisy. **Fully reverted** — pkls restored from backup (byte-identical to baseline md5s), features.ipynb reverted to 85/35. **Artifacts preserved:** the weather CSV + `betting/experiments/fetch_weather.py` remain on disk for potential future use in a totals model (where wind has clear signal).
+
+**Net business-relevant lesson from these experiments:** the production model is approximately at the ceiling of what this architecture can deliver on ATS. Further gains come from **execution infrastructure**, not model tuning:
+- **Closing Line Value (CLV) tracking** — leading indicator of long-term profit; currently not tracked
+- **Multi-book line shopping** — 2-5% implied edge improvement per bet at zero model cost
+- **Kelly fractional sizing** — currently absent; tier-based equal staking leaves money on the table
+- **Totals model** — independent edge stream; weather data is already built for this
+- **Player props model** — lower-efficiency market, higher edge potential
+
+These items (none of them model-tuning) are what would actually grow the project from "interesting analysis" to "revenue generator." See memory `[[bettingedge-model-experiments-2026-05]]` for full context.
 
 **2026-05-24 (weather-features experiment — NEGATIVE RESULT, reverted):**
 - Question: does kickoff-hour weather (temp_f + wind_mph) improve ATS when added to PROD_FEATURES_35? Originally we'd dropped weather because nflreadpy's `temp`/`wind` columns had 48.7% missing in 2022 and 21.5% in 2023.
@@ -376,7 +401,7 @@ Download the salary CSV from any DK NFL Classic contest lobby → *Export to CSV
 ### Editing the shared features notebook
 
 - `betting/features.ipynb` is ~80 KB but well within Read/NotebookEdit tool limits. Edit cells via the notebook tools or `json.load/dump`, either is fine.
-- After editing, run it standalone via `papermill betting/features.ipynb /tmp/_out.ipynb` to verify all 14 inline tests still pass. The papermill run takes ~5 seconds.
+- After editing, run it standalone via `papermill betting/features.ipynb /tmp/_out.ipynb` to verify all 15 inline tests still pass (imports-smoke + 14 RUN_TESTS-gated tests for constants, helpers, each of the 10 feature groups, build_features integration, build_numeric_features). The papermill run takes ~5 seconds.
 - If you change any name in the public surface (`build_features`, `FEATURE_COLS_85`, etc.), update the loader in `predict_betting.ipynb` cell 28 and the cell-structure tables in this CLAUDE.md.
 
 **2026-05-20 (continued, feature ablation):**
