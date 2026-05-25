@@ -1,0 +1,49 @@
+name: Tests
+
+# Runs the inline test suite in betting/features.ipynb on every push and PR
+# against main. Fast (<30s) and offline — features.ipynb's synthetic-data
+# tests don't hit nflreadpy, so this runs reliably without network flakiness.
+#
+# If you intentionally change a feature list, the order-hash assertion in
+# cell 8 will fail. Update the expected hash in the same commit as the pkl
+# retrain — that's the signal that the change is deliberate.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Avoid duplicate runs when a PR is opened from a branch in the same repo.
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  features:
+    name: features.ipynb inline tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements-ci.txt
+
+      - name: Run features.ipynb inline tests
+        run: papermill betting/features.ipynb /tmp/features_out.ipynb --no-progress-bar
+
+      - name: Upload notebook on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: features-out-${{ github.run_id }}
+          path: /tmp/features_out.ipynb

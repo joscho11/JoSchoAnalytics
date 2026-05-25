@@ -79,7 +79,9 @@
       "Bash(tee betting/_mc_run.log)",
       "Bash(awk '{print $5, $6, $7, $8}')",
       "Bash(ls /tmp/review/ 2>&1 | head -5)",
-      "Read(//c/tmp/review/**)"
+      "Read(//c/tmp/review/**)",
+      "Bash(tee betting/_fetch_full_log.txt)",
+      "Bash(tee betting/_mc_weather_run.log)"
     ]
   }
 }

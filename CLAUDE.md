@@ -95,6 +95,8 @@ Developed in `betting/sports_betting_agent.ipynb`. Uses LlamaIndex `ReActAgent` 
 ### Automation
 `.github/workflows/weekly_predictions.yml` runs `betting/predict_betting.ipynb` via papermill on three cron schedules (Tue 9am ET, Thu 9pm ET, Sun 9am ET) and commits the updated tracker. Supports manual dispatch with mode selection.
 
+`.github/workflows/test.yml` runs the inline test suite in `betting/features.ipynb` via papermill on every push and PR against `main`. Fast (~30s), offline (synth tests don't hit nflreadpy), uploads the failed notebook as an artifact on failure. The job fails if any inline assertion in features.ipynb breaks — including the order-hash check that catches `PROD_FEATURES_35` / `FEATURE_COLS_85` reorder bugs.
+
 ## Model Comparison Notebook (`betting/model_comparison.ipynb`)
 
 **Purpose:** Compare model architectures on the exact 85-feature dataset used by production pkl, with ensemble variants and walk-forward cross-validation.
@@ -348,6 +350,28 @@ Download the salary CSV from any DK NFL Classic contest lobby → *Export to CSV
   - **Cells 50–51 (new)**: closing markdown + code cell that `globals().pop()`s `_synth_schedule`, `_synth_pbp`, `_synth_allpro` when loaded with `RUN_TESTS=False`. Keeps consumer namespaces from accumulating test scaffolding. Total cell count: 51 → 53.
   - **Both consumer loaders** (`predict_betting.ipynb` cell 28 + `model_comparison.ipynb` cell 5): unified the path-resolution to use a `_FEATURE_NB_CANDIDATES` list with `next(p for p if p.exists())`. Same pattern in both files. Works whether CWD is project root or `betting/`. Cleanup switched from fragile `del` to idempotent `globals().pop(name, None)`. Error message now lists every path tried.
 - Verified: `papermill betting/features.ipynb` runs all 14 inline tests (all pass, including the now-hermetic passer-rating test). `papermill betting/predict_betting.ipynb -p MODE thursday` still runs through to the "season is over" check. mc retrain still produces byte-identical pkls.
+
+**2026-05-24 (CI safety net + order-hash regression check):**
+- Added `.github/workflows/test.yml` — a 2nd GitHub Actions workflow that runs `papermill betting/features.ipynb` on every push and PR against `main`. Fast (~30s), fully offline (synth tests don't touch nflreadpy), uploads the failed notebook as an artifact on failure. Closes the gap where breakage on `main` was only caught by the Tuesday cron run.
+- Tightened the constants test in `features.ipynb` cell 8 with an **order-hash check**: locks the canonical orders of `FEATURE_COLS_85` (md5 `c1822ba8…`) and `PROD_FEATURES_35` (md5 `ac880107…`). If either list is reordered, the assertion fails with a clear message ("If intentional, retrain pkls and update the expected hash"). This is the exact bug-class hit during Phase 2a (memory [[feature-list-order-is-contract]]) — now caught automatically before merge.
+- Why this matters: Phase 1+2a+review-fixes added clean structure but increased the cost of a silent regression. Pkl byte-equivalence had been verified by hand twice this week. With CI in place, the verification runs on every push — no future contributor (including future-me) has to remember to do it.
+
+**2026-05-24 (weather-features experiment — NEGATIVE RESULT, reverted):**
+- Question: does kickoff-hour weather (temp_f + wind_mph) improve ATS when added to PROD_FEATURES_35? Originally we'd dropped weather because nflreadpy's `temp`/`wind` columns had 48.7% missing in 2022 and 21.5% in 2023.
+- Built `betting/experiments/fetch_weather.py` (260 lines) — uses Meteostat (NOAA-backed, free) to pull kickoff-hour temp + wind for every outdoor REG-season game. Robust 2-era station picker + per-game fallback to next-nearest station gets 99.96% coverage (2,268 / 2,269 games). Cross-validated vs nflreadpy where both have data: median 1.1°F / 2.0 mph diff — meteostat is more accurate to actual kickoff hour. Spot-checked vs known events (Buffalo Snow Game 2017-12-10 = 28.9°F / 15 mph wind; Bills Dec 22 2024 = 14°F / 0 mph; Miami early-Sept = 86–92°F).
+- Result CSV: `betting/nfl_weather_2014_2025.csv` (225 KB). Indoor/dome games skipped on purpose — feature pipeline gives them neutral 70°F / 0 mph at training-time merge.
+- **Integration test (walk-forward CV 2020-2025, 5 models, 37 features = PROD_FEATURES_35 + temp_f + wind_mph):**
+  | Model | Baseline (35 feat) | With weather (37) | Δ ATS | Verdict |
+  |-------|---------|---------|--------|---------|
+  | XGBoost (cv) | 56.9% ± 1.9% | 56.2% ± 2.3% | -0.7pp | WORSE |
+  | LightGBM | 56.5% ± 1.7% | 56.3% ± 2.4% | -0.2pp | flat (std worse) |
+  | Ridge | 55.6% ± 2.0% | 55.3% ± 2.1% | -0.3pp | WORSE |
+  | Random Forest | 57.1% ± 2.9% | 56.1% ± 2.1% | -1.0pp | WORSE |
+  | MLP | 53.7% ± 2.5% | 53.7% ± 2.5% | +0.0pp | flat |
+- All 5 models flat or worse. Verdict: weather features add **no signal** on top of the existing 35. The model already implicitly captures weather effects via rolling EPA (passing in wind), coach win% (home-field cold-weather adaptation), and AllPro (cold-weather team strength).
+- **Reverted in same commit:** restored baseline pkls from backup (md5s match the snapshot), removed Group 11 from features.ipynb, removed `_build_weather` call from mc cell 33, restored original `==` size assertions in mc cells 6/33/34/37, restored original `FEATURE_COLS_85` (85 entries) and `PROD_FEATURES_35` (35 entries) with the original locked hashes (c1822ba8 / ac880107).
+- **What was preserved:** `betting/nfl_weather_2014_2025.csv` and `betting/experiments/fetch_weather.py` remain on disk. They're useful for future experiments where weather might matter more directly — e.g., a totals model (wind has stronger signal on totals than spreads — see the original analysis: ~3pt under in 16+ mph wind games), or extreme-weather subset features (freezing-temp games specifically), or any future model architecture where weather might add value the current ensemble misses.
+- **Lesson:** don't redo this experiment with the same feature framing. If weather is to be tried again, it should be in a different form (extreme buckets, weather × team interactions, or directly as a totals model).
 
 ### Editing the shared features notebook
 
