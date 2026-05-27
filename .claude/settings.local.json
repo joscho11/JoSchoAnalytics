@@ -85,7 +85,17 @@
       "Bash(tee betting/_mc_sweep_run.log)",
       "Bash(tee betting/_mc_thresh_run.log)",
       "Bash(PYTHONIOENCODING=utf-8 python -c ' *)",
-      "Bash(grep -E '__pycache__|\\\\.pyc$')"
+      "Bash(grep -E '__pycache__|\\\\.pyc$')",
+      "Bash(tee betting/experiments/_pass1.log)",
+      "Bash(tee betting/experiments/_pass2.log)",
+      "Bash(tee betting/experiments/_smoke_2010.log)",
+      "Bash(tee betting/experiments/_pass2_real.log)",
+      "Bash(tee betting/experiments/_pass3.log)",
+      "Bash(tee betting/experiments/_smoke_2008.log)",
+      "Bash(tee betting/experiments/_smoke2_2008.log)",
+      "Bash(tee betting/experiments/_pass3_clean.log)",
+      "WebFetch(domain:betql.co)",
+      "WebFetch(domain:the-odds-api.com)"
     ]
   }
 }

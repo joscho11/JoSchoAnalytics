@@ -1,0 +1,60 @@
+Loading data prep from model_comparison.ipynb (cells 1-37)...
+Loaded feature primitives from features.ipynb — TEAM_MAP=17 entries, FEATURE_COLS_85=85, PROD_FEATURES_35=35.
+Loading schedules 1999-2025...
+  completed games: 3,295
+Loading PBP 2014-2025 (takes ~2 min)...
+  run/pass plays: 412,591
+Long-format: (6590, 15)
+SOS done
+All-pro done
+NGS: 313 team-seasons covered (2016-2025)
+Manual: 64 team-seasons covered (2014-2015)
+QB NGS features done | team-seasons: 377  median PR=90.4  CPAE=0.4%  TTT=2.77s
+Sacks/TO/3rd-down done
+Coach win pct done
+QB switch done
+Games table: (3295, 73)
+Features engineered: 85/85  |  Missing: none
+Production features (subset): 35
+Train: 2,440  |  Test: 855  |  Features: 35
+Loading injury reports...
+  Injury rows: 65,866  Seasons: [2014.0, 2015.0, 2016.0, 2017.0, 2018.0, 2019.0, 2020.0, 2021.0, 2022.0, 2023.0, 2024.0, 2025.0]
+  Injury features populated for seasons: [2014.0, 2015.0, 2016.0, 2017.0, 2018.0, 2019.0, 2020.0, 2021.0, 2022.0, 2023.0, 2024.0, 2025.0]
+  Non-zero injured_count rows: 2,775
+  Non-zero diff_active_allpro rows: 3,149
+
+Train: 2,440  Test: 855  Features: 35
+Ready — re-run all model cells now.
+  Prep done in 19.4s — g.shape=(3295, 120), avail=35 features
+
+Pass 2 (range sweep, α=0): sweeping α = [0.0] × train_start = [2014, 2010, 2005, 1999]
+CV fold sets prepared: 4
+
+  train=2014+  XGBoost         α=0.00  mean=57.2%  std=2.0%  MAE=9.61  (1.3s) [baseline]
+  train=2014+  Ridge           α=0.00  mean=55.6%  std=2.0%  MAE=9.63  (0.0s) [baseline]
+  train=2014+  Random Forest   α=0.00  mean=57.1%  std=2.9%  MAE=9.71  (2.8s) [baseline]
+  train=2014+  LightGBM        α=0.00  mean=56.5%  std=1.7%  MAE=9.64  (0.8s) [baseline]
+  train=2014+  MLP             α=0.00  mean=53.6%  std=2.8%  MAE=10.22  (101.7s) [baseline]
+  train=2010+  XGBoost         α=0.00  mean=57.2%  std=2.0%  MAE=9.61  (2.4s) 
+  train=2010+  Ridge           α=0.00  mean=55.6%  std=2.0%  MAE=9.63  (0.0s) 
+  train=2010+  Random Forest   α=0.00  mean=57.1%  std=2.9%  MAE=9.71  (3.4s) 
+  train=2010+  LightGBM        α=0.00  mean=56.5%  std=1.7%  MAE=9.64  (1.1s) 
+  train=2010+  MLP             α=0.00  mean=54.6%  std=2.7%  MAE=10.25  (123.2s) 
+  train=2005+  XGBoost         α=0.00  mean=57.2%  std=2.0%  MAE=9.61  (1.8s) 
+  train=2005+  Ridge           α=0.00  mean=55.6%  std=2.0%  MAE=9.63  (0.0s) 
+  train=2005+  Random Forest   α=0.00  mean=57.1%  std=2.9%  MAE=9.71  (3.0s) 
+  train=2005+  LightGBM        α=0.00  mean=56.5%  std=1.7%  MAE=9.64  (0.9s) 
+  train=2005+  MLP             α=0.00  mean=53.9%  std=3.7%  MAE=10.19  (90.9s) 
+  train=1999+  XGBoost         α=0.00  mean=57.2%  std=2.0%  MAE=9.61  (1.3s) 
+  train=1999+  Ridge           α=0.00  mean=55.6%  std=2.0%  MAE=9.63  (0.0s) 
+  train=1999+  Random Forest   α=0.00  mean=57.1%  std=2.9%  MAE=9.71  (2.7s) 
+  train=1999+  LightGBM        α=0.00  mean=56.5%  std=1.7%  MAE=9.64  (1.0s) 
+  train=1999+  MLP             α=0.00  mean=53.7%  std=3.5%  MAE=10.22  (85.6s) 
+
+Wrote C:\Users\josep\Desktop\random_stuff\BettingEdgeContinued\betting\experiments\time_decay_pass2_results.json
+
+==============================================================================
+  SUMMARY — XGBoost mean ATS by (train_start × α)
+==============================================================================
+  α      train=2014+  train=2010+  train=2005+  train=1999+
+  0.00     57.2% ± 2.0%  57.2% ± 2.0%  57.2% ± 2.0%  57.2% ± 2.0%

@@ -1,5 +1,5 @@
 - [Prefer .ipynb over .py for new files](prefer-ipynb-not-py.md) — repo is notebook-centric; new shared code goes in .ipynb with inline tests, consumed via json+exec from another notebook.
 - [Feature list order is contract](feature-list-order-is-contract.md) — PROD_FEATURES_35 / FEATURE_COLS_85 order = X_tr column order = pkl identity; never reorder for readability.
-- [BettingEdge model experiments May 2026](bettingedge-model-experiments-2026-05.md) — rejected experiments: weather features, ensemble re-weighting, consensus filter removal, ULTRA tier. Don't re-run.
+- [BettingEdge model experiments May 2026](bettingedge-model-experiments-2026-05.md) — rejected experiments: weather, ensemble re-weighting, consensus filter, ULTRA tier, time-decay weighting, extended training range. Don't re-run. Always audit data-source coverage before "extend the data" experiments.
 - [Experiment rejection criteria](experiment-rejection-criteria.md) — concrete ship/reject thresholds for model-improvement experiments (+0.5pp CV ATS minimum, ≥3 of 5 models improve, live data wins on borderline evidence, etc.).
 - [Never mention commits](never-mention-commits.md) — user handles all git operations; don't prompt, propose messages, or frame work as commit-ready.

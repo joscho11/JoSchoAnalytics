@@ -332,7 +332,68 @@ Download the salary CSV from any DK NFL Classic contest lobby → *Export to CSV
 - **Name matching is fuzzy** — review `dk_avg`-flagged players in the pipeline output before finalising the lineup.
 - **Edit notebooks via Python `json.load/dump`** — same constraint as all other notebooks in this repo.
 
+## Active Experiments
+
+None currently. See Completed Work for the rolling log of rejected experiments.
+
 ## Completed Work
+
+**2026-05-25 / 26 / 27 (time-decay weighting + extended training range — REJECTED, three passes + clean rerun):**
+
+Tested whether (a) time-decay sample weighting and/or (b) extending TRAIN_SEASONS back beyond 2014 improves the ATS model. All three passes rejected; no production change. Pass 3 was re-run with verified-clean data coverage on 2026-05-27 after discovering the initial runs had silent mechanical zero-fill in pre-2009 training rows.
+
+**Pass 1 — time-decay sweep at TRAIN_SEASONS=2014+** (`betting/experiments/time_decay_results.json`, `_pass1.log`):
+- Sweep α ∈ {0, 0.05, 0.10, 0.15, 0.20} across 5 models via 6-fold walk-forward CV (test years 2020-2025), production-tuned hyperparameters, sample_weight = exp(-α × (max_train_year - season)).
+- XGBoost (primary): α=0 baseline 57.2% ± 2.0%; best non-zero α=0.10 at 57.2% ± 2.5% (Δ -0.01pp mean, +0.5pp std worse). α=0.20 worst at 56.2% ± 2.7% (Δ -1.0pp).
+- Ridge, LightGBM, Random Forest all flat or worse at every non-zero α.
+- Only MLP showed a positive response (53.6% → 55.0% at α=0.15, +1.4pp) — but MLP isn't in production.
+- **Ship criteria failed:** XGBoost ≥+0.5pp improvement (fail), ≥3 of 5 models improve (fail), std doesn't worsen >+0.3pp (fail).
+
+**Pass 2 (real) — extended TRAIN_SEASONS at α=0** (`betting/experiments/time_decay_pass2_real.json`, `_pass2_real.log`):
+- First attempt was methodologically flawed: `mc cell 2` only loads PBP for ALL_SEASONS=2014-2025, so filtering training data to earlier years was a no-op (identical results for train_starts 2014/2010/2005/1999). Documented and re-done.
+- Real Pass 2: extended `tune_time_decay.py` with `--earliest YEAR` that overrides `ALL_SEASONS` after mc cell 2 runs and before cell 8 (data load). Also monkey-patched `nfl.load_injuries` to filter to 2009+ (nflreadpy's documented lower bound) with progressive-year fallback. Ran `--alphas 0 --train-starts 2014,2010,2005 --earliest 2005`.
+- Verified extended load: 5,698 games (vs 3,295 baseline), 712k PBP plays, manual passer rating for 352 team-seasons (2005-2015), injuries 2009-2025, AllPro 2005-2025.
+- XGBoost results within this run: 56.4% ± 2.0% (2014+) → 56.7% ± 2.5% (2010+) → 56.8% ± 3.0% (2005+). Best Δ +0.4pp at 2005+, but std worsens by +1.0pp. Other models: Ridge +0.4pp at 2005+, LightGBM -0.5pp at 2005+, Random Forest -0.4pp, MLP +1.2pp.
+- Important caveat: the 2014+ baseline within this run (56.4%) is 0.8pp *below* Pass 1's baseline (57.2%) because extending the data load activates the manual passer-rating fallback for 2010-2015 (vs only 2014-2015 in Pass 1), changing feature values for 2014 training rows. So part of any "improvement" at train_start=2010+ is just recovering ground lost to the feature shift.
+- **Ship criteria failed:** XGBoost +0.4pp (sub-threshold), std worsens by +1.0pp at 2005+ (fail), only 3 of 5 models improve and two of those (Ridge, MLP) by sub-threshold amounts.
+
+**Pass 3 — synthesis: extended TRAIN_SEASONS × non-zero α** (`betting/experiments/time_decay_pass3.json`, `_pass3.log`):
+- First version with `--earliest 2005` had silent coverage corruption: pre-2009 training rows had 100% zero injury features (nflreadpy injuries only exist from 2009), and 2005 rows had 100% zero AllPro (a hardcoded 2006 floor in mc cell 15's `build_weighted`). The "extra training data" was partly mechanical zeros, biasing the test against the more-data hypothesis. Documented and re-done.
+- **Clean Pass 3** (`betting/experiments/time_decay_pass3_clean.json`, `_pass3_clean.log`): ran with `--earliest 2008, --train-starts 2014,2011,2009`. This avoids both coverage bugs: training never includes pre-2009 rows, the 2008 PBP load enables real 2008 prev-year features for 2009 training rows, AllPro CSV has the years needed (1997+). Added a `verify_coverage` gate in `tune_time_decay.py` that hard-fails if any feature shows a >25pp zero-rate shift between early and late periods — gate passed cleanly on this range.
+- **Audit of historical coverage** (`betting/experiments/_audit_historical_coverage.py`) before running, verifying each data source's earliest reliable year: schedules + spread + coach + QB names back to 1999 (100% non-null), PBP+EPA back to 1999 (verified at 2005/2007/2009/2011), AllPro CSV 1997+, NGS hard floor 2016 (nflreadpy ValueError pre-2016), injuries hard floor 2009 (nflreadpy ValueError pre-2009).
+- **XGBoost grid (clean Pass 3):**
+  | α | 2014+ | 2011+ | 2009+ |
+  |---|---|---|---|
+  | 0.00 | 56.5% ± 1.6% | 56.1% ± 2.6% | **57.1% ± 2.6%** |
+  | 0.05 | 56.8% ± 1.7% | 55.5% ± 2.8% | 56.9% ± 3.5% |
+  | 0.10 | 56.2% ± 1.9% | 55.3% ± 2.9% | 56.1% ± 2.8% |
+  | 0.15 | 56.0% ± 2.2% | 55.7% ± 3.1% | 55.8% ± 3.2% |
+- Best cell: train=2009+, α=0 at **57.1% ± 2.6%**. Within-run baseline (2014+, α=0) is 56.5% ± 1.6%. **+0.6pp mean** (clears the +0.5pp ship threshold), **+1.0pp std worse** (fails the +0.3pp std cap).
+- 4-of-5 models improve at the best cell (XGB +0.6, Ridge +0.2, LightGBM +0.3, MLP +0.7), 1-of-5 regresses (RF -0.5).
+- **Key insight on the apparent gain:** the within-run 2014+ baseline (56.5%) is **0.7pp below** Pass 1's standalone 2014+ baseline (57.2%). The reason: extending the data load gives 2013 a real manual passer rating (instead of median fill), which changes `pr_prev_year` for 2014 training rows. So part of the +0.6pp "gain from extending data" is recovery from the feature-shift the extension itself causes. Net change vs current production CV (XGBoost 56.9%): +0.2pp mean / +0.7pp std worse.
+- **Decay × extension synthesis: no synergy.** Every non-zero α at every train_start performs *worse* than α=0 within that train_start. Decay weighting consistently hurts when applied to the cleaned data.
+- **Verdict: REJECT.** The cleanest finding of all three passes — but the ship criteria fail on the std cap, and the net improvement vs current production is essentially zero once the data-shift baseline drop is factored in. Stability loss (+0.7-1.0pp std worse) is a real business cost in a money-at-stake application.
+
+**Verdict: all three passes rejected.** No production code changed; pkls verified byte-identical to baseline md5s (`ensemble=42a61911…`, `lgbm=c6fcf092…`, `xgboost=a0a209e5…`). Artifacts preserved on disk:
+- `betting/experiments/tune_time_decay.py` (now supports `--earliest YEAR` + has `verify_coverage()` gate)
+- `betting/experiments/_audit_historical_coverage.py` (live audit of nflreadpy's actual data coverage by source)
+- `betting/experiments/time_decay_results.json` + `_pass1.log` (Pass 1)
+- `betting/experiments/time_decay_pass2_real.json` + `_pass2_real.log` (Pass 2 real — partially-zeroed coverage)
+- `betting/experiments/time_decay_pass2_results.json` + `_pass2.log` (Pass 2 flawed v1, kept as cautionary tale)
+- `betting/experiments/time_decay_pass3.json` + `_pass3.log` (Pass 3 — partially-zeroed coverage)
+- `betting/experiments/time_decay_pass3_clean.json` + `_pass3_clean.log` (**Pass 3 clean — methodologically correct test**)
+- `betting/_pkl_baseline_time_decay.json` (md5 snapshot, used for verification)
+
+**Lessons:**
+1. The production XGBoost ensemble is at a stable ceiling around 57% CV ATS. Adding more historical data or down-weighting old samples does not move the mean meaningfully and degrades stability.
+2. **Always audit data-source coverage BEFORE running an "extra data" experiment.** Pass 2/3 initially looked borderline because pre-2009 training rows had 100% zero injury features (nflreadpy hard floor) and pre-2006 had 100% zero AllPro (hardcoded code floor). The model was being fed mechanical zeros disguised as extra training rows. The `verify_coverage()` gate in `tune_time_decay.py` catches this automatically by comparing early-vs-late zero-rates per feature.
+3. **Extending the data load also extends the manual passer-rating fallback,** which can change feature values for years that weren't strictly added (e.g. 2013 gets a real PR instead of median-fill, which then shifts 2014's prev-year-PR feature). This makes "extend the data" not a clean A/B knob — it shifts the baseline too.
+4. **Decay weighting consistently hurts on the cleaned data** at every (train_start, α > 0) cell. No synergy. The hypothesis "decay unlocks the value of more data" was wrong here.
+5. The MLP responds positively to both decay (+1.4pp Pass 1) and more data (+0.7pp clean Pass 3), but it isn't in production and adding it to the ensemble was tested in May 2026 (`[[bettingedge-model-experiments-2026-05]]`) without ship-worthy results.
+6. **Stability matters more than the mean in real-money applications.** A model that's 57.1% with 2.6% std could swing 54-60% in any given year, vs 56.5% with 1.6% std that swings 55-58%. The wider band is a worse business outcome even though the mean is higher. The std-worsening cap exists for this reason and is the right call to enforce.
+7. Per the rejection-criteria memory: when the cleanest possible test still fails the ship criteria, the prior on "this lever helps" is now strong enough that re-running is wasted effort. Memory updated.
+
+Memory note: see `[[bettingedge-model-experiments-2026-05]]` for the running list of model-tuning experiments that have been tried and rejected.
 
 **2026-05-23 (feature-engineering dedup, Phase 1):**
 - Created `betting/features.ipynb` (initially 51 cells; now 53 after same-day code-review fixes added a cleanup cell pair, see entry below) with markdown → code → inline-test pattern as the **single source of truth** for the 85-feature engineering pipeline. Public surface: `build_features`, `build_numeric_features`, all 10 `_build_*` per-group helpers, `FEATURE_COLS_85`, `PROD_FEATURES_35`, `TEAM_MAP`, `norm_name`, `canonicalize_ngs_team`. Each per-group helper has its own test cell exercising synthetic schedule + PBP + AllPro fixtures (Andy Reid wins 4/4 → roll3 = 1.0, KC offense AllPro 2024 → weight 4 in 2025, etc.). All 14 test cells pass.

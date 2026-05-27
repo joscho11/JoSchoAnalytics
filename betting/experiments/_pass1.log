@@ -1,0 +1,98 @@
+Loading data prep from model_comparison.ipynb (cells 1-37)...
+Loaded feature primitives from features.ipynb — TEAM_MAP=17 entries, FEATURE_COLS_85=85, PROD_FEATURES_35=35.
+Loading schedules 1999-2025...
+  completed games: 3,295
+Loading PBP 2014-2025 (takes ~2 min)...
+  run/pass plays: 412,591
+Long-format: (6590, 15)
+SOS done
+All-pro done
+NGS: 313 team-seasons covered (2016-2025)
+Manual: 64 team-seasons covered (2014-2015)
+QB NGS features done | team-seasons: 377  median PR=90.4  CPAE=0.4%  TTT=2.77s
+Sacks/TO/3rd-down done
+Coach win pct done
+QB switch done
+Games table: (3295, 73)
+Features engineered: 85/85  |  Missing: none
+Production features (subset): 35
+Train: 2,440  |  Test: 855  |  Features: 35
+Loading injury reports...
+  Injury rows: 65,866  Seasons: [2014.0, 2015.0, 2016.0, 2017.0, 2018.0, 2019.0, 2020.0, 2021.0, 2022.0, 2023.0, 2024.0, 2025.0]
+  Injury features populated for seasons: [2014.0, 2015.0, 2016.0, 2017.0, 2018.0, 2019.0, 2020.0, 2021.0, 2022.0, 2023.0, 2024.0, 2025.0]
+  Non-zero injured_count rows: 2,775
+  Non-zero diff_active_allpro rows: 3,149
+
+Train: 2,440  Test: 855  Features: 35
+Ready — re-run all model cells now.
+  Prep done in 28.8s — g.shape=(3295, 120), avail=35 features
+
+Sweeping α = [0.0, 0.05, 0.1, 0.15, 0.2] on TRAIN_SEASONS = 2014+ (Pass 1)
+CV folds prepared: 6
+
+
+==============================================================================
+XGBoost  (5 α values × 6 folds)
+==============================================================================
+  α=0.00  mean=57.2%  std=2.0%  range=[53.3%,59.6%]  MAE=9.61  (1.6s) [baseline]
+  α=0.05  mean=56.8%  std=2.6%  range=[51.6%,59.6%]  MAE=9.63  (1.2s) 
+  α=0.10  mean=57.2%  std=2.5%  range=[52.3%,60.0%]  MAE=9.64  (1.2s) 
+  α=0.15  mean=56.2%  std=2.6%  range=[50.9%,59.3%]  MAE=9.64  (1.2s) 
+  α=0.20  mean=56.2%  std=2.7%  range=[50.9%,58.9%]  MAE=9.66  (1.3s) 
+
+==============================================================================
+Ridge  (5 α values × 6 folds)
+==============================================================================
+  α=0.00  mean=55.6%  std=2.0%  range=[52.6%,57.9%]  MAE=9.63  (0.0s) [baseline]
+  α=0.05  mean=55.6%  std=1.4%  range=[53.5%,57.2%]  MAE=9.63  (0.0s) 
+  α=0.10  mean=55.4%  std=1.4%  range=[54.0%,57.9%]  MAE=9.64  (0.0s) 
+  α=0.15  mean=55.2%  std=1.5%  range=[53.0%,57.2%]  MAE=9.64  (0.0s) 
+  α=0.20  mean=55.1%  std=1.9%  range=[52.6%,58.2%]  MAE=9.65  (0.0s) 
+
+==============================================================================
+Random Forest  (5 α values × 6 folds)
+==============================================================================
+  α=0.00  mean=57.1%  std=2.9%  range=[51.9%,61.1%]  MAE=9.71  (2.8s) [baseline]
+  α=0.05  mean=56.9%  std=2.9%  range=[51.6%,60.2%]  MAE=9.70  (2.7s) 
+  α=0.10  mean=56.4%  std=1.6%  range=[53.5%,58.6%]  MAE=9.69  (2.7s) 
+  α=0.15  mean=55.5%  std=2.3%  range=[51.6%,58.7%]  MAE=9.70  (2.8s) 
+  α=0.20  mean=56.2%  std=2.1%  range=[52.8%,58.7%]  MAE=9.72  (2.7s) 
+
+==============================================================================
+LightGBM  (5 α values × 6 folds)
+==============================================================================
+  α=0.00  mean=56.5%  std=1.7%  range=[53.3%,58.4%]  MAE=9.64  (0.9s) [baseline]
+  α=0.05  mean=56.4%  std=2.2%  range=[53.3%,59.3%]  MAE=9.63  (1.1s) 
+  α=0.10  mean=56.3%  std=1.9%  range=[53.7%,58.9%]  MAE=9.65  (1.0s) 
+  α=0.15  mean=55.7%  std=1.7%  range=[53.0%,57.5%]  MAE=9.65  (0.8s) 
+  α=0.20  mean=56.2%  std=2.3%  range=[52.6%,59.3%]  MAE=9.67  (0.9s) 
+
+==============================================================================
+MLP  (5 α values × 6 folds)
+==============================================================================
+  α=0.00  mean=53.6%  std=3.5%  range=[46.5%,57.9%]  MAE=10.20  (83.1s) [baseline]
+  α=0.05  mean=54.7%  std=3.2%  range=[51.6%,60.7%]  MAE=10.21  (79.6s) 
+  α=0.10  mean=54.6%  std=1.6%  range=[52.3%,56.8%]  MAE=10.17  (78.2s) 
+  α=0.15  mean=55.0%  std=2.4%  range=[52.6%,58.6%]  MAE=10.14  (77.6s) 
+  α=0.20  mean=54.5%  std=3.4%  range=[48.9%,59.5%]  MAE=10.27  (78.3s) 
+
+Wrote C:\Users\josep\Desktop\random_stuff\BettingEdgeContinued\betting\experiments\time_decay_results.json
+
+==============================================================================
+  PASS 1 SUMMARY — XGBoost mean ATS by α (the primary model)
+==============================================================================
+  α=0.00  mean=57.2%  std=2.0%  Δ vs α=0: +0.00pp
+  α=0.10  mean=57.2%  std=2.5%  Δ vs α=0: -0.01pp
+  α=0.05  mean=56.8%  std=2.6%  Δ vs α=0: -0.41pp
+  α=0.15  mean=56.2%  std=2.6%  Δ vs α=0: -0.95pp
+  α=0.20  mean=56.2%  std=2.7%  Δ vs α=0: -1.01pp
+
+==============================================================================
+  FULL TABLE (mean ATS by model × α)
+==============================================================================
+  α     XGBoost         Ridge           Random Forest   LightGBM        MLP           
+  0.00  57.2% ± 2.0%   55.6% ± 2.0%   57.1% ± 2.9%   56.5% ± 1.7%   53.6% ± 3.5% 
+  0.05  56.8% ± 2.6%   55.6% ± 1.4%   56.9% ± 2.9%   56.4% ± 2.2%   54.7% ± 3.2% 
+  0.10  57.2% ± 2.5%   55.4% ± 1.4%   56.4% ± 1.6%   56.3% ± 1.9%   54.6% ± 1.6% 
+  0.15  56.2% ± 2.6%   55.2% ± 1.5%   55.5% ± 2.3%   55.7% ± 1.7%   55.0% ± 2.4% 
+  0.20  56.2% ± 2.7%   55.1% ± 1.9%   56.2% ± 2.1%   56.2% ± 2.3%   54.5% ± 3.4% 

@@ -197,11 +197,11 @@ memory/                                # Persistent notes for future contributor
 
 ## What's Next
 
-After a series of May 2026 experiments confirmed the ATS model is around the ceiling of what this architecture can deliver on spreads (weather features, ensemble re-weighting, and consensus-tier changes were all tested and rejected. See `CLAUDE.md` for details). The biggest gains from here are in execution infrastructure, not more model tuning.
+After an extended series of May 2026 experiments — weather features, ensemble re-weighting, consensus-tier changes, time-decay sample weighting, and extending the training window back to 2009 — all rejected the ATS spread model is at the ceiling of what this architecture can deliver. The biggest gains from here are in execution infrastructure or in opening new edge streams, not more spread-model tuning. See `CLAUDE.md` Completed Work for the full rolling log.
 
-1. **Closing Line Value (CLV) tracking.** Leading indicator of long-term profitability, more predictive than ATS% over short samples. Add a `closing_line` column to the tracker and compute CLV per pick.
-2. **Multi-book line shopping.** Same pick at DraftKings -3.5 (-110) vs FanDuel -3.5 (-105) is about a 2% implied-edge improvement. Across hundreds of bets this moves the needle more than further model tuning.
-3. **Totals model.** Independent edge stream using the same data infrastructure. Wind features (which don't help spreads) have clear signal on totals. The weather CSV (`betting/nfl_weather_2014_2025.csv`) is already built and ready.
+1. **Totals model.** Independent edge stream using the same data infrastructure. Wind features (which don't help spreads) have clear signal on totals. The weather CSV (`betting/nfl_weather_2014_2025.csv`) is already built and ready. Estimated 5-10 hours to a working v1; same XGB + Ridge architecture as the spread model.
+2. **Closing Line Value (CLV) tracking.** Leading indicator of long-term profitability, more predictive than ATS% over short samples. Two paths: (a) pay The Odds API ~$30 for one month to dump historical opening + closing lines for 2020-2025, then cancel; (b) modify the predictions tracker to start recording multi-day line snapshots forward-only. Path (a) gives a real CLV answer immediately; (b) is free but requires waiting through a season.
+3. **Multi-book line shopping.** Same pick at DraftKings -3.5 (-110) vs FanDuel -3.5 (-105) is about a 2% implied-edge improvement. Across hundreds of bets this moves the needle more than further model tuning.
 4. **Kelly fractional sizing.** Stop equal-staking within tiers. Let bet size scale with edge magnitude.
 5. **Player props model.** Lower-efficiency market, higher edge potential. Per-stat fantasy projection models already exist. The leap to "is the prop line over/under our predicted stat" is small.
 

@@ -1,0 +1,14 @@
+{
+  "ensemble_prod_model.pkl": {
+    "md5": "42a61911f6600852d9dcb094896735f0",
+    "size": 589353
+  },
+  "lgbm_prod_model.pkl": {
+    "md5": "c6fcf0921bbeaefc3a700e95834b1c0a",
+    "size": 553274
+  },
+  "xgboost_prod_model.pkl": {
+    "md5": "a0a209e55573e6dd3355cdc186b5a9bb",
+    "size": 590988
+  }
+}
