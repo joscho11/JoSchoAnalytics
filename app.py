@@ -111,6 +111,15 @@ def load_tracker():
     df['week']   = df['week'].astype(int)
     return df
 
+def load_totals_tracker():
+    path = _HERE / 'betting' / 'totals_tracker.csv'
+    if not path.exists():
+        return pd.DataFrame()
+    df = pd.read_csv(path)
+    df['season'] = df['season'].astype(int)
+    df['week']   = df['week'].astype(int)
+    return df
+
 try:
     df = load_tracker()
 except FileNotFoundError:
@@ -119,6 +128,8 @@ except FileNotFoundError:
 except Exception as _load_err:
     st.error(f"Failed to load predictions data: {_load_err}")
     st.stop()
+
+totals_df = load_totals_tracker()
 
 @st.cache_data(ttl=300)
 def _compute_hc_stats(acc_col: str, _df: pd.DataFrame) -> tuple:
@@ -397,8 +408,8 @@ def get_confidence(home, away, game_analysis, game_confidence=None):
         return 'HIGH'
     elif '🟡' in text:
         return 'MEDIUM'
-    elif '🔴' in text or 'SKIP' in text.upper():
-        return 'SKIP'
+    elif '🔴' in text or 'SKIP' in text.upper() or 'PASS' in text.upper():
+        return 'PASS'  # tier renamed from SKIP; keep SKIP detection for old cache compat
     else:
         return 'NO_ANALYSIS'
 
@@ -507,6 +518,16 @@ with tab1:
 
     week_df    = df[(df['season'] == season) & (df['week'] == week)].copy()
     results_in = week_df['actual_margin'].notna().any()
+
+    # Build a quick lookup: game_id → totals row (HIGH picks only)
+    _totals_week = (
+        totals_df[(totals_df['season'] == season) & (totals_df['week'] == week)]
+        if not totals_df.empty else pd.DataFrame()
+    )
+    _totals_lookup = (
+        _totals_week.set_index('game_id').to_dict('index')
+        if not _totals_week.empty else {}
+    )
 
     st.title(f"🏈 Week {week} Predictions: {season} Season")
 
@@ -779,7 +800,7 @@ with tab1:
                         btn_color = "#ffd600"
                         btn_bg    = "#3a3a1a"
                         btn_label = "🟡 Matchup Analysis"
-                    elif '🔴' in game_text or 'SKIP' in game_text.upper():
+                    elif '🔴' in game_text or 'SKIP' in game_text.upper() or 'PASS' in game_text.upper():
                         btn_color = "#ff5252"
                         btn_bg    = "#3a1a1a"
                         btn_label = "🔴 Matchup Analysis"
@@ -796,6 +817,7 @@ with tab1:
                     _md_to_html(game_text) if game_text
                     else "<em style='color:#888'>No analysis yet. Run the notebook to generate.</em>"
                 )
+
                 col_btn, _ = st.columns([1, 3])
                 with col_btn:
                     st.markdown(
@@ -804,6 +826,35 @@ with tab1:
                         f"<summary>{btn_label}</summary>"
                         f"<div>{content_html}</div>"
                         f"</details>",
+                        unsafe_allow_html=True
+                    )
+
+                # ── Totals badge (below matchup analysis) ────────────────────────────
+                _tot_row = _totals_lookup.get(row.get('game_id'))
+                if _tot_row and _tot_row.get('consensus_tier') == 'HIGH':
+                    _xgb_tot  = _tot_row.get('xgb_predicted_total', '')
+                    _rid_tot  = _tot_row.get('ridge_predicted_total', '')
+                    _tot_line = _tot_row.get('total_line', '')
+                    _at       = _tot_row.get('actual_total')
+                    _mc       = _tot_row.get('model_correct')
+                    _avg_pred = round((float(_xgb_tot) + float(_rid_tot)) / 2, 1) if _xgb_tot and _rid_tot else ''
+                    if _at is not None and not (isinstance(_at, float) and pd.isna(_at)):
+                        _result_icon = "✅" if _mc == 1.0 else "❌"
+                        _tot_result = f"&nbsp;&nbsp;{_result_icon}&nbsp;Actual: {int(_at)}"
+                    else:
+                        _tot_result = ""
+                    st.markdown(
+                        f"<div style='background:#1f1a0e;border:1px dashed #b88a1c;border-radius:6px;"
+                        f"padding:6px 12px;margin:14px 0 4px 0;font-size:13px;"
+                        f"display:flex;align-items:center;gap:10px'>"
+                        f"<span style='background:#b88a1c22;border:1px solid #b88a1c;border-radius:4px;"
+                        f"padding:1px 7px;font-size:10px;color:#e0a93a;font-weight:700;"
+                        f"letter-spacing:0.5px'>EXPERIMENTAL</span>"
+                        f"&nbsp;<span style='color:#e0a93a;font-weight:700'>UNDER {_tot_line}</span>"
+                        f"&nbsp;&nbsp;<span style='color:#888'>Model avg:</span>&nbsp;"
+                        f"<span style='color:#ccc;font-weight:600'>{_avg_pred}</span>"
+                        f"<span style='color:#888'>{_tot_result}</span>"
+                        f"</div>",
                         unsafe_allow_html=True
                     )
 
@@ -840,7 +891,7 @@ with tab1:
             bet_total   = int(bet_df[_correct_col].notna().sum())
             bet_pct     = round(bet_correct / bet_total * 100, 1) if bet_total > 0 else 0
 
-            skip_df      = week_df_eval[week_df_eval['agent_confidence'] == 'SKIP']
+            skip_df      = week_df_eval[week_df_eval['agent_confidence'].isin(['PASS', 'SKIP'])]
             skip_correct = int(skip_df[_correct_col].fillna(0).sum())
             skip_total   = int(skip_df[_correct_col].notna().sum())
             skip_pct     = round(skip_correct / skip_total * 100, 1) if skip_total > 0 else 0
@@ -849,8 +900,8 @@ with tab1:
             c1.metric("📈 Model (all games)",  f"{model_correct}/{model_total}", f"{model_pct}%")
             c2.metric("🟢 Agent HIGH only",    f"{high_correct}/{high_total}",   f"{high_pct}%")
             c3.metric("🟡 Agent HIGH+MED",     f"{bet_correct}/{bet_total}",     f"{bet_pct}%")
-            c4.metric("🔴 Skipped games",      f"{skip_correct}/{skip_total}",   f"{skip_pct}%",
-                      help="Lower % here = agent correctly avoided bad bets")
+            c4.metric("🔴 PASS games",         f"{skip_correct}/{skip_total}",   f"{skip_pct}%",
+                      help="Lower % here = agent correctly identified games to avoid")
 
             st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
 
@@ -1247,6 +1298,53 @@ with tab2:
             table = weekly[['week_lbl', 'record', 'pct', 'cum_pct']].copy()
             table.columns = ['Week', 'Record', 'Win %', 'Cumulative %']
             st.dataframe(table, hide_index=True, use_container_width=True)
+
+        # ── Totals model performance ──────────────────────────────────────────
+        totals_season = (
+            totals_df[(totals_df['season'] == season) & totals_df['model_correct'].notna()]
+            if not totals_df.empty else pd.DataFrame()
+        )
+        if not totals_season.empty:
+            st.divider()
+            st.subheader("🎯 Over/Under Model Performance — Experimental")
+            st.warning(
+                "**Tracking only — do not bet.** The totals model has a CV edge (55.7% on 575 picks across "
+                "2020–2025) but the live 2025 sample is too small to confirm it. Currently sitting near "
+                "break-even live. We track it through the 2026 season and reassess after a full season "
+                "(~96 picks) of real evidence."
+            )
+            st.caption("UNDER picks only — model bets UNDER when both XGBoost and Ridge agree. Break-even: 52.4%.")
+
+            t_high = totals_season[totals_season['consensus_tier'] == 'HIGH']
+            t_correct = int(t_high['model_correct'].sum())
+            t_total   = len(t_high)
+            t_pct     = round(t_correct / t_total * 100, 1) if t_total > 0 else 0
+
+            tc1, tc2, tc3 = st.columns(3)
+            tc1.markdown(metric_card("UNDER Picks", f"{t_correct}/{t_total}",
+                                     f"{t_pct}%" if t_total > 0 else "—",
+                                     color="green" if t_pct >= 52.4 else "red"), unsafe_allow_html=True)
+
+            _t_over_rate = totals_season['went_over'].mean() if 'went_over' in totals_season.columns and totals_season['went_over'].notna().any() else None
+            if _t_over_rate is not None:
+                tc2.markdown(metric_card("Actual OVER rate", "—",
+                                         f"{round(_t_over_rate * 100, 1)}% of all games",
+                                         color="blue"), unsafe_allow_html=True)
+            tc3.markdown(metric_card("Break-even", "52.4%", "at -110 odds", color="blue"), unsafe_allow_html=True)
+
+            # Week by week totals
+            if t_total > 0:
+                _t_weekly = t_high.groupby('week').agg(
+                    correct=('model_correct', 'sum'),
+                    total=('model_correct', 'count')
+                ).reset_index()
+                _t_weekly['pct'] = (_t_weekly['correct'] / _t_weekly['total'] * 100).round(1)
+                _t_weekly['record'] = _t_weekly['correct'].astype(int).astype(str) + '-' + (_t_weekly['total'] - _t_weekly['correct']).astype(int).astype(str)
+                with st.expander("📋 Totals week by week (UNDER picks only)"):
+                    st.dataframe(
+                        _t_weekly[['week', 'record', 'pct']].rename(
+                            columns={'week': 'Week', 'record': 'Record', 'pct': 'Win %'}),
+                        hide_index=True, use_container_width=True)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 3: FANTASY PROJECTIONS
@@ -2316,7 +2414,24 @@ The Season Performance tab is where you can see how the model has done across th
 
 It shows a week by week bar chart of ATS win percentage, a cumulative trend line showing how accuracy has moved over time, and a breakdown of how high edge games performed compared to low edge games.
 
-There's also a best and worst weeks section and a full season table if you want to dig into the numbers.
+There's also a best and worst weeks section, a full season table, and a separate Over/Under model section showing how the totals picks performed.
+        """)
+
+    with st.expander("What is the Over/Under (Totals) model? (Experimental)"):
+        st.markdown("""
+**Status: experimental — tracking only, not yet a confident pick.**
+
+In addition to picking sides against the spread, the site runs a separate model for the over/under total. It predicts whether the final combined score will go over or under the Vegas total line. It uses the same underlying features as the spread model plus 14 totals-specific inputs: the Vegas total line, implied team totals, weather (temperature and wind), dome/outdoor status, rolling points scored and allowed by each team over the last 5 games, the league scoring environment over the last 4 weeks, pace (plays per game), and whether it's a division game.
+
+The key finding from development: the edge only shows up on **UNDER picks**, not OVERs. The reason is that recreational bettors tend to bet OVER — everyone loves a shootout — which causes books to shade totals lines slightly high. That creates a systematic edge on the UNDER side that the model is designed to find.
+
+A pick is only flagged as **UNDER** when both the XGBoost and Ridge models independently predict the score will come in below the line. When they disagree, the model passes.
+
+**Where it stands:**
+- Walk-forward CV (2020–2025, n=575): **55.7%** hit rate, comfortably above the 52.4% break-even.
+- Live 2025 (weeks 10–17, n=46): **52.2%** hit rate, essentially at break-even. The sample is too small to distinguish real edge from CV noise (95% CI is roughly 37–67%).
+
+That's why the badges on the game cards are amber/dashed instead of green — the model says UNDER, but we haven't yet confirmed live that it's actually profitable. We track it through the 2026 season and reassess after a full season of real evidence (~96 picks). **Don't bet these picks; treat them as something to watch.**
         """)
 
     with st.expander("What is the Fantasy tab?"):
@@ -2504,25 +2619,31 @@ You can filter by season or view all-time records across every year your league 
 
     with st.expander("How does the prediction model work?"):
         st.markdown("""
-The prediction system uses four models trained on over 3,000 NFL games spanning 11 seasons (2014–2024).
+The site runs two independent prediction systems: one for the **spread** (ATS picks) and one for the **over/under total**.
 
-**The primary model** is the **Ensemble (fixed75)** — a fixed-weight blend of 75% XGBoost and 25% Ridge regression. It sets the predicted edge for each game and determines the sort order.
+**Spread model**
 
-**The three direction voters** are **XGBoost**, **Ridge**, and **LightGBM** — three independent models that each predict which side of the spread they favor. LightGBM grows trees leaf-first rather than level-first, giving it a genuinely different perspective from XGBoost.
+Four models trained on over 3,000 NFL games spanning 11 seasons (2014–2024).
+
+The primary model is the **Ensemble (fixed75)** — a fixed-weight blend of 75% XGBoost and 25% Ridge regression. It sets the predicted edge for each game and determines the sort order.
+
+The three direction voters are **XGBoost**, **Ridge**, and **LightGBM** — three independent models that each predict which side of the spread they favor.
 
 Each game is evaluated by all four models. The consensus tier is assigned based on voter agreement plus Ensemble edge size:
 
-- **HIGH** — all three voters agree on direction *and* the Ensemble edge is 3+ points (≥ 3 puts a game in HIGH, not MEDIUM)
+- **HIGH** — all three voters agree on direction *and* the Ensemble edge is 3+ points
 - **MEDIUM** — all three voters agree on direction *and* the Ensemble edge is 1+ points (but under 3)
-- **PASS** — the voters disagree on direction, *or* they agree but the Ensemble edge is under 1 point
+- **PASS** — the voters disagree, or they agree but edge is under 1 point
 
-Agreement alone isn't enough — the Ensemble still needs to show a meaningful edge. And a big edge alone isn't enough — all three voters need to point the same way.
+85 features were engineered, then trimmed to the top 35 via a walk-forward ablation study. The main features are rolling EPA, strength of schedule, All-Pro roster quality, injury impact, QB changes, coaching history, and home field advantage.
 
-I engineered 85 features for each game, then trimmed to the top 35 most-predictive ones via a walk-forward ablation study. The main features are rolling EPA (Expected Points Added) which measures offensive and defensive efficiency, strength of schedule, All-Pro roster quality as a proxy for talent, injury impact, QB changes, coaching history, and home field advantage.
+**Totals model (experimental)**
 
-Each model predicts the margin of victory for the home team. That predicted margin gets compared to the Vegas spread to calculate edge. If the Ensemble predicts the home team wins by 10 and Vegas had them at -7.5, the edge is 2.5 points in favor of betting the home team. The displayed PREDICTED line on each game card is shown in sportsbook style (favorite negative, underdog positive) so it lines up visually with the SPREAD column.
+A separate two-model system (XGBoost + Ridge) trained to predict whether the final combined score will be over or under the Vegas total line. Uses 35 spread features plus 14 totals-specific inputs (total line, implied team totals, weather, dome status, rolling points, league scoring environment, pace, division game flag).
 
-Models are retrained each offseason as new data comes in. The All-Pro roster data is updated manually each January.
+The CV result (2020–2025, 55.7% on 575 picks) suggests a real UNDER-side edge, consistent with the known retail OVER bias. **But live 2025 results so far (52.2% on 46 picks) are at break-even, not yet confirming the CV.** The 2025 sample is too small to tell — we're tracking through 2026 before treating these as real picks.
+
+All models are retrained each offseason as new data comes in.
         """)
 
     with st.expander("What is the LLM agent and what does it do?"):

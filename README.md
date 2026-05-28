@@ -34,6 +34,25 @@ Walk-forward CV results (6 folds, test years 2020 through 2025, 35-feature subse
 | LightGBM | 56.5% | 1.7% | Most consistent. Direction voter. |
 | Ridge | 55.6% | 2.0% | Direction voter + linear component of the ensemble. |
 
+### Over/Under (Totals) Model — Experimental
+
+A separate two-model system predicting whether the combined final score goes over or under the Vegas total line. **Currently flagged as experimental on the dashboard** — the CV result looks real but live 2025 hasn't yet confirmed it (see live test note below).
+
+- **XGBoost + Ridge** trained on the same 2014-2024 data, predicting `total_diff = actual_total - vegas_line`. Both models predict the residual from Vegas rather than the raw total, so they're learning small adjustments on top of an already well-calibrated line.
+- **49 features** = 35 spread features + 14 totals-specific: the Vegas total line, implied team totals (derived from spread + total), weather (temp, wind, dome flag), rolling points scored and allowed over 5 games, league scoring environment over 4 weeks, pace (plays per game), and a division-game flag.
+- **UNDER-only strategy**: recreational bettors systematically over-bet the OVER (everyone loves a shootout), which causes books to shade totals high. The model finds value on the UNDER side. No OVER picks — OVER hit-rate in CV is 50.8%, below break-even.
+- **Tier logic**: a game gets an UNDER pick when both XGBoost and Ridge independently predict the score comes in below the line. When they disagree, pass.
+
+Walk-forward CV results (6 folds, test years 2020 through 2025, 49 features):
+
+| Strategy | Hit rate | n picks/season | Notes |
+|---|---|---|---|
+| Always UNDER (naive baseline) | 51.2% | all games | Free — just the market bias |
+| **Consensus UNDER (XGB + Ridge agree)** | **55.7%** | **~96** | **95% CI: 51.6–59.7%** |
+| Consensus OVER | 50.8% | ~100 | Below break-even — not bet |
+
+Live test (2025 weeks 10-17, n=46 picks): **52.2%** correct — essentially at the 52.4% break-even. SE ≈ 7.4pp on this sample size, so 95% CI is ~37-67%, which contains both the CV estimate (55.7%) and "no edge" (50%). The sample is just too small to tell. That's why the dashboard tags totals picks as **experimental** — track but don't bet. After a full live season (~96 picks) we'll have enough data to either promote the model or pull it.
+
 ![Walk-forward CV results across 5 models, 2020 through 2025](betting/images/model_cv_results.png)
 
 Break-even is 52.4% ATS. The full ablation, hyperparameter sweep, and seed-stability check live in `betting/experiments/`.
@@ -101,8 +120,8 @@ A LlamaIndex `ReActAgent` with 5 tools (predictions lookup, injury reports, line
 
 Streamlit app with three main tabs.
 
-- **Weekly Predictions**: game cards with edge, consensus tier, and expandable agent reasoning.
-- **Season Performance**: ATS record by confidence tier and week, plus profit-at-110-odds and longest streaks.
+- **Weekly Predictions**: game cards with edge, consensus tier, and expandable agent reasoning. Games where the experimental totals model says UNDER show a dashed amber **EXPERIMENTAL UNDER** badge below the spread card.
+- **Season Performance**: ATS record by confidence tier and week, profit-at-110-odds, longest streaks, and a separate Over/Under model section (flagged experimental — currently tracking only).
 - **Fantasy**: per-position player projections with projected and actual stat columns.
 
 ### Automation
@@ -199,8 +218,7 @@ memory/                                # Persistent notes for future contributor
 
 After an extended series of May 2026 experiments — weather features, ensemble re-weighting, consensus-tier changes, time-decay sample weighting, and extending the training window back to 2009 — all rejected the ATS spread model is at the ceiling of what this architecture can deliver. The biggest gains from here are in execution infrastructure or in opening new edge streams, not more spread-model tuning. See `CLAUDE.md` Completed Work for the full rolling log.
 
-1. **Totals model.** Independent edge stream using the same data infrastructure. Wind features (which don't help spreads) have clear signal on totals. The weather CSV (`betting/nfl_weather_2014_2025.csv`) is already built and ready. Estimated 5-10 hours to a working v1; same XGB + Ridge architecture as the spread model.
-2. **Closing Line Value (CLV) tracking.** Leading indicator of long-term profitability, more predictive than ATS% over short samples. Two paths: (a) pay The Odds API ~$30 for one month to dump historical opening + closing lines for 2020-2025, then cancel; (b) modify the predictions tracker to start recording multi-day line snapshots forward-only. Path (a) gives a real CLV answer immediately; (b) is free but requires waiting through a season.
+1. **CLV (Closing Line Value) tracking.** Leading indicator of long-term profitability, more predictive than ATS% over short samples. Two paths: (a) pay The Odds API ~$30 for one month to dump historical opening + closing lines for 2020-2025, then cancel; (b) modify the predictions tracker to start recording multi-day line snapshots forward-only. Path (a) gives a real CLV answer immediately; (b) is free but requires waiting through a season.
 3. **Multi-book line shopping.** Same pick at DraftKings -3.5 (-110) vs FanDuel -3.5 (-105) is about a 2% implied-edge improvement. Across hundreds of bets this moves the needle more than further model tuning.
 4. **Kelly fractional sizing.** Stop equal-staking within tiers. Let bet size scale with edge magnitude.
 5. **Player props model.** Lower-efficiency market, higher edge potential. Per-stat fantasy projection models already exist. The leap to "is the prop line over/under our predicted stat" is small.

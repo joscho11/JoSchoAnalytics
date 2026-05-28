@@ -4,8 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-BettingEdge is an NFL Against-the-Spread (ATS) prediction system combining:
-- Ensemble fixed75 as primary model (edge-setter), with XGBoost, Ridge, and LightGBM as the three direction voters
+BettingEdge is an NFL sports betting prediction system with two independent models:
+- **Spread model**: Ensemble fixed75 as primary edge-setter (0.75 XGBoost + 0.25 Ridge), with XGBoost, Ridge, and LightGBM as three direction voters. HIGH/MEDIUM/PASS tiers.
+- **Totals model**: XGBoost + Ridge predicting whether games go over/under the Vegas total. UNDER-only strategy (books shade totals high due to recreational OVER-bias). HIGH = both models predict UNDER.
 - A Claude-powered LLM agent (via LlamaIndex) for qualitative game reasoning
 - A Streamlit dashboard for visualization (deployed at joschobetting.streamlit.app)
 - GitHub Actions for weekly automated predictions (Mon/Thu/Sun)
@@ -18,12 +19,19 @@ streamlit run app.py
 ```
 Runs on port 8501. Requires `betting/predictions_tracker.csv` and any cached `betting/agent_analysis_2025_week*.json` files.
 
-**Run the prediction pipeline:**
+**Run the spread prediction pipeline:**
 ```bash
 papermill betting/predict_betting.ipynb /tmp/out.ipynb -p MODE tuesday   # Update results + new predictions
 papermill betting/predict_betting.ipynb /tmp/out.ipynb -p MODE thursday  # Refresh with injury data
 papermill betting/predict_betting.ipynb /tmp/out.ipynb -p MODE sunday    # Final predictions
 papermill betting/predict_betting.ipynb /tmp/out.ipynb -p MODE backfill -p TARGET_WEEK 14  # Backfill a specific week
+```
+
+**Run the totals prediction pipeline:**
+```bash
+papermill betting/predict_totals.ipynb /tmp/out.ipynb -p MODE tuesday    # New totals predictions
+papermill betting/predict_totals.ipynb /tmp/out.ipynb -p MODE thursday   # Refresh with injury data
+papermill betting/predict_totals.ipynb /tmp/out.ipynb -p MODE sunday     # Final totals predictions
 ```
 
 **Run fantasy projections:**
@@ -62,15 +70,21 @@ pip install -r requirements.txt
   | 38–40 | `log_predictions` — write to tracker CSV |
   | 41–42 | Run Pipeline — execution cell |
 - **`betting/features.ipynb`** — **Single source of truth** for the 85-feature engineering pipeline (Groups 1–10) shared by both `predict_betting.ipynb` and `model_comparison.ipynb`. 53 cells using the markdown → code → inline-test pattern, with synthetic-data tests per group (all hermetic — no live nflreadpy calls in tests). Public names exposed after load: `build_features`, `build_numeric_features`, the per-group `_build_*` helpers, `FEATURE_COLS_85`, `PROD_FEATURES_35`, `TEAM_MAP`, `norm_name`, `canonicalize_ngs_team`. **Loading pattern** (used by `predict_betting.ipynb` cell 28 and `model_comparison.ipynb` cell 5): set `RUN_TESTS = False` then exec every code cell from the notebook json — see [editing notebooks](#editing-the-shared-features-notebook) below. The synthetic-data tests inside run when the notebook is opened standalone (RUN_TESTS=True by default) and are skipped during production runs; a closing cleanup cell removes the synth fixtures from consumer globals.
-- **`app.py`** — Streamlit dashboard with 3 tabs: Weekly Predictions, Season Performance, Help & Guide. Reads `betting/predictions_tracker.csv` and cached `betting/agent_analysis_2025_week{n}.json` files for LLM agent reasoning overlays. Fantasy tab shows per-week projections per position with projected and actual stat columns (pass yds, rush yds, receptions, rec yds) that populate automatically after the week is played (fetched live from nflreadpy, cached 1 hour). Players who didn't play show "DNP" in all actual columns.
+- **`app.py`** — Streamlit dashboard with 3 tabs: Weekly Predictions, Season Performance, Help & Guide. Reads `betting/predictions_tracker.csv` and `betting/totals_tracker.csv`. Game cards show a **dashed amber EXPERIMENTAL UNDER badge** when the totals model has a HIGH pick — amber instead of green/purple because live 2025 is only at break-even and the model hasn't been confirmed profitable yet. Season Performance totals section is gated with a "tracking only — do not bet" warning banner. Fantasy tab shows per-week projections per position with projected and actual stat columns.
 - **`betting/models/`** — All trained model pkl files:
-  - `ensemble_prod_model.pkl` — **Primary model.** Ensemble fixed75: 0.75 XGBoost + 0.25 Ridge, trained 2014–2024. Sets the edge threshold and output sort order. Includes `scaler`, `feature_cols`, `roof_surface_encoder`, `xgb_model`, `ridge_model`, `xgb_weight`.
-  - `xgboost_prod_model.pkl` — XGBoost sklearn pipeline (preprocessor + regressor). One of three direction voters.
-  - `lgbm_prod_model.pkl` — LightGBM regressor. Third direction voter; independent signal from XGBoost (leaf-wise growth). Saved as `{'model': LGBMRegressor, 'feature_cols': list}`.
-  - (Ridge is extracted from `ensemble_prod_model.pkl["ridge_model"]` at runtime — no separate pkl needed.)
+  - `ensemble_prod_model.pkl` — **Primary spread model.** Ensemble fixed75: 0.75 XGBoost + 0.25 Ridge, trained 2014–2024. Sets the edge threshold and output sort order. Includes `scaler`, `feature_cols`, `roof_surface_encoder`, `xgb_model`, `ridge_model`, `xgb_weight`.
+  - `xgboost_prod_model.pkl` — XGBoost sklearn pipeline (preprocessor + regressor). One of three spread direction voters.
+  - `lgbm_prod_model.pkl` — LightGBM regressor. Third spread direction voter. Saved as `{'model': LGBMRegressor, 'feature_cols': list}`.
+  - (Ridge for spreads is extracted from `ensemble_prod_model.pkl["ridge_model"]` at runtime — no separate pkl needed.)
+  - `totals_xgboost.pkl` — **Totals model XGBoost.** Saved as `{'model': XGBRegressor, 'feature_cols': list[49], 'target': 'total_diff', 'train_seasons': list}`.
+  - `totals_ridge.pkl` — **Totals model Ridge.** Saved as `{'model': Ridge, 'scaler': StandardScaler, 'feature_cols': list[49], 'target': 'total_diff', 'train_seasons': list}`.
 - **`betting/archive/`** — Old model files and retired notebooks: `betting_model.pkl` (original XGBoost pkl), `BettingEdge_v2.ipynb`, `BettingEdgeContinued.ipynb`.
-- **`betting/predictions_tracker.csv`** — Master log of all predictions and outcomes. Auto-committed by GitHub Actions.
-- **`betting/model_comparison.ipynb`** — Model comparison notebook (70 cells). Rebuilds the exact 85-feature production dataset from scratch, evaluates 5 model architectures + 3 ensemble variants + walk-forward CV. As of 2026-05-24, Section 18 (cell 55) also contains a comprehensive ensemble-variant sweep and a consensus-tier threshold analysis — both produced negative results documented in the Completed Work entries. See dedicated section below.
+- **`betting/predictions_tracker.csv`** — Master log of spread predictions and outcomes. Auto-committed by GitHub Actions.
+- **`betting/totals_tracker.csv`** — Master log of totals (over/under) predictions and outcomes. Same structure as predictions_tracker but for the totals model. Columns: `game_id`, `home_team`, `away_team`, `gameday`, `season`, `week`, `total_line`, `xgb_predicted_total`, `ridge_predicted_total`, `xgb_diff`, `ridge_diff`, `consensus_tier` (HIGH/PASS), `recommendation` (UNDER/PASS), `mode`, `logged_at`, `actual_total`, `went_over`, `model_correct`.
+- **`betting/totals_features.ipynb`** — **Single source of truth** for the 14 totals-specific features. 15 cells, markdown→code→test pattern. Public surface: `build_totals_features`, `TOTALS_FEATURE_COLS`, `totals_acc`. Loaded by consumer notebooks via json+exec with `RUN_TESTS=False`. **Key constraint:** `is_dome` re-merges the raw roof string from sched (not the ordinal-encoded int in `g`) — this is intentional and must be preserved.
+- **`betting/totals_model.ipynb`** — Totals model training notebook (22 cells). Loads `features.ipynb` + `totals_features.ipynb`, builds 49-feature matrix (35 spread + 14 totals), runs walk-forward CV, retrains on full 2014-2024 data, saves `totals_xgboost.pkl` and `totals_ridge.pkl`.
+- **`betting/predict_totals.ipynb`** — Weekly totals inference pipeline. Papermill-compatible (MODE parameter). Loads both `features.ipynb` (for `build_features`, `PROD_FEATURES_35`) and `totals_features.ipynb` (for `build_totals_features`, `TOTALS_FEATURE_COLS`). Hard-fails at load if pkl feature_cols don't match `TOTALS_ALL_COLS = PROD_FEATURES_35 + TOTALS_FEATURE_COLS`. Writes to `totals_tracker.csv`.
+- **`betting/model_comparison.ipynb`** — Spread model comparison notebook (70 cells). Rebuilds the exact 85-feature production dataset from scratch, evaluates 5 model architectures + 3 ensemble variants + walk-forward CV. See dedicated section below.
 
 ### Feature Groups (betting/predict_betting.ipynb — helpers cell)
 1. Schedule context: surface, playoff flag, final-week flag
@@ -334,11 +348,11 @@ Download the salary CSV from any DK NFL Classic contest lobby → *Export to CSV
 
 ## Active Experiments
 
-### 2026-05-27: Totals model (over/under) — WIP, baseline established, awaiting productization
+### 2026-05-27/28: Totals model (over/under) — SHIPPED v1 (EXPERIMENTAL on dashboard)
 
 **Goal:** Build a separate model for the totals (over/under) market, independent of the spread model. Spread architecture is at architectural ceiling (~57% CV), but the totals market is a separate edge stream — sharp UNDER bias is a known retail/professional inefficiency.
 
-**Status:** Three exploration iterations done (v1→v3.5). Best architecture identified. NOT YET PRODUCTIZED — no notebook, no pkls, no tracker, no dashboard integration.
+**Status:** Fully productized and shipped.
 
 **Path so far:**
 1. **v1 (spread features alone):** all 5 models BELOW 52.4% break-even. The 35 spread features answer "who's better" not "high or low scoring."
@@ -369,14 +383,22 @@ Download the salary CSV from any DK NFL Classic contest lobby → *Export to CSV
 - Picks volume: ~96 UNDER picks per season (vs 17 HIGH-tier spread picks/season). Higher volume = more variance reduction over time.
 - Vegas total_line itself has near-zero correlation with the diff target (-0.007). Vegas is well-calibrated; the model is finding small residual signal.
 
-**Productization path (next session, ~3-5 hours):**
-1. Promote `totals_baseline_v3_5.py` logic into `betting/totals_features.ipynb` (mc analog for totals, markdown→code→test pattern, json+exec loadable)
-2. Build `betting/totals_model.ipynb` (model_comparison.ipynb analog — walk-forward CV, model training, pkl save)
-3. Build `betting/predict_totals.ipynb` (predict_betting.ipynb analog — live inference, writes to tracker)
-4. Train + save `betting/models/totals_xgboost.pkl` + `totals_ridge.pkl` (optionally `totals_rf.pkl`)
-5. Create `betting/totals_tracker.csv` (mirrors predictions_tracker.csv structure for totals picks)
-6. Update `app.py` dashboard with a "Totals" tab/section
-7. Decide tier logic: simplest is "consensus_under_tier = HIGH if XGB and Ridge both predict UNDER else PASS"
+**Productization status (all complete):**
+1. ✓ `betting/totals_features.ipynb` — feature engineering source of truth (13 cells, all tests pass). Loaded by consumer notebooks via json+exec with `RUN_TESTS=False`.
+2. ✓ `betting/totals_model.ipynb` — walk-forward CV + production retrain (22 cells, all section tests pass). CV reproduces 55.7% consensus UNDER.
+3. ✓ `betting/predict_totals.ipynb` — papermill-compatible weekly inference (MODE parameter). Loads both `features.ipynb` and `totals_features.ipynb`. Validates feature order against pkls at load time.
+4. ✓ `betting/models/totals_xgboost.pkl` — trained on 2014-2024, 49 features, target=total_diff
+5. ✓ `betting/models/totals_ridge.pkl` — trained on 2014-2024, 49 features + scaler, target=total_diff
+6. ✓ `betting/totals_tracker.csv` — backfilled for 2025 weeks 10-17 (46 HIGH picks, 52.2% correct, 95% CI ~37-67%)
+7. ✓ `app.py` — game cards show purple UNDER badge for HIGH totals picks; Season Performance tab has totals section; Help & Guide updated.
+
+**Tier logic:** HIGH = both XGBoost AND Ridge predict UNDER (both residuals < 0). PASS = everything else. No OVER bets — OVER hit-rate is 50.8%, below break-even.
+
+**Live test (2025 weeks 10-17, n=46):** 52.2% correct — essentially at the 52.4% break-even. SE ≈ 7.4pp (95% CI ~37-67%), so the result is statistically consistent with both the 55.7% CV estimate AND "no edge" — the sample is too small to tell. A full live season (~96 picks) is needed for a clean read.
+
+**Dashboard treatment (2026-05-28):** Because the live result hasn't yet cleared break-even, the totals model is presented as **EXPERIMENTAL** on the dashboard — amber/dashed badge styling instead of confident green/purple, plus a "tracking only — do not bet" warning banner in the Season Performance section, plus an honest disclosure in the Help & Guide. We reassess after a full 2026 season of picks (~96 graded HIGH picks).
+
+**Note on the earlier live-test number:** an initial docs claim of "57.9% on 38 picks" was based on a `g_full` fallback code path that doesn't match production. The correct production-path number is 52.2% on 46 picks. See the 2026-05-28 code review fixes for what changed.
 
 **Architecture note for future-me:** keep totals SEPARATE from spread features. `betting/features.ipynb` stays untouched (it's the spread source of truth). New file `betting/totals_features.ipynb` is the totals source of truth. They can share data prep (mc cells 1-37) but each owns its own feature list and pkl files. Both can be retrained independently.
 

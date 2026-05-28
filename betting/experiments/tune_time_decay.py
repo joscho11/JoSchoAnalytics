@@ -40,7 +40,8 @@ import time
 import warnings
 from pathlib import Path
 
-sys.stdout.reconfigure(encoding='utf-8')
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
 warnings.filterwarnings('ignore')
 
 import numpy as np
