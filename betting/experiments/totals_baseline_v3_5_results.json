@@ -1,0 +1,200 @@
+{
+  "label": "Totals v3.5 (Ridge-friendly: drop multicollinear derived feats)",
+  "feature_cols": [
+    "spread_line",
+    "sack_diff",
+    "sack_diff_reverse",
+    "scoring_diff",
+    "home_coach_win_pct_roll3",
+    "scoring_diff_reverse",
+    "home_coach_win_pct_prior",
+    "away_rolling_allowed_play_count",
+    "away_rolling_allowed_avg_yards",
+    "home_rolling_win_pct",
+    "diff_active_allpro_weighted",
+    "epa_home_off_away_def_rolling_diff",
+    "diff_active_allpro_prev_year",
+    "away_season_sos_opponent_avg",
+    "diff_allpro_last_3_years_weighted",
+    "allpro_diff_home_off_away_def_3_years",
+    "home_defense_allpro_prev_year",
+    "away_offense_allpro_prev_year",
+    "season_sos_diff",
+    "third_down_diff",
+    "epa_home_def_away_off_rolling_diff",
+    "is_playoff",
+    "play_count_home_def_away_off_rolling_diff",
+    "home_allpro_last_3_years_weighted",
+    "away_rolling_avg_yards",
+    "home_rolling_allowed_avg_epa",
+    "away_defense_allpro_3_years",
+    "away_coach_win_pct_prior",
+    "home_recent_sos_opponent_avg",
+    "away_pr_prev_year",
+    "away_rolling_avg_epa",
+    "away_injured_count",
+    "home_rolling_play_count",
+    "avg_yards_home_off_away_def_rolling_diff",
+    "allpro_diff_home_off_away_def_prev_year",
+    "total_line",
+    "home_implied_pts",
+    "away_implied_pts",
+    "temp_f",
+    "wind_mph",
+    "is_dome",
+    "home_pts_scored_5g",
+    "home_pts_allowed_5g",
+    "away_pts_scored_5g",
+    "away_pts_allowed_5g",
+    "combined_pts_5g",
+    "league_avg_total_4wk",
+    "pace_5g",
+    "div_game"
+  ],
+  "new_features": [
+    "total_line",
+    "home_implied_pts",
+    "away_implied_pts",
+    "temp_f",
+    "wind_mph",
+    "is_dome",
+    "home_pts_scored_5g",
+    "home_pts_allowed_5g",
+    "away_pts_scored_5g",
+    "away_pts_allowed_5g",
+    "combined_pts_5g",
+    "league_avg_total_4wk",
+    "pace_5g",
+    "div_game"
+  ],
+  "results": [
+    {
+      "alpha": 0.0,
+      "fold_hit": [
+        0.4962121212121212,
+        0.549645390070922,
+        0.5195729537366548,
+        0.5444839857651246,
+        0.5141843971631206,
+        0.512280701754386
+      ],
+      "fold_mae_diff": [
+        10.3435697555542,
+        10.744380950927734,
+        10.472882270812988,
+        10.16861629486084,
+        9.779841423034668,
+        10.387190818786621
+      ],
+      "mean_hit": 0.5227299249503882,
+      "std_hit": 0.01867732188820772,
+      "mean_mae_diff": 10.316080252329508,
+      "model": "XGBoost",
+      "train_start": 2014
+    },
+    {
+      "alpha": 0.0,
+      "fold_hit": [
+        0.48484848484848486,
+        0.5390070921985816,
+        0.5409252669039146,
+        0.5444839857651246,
+        0.48936170212765956,
+        0.5263157894736842
+      ],
+      "fold_mae_diff": [
+        10.782327651977539,
+        10.678719520568848,
+        10.353838920593262,
+        10.074164390563965,
+        9.90089225769043,
+        10.409208297729492
+      ],
+      "mean_hit": 0.5208237202195749,
+      "std_hit": 0.02452466217378202,
+      "mean_mae_diff": 10.366525173187256,
+      "model": "Ridge",
+      "train_start": 2014
+    },
+    {
+      "alpha": 0.0,
+      "fold_hit": [
+        0.5151515151515151,
+        0.5390070921985816,
+        0.5160142348754448,
+        0.5409252669039146,
+        0.5141843971631206,
+        0.5719298245614035
+      ],
+      "fold_mae_diff": [
+        10.311159035465405,
+        10.76998072717438,
+        10.464287913969164,
+        10.163118645020504,
+        9.749765204044056,
+        10.319767821108586
+      ],
+      "mean_hit": 0.5328687218089966,
+      "std_hit": 0.020718085445450528,
+      "mean_mae_diff": 10.296346557797015,
+      "model": "Random Forest",
+      "train_start": 2014
+    },
+    {
+      "alpha": 0.0,
+      "fold_hit": [
+        0.49242424242424243,
+        0.5425531914893617,
+        0.47686832740213525,
+        0.5480427046263345,
+        0.48226950354609927,
+        0.519298245614035
+      ],
+      "fold_mae_diff": [
+        10.301402576202484,
+        10.801279826261322,
+        10.421905315936433,
+        10.166957076097388,
+        9.77217448591755,
+        10.383141704248915
+      ],
+      "mean_hit": 0.5102427025170347,
+      "std_hit": 0.028191774843417117,
+      "mean_mae_diff": 10.307810164110682,
+      "model": "LightGBM",
+      "train_start": 2014
+    },
+    {
+      "alpha": 0.0,
+      "fold_hit": [
+        0.5416666666666666,
+        0.5106382978723404,
+        0.4412811387900356,
+        0.5302491103202847,
+        0.49645390070921985,
+        0.512280701754386
+      ],
+      "fold_mae_diff": [
+        11.450268745422363,
+        11.865219116210938,
+        11.488585472106934,
+        11.189864158630371,
+        10.900561332702637,
+        11.078763961791992
+      ],
+      "mean_hit": 0.5054283026854889,
+      "std_hit": 0.03214236421812626,
+      "mean_mae_diff": 11.328877131144205,
+      "model": "MLP",
+      "train_start": 2014
+    }
+  ],
+  "consensus": {
+    "both_over_n": 597,
+    "both_over_hit": 0.507537688442211,
+    "both_under_n": 575,
+    "both_under_hit": 0.5565217391304348,
+    "disagree_n": 503,
+    "consensus_overall": 0.5315699658703071
+  }
+}

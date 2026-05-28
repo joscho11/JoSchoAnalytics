@@ -334,7 +334,51 @@ Download the salary CSV from any DK NFL Classic contest lobby → *Export to CSV
 
 ## Active Experiments
 
-None currently. See Completed Work for the rolling log of rejected experiments.
+### 2026-05-27: Totals model (over/under) — WIP, baseline established, awaiting productization
+
+**Goal:** Build a separate model for the totals (over/under) market, independent of the spread model. Spread architecture is at architectural ceiling (~57% CV), but the totals market is a separate edge stream — sharp UNDER bias is a known retail/professional inefficiency.
+
+**Status:** Three exploration iterations done (v1→v3.5). Best architecture identified. NOT YET PRODUCTIZED — no notebook, no pkls, no tracker, no dashboard integration.
+
+**Path so far:**
+1. **v1 (spread features alone):** all 5 models BELOW 52.4% break-even. The 35 spread features answer "who's better" not "high or low scoring."
+2. **v2 (+12 totals-specific features):** XGBoost 51.7%, Ridge 52.6% (just above break-even). Significant gain from weather + implied team totals + rolling points + league scoring environment. **Audit revealed `is_dome` bug** — was always 0 because `g['roof']` was already ordinal-encoded by mc cell 33.
+3. **v3 (+8 derived features, dome bug fixed):** XGBoost +0.7pp but Ridge -0.9pp. Derived features (abs_spread, rest_diff, sum_pr_prev, sum_active_allpro, outdoor_wind_mph, team_total_combined) helped trees but hurt Ridge via multicollinearity with spread features.
+4. **v3.5 (Ridge-friendly: drop multicollinear, keep only pace_5g + div_game on top of v2):** **Best result.** XGBoost 52.3% ± 1.9%, Ridge 52.1%, **RF 53.3% ± 2.1% — best single model.** Consensus UNDER (XGB + Ridge agree) at **55.7% on n=575** (~96 picks/season, 95% CI 51.6-59.7%). XGBoost std dropped from 2.8% → 1.9% — lean features = less overfitting.
+
+**Critical finding: the edge is asymmetric.** OVERs are essentially noise (50.8-52.6% across configs). The actionable strategy is **UNDER-only** when 2 voters agree. This is consistent with the known retail OVER-bias in totals markets (recreational bettors love OVER → lines inflated → UNDERs sharper).
+
+**Final v3.5 feature set (14 totals features on top of the 35 spread features):**
+- Vegas inputs (3): `total_line`, `home_implied_pts`, `away_implied_pts`
+- Weather (3): `temp_f`, `wind_mph`, `is_dome` (neutralizes weather for indoor games)
+- Rolling scoring (5): `home_pts_scored_5g`, `home_pts_allowed_5g`, `away_pts_scored_5g`, `away_pts_allowed_5g`, `combined_pts_5g`
+- Environment (1): `league_avg_total_4wk` (rolling 4-week league average total)
+- Pace (1): `pace_5g` (PBP-derived plays per game, both teams averaged)
+- Matchup type (1): `div_game` (binary, division games trend slightly lower)
+
+**Artifacts on disk:**
+- `betting/experiments/totals_baseline_v3_5.py` — canonical feature engineering + walk-forward CV
+- `betting/experiments/totals_baseline_v3_5_results.json` — final CV results
+- `betting/experiments/_totals_baseline_v3_5.log` — run log
+- `betting/experiments/_totals_direction_check.py` — direction-conditioned analysis (OVER vs UNDER hit-rates per model)
+- `betting/experiments/_totals_3voter_check.py` — 3-voter consensus comparison
+- (v1/v2/v3 iterations deleted during cleanup; the path-through is documented above.)
+
+**Stats to know before picking this up next session:**
+- 95% CI on 2-voter consensus UNDER straddles break-even on the lower end (51.6%). Real but not slam-dunk edge.
+- Picks volume: ~96 UNDER picks per season (vs 17 HIGH-tier spread picks/season). Higher volume = more variance reduction over time.
+- Vegas total_line itself has near-zero correlation with the diff target (-0.007). Vegas is well-calibrated; the model is finding small residual signal.
+
+**Productization path (next session, ~3-5 hours):**
+1. Promote `totals_baseline_v3_5.py` logic into `betting/totals_features.ipynb` (mc analog for totals, markdown→code→test pattern, json+exec loadable)
+2. Build `betting/totals_model.ipynb` (model_comparison.ipynb analog — walk-forward CV, model training, pkl save)
+3. Build `betting/predict_totals.ipynb` (predict_betting.ipynb analog — live inference, writes to tracker)
+4. Train + save `betting/models/totals_xgboost.pkl` + `totals_ridge.pkl` (optionally `totals_rf.pkl`)
+5. Create `betting/totals_tracker.csv` (mirrors predictions_tracker.csv structure for totals picks)
+6. Update `app.py` dashboard with a "Totals" tab/section
+7. Decide tier logic: simplest is "consensus_under_tier = HIGH if XGB and Ridge both predict UNDER else PASS"
+
+**Architecture note for future-me:** keep totals SEPARATE from spread features. `betting/features.ipynb` stays untouched (it's the spread source of truth). New file `betting/totals_features.ipynb` is the totals source of truth. They can share data prep (mc cells 1-37) but each owns its own feature list and pkl files. Both can be retrained independently.
 
 ## Completed Work
 

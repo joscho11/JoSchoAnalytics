@@ -95,7 +95,12 @@
       "Bash(tee betting/experiments/_smoke2_2008.log)",
       "Bash(tee betting/experiments/_pass3_clean.log)",
       "WebFetch(domain:betql.co)",
-      "WebFetch(domain:the-odds-api.com)"
+      "WebFetch(domain:the-odds-api.com)",
+      "Bash(papermill betting/predict_betting.ipynb /tmp/predict_betting_smoketest.ipynb -p MODE tuesday)",
+      "Bash(tee betting/experiments/_totals_baseline.log)",
+      "Bash(tee betting/experiments/_totals_baseline_v2.log)",
+      "Bash(tee betting/experiments/_totals_baseline_v3.log)",
+      "Bash(tee betting/experiments/_totals_baseline_v3_5.log)"
     ]
   }
 }
