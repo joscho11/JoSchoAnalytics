@@ -83,7 +83,7 @@ pip install -r requirements.txt
 - **`betting/totals_tracker.csv`** — Master log of totals (over/under) predictions and outcomes. Same structure as predictions_tracker but for the totals model. Columns: `game_id`, `home_team`, `away_team`, `gameday`, `season`, `week`, `total_line`, `xgb_predicted_total`, `ridge_predicted_total`, `xgb_diff`, `ridge_diff`, `consensus_tier` (HIGH/PASS), `recommendation` (UNDER/PASS), `mode`, `logged_at`, `actual_total`, `went_over`, `model_correct`.
 - **`betting/totals_features.ipynb`** — **Single source of truth** for the 14 totals-specific features. 15 cells, markdown→code→test pattern. Public surface: `build_totals_features`, `TOTALS_FEATURE_COLS`, `totals_acc`. Loaded by consumer notebooks via json+exec with `RUN_TESTS=False`. **Key constraint:** `is_dome` re-merges the raw roof string from sched (not the ordinal-encoded int in `g`) — this is intentional and must be preserved.
 - **`betting/totals_model.ipynb`** — Totals model training notebook (22 cells). Loads `features.ipynb` + `totals_features.ipynb`, builds 49-feature matrix (35 spread + 14 totals), runs walk-forward CV, retrains on full 2014-2024 data, saves `totals_xgboost.pkl` and `totals_ridge.pkl`.
-- **`betting/predict_totals.ipynb`** — Weekly totals inference pipeline. Papermill-compatible (MODE parameter). Loads both `features.ipynb` (for `build_features`, `PROD_FEATURES_35`) and `totals_features.ipynb` (for `build_totals_features`, `TOTALS_FEATURE_COLS`). Hard-fails at load if pkl feature_cols don't match `TOTALS_ALL_COLS = PROD_FEATURES_35 + TOTALS_FEATURE_COLS`. Writes to `totals_tracker.csv`.
+- **`betting/predict_totals.ipynb`** — Weekly totals inference pipeline. Papermill-compatible (MODE parameter). Loads both `features.ipynb` (for `build_features`, `PROD_FEATURES_35`) and `totals_features.ipynb` (for `build_totals_features`, `TOTALS_FEATURE_COLS`). Hard-fails at load if pkl feature_cols don't match `TOTALS_ALL_COLS = PROD_FEATURES_35 + TOTALS_FEATURE_COLS`. Writes to `totals_tracker.csv`. **Critical:** `build_features` must be called with keyword args — positional args would bind `target_week` and `target_season` incorrectly. Grading (actual_total, model_correct) is computed from `full_schedule` at write time so re-running a past week doesn't wipe grades.
 - **`betting/model_comparison.ipynb`** — Spread model comparison notebook (70 cells). Rebuilds the exact 85-feature production dataset from scratch, evaluates 5 model architectures + 3 ensemble variants + walk-forward CV. See dedicated section below.
 
 ### Feature Groups (betting/predict_betting.ipynb — helpers cell)
@@ -99,7 +99,12 @@ pip install -r requirements.txt
 10. Coach win%: career win% + rolling 3-season win% for home/away coach
 
 ### LLM Agent
-Developed in `betting/sports_betting_agent.ipynb`. Uses LlamaIndex `ReActAgent` with 5 tools (predictions lookup, injury reports, line movement, matchup history, confidence analysis). Output is cached per week as `betting/agent_analysis_2025_week{n}.json` and displayed in the dashboard as confidence overlays (HIGH/MEDIUM/SKIP).
+Developed in `betting/sports_betting_agent.ipynb`. Uses LlamaIndex `ReActAgent` with 5 tools (predictions lookup, live injuries via nflreadpy, line movement mock data, historical matchups, confidence analysis). Output is cached per week as `betting/agent_analysis_2025_week{n}.json` and displayed in the dashboard as confidence overlays (HIGH/MEDIUM/PASS).
+
+**Key constraints:**
+- `llama-index==0.11.0` (pinned in requirements.txt) only recognises model IDs up to `claude-3-5-sonnet-20240620`. Newer models are patched into `CLAUDE_MODELS` at runtime in cell 5. pydantic v2 silently drops `_client`/`_aclient` set in `__init__` — cell 5 restores them via `object.__setattr__` after construction.
+- Line movement data is hardcoded mock (Week 10 2025). Replace with a live sportsbook API (e.g. The Odds API) for production use.
+- Run via papermill: `papermill betting/sports_betting_agent.ipynb /tmp/out.ipynb -p TARGET_WEEK 10 -p TARGET_SEASON 2025`
 
 ### Data
 - `betting/nfl_allpro_1997_2025.csv` — All-Pro roster data; updated manually each January
@@ -384,7 +389,7 @@ Download the salary CSV from any DK NFL Classic contest lobby → *Export to CSV
 - Vegas total_line itself has near-zero correlation with the diff target (-0.007). Vegas is well-calibrated; the model is finding small residual signal.
 
 **Productization status (all complete):**
-1. ✓ `betting/totals_features.ipynb` — feature engineering source of truth (13 cells, all tests pass). Loaded by consumer notebooks via json+exec with `RUN_TESTS=False`.
+1. ✓ `betting/totals_features.ipynb` — feature engineering source of truth (15 cells, all tests pass). Loaded by consumer notebooks via json+exec with `RUN_TESTS=False`.
 2. ✓ `betting/totals_model.ipynb` — walk-forward CV + production retrain (22 cells, all section tests pass). CV reproduces 55.7% consensus UNDER.
 3. ✓ `betting/predict_totals.ipynb` — papermill-compatible weekly inference (MODE parameter). Loads both `features.ipynb` and `totals_features.ipynb`. Validates feature order against pkls at load time.
 4. ✓ `betting/models/totals_xgboost.pkl` — trained on 2014-2024, 49 features, target=total_diff
