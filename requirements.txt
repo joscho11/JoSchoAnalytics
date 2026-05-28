@@ -13,7 +13,7 @@ nflreadpy>=0.1.5
 
 # Dashboard
 streamlit>=1.30,<2.0
-plotly
+plotly>=5.17,<6.0
 requests
 
 # Notebook execution
