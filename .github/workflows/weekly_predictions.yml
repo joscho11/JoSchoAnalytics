@@ -34,7 +34,7 @@ concurrency:
 jobs:
   predict:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     permissions:
       contents: write
 
@@ -68,21 +68,50 @@ jobs:
             echo "MODE=sunday" >> $GITHUB_ENV
           fi
 
-      - name: Run predictions
+      - name: Run spread predictions
         run: papermill betting/predict_betting.ipynb /tmp/predict_out.ipynb -p MODE ${{ env.MODE }} -p TARGET_WEEK ${{ github.event.inputs.target_week || 'None' }}
 
-      - name: Upload failed notebook
+      - name: Upload failed spread notebook
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: failed-notebook-${{ github.run_id }}
+          name: failed-spread-notebook-${{ github.run_id }}
           path: /tmp/predict_out.ipynb
 
-      - name: Commit updated tracker
+      - name: Run totals predictions
+        if: success()
+        run: papermill betting/predict_totals.ipynb /tmp/totals_out.ipynb -p MODE ${{ env.MODE }} -p TARGET_WEEK ${{ github.event.inputs.target_week || 'None' }}
+
+      - name: Upload failed totals notebook
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failed-totals-notebook-${{ github.run_id }}
+          path: /tmp/totals_out.ipynb
+
+      # Agent deps (llama-index, anthropic) are excluded from requirements-ci.txt
+      # to keep the Thu/Sun runs lean. Install them only for the Tuesday agent run.
+      - name: Install agent dependencies (Tuesday only)
+        if: success() && (github.event.schedule == '0 14 * * 2' || (github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'tuesday'))
+        run: pip install "llama-index==0.11.0" "llama-index-llms-anthropic==0.2.0" anthropic python-dotenv
+
+      - name: Run agent analysis (Tuesday only)
+        if: success() && (github.event.schedule == '0 14 * * 2' || (github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'tuesday'))
+        run: papermill betting/sports_betting_agent.ipynb /tmp/agent_out.ipynb -p TARGET_WEEK ${{ github.event.inputs.target_week || 'None' }}
+        continue-on-error: true
+
+      - name: Upload failed agent notebook
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failed-agent-notebook-${{ github.run_id }}
+          path: /tmp/agent_out.ipynb
+
+      - name: Commit updated trackers and analysis
         if: success()
         run: |
           git config --global user.name  "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add betting/predictions_tracker.csv
+          git add betting/predictions_tracker.csv betting/totals_tracker.csv betting/agent_analysis_*.json
           git diff --staged --quiet || git commit -m "Auto (${{ env.MODE }}): week update $(date +'%Y-%m-%d')"
           git push

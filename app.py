@@ -129,6 +129,10 @@ except Exception as _load_err:
     st.error(f"Failed to load predictions data: {_load_err}")
     st.stop()
 
+if df.empty:
+    st.warning("predictions_tracker.csv has no rows yet. Run the prediction pipeline to populate it.")
+    st.stop()
+
 totals_df = load_totals_tracker()
 
 @st.cache_data(ttl=300)
@@ -733,12 +737,29 @@ with tab1:
             else:
                 tier_html = ''
 
+            # Suggested stake (units) — edge-magnitude tiering, visual only.
+            # HIGH: 1u for 3-5pt edge, 2u for 5pt+; MEDIUM: 0.5u; PASS: none.
+            _abs_edge = abs(edge) if pd.notna(edge) else 0
+            if tier == 'HIGH':
+                _units = "2u" if _abs_edge >= 5 else "1u"
+            elif tier == 'MEDIUM':
+                _units = "0.5u"
+            else:
+                _units = ''
+            stake_html = (
+                f"&nbsp;&nbsp;<span style='background:#1a2433;border:1px solid #3D95CE;"
+                f"border-radius:4px;padding:1px 6px;font-size:11px;color:#3D95CE' "
+                f"title='Suggested stake in units, scaled by model edge'>\U0001F4B0 {_units}</span>"
+                if _units else ''
+            )
+
             with st.container():
                 st.markdown(
                     f"<div style='font-size:13px;color:#888;margin-bottom:6px'>"
                     f"<b style='color:#ccc'>{_html.escape(str(away))} @ {_html.escape(str(home))}</b>"
                     f"&nbsp;&nbsp;·&nbsp;&nbsp;{_html.escape(str(row['gameday']))}"
                     f"{tier_html}"
+                    f"{stake_html}"
                     f"{'&nbsp;&nbsp;·&nbsp;&nbsp;<b>' + result_label + '</b>' if result_label else ''}"
                     f"</div>",
                     unsafe_allow_html=True
@@ -832,13 +853,14 @@ with tab1:
                 # ── Totals badge (below matchup analysis) ────────────────────────────
                 _tot_row = _totals_lookup.get(row.get('game_id'))
                 if _tot_row and _tot_row.get('consensus_tier') == 'HIGH':
-                    _xgb_tot  = _tot_row.get('xgb_predicted_total', '')
-                    _rid_tot  = _tot_row.get('ridge_predicted_total', '')
+                    # Coerce defensively — a corrupted/hand-edited CSV could carry strings.
+                    _xgb_tot  = pd.to_numeric(_tot_row.get('xgb_predicted_total'), errors='coerce')
+                    _rid_tot  = pd.to_numeric(_tot_row.get('ridge_predicted_total'), errors='coerce')
                     _tot_line = _tot_row.get('total_line', '')
-                    _at       = _tot_row.get('actual_total')
+                    _at       = pd.to_numeric(_tot_row.get('actual_total'), errors='coerce')
                     _mc       = _tot_row.get('model_correct')
-                    _avg_pred = round((float(_xgb_tot) + float(_rid_tot)) / 2, 1) if _xgb_tot and _rid_tot else ''
-                    if _at is not None and not (isinstance(_at, float) and pd.isna(_at)):
+                    _avg_pred = round((_xgb_tot + _rid_tot) / 2, 1) if pd.notna(_xgb_tot) and pd.notna(_rid_tot) else ''
+                    if pd.notna(_at):
                         _result_icon = "✅" if _mc == 1.0 else "❌"
                         _tot_result = f"&nbsp;&nbsp;{_result_icon}&nbsp;Actual: {int(_at)}"
                     else:
@@ -2397,6 +2419,18 @@ The Min Edge slider controls which games show up on the page.
 At 0.0 (the default) you see every game. At 1.0 you only see games where the model disagrees with Vegas by at least 1 point. At 3.0 you're only seeing the high conviction plays.
 
 Slide it up to filter down to your highest-confidence plays.
+        """)
+
+    with st.expander("What does the 💰 stake chip mean?"):
+        st.markdown("""
+The 💰 chip next to a game's tier badge is a **suggested stake in units**, scaled by how large the model's edge is. A "unit" is just whatever you decide one bet is worth (commonly 1-2% of your bankroll) — the chip only tells you the *relative* size, not a dollar amount.
+
+- **2u** — HIGH tier with a 5+ point edge. The model's strongest disagreement with Vegas.
+- **1u** — HIGH tier with a 3-5 point edge.
+- **0.5u** — MEDIUM tier. There's an edge but less conviction.
+- *(no chip)* — PASS games. The model doesn't have enough edge to recommend a bet.
+
+This is a simple flat-tiered guide, not full Kelly criterion sizing. It's there to remind you that not every pick deserves the same amount of money — bet more when the model is more confident, less when it isn't, and nothing on PASS games. Never bet more than you can afford to lose.
         """)
 
     with st.expander("How often does the site update?"):

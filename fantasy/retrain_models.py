@@ -21,31 +21,39 @@ DATA_PATH     = _HERE / "features_dataset.csv"
 RAW_PATH      = _HERE / "raw_dataset.csv"
 MODEL_DIR     = _HERE / "models"
 # UPDATE ANNUALLY: add completed season to TRAIN_SEASONS; TEST_SEASON auto-derives.
+# 2025 is intentionally held OUT as the evaluation season (not yet folded into training).
 TRAIN_SEASONS = [2020, 2021, 2022, 2023, 2024]
-TEST_SEASON   = max(TRAIN_SEASONS) + 1
+TEST_SEASON   = max(TRAIN_SEASONS) + 1   # = 2025 holdout
 POSITIONS     = ["QB", "RB", "WR", "TE"]
 
 np.random.seed(RANDOM_SEED)
 
+# early_stopping_rounds belongs in the constructor as of XGBoost 2.x+, not fit().
 XGB_PARAMS = dict(
-    n_estimators     = 500,
-    max_depth        = 4,
-    learning_rate    = 0.05,
-    min_child_weight = 5,
-    subsample        = 0.8,
-    colsample_bytree = 0.8,
-    reg_alpha        = 0.5,
-    reg_lambda       = 1.0,
-    objective        = "reg:squarederror",
-    random_state     = RANDOM_SEED,
-    tree_method      = "hist",
-    n_jobs           = -1,
+    n_estimators        = 500,
+    max_depth           = 4,
+    learning_rate       = 0.05,
+    min_child_weight    = 5,
+    subsample           = 0.8,
+    colsample_bytree    = 0.8,
+    reg_alpha           = 0.5,
+    reg_lambda          = 1.0,
+    objective           = "reg:squarederror",
+    random_state        = RANDOM_SEED,
+    tree_method         = "hist",
+    n_jobs              = -1,
+    early_stopping_rounds = 25,
 )
 
 # ── Load data ──────────────────────────────────────────────────────────────────
 print("Loading features_dataset.csv ...")
 df = pd.read_csv(DATA_PATH)
 print(f"Dataset: {df.shape[0]:,} rows x {df.shape[1]} cols")
+
+# Fail fast with a clear message if the expected schema isn't present.
+_req = {"position", "season", "week", "player_id", "target_half_ppr"}
+_missing = _req - set(df.columns)
+assert not _missing, f"features_dataset.csv missing required columns: {sorted(_missing)}"
 
 IDENTITY_COLS = ["player_id", "player_display_name", "position", "team",
                  "opponent_team", "season", "week"]
@@ -89,10 +97,10 @@ for pos in POSITIONS:
     X_train, y_train = train[pos_feats], train[TARGET_COL]
     X_test,  y_test  = test[pos_feats],  test[TARGET_COL]
 
-    # Old MAE
+    # Old MAE (only computable when a holdout season exists)
     old_path = os.path.join(MODEL_DIR, f"{pos.lower()}_model.pkl")
     old_mae = None
-    if os.path.exists(old_path):
+    if os.path.exists(old_path) and len(X_test) > 0:
         old_m    = joblib.load(old_path)
         old_pred = old_m["model"].predict(test[old_m["feature_cols"]])
         old_mae  = mean_absolute_error(y_test, old_pred)
@@ -102,15 +110,18 @@ for pos in POSITIONS:
     X_val,  y_val  = X_train.iloc[val_cut:], y_train.iloc[val_cut:]
 
     model = XGBRegressor(**XGB_PARAMS)
-    model.fit(X_tr85, y_tr85, eval_set=[(X_val, y_val)],
-              early_stopping_rounds=25, verbose=False)
+    model.fit(X_tr85, y_tr85, eval_set=[(X_val, y_val)], verbose=False)
 
-    new_pred = model.predict(X_test)
-    new_mae  = mean_absolute_error(y_test, new_pred)
-    rmse     = root_mean_squared_error(y_test, new_pred)
-    if "fantasy_points_half_ppr_roll3" in test.columns:
-        baseline_mae = mean_absolute_error(y_test, test["fantasy_points_half_ppr_roll3"])
+    if len(X_test) > 0:
+        new_pred = model.predict(X_test)
+        new_mae  = mean_absolute_error(y_test, new_pred)
+        rmse     = root_mean_squared_error(y_test, new_pred)
+        if "fantasy_points_half_ppr_roll3" in test.columns:
+            baseline_mae = mean_absolute_error(y_test, test["fantasy_points_half_ppr_roll3"])
+        else:
+            baseline_mae = None
     else:
+        new_mae = rmse = float("nan")  # no holdout season yet
         baseline_mae = None
 
     save_path = os.path.join(MODEL_DIR, f"{pos.lower()}_model.pkl")
@@ -151,11 +162,14 @@ def train_stat_model(features_df, pos, stat_name, target_col, pos_feats):
     model = XGBRegressor(**XGB_PARAMS)
     model.fit(X_tr.iloc[:val_cut_s], y_tr.iloc[:val_cut_s],
               eval_set=[(X_tr.iloc[val_cut_s:], y_tr.iloc[val_cut_s:])],
-              early_stopping_rounds=25, verbose=False)
+              verbose=False)
 
-    preds = np.clip(model.predict(X_te), 0, None)
-    mae  = mean_absolute_error(y_te, preds)
-    rmse = root_mean_squared_error(y_te, preds)
+    if len(X_te) > 0:
+        preds = np.clip(model.predict(X_te), 0, None)
+        mae  = mean_absolute_error(y_te, preds)
+        rmse = root_mean_squared_error(y_te, preds)
+    else:
+        mae = rmse = float("nan")  # no holdout season yet
 
     save_path = os.path.join(MODEL_DIR, f"{stat_name}_model.pkl")
     joblib.dump({"model": model, "feature_cols": pos_feats}, save_path)

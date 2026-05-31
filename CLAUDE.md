@@ -70,7 +70,7 @@ pip install -r requirements.txt
   | 38–40 | `log_predictions` — write to tracker CSV |
   | 41–42 | Run Pipeline — execution cell |
 - **`betting/features.ipynb`** — **Single source of truth** for the 85-feature engineering pipeline (Groups 1–10) shared by both `predict_betting.ipynb` and `model_comparison.ipynb`. 53 cells using the markdown → code → inline-test pattern, with synthetic-data tests per group (all hermetic — no live nflreadpy calls in tests). Public names exposed after load: `build_features`, `build_numeric_features`, the per-group `_build_*` helpers, `FEATURE_COLS_85`, `PROD_FEATURES_35`, `TEAM_MAP`, `norm_name`, `canonicalize_ngs_team`. **Loading pattern** (used by `predict_betting.ipynb` cell 28 and `model_comparison.ipynb` cell 5): set `RUN_TESTS = False` then exec every code cell from the notebook json — see [editing notebooks](#editing-the-shared-features-notebook) below. The synthetic-data tests inside run when the notebook is opened standalone (RUN_TESTS=True by default) and are skipped during production runs; a closing cleanup cell removes the synth fixtures from consumer globals.
-- **`app.py`** — Streamlit dashboard with 3 tabs: Weekly Predictions, Season Performance, Help & Guide. Reads `betting/predictions_tracker.csv` and `betting/totals_tracker.csv`. Game cards show a **dashed amber EXPERIMENTAL UNDER badge** when the totals model has a HIGH pick — amber instead of green/purple because live 2025 is only at break-even and the model hasn't been confirmed profitable yet. Season Performance totals section is gated with a "tracking only — do not bet" warning banner. Fantasy tab shows per-week projections per position with projected and actual stat columns.
+- **`app.py`** — Streamlit dashboard with 3 tabs: Weekly Predictions, Season Performance, Help & Guide. Reads `betting/predictions_tracker.csv` and `betting/totals_tracker.csv`. Game cards show a **dashed amber EXPERIMENTAL UNDER badge** when the totals model has a HIGH pick — amber instead of green/purple because live 2025 is only at break-even and the model hasn't been confirmed profitable yet. Season Performance totals section is gated with a "tracking only — do not bet" warning banner. Game cards also show a **💰 stake chip** next to the tier badge (added 2026-05-28): HIGH tier = 2u if `abs(ens_model_edge) ≥ 5` else 1u, MEDIUM = 0.5u, PASS = none. Visual flat-tier guide only (not full Kelly); explained in the Help & Guide. Fantasy tab shows per-week projections per position with projected and actual stat columns.
 - **`betting/models/`** — All trained model pkl files:
   - `ensemble_prod_model.pkl` — **Primary spread model.** Ensemble fixed75: 0.75 XGBoost + 0.25 Ridge, trained 2014–2024. Sets the edge threshold and output sort order. Includes `scaler`, `feature_cols`, `roof_surface_encoder`, `xgb_model`, `ridge_model`, `xgb_weight`.
   - `xgboost_prod_model.pkl` — XGBoost sklearn pipeline (preprocessor + regressor). One of three spread direction voters.
@@ -79,7 +79,7 @@ pip install -r requirements.txt
   - `totals_xgboost.pkl` — **Totals model XGBoost.** Saved as `{'model': XGBRegressor, 'feature_cols': list[49], 'target': 'total_diff', 'train_seasons': list}`.
   - `totals_ridge.pkl` — **Totals model Ridge.** Saved as `{'model': Ridge, 'scaler': StandardScaler, 'feature_cols': list[49], 'target': 'total_diff', 'train_seasons': list}`.
 - **`betting/archive/`** — Old model files and retired notebooks: `betting_model.pkl` (original XGBoost pkl), `BettingEdge_v2.ipynb`, `BettingEdgeContinued.ipynb`.
-- **`betting/predictions_tracker.csv`** — Master log of spread predictions and outcomes. Auto-committed by GitHub Actions.
+- **`betting/predictions_tracker.csv`** — Master log of spread predictions and outcomes. Auto-committed by GitHub Actions. Includes `pick_line` / `closing_line` / `clv` columns (added 2026-05-28, currently empty) reserved for forward-collected Closing Line Value once the 2026 season pipeline runs.
 - **`betting/totals_tracker.csv`** — Master log of totals (over/under) predictions and outcomes. Same structure as predictions_tracker but for the totals model. Columns: `game_id`, `home_team`, `away_team`, `gameday`, `season`, `week`, `total_line`, `xgb_predicted_total`, `ridge_predicted_total`, `xgb_diff`, `ridge_diff`, `consensus_tier` (HIGH/PASS), `recommendation` (UNDER/PASS), `mode`, `logged_at`, `actual_total`, `went_over`, `model_correct`.
 - **`betting/totals_features.ipynb`** — **Single source of truth** for the 14 totals-specific features. 15 cells, markdown→code→test pattern. Public surface: `build_totals_features`, `TOTALS_FEATURE_COLS`, `totals_acc`. Loaded by consumer notebooks via json+exec with `RUN_TESTS=False`. **Key constraint:** `is_dome` re-merges the raw roof string from sched (not the ordinal-encoded int in `g`) — this is intentional and must be preserved.
 - **`betting/totals_model.ipynb`** — Totals model training notebook (22 cells). Loads `features.ipynb` + `totals_features.ipynb`, builds 49-feature matrix (35 spread + 14 totals), runs walk-forward CV, retrains on full 2014-2024 data, saves `totals_xgboost.pkl` and `totals_ridge.pkl`.
@@ -112,7 +112,7 @@ Developed in `betting/sports_betting_agent.ipynb`. Uses LlamaIndex `ReActAgent` 
 - Live schedule, PBP, and stats pulled from `nflreadpy` at prediction time
 
 ### Automation
-`.github/workflows/weekly_predictions.yml` runs `betting/predict_betting.ipynb` via papermill on three cron schedules (Tue 9am ET, Thu 9pm ET, Sun 9am ET) and commits the updated tracker. Supports manual dispatch with mode selection.
+`.github/workflows/weekly_predictions.yml` runs the prediction pipelines via papermill on three cron schedules (Tue 9am ET, Thu 9pm ET, Sun 9am ET) and commits the updated trackers. Supports manual dispatch with mode selection. Steps in order: (1) `predict_betting.ipynb` (spread), (2) `predict_totals.ipynb` (totals), (3) `sports_betting_agent.ipynb` — **Tuesday only** (gated on the Tuesday cron / `mode == tuesday` dispatch; `continue-on-error: true` so an agent/API failure never blocks the tracker commit). Commit stages `predictions_tracker.csv`, `totals_tracker.csv`, and `agent_analysis_*.json`. Job timeout is 60 min (agent adds ~10 min for a full slate). Each notebook uploads its own failed-notebook artifact on error.
 
 `.github/workflows/test.yml` runs the inline test suite in `betting/features.ipynb` via papermill on every push and PR against `main`. Fast (~30s), offline (synth tests don't hit nflreadpy), uploads the failed notebook as an artifact on failure. The job fails if any inline assertion in features.ipynb breaks — including the order-hash check that catches `PROD_FEATURES_35` / `FEATURE_COLS_85` reorder bugs.
 
@@ -205,18 +205,19 @@ Target: `target_half_ppr` (half-PPR points in week W+1).
 
 **Model:** One XGBoost regressor per position (QB, RB, WR, TE). Train on 2020–2024, holdout 2025. Saved to `models/{position}_model.pkl` as `{'model': XGBRegressor, 'feature_cols': list}`.
 
-**2025 holdout results** (vs 3-week rolling average baseline):
+**2025 holdout results** (vs 3-week rolling average baseline; retrained 2026-05-28):
 
 | Position | Train rows | Test rows | MAE | RMSE | Baseline MAE |
 |----------|-----------|-----------|-----|------|--------------|
-| QB | 2,781 | 571 | 6.99 | 8.60 | 7.49 |
-| RB | 6,652 | 1,397 | 4.48 | 6.45 | 4.59 |
-| WR | 10,643 | 2,215 | 3.91 | 5.37 | 4.06 |
-| TE | 5,265 | 1,145 | 3.17 | 4.64 | 3.48 |
+| QB | 2,781 | 571 | 6.81 | 8.43 | 7.49 |
+| RB | 6,652 | 1,397 | 4.40 | 6.36 | 4.59 |
+| WR | 10,643 | 2,215 | 3.96 | 5.28 | 4.06 |
+| TE | 5,265 | 1,145 | 3.16 | 4.55 | 3.48 |
 
 ### Known Next Improvements
 
-- **Include 2025 in training** — currently `TRAIN_SEASONS = [2020–2024]` with 2025 as the holdout. Once the 2025 season is complete, move it into training and use 2026 (or a rolling holdout) for evaluation. Update `TRAIN_SEASONS` in `model.ipynb` cell 3, retrain with `retrain_models.py`, and update the holdout results table above. This is the highest-ROI change remaining — it adds ~3,000 rows per model.
+- **Include 2025 in training (still PENDING — intentionally deferred).** 2025 is kept as the **evaluation holdout** for now so the models can be improved against a real out-of-sample season. `TRAIN_SEASONS = [2020–2024]`, `TEST_SEASON = 2025` in both `model.ipynb` cell 3 and `retrain_models.py`. When ready to fold 2025 in, bump both to include 2025 and re-run `retrain_models.py` (the empty-holdout guards already handle the resulting empty 2026 holdout). This adds ~5,300 rows total when done.
+- **Infra fixes applied 2026-05-28 (retained regardless of holdout choice):** (1) `early_stopping_rounds` moved from `fit()` into the `XGB_PARAMS` constructor — XGBoost 2.x+ rejects it in `fit()`, so the old code couldn't retrain at all; (2) eval cells in `model.ipynb` (7, 9, 15) and player-profile cells (17-19) guarded to skip gracefully on an empty holdout; (3) `retrain_models.py` is the canonical retrain path covering all 12 models (the notebook only covers the 4 main + 6 RB per-stat). All 12 models retrained 2026-05-28 on 2020-2024 with 2025 holdout MAE: QB 6.81, RB 4.40, WR 3.96, TE 3.16 (all beat the rolling-avg baseline of 7.49 / 4.59 / 4.06 / 3.48).
 - **Rebuild raw_dataset.csv annually** — re-run `data_pipeline.ipynb` each offseason to pull fresh nflreadpy data (new season stats, updated injury history, depth charts). Then re-run `features.ipynb` and retrain.
 
 ### data_pipeline.ipynb — Feature Groups
@@ -299,7 +300,7 @@ Eight additional XGBoost regressors trained to predict individual stats for prop
 
 Each pkl is `{'model': XGBRegressor, 'feature_cols': list}` — same structure as main models. Note: per-stat projections are independent models; their values will not sum exactly to the main `Proj Pts` prediction.
 
-Trained and saved in `fantasy/model.ipynb` Step 2b (RB), 2c (WR), 2d (TE), 2e (QB).
+**Canonical retrain path is `fantasy/retrain_models.py`** — it trains all 12 production models (4 main + these 8 per-stat) in one run with identical config. `fantasy/model.ipynb` also trains the 4 main + the 2 RB per-stat models (rush_yards, rec_yards) for exploration; as of 2026-05-28 its RB-stat section is trimmed to exactly those 2 so it no longer writes orphan pkls (rush_tds / rec_tds / receptions / fumbles_lost) into `models/`. Both paths use `early_stopping_rounds=25` in the `XGBRegressor` constructor (XGBoost 2.x+ rejects it in `fit()`). `predict_fantasy.ipynb` loads exactly these 8.
 
 ### features.ipynb — Structure
 
@@ -394,7 +395,7 @@ Download the salary CSV from any DK NFL Classic contest lobby → *Export to CSV
 3. ✓ `betting/predict_totals.ipynb` — papermill-compatible weekly inference (MODE parameter). Loads both `features.ipynb` and `totals_features.ipynb`. Validates feature order against pkls at load time.
 4. ✓ `betting/models/totals_xgboost.pkl` — trained on 2014-2024, 49 features, target=total_diff
 5. ✓ `betting/models/totals_ridge.pkl` — trained on 2014-2024, 49 features + scaler, target=total_diff
-6. ✓ `betting/totals_tracker.csv` — backfilled for 2025 weeks 10-17 (46 HIGH picks, 52.2% correct, 95% CI ~37-67%)
+6. ✓ `betting/totals_tracker.csv` — backfilled for 2025 **weeks 10-17 only** (the model didn't exist earlier in the season). 121 rows, 46 HIGH picks, 52.2% correct, 95% CI ~37-67%. Weeks 1-9 are intentionally absent — don't compute "full season" totals stats off this file without accounting for the partial coverage.
 7. ✓ `app.py` — game cards show purple UNDER badge for HIGH totals picks; Season Performance tab has totals section; Help & Guide updated.
 
 **Tier logic:** HIGH = both XGBoost AND Ridge predict UNDER (both residuals < 0). PASS = everything else. No OVER bets — OVER hit-rate is 50.8%, below break-even.
@@ -408,6 +409,14 @@ Download the salary CSV from any DK NFL Classic contest lobby → *Export to CSV
 **Architecture note for future-me:** keep totals SEPARATE from spread features. `betting/features.ipynb` stays untouched (it's the spread source of truth). New file `betting/totals_features.ipynb` is the totals source of truth. They can share data prep (mc cells 1-37) but each owns its own feature list and pkl files. Both can be retrained independently.
 
 ## Completed Work
+
+**2026-05-28 (5 quick wins + dual code review):**
+- **Fantasy 2025 holdout retain + infra fixes:** kept `TRAIN_SEASONS=[2020-2024]` / `TEST_SEASON=2025` (2025 stays the holdout for now); fixed `early_stopping_rounds` (moved to `XGB_PARAMS` constructor in both `model.ipynb` and `retrain_models.py` — XGBoost 3.x rejects it in `fit()`, so retrain was previously broken); guarded empty-holdout eval/profile cells; retrained all 12 models via `retrain_models.py` (holdout MAE QB 6.81 / RB 4.40 / WR 3.96 / TE 3.16).
+- **DFS export fixed** — `dfs_pipeline.ipynb` cell 19 now writes proper DK Classic columns (`QB,RB,RB,WR,WR,WR,TE,FLEX,DST`) via consume-from-slot; unit-tested.
+- **CLV columns** added to `predictions_tracker.csv` (`pick_line`, `closing_line`, `clv`; empty, reserved for 2026).
+- **Agent in CI** — `weekly_predictions.yml` runs `sports_betting_agent.ipynb` Tuesday-only with a Tuesday-only conditional install of agent deps (llama-index/anthropic are excluded from `requirements-ci.txt` to keep Thu/Sun lean); `continue-on-error` so an agent/API failure never blocks the tracker commit.
+- **Kelly stake chip** on game cards (💰 2u / 1u / 0.5u by tier + edge; visual only).
+- **Code-review fixes (this session, mine + independent agent):** (1) app.py totals badge now coerces predictions with `pd.to_numeric(errors='coerce')` so a corrupted CSV can't crash the dashboard; (2) app.py stops with a clear warning if `predictions_tracker.csv` loads empty (not just missing); (3) `predict_totals.ipynb` asserts all `PROD_FEATURES_35` survived `build_features` for a clear error; (4) `get_tier` got a docstring; (5) `retrain_models.py` asserts required columns exist in `features_dataset.csv`; (6) deleted 4 orphan RB per-stat pkls and trimmed `model.ipynb` cell 9 so they no longer regenerate (production per-stat set is the documented 8). Both reviewers confirmed no leakage, no crash bugs, all pct divisions guarded. Remaining `SKIP` strings in app.py (lines ~411/820/911) are intentional backward-compat detectors for pre-rename cached agent JSON — they map to `PASS`.
 
 **2026-05-25 / 26 / 27 (time-decay weighting + extended training range — REJECTED, three passes + clean rerun):**
 
@@ -576,7 +585,7 @@ These items (none of them model-tuning) are what would actually grow the project
 
 ## Known Issues
 
-- **DK lineup upload CSV format may be wrong (Medium)** — `dfs_pipeline.ipynb` exports only a `Name` column. DraftKings' actual lineup import format requires position slots as separate columns (QB, RB, RB, WR, WW, WR, TE, FLEX, DST). Verify against DK's current template before using the export.
+- **✓ FIXED (2026-05-28): DK lineup upload CSV format.** `dfs_pipeline.ipynb` cell 19 now exports the proper DraftKings Classic layout — one column per roster slot (`QB, RB, RB, WR, WR, WR, TE, FLEX, DST`), filled by consuming names from each `_assign_slots` label. Verify against DK's current template before a real contest, but the format now matches the documented Classic import spec.
 
 ---
 

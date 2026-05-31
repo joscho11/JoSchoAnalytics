@@ -101,7 +101,8 @@
       "Bash(tee betting/experiments/_totals_baseline_v2.log)",
       "Bash(tee betting/experiments/_totals_baseline_v3.log)",
       "Bash(tee betting/experiments/_totals_baseline_v3_5.log)",
-      "Bash(tee betting/experiments/_backfill_totals.log)"
+      "Bash(tee betting/experiments/_backfill_totals.log)",
+      "Bash(echo \"EXIT $?\")"
     ]
   }
 }

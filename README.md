@@ -80,10 +80,10 @@ Half-PPR points for QB, RB, WR, and TE the night before each slate, plus per-sta
 
 | Position | Train rows | Test rows | MAE | RMSE | Baseline MAE |
 |----------|-----------|-----------|-----|------|--------------|
-| QB | 2,781 | 571 | **6.99** | 8.60 | 7.49 |
-| RB | 6,652 | 1,397 | **4.48** | 6.45 | 4.59 |
-| WR | 10,643 | 2,215 | **3.91** | 5.37 | 4.06 |
-| TE | 5,265 | 1,145 | **3.17** | 4.64 | 3.48 |
+| QB | 2,781 | 571 | **6.81** | 8.43 | 7.49 |
+| RB | 6,652 | 1,397 | **4.40** | 6.36 | 4.59 |
+| WR | 10,643 | 2,215 | **3.96** | 5.28 | 4.06 |
+| TE | 5,265 | 1,145 | **3.16** | 4.55 | 3.48 |
 
 Beats the rolling-average baseline at every position. TE has the lowest MAE since TE scoring is more concentrated and the model picks up on it.
 
