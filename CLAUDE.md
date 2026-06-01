@@ -352,6 +352,67 @@ Download the salary CSV from any DK NFL Classic contest lobby → *Export to CSV
 - **Name matching is fuzzy** — review `dk_avg`-flagged players in the pipeline output before finalising the lineup.
 - **Edit notebooks via Python `json.load/dump`** — same constraint as all other notebooks in this repo.
 
+## Seasonal Projections (`fantasy/seasonal_projections/`)
+
+A **pre-season** fantasy projection / draft-board system, distinct from the in-season weekly model. Goal: project each player's upcoming season, rank into a draft board, and compare to the market (Sleeper ADP) to surface values and reaches — the fantasy analog of the betting side's "model vs the Vegas line" edge thesis (here the market line is ADP). **As of 2026-05-28 the data foundation is built and tested; the models are NOT built yet** (next session).
+
+**Why a separate model from the weekly one:** the weekly model leans on in-season rolling features (recent EPA, recent target share) that don't exist before Week 1. This is a season-long projection built only from draft-time-available info (prior-season aggregates, multi-year trend, age, draft capital, team context).
+
+### Files (pipeline runs in order)
+
+| File | Output | Purpose |
+|------|--------|---------|
+| `_utils.py` | — | Shared `norm_name` (DRY, matches betting/features.ipynb convention; no early `break` so cached join keys stay identical) + constants (`ADP_SENTINEL=900`, `SKILL_POSITIONS`). |
+| `fetch_adp.py` | `sleeper_adp_2020_2025.csv` | Caches Sleeper preseason ADP (`adp_half_ppr`) + Sleeper's own season projections, from the undocumented `api.sleeper.app/v1/projections/nfl/regular/{season}` endpoint. **ADP is a benchmark only, never a model feature.** |
+| `build_season_dataset.py` | `season_dataset_2014_2025.csv` | One row per (player, season), 7,350 rows, prior-only features (no leakage), two targets, ADP joined for 2020+. |
+| `test_seasonal_projections.py` | — | Hermetic test suite (7 tests, no network) for the transformation logic + an output-integrity check on the real CSV. |
+| `README.md` | — | Pipeline order, design decisions, honest caveats. |
+
+### Data-source facts (verified empirically)
+
+- **Sleeper ADP**: undocumented projections endpoint carries `adp_half_ppr` etc. ADP exists **2020+** only (2019 is 100% the `999.0` "undrafted" sentinel; pre-2019 has no ADP). Sleeper point projections exist 2018+. It's a **live rolling aggregate** of real drafts that freezes at the final draft-season (late-Aug) consensus for completed seasons. No timestamp in the data. Join to our data by **normalized name + position** (Sleeper's `gsis_id` is too sparse to join on, even for stars).
+- **Model features come from `nfl.load_player_stats` (1999+)**, which carries `target_share`, `air_yards_share`, `receiving_air_yards` populated back to 2011 — so the air-yards/aDOT "NGS-like" signal needs no NGS endpoint and no PBP load, and 2014 has zero missing-value problem.
+
+### Two-model design (target columns)
+
+- `target_ppg` — half-PPR points per game (**Model A, production**). NaN when the player played 0 games or `< MIN_GAMES_TARGET` (3) — a tiny sample is a noisy label.
+- `target_games` — games played (**Model B, availability**). Present for every row, including reconstructed full-miss seasons.
+- `sample_weight` — games played, so Model A trusts a 2-game season far less than a 16-game one.
+- Final draft value = projected PPG × projected games, ranked vs ADP. (Models not built yet.)
+
+### Key design decisions (intentional — do not "fix")
+
+- **Full-miss seasons reconstructed**: a season a player skips entirely leaves no stats row, so Model B would never see a 0-game outcome. `reconstruct_missed` synthesizes a `games=0` row for every gap **between** a player's first and last active season (leans toward injury/IR since the player returned). 377 such rows.
+- **`is_rookie` vs `missed_prior_season`**: both yield a NaN-ish prior but mean opposite things (no NFL history vs a veteran who sat out hurt). Both are flags.
+- **Prior features via explicit season-(N-1) join, NOT `shift(1)`** — a missed season correctly yields NaN priors instead of pulling 2-year-stale data. Missing priors are **NaN, never 0** (zero is a real value to a tree; same lesson as the spread time-decay bug).
+- **Low-snap player-seasons kept, not filtered** — usage drives points, so a 17-game/15%-snap line is real signal; `snap_share_pg` lets the model learn it. The ADP join means low-relevance players never reach the board.
+- **Draft capital joins on `gsis_id`** (matches `player_id`), name-join only as fallback — avoids the father/son same-name collapse (Frank Gore vs Frank Gore Jr.).
+- **Training window decoupled from ADP**: model trains 2014+ from nflreadpy; ADP (2020+) is left-joined where it exists. Pre-2020 rows simply have no ADP benchmark, which is fine.
+
+### Caveats (documented, not bugs)
+
+- `qb_changed` and `vacated_target_share`/`vacated_rush_share` use season-N primary-passer / roster info — ~known by a late-August draft but mild hindsight in a strict backtest. `coach_changed` is fully clean (coaches known at season start).
+- Reconstructed gaps capture injury plus some non-injury cases (a backup who sat a year); the ADP join ignores them, so they only inform Model B's durability gradient.
+- `games_played` is snap-based where snaps exist (2013+), else stat-line weeks.
+
+### Next session — modeling (TODO)
+
+The data foundation is done; this is the plan for the modeling step:
+1. **Model A (production / PPG)** — per-position XGBoost regressors (QB/RB/WR/TE, mirroring the weekly model), target `target_ppg`, `sample_weight=sample_weight` (games-weighted), train 2014-2024, holdout 2025. Pass NaN priors through natively (don't impute/zero-fill). Report holdout MAE per position.
+2. **Model B (availability / games)** — one regressor predicting `target_games`, trained on ALL rows including reconstructed 0-game seasons. Features that matter: `age`, `prior_games_missed`, `missed_prior_season`, `position`, prior workload (`prior_carries_pg`/`prior_touches_pg`), `years_exp`. Set honest expectations: it should separate durable/fragile tiers, not predict exact games.
+3. **Combine → draft board** — `projected_value = PPG_pred × games_pred`, rank overall + per position, join ADP (`adp_pos_rank`), compute the value/reach gap (our rank vs ADP rank). Breakouts = biggest positive gaps among young/cheap (low-ADP, low-`years_exp`) players.
+4. **Evaluate two ways**: (a) projection accuracy vs actual 2025 (PPG MAE, games MAE) and vs Sleeper's own `sleeper_pts_half_ppr` projection as a benchmark; (b) the edge thesis — do our "value" picks (we rank meaningfully above ADP) actually out-finish their ADP? Backtest on 2020-2024 where ADP exists.
+5. **Watch for**: modest sample (~6k usable rows, one row per player-season) → lean on regularization, don't over-feature; rookies are a cold-start population (lean on `draft_pick`/`age`/`is_rookie`); be honest if the ADP edge is within noise (same discipline as the totals model — live/holdout evidence over backtest).
+6. Output a board CSV (and later a dashboard view). Keep models in `fantasy/seasonal_projections/models/` separate from the weekly `fantasy/models/`.
+
+### Editing / running
+
+```bash
+python fantasy/seasonal_projections/fetch_adp.py            # refresh ADP cache
+python fantasy/seasonal_projections/build_season_dataset.py # rebuild dataset (~1-2 min)
+python fantasy/seasonal_projections/test_seasonal_projections.py
+```
+
 ## Active Experiments
 
 ### 2026-05-27/28: Totals model (over/under) — SHIPPED v1 (EXPERIMENTAL on dashboard)

@@ -102,7 +102,8 @@
       "Bash(tee betting/experiments/_totals_baseline_v3.log)",
       "Bash(tee betting/experiments/_totals_baseline_v3_5.log)",
       "Bash(tee betting/experiments/_backfill_totals.log)",
-      "Bash(echo \"EXIT $?\")"
+      "Bash(echo \"EXIT $?\")",
+      "WebFetch(domain:docs.sleeper.com)"
     ]
   }
 }
