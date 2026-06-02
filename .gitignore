@@ -5,6 +5,7 @@ __pycache__/
 .ipynb_checkpoints/
 .venv
 .streamlit/secrets.toml
+.claude/
 
 # Retired notebooks — live in betting/archive/, ignore if they drift back to root
 betting/BettingEdgeContinued.ipynb

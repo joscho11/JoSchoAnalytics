@@ -1,0 +1,13 @@
+{
+  "cv_mae": 4.05,
+  "holdout_mae": 3.734,
+  "holdout_rho": 0.567,
+  "baseline_prior_games_mae": 4.113,
+  "baseline_mean_mae": 5.342,
+  "n_holdout": 610,
+  "best_params": {
+    "depth": 6,
+    "learning_rate": 0.03,
+    "l2_leaf_reg": 3.0
+  }
+}

@@ -1,0 +1,210 @@
+{
+  "QB": {
+    "n_train": 676,
+    "n_holdout": 72,
+    "algos": {
+      "catboost": {
+        "cv_wMAE": 3.022,
+        "holdout_wMAE": 2.9,
+        "holdout_MAE": 3.647,
+        "holdout_rho": 0.711,
+        "best_params": {
+          "depth": 4,
+          "learning_rate": 0.03,
+          "l2_leaf_reg": 6.0
+        }
+      },
+      "xgboost": {
+        "cv_wMAE": 3.081,
+        "holdout_wMAE": 3.05,
+        "holdout_MAE": 3.728,
+        "holdout_rho": 0.734,
+        "best_params": {
+          "max_depth": 3,
+          "learning_rate": 0.03,
+          "reg_lambda": 1.0,
+          "min_child_weight": 10
+        }
+      },
+      "lightgbm": {
+        "cv_wMAE": 3.311,
+        "holdout_wMAE": 3.423,
+        "holdout_MAE": 4.032,
+        "holdout_rho": 0.698,
+        "best_params": {
+          "num_leaves": 15,
+          "learning_rate": 0.03,
+          "reg_lambda": 1.0,
+          "min_child_samples": 40,
+          "max_depth": -1
+        }
+      }
+    },
+    "baselines": {
+      "prior_ppg": {
+        "wMAE": 3.795,
+        "n": 58
+      },
+      "ppg_3yr": {
+        "wMAE": 3.27,
+        "n": 60
+      }
+    }
+  },
+  "RB": {
+    "n_train": 1430,
+    "n_holdout": 126,
+    "algos": {
+      "catboost": {
+        "cv_wMAE": 2.528,
+        "holdout_wMAE": 2.556,
+        "holdout_MAE": 2.451,
+        "holdout_rho": 0.701,
+        "best_params": {
+          "depth": 4,
+          "learning_rate": 0.06,
+          "l2_leaf_reg": 6.0
+        }
+      },
+      "xgboost": {
+        "cv_wMAE": 2.593,
+        "holdout_wMAE": 2.531,
+        "holdout_MAE": 2.522,
+        "holdout_rho": 0.702,
+        "best_params": {
+          "max_depth": 4,
+          "learning_rate": 0.03,
+          "reg_lambda": 5.0,
+          "min_child_weight": 10
+        }
+      },
+      "lightgbm": {
+        "cv_wMAE": 2.628,
+        "holdout_wMAE": 2.552,
+        "holdout_MAE": 2.577,
+        "holdout_rho": 0.689,
+        "best_params": {
+          "num_leaves": 15,
+          "learning_rate": 0.03,
+          "reg_lambda": 5.0,
+          "min_child_samples": 20,
+          "max_depth": -1
+        }
+      }
+    },
+    "baselines": {
+      "prior_ppg": {
+        "wMAE": 2.397,
+        "n": 93
+      },
+      "ppg_3yr": {
+        "wMAE": 2.555,
+        "n": 98
+      }
+    }
+  },
+  "WR": {
+    "n_train": 2259,
+    "n_holdout": 221,
+    "algos": {
+      "catboost": {
+        "cv_wMAE": 2.083,
+        "holdout_wMAE": 1.8,
+        "holdout_MAE": 1.737,
+        "holdout_rho": 0.779,
+        "best_params": {
+          "depth": 4,
+          "learning_rate": 0.06,
+          "l2_leaf_reg": 6.0
+        }
+      },
+      "xgboost": {
+        "cv_wMAE": 2.123,
+        "holdout_wMAE": 1.901,
+        "holdout_MAE": 1.893,
+        "holdout_rho": 0.771,
+        "best_params": {
+          "max_depth": 3,
+          "learning_rate": 0.03,
+          "reg_lambda": 5.0,
+          "min_child_weight": 10
+        }
+      },
+      "lightgbm": {
+        "cv_wMAE": 2.135,
+        "holdout_wMAE": 1.921,
+        "holdout_MAE": 1.901,
+        "holdout_rho": 0.758,
+        "best_params": {
+          "num_leaves": 15,
+          "learning_rate": 0.03,
+          "reg_lambda": 1.0,
+          "min_child_samples": 20,
+          "max_depth": -1
+        }
+      }
+    },
+    "baselines": {
+      "prior_ppg": {
+        "wMAE": 2.232,
+        "n": 169
+      },
+      "ppg_3yr": {
+        "wMAE": 2.314,
+        "n": 179
+      }
+    }
+  },
+  "TE": {
+    "n_train": 1320,
+    "n_holdout": 130,
+    "algos": {
+      "catboost": {
+        "cv_wMAE": 1.383,
+        "holdout_wMAE": 1.482,
+        "holdout_MAE": 1.369,
+        "holdout_rho": 0.808,
+        "best_params": {
+          "depth": 6,
+          "learning_rate": 0.03,
+          "l2_leaf_reg": 6.0
+        }
+      },
+      "xgboost": {
+        "cv_wMAE": 1.451,
+        "holdout_wMAE": 1.575,
+        "holdout_MAE": 1.499,
+        "holdout_rho": 0.796,
+        "best_params": {
+          "max_depth": 4,
+          "learning_rate": 0.03,
+          "reg_lambda": 1.0,
+          "min_child_weight": 10
+        }
+      },
+      "lightgbm": {
+        "cv_wMAE": 1.451,
+        "holdout_wMAE": 1.649,
+        "holdout_MAE": 1.565,
+        "holdout_rho": 0.768,
+        "best_params": {
+          "num_leaves": 15,
+          "learning_rate": 0.03,
+          "reg_lambda": 5.0,
+          "min_child_samples": 20,
+          "max_depth": -1
+        }
+      }
+    },
+    "baselines": {
+      "prior_ppg": {
+        "wMAE": 1.589,
+        "n": 104
+      },
+      "ppg_3yr": {
+        "wMAE": 1.448,
+        "n": 110
+      }
+    }
+  }
+}

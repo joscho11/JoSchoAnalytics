@@ -354,7 +354,7 @@ Download the salary CSV from any DK NFL Classic contest lobby → *Export to CSV
 
 ## Seasonal Projections (`fantasy/seasonal_projections/`)
 
-A **pre-season** fantasy projection / draft-board system, distinct from the in-season weekly model. Goal: project each player's upcoming season, rank into a draft board, and compare to the market (Sleeper ADP) to surface values and reaches — the fantasy analog of the betting side's "model vs the Vegas line" edge thesis (here the market line is ADP). **As of 2026-05-28 the data foundation is built and tested; the models are NOT built yet** (next session).
+A **pre-season** fantasy projection / draft-board system, distinct from the in-season weekly model. Goal: project each player's upcoming season, rank into a draft board, and compare to the market (Sleeper ADP) to surface values and reaches — the fantasy analog of the betting side's "model vs the Vegas line" edge thesis (here the market line is ADP). **As of 2026-06-02 both models are built (CatBoost) and evaluated; the honest verdict is that the system does NOT beat ADP** — it's a fine projection/cross-check tool but not a draft-board edge (see the Modeling section below).
 
 **Why a separate model from the weekly one:** the weekly model leans on in-season rolling features (recent EPA, recent target share) that don't exist before Week 1. This is a season-long projection built only from draft-time-available info (prior-season aggregates, multi-year trend, age, draft capital, team context).
 
@@ -366,7 +366,11 @@ A **pre-season** fantasy projection / draft-board system, distinct from the in-s
 | `fetch_adp.py` | `sleeper_adp_2020_2025.csv` | Caches Sleeper preseason ADP (`adp_half_ppr`) + Sleeper's own season projections, from the undocumented `api.sleeper.app/v1/projections/nfl/regular/{season}` endpoint. **ADP is a benchmark only, never a model feature.** |
 | `build_season_dataset.py` | `season_dataset_2014_2025.csv` | One row per (player, season), 7,350 rows, prior-only features (no leakage), two targets, ADP joined for 2020+. |
 | `test_seasonal_projections.py` | — | Hermetic test suite (7 tests, no network) for the transformation logic + an output-integrity check on the real CSV. |
-| `README.md` | — | Pipeline order, design decisions, honest caveats. |
+| `model_a_compare.ipynb` | `model_a_compare_results.json` | 3-way bakeoff (CatBoost vs XGBoost vs LightGBM) per position, tuned via walk-forward CV, with a fair matched-subset baseline check. **CatBoost won at all 4 positions.** Kept as a notebook for future re-testing. |
+| `train_model_a.py` | `models/{pos}_ppg_model.pkl` + `model_a_metrics.json` | Production Model A. One CatBoost per position, games-weighted, tuned params from the bakeoff JSON, train 2014-2024 / holdout 2025. |
+| `train_model_b.py` | `models/availability_model.pkl` + `model_b_metrics.json` | Production Model B. One pooled CatBoost predicting `target_games`, trained on ALL rows incl. the 377 reconstructed 0-game seasons, `position` as native categorical, no sample weighting. |
+| `build_draft_board.py` | `draft_board_2025.csv` | Combines A×B → VOR, ranks vs ADP, runs the **walk-forward** edge backtest. |
+| `README.md` | — | Pipeline order, design decisions, honest caveats + the verdict. |
 
 ### Data-source facts (verified empirically)
 
@@ -378,7 +382,7 @@ A **pre-season** fantasy projection / draft-board system, distinct from the in-s
 - `target_ppg` — half-PPR points per game (**Model A, production**). NaN when the player played 0 games or `< MIN_GAMES_TARGET` (3) — a tiny sample is a noisy label.
 - `target_games` — games played (**Model B, availability**). Present for every row, including reconstructed full-miss seasons.
 - `sample_weight` — games played, so Model A trusts a 2-game season far less than a 16-game one.
-- Final draft value = projected PPG × projected games, ranked vs ADP. (Models not built yet.)
+- Final draft value = projected PPG × projected games → value-over-replacement (VOR), ranked vs ADP. **Both models built 2026-06-02 (CatBoost).**
 
 ### Key design decisions (intentional — do not "fix")
 
@@ -395,15 +399,25 @@ A **pre-season** fantasy projection / draft-board system, distinct from the in-s
 - Reconstructed gaps capture injury plus some non-injury cases (a backup who sat a year); the ADP join ignores them, so they only inform Model B's durability gradient.
 - `games_played` is snap-based where snaps exist (2013+), else stat-line weeks.
 
-### Next session — modeling (TODO)
+### Modeling — BUILT 2026-06-02 (CatBoost), with an honest negative verdict on the edge
 
-The data foundation is done; this is the plan for the modeling step:
-1. **Model A (production / PPG)** — per-position XGBoost regressors (QB/RB/WR/TE, mirroring the weekly model), target `target_ppg`, `sample_weight=sample_weight` (games-weighted), train 2014-2024, holdout 2025. Pass NaN priors through natively (don't impute/zero-fill). Report holdout MAE per position.
-2. **Model B (availability / games)** — one regressor predicting `target_games`, trained on ALL rows including reconstructed 0-game seasons. Features that matter: `age`, `prior_games_missed`, `missed_prior_season`, `position`, prior workload (`prior_carries_pg`/`prior_touches_pg`), `years_exp`. Set honest expectations: it should separate durable/fragile tiers, not predict exact games.
-3. **Combine → draft board** — `projected_value = PPG_pred × games_pred`, rank overall + per position, join ADP (`adp_pos_rank`), compute the value/reach gap (our rank vs ADP rank). Breakouts = biggest positive gaps among young/cheap (low-ADP, low-`years_exp`) players.
-4. **Evaluate two ways**: (a) projection accuracy vs actual 2025 (PPG MAE, games MAE) and vs Sleeper's own `sleeper_pts_half_ppr` projection as a benchmark; (b) the edge thesis — do our "value" picks (we rank meaningfully above ADP) actually out-finish their ADP? Backtest on 2020-2024 where ADP exists.
-5. **Watch for**: modest sample (~6k usable rows, one row per player-season) → lean on regularization, don't over-feature; rookies are a cold-start population (lean on `draft_pick`/`age`/`is_rookie`); be honest if the ADP edge is within noise (same discipline as the totals model — live/holdout evidence over backtest).
-6. Output a board CSV (and later a dashboard view). Keep models in `fantasy/seasonal_projections/models/` separate from the weekly `fantasy/models/`.
+**Model A (PPG, production).** Ran a 3-way bakeoff (CatBoost / XGBoost / LightGBM) per position, each tuned via walk-forward CV (val seasons 2021-2024), scored on the 2025 holdout with games-weighted MAE. **CatBoost won at all four positions** and was the only algo to beat the naive 3-year-average baseline everywhere — bakeoff kept as `model_a_compare.ipynb`. Production trainer `train_model_a.py` reconstructs each position's tuned params from `model_a_compare_results.json` and fits `dict(iterations=500, loss_function="MAE", random_seed=42, verbose=0, allow_writing_files=False, **best_params)` (best_params = depth / learning_rate / l2_leaf_reg). 2025 holdout matched-row wMAE (rookies excluded so the baseline can compete): **QB 2.78, RB 2.41, WR 1.84, TE 1.36**; ρ 0.75-0.83.
+
+**Model B (availability / games).** One pooled CatBoost (`train_model_b.py`) predicting `target_games`, trained on ALL 6,740 rows incl. the 377 reconstructed 0-game seasons, `position` as native categorical, NO sample weighting (each player-season is one equal availability vote). Tuned grid → depth 6 / lr 0.03 / l2 3.0. 2025 holdout MAE **3.73 games**, beating "repeat prior games" (4.11) and "predict the mean" (5.34); ρ 0.57. Honest framing baked into the docstring: it separates durable/fragile tiers, it does not nail exact games (most injury variance is a freak hit).
+
+**Draft board (`build_draft_board.py`).** value = PPG_pred × games_pred → **VOR** (value over replacement, baselines QB14/RB30/WR36/TE14) so the overall board isn't all-QBs and the ADP comparison is apples-to-apples (ADP *is* a market VOR ranking). Writes `draft_board_2025.csv`. Within-position value/reach gap = `adp_pos_rank − our_pos_rank`.
+
+**THE EDGE THESIS FAILS — we do NOT beat ADP.** The first pass looked like a +0.12 ρ edge, but that was **leakage** (production pkls are trained through 2024, so backtesting 2020-2024 was in-sample). The corrected backtest **retrains both models walk-forward** (train on seasons `< N`, predict `N`), drafted pool only (ADP top 180), judged on actual VOR:
+
+| | our VOR ρ | ADP ρ | edge |
+|---|---|---|---|
+| mean 2020-2024 | 0.488 | 0.552 | **−0.063** (ADP wins every year) |
+
+Value-vs-reach buckets confirm it: players we'd "value pick" (gap ≥ +6) finished at **125** mean pts vs **160** for neutral and **157** for players we'd fade. When our model disagrees with the market, the market is usually right. 2025 season-total projection MAE: ours 38.8 vs Sleeper's own projection 36.8 (we're close but behind). **Same lesson as spread + totals: a market consensus prices in offseason/camp/depth-chart info a prior-season-stats model can't see.** The board is a fine projection + cross-check tool; it is NOT draft-board alpha and we are not shipping it as an edge. See memory `[[seasonal-projections-no-adp-edge]]`.
+
+**Two leakage traps caught during this build (lessons):** (1) raw PPG×games stacks all QBs at the top of an overall board — use VOR; (2) any backtest of a model whose training window covers the backtest years is in-sample — retrain walk-forward or the edge is fiction. Both bit the first pass before correction.
+
+**Possible future work (not committed):** the model structurally can't rank rookies (no prior data → it fades them, and the 2025 "reaches" were almost all rookies) — a rookie-specific draft-capital model could help there, but given the clean negative edge result the priority is low.
 
 ### Editing / running
 
@@ -411,6 +425,9 @@ The data foundation is done; this is the plan for the modeling step:
 python fantasy/seasonal_projections/fetch_adp.py            # refresh ADP cache
 python fantasy/seasonal_projections/build_season_dataset.py # rebuild dataset (~1-2 min)
 python fantasy/seasonal_projections/test_seasonal_projections.py
+python fantasy/seasonal_projections/train_model_a.py        # production Model A (4 CatBoost pkls)
+python fantasy/seasonal_projections/train_model_b.py        # production Model B (availability pkl)
+python fantasy/seasonal_projections/build_draft_board.py    # board + walk-forward edge backtest
 ```
 
 ## Active Experiments

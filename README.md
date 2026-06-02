@@ -253,6 +253,12 @@ fantasy/
   dfs/
     optimizer.ipynb                    # ILP formulation and helper reference
     dfs_pipeline.ipynb                 # Weekly DFS workflow (papermill)
+  seasonal_projections/                # Pre-season draft-board research (not shipped; does not beat ADP)
+    train_model_a.py                   # Per-position CatBoost season PPG models
+    train_model_b.py                   # Pooled CatBoost availability (games played) model
+    build_draft_board.py               # Combine to a VOR board, walk-forward ADP backtest
+    model_a_compare.ipynb              # CatBoost vs XGBoost vs LightGBM bakeoff (reference)
+    README.md                          # Design decisions, results, and the honest verdict
 memory/                                # Persistent notes for future work
 .github/workflows/
   weekly_predictions.yml               # Tue/Thu/Sun automation (spread, totals, agent)
