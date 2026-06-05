@@ -46,7 +46,7 @@ if hasattr(sys.stdout, "reconfigure"):
 
 HERE             = Path(__file__).resolve().parent
 OUT_CSV          = HERE / "season_dataset_2014_2025.csv"
-ADP_CSV          = HERE / "sleeper_adp_2020_2025.csv"
+ADP_CSV          = HERE / "sleeper_adp_2020_2026.csv"
 SKILL            = set(SKILL_POSITIONS)
 TARGET_SEASONS   = list(range(2014, 2026))
 LOAD_FROM        = 2011

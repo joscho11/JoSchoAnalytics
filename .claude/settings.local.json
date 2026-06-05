@@ -103,7 +103,17 @@
       "Bash(tee betting/experiments/_totals_baseline_v3_5.log)",
       "Bash(tee betting/experiments/_backfill_totals.log)",
       "Bash(echo \"EXIT $?\")",
-      "WebFetch(domain:docs.sleeper.com)"
+      "WebFetch(domain:docs.sleeper.com)",
+      "Bash(BOARD_SEASON=2026 python fantasy/seasonal_projections/build_draft_board.py)",
+      "Bash(BOARD_SEASON=2019 python fantasy/seasonal_projections/build_draft_board.py)",
+      "Bash(awk -F: '$1 > 2400 {print}')",
+      "Bash(git --no-pager diff --stat)",
+      "Bash(grep -v \"use_container_width\\\\|width=\\\\|replace\\\\|ScriptRunContext\\\\|^$\")",
+      "Bash(ls -la fantasy/seasonal_projections/models/rookie_ppg_model.pkl)",
+      "Bash(cat fantasy/seasonal_projections/models/rookie_metrics.json)",
+      "Bash(grep -n \"August\\\\|2026 board\\\\|Known limitation\\\\|pre-draft\\\\|BOARD_SEASON\\\\|Annual refresh\\\\|build_draft_board.py\\\\`\" CLAUDE.md)",
+      "Bash(git rm *)",
+      "Bash(grep -v \"use_container_width\\\\|Please replace\\\\|will be removed\\\\|For \\\\`\")"
     ]
   }
 }

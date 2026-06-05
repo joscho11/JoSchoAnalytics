@@ -61,6 +61,8 @@ Being off by 3 points on the margin does not matter if I got the side right. A m
 
 You cannot use 2024 games to predict 2023, that is leakage. So validation trains on everything up to year N and tests on year N, stepping forward through 2020 to 2025 (6 folds). That mimics how the model would actually have been used week to week. On top of that, the production models train through 2024 and **2025 is held out as a true live test**, the only data the model has genuinely never seen. That holdout is the honest read on whether the edge is real.
 
+One caveat I am upfront about: the cross-validation win rate (around 57%) is an *optimistic* number, because the hyperparameters and the feature set were chosen by looking at those same folds. That is not data leakage (nothing trains on the test set), it is selection bias from tuning, and it inflates the point estimate a little. The unbiased read is the forward live tracking, not the backtest. A research-only nested re-tune (tuning inside each fold on prior seasons only) put a number on it: the headline drops from about 57.2% to about 56.4%, roughly 0.9 points of optimism, with the edge still well clear of the 52.4% break-even.
+
 ### Why so many experiments got rejected
 
 Through 2026 I ran a long list of "make it better" experiments: weather features, re-weighting the ensemble, an ULTRA confidence tier, time-decay sample weighting, extending training data back to 2009. Almost all were rejected against a strict bar (the primary model has to improve at least 0.5pp, most models have to improve, and stability cannot get meaningfully worse).
@@ -253,7 +255,7 @@ fantasy/
   dfs/
     optimizer.ipynb                    # ILP formulation and helper reference
     dfs_pipeline.ipynb                 # Weekly DFS workflow (papermill)
-  seasonal_projections/                # Pre-season draft-board research (not shipped; does not beat ADP)
+  seasonal_projections/                # Pre-season draft board (Beta tab; three-way our/ADP/Sleeper blend, 2025 + 2026)
     train_model_a.py                   # Per-position CatBoost season PPG models
     train_model_b.py                   # Pooled CatBoost availability (games played) model
     build_draft_board.py               # Combine to a VOR board, walk-forward ADP backtest
@@ -273,7 +275,7 @@ The spread model is at the ceiling of what this architecture delivers, confirmed
 
 1. **Closing Line Value tracking.** The leading indicator of long-term profit, more predictive than win rate over short samples. The tracker already has empty columns reserved for it. The plan is to record the line at pick time and again near kickoff once the 2026 season starts.
 2. **Multi-book line shopping.** The same pick at one book's price versus another's is a couple percent of implied edge per bet, which compounds across a season more than model tuning would.
-3. **Kelly fractional sizing.** The dashboard already shows a flat-tier stake chip. Real fractional Kelly sizing by edge magnitude is the next step.
+3. **Kelly fractional sizing.** Real fractional Kelly sizing by edge magnitude, surfaced once it's validated (an earlier flat-tier unit chip was removed as premature).
 4. **Player props model.** A lower-efficiency market with higher edge potential. The per-stat fantasy models already exist, so the leap to "is the prop line over or under our projection" is small.
 
 DFS follow-ups (lower priority, already functional):

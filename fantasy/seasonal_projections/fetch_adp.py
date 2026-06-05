@@ -24,7 +24,7 @@ Join key for downstream use: normalized name + position + season. Sleeper's
 gsis_id field is too sparsely populated to join on (even stars lack it), so
 we follow the same name-normalization convention used elsewhere in the repo.
 
-Output: fantasy/seasonal_projections/sleeper_adp_2019_2025.csv
+Output: fantasy/seasonal_projections/sleeper_adp_2020_2026.csv
 Run:    python fantasy/seasonal_projections/fetch_adp.py
 """
 import sys
@@ -41,8 +41,11 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
 HERE        = Path(__file__).resolve().parent
-OUT_CSV     = HERE / "sleeper_adp_2020_2025.csv"
-SEASONS     = list(range(2020, 2026))       # 2019 is all-sentinel; 2025 is the holdout demo
+OUT_CSV     = HERE / "sleeper_adp_2020_2026.csv"
+# 2019 is all-sentinel; 2020-2025 are completed (ADP frozen at their draft-time state);
+# 2026 is the live upcoming season -- its ADP already exists (early best-ball drafts) and
+# keeps growing toward the late-August consensus. Refresh this cache to pull current 2026 ADP.
+SEASONS     = list(range(2020, 2027))
 HEADERS     = {"User-Agent": "Mozilla/5.0 (BettingEdge seasonal_projections cache)"}
 BASE        = "https://api.sleeper.app/v1"
 SKILL       = set(SKILL_POSITIONS)

@@ -20,9 +20,17 @@ Two evaluations, both honest:
      production pkls were trained through 2024 and would leak here. Question: does
      ranking by our VOR correlate with actual draft value better than ADP does?
 
-Writes draft_board_2025.csv.
+The board's headline ranking is a three-way blend of our VOR rank, ADP, and Sleeper's
+own season projection (see three_way_blend_test.py and BLEND_WEIGHTS, ~0.2/0.3/0.5).
+Sleeper's projection is the strongest single signal; the blend beats pure ADP and the
+older our/ADP two-way out-of-sample 5/5 seasons (~+0.06 rho). Our model still earns a
+small independent weight. The standalone model alone loses to ADP; the blend is the
+shippable view.
+
+Writes draft_board_{board_season}.csv (BOARD_SEASON env var, default = latest season).
 Run:  python fantasy/seasonal_projections/build_draft_board.py
 """
+import os
 import sys
 import json
 import warnings
@@ -38,18 +46,36 @@ warnings.filterwarnings("ignore")
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))   # sibling imports resolve as script or import
+import rookie_features as rf
+
 HERE       = Path(__file__).resolve().parent
-DATA       = HERE / "season_dataset_2014_2025.csv"
+# Use the newest season dataset on disk: the base build is season_dataset_2014_2025.csv;
+# build_2026_board.py adds season_dataset_2014_2026.csv (same rows + the upcoming season).
+_DATASETS  = sorted(HERE.glob("season_dataset_*.csv"))
+DATA       = _DATASETS[-1] if _DATASETS else HERE / "season_dataset_2014_2025.csv"
 MODELS_DIR = HERE / "models"
 POSITIONS  = ["QB", "RB", "WR", "TE"]
-BOARD_SEASON   = 2025
-BACKTEST_SEASONS = [2020, 2021, 2022, 2023, 2024]
+# Board season is the latest season in the dataset by default; override for an
+# annual refresh with e.g. BOARD_SEASON=2026 once that season's rows exist. A
+# future season with no actuals / no ADP yet is handled gracefully (projections
+# only). BACKTEST_SEASONS auto-derives to the ADP-era seasons before the board.
+BOARD_SEASON = int(os.environ.get("BOARD_SEASON", 0)) or None
+ADP_FIRST_SEASON = 2020   # Sleeper ADP only exists 2020+
 SEED = 42
 
 # 12-team VOR replacement baselines (rank of the last "startable" player per pos)
 REPL = {"QB": 14, "RB": 30, "WR": 36, "TE": 14}
 # a real fantasy draft is ~15 rounds x 12 teams; ignore the undrafted ADP tail
 DRAFTED_MAX_RANK = 180
+# Recommended draft order = a THREE-way blend of within-pool ranks:
+#   blend = W_OUR*our_rank + W_ADP*adp_rank + W_SLEEPER*sleeper_rank
+# Sleeper's own season projection is the strongest single signal; adding it lifts the
+# board well past pure ADP. Weights confirmed via fine sweep + leave-one-season-out
+# (three_way_blend_test.py): held-out 3-way beats the old our/ADP 2-way in 5/5 seasons,
+# mean +0.063 Spearman rho (~2 SE), LOSO weights cluster at our 0.2 / adp 0.3 / slp 0.5.
+# Our model keeps real (small) weight -- it's not redundant on top of the two market signals.
+BLEND_WEIGHTS = {"our": 0.20, "adp": 0.30, "sleeper": 0.50}
 
 EXCLUDE = {
     "player_id", "player", "norm_name", "team", "position", "season", "reconstructed",
@@ -62,9 +88,16 @@ B_FEATURES = ["age", "years_exp", "is_rookie", "missed_prior_season",
 
 
 def load_models():
+    """Per-position Model A + Model B + the (optional) rookie model.
+
+    The rookie model is used for rookies' PPG inside the board blend; if its pkl
+    is absent the board still works (rookies fall back to the veteran model).
+    """
     a = {pos: joblib.load(MODELS_DIR / f"{pos.lower()}_ppg_model.pkl") for pos in POSITIONS}
     b = joblib.load(MODELS_DIR / "availability_model.pkl")
-    return a, b
+    rk_path = MODELS_DIR / "rookie_ppg_model.pkl"
+    rookie = joblib.load(rk_path) if rk_path.exists() else None
+    return a, b, rookie
 
 
 def _tuned_params():
@@ -92,8 +125,14 @@ def train_fold(train_df, a_params, b_params, feats):
     return a, {"model": mb, "feature_cols": B_FEATURES}
 
 
-def predict(df, model_a, model_b):
-    """Attach ppg_pred, games_pred, projected_total, vor to a copy of df."""
+def predict(df, model_a, model_b, rookie_model=None):
+    """Attach ppg_pred, games_pred, projected_total, vor to a copy of df.
+
+    If `rookie_model` is given, rookies' PPG comes from it instead of the veteran
+    Model A (the validated board behavior -- improves the rookie slice of the blend;
+    see rookie_blend_test.py). The standalone-vs-ADP edge backtest calls this WITHOUT
+    a rookie model, so that documented thesis is unchanged.
+    """
     d = df.copy()
     d["position"] = d["position"].astype(str)
     d["ppg_pred"] = np.nan
@@ -101,6 +140,12 @@ def predict(df, model_a, model_b):
         m = d.position == pos
         if m.any():
             d.loc[m, "ppg_pred"] = np.clip(art["model"].predict(d.loc[m, art["feature_cols"]]), 0, None)
+    if rookie_model is not None and "is_rookie" in d.columns:
+        rk_mask = d["is_rookie"] == 1
+        if rk_mask.any():
+            d = rf.add_rookie_features(d)        # join combine cols (preserves vet ppg_pred already set)
+            d.loc[rk_mask, "ppg_pred"] = np.clip(
+                rookie_model["model"].predict(d.loc[rk_mask, rookie_model["feature_cols"]]), 0, None)
     d["games_pred"] = np.clip(model_b["model"].predict(d[model_b["feature_cols"]]), 0, 17)
     d["projected_total"] = d["ppg_pred"] * d["games_pred"]
     d["vor"] = _vor(d, "projected_total")
@@ -118,12 +163,42 @@ def _vor(d, total_col):
 
 
 def make_board(d):
-    """Rank a single-season prediction frame by VOR and compute the ADP gap."""
+    """Rank a single-season prediction frame by VOR, blend with ADP, compute the gap.
+
+    Two rankings are produced:
+      our_*       -- our independent VOR ranking (used for the value/reach view)
+      blend_*     -- the recommended draft order: a three-way blend of our VOR rank,
+                     ADP rank, and Sleeper-projection rank (BLEND_WEIGHTS), among
+                     players the market drafts. Beats pure ADP and the old 2-way
+                     (three_way_blend_test.py). NaN where ADP is absent.
+    """
     b = d.copy()
     b["our_overall_rank"] = b["vor"].rank(ascending=False, method="min")
     b["our_pos_rank"] = b.groupby("position")["vor"].rank(ascending=False, method="min")
     # value/reach gap: positive = we rank higher (better) than the market's positional ADP
     b["value_gap"] = b["adp_pos_rank"] - b["our_pos_rank"]
+
+    # blended ranking within the drafted pool (lower blend_score = earlier pick).
+    # Rank within ADP top-DRAFTED_MAX_RANK only -- the SAME population three_way_blend_test.py
+    # validated the weights on. Players beyond the drafted pool (or with no ADP) get NaN
+    # blend_rank, as a real draft wouldn't reach them.
+    b["blend_score"] = np.nan
+    b["blend_rank"] = np.nan
+    b["blend_pos_rank"] = np.nan
+    has = b["adp_overall_rank"].le(DRAFTED_MAX_RANK)
+    if has.any():
+        sub = b[has]
+        our_r = sub["vor"].rank(ascending=False, method="average")
+        adp_r = sub["adp_overall_rank"].rank(ascending=True, method="average")
+        # Sleeper's season projection (higher = better). Missing it -> defer that term
+        # to ADP so the player still ranks (Sleeper coverage on the drafted pool is ~99%).
+        slp_r = sub["sleeper_pts_half_ppr"].rank(ascending=False, method="average").fillna(adp_r) \
+            if "sleeper_pts_half_ppr" in sub.columns else adp_r
+        score = (BLEND_WEIGHTS["our"] * our_r + BLEND_WEIGHTS["adp"] * adp_r
+                 + BLEND_WEIGHTS["sleeper"] * slp_r)
+        b.loc[has, "blend_score"] = score
+        b.loc[has, "blend_rank"] = score.rank(ascending=True, method="min")
+        b.loc[has, "blend_pos_rank"] = score.groupby(sub["position"]).rank(ascending=True, method="min")
     return b.sort_values("vor", ascending=False)
 
 
@@ -131,23 +206,43 @@ def fmt(x, n=1):
     return "" if pd.isna(x) else f"{x:.{n}f}"
 
 
-def build_2025_board(df, model_a, model_b):
-    d = df[df.season == BOARD_SEASON].copy()
-    d = predict(d, model_a, model_b)
+def build_board(df, model_a, model_b, board_season, rookie_model=None):
+    d = df[df.season == board_season].copy()
+    if d.empty:
+        print(f"\n(no rows for season {board_season} in the dataset; rebuild it first)")
+        return d
+    d = predict(d, model_a, model_b, rookie_model)
     board = make_board(d)
+    has_adp = board.adp_overall_rank.notna().any()
 
     cols = ["player", "position", "team", "ppg_pred", "games_pred", "projected_total", "vor",
-            "our_overall_rank", "our_pos_rank", "adp_pos_rank", "adp_overall_rank",
-            "value_gap", "sleeper_pts_half_ppr", "age", "years_exp",
-            "target_ppg", "target_games"]
-    board[cols].to_csv(HERE / "draft_board_2025.csv", index=False)
+            "our_overall_rank", "our_pos_rank", "blend_rank", "blend_pos_rank",
+            "adp_pos_rank", "adp_overall_rank", "value_gap", "sleeper_pts_half_ppr",
+            "age", "years_exp", "target_ppg", "target_games"]
+    out_path = HERE / f"draft_board_{board_season}.csv"
+    board[cols].to_csv(out_path, index=False)
 
-    print(f"\n=== 2025 draft board (top 20 overall, by VOR) ===")
-    print(f"{'rk':>3} {'player':22} {'pos':3} {'VOR':>6} {'total':>6} {'ppg':>5} {'gms':>5} {'ADP':>5}")
-    for _, r in board.head(20).iterrows():
-        print(f"{int(r.our_overall_rank):>3} {str(r.player)[:22]:22} {r.position:3} "
-              f"{fmt(r.vor):>6} {fmt(r.projected_total):>6} {fmt(r.ppg_pred):>5} "
-              f"{fmt(r.games_pred):>5} {fmt(r.adp_overall_rank,0):>5}")
+    if has_adp:
+        # headline = the recommended draft order (our/ADP/Sleeper blend; beats pure ADP)
+        rec = board[board.blend_rank.notna()].sort_values("blend_rank")
+        _w = BLEND_WEIGHTS
+        print(f"\n=== {board_season} draft board (top 20, blend: our {_w['our']:.0%} / "
+              f"ADP {_w['adp']:.0%} / Sleeper {_w['sleeper']:.0%}) ===")
+        print(f"{'rk':>3} {'player':22} {'pos':3} {'blend':>5} {'ourVOR':>6} {'ADP':>5}")
+        for _, r in rec.head(20).iterrows():
+            print(f"{int(r.blend_rank):>3} {str(r.player)[:22]:22} {r.position:3} "
+                  f"{r.position}{int(r.blend_pos_rank):<3} {fmt(r.vor):>6} {fmt(r.adp_overall_rank,0):>5}")
+    else:
+        print(f"\n=== {board_season} draft board (top 20 overall, by VOR) ===")
+        print(f"{'rk':>3} {'player':22} {'pos':3} {'VOR':>6} {'total':>6} {'ppg':>5} {'gms':>5}")
+        for _, r in board.head(20).iterrows():
+            print(f"{int(r.our_overall_rank):>3} {str(r.player)[:22]:22} {r.position:3} "
+                  f"{fmt(r.vor):>6} {fmt(r.projected_total):>6} {fmt(r.ppg_pred):>5} {fmt(r.games_pred):>5}")
+
+    if not has_adp:
+        print(f"\n(no ADP for {board_season} yet -- projections only; values/reaches skipped "
+              f"until Sleeper ADP lands ~August)")
+        return board
 
     # values / reaches among players the market actually drafts (top ~180 ADP)
     drafted = board[board.adp_overall_rank.le(DRAFTED_MAX_RANK)].copy()
@@ -164,10 +259,17 @@ def build_2025_board(df, model_a, model_b):
     return board
 
 
-def eval_2025_accuracy(board):
-    """PPG / games MAE vs actuals, and our season total vs Sleeper's projection."""
-    print(f"\n=== 2025 projection accuracy (holdout) ===")
+def eval_accuracy(board, board_season):
+    """PPG / games MAE vs actuals, and our season total vs Sleeper's projection.
+
+    Skipped for a future board season whose games have not been played yet.
+    """
     a = board[board.target_ppg.notna()]
+    if a.empty:
+        print(f"\n=== {board_season} projection accuracy ===")
+        print(f"  (no actuals for {board_season} yet -- skipped until the season is played)")
+        return
+    print(f"\n=== {board_season} projection accuracy (holdout) ===")
     ppg_mae = float(np.mean(np.abs(a.ppg_pred - a.target_ppg)))
     g = board[board.target_games.notna()]
     gms_mae = float(np.mean(np.abs(g.games_pred - g.target_games)))
@@ -183,7 +285,7 @@ def eval_2025_accuracy(board):
         print(f"  season-total MAE  ours={ours_mae:.1f}  vs Sleeper proj={sleeper_mae:.1f}  (n={len(s)})")
 
 
-def eval_edge_thesis(df, a_params, b_params, feats):
+def eval_edge_thesis(df, a_params, b_params, feats, backtest_seasons):
     """Walk-forward backtest: does our VOR ranking beat ADP at predicting finish?
 
     Retrains both models on seasons < N for each backtest year N, so the
@@ -191,11 +293,14 @@ def eval_edge_thesis(df, a_params, b_params, feats):
     Both rankings are judged against actual VOR (actual draft value), which is
     what ADP optimizes -- the fair target.
     """
-    print(f"\n=== ADP edge thesis (walk-forward backtest {BACKTEST_SEASONS[0]}-{BACKTEST_SEASONS[-1]}) ===")
+    if not backtest_seasons:
+        print("\n=== ADP edge thesis ===\n  (no completed ADP-era seasons to backtest)")
+        return
+    print(f"\n=== ADP edge thesis (walk-forward backtest {backtest_seasons[0]}-{backtest_seasons[-1]}) ===")
     print("  drafted pool only (ADP top {}); ranking quality vs actual VOR (Spearman rho):".format(DRAFTED_MAX_RANK))
     print(f"  {'season':>6} {'n':>4} {'ours':>7} {'ADP':>7} {'edge':>7}")
     rows, allpop = [], []
-    for yr in BACKTEST_SEASONS:
+    for yr in backtest_seasons:
         ma, mb = train_fold(df[df.season < yr], a_params, b_params, feats)
         d = predict(df[df.season == yr], ma, mb)
         pop = d[d.adp_overall_rank.le(DRAFTED_MAX_RANK) & d.target_ppg.notna()].copy()
@@ -219,6 +324,8 @@ def eval_edge_thesis(df, a_params, b_params, feats):
         print(f"  -> {verdict}")
 
     # value-vs-reach: do players we boost out-finish players we fade?
+    if not allpop:
+        return
     print(f"\n  value-vs-reach (drafted pool): mean actual season points by our gap bucket")
     allpop = pd.concat(allpop, ignore_index=True)
     for name, grp in [("VALUE (gap>=+6)", allpop[allpop.value_gap >= 6]),
@@ -231,13 +338,20 @@ def eval_edge_thesis(df, a_params, b_params, feats):
 
 def main():
     df = pd.read_csv(DATA)
-    model_a, model_b = load_models()
-    board = build_2025_board(df, model_a, model_b)
-    eval_2025_accuracy(board)
+    board_season = BOARD_SEASON or int(df.season.max())   # default = latest in dataset
+    # backtest the ADP-era seasons that are fully played (strictly before the board)
+    backtest_seasons = sorted(s for s in df.season.unique()
+                              if ADP_FIRST_SEASON <= s < board_season)
+
+    model_a, model_b, rookie_model = load_models()
+    board = build_board(df, model_a, model_b, board_season, rookie_model)
+    if board.empty:
+        return
+    eval_accuracy(board, board_season)
     a_params, b_params = _tuned_params()
     feats = [c for c in df.columns if c not in EXCLUDE]
-    eval_edge_thesis(df, a_params, b_params, feats)
-    print(f"\nWrote draft_board_2025.csv to {HERE}")
+    eval_edge_thesis(df, a_params, b_params, feats, backtest_seasons)
+    print(f"\nWrote draft_board_{board_season}.csv to {HERE}")
 
 
 if __name__ == "__main__":
