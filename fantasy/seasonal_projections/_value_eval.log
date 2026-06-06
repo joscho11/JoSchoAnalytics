@@ -1,0 +1,56 @@
+=== TRAINING-SCOPE TEST (does more training data beat the overfit wall?) ===
+  train=drafted-only  (top-180 only        ): residual edge +0.097  | 2025 ρ +0.116
+  train=broad         (all Sleeper-covered ): residual edge +0.038  | 2025 ρ +0.020
+
+=== FEATURE-SET SWEEP (residual edge above placebo; want high pooled AND recent) ===
+  set                             pooled |   2022   2023   2024  2025*
+  SITU+BIAS                       +0.228 | +0.194 +0.252 +0.108 +0.040
+  SITU+BIAS+COLLEGE               +0.101 | +0.177 +0.146 +0.075 +0.116
+  SITU+BIAS+COLLEGE+QB            +0.103 | +0.103 +0.170 +0.032 +0.022
+  LEAN (11 hand-picked)           +0.106 | +0.186 +0.127 +0.055 +0.013
+  LEAN+QB                         +0.117 | +0.185 +0.118 +0.036 +0.059
+  LEAN+QB+college_dom             +0.097 | +0.216 +0.100 +0.010 -0.019
+
+  most robust set: SITU+BIAS  (* 2025 = live holdout)
+
+=== PRODUCTION TWO-STAGE TEST (does Sleeper + residual nudge beat Sleeper?) ===
+  baselines:  ADP +0.619   Sleeper +0.730
+  nudge 0.30:  final ρ +0.714  (2025 +0.674)  vs Sleeper -0.015
+  nudge 0.50:  final ρ +0.682  (2025 +0.639)  vs Sleeper -0.048
+  nudge 0.70:  final ρ +0.650  (2025 +0.605)  vs Sleeper -0.080
+  nudge 1.00:  final ρ +0.602  (2025 +0.553)  vs Sleeper -0.128
+  best nudge 0.3 -> ρ +0.714  (does NOT beat Sleeper +0.730)
+
+=== RESIDUAL TAIL TEST (does our orthogonal signal beat SLEEPER at the tails?) ===
+  BUY  (z_res>=+0.8): 56% beat Sleeper exp (n=142)  vs placebo 48%  -> edge +8pp
+  FADE (z_res<=-0.8): 59% missed (n=146)  vs placebo 52%  -> edge +7pp
+  BUY edge bootstrap 95% CI: [-0pp, +16pp]  (straddles 0 -> not significant)
+
+=== SLEEPER-RESIDUAL TEST (can we predict where the market is wrong?) ===
+  pooled per-position ρ(pred_resid, actual_resid): +0.118
+  placebo floor (shuffled):                        +0.036
+  overall Pearson r:                               +0.128
+  EDGE above placebo: +0.082   (real signal)
+  per-season ρ (pred vs actual residual):
+    2022: +0.180  (n=174)
+    2023: +0.129  (n=175)
+    2024: +0.017  (n=175)
+    2025: +0.014  (n=175)
+  top features driving the residual prediction:
+      5.8  ret_tgt_competition
+      5.1  vacated_rush_share
+      5.1  vacated_target_share
+      3.6  net_rush_room
+      3.0  prior_touches_pg
+      2.7  ppg_trend
+      2.7  cfb_ypc
+      2.6  draft_pick
+      2.6  prior_team_pass_rate
+      2.5  cfb_career_scrim_yds
+      2.5  prior_ypc
+      2.4  prior_adot
+
+=== PLACEBO-CONTROLLED BUY/FADE (vs ADP) ===
+  model  BUY   66% (n=176)   FADE   72% (n=150)
+  placebo BUY   57% (n=300)   FADE   62% (n=299)  <- artifact floor
+  EDGE above placebo: BUY +9pp  FADE +10pp

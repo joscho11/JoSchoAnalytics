@@ -113,7 +113,10 @@
       "Bash(cat fantasy/seasonal_projections/models/rookie_metrics.json)",
       "Bash(grep -n \"August\\\\|2026 board\\\\|Known limitation\\\\|pre-draft\\\\|BOARD_SEASON\\\\|Annual refresh\\\\|build_draft_board.py\\\\`\" CLAUDE.md)",
       "Bash(git rm *)",
-      "Bash(grep -v \"use_container_width\\\\|Please replace\\\\|will be removed\\\\|For \\\\`\")"
+      "Bash(grep -v \"use_container_width\\\\|Please replace\\\\|will be removed\\\\|For \\\\`\")",
+      "Bash(ls -la fantasy/seasonal_projections/adp_value_model.py)",
+      "Bash(git check-ignore *)",
+      "Bash(git status *)"
     ]
   }
 }

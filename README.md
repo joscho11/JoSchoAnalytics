@@ -166,9 +166,9 @@ A LlamaIndex ReActAgent with 5 tools (predictions, live injuries, line movement,
 
 ### Dashboard
 
-A Streamlit app with tabs for Weekly Predictions, Season Performance, Fantasy, DFS, and a Help guide.
+A Streamlit app with tabs for Weekly Predictions, Season Performance, Fantasy, DFS, League History, and a Help guide. (A pre-season Draft Board tab is built but turned off on the live site for now, while I decide whether the seasonal value research is worth shipping.)
 
-- **Weekly Predictions**: game cards with edge, confidence tier, a stake-size chip, and expandable agent reasoning. Games where the experimental totals model says UNDER show a dashed amber badge below the spread card.
+- **Weekly Predictions**: game cards with edge, confidence tier, and expandable agent reasoning. Games where the experimental totals model says UNDER show a dashed amber badge below the spread card.
 - **Season Performance**: ATS record by tier and week, profit at standard odds, longest streaks, and a separate over/under section flagged as tracking-only.
 - **Fantasy**: per-position projections with both projected and actual stat columns that fill in after games are played.
 
@@ -255,11 +255,14 @@ fantasy/
   dfs/
     optimizer.ipynb                    # ILP formulation and helper reference
     dfs_pipeline.ipynb                 # Weekly DFS workflow (papermill)
-  seasonal_projections/                # Pre-season draft board (Beta tab; three-way our/ADP/Sleeper blend, 2025 + 2026)
+  seasonal_projections/                # Pre-season draft board + value-edge research (tab built, currently OFF on the live site)
     train_model_a.py                   # Per-position CatBoost season PPG models
     train_model_b.py                   # Pooled CatBoost availability (games played) model
-    build_draft_board.py               # Combine to a VOR board, walk-forward ADP backtest
-    model_a_compare.ipynb              # CatBoost vs XGBoost vs LightGBM bakeoff (reference)
+    build_draft_board.py               # Combine to a VOR board, three-way our/ADP/Sleeper blend, walk-forward ADP backtest
+    value_eval.py                      # Honest edge eval: Sleeper-residual test, feature sweep, placebo-controlled buy/fade
+    fetch_college.py                   # College production from cfbfastR (dominator, efficiency) for the rookie dig
+    opportunity_features.py            # Landing-spot / role-competition features
+    qb_context_features.py             # QB-upgrade quality for pass-catchers
     README.md                          # Design decisions, results, and the honest verdict
 memory/                                # Persistent notes for future work
 .github/workflows/
