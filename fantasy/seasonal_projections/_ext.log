@@ -1,0 +1,11 @@
+--- OLD baseline (6 seasons, Sleeper ADP only) ---
+ADP coverage after FFC fill: 3211 rows, seasons [2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
+
+=== NEW 11-season (FFC 2014-19 + Sleeper 2020-25), ADP-anchored: 1688 rows, 10 test seasons ===
+  residual edge above placebo: +0.013
+  per-season ρ: 2016:+0.06  2017:-0.11  2018:+0.15  2019:+0.15  2020:+0.13  2021:-0.00  2022:+0.10  2023:+0.08  2024:-0.01  2025:+0.01
+
+=== RESIDUAL TAIL TEST (does our orthogonal signal beat SLEEPER at the tails?) ===
+  BUY  (z_res>=+0.8): 53% beat Sleeper exp (n=319)  vs placebo 49%  -> edge +5pp
+  FADE (z_res<=-0.8): 52% missed (n=333)  vs placebo 51%  -> edge +0pp
+  BUY edge bootstrap 95% CI: [-1pp, +10pp]  (straddles 0 -> not significant)
