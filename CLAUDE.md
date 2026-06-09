@@ -456,17 +456,24 @@ Value-vs-reach buckets confirm it: players we'd "value pick" (gap ≥ +6) finish
 
 **Building / refreshing the upcoming-season board.** A true *pre-draft* board (season with zero games played) IS built — `build_2026_board.py` seeds the upcoming player population from `load_rosters` + that draft's rookies (draft/combine) and attaches prior-year priors via the same `build_feature_rows` prior-join the training data uses, so no reimplementation. It keeps the trained 2014-2025 rows verbatim (nflreadpy drifts; the models trained on the existing dataset) and only appends fresh upcoming-season rows → `season_dataset_2014_2026.csv`. `build_draft_board.py` globs the newest dataset, so `BOARD_SEASON=2026 python build_draft_board.py` then produces `draft_board_2026.csv`, and the dashboard season selector shows it. To refresh as 2026 ADP matures (it grows from ~245 players now toward ~1,800 by late-Aug drafts): re-run `fetch_adp.py` → `build_2026_board.py` → `BOARD_SEASON=2026 build_draft_board.py`. For a future year (2027), generalize `build_2026_board.py`'s `UPCOMING` constant. `build_draft_board.py` also still degrades gracefully for a season with no rows / no ADP.
 
-### Value-edge research (2026-06-06) — real but marginal; tab disabled pending a decision
+### Value-edge research → ADP-MISPRICING SKILL (canonical eval `surprise_eval.py`, 2026-06-08)
 
-A focused dig for an actual over/under-valued-vs-ADP edge (the user reframed the goal to "find undervalued/overvalued players vs Sleeper ADP, 2025 as the live test"). **Full detail + the honest verdict live in memory `[[seasonal-projections-no-adp-edge]]`** (the 2026-06-06 entries). One-paragraph summary: the original board's "no edge" was partly an EVALUATION artifact — the right target is the **Sleeper-RESIDUAL** (predict where the market is wrong from orthogonal features), which gives a real, per-season-stable +0.10-0.15 ρ above a placebo floor, driven by OPPORTUNITY (vacated share). But it's **marginal**: it beats the casual ADP line (+10pp tail) yet is borderline-insignificant vs Sleeper (tail +7-8pp, bootstrap CI straddles 0), can't improve Sleeper's overall ranking, and every attempt to strengthen it (richer opportunity features, QB-upgrade quality, broader training data) **overfit the ~700-row sample**. We are **noise-limited, not idea-limited** — 6 seasons of Sleeper ADP can't resolve whether any new feature reliably beats Sleeper. Decision on what to do (ship a modest ADP-flag overlay / try Vegas win totals / pivot to props) deferred by the user.
+A long dig (2026-06-06/08) for an actual over/under-valued-vs-ADP edge. **Full detail + numbers live in memory `[[seasonal-projections-no-adp-edge]]`.** Bottom line evolved:
 
-New research files (all kept on disk, NOT wired into the dashboard):
-- `adp_value_model.py` — the ADP-residual reframe + walk-forward backtest (ADP/Sleeper/ours/mkt-only ablation, buy/fade).
-- `value_eval.py` — **the honest eval suite**: Sleeper-residual test (with placebo floor), feature-set sweep, two-stage (anchor+residual nudge) test, residual tail test with bootstrap CI, broad-vs-drafted training-scope test.
-- `fetch_college.py` → `college_features.csv` + `college_production_2014_2024.csv` — college production from cfbfastR (key-less GitHub parquet), bridged to NFL by normalized name (~90%). `college_rookie_test.py` tests it on the rookie slice (college-only ρ ~0.04 = noise; doesn't crack rookies).
-- `opportunity_features.py` — landing-spot/role-competition features (team_changed, returning target/carry competition, net room). Overfit.
-- `qb_context_features.py` → `qb_context_features.csv` — QB-upgrade quality for pass-catchers (team_qb_quality, team_qb_delta). Overfit.
-- `_value_eval.log` — last run log (transient; safe to delete / not commit).
+- **The evaluation was the problem.** MAE / rank-ρ are dominated by easy calls (Chase top-5 = zero edge); they hid a real signal. **The canonical seasonal eval is now `surprise_eval.py`**, which grades CONDITIONAL ON ADP: `edge = corr(our_dev, actual_dev)` where `our_dev = adp_pos_rank − our_pos_rank` and `actual_dev = adp_pos_rank − actual_pos_rank`. Mid-season-injury seasons (missed >6 games, `MIN_GAMES_PLAYED=11`) are EXCLUDED — injuries are unpredictable noise. Result: pooled 2021-2025 **ADP-mispricing skill +0.20 (placebo ~0, positive every season)**; bold calls +8pp; surprise-catch 59%. We catch OPPORTUNITY/role surprises, miss INJURY ones. **The board is reframed around this** (see `build_draft_board.py` docstring): its job is identifying value vs ADP, not winning the overall ranking (it loses that to ADP — wrong lens). **Honest boundary: edge is vs ADP [cleared]; Sleeper also beats ADP, and vs Sleeper it stays marginal.**
+- **Earlier (2026-06-06) marginal-signal arc** (Sleeper-residual reframe, +0.10-0.15 ρ; opportunity features / QB context / broader-training all OVERFIT the ~700-row sample; FFC historical ADP 2014-19 added via `fetch_historical_adp.py` → 11 seasons but the edge stayed unstable/fading vs Sleeper). We are noise-limited vs Sleeper, but the conditional-on-ADP skill is real.
+
+**Model findings (eval = `eval_projection.py` MAE panel + `model_bakeoff.py`):** LightGBM/RF/XGBoost all beat production CatBoost by ~0.15-0.17 PPG MAE at every position (CatBoost *hyperparam* tuning does nothing — it's the algorithm); drop injury features from the PPG model (slightly helps — rate is injury-independent); on TOTALS the availability/games model HURTS (`ppg×predicted-games` 66.5 vs `ppg×const-16.5` 52.6) so use constant games — **injuries are a totals problem, not a rate problem**; best total method = blend(0.4·our-const + 0.6·Sleeper) MAE 50.2 < Sleeper 53.6. Contingent-opportunity feature (`contingent_features.py`, teammate-injury-risk-weighted, leak-safe) = sound idea, no usable signal (injury timing unpredictable).
+
+New research files (all on disk, NOT wired into the dashboard, tab still disabled):
+- `surprise_eval.py` — **CANONICAL EVAL**: ADP-mispricing skill (corr of deviations), bold-call + surprise-catch hit-rates w/ placebo, 2025 scorecard, injury filter.
+- `eval_projection.py` — PPG MAE panel (MAE/RMSE/bias/medAE/r/R²/hit<3) ours vs Sleeper vs naive vs blend.
+- `model_bakeoff.py` (+ `_validate_models.py`) — algorithm + hyperparameter bakeoff on PPG; LightGBM/tree-ensemble win.
+- `eval_totals.py` / `totals_board_2025.py` — season-total eval (availability model hurts; constant games + Sleeper blend best) + 2025 totals board.
+- `rankings_2025.py` — 2025 rankings from the best standalone model, best position.
+- `contingent_features.py` / `eval_contingent.py` — teammate-injury-risk opportunity (no signal).
+- `fetch_historical_adp.py` → `ffc_adp_2014_2019.csv`, `value_eval.py`, `value_eval_extended.py`, `adp_value_model.py`, `fetch_college.py` → `college_features.csv`/`college_production_2014_2024.csv`, `college_rookie_test.py`, `opportunity_features.py`, `qb_context_features.py` → `qb_context_features.csv` — earlier-arc research (see memory).
+- transient run logs (`_*.log`): safe to delete / not commit.
 
 ### Editing / running
 
@@ -477,7 +484,10 @@ python fantasy/seasonal_projections/test_seasonal_projections.py
 python fantasy/seasonal_projections/train_model_a.py        # production Model A (4 CatBoost pkls)
 python fantasy/seasonal_projections/train_model_b.py        # production Model B (availability pkl)
 python fantasy/seasonal_projections/build_draft_board.py    # board + walk-forward edge backtest
-python fantasy/seasonal_projections/value_eval.py           # value-edge research eval suite (2026-06-06)
+python fantasy/seasonal_projections/surprise_eval.py        # CANONICAL eval: ADP-mispricing skill (2026-06-08)
+python fantasy/seasonal_projections/eval_projection.py      # PPG MAE metric panel (ours/Sleeper/naive/blend)
+python fantasy/seasonal_projections/model_bakeoff.py        # algorithm + hyperparameter bakeoff (LightGBM wins)
+python fantasy/seasonal_projections/value_eval.py           # earlier value-edge research eval suite (2026-06-06)
 ```
 
 ## Active Experiments

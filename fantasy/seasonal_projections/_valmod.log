@@ -1,0 +1,12 @@
+=== standalone PPG MAE by position (pooled 2021-2025) ===
+  model             QB    RB    WR    TE   ALL   2025
+  CatBoost        2.50  2.94  2.45  2.13  2.58   2.57
+  LightGBM        2.48  2.77  2.31  2.01  2.44   2.33
+  RandomForest    2.43  2.71  2.38  1.84  2.42   2.37
+  XGBoost         2.47  2.75  2.33  2.07  2.45   2.36
+  TreeEns         2.42  2.71  2.32  1.95  2.41   2.32
+
+=== BLEND with Sleeper: best ALL MAE (sweep our-weight) ===
+  Sleeper alone: 2.111
+  blend(CatBoost+Sleeper): best w=0.25 -> MAE 2.058 (beats Sleeper +0.053) | 2025 2.136
+  blend(TreeEns +Sleeper): best w=0.25 -> MAE 2.054 (beats Sleeper +0.057) | 2025 2.134

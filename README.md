@@ -256,13 +256,13 @@ fantasy/
     optimizer.ipynb                    # ILP formulation and helper reference
     dfs_pipeline.ipynb                 # Weekly DFS workflow (papermill)
   seasonal_projections/                # Pre-season draft board + value-edge research (tab built, currently OFF on the live site)
-    train_model_a.py                   # Per-position CatBoost season PPG models
-    train_model_b.py                   # Pooled CatBoost availability (games played) model
-    build_draft_board.py               # Combine to a VOR board, three-way our/ADP/Sleeper blend, walk-forward ADP backtest
-    value_eval.py                      # Honest edge eval: Sleeper-residual test, feature sweep, placebo-controlled buy/fade
+    train_model_a.py                   # Per-position season PPG models
+    train_model_b.py                   # Pooled availability (games played) model
+    build_draft_board.py               # Combine to a VOR board, three-way our/ADP/Sleeper blend; framed around ADP-mispricing skill
+    surprise_eval.py                   # Canonical eval: ADP-mispricing skill (can we spot over/undervalued players vs ADP, injury-filtered)
+    eval_projection.py                 # Points-per-game accuracy panel (ours vs Sleeper vs naive vs blend)
+    model_bakeoff.py                   # Algorithm + hyperparameter bakeoff on the projection (LightGBM wins)
     fetch_college.py                   # College production from cfbfastR (dominator, efficiency) for the rookie dig
-    opportunity_features.py            # Landing-spot / role-competition features
-    qb_context_features.py             # QB-upgrade quality for pass-catchers
     README.md                          # Design decisions, results, and the honest verdict
 memory/                                # Persistent notes for future work
 .github/workflows/

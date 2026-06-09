@@ -11,21 +11,28 @@ ADP is itself a VOR ranking, so VOR makes the our-vs-ADP comparison fair. Within
 position we also compute our rank and the value/reach gap vs the market's ADP
 positional rank (positive gap = we like a player more than the room does).
 
-Two evaluations, both honest:
-  1. Projection accuracy on the 2025 holdout (PPG MAE, games MAE, and our season
-     total vs Sleeper's own projection as a benchmark). 2025 is unseen by the
-     production models, so this is clean out-of-sample.
-  2. The edge thesis (backtest 2020-2024). This RETRAINS both models walk-forward
-     (train on seasons < N, predict N) so it is genuinely out-of-sample -- the
-     production pkls were trained through 2024 and would leak here. Question: does
-     ranking by our VOR correlate with actual draft value better than ADP does?
+HOW THE BOARD IS EVALUATED (reframed 2026-06-08):
+  The CANONICAL evaluation is `surprise_eval.py` -- the board's real job is to identify
+  OVER/UNDERVALUED players vs ADP, not to win the overall ranking (the market already
+  ranks the easy calls -- Chase top-5 -- perfectly). So we grade it CONDITIONAL ON ADP:
+  the correlation between our deviation from ADP and the player's ACTUAL deviation from
+  ADP, with mid-season-injury seasons (missed > 6 games) excluded since injuries are
+  unpredictable noise. Pooled 2021-2025 that ADP-mispricing skill is ~+0.20 (placebo ~0,
+  positive every season), concentrated on OPPORTUNITY/role moves, not injuries. That is
+  the headline number; run `python surprise_eval.py` for the full scorecard.
 
-The board's headline ranking is a three-way blend of our VOR rank, ADP, and Sleeper's
-own season projection (see three_way_blend_test.py and BLEND_WEIGHTS, ~0.2/0.3/0.5).
-Sleeper's projection is the strongest single signal; the blend beats pure ADP and the
-older our/ADP two-way out-of-sample 5/5 seasons (~+0.06 rho). Our model still earns a
-small independent weight. The standalone model alone loses to ADP; the blend is the
-shippable view.
+  Two secondary checks remain in this file:
+  1. Projection accuracy on the 2025 holdout (PPG MAE, games MAE, our season total vs
+     Sleeper). Clean out-of-sample; answers "is the projection good," not "do we have edge."
+  2. `eval_edge_thesis` -- the OVERALL-rank backtest. Kept for the record, but it is the
+     WRONG lens: our VOR ranking loses to ADP on the overall order (dominated by easy
+     calls). The mispricing skill above is where the real edge lives.
+
+The board's display ranking is a three-way blend of our VOR rank, ADP, and Sleeper's own
+season projection (see three_way_blend_test.py and BLEND_WEIGHTS, ~0.2/0.3/0.5); the
+value/reach gap (adp_pos_rank - our_pos_rank) is the ADP-mispricing call the canonical
+eval grades. Best standalone model per the bakeoff is LightGBM (PPG, injury features
+dropped) x constant games -- see model_bakeoff.py / surprise_eval.py.
 
 Writes draft_board_{board_season}.csv (BOARD_SEASON env var, default = latest season).
 Run:  python fantasy/seasonal_projections/build_draft_board.py
