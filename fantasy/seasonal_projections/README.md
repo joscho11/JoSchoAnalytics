@@ -54,8 +54,16 @@ a season-long projection built only from information known at draft time
 
 `_utils.py` holds shared helpers (`norm_name`, constants). `test_seasonal_projections.py`
 is a hermetic test suite (no network) for the transformation logic.
-`model_a_compare.ipynb` is the 3-way bakeoff (CatBoost vs XGBoost vs LightGBM) kept
-for reference; CatBoost won and is what `train_model_a.py` ships.
+`model_a_compare.ipynb` is the original 3-way bakeoff (CatBoost vs XGBoost vs LightGBM),
+kept for reference. CatBoost won *that* pass, but the later, sharper bakeoff in
+`model_bakeoff.py` found **LightGBM** beats it by ~0.15 PPG MAE at every position — so the
+shipped `train_model_a.py` uses LightGBM, with injury features dropped.
+
+**Completed-season grading and injuries.** For a finished season the board shows where each
+player actually finished and a ✅ hit / ❌ miss on the call — *except* players who missed
+more than 6 games, who show **🏥 injured** and aren't graded either way. This matches the
+canonical eval, which excludes mid-season-injury seasons because injury timing is
+unpredictable noise (and our BUYs aren't more injury-prone than the field — ~14% vs ~18%).
 
 ```bash
 python fantasy/seasonal_projections/fetch_adp.py

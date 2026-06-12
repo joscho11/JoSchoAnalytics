@@ -125,7 +125,8 @@
       "Bash(grep -vE '\\\\.log$')",
       "Bash(xargs echo \"stale refs remaining in app.py:\")",
       "PowerShell(python test_app_draft_board.py)",
-      "PowerShell(python \"c:\\\\Users\\\\josep\\\\Desktop\\\\random_stuff\\\\BettingEdgeContinued\\\\test_app_draft_board.py\")"
+      "PowerShell(python \"c:\\\\Users\\\\josep\\\\Desktop\\\\random_stuff\\\\BettingEdgeContinued\\\\test_app_draft_board.py\")",
+      "Bash(echo \"EXIT=$?\")"
     ]
   }
 }
