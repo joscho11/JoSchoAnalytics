@@ -513,11 +513,8 @@ if not season_active:
     )
 
 # ── Tabs ──────────────────────────────────────────────────────────────────────
-# NOTE: Draft Board (Beta) tab temporarily removed from production 2026-06-05 — the code is
-# kept (disabled below via `if False:`) to re-enable later. To restore: add "📋 Draft Board ᴮᴱᵀᴬ"
-# back into this label list, restore `tab5` in the unpacking, and change the draft-board block's
-# `if False:` back to `with tab5:` (and the Help expander likewise).
-tab1, tab2, tab3, tab4, tab6, tab7 = st.tabs(["🏈 Weekly Predictions", "📈 Season Performance", "🏆 Fantasy", "🎯 DFS", "🏅 League History", "❓ Help & Guide"])
+# Draft Value Finder (tab5) re-enabled 2026-06-08 — our model's calls vs ADP (value_board_*.csv).
+tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(["🏈 Weekly Predictions", "📈 Track Record", "🏆 Weekly Fantasy", "🎯 DFS Optimizer", "📋 Draft Value Finder", "🏅 League History", "❓ Help & Guide"])
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 1: WEEKLY PREDICTIONS
@@ -940,7 +937,7 @@ with tab1:
 # ══════════════════════════════════════════════════════════════════════════════
 with tab2:
 
-    st.title(f"📈 {season} Season Performance")
+    st.title(f"📈 {season} Track Record")
     season_df = df[
         (df['season'] == season) &
         (df['actual_margin'].notna())
@@ -1678,7 +1675,7 @@ with tab3:
 with tab4:
 
     st.title("🎯 DFS Optimizer")
-    st.caption("DraftKings NFL Classic lineup optimizer — powered by the same weekly projections as the Fantasy tab.")
+    st.caption("DraftKings NFL Classic lineup optimizer — powered by the same weekly projections as the Weekly Fantasy tab.")
 
     st.divider()
 
@@ -1711,274 +1708,219 @@ with tab4:
     )
 
 # ══════════════════════════════════════════════════════════════════════════════
-# TAB 5: SEASONAL DRAFT BOARD (BETA) — TEMPORARILY DISABLED (2026-06-05)
-# Code kept intact; `if False:` skips rendering. Re-enable by restoring the tab label +
-# `tab5` unpacking on the st.tabs line above and changing `if False:` back to `with tab5:`.
+# TAB 5: SEASONAL VALUE FINDER — our model's calls vs the draft room (ADP)
 # ══════════════════════════════════════════════════════════════════════════════
-if False:  # was: with tab5:
+with tab5:
 
-    st.title("📋 Seasonal Draft Board")
+    st.title("📋 Draft Value Finder")
 
-    # Beta banner — amber/dashed, same honest-disclosure styling as the totals model
     st.markdown(
         "<div style='background:#1f1a0e;border:1px dashed #b88a1c;border-radius:8px;"
         "padding:12px 16px;margin:4px 0 14px 0;font-size:13.5px;line-height:1.5'>"
-        "<span style='background:#b88a1c22;border:1px solid #b88a1c;border-radius:4px;"
-        "padding:1px 7px;font-size:10px;color:#e0a93a;font-weight:700;letter-spacing:0.5px'>BETA</span>"
-        "&nbsp;&nbsp;<span style='color:#e0a93a;font-weight:700'>Pre-season half-PPR draft rankings — a blended consensus, not a secret edge.</span>"
-        "<br><span style='color:#bbb'>Our season-projection model on its own does <b>not</b> beat the market. "
-        "The board is a <b>blend of three rankings — Sleeper's projection (50%), ADP (30%), and our model (20%)</b>. "
-        "That blend beat pure ADP in 5 of 5 backtest seasons (out-of-sample), a real if modest gain; our model "
-        "earns a small independent weight on top of the two market signals. Use it as a sanity-checked consensus "
-        "and a value finder, not a cheat code.</span>"
+        "<span style='color:#e0a93a;font-weight:700'>Our model vs the draft room (ADP) — values the room is sleeping on.</span>"
+        "<br><span style='color:#bbb'>Our <b>independent</b> season projection ranked against the market's "
+        "<b>ADP</b>. <b>BUY</b> = we rank a player above their ADP (undervalued); <b>FADE</b> = below (overvalued). "
+        "On confident calls it beats the casual ADP line (~68% on HIGH buys, stable across seasons). <b>Fades</b> are "
+        "only shown with a real decline catalyst (aging / declining), never young players. Sharper public projections "
+        "(e.g. <b>Sleeper</b>, shown for comparison) are still better than our model — treat this as a draft "
+        "cross-check, not a guarantee.</span>"
         "</div>",
         unsafe_allow_html=True,
     )
 
-    _board_files = glob.glob(str(_HERE / "fantasy" / "seasonal_projections" / "draft_board_*.csv"))
-    _boards = {}
-    for _f in _board_files:
+    _vb_files = glob.glob(str(_HERE / "fantasy" / "seasonal_projections" / "value_board_*.csv"))
+    _vbs = {}
+    for _f in _vb_files:
         try:
-            _boards[int(os.path.basename(_f).replace("draft_board_", "").replace(".csv", ""))] = _f
+            _vbs[int(os.path.basename(_f).replace("value_board_", "").replace(".csv", ""))] = _f
         except ValueError:
             continue
-    if not _boards:
+    if not _vbs:
         st.info(
-            "No draft board found. Generate one with "
-            "`python fantasy/seasonal_projections/build_draft_board.py` "
-            "(set `BOARD_SEASON` for a specific season)."
+            "No value board found. Generate one with "
+            "`python fantasy/seasonal_projections/build_value_board.py`."
         )
     else:
-        _seasons = sorted(_boards, reverse=True)
-        # season picker appears only once more than one board exists (e.g. when the
-        # 2026 board lands in August); with a single board it just uses that one.
-        if len(_seasons) > 1:
-            _bseason = st.selectbox("Season", _seasons, index=0, key="board_season")
-        else:
-            _bseason = _seasons[0]
-        _bpath = _boards[_bseason]
-        bdf = pd.read_csv(_bpath)
-        for _c in ("blend_rank", "blend_pos_rank", "our_pos_rank", "vor", "projected_total",
-                   "ppg_pred", "games_pred", "adp_overall_rank", "adp_pos_rank", "value_gap", "age",
-                   "target_ppg", "target_games", "sleeper_pts_half_ppr"):
-            if _c in bdf.columns:
-                bdf[_c] = pd.to_numeric(bdf[_c], errors="coerce")
-        # a completed season has actual results (target_ppg filled); a future board (2026) doesn't
-        bdf["actual_total"] = (bdf["target_ppg"] * bdf["target_games"]) if "target_ppg" in bdf.columns else float("nan")
-        _has_actuals = bdf["actual_total"].notna().any()
+        _seasons = sorted(_vbs, reverse=True)
+        _bseason = st.selectbox("Season", _seasons, index=0, key="vb_season") if len(_seasons) > 1 else _seasons[0]
+        vdf = pd.read_csv(_vbs[_bseason])
+        for _c in ("our_rank", "adp_rank", "value", "sleeper_rank", "actual_rank",
+                   "our_proj", "actual_total", "sleeper_agrees"):
+            if _c in vdf.columns:
+                vdf[_c] = pd.to_numeric(vdf[_c], errors="coerce")
+        for _c in ("call", "contested", "reason"):     # empty cells read back as NaN -> ""
+            vdf[_c] = vdf[_c].fillna("") if _c in vdf.columns else ""
+        # injured = missed >6 games; outcome is injury-driven so we don't grade the call (robust bool parse)
+        vdf["injured"] = (vdf["injured"].astype(str).str.lower().isin(["true", "1", "1.0"])
+                          if "injured" in vdf.columns else False)
+        _has_actuals = "actual_rank" in vdf.columns and vdf["actual_rank"].notna().any()
+        _has_slp = "sleeper_rank" in vdf.columns
 
         st.caption(
-            f"{_bseason} season · {len(bdf):,} players · ranked by the our/ADP/Sleeper blend."
-            + ("  Results are in — actual finishes shown below." if _has_actuals
+            f"{_bseason} season · {len(vdf):,} drafted players · our model's calls vs ADP."
+            + ("  Results are in — actual finishes shown." if _has_actuals
                else "  Upcoming season — projections only, no results yet.")
         )
 
-        with st.expander("How to read this board"):
+        with st.expander("How to read this (and what it is / isn't)"):
             st.markdown(
-                "Click any column header to sort. The **Position** filter switches the rank columns between "
-                "**overall** ranks (All) and **positional** ranks (one position). Columns:\n"
-                "- **ADP** — the market's draft rank (Sleeper). **Pred** — our projected rank: the rank of **Proj Pts** "
-                "(our blended projection of our model + Sleeper), so a higher Proj Pts is always a better Pred. ADP is "
-                "shown alongside for comparison. Both switch overall↔positional with the filter.\n"
-                "- **Value** *(upcoming season only)* — ADP minus Pred. Positive (green) = we project them ahead "
-                "of the market (a value); negative (red) = a reach.\n"
-                "- **Actual** *(completed season)* — where the player actually finished (same overall/positional basis). "
-                "Compare it to Pred and ADP to see who hit and who busted. Players who didn't play are blank.\n"
-                "- **Proj Pts** — our blended projected half-PPR total (our model + Sleeper's projection, in the blend's "
-                "proportions), so it moves with the Pred rank. **Actual Pts** — what they actually scored.\n"
-                "- Below the table: the biggest **value/reach** call-outs, and (for a finished season) a **\"How the "
-                "board did\"** panel scoring each ranking against reality.\n"
-                "- This is a projection and cross-check tool. The blend's edge over the market is real but small, and "
-                "rookies are the hardest to call — so don't treat any single call as gospel."
+                "Our **independent** season-projection model (LightGBM, no Sleeper) ranked against the market's "
+                "draft order, within each position. Each rank reads like a draft label — **RB12** = the 12th "
+                "running back. Columns:\n"
+                "- **ADP** — Average Draft Position, where the draft market ranks the player. **Our Rank** — where our model does.\n"
+                "- **Verdict** — our call. 🟢 green = we rank them above the room (a *value/buy*); 🔴 red = below "
+                "(a *fade*); ⚠️ **Contested** = we liked them, but new competition for touches just arrived (a drafted "
+                "rookie, a free-agent signing, a starter returning from injury, or a newly-crowded backfield) that our "
+                "prior-stats model can't see — so we hold off rather than flag a false value. The number is how many "
+                "positional spots we differ. Fades are only shown for aging/declining players, never young ones.\n"
+                "- **Finished** *(completed season)* — where the player actually finished; **Result** — ✅ the call "
+                "paid off, ❌ it didn't.\n"
+                "- **Sleeper** — Sleeper's own projected rank, shown *for comparison only*. It is **not** part of our "
+                "call; the call-outs just note whether Sleeper happens to agree.\n\n"
+                "**Honest scope:** our confident BUY calls beat the casual ADP line ~68% of the time (season-stable). "
+                "Sharper public projections like Sleeper's are still better than our model — so use this as a cross-check "
+                "on your draft room, not as gospel. Injuries are unpredictable and not modeled."
             )
 
-        _pos = st.radio("Position", ["All", "QB", "RB", "WR", "TE"], horizontal=True, key="board_pos")
-        # All display ranks are recomputed WITHIN the drafted pool (board_view.add_display_ranks)
-        # so overall and positional ranks are mutually consistent — the CSV's our_pos_rank is over
-        # the full ~610-player universe and would contradict the pool-based overall rank.
-        import sys as _sys
-        _seas_dir = str(_HERE / "fantasy" / "seasonal_projections")
-        if _seas_dir not in _sys.path:
-            _sys.path.insert(0, _seas_dir)
-        import board_view as _bv
-        pool = _bv.add_display_ranks(bdf[bdf["blend_rank"].notna()].copy())
-        view = (pool if _pos == "All" else pool[pool["position"] == _pos]).sort_values("adp_overall_rank")
+        _pos = st.radio("Position", ["All", "QB", "RB", "WR", "TE"], horizontal=True, key="vb_pos")
+        view = (vdf if _pos == "All" else vdf[vdf["position"] == _pos]).copy()
 
         if view.empty:
-            st.info("No ranked players for this filter yet (the board may predate this season's ADP).")
+            st.info("No players for this filter.")
         else:
-            # When viewing ALL players the rank columns are OVERALL ("total") ranks; when a single
-            # position is filtered they switch to POSITIONAL ranks. Every value is numeric (sorts
-            # correctly) and computed within the drafted pool (so overall/positional are consistent).
-            _single = _pos != "All"
-            if _single:
-                adp_r, pred_r = view["adp_posrk"], view["pred_posrk"]
-                actual_r = view["actual_posrk"] if _has_actuals else None
-                st.caption(f"Showing **positional** ranks within {_pos}. Sorted by ADP — click any header to re-sort.")
-            else:
-                adp_r, pred_r = view["adp_ovr"], view["pred_ovr"]
-                actual_r = view["actual_ovr"] if _has_actuals else None
-                st.caption("Showing **overall** ranks (all positions). Filter to a position for positional ranks. "
-                           "Sorted by ADP — click any header to re-sort.")
-            # When a position is filtered, name the rank columns Pos ADP / Pos Pred / Pos Actual
-            # to make clear they're positional; in the All view they're overall ranks.
-            _p = "Pos " if _single else ""
-            c_adp, c_pred, c_act = f"{_p}ADP", f"{_p}Pred", f"{_p}Actual"
+            def _fin(r):
+                if not (_has_actuals and pd.notna(r.get("actual_rank"))):
+                    return ""
+                tag = " 🏥 (missed time)" if r.get("injured") else ""
+                return f" → finished {r['position']}{int(r['actual_rank'])}{tag}"
 
-            # Column order: Player, Pos, Team, ADP, Pred, [Actual, Diff | Value], Proj Pts, [Actual Pts]
-            disp = pd.DataFrame({
-                "Player": view["player"],
-                "Pos":    view["position"],
-                "Team":   view["team"],
-                c_adp:    adp_r.astype("Int64"),          # market rank
-                c_pred:   pred_r.astype("Int64"),         # our projected rank (= rank of Proj Pts)
-            })
-            if _has_actuals:
-                disp[c_act]   = actual_r.astype("Int64")           # where they actually finished
-                disp["Diff"]  = (pred_r - actual_r).astype("Int64")  # pred − actual: − = bust, + = beat prediction
-            else:
-                disp["Value"] = (adp_r - pred_r).astype("Int64")   # ADP − Pred: + = we project ahead of market
-            disp["Proj Pts"]  = view["blend_proj"].round(0).astype("Int64")   # blended projection (Pred = its rank)
-            if _has_actuals:
-                disp["Actual Pts"] = view["actual_total"].round(0).astype("Int64")
+            def _agree(r):
+                if _has_slp and pd.notna(r.get("sleeper_agrees")):
+                    return " · ✓ Sleeper agrees" if r["sleeper_agrees"] else " · ✗ Sleeper disagrees"
+                return ""
 
-            # numeric underlying (sorts correctly) + green/red via styler.
-            def _c_higher_good(v):  # Value: + (we rank ahead of market) = green
-                return "" if pd.isna(v) else ("color:#1a9850;font-weight:600" if v > 0
-                       else "color:#d73027;font-weight:600" if v < 0 else "color:#888")
+            # drop any row missing a rank so the int(...) formatters below can't crash
+            _called = view.dropna(subset=["our_rank", "adp_rank", "value"])
+            buys = _called[_called["call"] == "BUY"].sort_values("value", ascending=False)
+            fades = _called[_called["call"] == "FADE"].sort_values("value")
 
-            def _c_lower_good(v):   # Diff = pred − actual: + (beat our pred) = green, − (bust) = red
-                return "" if pd.isna(v) else ("color:#1a9850;font-weight:600" if v > 0
-                       else "color:#d73027;font-weight:600" if v < 0 else "color:#888")
+            # 🔥 CONSENSUS VALUES — the headline. Where OUR model AND Sleeper BOTH rank a player above
+            # their ADP. That agreement is the single strongest signal in the tool (~78% have beaten
+            # their draft cost vs ~68% for our model alone), so we lead with it.
+            if _has_slp:
+                cons = buys[buys["sleeper_agrees"] == 1].copy()
+                cons["_c"] = (cons["adp_rank"] - cons["our_rank"]) + (cons["adp_rank"] - cons["sleeper_rank"])
+                cons = cons.sort_values("_c", ascending=False)
+                if len(cons):
+                    def _finh(r):
+                        if not (_has_actuals and pd.notna(r.get("actual_rank"))):
+                            return ""
+                        if r.get("injured"):    # injury-shortened season -> don't grade it
+                            return f" &rarr; finished {r['position']}{int(r['actual_rank'])} 🏥"
+                        return (f" &rarr; finished {r['position']}{int(r['actual_rank'])} "
+                                f"{'✅' if r['actual_rank'] < r['adp_rank'] else '❌'}")
+                    items = "".join(
+                        f"<li style='margin:4px 0'><b>{r['player']}</b> "
+                        f"<span style='color:#888'>({r['position']})</span> — drafted "
+                        f"{r['position']}{int(r['adp_rank'])}; we say <b style='color:#3fbf5f'>"
+                        f"{r['position']}{int(r['our_rank'])}</b>, Sleeper <b style='color:#3fbf5f'>"
+                        f"{r['position']}{int(r['sleeper_rank'])}</b>{_finh(r)}</li>"
+                        for _, r in cons.head(6).iterrows())
+                    st.markdown(
+                        "<div style='background:#0f1a0e;border:1px solid #1a9850;border-radius:8px;"
+                        "padding:12px 16px;margin:2px 0 16px 0'>"
+                        "<div style='color:#3fbf5f;font-weight:700;font-size:15px;margin-bottom:3px'>"
+                        "🔥 Consensus values</div>"
+                        "<div style='color:#aaa;font-size:12.5px;margin-bottom:8px'>The players our model "
+                        "<b>and</b> Sleeper both rank above where the draft room takes them — the strongest "
+                        "signal here (~78% have beaten their ADP, vs ~68% for our model alone).</div>"
+                        f"<ul style='margin:0;padding-left:18px;font-size:13.5px;color:#ddd'>{items}</ul></div>",
+                        unsafe_allow_html=True)
 
-            def _fmt_signed(v):
-                return "" if pd.isna(v) else f"{int(v):+d}"
-
-            sty = disp.style
-            if "Value" in disp.columns:
-                sty = sty.map(_c_higher_good, subset=["Value"]).format(_fmt_signed, subset=["Value"])
-            if "Diff" in disp.columns:
-                sty = sty.map(_c_lower_good, subset=["Diff"]).format(_fmt_signed, subset=["Diff"])
-
-            _basis = "positional" if _single else "overall"
-            _help = {
-                "Pos": "Position (QB/RB/WR/TE). Filter above to see one position.",
-                "Team": "NFL team.",
-                c_adp: f"Market draft rank (Sleeper), {_basis}.",
-                c_pred: f"Our projected draft rank ({_basis}) — the rank of our blended projection (Proj Pts), so a "
-                        "higher Proj Pts is always a better Pred. ADP is shown separately for comparison.",
-                c_act: f"Where the player actually finished, {_basis}.",
-                "Diff": "Pred rank minus Actual rank. Negative (red) = busted (finished worse than predicted); positive (green) = exceeded our projection.",
-                "Value": "ADP minus Pred. + (green) = we project them ahead of the market (a value); − (red) = a reach.",
-                "Proj Pts": "Our blended projected half-PPR total — our model + Sleeper's projection (ADP has no point "
-                            "value, so it isn't in this number). Pred is exactly the rank of this column.",
-                "Actual Pts": "Actual half-PPR season total.",
-            }
-            _colcfg = {c: st.column_config.Column(help=h) for c, h in _help.items() if c in disp.columns}
-            st.dataframe(sty, hide_index=True, use_container_width=True, height=560, column_config=_colcfg)
-
-            # Call-outs — different lens per season (2025 = what happened, 2026 = our opinion).
-            drafted = view.copy()
             cL, cR = st.columns(2)
-            if _has_actuals:
-                # 2025: our prediction vs actual finish — matches the Diff column (pred − actual).
-                # Negative = bust (pred better than actual); positive = exceeded projection.
-                drafted["_v"] = drafted["pred_posrk"] - drafted["actual_posrk"]
-                with cL:
-                    st.markdown("**🟢 Biggest values** (exceeded our projection)")
-                    _v = drafted[drafted["_v"] > 0].sort_values("_v", ascending=False).head(5)
-                    if len(_v):
-                        for _, r in _v.iterrows():
-                            st.markdown(f"- **{r['player']}** ({r['position']}) — predicted "
-                                        f"{r['position']}{int(r['pred_posrk'])}, finished "
-                                        f"{r['position']}{int(r['actual_posrk'])} "
-                                        f"(+{int(r['_v'])})")
-                    else:
-                        st.caption("None at this filter.")
-                with cR:
-                    st.markdown("**🔴 Biggest misses** (busted vs our projection)")
-                    _m = drafted[drafted["_v"] < 0].sort_values("_v").head(5)
-                    if len(_m):
-                        for _, r in _m.iterrows():
-                            st.markdown(f"- **{r['player']}** ({r['position']}) — predicted "
-                                        f"{r['position']}{int(r['pred_posrk'])}, finished "
-                                        f"{r['position']}{int(r['actual_posrk'])} "
-                                        f"({int(r['_v'])})")
-                    else:
-                        st.caption("None at this filter.")
-            else:
-                # 2026: our opinion vs the market — where we project ahead of / behind ADP.
-                drafted["_cv"] = drafted["adp_posrk"] - drafted["pred_posrk"]
-                with cL:
-                    st.markdown("**🟢 Biggest values** (we project them ahead of the market)")
-                    _v = drafted[drafted["_cv"] > 0].sort_values("_cv", ascending=False).head(8)
-                    if len(_v):
-                        for _, r in _v.iterrows():
-                            st.markdown(f"- **{r['player']}** ({r['position']}) — us {r['position']}"
-                                        f"{int(r['pred_posrk'])} vs ADP {r['position']}{int(r['adp_posrk'])} "
-                                        f"(+{int(r['_cv'])})")
-                    else:
-                        st.caption("None at this filter.")
-                with cR:
-                    st.markdown("**🔴 Biggest reaches** (market drafts them ahead of our projection)")
-                    _r = drafted[drafted["_cv"] < 0].sort_values("_cv").head(8)
-                    if len(_r):
-                        for _, r in _r.iterrows():
-                            st.markdown(f"- **{r['player']}** ({r['position']}) — us {r['position']}"
-                                        f"{int(r['pred_posrk'])} vs ADP {r['position']}{int(r['adp_posrk'])} "
-                                        f"({int(r['_cv'])})")
-                    else:
-                        st.caption("None at this filter.")
-
-            # ── Results: how the board's ranking tracked the actual finish (completed season only)
-            if _has_actuals:
-                st.divider()
-                st.markdown(f"#### 📊 How the board did — {_bseason} results")
-                rp = view[(view["adp_overall_rank"] <= 180) & view["actual_total"].notna()].copy()
-                if len(rp) >= 10:
-                    actual_r = rp["actual_total"].rank(ascending=True)   # higher pts = better
-
-                    def _srho(goodness):                                  # Spearman = corr of ranks
-                        return float(goodness.rank(ascending=True).corr(actual_r))
-
-                    rho_board = _srho(rp["blend_proj"])                   # the board's ranking (our projection)
-                    rho_adp   = _srho(-rp["adp_overall_rank"])
-                    rho_our   = _srho(rp["vor"]) if rp["vor"].notna().any() else float("nan")
-                    rho_slp   = _srho(rp["sleeper_pts_half_ppr"]) if rp["sleeper_pts_half_ppr"].notna().any() else float("nan")
-
-                    m1, m2, m3, m4 = st.columns(4)
-                    m1.metric("Board (our proj)", f"{rho_board:.3f}")
-                    m2.metric("Sleeper proj", f"{rho_slp:.3f}" if pd.notna(rho_slp) else "—")
-                    m3.metric("ADP (market)", f"{rho_adp:.3f}")
-                    m4.metric("Our model raw", f"{rho_our:.3f}" if pd.notna(rho_our) else "—")
-                    st.caption(
-                        f"Rank correlation (Spearman) between each ranking and actual {_bseason} half-PPR finish, "
-                        f"drafted pool n={len(rp)}. Higher = the ranking better predicted who actually finished well "
-                        f"({_bseason} is a clean out-of-sample check — the models hold out {_bseason}). 'Board' is the "
-                        "projection the board ranks by (our model + Sleeper); our model alone is the weakest input, "
-                        "which is why it gets the least weight. Single-season numbers bounce year to year."
-                    )
-
-                    # season-total projection accuracy: the board's projection vs Sleeper's, vs actual
-                    s = rp[rp["sleeper_pts_half_ppr"].notna()]
-                    if len(s):
-                        board_mae = (s["blend_proj"] - s["actual_total"]).abs().mean()
-                        slp_mae   = (s["sleeper_pts_half_ppr"] - s["actual_total"]).abs().mean()
-                        st.caption(f"Season-total projection MAE — board **{board_mae:.0f}** vs Sleeper **{slp_mae:.0f}** "
-                                   f"(half-PPR points, n={len(s)}).")
-
-                    # did our value/reach calls pay off? (where we project a player ahead of ADP)
-                    _cvr = rp["adp_posrk"] - rp["pred_posrk"]
-                    val  = rp[_cvr >= 6]["actual_total"]
-                    neu  = rp[_cvr.abs() < 6]["actual_total"]
-                    rea  = rp[_cvr <= -6]["actual_total"]
-                    if len(val) and len(rea):
-                        st.caption(
-                            f"Players we projected ≥6 spots above ADP actually averaged **{val.mean():.0f}** pts "
-                            f"vs **{neu.mean():.0f}** for neutral and **{rea.mean():.0f}** for our reaches."
+            with cL:
+                st.markdown("**🟢 Best values** — drafted cheap, we rank them higher")
+                if len(buys):
+                    for _, r in buys.head(8).iterrows():
+                        st.markdown(
+                            f"- **{r['player']}** ({r['position']}) — drafted {r['position']}{int(r['adp_rank'])}, "
+                            f"we rank **{r['position']}{int(r['our_rank'])}** (+{int(r['value'])} spots){_agree(r)}{_fin(r)}"
                         )
                 else:
-                    st.caption(f"Not enough graded {_bseason} players at this filter to summarize results.")
+                    st.caption("None at this filter.")
+            with cR:
+                st.markdown("**🔴 Fades** — drafted high, we'd let someone else pay")
+                if len(fades):
+                    for _, r in fades.head(8).iterrows():
+                        st.markdown(
+                            f"- **{r['player']}** ({r['position']}) — drafted {r['position']}{int(r['adp_rank'])}, "
+                            f"we rank **{r['position']}{int(r['our_rank'])}** ({int(r['value'])} spots, {r['reason']}){_agree(r)}{_fin(r)}"
+                        )
+                else:
+                    st.caption("None at this filter.")
+
+            # full table — readable AND correctly sortable. Ranks stay NUMERIC (so the grid sorts 1,2,..,10,11
+            # not 1,10,11,2), but column_config DISPLAYS them with the position prefix ("RB%d" -> RB12) when a
+            # single position is filtered. The 🟢/🔴 emoji in Verdict carry the color, so no Styler is needed.
+            st.markdown("**Full board** — every drafted player, by position")
+            st.caption(
+                "Read a row like this: the market drafts this player at **ADP** and our model ranks them at "
+                "**Our Rank** (both within their position — filter to one position to see them labelled RB12, WR8, "
+                "etc.). A 🟢 green **Verdict** = a value vs the draft room; 🔴 red = overvalued. **Sleeper** is a "
+                "sharper public projection, shown only to compare against. Click any header to sort."
+            )
+            view = view.sort_values(["position", "adp_rank"]).reset_index(drop=True)
+
+            def _verdict(r):
+                v = r["value"]
+                if r["call"] == "BUY":
+                    return f"🟢 {'Strong buy' if r['tier'] == 'HIGH' else 'Buy'} (+{int(v)})"
+                if r["call"] == "FADE":
+                    return f"🔴 {'Strong fade' if r['tier'] == 'HIGH' else 'Fade'} ({int(v)})"
+                if str(r.get("contested", "")):      # our model liked them, but new competition arrived
+                    return f"⚠️ Contested ({r['contested']})"
+                return "—"
+
+            def _result(r):
+                if r["call"] not in ("BUY", "FADE") or pd.isna(r.get("actual_rank")):
+                    return ""
+                if r.get("injured"):        # missed >6 games -> outcome is injury luck, not our call
+                    return "🏥 injured"
+                better = r["actual_rank"] < r["adp_rank"]       # finished above their draft slot
+                hit = better if r["call"] == "BUY" else not better
+                return "✅ hit" if hit else "❌ miss"
+
+            disp = pd.DataFrame({
+                "Player": view["player"], "Pos": view["position"], "Team": view["team"],
+                "ADP": view["adp_rank"].astype("Int64"),
+                "Our Rank": view["our_rank"].astype("Int64"),
+                "Verdict": view.apply(_verdict, axis=1),
+            })
+            if _has_actuals:
+                disp["Finished"] = view["actual_rank"].astype("Int64")
+                disp["Result"] = view.apply(_result, axis=1)
+            if _has_slp:
+                disp["Sleeper"] = view["sleeper_rank"].astype("Int64")
+            disp["Proj Pts"] = view["our_proj"].round(0).astype("Int64")
+
+            # prefix the rank display with the position when one is filtered (numbers stay numeric -> sortable)
+            _rankfmt = f"{_pos}%d" if _pos != "All" else "%d"
+            _num = st.column_config.NumberColumn
+            _txt = st.column_config.TextColumn
+            _allcfg = {
+                "ADP": _num("ADP", help="Average Draft Position — where the draft market ranks this player at their position.", format=_rankfmt),
+                "Our Rank": _num("Our Rank", help="Where OUR independent model ranks them at their position (no Sleeper).", format=_rankfmt),
+                "Finished": _num("Finished", help="Where the player actually finished at their position.", format=_rankfmt),
+                "Sleeper": _num("Sleeper", help="Sleeper's projected rank — shown only for comparison, not part of our call.", format=_rankfmt),
+                "Proj Pts": _num("Proj Pts", help="Our model's projected half-PPR season total.", format="%d"),
+                "Verdict": _txt("Verdict", help="Our call vs the market — 🟢 = undervalued (buy), 🔴 = overvalued (fade), "
+                                "⚠️ Contested = we liked them but new competition arrived (a rookie, signing, returning starter, or "
+                                "crowded backfield) that our stats model can't price, so we hold off. The number is how many "
+                                "positional spots we differ. Fades only for aging/declining players, never young ones."),
+                "Result": _txt("Result", help="Did the call pay off? ✅ = finished on our side of the market, ❌ = it didn't."),
+            }
+            _colcfg = {c: cfg for c, cfg in _allcfg.items() if c in disp.columns}
+            st.dataframe(disp, hide_index=True, use_container_width=True, height=560, column_config=_colcfg)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 6: LEAGUE HISTORY
@@ -2687,9 +2629,9 @@ Tuesday morning it fills in the previous week's results and posts initial predic
 During the offseason the site just shows historical data from past seasons. Everything spins back up when the season kicks off in September.
         """)
 
-    with st.expander("What is the Season Performance tab?"):
+    with st.expander("What is the Track Record tab?"):
         st.markdown("""
-The Season Performance tab is where you can see how the model has done across the whole season, not just one week.
+The Track Record tab is where you can see how the model has done across the whole season, not just one week.
 
 It shows a week by week bar chart of ATS win percentage, a cumulative trend line showing how accuracy has moved over time, and a breakdown of how high edge games performed compared to low edge games.
 
@@ -2713,32 +2655,31 @@ A pick is only flagged as **UNDER** when both the XGBoost and Ridge models indep
 That's why the badges on the game cards are amber/dashed instead of green — the model says UNDER, but we haven't yet confirmed live that it's actually profitable. We track it through the 2026 season and reassess after a full season of real evidence (~96 picks). **Don't bet these picks; treat them as something to watch.**
         """)
 
-    with st.expander("What is the Fantasy tab?"):
+    with st.expander("What is the Weekly Fantasy tab?"):
         st.markdown("""
-The Fantasy tab shows weekly half-PPR fantasy projections for every active QB, RB, WR, and TE. Each position has its own subtab.
+The Weekly Fantasy tab shows weekly half-PPR fantasy projections for every active QB, RB, WR, and TE. Each position has its own subtab.
 
 You can filter by team or health status and see projected fantasy points alongside position-specific stat projections (passing yards, rushing yards, receptions, receiving yards). Once the week's games are played, actual stats fill in automatically.
 
 See the Fantasy Projections section below for more detail on how the models work.
         """)
 
-    with st.expander("What is the DFS tab?"):
+    with st.expander("What is the DFS Optimizer tab?"):
         st.markdown("""
-The DFS tab is a DraftKings NFL Classic lineup optimizer launching with the 2026 season.
+The DFS Optimizer tab is a DraftKings NFL Classic lineup optimizer launching with the 2026 season.
 
 Upload your DraftKings salary CSV and the optimizer generates the highest-projected legal 9-player lineup under the $50,000 salary cap. See the DFS Optimizer section below for a full breakdown.
         """)
 
-    if False:  # Draft Board Help entry — disabled 2026-06-05 with the tab (re-enable: `with st.expander(...)`)
-      with st.expander("What is the Draft Board tab? (Beta)"):
+    with st.expander("What is the Draft Value Finder tab?"):
         st.markdown("""
-The Draft Board is a **pre-season** half-PPR ranking tool, separate from the weekly Fantasy tab. It projects each player's whole upcoming season (points per game × games played) and turns that into a draft order.
+The Draft Value Finder is a **pre-season draft tool**, separate from the Weekly Fantasy tab. It runs our own season-projection model and compares it to the market's **ADP** (average draft position) to flag players the draft room is **mis-pricing**.
 
-**Honest disclaimer (why it's Beta):** our season-projection model on its own is weak — Sleeper's published projection is a stronger signal. So the board ranks by a **blended projection** (mostly Sleeper's projection plus a slice of our model), and shows the market's **ADP** next to it for comparison. The **Pred** rank is simply the rank of that projection, so the projected points and the rank always agree.
+**What it's doing:** our independent model projects each player's upcoming season and ranks them within their position (e.g. RB12). The board compares our rank to where the draft market (ADP) takes them, and shows a plain-English **Verdict**: 🟢 green means we rank a player *above* their draft cost — a **buy** (undervalued); 🔴 red means below — a **fade** (overvalued). The number is how many positional spots we differ, and HIGH-confidence calls are the biggest disagreements. For a completed season it also shows where they **Finished** and whether the call **hit**.
 
-So treat it as a projection and a value finder, not a secret edge. **ADP** is the market's draft rank, **Pred** is our projected rank, and **Value** = ADP − Pred flags where we project a player ahead of (green) or behind (red) the market. The **Position** filter switches the ranks between overall and positional. Rookies get a dedicated model (draft capital + combine measurables + landing spot) since they have no NFL history; it's the hardest group to call.
+**Honest scope:** on our confident BUY calls this beats the casual ADP draft line about **68%** of the time, and it's been stable season to season — a real, if modest, edge over the room. It is **not** better than the sharpest public projections (e.g. Sleeper, which we show next to our ranks purely for comparison). **Fades** are only shown when there's a real decline catalyst (aging or declining production) and never for young players — those are the only fades that beat a coin flip. Injuries are unpredictable and not modeled.
 
-Use the **season selector** to switch seasons. For the **upcoming season** a **Value** column (ADP − Pred; green = our board ranks them ahead of the market) flags values and reaches. For a **completed season** (e.g. 2025) that's replaced by **Actual** (where the player really finished) plus **Actual Pts**, so you can see who hit and who busted — and a "How the board did" panel scores each ranking (blend, Sleeper, ADP, our model) against reality. It's a clean out-of-sample scorecard since the models hold out the most recent season.
+Use the **season selector** to switch years and the **Position** filter to focus. For a **completed season** (2025) we show where each player **actually finished**, so you can see which calls hit. Treat it as a cross-check on your draft room, not a guarantee.
         """)
 
     st.divider()
@@ -2748,7 +2689,7 @@ Use the **season selector** to switch seasons. For the **upcoming season** a **V
 
     with st.expander("How do the fantasy projections work?"):
         st.markdown("""
-The Fantasy tab uses a separate machine learning system from the betting model. There are four XGBoost models — one for each position (QB, RB, WR, TE) — each trained on NFL player stats from 2020 through 2024 with the 2025 season held out as a real-world test.
+The Weekly Fantasy tab uses a separate machine learning system from the betting model. There are four XGBoost models — one for each position (QB, RB, WR, TE) — each trained on NFL player stats from 2020 through 2024 with the 2025 season held out as a real-world test.
 
 Each model predicts **half-PPR fantasy points** for the upcoming week based on roughly 80 features, including:
 
@@ -2848,13 +2789,13 @@ If you're looking at a past week, the actuals shown are the real NFL stats for t
 
     with st.expander("What is the DFS Optimizer?"):
         st.markdown("""
-The DFS tab is a DraftKings NFL Classic lineup optimizer launching with the 2026 season.
+The DFS Optimizer tab is a DraftKings NFL Classic lineup optimizer launching with the 2026 season.
 
 It takes this site's weekly fantasy projections and solves for the highest-projected legal lineup under the $50,000 salary cap using an integer linear program. The optimizer fills all 9 roster slots — QB, 2 RB, 3 WR, TE, FLEX, DST — subject to DraftKings' constraints.
 
 The workflow each week is:
 1. Download your DraftKings salary CSV from any NFL Classic contest lobby
-2. Upload it in the DFS tab
+2. Upload it in the DFS Optimizer tab
 3. The optimizer fuzzy-matches DK player names to our projected points and solves the lineup
 4. Lock or exclude specific players and re-run if you want to tweak it
 5. Download the finished lineup ready for DraftKings import

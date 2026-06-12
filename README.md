@@ -166,11 +166,13 @@ A LlamaIndex ReActAgent with 5 tools (predictions, live injuries, line movement,
 
 ### Dashboard
 
-A Streamlit app with tabs for Weekly Predictions, Season Performance, Fantasy, DFS, League History, and a Help guide. (A pre-season Draft Board tab is built but turned off on the live site for now, while I decide whether the seasonal value research is worth shipping.)
+A Streamlit app with tabs for Weekly Predictions, Track Record, Weekly Fantasy, DFS Optimizer, a pre-season Draft Value Finder, League History, and a Help guide.
+
+- **Draft Value Finder**: our own season projection ranked against the market's ADP to flag who the draft room is mis-pricing. It leads with a **🔥 Consensus values** box — the players our model *and* Sleeper both rank above their ADP, which is the strongest signal (~78% have beaten their draft cost). BUY = we rank a player above their ADP, FADE = below (fades only shown with a real decline reason). On our confident calls alone it beats the casual ADP line about 68% of the time, season to season. It does not beat the sharpest public projections (Sleeper is shown next to our ranks for comparison) - it is an honest draft-day second opinion, not a market-beating edge.
 
 - **Weekly Predictions**: game cards with edge, confidence tier, and expandable agent reasoning. Games where the experimental totals model says UNDER show a dashed amber badge below the spread card.
-- **Season Performance**: ATS record by tier and week, profit at standard odds, longest streaks, and a separate over/under section flagged as tracking-only.
-- **Fantasy**: per-position projections with both projected and actual stat columns that fill in after games are played.
+- **Track Record**: ATS record by tier and week, profit at standard odds, longest streaks, and a separate over/under section flagged as tracking-only.
+- **Weekly Fantasy**: per-position projections with both projected and actual stat columns that fill in after games are played.
 
 ### Automation
 
@@ -255,14 +257,13 @@ fantasy/
   dfs/
     optimizer.ipynb                    # ILP formulation and helper reference
     dfs_pipeline.ipynb                 # Weekly DFS workflow (papermill)
-  seasonal_projections/                # Pre-season draft board + value-edge research (tab built, currently OFF on the live site)
-    train_model_a.py                   # Per-position season PPG models
-    train_model_b.py                   # Pooled availability (games played) model
-    build_draft_board.py               # Combine to a VOR board, three-way our/ADP/Sleeper blend; framed around ADP-mispricing skill
-    surprise_eval.py                   # Canonical eval: ADP-mispricing skill (can we spot over/undervalued players vs ADP, injury-filtered)
-    eval_projection.py                 # Points-per-game accuracy panel (ours vs Sleeper vs naive vs blend)
+  seasonal_projections/                # Pre-season Draft Value Finder tab + value-edge research
+    train_model_a.py                   # Per-position season PPG models (LightGBM, injury features removed)
+    build_value_board.py               # Builds the live tab data: our calls vs ADP (+ Sleeper comparison)
+    surprise_eval.py                   # Canonical eval: ADP-mispricing skill (can we spot over/undervalued players, injury-filtered)
     model_bakeoff.py                   # Algorithm + hyperparameter bakeoff on the projection (LightGBM wins)
-    fetch_college.py                   # College production from cfbfastR (dominator, efficiency) for the rookie dig
+    fade_deep_dive.py                  # Why fades struggle + the decline-catalyst gate that fixes them
+    build_draft_board.py               # Older three-way blend board (retained for reference)
     README.md                          # Design decisions, results, and the honest verdict
 memory/                                # Persistent notes for future work
 .github/workflows/

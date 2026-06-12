@@ -118,7 +118,14 @@
       "Bash(git check-ignore *)",
       "Bash(git status *)",
       "Bash(wc -l _iso.log)",
-      "Bash(grep -E \"ADP-anchor|residual edge|per-season\" _iso.log)"
+      "Bash(grep -E \"ADP-anchor|residual edge|per-season\" _iso.log)",
+      "Bash(grep -n \"^with tab6:\\\\|^# TAB 6\\\\|^# ═.*$\\\\|^with tab\" app.py)",
+      "Bash(grep -vE \"use_container_width|Please replace|will be removed|For \\\\`\")",
+      "Bash(grep -n \"surprise_eval.py\\\\` — \\\\*\\\\*CANONICAL\" CLAUDE.md)",
+      "Bash(grep -vE '\\\\.log$')",
+      "Bash(xargs echo \"stale refs remaining in app.py:\")",
+      "PowerShell(python test_app_draft_board.py)",
+      "PowerShell(python \"c:\\\\Users\\\\josep\\\\Desktop\\\\random_stuff\\\\BettingEdgeContinued\\\\test_app_draft_board.py\")"
     ]
   }
 }

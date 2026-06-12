@@ -19,8 +19,9 @@ players whose season was wrecked by an injury it could never have foreseen. (Thi
 up the few pre-season-known injuries like Aiyuk -- slightly unfair since those are predictable,
 but the sample is too thin to handle separately; an accepted simplification.)
 
-Uses our STANDALONE model (LightGBM PPG x constant games -> positional finish), no Sleeper/ADP
-in the features, so this measures OUR independent edge. Pooled 2021-2025 (one season is too noisy).
+Uses the SHIPPED production model (per-position LightGBM PPG x constant games -> positional
+finish, base features minus injury, no Sleeper/ADP), so this canonically measures what the
+Seasonal Value tab actually serves. Pooled 2021-2025 (one season is too noisy).
 """
 import sys
 from pathlib import Path
@@ -29,25 +30,41 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import adp_value_model as avm
-import model_bakeoff as mb
-from college_rookie_test import attach_college
+from lightgbm import LGBMRegressor
 
-LGBM = ("lgbm", dict(num_leaves=31, learning_rate=0.03, n_estimators=600, reg_lambda=3, subsample=0.8))
+# PRODUCTION Model A config — kept identical to train_model_a.py / build_value_board.py so this
+# canonical eval measures the SHIPPED model: per-position LightGBM on the base features with the
+# injury features removed (no Sleeper/ADP/college/bias). (Verified: gives the same ~68% buys /
+# +0.20 skill as the earlier pooled config, so the headline numbers are unchanged.)
+EXCLUDE = {"player_id", "player", "norm_name", "team", "position", "season", "reconstructed",
+           "target_ppg", "target_games", "sample_weight",
+           "adp_half_ppr", "adp_overall_rank", "adp_pos_rank", "sleeper_pts_half_ppr"}
+INJURY = {"prior_games_missed", "missed_prior_season"}
+LGBM_PARAMS = dict(objective="mae", num_leaves=20, learning_rate=0.03, n_estimators=600,
+                   min_child_samples=25, reg_lambda=3.0, subsample=0.8, subsample_freq=1,
+                   random_state=42, n_jobs=-1, verbose=-1)
+POSITIONS = ["QB", "RB", "WR", "TE"]
 MIN_GAMES_PLAYED = 11   # grade only players who missed <= 6 games (17-game season); injuries are noise
 rng = np.random.default_rng(42)
 
 
 def build():
-    df = avm.add_bias_features(attach_college(pd.read_csv(avm.newest_dataset())))
-    ppg_feats = [c for c in mb.FEATS if c in df.columns and c not in ("prior_games_missed", "missed_prior_season")]
+    df = pd.read_csv(avm.newest_dataset())
+    feats = [c for c in df.columns if c not in EXCLUDE and c not in INJURY]
     pool = df[(df["adp_overall_rank"] <= 180) & df["target_ppg"].notna()].copy()
-    tr = df[df["target_ppg"].notna()]
+    tr_all = df[df["target_ppg"].notna()]
     chunks = []
     for N in range(2021, 2026):
         te = pool[pool["season"] == N].copy()
         if len(te) < 20:
             continue
-        te["ppg_pred"] = mb.fit_predict(LGBM[0], LGBM[1], tr[tr.season < N], te, ppg_feats)
+        te["ppg_pred"] = np.nan
+        for pos in POSITIONS:                          # per position, train only on prior seasons
+            tr = tr_all[(tr_all.season < N) & (tr_all.position == pos)]
+            m = te.position == pos
+            if m.any() and len(tr) > 50:
+                mdl = LGBMRegressor(**LGBM_PARAMS).fit(tr[feats], tr.target_ppg, sample_weight=tr.sample_weight)
+                te.loc[m, "ppg_pred"] = np.clip(mdl.predict(te.loc[m, feats]), 0, None)
         gconst = pool[pool["season"] < N]["target_games"].mean()
         te["our_total"] = te["ppg_pred"] * gconst
         te["actual_total"] = te["target_ppg"] * te["target_games"]

@@ -1,10 +1,32 @@
 # Seasonal Projections
 
 A pre-season fantasy projection system, separate from the in-season weekly
-model in `fantasy/`. The goal: project each player's upcoming season, rank them
-into a draft board, and compare to the market (Sleeper ADP) to surface values
-and reaches. It is the fantasy analog of the betting side's "model vs the Vegas
-line" thesis (here the market line is ADP).
+model in `fantasy/`. The goal: project each player's upcoming season and compare
+to the market (ADP) to surface over/undervalued players. It is the fantasy analog
+of the betting side's "model vs the Vegas line" thesis (here the market line is ADP).
+
+## What ships today: the Seasonal Value Finder (2026-06-08)
+
+The live dashboard tab is the **Seasonal Value Finder** — **our independent model's
+calls vs the draft room's ADP**. `train_model_a.py` (per-position **LightGBM**, injury
+features removed) projects each player; `build_value_board.py` ranks the drafted pool,
+computes `value = adp_rank − our_rank`, and emits **BUY** (undervalued) / **FADE**
+(overvalued) calls with confidence tiers → `value_board_{season}.csv` → the app tab.
+
+**Honest verdict (and why it's framed the way it is):**
+- Our calls **beat the casual ADP line**: ~**68% on confident (HIGH) buys**, stable every
+  season (canonical eval `surprise_eval.py`: ADP-mispricing skill +0.20 vs a ~0 placebo).
+- The edge is **buy-side**; raw fades are a coin flip, so **fades are gated** to players
+  with a real decline catalyst (aging or declining) and never young — that subset clears
+  50%. The eval **excludes mid-season-injury seasons** (unpredictable noise).
+- We do **NOT** beat the sharpest public projection. **Sleeper's projection alone vs ADP
+  is ~84-90%** (verified not leakage), and combining our model with Sleeper does not beat
+  Sleeper alone. So Sleeper is shown on the board **as a comparison column only** — we
+  deliberately do **not** ship Sleeper-as-our-edge (that would be repackaging, not an edge
+  we own). The tab's claim is "beats your draft room," not "beats Sleeper."
+
+Everything below (the A×B VOR board, the three-way blend, the rookie model) is the **earlier
+research arc** — kept on disk for reference, but it is **not** what the tab serves.
 
 ## Why this is a different model than the weekly one
 
@@ -19,11 +41,12 @@ a season-long projection built only from information known at draft time
 |------|------|--------|-------|
 | 1 | `fetch_adp.py` | `sleeper_adp_2020_2026.csv` | Caches Sleeper preseason ADP (`adp_half_ppr`) + Sleeper's own season projection. ADP exists 2020+; 2026 already has ~245 players and grows toward late-August. |
 | 2 | `build_season_dataset.py` | `season_dataset_2014_2025.csv` | One row per (player, season): prior-only features, two targets, ADP/Sleeper joined for 2020+. |
-| 3 | `train_model_a.py` | `models/{pos}_ppg_model.pkl` | Model A (PPG), one CatBoost per position, games-weighted, 2014-2024 train / 2025 holdout. |
-| 4 | `train_model_b.py` | `models/availability_model.pkl` | Model B (games played), one pooled CatBoost incl. reconstructed 0-game seasons. |
-| 5 | `train_rookie_model.py` | `models/rookie_ppg_model.pkl` | Rookie PPG model (CatBoost on draft + combine + landing spot); used for rookies inside the board blend. |
-| 6 | `build_2026_board.py` | `season_dataset_2014_2026.csv` | Seeds upcoming-season (2026) rows from rosters + rookies + 2025 priors; keeps 2014-2025 verbatim. Run before building a 2026 board. |
-| 7 | `build_draft_board.py` | `draft_board_{season}.csv` | A x B -> VOR -> **three-way blend** (our/ADP/Sleeper) for the recommended order; runs the edge backtest. Globs newest dataset; season via `BOARD_SEASON`. |
+| 3 | `train_model_a.py` | `models/{pos}_ppg_model.pkl` | **SHIPPED model.** Model A (PPG), one **LightGBM** per position, games-weighted, **injury features removed**, 2014-2024 train / 2025 holdout. (Bakeoff: LightGBM/tree-ensemble beat CatBoost ~0.15 PPG MAE; CatBoost hyperparam tuning did nothing.) |
+| 4 | `build_value_board.py` | `value_board_{season}.csv` | **SHIPPED tab data.** Loads Model A pkls, ranks the drafted pool vs ADP, emits BUY/FADE calls + tiers (fades gated to decline-catalyst, not young), adds Sleeper rank as a comparison column, and runs the **incoming-competition guard** (`incoming_competition.py`) that turns a BUY into **⚠️ Contested** when a real new threat joined the player's room (round≤2 rookie, free-agent/trade arrival, returning-from-injury starter, or a crowded backfield) — fixing the "our model over-likes James Conner / Trey Benson" problem the prior-stats model can't see. Elite-gated + conservative so it never fades a clear starter. Feeds the app's Seasonal Value tab. |
+| 5 | `surprise_eval.py` | (stdout) | **CANONICAL eval.** ADP-mispricing skill = corr(our deviation from ADP, actual deviation), conditional on ADP, injury-filtered. Measures the shipped per-position config. ~+0.20 skill, +10pp bold calls. |
+| - | `train_rookie_model.py` | `models/rookie_ppg_model.pkl` | Rookie PPG model (draft capital + combine + landing spot, via `rookie_features.py`). **Used by `build_value_board.py`** to project rookies (Model A has no prior stats for them). Rookies show on the board but get no buy/fade call — our rookie ranking loses to ADP, so we don't pretend a rookie edge. |
+| - | `build_2026_board.py` | `season_dataset_2014_2026.csv` | Seeds upcoming-season (2026) rows from rosters **+ every drafted rookie pulled straight from `load_draft_picks`** (the roster feed lags the draft, so even top picks like Jeremiyah Love were missing — draft team is normalized to the roster convention via `DRAFT_TEAM_MAP`) + 2025 priors; keeps 2014-2025 verbatim. Run before building the 2026 value board. (Rookie ADP fills in over the summer, so the rest enter the pool as ADP populates.) |
+| - | `train_model_b.py`, `build_draft_board.py` | — | **Earlier arc (retained, not shipped):** Model B (availability) + the A×B VOR + three-way-blend board. Kept for reference; the tab no longer uses them. |
 | - | `rookie_features.py` | - | Shared rookie-model features (combine join + ROOKIE_FEATS). Source of truth for the trainer, board, and experiments. |
 | - | `three_way_blend_test.py` | - | Sweeps the our/ADP/Sleeper blend weights (simplex grid + LOSO). Confirmed 0.2/0.3/0.5 beats the 2-way 5/5 seasons. |
 | - | `blend_experiment.py` | - | The original our/ADP two-way weight sweep (found 0.30). Superseded by the three-way blend. |
@@ -38,12 +61,12 @@ for reference; CatBoost won and is what `train_model_a.py` ships.
 python fantasy/seasonal_projections/fetch_adp.py
 python fantasy/seasonal_projections/build_season_dataset.py
 python fantasy/seasonal_projections/test_seasonal_projections.py   # dataset transform tests
-python fantasy/seasonal_projections/train_model_a.py
-python fantasy/seasonal_projections/train_model_b.py
-python fantasy/seasonal_projections/train_rookie_model.py          # rookie PPG model (used in the blend)
-python fantasy/seasonal_projections/build_2026_board.py            # seed 2026 rows (for the pre-draft board)
-python fantasy/seasonal_projections/build_draft_board.py           # latest-season board (BOARD_SEASON to override)
-python fantasy/seasonal_projections/test_draft_board.py            # board / blend logic tests
+python fantasy/seasonal_projections/train_model_a.py               # SHIPPED model (LightGBM, no injury feats)
+python fantasy/seasonal_projections/build_value_board.py           # SHIPPED tab data: value_board_{season}.csv
+python fantasy/seasonal_projections/surprise_eval.py               # CANONICAL eval: ADP-mispricing skill
+# --- earlier arc (retained, not shipped) ---
+python fantasy/seasonal_projections/build_2026_board.py            # seed 2026 rows (needed by build_value_board for 2026)
+python fantasy/seasonal_projections/build_draft_board.py           # old three-way-blend board
 ```
 
 ## What the models do, and the honest verdict

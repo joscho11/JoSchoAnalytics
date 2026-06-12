@@ -44,6 +44,10 @@ BASE_CSV = HERE / "season_dataset_2014_2025.csv"      # the trained dataset -- k
 OUT_CSV  = HERE / "season_dataset_2014_2026.csv"
 ADP_CSV  = bsd.ADP_CSV
 SKILL    = set(SKILL_POSITIONS)
+# draft-picks use pfr-style abbreviations; rosters/Sleeper use these -- normalize so a drafted
+# rookie groups with their actual team (e.g. Jeremiyah Love ARI -> AZ, with Conner/Benson).
+DRAFT_TEAM_MAP = {"ARI": "AZ", "GNB": "GB", "KAN": "KC", "LAR": "LA", "LVR": "LV",
+                  "NOR": "NO", "NWE": "NE", "SFO": "SF", "TAM": "TB"}
 
 
 def _pdf(x):
@@ -62,6 +66,27 @@ def seed_upcoming_rows(full):
     ros["player"] = ros[name_col] if name_col else ros["player_id"]
     ros = ros.drop_duplicates("player_id")[["player_id", "player", "position", "team"]]
     print(f"2026 roster skill players: {len(ros)}")
+
+    # The roster FEED lags the draft -- drafted rookies (even the #3 overall) may not be on a
+    # team's roster yet, so they'd be silently dropped. Add every drafted UPCOMING skill rookie
+    # straight from the draft, using the draft team (normalized to the roster convention).
+    dpk = _pdf(nfl.load_draft_picks())
+    dpk = dpk[(dpk["season"] == UPCOMING) & (dpk["position"].isin(SKILL))].copy()
+    nmc = next((c for c in ["pfr_player_name", "player_name", "full_name"] if c in dpk.columns), None)
+    if nmc and len(dpk):
+        dpk["team"] = dpk["team"].map(lambda t: DRAFT_TEAM_MAP.get(t, t))
+        dpk["player"] = dpk[nmc]
+        # stable id: gsis when present, else a pfr-derived id (so brand-new rookies still get a row)
+        dpk["player_id"] = np.where(dpk["gsis_id"].notna(), dpk["gsis_id"],
+                                    "pfr_" + dpk.get("pfr_player_id", dpk[nmc]).astype(str))
+        dpk["norm_name"] = dpk["player"].map(norm_name)
+        have_id = set(ros["player_id"]); have_nm = set(ros["player"].map(norm_name))
+        miss = dpk[(~dpk["player_id"].isin(have_id)) & (~dpk["norm_name"].isin(have_nm))]
+        miss = miss.drop_duplicates("player_id")[["player_id", "player", "position", "team"]]
+        if len(miss):
+            ros = pd.concat([ros, miss], ignore_index=True)
+            print(f"  + {len(miss)} drafted rookies not yet on the roster feed "
+                  f"(e.g. {', '.join(miss['player'].head(3))})")
 
     # veteran vs rookie from prior NFL activity (any games>0 before 2026)
     active = full[full["games"] > 0]
