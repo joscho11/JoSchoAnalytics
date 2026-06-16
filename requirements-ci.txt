@@ -1,11 +1,16 @@
-# CI requirements — only packages needed by predict_betting.ipynb
+# CI requirements — only packages needed by predict_betting.ipynb + the features.ipynb CI.
+# Pinned EXACTLY so the unattended weekly cron (weekly_predictions.yml) and CI are
+# reproducible — a silent upstream bump in nflreadpy/polars/pandas is the most likely
+# thing to break a live run, so the data + model stack is locked here.
 # Keep this lean: torch, llama-index, streamlit, pulp, etc. are NOT needed here.
-pandas>=2.0,<3.0
-numpy>=1.24,<2.0
-xgboost>=2.0,<4.0
-scikit-learn>=1.4,<2.0
-lightgbm>=4.0,<5.0
-joblib
-nflreadpy>=0.1.5
-papermill
-ipykernel
+pandas==2.3.3
+numpy==1.26.4
+xgboost==3.1.2
+scikit-learn==1.6.1
+lightgbm==4.6.0
+joblib==1.5.3
+nflreadpy==0.1.5
+polars==1.40.1
+pyarrow==24.0.0
+papermill==2.7.0
+ipykernel==6.30.1

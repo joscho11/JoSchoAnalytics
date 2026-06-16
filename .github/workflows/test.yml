@@ -1,12 +1,12 @@
 name: Tests
 
-# Runs the inline test suite in betting/features.ipynb on every push and PR
-# against main. Fast (<30s) and offline — features.ipynb's synthetic-data
-# tests don't hit nflreadpy, so this runs reliably without network flakiness.
+# Runs the hermetic feature-pipeline tests (betting/test_features.py) plus the
+# seasonal/dashboard suites on every push and PR against main. Fast and offline —
+# the synthetic-data tests don't hit nflreadpy, so this runs without network flakiness.
 #
 # If you intentionally change a feature list, the order-hash assertion in
-# cell 8 will fail. Update the expected hash in the same commit as the pkl
-# retrain — that's the signal that the change is deliberate.
+# test_features.py (test_constants_and_order_hashes) will fail. Update the expected
+# hash in the same commit as the pkl retrain — that's the signal it's deliberate.
 
 on:
   push:
@@ -21,7 +21,7 @@ concurrency:
 
 jobs:
   features:
-    name: features.ipynb inline tests
+    name: features.py contract tests (offline)
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
@@ -36,14 +36,38 @@ jobs:
           cache: 'pip'
 
       - name: Install dependencies
-        run: pip install -r requirements-ci.txt
+        run: pip install -r requirements-ci.txt pytest
 
-      - name: Run features.ipynb inline tests
-        run: papermill betting/features.ipynb /tmp/features_out.ipynb --no-progress-bar
+      # Hermetic synthetic-data tests for betting/features.py (the feature source of
+      # truth). Includes the PROD_FEATURES_35 / FEATURE_COLS_85 order-hash check that
+      # catches a feature-list reorder that would silently invalidate the trained pkls.
+      - name: Run features.py contract tests
+        run: pytest -v betting/test_features.py
 
-      - name: Upload notebook on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
+  pytests:
+    name: Python test suites (seasonal + dashboard)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          name: features-out-${{ github.run_id }}
-          path: /tmp/features_out.ipynb
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements-test.txt
+
+      # Explicit file list (not auto-discovery) so the network/training research
+      # scripts named *_test.py in seasonal_projections/ are never collected here.
+      - name: Run hermetic Python test suites
+        run: >-
+          pytest -v
+          test_dashboard_utils.py
+          fantasy/seasonal_projections/test_seasonal_projections.py
+          fantasy/seasonal_projections/test_draft_board.py
+          test_app_draft_board.py

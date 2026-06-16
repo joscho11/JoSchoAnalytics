@@ -6,7 +6,6 @@ import glob
 import uuid
 import time
 import html as _html
-import re as _re
 import itertools as _it
 import requests as req
 from datetime import datetime as dt
@@ -15,6 +14,12 @@ import plotly.graph_objects as go
 import concurrent.futures as _cf
 
 _HERE = Path(__file__).parent
+
+import sys as _sys
+_sys.path.insert(0, str(_HERE))   # ensure local modules resolve regardless of launch CWD
+from dashboard_utils import (
+    load_tracker, load_totals_tracker, _md_to_html, get_confidence, metric_card,
+)
 
 st.set_page_config(
     page_title="BettingEdge | NFL Predictions",
@@ -103,25 +108,14 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# load_tracker / load_totals_tracker now live in dashboard_utils.py (testable, no st.* coupling).
+# Cached shim preserves the original @st.cache_data behavior (avoid re-reading the CSV every rerun).
 @st.cache_data(ttl=300)
-def load_tracker():
-    path = str(_HERE / 'betting' / 'predictions_tracker.csv')
-    df = pd.read_csv(path)
-    df['season'] = df['season'].astype(int)
-    df['week']   = df['week'].astype(int)
-    return df
-
-def load_totals_tracker():
-    path = _HERE / 'betting' / 'totals_tracker.csv'
-    if not path.exists():
-        return pd.DataFrame()
-    df = pd.read_csv(path)
-    df['season'] = df['season'].astype(int)
-    df['week']   = df['week'].astype(int)
-    return df
+def _load_tracker_cached(base):
+    return load_tracker(base)
 
 try:
-    df = load_tracker()
+    df = _load_tracker_cached(_HERE)
 except FileNotFoundError:
     st.error("predictions_tracker.csv not found. Run the prediction pipeline first.")
     st.stop()
@@ -133,7 +127,7 @@ if df.empty:
     st.warning("predictions_tracker.csv has no rows yet. Run the prediction pipeline to populate it.")
     st.stop()
 
-totals_df = load_totals_tracker()
+totals_df = load_totals_tracker(_HERE)
 
 @st.cache_data(ttl=300)
 def _compute_hc_stats(acc_col: str, _df: pd.DataFrame) -> tuple:
@@ -389,33 +383,7 @@ def _fetch_sleeper_history(start_league_id: str) -> dict:
 
     return {"league_name": league_name or "League", "seasons": seasons}
 
-def _md_to_html(text: str) -> str:
-    """Convert simple agent-analysis markdown to HTML for use inside a <details> block."""
-    escaped = _html.escape(text)
-    escaped = _re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', escaped)
-    lines = []
-    for line in escaped.split('\n'):
-        stripped = line.strip()
-        if stripped.startswith('- '):
-            lines.append(f'&bull;&nbsp;{stripped[2:]}')
-        else:
-            lines.append(stripped)
-    return '<br>'.join(lines)
-
-def get_confidence(home, away, game_analysis, game_confidence=None):
-    key = f"{home}_{away}"
-    if game_confidence and key in game_confidence:
-        return game_confidence[key]
-    # fall back to emoji detection for cache files written before game_confidence was added
-    text = game_analysis.get(key, '')
-    if '🟢' in text:
-        return 'HIGH'
-    elif '🟡' in text:
-        return 'MEDIUM'
-    elif '🔴' in text or 'SKIP' in text.upper() or 'PASS' in text.upper():
-        return 'PASS'  # tier renamed from SKIP; keep SKIP detection for old cache compat
-    else:
-        return 'NO_ANALYSIS'
+# _md_to_html / get_confidence now live in dashboard_utils.py (testable, no st.* coupling).
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 st.sidebar.image(str(_HERE / "assets" / "logo.svg"), use_container_width=True)
@@ -475,17 +443,7 @@ edge_threshold = st.sidebar.slider(
 )
 
 # ── UI helpers ───────────────────────────────────────────────────────────────
-def metric_card(label, value, sub=None, color="blue"):
-    border = {"green": "#00c853", "red": "#ff5252", "blue": "#3D95CE"}.get(color, "#3D95CE")
-    sub_html = f"<div style='font-size:13px;color:#aaa;margin-top:3px'>{sub}</div>" if sub else ""
-    return (
-        f"<div style='background:#1e2a3a;border-left:4px solid {border};border-radius:6px;"
-        f"padding:14px 16px;margin-bottom:4px;'>"
-        f"<div style='font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px;"
-        f"margin-bottom:6px'>{label}</div>"
-        f"<div style='font-size:22px;font-weight:700;color:white;line-height:1.1'>{value}</div>"
-        f"{sub_html}</div>"
-    )
+# metric_card now lives in dashboard_utils.py (testable, no st.* coupling).
 
 _MODE_BADGE_COLORS = {
     'monday':   '#ffd600',
@@ -1334,7 +1292,7 @@ with tab2:
             _t_over_rate = totals_season['went_over'].mean() if 'went_over' in totals_season.columns and totals_season['went_over'].notna().any() else None
             if _t_over_rate is not None:
                 tc2.markdown(metric_card("Actual OVER rate", "—",
-                                         f"{round(_t_over_rate * 100, 1)}% of all games",
+                                         f"{round(_t_over_rate * 100, 1)}% of tracked games",
                                          color="blue"), unsafe_allow_html=True)
             tc3.markdown(metric_card("Break-even", "52.4%", "at -110 odds", color="blue"), unsafe_allow_html=True)
 

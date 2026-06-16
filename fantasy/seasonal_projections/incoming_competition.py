@@ -85,8 +85,10 @@ def add_incoming_competition(season_df):
             others = threats[threats.index != idx]          # competition = a THREAT that isn't you
             if len(others):
                 out.loc[idx] = others["_ttype"].iloc[0]
-            elif crowded and (d.loc[idx, "prior_carries_pg"] or 0) < 14:   # not a clear bell-cow
-                out.loc[idx] = "crowded backfield"
+            elif crowded:
+                _pc = d.loc[idx, "prior_carries_pg"]            # NaN -> treat as 0 (no prior usage = not a bell-cow)
+                if (_pc if pd.notna(_pc) else 0) < 14:
+                    out.loc[idx] = "crowded backfield"
     return out
 
 

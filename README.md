@@ -188,7 +188,7 @@ Two GitHub Actions workflows.
 
 The agent only runs on Tuesday (it costs API calls) and is allowed to fail without blocking the tracker commit.
 
-**`test.yml`** runs on every push and PR to `main`, executing the shared feature notebook end to end and validating its inline tests, including an order-hash check that catches feature-list changes that would silently alter the trained models. Catches regressions in seconds instead of on the next cron.
+**`test.yml`** runs on every push and PR to `main`: a `features` job runs the `features.py` contract tests (including an order-hash check that catches feature-list changes which would silently alter the trained models) and a `pytests` job runs the seasonal + dashboard suites. Catches regressions in seconds instead of on the next cron.
 
 The only manual step each season is updating the All-Pro CSV in January.
 
@@ -226,10 +226,14 @@ Best week: 9 of 14 (Week 14, 64.3%). These are encouraging but it is a small liv
 
 ```
 app.py                                 # Streamlit dashboard (entry point)
+dashboard_utils.py                     # Streamlit-free dashboard helpers (testable; metric_card, loaders, etc.)
+test_dashboard_utils.py                # Unit tests for dashboard_utils.py (run in CI)
 betting/
-  features.ipynb                       # Shared 85-feature engineering (single source of truth)
-  predict_betting.ipynb                # Weekly ATS prediction pipeline (papermill; loads features.ipynb)
-  predict_totals.ipynb                 # Weekly over/under pipeline (loads features + totals_features)
+  features.py                          # Shared 85-feature engineering (single source of truth, importable)
+  test_features.py                     # Hermetic synthetic-data tests for features.py (run in CI)
+  features.ipynb                       # Thin documentation notebook (design rationale; imports features.py)
+  predict_betting.ipynb                # Weekly ATS prediction pipeline (papermill; imports features.py)
+  predict_totals.ipynb                 # Weekly over/under pipeline (imports features.py + totals_features)
   totals_features.ipynb                # 14 totals-specific features (single source of truth)
   totals_model.ipynb                   # Totals walk-forward CV + production retrain
   model_comparison.ipynb               # Spread model architecture comparison + walk-forward CV
@@ -268,7 +272,7 @@ fantasy/
 memory/                                # Persistent notes for future work
 .github/workflows/
   weekly_predictions.yml               # Tue/Thu/Sun automation (spread, totals, agent)
-  test.yml                             # Push/PR CI on the shared feature notebook
+  test.yml                             # Push/PR CI: features.py contract tests + seasonal/dashboard suites
 ```
 
 ---

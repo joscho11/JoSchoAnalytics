@@ -1,0 +1,9 @@
+# Dependencies for the Python test suites (test.yml "Python test suites" job).
+# Inherits the pinned CI/data stack, then adds the libs the seasonal + dashboard
+# tests import (catboost/scipy for build_draft_board, streamlit/plotly for app.py).
+-r requirements-ci.txt
+scipy==1.16.3
+catboost==1.2.10
+streamlit==1.57.0
+plotly==6.7.0
+pytest==9.0.2

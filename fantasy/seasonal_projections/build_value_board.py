@@ -112,7 +112,12 @@ def build_one(season, df, gconst):
     # INCOMING-COMPETITION guard: our prior-stats model can't see touches ARRIVING (a rookie, a
     # signing, a returning starter, a newly-crowded backfield). Suppress BUYs on incumbents whose
     # room just got more competition — the market already prices it; we'd otherwise flag a false buy.
-    comp = add_incoming_competition(df[df.season == season]).reindex(pool.index).fillna("")
+    comp_full = add_incoming_competition(df[df.season == season])
+    # align on the shared original index; assert full coverage so a future pool-rebuild that
+    # resets the index can't silently drop every contested flag (reindex -> all-NaN -> "").
+    assert pool.index.isin(comp_full.index).all(), \
+        "incoming-competition index misalignment: pool rows missing from comp (did pool get reindexed?)"
+    comp = comp_full.reindex(pool.index).fillna("")
     pool["contested"] = ""                                  # only set for buys we actually hold off on
     _supp = (pool["call"] == "BUY") & (comp != "")
     pool.loc[_supp, "contested"] = comp[_supp]
