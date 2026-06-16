@@ -17,9 +17,11 @@ _HERE = Path(__file__).parent
 
 import sys as _sys
 _sys.path.insert(0, str(_HERE))   # ensure local modules resolve regardless of launch CWD
+_sys.path.insert(0, str(_HERE / "betting"))   # for betting/calibration.py (same pattern as the notebooks' `import features`)
 from dashboard_utils import (
     load_tracker, load_totals_tracker, _md_to_html, get_confidence, metric_card,
 )
+from calibration import build_calibration
 
 st.set_page_config(
     page_title="BettingEdge | NFL Predictions",
@@ -128,6 +130,14 @@ if df.empty:
     st.stop()
 
 totals_df = load_totals_tracker(_HERE)
+
+# Honest cover-probability calibration from the full graded history (betting/calibration.py).
+# Drives the "bets like this have covered X%" line on each pick card. Wrapped so a schema
+# hiccup degrades to "no calibration line" instead of breaking the dashboard.
+try:
+    _calib = build_calibration(df)
+except Exception:
+    _calib = {"n_graded": 0, "by_tier": {}, "overall": None}
 
 @st.cache_data(ttl=300)
 def _compute_hc_stats(acc_col: str, _df: pd.DataFrame) -> tuple:
@@ -587,6 +597,27 @@ with tab1:
                 <span style='font-size:11px;color:#555;'>All 3 models agree direction · Ensemble edge ≥3 pts = HIGH, ≥1 pt = MED</span>
             </div>
         """, unsafe_allow_html=True)
+
+        # One honest line per tab: how each tier has actually covered historically, with a
+        # Wilson CI so a thin live sample doesn't read as a guarantee (betting/calibration.py).
+        if _calib.get("n_graded"):
+            _bt = _calib["by_tier"]
+            _parts = []
+            for _t, _lbl in (("HIGH", "HIGH"), ("MEDIUM", "MED"), ("PASS", "PASS")):
+                _e = _bt.get(_t)
+                if _e and _e.n:
+                    _parts.append(
+                        f"<b style='color:#bbb'>{_lbl}</b> {_e.rate*100:.1f}% "
+                        f"<span style='color:#667'>(CI {_e.lo*100:.0f}–{_e.hi*100:.0f}%, n={_e.n})</span>"
+                    )
+            if _parts:
+                st.markdown(
+                    f"<div style='font-size:11px;color:#8a93a0;margin:-4px 0 12px 0;'>"
+                    f"📊 Historical cover rate ({_calib['n_graded']} graded bets): "
+                    + " &nbsp;·&nbsp; ".join(_parts)
+                    + " &nbsp;·&nbsp; <span style='color:#667'>break-even 52.4%</span></div>",
+                    unsafe_allow_html=True,
+                )
 
     st.subheader("Game Predictions")
 

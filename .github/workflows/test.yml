@@ -44,6 +44,11 @@ jobs:
       - name: Run features.py contract tests
         run: pytest -v betting/test_features.py
 
+      # Hermetic calibration tests (betting/calibration.py): edge/tier → honest cover
+      # probability with Wilson intervals. No network, no CSV I/O.
+      - name: Run calibration tests
+        run: pytest -v betting/test_calibration.py
+
   pytests:
     name: Python test suites (seasonal + dashboard)
     runs-on: ubuntu-latest
