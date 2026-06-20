@@ -1,6 +1,6 @@
 # BettingEdge: NFL Prediction System
 
-Live dashboard: [joschobetting.streamlit.app](https://joschobetting.streamlit.app)
+Live dashboard: [joschobetting.streamlit.app](https://joschobetting.streamlit.app) - May need to be woken up
 
 ---
 
