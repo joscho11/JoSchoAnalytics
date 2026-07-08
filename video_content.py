@@ -9,8 +9,8 @@ The `video_id` is the number at the end of the TikTok URL (.../video/<id>).
 # The channel intro — featured at the top of the tab as "what this is about".
 INTRO_VIDEO = {
     "title": "Welcome to JoScho Analytics",
-    "tiktok_url": "https://www.tiktok.com/@joscho_analytics/video/7660007652818259231",
-    "video_id": "7660007652818259231",
+    "tiktok_url": "https://www.tiktok.com/@joschoanalytics/video/7660252294327307550",
+    "video_id": "7660252294327307550",
     "blurb": (
         "Model-backed sports analysis, not hot takes — built by an ML engineer, with the code "
         "public on GitHub. Watch a short, then open the deep dive the video couldn't fit."
@@ -32,8 +32,8 @@ VIDEOS = [
         "title": "The Market Is Wrong About Brian Thomas Jr.",
         "subtitle": "WR · Jacksonville — Sleeper ADP WR31, our model WR17",
         "date": "2026-07-07",
-        "tiktok_url": "https://www.tiktok.com/@joscho_analytics/video/7659945800209927454",
-        "video_id": "7659945800209927454",
+        "tiktok_url": "https://www.tiktok.com/@joschoanalytics/video/7660252626046553374",
+        "video_id": "7660252626046553374",
         "breakdown_file": "brian_thomas_jr.md",
         "teaser": (
             "The short covers the headline. The full breakdown digs into the quarterback "

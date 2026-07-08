@@ -174,7 +174,7 @@ A Streamlit app with tabs for Weekly Predictions, Track Record, Film Room, Weekl
 - **Track Record**: ATS record by tier and week, profit at standard odds, longest streaks, and a separate over/under section flagged as tracking-only.
 - **Weekly Fantasy**: per-position projections with both projected and actual stat columns that fill in after games are played.
 
-- **Film Room**: embedded TikToks from the [@joscho_analytics](https://www.tiktok.com/@joscho_analytics) channel (the analytics content arm), each paired with a click-to-open written breakdown that digs into the data the short couldn't fit. The channel intro is featured at the top; player and matchup breakdowns land here as they're posted. Add one by appending to `video_content.py` and dropping a markdown file in `video_breakdowns/`.
+- **Film Room**: embedded TikToks from the [@joschoanalytics](https://www.tiktok.com/@joschoanalytics) channel (the analytics content arm), each paired with a click-to-open written breakdown that digs into the data the short couldn't fit. The channel intro is featured at the top; player and matchup breakdowns land here as they're posted. Add one by appending to `video_content.py` and dropping a markdown file in `video_breakdowns/`.
 
 ### Automation
 
