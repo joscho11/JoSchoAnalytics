@@ -5,6 +5,7 @@ Videos fill left-to-right and wrap to the next row as more are added.
 """
 import os
 
+import requests
 import streamlit as st
 import streamlit.components.v1 as components
 
@@ -17,16 +18,34 @@ _PER_ROW = 3          # videos per row; they wrap to a new line when full
 _EMBED_HEIGHT = 800   # tall enough to show the full TikTok card (video + caption + sound)
 
 
+@st.cache_data(ttl=21600, show_spinner=False)  # 6h; keyed by url, so a swapped video re-fetches
+def _oembed_html(url: str) -> str | None:
+    """TikTok's official embed markup for a video. Always resolves to the current video and
+    the canonical handle, so it self-heals after a delete+reupload. None on any failure."""
+    try:
+        r = requests.get(
+            "https://www.tiktok.com/oembed",
+            params={"url": url},
+            timeout=6,
+            headers={"User-Agent": "Mozilla/5.0"},
+        )
+        if r.ok:
+            return r.json().get("html")
+    except requests.RequestException:
+        pass
+    return None
+
+
 def _tiktok_embed(video_id: str, url: str) -> None:
-    html = f"""
-    <div style="display:flex;justify-content:center;">
-      <blockquote class="tiktok-embed" cite="{url}" data-video-id="{video_id}"
-                  style="max-width:325px;min-width:280px;margin:0;">
-        <a href="{url}" target="_blank" rel="noopener">Watch on TikTok</a>
-      </blockquote>
-    </div>
-    <script async src="https://www.tiktok.com/embed.js"></script>
-    """
+    # Prefer TikTok's official oEmbed markup; fall back to a hand-built blockquote if the
+    # oEmbed call fails (offline / rate-limited). Both rely on embed.js to hydrate the player.
+    embed = _oembed_html(url) or (
+        f'<blockquote class="tiktok-embed" cite="{url}" data-video-id="{video_id}" '
+        f'style="max-width:325px;min-width:280px;margin:0;">'
+        f'<a href="{url}" target="_blank" rel="noopener">Watch on TikTok</a></blockquote>'
+        f'<script async src="https://www.tiktok.com/embed.js"></script>'
+    )
+    html = f'<div style="display:flex;justify-content:center;">{embed}</div>'
     components.html(html, height=_EMBED_HEIGHT, scrolling=False)
 
 
