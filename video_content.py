@@ -9,18 +9,18 @@ The `video_id` is the number at the end of the TikTok URL (.../video/<id>).
 # The channel intro — featured at the top of the tab as "what this is about".
 INTRO_VIDEO = {
     "title": "Welcome to JoScho Analytics",
-    "tiktok_url": "https://www.tiktok.com/@joscho_analytics/video/7659617116106132767",
-    "video_id": "7659617116106132767",
+    "tiktok_url": "https://www.tiktok.com/@joscho_analytics/video/7660007652818259231",
+    "video_id": "7660007652818259231",
     "blurb": (
-        "Sports analytics, not hot takes. Every call here is model-backed — and this is "
-        "where the full breakdowns live. Watch a short, then open the deep dive the video "
-        "couldn't fit."
+        "Model-backed sports analysis, not hot takes — built by an ML engineer, with the code "
+        "public on GitHub. Watch a short, then open the deep dive the video couldn't fit."
     ),
     "about": (
         "### 📺 About the Film Room\n\n"
-        "This is home to my model-backed video breakdowns. Each short gives you the headline; "
-        "the write-up next to it digs into the data the video couldn't fit — the numbers, the "
-        "model's reasoning, and the honest case for and against.\n\n"
+        "Every call here comes from a machine-learning model I built and run live — the code's "
+        "public on my GitHub, and I show you the reasoning, not just the pick. Each short gives "
+        "you the headline; the write-up next to it digs into the data the video couldn't fit — "
+        "the numbers, the model's reasoning, and the honest case for and against.\n\n"
         "New player and matchup breakdowns land here as I post them."
     ),
 }

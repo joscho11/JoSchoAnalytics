@@ -166,13 +166,15 @@ A LlamaIndex ReActAgent with 5 tools (predictions, live injuries, line movement,
 
 ### Dashboard
 
-A Streamlit app with tabs for Weekly Predictions, Track Record, Weekly Fantasy, DFS Optimizer, a pre-season Draft Value Finder, League History, and a Help guide.
+A Streamlit app with tabs for Weekly Predictions, Track Record, Film Room, Weekly Fantasy, DFS Optimizer, a pre-season Draft Value Finder, League History, and a Help guide.
 
 - **Draft Value Finder**: our own season projection ranked against the market's ADP to flag who the draft room is mispricing. It leads with a **🔥 Consensus values** box, the players our model and Sleeper both rank above their ADP, which is the strongest signal (about 78% have beaten their draft cost). BUY means we rank a player above their ADP and FADE means below, and we only show fades when there's a real decline reason. On our confident calls alone it beats the casual ADP line about 68% of the time, season to season. It does not beat the sharpest public projections, so Sleeper sits next to our ranks purely for comparison. Treat it as an honest draft day second opinion, not a market beating edge. For a finished season it shows where each player actually landed and whether the call hit, and anyone who lost a big chunk of the year to injury just shows 🏥 instead of a hit or miss, since injuries are not something the model can predict.
 
 - **Weekly Predictions**: game cards with edge, confidence tier, and expandable agent reasoning. Games where the experimental totals model says UNDER show a dashed amber badge below the spread card.
 - **Track Record**: ATS record by tier and week, profit at standard odds, longest streaks, and a separate over/under section flagged as tracking-only.
 - **Weekly Fantasy**: per-position projections with both projected and actual stat columns that fill in after games are played.
+
+- **Film Room**: embedded TikToks from the [@joscho_analytics](https://www.tiktok.com/@joscho_analytics) channel (the analytics content arm), each paired with a click-to-open written breakdown that digs into the data the short couldn't fit. The channel intro is featured at the top; player and matchup breakdowns land here as they're posted. Add one by appending to `video_content.py` and dropping a markdown file in `video_breakdowns/`.
 
 ### Automation
 
@@ -228,6 +230,9 @@ Best week: 9 of 14 (Week 14, 64.3%). These are encouraging but it is a small liv
 app.py                                 # Streamlit dashboard (entry point)
 dashboard_utils.py                     # Streamlit-free dashboard helpers (testable; metric_card, loaders, etc.)
 test_dashboard_utils.py                # Unit tests for dashboard_utils.py (run in CI)
+film_room.py                           # Film Room tab renderer (embedded TikToks + breakdown popups)
+video_content.py                       # Registry of published videos (embed ids + breakdown files)
+video_breakdowns/                      # Long-form written breakdowns (markdown), one per video
 betting/
   features.py                          # Shared 85-feature engineering (single source of truth, importable)
   test_features.py                     # Hermetic synthetic-data tests for features.py (run in CI)
