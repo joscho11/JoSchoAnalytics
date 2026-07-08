@@ -24,7 +24,7 @@ from dashboard_utils import (
 from calibration import build_calibration
 
 st.set_page_config(
-    page_title="BettingEdge | NFL Predictions",
+    page_title="JoScho Analytics | NFL Predictions",
     page_icon="🏈",
     layout="wide"
 )
@@ -43,8 +43,8 @@ def track_pageview(measurement_id, api_secret):
                 "events": [{
                     "name": "page_view",
                     "params": {
-                        "page_title": "BettingEdge | NFL Predictions",
-                        "page_location": "https://joschobetting.streamlit.app",
+                        "page_title": "JoScho Analytics | NFL Predictions",
+                        "page_location": "https://joschoanalytics.streamlit.app",
                         "session_id": st.session_state.ga_session_id,
                         "engagement_time_msec": "100"
                     }
