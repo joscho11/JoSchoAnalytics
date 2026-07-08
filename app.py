@@ -482,7 +482,8 @@ if not season_active:
 
 # ── Tabs ──────────────────────────────────────────────────────────────────────
 # Draft Value Finder (tab5) re-enabled 2026-06-08 — our model's calls vs ADP (value_board_*.csv).
-tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(["🏈 Weekly Predictions", "📈 Track Record", "🏆 Weekly Fantasy", "🎯 DFS Optimizer", "📋 Draft Value Finder", "🏅 League History", "❓ Help & Guide"])
+# Film Room sits 3rd (after Track Record); the unpack order maps each content block to its slot.
+tab1, tab2, tab8, tab3, tab4, tab5, tab6, tab7 = st.tabs(["🏈 Weekly Predictions", "📈 Track Record", "📺 Film Room", "🏆 Weekly Fantasy", "🎯 DFS Optimizer", "📋 Draft Value Finder", "🏅 League History", "❓ Help & Guide"])
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 1: WEEKLY PREDICTIONS
@@ -2921,3 +2922,9 @@ Nothing on this site should be taken as betting or financial advice. Sports bett
             </div>
         </div>
     """, unsafe_allow_html=True)
+
+
+with tab8:
+    from film_room import render_film_room
+
+    render_film_room()
