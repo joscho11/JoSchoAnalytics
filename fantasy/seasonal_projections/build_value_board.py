@@ -123,6 +123,20 @@ def build_one(season, df, gconst):
     pool.loc[_supp, "contested"] = comp[_supp]
     pool.loc[_supp, ["call", "tier"]] = ["", ""]
 
+    # RETURNING-FROM-INJURY guard: when the PLAYER'S OWN prior season was injury-shortened, his
+    # depressed prior-year stats make the projection unreliable in BOTH directions (walk-forward:
+    # post-injury WR MAE ~2.8 vs ~1.3 healthy, and NO fixable systematic bias — a games-weighted
+    # baseline / injury flag added nothing OOS). The model can't tell "healthy bounce-back" from
+    # "aging/injury-prone fade", so we don't issue a confident BUY/FADE off it — we flag it.
+    # (Distinct from the contested guard above, which is about NEW teammates arriving.)
+    missed_prior = pool["missed_prior_season"].fillna(0) if "missed_prior_season" in pool.columns else 0
+    ret_inj = ((pool["prior_games_missed"].fillna(0) >= 6) & (pool["prior_games"].fillna(0) >= 3)
+               & (missed_prior != 1))
+    pool["injury_return"] = ""
+    _inj = ret_inj & pool["call"].isin(["BUY", "FADE"])
+    pool.loc[_inj, "injury_return"] = "returning from injury"
+    pool.loc[_inj, ["call", "tier", "reason"]] = ["", "", ""]
+
     # does Sleeper lean the same way vs ADP? (transparent comparison only)
     if has_slp:
         slp_dev = pool["adp_rank"] - pool["sleeper_rank"]
@@ -141,15 +155,17 @@ def build_one(season, df, gconst):
         pool["injured"] = pool["target_games"] < 11
 
     keep = ["player", "position", "team", "our_proj", "our_rank", "adp_rank", "value",
-            "call", "tier", "reason", "contested", "years_exp", "age"]
+            "call", "tier", "reason", "contested", "injury_return", "years_exp", "age"]
     for c in ["sleeper_rank", "sleeper_agrees", "actual_rank", "actual_total", "injured"]:
         if c in pool.columns:
             keep.append(c)
     out = pool[keep].sort_values(["position", "adp_rank"]).reset_index(drop=True)
     out.to_csv(HERE / f"value_board_{season}.csv", index=False)
     nb = (out.call == "BUY").sum(); nf = (out.call == "FADE").sum(); nc = (out.contested != "").sum()
-    print(f"  {season}: {len(out)} players | {nb} BUY, {nf} FADE, {nc} contested (buys suppressed) | "
-          f"sleeper {'incl' if has_slp else 'MISSING'} | actuals {'yes' if 'actual_rank' in out.columns else 'no'}")
+    ni = (out.injury_return != "").sum()
+    print(f"  {season}: {len(out)} players | {nb} BUY, {nf} FADE, {nc} contested, {ni} injury-flagged "
+          f"(calls suppressed) | sleeper {'incl' if has_slp else 'MISSING'} | "
+          f"actuals {'yes' if 'actual_rank' in out.columns else 'no'}")
     return out
 
 

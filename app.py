@@ -1738,7 +1738,7 @@ with tab5:
                    "our_proj", "actual_total", "sleeper_agrees"):
             if _c in vdf.columns:
                 vdf[_c] = pd.to_numeric(vdf[_c], errors="coerce")
-        for _c in ("call", "contested", "reason"):     # empty cells read back as NaN -> ""
+        for _c in ("call", "contested", "reason", "injury_return"):  # empty cells read back as NaN -> ""
             vdf[_c] = vdf[_c].fillna("") if _c in vdf.columns else ""
         # injured = missed >6 games; outcome is injury-driven so we don't grade the call (robust bool parse)
         vdf["injured"] = (vdf["injured"].astype(str).str.lower().isin(["true", "1", "1.0"])
@@ -1869,6 +1869,8 @@ with tab5:
                     return f"🔴 {'Strong fade' if r['tier'] == 'HIGH' else 'Fade'} ({int(v)})"
                 if str(r.get("contested", "")):      # our model liked them, but new competition arrived
                     return f"⚠️ Contested ({r['contested']})"
+                if str(r.get("injury_return", "")):   # player's own injury-shortened prior year -> unreliable
+                    return "⚠️ Returning from injury"
                 return "—"
 
             def _result(r):
@@ -1905,8 +1907,9 @@ with tab5:
                 "Proj Pts": _num("Proj Pts", help="Our model's projected half-PPR season total.", format="%d"),
                 "Verdict": _txt("Verdict", help="Our call vs the market — 🟢 = undervalued (buy), 🔴 = overvalued (fade), "
                                 "⚠️ Contested = we liked them but new competition arrived (a rookie, signing, returning starter, or "
-                                "crowded backfield) that our stats model can't price, so we hold off. The number is how many "
-                                "positional spots we differ. Fades only for aging/declining players, never young ones."),
+                                "crowded backfield) that our stats model can't price, so we hold off. ⚠️ Returning from injury = the "
+                                "player's OWN prior season was injury-shortened, so the projection off it is unreliable — no call. "
+                                "The number is how many positional spots we differ. Fades only for aging/declining players, never young ones."),
                 "Result": _txt("Result", help="Did the call pay off? ✅ = finished on our side of the market, ❌ = it didn't."),
             }
             _colcfg = {c: cfg for c, cfg in _allcfg.items() if c in disp.columns}
