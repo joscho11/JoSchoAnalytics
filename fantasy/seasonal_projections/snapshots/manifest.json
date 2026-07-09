@@ -1,0 +1,56 @@
+{
+  "draft_picks": {
+    "args": "()",
+    "cols": 36,
+    "fetched_utc": "2026-07-09T23:12:07Z",
+    "loader": "load_draft_picks",
+    "nflreadpy": "0.1.5",
+    "rows": 12927,
+    "sha256": "d5e88f23a11e6208ebfe31be17fd974fb5b32efe94c1a5069fdae50039e56508"
+  },
+  "player_stats_2011_2025": {
+    "args": "([2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025],)",
+    "cols": 115,
+    "fetched_utc": "2026-07-09T23:10:30Z",
+    "loader": "load_player_stats",
+    "nflreadpy": "0.1.5",
+    "rows": 269594,
+    "sha256": "e8dad7e48fd202d414d66f5a14fb23f72d4bdb5a1b60a09c5d71556444203344"
+  },
+  "players": {
+    "args": "()",
+    "cols": 39,
+    "fetched_utc": "2026-07-09T23:12:07Z",
+    "loader": "load_players",
+    "nflreadpy": "0.1.5",
+    "rows": 25033,
+    "sha256": "7b3acde823e41cbc3b5d170f8a52bce5c451f200843980be57faefac3b0e9856"
+  },
+  "rosters_2011_2025": {
+    "args": "([2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025],)",
+    "cols": 36,
+    "fetched_utc": "2026-07-09T23:12:10Z",
+    "loader": "load_rosters",
+    "nflreadpy": "0.1.5",
+    "rows": 41704,
+    "sha256": "5828d6fd7b2bf75c20813125ca498c203a2930685d5c3e3d9deabedd41c37182"
+  },
+  "schedules_2011_2025": {
+    "args": "([2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025],)",
+    "cols": 46,
+    "fetched_utc": "2026-07-09T23:12:07Z",
+    "loader": "load_schedules",
+    "nflreadpy": "0.1.5",
+    "rows": 4096,
+    "sha256": "0b844b6ba7edd7ae474822f0752ffc3fced922247225f966583fbca68b1065cc"
+  },
+  "snap_counts_2013_2025": {
+    "args": "([2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025],)",
+    "cols": 16,
+    "fetched_utc": "2026-07-09T23:12:06Z",
+    "loader": "load_snap_counts",
+    "nflreadpy": "0.1.5",
+    "rows": 324611,
+    "sha256": "7b85db1820364f0b5817c623485e179cf2747b3d7f35d8624af54e59bc424de9"
+  }
+}

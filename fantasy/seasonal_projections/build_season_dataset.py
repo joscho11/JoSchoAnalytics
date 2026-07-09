@@ -40,6 +40,7 @@ import nflreadpy as nfl
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))   # so _utils imports regardless of CWD
 from _utils import norm_name, SKILL_POSITIONS
+from snapshots import snap
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
@@ -64,7 +65,7 @@ def build_season_aggregates():
         the player_id of that team's leading passer (used for the qb_changed flag).
     """
     print(f"Loading player stats {LOAD_FROM}-2025 ...")
-    ps = nfl.load_player_stats(list(range(LOAD_FROM, 2026))).to_pandas()
+    ps = snap("player_stats_2011_2025", nfl.load_player_stats, list(range(LOAD_FROM, 2026)))
     ps = ps[(ps["season_type"] == "REG") & (ps["position"].isin(SKILL))].copy()
     ps["half_ppr"] = ps["fantasy_points"].fillna(0) + 0.5 * ps["receptions"].fillna(0)
     ps["touches"]  = ps["carries"].fillna(0) + ps["receptions"].fillna(0)
@@ -133,17 +134,17 @@ def reconstruct_missed(agg):
 # ── 3. Snap counts -> snap_share + snap-based games ─────────────────────────
 def add_snaps(full):
     print(f"Loading snap counts {SNAP_FROM}-2025 ...")
-    sc = nfl.load_snap_counts(list(range(SNAP_FROM, 2026))).to_pandas()
+    sc = snap("snap_counts_2013_2025", nfl.load_snap_counts, list(range(SNAP_FROM, 2026)))
     _need = {"offense_snaps", "offense_pct", "player", "season", "week"}
     _missing = _need - set(sc.columns)
     assert not _missing, f"snap_counts schema changed; missing {sorted(_missing)}"
     sc = sc[sc["offense_snaps"].fillna(0) > 0].copy()
     sc["norm_name"] = sc["player"].map(norm_name)
-    snap = sc.groupby(["norm_name", "season"]).agg(
+    snap_agg = sc.groupby(["norm_name", "season"]).agg(
         snap_games=("week", "nunique"),
         snap_share_pg=("offense_pct", "mean"),
     ).reset_index()
-    full = full.merge(snap, on=["norm_name", "season"], how="left")
+    full = full.merge(snap_agg, on=["norm_name", "season"], how="left")
     # Prefer snap-based games where available (more accurate availability), but
     # NEVER let a name-collision snap match resurrect a reconstructed 0-game
     # season — those must stay games=0. Fall back to stat-line weeks otherwise.
@@ -175,7 +176,7 @@ def add_bio(full):
     full["years_exp"] = full["season"] - full["rookie_season"]
     full["is_rookie"] = (full["season"] == full["rookie_season"]).astype(int)
 
-    players = nfl.load_players().to_pandas()
+    players = snap("players", nfl.load_players)
     bd = players[["gsis_id", "birth_date"]].dropna(subset=["birth_date"]).copy()
     bd["birth_date"] = pd.to_datetime(bd["birth_date"], errors="coerce")
     full = full.merge(bd.rename(columns={"gsis_id": "player_id"}), on="player_id", how="left")
@@ -188,7 +189,7 @@ def add_bio(full):
     full["draft_round"] = np.nan
     full["draft_pick"]  = np.nan
     try:
-        dp = nfl.load_draft_picks().to_pandas()
+        dp = snap("draft_picks", nfl.load_draft_picks)
         if "gsis_id" in dp.columns:
             by_id = (dp[dp["gsis_id"].notna()].sort_values("season")
                      .groupby("gsis_id").agg(dr=("round", "first"), dp_=("pick", "first")).reset_index()
@@ -225,7 +226,7 @@ def add_team_context(full, primary_qb):
     full = full.merge(team[["team", "season", "team_pass_rate", "team_plays_est"]], on=["team", "season"], how="left")
 
     # coaching change (clean: coaches known at season start)
-    sched = nfl.load_schedules(list(range(LOAD_FROM, 2026))).to_pandas()
+    sched = snap("schedules_2011_2025", nfl.load_schedules, list(range(LOAD_FROM, 2026)))
     h = sched[["season", "home_team", "home_coach"]].rename(columns={"home_team": "team", "home_coach": "coach"})
     a = sched[["season", "away_team", "away_coach"]].rename(columns={"away_team": "team", "away_coach": "coach"})
     coaches = pd.concat([h, a]).dropna().groupby(["team", "season"])["coach"].agg(lambda s: s.mode().iat[0]).reset_index()
@@ -246,7 +247,7 @@ def add_vacated(full):
     # vacated opportunity: share of a team's N-1 targets/carries held by players
     # NOT on the team's roster in season N. Mild hindsight (season-N roster).
     print("Loading rosters for vacated-opportunity ...")
-    ros = nfl.load_rosters(list(range(LOAD_FROM, 2026))).to_pandas()
+    ros = snap("rosters_2011_2025", nfl.load_rosters, list(range(LOAD_FROM, 2026)))
     ros = ros[["season", "team", "gsis_id"]].dropna().rename(columns={"gsis_id": "player_id"})
     roster_set = ros.groupby(["team", "season"])["player_id"].apply(set).to_dict()
 
