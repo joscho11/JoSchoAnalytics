@@ -186,3 +186,25 @@ gate and cannot modify the frozen config.*
 Amendments 1–2 added the same day, before any extended data was built.
 Amendment 3 added the same day, after the extended dataset was built but before
 any extended-data training or evaluation.*
+
+---
+
+## OUTCOMES (recorded after the fact; rules above were not modified)
+
+**A4 extension gate: FAIL (2026-07-09, `extension_gate.py`, commit follows).**
+Corrected+extended vs corrected-only, walk-forward, RB/WR/TE, identical pools:
+2020–2025 pooled Δρ **+0.003** (< +0.010 required → criterion (a) fails);
+2016–2019 pooled Δρ +0.058 (passes (b)); worst-position Δ −0.006 (passes (c)).
+Per position, 2020–2025: RB +0.018, WR −0.006, TE −0.004; 2016–2019: RB +0.112,
+WR −0.000, TE +0.062. Reading: doubling the history materially helps the panel
+adjacent to the added seasons (2016–2019) but the gain decays to noise by
+2020–2025 — the extension does not improve the deployment-era model.
+**Consequences per Amendment 3 / D1:** deployed config reverts to (stays) 2014+
+targets; the extension is recorded as a measured negative; **the TE hypothesis
+(H1) is UNTESTABLE UNDER THIS DESIGN and the test will not run**; seasons
+2008–2015 remain unseen by any model-vs-ADP metric. Any future TE-test design
+requires a new pre-registered hypothesis.
+*Pre-declared diagnostic (non-gating):* era-bound features rank mid-to-bottom in
+the earliest extended fold (snap share 22–27/31, air-yards-share 12–15/31,
+target share 7–15/31 by split importance) — no evidence the model leans on
+era-missingness as a proxy; the null result above is not an artifact of that.
