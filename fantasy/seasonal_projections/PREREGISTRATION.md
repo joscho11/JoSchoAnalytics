@@ -71,5 +71,67 @@ scanning are hypotheses, never results. The multiple-comparisons burden
 
 ---
 
+## Amendment 1 (2026-07-09, committed BEFORE any extended data exists)
+
+Pre-test decisions for the Step 1b extension. All four are one-way doors closed now;
+source-coverage probes (row counts only — no outcome metrics) informed A2.
+
+**A1 — Feature policy across eras: (ii) NaN-tolerant full set, frozen.** The TE test
+evaluates the shipped config (per-position LightGBM, full feature set, native NaN
+handling, no imputation, injury features excluded). Justification: (1) it is the
+deployment config the hypothesis came from; (2) walk-forward training degrades
+naturally to the era-common subset in early folds (a 2002–2007 training set simply
+contains no snap/air-yards signal, so the model cannot lean on it), which biases
+*against* confirmation rather than for it; (3) restricting to an era-common subset
+would test a different, weaker model than the one that generated the hypothesis.
+Era-availability/era-effect confounding is acknowledged and accepted.
+`target_share` hole (2004–2008): filled with the reconstruction (player targets ÷
+team targets) ONLY if Step 1b validation shows season-level correlation ≥ 0.95 and
+|relative bias| ≤ 10% against the native series on overlap years; otherwise the hole
+stays NaN. Rule fixed now, applied after validation.
+
+**A2 — ADP series per era and the amended TE rule.** Per season, the deepest series
+in preference order half-PPR > PPR > standard: Sleeper half-PPR 2020+, FFC half-PPR
+2018–19, FFC PPR 2013–17 and 2010–11, FFC standard 2008–09 and 2012 (PPR too thin:
+93 players). Pool = top-180 of that season's series (or all players if fewer).
+**TE-gate seasons = 2010, 2011, 2013, 2014, 2015 only** (PPR-or-better with ≥150
+players; standard-scoring seasons are excluded from the gate because standard ADP
+underweights receptions and would bias the test TOWARD false confirmation at TE).
+**Amended decision rule:** CONFIRMED only if pooled mean ρ_ours − ρ_ADP ≥ +0.03 over
+those 5 seasons AND ours wins the season-level ρ in ≥ 4 of 5 (tightened from 5-of-8's
+62.5% to 80% because fewer seasons carry less evidential weight). Secondary
+consistency gate unchanged. 2008, 2009, 2012 are reported descriptively, never gating.
+
+**A3 — Era normalization: none, frozen.** Target stays raw half-PPR PPG; season/era
+is not a feature. The graded metrics are within-position-season rankings, which are
+scale-invariant to era; point-scale metrics (MAE/VOR) on pre-2014 seasons are
+descriptive only. If later development (on SEEN panels only) finds normalization
+helps, that is a config change requiring a NEW pre-registered hypothesis — it may not
+be swapped into this TE test.
+
+**A4 — Extension gate (recorded).** The extension is adopted ONLY if the
+corrected+extended model beats the corrected-only model on the SEEN panels:
+pooled mean ρ across modeled positions on 2020–2025 improves by ≥ +0.01 AND
+2016–2019 does not degrade by more than 0.01 (or vice versa). Anything else →
+revert to 2014+ targets and record the negative. 2008–2015 is NOT the gate and no
+model-vs-ADP metric may be computed on it outside the one-shot TE test.
+
+## Amendment 2 (2026-07-09) — QB model dropped, measured negative
+
+On the corrected panel the walk-forward QB model loses to its own null: ρ .268 vs
+naive prior-season points .390 and ADP .431 (top-12 hit and bust rate agree). It was
+also the position most inflated by the qb_changed hindsight fixed in Step 1a-2
+(−.035 ρ on correction), it has the smallest sample (~750 usable rows, ~40 drafted
+per season), and the naive baseline already encodes most of what prior stats know
+about QBs. Decision: the QB model is DROPPED from the modeled set. QB on any board
+falls back to market rank (ADP); the model-side null for QB in evals is naive
+prior-points. The extension gate (A4) and all model-vs-ADP claims are computed over
+RB/WR/TE. Headline hit-rate metric for QB and TE is top-12 (the drafted pool is only
+~24 deep at those positions; top-24 is degenerate there). Revisiting QB requires a
+new pre-registered hypothesis with a stated mechanism, not a re-run.
+
+---
+
 *Locked 2026-07-09. Harness of record: `phase0_benchmark.py` (+
-`phase0_benchmark_results.json` for the Phase 0 numbers this file cites).*
+`phase0_benchmark_results.json` for the Phase 0 numbers this file cites).
+Amendments 1–2 added the same day, before any extended data was built.*
