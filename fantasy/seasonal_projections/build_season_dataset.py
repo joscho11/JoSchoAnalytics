@@ -29,6 +29,21 @@ Edge cases (unchanged design): 0-game seasons dropped from Model A / kept for B,
 soft floor on Model A labels, prior_games_played as a feature, NaN never 0 for
 missing priors, is_rookie + missed_prior_season flags.
 
+v3 (2026-07-09) LEAKAGE FIXES — season-N context is now strictly preseason:
+  (a) qb_changed: week-1 REG depth-chart QB1 of season N vs the N-1 primary
+      passer (was: season-N primary passer = genuine hindsight).
+  (b) vacated_*: departures detected against the WEEK-1 roster of season N
+      (was: full-season-N rosters, which include in-season signings).
+  (c) context_team: the player's week-1 roster team drives every season-N
+      context join and the output `team` (was: last stats team of season N,
+      wrong after midseason trades). Fallback = stats team (post-week-1
+      signees only; residual, documented).
+  (d) years_exp/is_rookie from draft year (load_draft_picks, 1980+), UDFA
+      fallback = first active season (was: first-seen in 2011+ data, which
+      truncates pre-2011 debuts).
+Raw pulls are pinned by snapshots.py, so these fixes are measured against the
+identical bytes the old logic consumed (no drift confound).
+
 Output: fantasy/seasonal_projections/season_dataset_2014_2025.csv
 """
 import sys
@@ -171,10 +186,10 @@ def add_rates(full):
 
 # ── 5. Bio: experience, rookie flag, age, draft capital ─────────────────────
 def add_bio(full):
-    first_seen = full[full["games"] > 0].groupby("player_id")["season"].min().rename("rookie_season")
+    # first active season kept as the UDFA fallback for entry year (fix d);
+    # drafted players get their true draft year below.
+    first_seen = full[full["games"] > 0].groupby("player_id")["season"].min().rename("first_active")
     full = full.merge(first_seen, on="player_id", how="left")
-    full["years_exp"] = full["season"] - full["rookie_season"]
-    full["is_rookie"] = (full["season"] == full["rookie_season"]).astype(int)
 
     players = snap("players", nfl.load_players)
     bd = players[["gsis_id", "birth_date"]].dropna(subset=["birth_date"]).copy()
@@ -188,32 +203,105 @@ def add_bio(full):
     # fall back to a normalized-name join only for the ~14% of picks lacking gsis_id.
     full["draft_round"] = np.nan
     full["draft_pick"]  = np.nan
+    full["draft_year"]  = np.nan
     try:
         dp = snap("draft_picks", nfl.load_draft_picks)
         if "gsis_id" in dp.columns:
             by_id = (dp[dp["gsis_id"].notna()].sort_values("season")
-                     .groupby("gsis_id").agg(dr=("round", "first"), dp_=("pick", "first")).reset_index()
+                     .groupby("gsis_id").agg(dr=("round", "first"), dp_=("pick", "first"),
+                                             dy=("season", "first")).reset_index()
                      .rename(columns={"gsis_id": "player_id"}))
             full = full.merge(by_id, on="player_id", how="left")
             full["draft_round"] = full["dr"]; full["draft_pick"] = full["dp_"]
-            full.drop(columns=["dr", "dp_"], inplace=True)
+            full["draft_year"]  = full["dy"]
+            full.drop(columns=["dr", "dp_", "dy"], inplace=True)
         # name fallback for rows still unmatched (picks without gsis_id)
         nmcol = next((c for c in ["pfr_player_name", "full_name", "player_name"] if c in dp.columns), None)
         if nmcol:
             dp["norm_name"] = dp[nmcol].map(norm_name)
             by_nm = (dp.sort_values("season").groupby("norm_name")
-                     .agg(dr=("round", "first"), dp_=("pick", "first")).reset_index())
+                     .agg(dr=("round", "first"), dp_=("pick", "first"), dy=("season", "first")).reset_index())
             full = full.merge(by_nm, on="norm_name", how="left")
             full["draft_round"] = full["draft_round"].fillna(full["dr"])
             full["draft_pick"]  = full["draft_pick"].fillna(full["dp_"])
-            full.drop(columns=["dr", "dp_"], inplace=True)
+            full["draft_year"]  = full["draft_year"].fillna(full["dy"])
+            full.drop(columns=["dr", "dp_", "dy"], inplace=True)
         print(f"  draft capital matched: {full['draft_pick'].notna().sum():,} "
               f"({full[['player_id','draft_pick']].dropna()['player_id'].nunique():,} unique players)")
     except KeyError as e:
         print(f"  WARNING: draft picks schema changed (missing {e}); draft_round/pick left NaN")
     except Exception as e:
         print(f"  WARNING: draft picks load failed ({type(e).__name__}: {e}); draft_round/pick left NaN")
+
+    # fix (d): entry year = draft year (1980+); UDFA fallback = first active season.
+    # Left-edge caveat: pre-2011-debut UDFAs still inherit a too-late first_active.
+    full["entry_year"] = full["draft_year"].fillna(full["first_active"])
+    full["years_exp"]  = full["season"] - full["entry_year"]
+    full["is_rookie"]  = (full["season"] == full["entry_year"]).astype(int)
     return full
+
+
+# ── 5b. Week-1 sources (leakage fixes a-c): rosters + depth-chart QB1 ────────
+def _load_rosters_week1(seasons):
+    rw = nfl.load_rosters_weekly(seasons).to_pandas()
+    return rw[rw["week"] == 1][["season", "team", "gsis_id"]].dropna()
+
+
+def _load_qb1_week1(seasons):
+    """Week-1 (preseason-knowable) depth-chart QB1 per team-season.
+
+    Depth charts have two schemas: <=2024 weekly charts (club_code/week/
+    game_type/depth_team, with era team codes), 2025+ daily snapshots
+    (dt/team/pos_abb/pos_rank). For 2025+ we take the last snapshot strictly
+    BEFORE the season's first REG gameday (from schedules), so it is pre-kickoff.
+    """
+    ERA = {"STL": "LA", "SD": "LAC", "OAK": "LV"}
+    frames = []
+    old = [s for s in seasons if s <= 2024]
+    if old:
+        dc = nfl.load_depth_charts(old).to_pandas()
+        dc = dc[(dc["game_type"] == "REG") & (dc["week"] == 1) &
+                (dc["position"].astype(str).str.strip() == "QB") &
+                (dc["depth_team"].astype(str) == "1")]
+        f = dc[["season", "club_code", "gsis_id"]].dropna().rename(columns={"club_code": "team"})
+        f["team"] = f["team"].replace(ERA)
+        frames.append(f)
+    for s in [s for s in seasons if s >= 2025]:
+        dc = nfl.load_depth_charts([s]).to_pandas()
+        if not len(dc) or "dt" not in dc.columns:
+            continue
+        sched = nfl.load_schedules([s]).to_pandas()
+        kickoff = pd.Timestamp(sched[sched["game_type"] == "REG"]["gameday"].min(), tz="UTC")
+        dc["dt"] = pd.to_datetime(dc["dt"])
+        pre = dc[(dc["dt"] < kickoff) & (dc["pos_abb"] == "QB") & (dc["pos_rank"] == 1)]
+        if not len(pre):
+            continue
+        pre = pre[pre["dt"] == pre["dt"].max()]
+        f = pre.assign(season=s)[["season", "team", "gsis_id"]].dropna()
+        frames.append(f)
+    return pd.concat(frames, ignore_index=True)
+
+
+def add_context_team(full):
+    """Fix (c): the player's week-1 roster team = his preseason-knowable team.
+
+    Drives every season-N context join and the output `team`. Stats-team stays
+    in place for season-N volume aggregation and prior-season attribution
+    (history, not hindsight). Fallback for players absent from the week-1
+    roster (post-week-1 signees) = stats team; residual, documented.
+    """
+    rw1 = snap("rosters_weekly_w1_2014_2025", _load_rosters_week1, list(range(2014, 2026)))
+    w1 = (rw1.drop_duplicates(["season", "gsis_id"])
+             .rename(columns={"gsis_id": "player_id", "team": "w1_team"}))
+    full = full.merge(w1, on=["player_id", "season"], how="left")
+    full["context_team"] = full["w1_team"].fillna(full["team"])
+    n = full["season"].isin(TARGET_SEASONS)
+    moved = (full.loc[n, "w1_team"].notna() &
+             full.loc[n, "team"].notna() &
+             (full.loc[n, "w1_team"] != full.loc[n, "team"])).sum()
+    print(f"  context_team: week-1 coverage {full.loc[n, 'w1_team'].notna().mean()*100:.0f}% "
+          f"| differs from stats-team on {moved:,} target rows")
+    return full.drop(columns=["w1_team"])
 
 
 # ── 6. Team context: pass rate, coaching change, QB change, vacated opp ─────
@@ -225,7 +313,8 @@ def add_team_context(full, primary_qb):
     team["team_plays_est"] = team["team_pass_att"] + team["team_carries"]
     full = full.merge(team[["team", "season", "team_pass_rate", "team_plays_est"]], on=["team", "season"], how="left")
 
-    # coaching change (clean: coaches known at season start)
+    # coaching change (clean: coaches known at season start); joined on the
+    # preseason-knowable context_team (fix c)
     sched = snap("schedules_2011_2025", nfl.load_schedules, list(range(LOAD_FROM, 2026)))
     h = sched[["season", "home_team", "home_coach"]].rename(columns={"home_team": "team", "home_coach": "coach"})
     a = sched[["season", "away_team", "away_coach"]].rename(columns={"away_team": "team", "away_coach": "coach"})
@@ -233,22 +322,35 @@ def add_team_context(full, primary_qb):
     coaches = coaches.sort_values(["team", "season"])
     coaches["prev_coach"] = coaches.groupby("team")["coach"].shift(1)
     coaches["coach_changed"] = (coaches["coach"] != coaches["prev_coach"]) & coaches["prev_coach"].notna()
-    full = full.merge(coaches[["team", "season", "coach_changed"]], on=["team", "season"], how="left")
+    full = full.merge(coaches[["team", "season", "coach_changed"]].rename(columns={"team": "context_team"}),
+                      on=["context_team", "season"], how="left")
 
-    # QB change (mild hindsight: uses season-N primary passer vs N-1)
-    pq = primary_qb.sort_values(["team", "season"]).copy()
-    pq["prev_qb"] = pq.groupby("team")["primary_qb_id"].shift(1)
-    pq["qb_changed"] = (pq["primary_qb_id"] != pq["prev_qb"]) & pq["prev_qb"].notna()
-    full = full.merge(pq[["team", "season", "qb_changed"]], on=["team", "season"], how="left")
+    # QB change, fix (a): week-1 REG depth-chart QB1 of season N vs the N-1
+    # primary passer — both strictly knowable before Week 1 (was: season-N
+    # primary passer, i.e. hindsight whenever the starter changed in-season).
+    qb1 = snap("depthchart_qb1_w1_2014_2025", _load_qb1_week1, list(range(2014, 2026)))
+    qb1 = (qb1.sort_values("gsis_id").drop_duplicates(["season", "team"])
+              .rename(columns={"team": "context_team", "gsis_id": "qb1_id"}))
+    prev_pq = primary_qb.copy()
+    prev_pq["season"] = prev_pq["season"] + 1          # N-1 passer aligned to season N
+    prev_pq = prev_pq.rename(columns={"team": "context_team", "primary_qb_id": "prev_qb"})
+    qbctx = qb1.merge(prev_pq, on=["context_team", "season"], how="left")
+    qbctx["qb_changed"] = (qbctx["qb1_id"] != qbctx["prev_qb"]) & qbctx["prev_qb"].notna() & qbctx["qb1_id"].notna()
+    n_match = qbctx["prev_qb"].notna().sum()
+    print(f"  qb_changed (preseason): {len(qbctx):,} team-seasons with a wk1 QB1, "
+          f"{n_match:,} matched to a prior passer, {int(qbctx['qb_changed'].sum()):,} changes")
+    full = full.merge(qbctx[["context_team", "season", "qb_changed"]],
+                      on=["context_team", "season"], how="left")
     return full
 
 
 def add_vacated(full):
     # vacated opportunity: share of a team's N-1 targets/carries held by players
-    # NOT on the team's roster in season N. Mild hindsight (season-N roster).
-    print("Loading rosters for vacated-opportunity ...")
-    ros = snap("rosters_2011_2025", nfl.load_rosters, list(range(LOAD_FROM, 2026)))
-    ros = ros[["season", "team", "gsis_id"]].dropna().rename(columns={"gsis_id": "player_id"})
+    # NOT on the team's WEEK-1 roster in season N (fix b — was full-season-N
+    # rosters, which include in-season signings). Joined on context_team (fix c).
+    print("Loading week-1 rosters for vacated-opportunity ...")
+    ros = snap("rosters_weekly_w1_2014_2025", _load_rosters_week1, list(range(2014, 2026)))
+    ros = ros.rename(columns={"gsis_id": "player_id"})
     roster_set = ros.groupby(["team", "season"])["player_id"].apply(set).to_dict()
 
     active = full[full["games"] > 0][["player_id", "season", "team", "target_share", "carries"]].copy()
@@ -271,7 +373,8 @@ def add_vacated(full):
                          "vacated_target_share": gone["target_share"].fillna(0).sum(),
                          "vacated_rush_share":  gone["rush_share"].fillna(0).sum()})
     vac = pd.DataFrame(vac_rows)
-    full = full.merge(vac, on=["team", "season"], how="left")
+    full = full.merge(vac.rename(columns={"team": "context_team"}),
+                      on=["context_team", "season"], how="left")
     return full
 
 
@@ -325,9 +428,11 @@ def main():
     full = add_snaps(full)
     full = add_rates(full)
     full = add_bio(full)
+    full = add_context_team(full)
     full = add_team_context(full, primary_qb)
     full = add_vacated(full)
     rows = build_feature_rows(full)
+    rows["team"] = rows["context_team"].fillna(rows["team"])   # fix (c): output team = preseason team
 
     if ADP_CSV.exists():
         adp = pd.read_csv(ADP_CSV)
