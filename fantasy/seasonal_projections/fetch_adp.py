@@ -100,6 +100,16 @@ def fetch_season(season: int, players: dict) -> pd.DataFrame:
         rows.append(row)
 
     df = pd.DataFrame(rows).sort_values("adp_half_ppr").reset_index(drop=True)
+    # QUARANTINE (2026-07-10 provenance audit): Sleeper's stored 2020 "projections"
+    # are near-actuals, not projections — gp varies per player and correlates +0.91
+    # with actual games played (Mixon proj 88.0/gp 6 = his real 89 pts/6 games;
+    # Barkley proj 35.1/gp 2 = his week-2 ACL season), corr(proj, actual)=0.968 vs
+    # 0.81-0.86 every other season. 2021+ pass every probe (constant full-slate gp,
+    # injury busts keep high projections, refetch-stable). The 2020 ADP fields are
+    # NOT affected (Barkley ADP rank 4 / Mixon 6 prove ADP is preseason) and are kept.
+    if season == 2020:
+        for f in PROJ_FIELDS:
+            df[f"sleeper_{f}"] = pd.NA
     df["adp_overall_rank"] = range(1, len(df) + 1)
     # Positional ADP rank (e.g. WR12, RB5) — useful for the draft board view.
     df["adp_pos_rank"] = df.groupby("position")["adp_half_ppr"].rank(method="first").astype(int)

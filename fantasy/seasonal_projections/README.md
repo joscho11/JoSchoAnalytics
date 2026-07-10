@@ -19,8 +19,16 @@ computes `value = adp_rank − our_rank`, and emits **BUY** (undervalued) / **FA
 - The edge is **buy-side**; raw fades are a coin flip, so **fades are gated** to players
   with a real decline catalyst (aging or declining) and never young — that subset clears
   50%. The eval **excludes mid-season-injury seasons** (unpredictable noise).
-- We do **NOT** beat the sharpest public projection. **Sleeper's projection alone vs ADP
-  is ~84-90%** (verified not leakage), and combining our model with Sleeper does not beat
+- We do **NOT** beat the sharpest public projection. ~~**Sleeper's projection alone vs ADP
+  is ~84-90%** (verified not leakage)~~ **[STRUCK 2026-07-10 — provenance audit:** Sleeper's
+  stored **2020 "projections" are near-actuals** (gp correlates +0.91 with actual games;
+  Mixon proj 88.0/gp 6 = his real 89 pts/6 games), so every Sleeper number computed on
+  2020 was inflated; see `PREREGISTRATION.md` Outcomes + the quarantine in `fetch_adp.py`.
+  The 84-90% figure's source computation was deleted in the 2026-06-12 scratch cleanup and
+  cannot be recomputed as-was. Ex-2020 restatement (2021-2025, `recompute_sleeper_ex2020.py`):
+  Sleeper ρ QB .578 / RB .711 / WR .659 / TE .544 vs ADP .420/.585/.571/.454 — still the
+  sharpest public source, by a reduced margin. 2021-2025 projections passed every
+  contamination probe.**] Combining our model with Sleeper does not beat
   Sleeper alone. So Sleeper is shown on the board **as a comparison column only** — we
   deliberately do **not** ship Sleeper-as-our-edge (that would be repackaging, not an edge
   we own). The tab's claim is "beats your draft room," not "beats Sleeper."
@@ -99,7 +107,9 @@ with ADP, ADP is usually right. Same lesson as the spread and totals models: a m
 consensus already prices in offseason news, camp reports, and depth-chart moves a
 prior-season-stats model cannot see. So we do not ship the standalone model as an edge.
 
-**What we do ship is the blend** (see below), which out-ranks any single source. The
+**What we do ship is the blend** (see below), ~~which out-ranks any single source~~
+**[STRUCK 2026-07-10: ex-2020 the blend no longer beats Sleeper alone — see the
+three-way section below]**. The
 honest framing: our model is not draft-board alpha on its own, but as one ingredient in
 a market blend it earns a real, small contribution. We present the board as a
 sanity-checked consensus, not a secret edge.
@@ -144,10 +154,19 @@ beats pure ADP in 5 of 5 seasons, but only by about 0.012 to 0.015 Spearman rho,
 the noise band. Then the big one (`three_way_blend_test.py`): Sleeper also publishes its
 own season point projection, which alone already beats ADP, so we added it as a third
 ranker. The best mix, confirmed by a simplex weight sweep plus leave-one-season-out, is
-**our 20 percent, ADP 30 percent, Sleeper 50 percent**. That lifts the board to rho
+**our 20 percent, ADP 30 percent, Sleeper 50 percent**. ~~That lifts the board to rho
 0.637 versus 0.567 for the old two-way, a plus 0.07 gain (about two standard errors)
 that holds out of sample in 5 of 5 seasons. Our model still earns its 20 percent: the
-full three-way beats ADP-plus-Sleeper-without-us, so the projection is not redundant.
+full three-way beats ADP-plus-Sleeper-without-us, so the projection is not redundant.~~
+**[STRUCK 2026-07-10 — doubly affected by the 2020 provenance finding: the weights were
+TUNED on and the gain was EVALUATED on 2020-2024, and 2020's Sleeper column is
+near-actuals (see PREREGISTRATION.md Outcomes). Harness restatement ex-2020
+(`recompute_sleeper_ex2020.py`, frozen weights, 2021-2024): three-way ρ .685, two-way
+.564, ADP .489 — but Sleeper ALONE .711, i.e. the blend is no longer shown to beat
+Sleeper alone. The "our model earns its 20%" claim does not survive the corrected
+record (restated with different model machinery — LightGBM points vs the original
+CatBoost VOR — so it is a restatement, not an exact rerun; a faithful rerun would also
+require re-tuning the weights ex-2020, which has not been done).]**
 The board uses this three-way blend as the headline recommended draft order
 (`blend_rank` / `blend_pos_rank`); the raw projection is kept for the value and reach
 view. It is a real ranking improvement, but it is a blended consensus, not a secret edge.
