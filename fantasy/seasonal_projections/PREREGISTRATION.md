@@ -208,3 +208,83 @@ requires a new pre-registered hypothesis.
 the earliest extended fold (snap share 22–27/31, air-yards-share 12–15/31,
 target share 7–15/31 by split importance) — no evidence the model leans on
 era-missingness as a proxy; the null result above is not an artifact of that.
+
+---
+
+## Amendment 4 (2026-07-09) — standing prohibition: no gate-shopping the failed A4
+
+The A4 extension gate failed and the per-panel deltas are now known (2016–2019
+moved, 2020–2025 did not). We will NOT search for an extension variant that
+passes: no alternative history cutoffs (2010+, 2012+), no recency-weighted
+sample weights, no era subsets, no re-pooling — any such attempt chosen AFTER
+seeing which panels moved is gate-shopping on a question already answered
+negatively. A future revisit requires a fresh pre-registration with a decision
+rule written blind to any new variant's results, and must open by acknowledging
+it is a second look at an answered question. (This mirrors the repo's 2026-05
+time-decay/extended-training rejection on the spread model: same lever, same
+verdict, same rule against re-running it.)
+
+---
+
+## H4 — Step 2: ADP-anchored residual model (pre-registered 2026-07-09,
+## committed BEFORE any Step 2 code or metric exists)
+
+**Architecture under test.** Final projection = ADP-implied points + shrunk
+learned correction. The market prior is the anchor; the model learns only where
+the market is systematically wrong, from the frozen prior-stats feature set.
+
+**1. The null is RAW ADP, unchanged.** The gate compares the residual model to
+using ADP as-is on identical pools. Secondary comparisons, reported as context
+and never gating: the corrected from-scratch model (2020–2025 ρ RB .520 /
+WR .500 / TE .323) and Sleeper preseason. Positions RB/WR/TE; QB stays market
+rank per Amendment 2.
+
+**2. Scope (decided blind): a better RANKER OF THE DRAFTED POOL, only.**
+Step 2 makes no claim about undrafted players and is not a discovery engine.
+No hybrid stitching in this test — the from-scratch model already exists as the
+fallback for ADP-less players on any board, and a hybrid would add a second
+moving part to a one-shot test. The eval pool stays ADP top-180 (consistent
+with phase0), which by construction CANNOT detect the undrafted-breakout blind
+spot; if we ever want that measured, it needs its own pre-registered test with
+a different pool. Recorded now so the limitation is on the claim, not
+discovered after it.
+
+**3. Residual target (frozen): points-space vs a walk-forward ADP curve.**
+For eval season t, fit per position a monotone-decreasing curve (isotonic
+regression) of actual season half-PPR points on within-position ADP rank using
+ONLY seasons < t; implied_pts = curve(adp_pos_rank); residual target =
+actual_pts − implied_pts (zero-game seasons keep their real, near-zero
+actuals). Reason for points-space over rank-space: the output remains a real
+point projection (compatible with the harness's VOR/MAE metrics and any board),
+and the positional draft-value curve is the natural, standard prior. This is
+the only mapping that will be tried.
+
+**4. Shrinkage and tuning policy (frozen).** Correction applied as
+final = implied + λ·residual_pred, λ ∈ {0, 0.25, 0.5, 0.75, 1.0} selected PER
+POSITION by walk-forward CV strictly inside the training window (for eval
+season t, inner folds only use seasons < t). Model = the frozen A1/A3 LightGBM
+config and feature set, unchanged — no new hyperparameter search, no feature
+selection, nothing chosen on the evaluation panel. Note λ=0 recovers raw ADP
+by construction, so the inner CV is free to conclude the correction is
+worthless; that is the honest path to the negative in (6).
+
+**5. Decision rule (exact, one test).** Primary panel 2020–2025, ADP-top-180
+pool, harness metrics, positions RB/WR/TE, pooled = unweighted mean of
+per-position ρ (matching A4's D2 definitions). ADOPT iff ALL of:
+  (a) pooled Δρ (residual model − raw ADP) ≥ **+0.020**;
+  (b) the pooled season-level Δ is positive in **≥ 4 of 6** seasons;
+  (c) no position's Δρ vs raw ADP below **−0.010**;
+  (d) consistency: pooled top-12 hit rate and bust rate are not BOTH worse
+      than raw ADP.
+2016–2019 is reported as context only (FFC format proxies make it a noisier
+ADP null; it does not gate). Numbers at 3 decimals. Rejection is final: no
+metric shopping, no alternative residual mappings, no λ-grid extensions.
+
+**6. The negative is pre-committed as acceptable.** If the inner CV collapses
+λ to ~0 or the gate fails, the finding is: the market already contains what our
+prior-stats features know, and the honest product is ADP plus a calibrated
+uncertainty band (Phase 4 direction: distributions and bust probabilities on
+top of market rank). That outcome will be reported as-is and not iterated
+around; it would close the "beat ADP with prior-stats features" question for
+this feature set, leaving offseason/competition features (Step 3) as the
+remaining pre-registerable angle.
