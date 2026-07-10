@@ -60,13 +60,18 @@ from snapshots import snap
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
+import os
+
 HERE             = Path(__file__).resolve().parent
-OUT_CSV          = HERE / "season_dataset_2014_2025.csv"
+EXTENDED         = os.environ.get("EXTENDED_BUILD") == "1"   # Step 1b: 2002+ targets
+OUT_CSV          = HERE / ("season_dataset_2002_2025.csv" if EXTENDED else "season_dataset_2014_2025.csv")
 ADP_CSV          = HERE / "sleeper_adp_2020_2026.csv"
 SKILL            = set(SKILL_POSITIONS)
-TARGET_SEASONS   = list(range(2014, 2026))
-LOAD_FROM        = 2011
+TARGET_SEASONS   = list(range(2002 if EXTENDED else 2014, 2026))
+LOAD_FROM        = 1999 if EXTENDED else 2011
+W1_FROM          = 2002 if EXTENDED else 2014 # week-1 rosters / depth charts floor
 SNAP_FROM        = 2013                       # snap_counts reliable from 2013
+AIR_YARDS_FROM   = 2006                       # pre-2006 air-yards values are junk -> NaN
 MIN_GAMES_TARGET = 3
 
 
@@ -80,9 +85,14 @@ def build_season_aggregates():
         the player_id of that team's leading passer (used for the qb_changed flag).
     """
     print(f"Loading player stats {LOAD_FROM}-2025 ...")
-    ps = snap("player_stats_2011_2025", nfl.load_player_stats, list(range(LOAD_FROM, 2026)))
+    ps = snap(f"player_stats_{LOAD_FROM}_2025", nfl.load_player_stats, list(range(LOAD_FROM, 2026)))
     ps = ps[(ps["season_type"] == "REG") & (ps["position"].isin(SKILL))].copy()
     ps["half_ppr"] = ps["fantasy_points"].fillna(0) + 0.5 * ps["receptions"].fillna(0)
+    # pre-2006 air-yards are junk (0-17% nonzero): NaN them so sums/rates can't fake zeros
+    ps.loc[ps["season"] < AIR_YARDS_FROM, ["receiving_air_yards", "air_yards_share"]] = np.nan
+    # reconstructed weekly target share (fills the 2003-2008 native hole; validated below)
+    tt = ps.groupby(["team", "season", "week"])["targets"].transform("sum")
+    ps["recon_tgt_share"] = ps["targets"] / tt.replace(0, np.nan)
     ps["touches"]  = ps["carries"].fillna(0) + ps["receptions"].fillna(0)
     ps["total_td"] = ps["rushing_tds"].fillna(0) + ps["receiving_tds"].fillna(0) + ps["passing_tds"].fillna(0)
 
@@ -103,11 +113,25 @@ def build_season_aggregates():
         total_td=("total_td", "sum"),
         touches=("touches", "sum"),
         target_share=("target_share", "mean"),
+        recon_target_share=("recon_tgt_share", "mean"),
         air_yards_share=("air_yards_share", "mean"),
         rec_epa=("receiving_epa", "sum"),
         rush_epa=("rushing_epa", "sum"),
     ).reset_index()
+    agg.loc[agg["season"] < AIR_YARDS_FROM, "rec_air_yards"] = np.nan
     agg["norm_name"] = agg["player"].map(norm_name)
+    # pre-registered fill rule (PREREGISTRATION.md A1): fill native target_share
+    # holes with the reconstruction ONLY if overlap corr >= 0.95 and |rel bias| <= 10%
+    both = agg[agg["target_share"].notna() & agg["recon_target_share"].notna() & (agg["targets"] > 10)]
+    if len(both) > 500:
+        corr = float(both["target_share"].corr(both["recon_target_share"]))
+        bias = float(both["recon_target_share"].mean() / both["target_share"].mean() - 1)
+        ok = corr >= 0.95 and abs(bias) <= 0.10
+        print(f"  target_share reconstruction: overlap n={len(both):,}, corr {corr:.4f}, "
+              f"rel bias {bias:+.2%} -> {'FILL holes' if ok else 'REJECT (holes stay NaN)'}")
+        if ok:
+            agg["target_share"] = agg["target_share"].fillna(agg["recon_target_share"])
+    agg.drop(columns=["recon_target_share"], inplace=True)
     # primary passer per team-season (for qb_changed): the QB with most attempts.
     # Tiebreak on player_id so the choice is deterministic when attempts tie.
     qb = ps[ps["position"] == "QB"].groupby(["team", "season", "player_id"])["attempts"].sum().reset_index()
@@ -138,10 +162,12 @@ def reconstruct_missed(agg):
     print(f"  reconstructed full-miss seasons: {len(miss):,}")
     agg["reconstructed"] = 0
     full = pd.concat([agg, miss], ignore_index=True)
-    # numeric stat cols on reconstructed rows -> 0 (they truly produced nothing)
+    # numeric stat cols on RECONSTRUCTED rows -> 0 (they truly produced nothing).
+    # Restricted to reconstructed rows: a blanket fillna(0) would resurrect the
+    # pre-2006 air-yards junk-zeros that build_season_aggregates deliberately NaN'd.
     for c in ["targets", "receptions", "rec_yards", "rec_air_yards", "carries", "rush_yards",
               "pass_att", "total_td", "touches", "rec_epa", "rush_epa"]:
-        full[c] = full[c].fillna(0)
+        full.loc[full["reconstructed"] == 1, c] = full.loc[full["reconstructed"] == 1, c].fillna(0)
     # rate stats stay NaN on 0-game rows (undefined), filled later by guards
     return full
 
@@ -290,7 +316,7 @@ def add_context_team(full):
     (history, not hindsight). Fallback for players absent from the week-1
     roster (post-week-1 signees) = stats team; residual, documented.
     """
-    rw1 = snap("rosters_weekly_w1_2014_2025", _load_rosters_week1, list(range(2014, 2026)))
+    rw1 = snap(f"rosters_weekly_w1_{W1_FROM}_2025", _load_rosters_week1, list(range(W1_FROM, 2026)))
     w1 = (rw1.drop_duplicates(["season", "gsis_id"])
              .rename(columns={"gsis_id": "player_id", "team": "w1_team"}))
     full = full.merge(w1, on=["player_id", "season"], how="left")
@@ -315,7 +341,7 @@ def add_team_context(full, primary_qb):
 
     # coaching change (clean: coaches known at season start); joined on the
     # preseason-knowable context_team (fix c)
-    sched = snap("schedules_2011_2025", nfl.load_schedules, list(range(LOAD_FROM, 2026)))
+    sched = snap(f"schedules_{LOAD_FROM}_2025", nfl.load_schedules, list(range(LOAD_FROM, 2026)))
     h = sched[["season", "home_team", "home_coach"]].rename(columns={"home_team": "team", "home_coach": "coach"})
     a = sched[["season", "away_team", "away_coach"]].rename(columns={"away_team": "team", "away_coach": "coach"})
     coaches = pd.concat([h, a]).dropna().groupby(["team", "season"])["coach"].agg(lambda s: s.mode().iat[0]).reset_index()
@@ -328,7 +354,7 @@ def add_team_context(full, primary_qb):
     # QB change, fix (a): week-1 REG depth-chart QB1 of season N vs the N-1
     # primary passer — both strictly knowable before Week 1 (was: season-N
     # primary passer, i.e. hindsight whenever the starter changed in-season).
-    qb1 = snap("depthchart_qb1_w1_2014_2025", _load_qb1_week1, list(range(2014, 2026)))
+    qb1 = snap(f"depthchart_qb1_w1_{W1_FROM}_2025", _load_qb1_week1, list(range(W1_FROM, 2026)))
     qb1 = (qb1.sort_values("gsis_id").drop_duplicates(["season", "team"])
               .rename(columns={"team": "context_team", "gsis_id": "qb1_id"}))
     prev_pq = primary_qb.copy()
@@ -349,7 +375,7 @@ def add_vacated(full):
     # NOT on the team's WEEK-1 roster in season N (fix b — was full-season-N
     # rosters, which include in-season signings). Joined on context_team (fix c).
     print("Loading week-1 rosters for vacated-opportunity ...")
-    ros = snap("rosters_weekly_w1_2014_2025", _load_rosters_week1, list(range(2014, 2026)))
+    ros = snap(f"rosters_weekly_w1_{W1_FROM}_2025", _load_rosters_week1, list(range(W1_FROM, 2026)))
     ros = ros.rename(columns={"gsis_id": "player_id"})
     roster_set = ros.groupby(["team", "season"])["player_id"].apply(set).to_dict()
 
