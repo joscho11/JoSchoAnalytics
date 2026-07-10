@@ -132,6 +132,57 @@ new pre-registered hypothesis with a stated mechanism, not a re-run.
 
 ---
 
+## Amendment 3 (2026-07-09) — A1/A4 conflict resolved BLIND; A4 terms pinned
+
+Recorded with NO knowledge of any extended-data metric: at the time of this
+amendment the extended dataset exists but no model has been trained on it and no
+evaluation of any kind has been computed from it.
+
+**D1 — The TE test is CONDITIONAL on A4 passing (option i).** The gate seasons
+(2010–2015) can only be predicted walk-forward by a model trained on 2002+, so the
+test presupposes the extension. Resolution: if A4 FAILS, we revert to 2014+ targets,
+the TE hypothesis is recorded as **UNTESTABLE UNDER THIS DESIGN**, no test is run,
+and seasons 2008–2015 remain unseen. Rationale for rejecting option (ii)
+(decoupling): (1) testing a config that just measurably lost on the seen panels
+builds in a post-hoc escape hatch — a rejection could be blamed on the weaker
+config, voiding the rejection's finality; (2) a confirmation would be a claim about
+a model we explicitly declined to deploy, which is not the hypothesis we care
+about. Under (i) every outcome stays meaningful. A future TE-test design (e.g. a
+2010+-trained panel model) would require a new pre-registered hypothesis and would
+inherit 2008–2015 only if still unseen at that point.
+
+**D2 — A4 pinned exactly.** Positions: **RB, WR, TE only** (QB was dropped by
+Amendment 2, which predates any extended metric — the gate metric was defined over
+"modeled positions" and the modeled set was fixed to RB/WR/TE before this gate was
+ever computable; no silent change). Metric: per position, the harness ρ (mean of
+within-position-season Spearman on the ADP-top-180 pool); "pooled" = unweighted
+mean of the three per-position ρ values. Both configs (corrected-only 2014+ vs
+corrected+extended 2002+) evaluated walk-forward with the frozen A1/A3 config on
+identical pools. **PASS iff ALL of:**
+  (a) Δ pooled ρ on 2020–2025 ≥ **+0.010**;
+  (b) Δ pooled ρ on 2016–2019 ≥ **−0.010** (tolerance, not required to improve);
+  (c) no single position's Δρ on 2020–2025 below **−0.030** (a large WR gain may
+      not license a material TE/RB loss).
+Numbers computed at 3 decimals; thresholds are as written; anything else → FAIL →
+revert to 2014+ targets and record the extension as a measured negative.
+Baseline (corrected-only, from `phase0_benchmark_results.json` at commit 5b846fd):
+2020–2025 RB .520 / WR .500 / TE .323 (pooled .448); 2016–2019 RB .299 / WR .429 /
+TE .392 (pooled .373).
+
+**D3 — TE gate rule reconfirmed unchanged:** pooled ρ edge ≥ +0.03 AND ours wins
+≥4 of 5 gate seasons (2010, 2011, 2013, 2014, 2015), top-12/bust consistency gate,
+rejection final, no metric shopping. Runs only if A4 passes, in a fresh session,
+exactly once.
+
+*Diagnostic note (pre-declared, non-gating): after the A4 run we will report
+whether the extended model uses era-missingness as a proxy (importance/split
+counts on snap-share / air-yards features). It is explicitly not part of any
+gate and cannot modify the frozen config.*
+
+---
+
 *Locked 2026-07-09. Harness of record: `phase0_benchmark.py` (+
 `phase0_benchmark_results.json` for the Phase 0 numbers this file cites).
-Amendments 1–2 added the same day, before any extended data was built.*
+Amendments 1–2 added the same day, before any extended data was built.
+Amendment 3 added the same day, after the extended dataset was built but before
+any extended-data training or evaluation.*
