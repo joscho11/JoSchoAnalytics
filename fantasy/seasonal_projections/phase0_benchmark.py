@@ -83,10 +83,13 @@ LGBM_PARAMS = dict(objective="mae", num_leaves=20, learning_rate=0.03, n_estimat
 
 # ── data assembly ─────────────────────────────────────────────────────────────
 def load_actual_points():
-    """Actual season half-PPR totals, recomputed independently of the dataset."""
+    """Actual season half-PPR totals, recomputed independently of the dataset
+    (from the pinned player-stats snapshot, so reruns are deterministic)."""
     import nflreadpy as nfl
-    ps = nfl.load_player_stats(list(range(2014, 2026))).to_pandas()
-    ps = ps[(ps["season_type"] == "REG") & (ps["position"].isin(SKILL_POSITIONS))].copy()
+    from snapshots import snap
+    ps = snap("player_stats_2011_2025", nfl.load_player_stats, list(range(2011, 2026)))
+    ps = ps[(ps["season"] >= 2014) & (ps["season_type"] == "REG") &
+            (ps["position"].isin(SKILL_POSITIONS))].copy()
     ps["half_ppr"] = ps["fantasy_points"].fillna(0) + 0.5 * ps["receptions"].fillna(0)
     act = ps.groupby(["player_id", "season"])["half_ppr"].sum().rename("actual_pts").reset_index()
     return act
