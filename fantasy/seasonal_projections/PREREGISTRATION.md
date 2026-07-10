@@ -209,6 +209,26 @@ the earliest extended fold (snap share 22–27/31, air-yards-share 12–15/31,
 target share 7–15/31 by split importance) — no evidence the model leans on
 era-missingness as a proxy; the null result above is not an artifact of that.
 
+**H4 Step 2 residual model: FAIL (2026-07-10, `step2_residual_model.py --fire`,
+sha256 57d36bab…, run exactly once).** Structural asserts and F5 provenance were
+verified before firing (primary panel 100% Sleeper half-PPR; anchor = null;
+λ=0 ≡ raw ADP exactly; all folds strictly walk-forward; no season < 2016
+predicted). Result vs the rule: (a) pooled Δρ **−0.002** (< +0.020, FAIL);
+(b) positive pooled Δ in **2/6** seasons (< 4, FAIL); (c) worst position −0.005
+(pass); (d) top-12/bust identical to ADP (pass). The mechanism of the failure is
+the pre-committed honest path: the inner walk-forward CV chose **λ = 0 (raw ADP)
+in 28 of 30 position-folds** (TE 0.25 at t=2020/2021 only, which cost −0.005 TE
+ρ out of sample). The 2025 diagnostic board is therefore all-zero corrections —
+descriptive confirmation that the model has nothing to say beyond the market,
+not a salvage. **Finding, as pre-committed in H4 §6: the market already contains
+what our prior-stats feature set knows about drafted RB/WR/TE. The "beat ADP
+with prior-stats features" question is CLOSED for this feature set. The product
+direction is ADP plus a calibrated uncertainty band (Phase 4); the remaining
+pre-registerable modeling angle is Step 3 (offseason/competition features), which
+would require a new hypothesis and decision rule written blind.** Amendment 4
+applies by analogy and was invoked in advance by Joseph: no λ-grid extensions,
+no alternative residual mappings, no panel swaps.
+
 ---
 
 ## Amendment 4 (2026-07-09) — standing prohibition: no gate-shopping the failed A4
