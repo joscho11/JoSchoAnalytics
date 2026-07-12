@@ -1642,3 +1642,509 @@ comparisons were market-input vs market-input, reported as dating evidence
 
 **Queue state: J3 (ProSportsTransactions) and J4 (props/futures scoping)
 remain declared-not-started.**
+
+---
+
+## H11 — Freshness decomposition of the validated H6 signal (the P5 dated-ADP
+## instrument; pre-registered 2026-07-11, BEFORE any harness or any
+## signal×outcome metric on the dated-window axis exists)
+
+**Session discipline note.** This T-step computed window-ADP reconstructions,
+market-vs-market agreement, membership counts, and counts-only power
+arithmetic — nothing else. No dated-window quantity has ever been joined to
+points, z-perf, games, or any outcome, by this session or any prior one. No
+harness exists; the F-step builds it in a separate session after Joseph
+reviews this prereg.
+
+**Lineage (the license to exist).** The dated-ADP instrument was declared
+blind in H5 Amendment 2 P5 (2026-07-10) — BEFORE H6 fired — as "the properly
+powered instrument for the confound question," and the last-angle declaration
+(H8 V4) put it first in the new-source queue behind its own J-class audit.
+That audit is J1 (Underdog BBM II–VI: CONDITIONAL-CLEAN, quirks q1–q7). H11
+is therefore a pre-declared DECOMPOSITION reading UNDER H6's validated claim
+— not a new signal claim, and not a variant search: the signal definition,
+population, statistic family, thresholds, and machinery are all inherited
+from H6 unchanged; the ONLY new element is the dated market benchmark. Serial
+burden acknowledged: fifth fired instrument in the program (H4, H6, H7, H8v
+before it); thresholds stay at campaign severity; the placebo binds.
+
+**Blindness disclosure (required reading).** H11 is deliberately NOT blind to
+H6's aggregate result (+0.300 etc.) — a decomposition cannot be; the
+mitigation is that the instrument was named (P5) before H6 fired, and every
+numeric choice below is inherited (H6's thresholds, J1's audited window grid)
+or frozen mechanically here (seed). What HAS been seen on the market axis:
+J1/J2's window-agreement curves (Underdog-vs-Sleeper aggregate ρ rising to
+~.95–.96 at the final window) — market-vs-market only; they shaped the
+window-axis choice and that anchoring is disclosed (the rise toward W10 is
+mechanical market convergence, not outcome information). NOTHING on the
+dated-window×outcome axis has ever been computed. Partially blind, declared;
+Joseph rules before the F-step.
+
+**Hypothesis and construct, frozen.** H6's edge conflates SKILL (the
+projection knows what the market never prices) with FRESHNESS (the projection
+postdates the average draft inside the season-aggregate ADP, so it "predicts"
+market movement that had already happened — the K4 confound). Operationalize
+freshness as the STALENESS GAP between the fixed week-1-eve Sleeper
+projection snapshot and a DATED market benchmark, manipulated by choosing the
+Underdog draft window w. Instrument family, per window w:
+    signal_w = adp_w_pos_rank − sleeper_pos_rank
+    perf_w   = z(actual_pts − implied(adp_w_pos_rank))
+i.e. H6's exact instrument transported to the window-w market: BOTH sides
+reference the same dated benchmark (what varies is market freshness; what is
+held fixed is the projection snapshot, the population, the statistic, the
+machinery). Mechanism predictions, pre-committed: under PURE FRESHNESS,
+r_w is inflated at stale w by shared market-drift variance and decays to ≈ 0
+at the final window (where the gap shrinks to days); under REAL SKILL, r at
+the final window stays positive — disagreement with a CONTEMPORANEOUS market
+still predicts that market's error. **The gate is r_FINAL: the H6 statistic
+against the freshest dated benchmark.** The window curve r_w (early → final)
+is the declared descriptive sizing of the freshness component.
+
+**Windows (J1's audited grid, verbatim; axis = July 1 – Sep 10 only).**
+W1..W9 = weekly from Jul 1; W10 = Sep 2–10. FINAL(season) = last populated
+window: W10 for 2021/2022/2023/2025, **W9 for 2024** (q4: BBM V filled by
+Aug 31). EARLY = W1 ∪ W2 pooled (Jul 1–14). Descriptive curve = r_w at each
+of EARLY, W3, W4, W5, W6, W7, W8, W9, (W10 where populated). The pre-July
+draft mass is EXCLUDED from the axis (outside J1's audited weekly grid and
+carrying the heaviest slow-draft dating quirk, q2). Window ADP = mean
+overall_pick_number over the window's drafts, alias table applied (q1),
+pool-rank recomputed within (season, position) on the full pool BEFORE any
+subset filter (h6 pattern); J1 sampling error ≤ ~1.5 picks at the thinnest
+cell, negligible at the gate windows.
+
+**Population, frozen — H6's stable-role subset EXACTLY (with its blind
+operative counts: QB 14/14/13/14/16, RB 23/23/25/24/34, TE 14/14/15/18/16,
+WR 44/36/34/41/41 — 473 rows), NOT the full pool.** Two reasons, the second
+decisive: (a) the claim being decomposed exists only on this subset; (b) a
+full-pool fire would compute signal×outcome on the VOLATILE rows and thereby
+unblind the volatile-slice validation, which is its own declared prereg next
+in queue. This choice costs power (full-pool MDE ≈ .10 per J1's memo is
+therefore UNAVAILABLE to H11; the stable-subset MDE is ≈ .144) and is made
+knowingly. Panel 2021–2025. Signal-present convention inherited from H6
+(missing Sleeper projection ≤ 3%, excluded from signal, retained in
+denominators); rows lacking a window-w match enter no cell for that window —
+J1's coverage minima say stable-slice window coverage is 100% in EARLY and
+FINAL windows (alias table applied), and the F-step must assert per-cell
+losses ≤ 2% or STOP.
+
+**z-perf machinery, verbatim campaign standard.** Implied points = per-
+position IsotonicRegression(increasing=False, out_of_bounds="clip") of
+actual_pts on the ADP position rank, fit walk-forward on pool rows of ADP
+seasons < t (2014+, 2020 ADP participates — audited clean), EVALUATED at the
+window-w position rank; residual z-scored within position-season over all
+pool rows carrying that window's rank. (The curve is the campaign's
+rank→points prior; Underdog windows begin 2021, so window-specific training
+curves are infeasible for t = 2021 — the campaign curve evaluated at the
+window rank keeps the 5-season panel and the validated machinery. Flagged as
+D2 below.)
+
+**Placebo / bar / seed.** Permutation placebo, 1,000 draws, signal shuffled
+among stable-role signal-present rows within position-season — H6's exact
+scope — run separately for the FINAL frame (gates) and the EARLY frame
+(pattern reading only). **Frozen seed 20260716.** Bars fixed at the F-step
+under the frozen seed (N3 sanction: randomized pairings reveal the threshold,
+never the answer); design expectation ≈ 0.085 from the Q3 arithmetic at
+H6's cells, same exact-vs-estimate pattern as H6/H7/H8v.
+
+**PASS rule — one shot, on r_FINAL, at H6 severity. PASS iff ALL of:**
+  (a) pooled 5-season mean r_FINAL above the fire-time frozen-seed placebo
+      95th percentile (FINAL frame);
+  (b) season-level pooled r_FINAL positive in ≥ 4 of 5 seasons;
+  (c) per-position floor: no position's 5-season mean r_FINAL below −0.03
+      (assessable at all four positions on this subset);
+  (d) one shot, rejection final — no threshold changes, no window swaps, no
+      panel swaps, no vendor swaps.
+A FAIL headlines as **"FAIL (freshness-controlled edge not established; true
+r up to ≈ 0.144 not excluded at 80% power)."**
+
+**Pre-committed readings (directions pinned NOW; the pattern rule is
+mechanical so no post-hoc choice exists):**
+1. **PASS** = the H6 edge SURVIVES freshness control: Sleeper's disagreement
+   with a contemporaneous dated market still predicts that market's error
+   among stable veterans. Licenses exactly: upgrading H6's claim wording
+   from "not explained by last-days news exposure" to "not explained by
+   snapshot staleness — verified against a dated contemporaneous market
+   (Underdog, best-ball; format delta q3 on the wording)." It does NOT
+   license (R0 carried verbatim): the volatile slice, threshold tiers,
+   player-level calls, other vendors, undrafted players, or 2026 transfer.
+   The descriptive curve then SIZES the freshness share (r_EARLY − r_FINAL),
+   reported flat, gating nothing.
+2. **FAIL, freshness-consistent pattern** — applies iff the gate fails AND
+   pooled r_EARLY exceeds its own frozen-seed placebo 95th percentile:
+   consistent with the freshness mechanism carrying much of the aggregate-
+   ADP edge. H6's recorded claim is NOT revoked (it was made about the
+   aggregate-ADP market and stands as worded); its mechanism attribution
+   narrows: the skill component is not established at this power.
+3. **FAIL, flat pattern** — gate fails and r_EARLY does not clear its bar:
+   inconclusive decomposition (the transported instrument may be weakened by
+   the vendor/format delta, q3); H6 stands as originally worded, neither
+   rescued nor weakened.
+Under every outcome: H6's PASS is not revoked; Phase 4 and the Q1/R0 label
+duties are unchanged; the intermediate-window curve is descriptive, gates
+nothing, and may never be promoted, cited as a pass, or used to reopen a
+FAIL.
+
+**Power (blind, counts only — reasoning reproduced, not inherited as
+gospel).** The gate frame is H6's cells exactly (473 rows, 20 cells), so the
+Q3 arithmetic transfers: per-cell null SD ≈ 1/√(n−1) → pooled null SE ≈
+0.052 → design bar ≈ 0.085, joint FPR ≈ 4%, power ≈ 54% at r = 0.10, 84% at
+0.15, ≈ 99% at 0.25, **MDE(80%) ≈ 0.144** (H6's simulated joint figure;
+identical cells and criteria). Context, stated plainly: H6's recorded
+aggregate r was +0.300 — if the edge is mostly skill the expected r_FINAL
+sits near there (power ≈ 100%); if freshness dominates, r_FINAL ≈ 0 and the
+gate correctly fails; a 50/50 split (~0.15) sits at ≈ 84%. J1's ≈ .10 MDE
+was the FULL-POOL figure and is unavailable by design choice D1. Window-ADP
+sampling noise (≤1.5 picks) attenuates r_w negligibly; disclosed.
+
+**F-step assert-teeth (build session, no metrics printed):** staged-file
+sha256s match the J1 manifest (16 files; no re-pull); stable-role cells
+reproduce H6's operative counts exactly; window-match losses ≤ 2% per cell
+(alias table applied) else STOP; ranks computed on the pre-filter pool;
+walk-forward fence per fold; z mean/SD fences per cell; placebo scoped to
+stable-role signal-present rows within position-season; frozen seed 20260716;
+embargo self-check (the observed statistic callable only from fire()); the
+fire computes the gate and the declared curve in ONE execution.
+
+**Deviations flagged for Joseph's ruling (D1–D6; none resolved silently):**
+- **D1 — Population = H6's stable-role subset, not the full pool.** Costs
+  MDE (.144 vs .10) but protects the volatile-slice prereg from being
+  unblinded and keeps the decomposition on the validated claim's rows.
+- **D2 — Implied-points curve = campaign aggregate-ADP-trained walk-forward
+  isotonic, evaluated at the window rank.** Window-trained curves are
+  infeasible (Underdog history starts 2021 → no prior seasons for t=2021)
+  and would shrink the panel to 4 seasons on thin curves.
+- **D3 — Freshness axis excludes pre-July drafts** (outside J1's audited
+  weekly grid; heaviest slow-draft dating quirk q2). Maximum staleness on
+  the axis is therefore early July, not May.
+- **D4 — EARLY = W1 ∪ W2 pooled** (Jul 1–14; pooling is mechanical stability
+  for 2021–22's thinner July windows).
+- **D5 — 2024's FINAL = W9 (Aug 26–31, q4):** its staleness gap at "final"
+  is ~1–2 weeks rather than days; bounded, disclosed, not fixable.
+- **D6 — Vendor/format transport (q3):** the dated benchmark is Underdog
+  best-ball (18 rounds, tournament), not Sleeper redraft; final-window
+  agreement with the Sleeper aggregate is ρ .949–.965, and the claim wording
+  carries the format delta either way.
+
+**Fences and embargoes.** Two-designs cap: this design plus at most one
+blind power-grounds redesign before the fire, never a third. Dead signals
+stay dead — no H4/H7/H8v resurrection through any window variant. If H11
+fails: no window-shopping, no alternative freshness axes, no vendor swaps,
+no re-tries — rejection final; a revisit needs a fresh prereg that opens by
+admitting it is a second look. **Embargo: no historical (≤2025) dated-ADP or
+dated-disagreement index with visible outcomes until H11 fires; 2026-forward
+window indexes (no outcomes exist) are free now that this prereg is frozen.**
+This prereg does NOT unblock the volatile slice or H10 — both remain
+declared, blind, untouched, next in queue, each requiring its own prereg.
+Product unchanged under every outcome (Phase 4 ships; board label duties
+per Q1/R0 stand).
+
+*Locked 2026-07-11, T-step only. Joseph reviews this prereg; the F-step
+(harness + structural asserts + frozen-seed bars + sha256, no outcome
+statistic) is a separate session; the shot is the session after that, same
+staging as H4/H6/H7/H8v. I commit nothing — Joseph commits.*
+
+---
+
+## OUTCOMES — H11 (2026-07-12): **PASS** — fired exactly once
+
+**H11 freshness decomposition: PASS** (`h11_freshness_signal.py --fire`,
+script sha256
+14975c7768fbbe1fffbd8ddf1d24dc8f2e5719acd3c05a13c02fcb0a4d554678 — verified
+against the frozen F-step hash before firing; placebo seed 20260716;
+fire-time frozen-seed bars FINAL 0.0815 / EARLY 0.0861; no-prior-fire check
+clean (the one grep hit was this prereg's own embargo sentence, verified by
+eye); all structural asserts passed on the fire run: J1 manifest sha256s
+16/16, H6 operative cells exact 20/20 (473 rows), window-match losses ZERO
+in every axis window, 2024 W10 empty per q4, walk-forward and z fences,
+placebo scope, embargo self-check).
+
+Criteria, verbatim against the frozen rule (gate = r_FINAL, the H6
+instrument against the last populated dated window):
+- (a) pooled 5-season mean r_FINAL = **+0.296** > frozen placebo bar
+  **0.081** → PASS (≈ 5.7 null SEs);
+- (b) season-level pooled r_FINAL positive in **4 of 5** seasons ≥ 4 → PASS
+  (2021 +0.411, 2022 +0.387, 2023 +0.286, 2024 +0.425, 2025 −0.027 — the
+  one miss is ≈ zero and is the same season H6's aggregate instrument
+  missed, reported as-is);
+- (c) per-position floor: QB **+0.300**, RB **+0.286**, WR **+0.252**,
+  TE **+0.348** — worst +0.252 ≥ −0.03 → PASS (all four positions positive).
+
+*Descriptive curve (declared, gates nothing, NEVER PROMOTABLE):*
+EARLY +0.371 → W3 +0.369 → W4 +0.383 → W5 +0.371 → W6 +0.361 → W7 +0.336 →
+W8 +0.319 → W9 +0.294 → W10 +0.264. Freshness share (descriptive, as
+pre-declared): r_EARLY − r_FINAL = **+0.075** — a real, modest staleness
+gradient; the surviving freshness-controlled component (+0.296) is the
+dominant part of the signal. Context, descriptive only: r_FINAL (+0.296)
+lands almost exactly on H6's aggregate-ADP result (+0.300) despite the
+vendor/format transport (q3) — the instrument reproduces across markets.
+
+**Pre-committed reading applied (branch 1, verbatim): the H6 edge SURVIVES
+freshness control.** Sleeper's disagreement with a contemporaneous dated
+market still predicts that market's error among stable-role veterans.
+License, exactly as pre-registered: H6's claim wording upgrades from "not
+explained by last-days news exposure" to **"not explained by snapshot
+staleness — verified against a dated contemporaneous market (Underdog,
+best-ball; format delta q3 on the wording)."** The Q1 labeling duty may now
+read "signal validated in aggregate and freshness-controlled; threshold
+tiers unvalidated."
+
+**What this does NOT license (R0 carried verbatim, in force):** the
+VOLATILE-PLAYER population (rookies, team-changers, low-prior-games — most
+of what a draft-day user sees flagged), the |gap| ≥ 8 threshold tiers, the
+board's HIGH/`sleeper_agrees` surfaces beyond the label wording above,
+player-level calls, other vendors, undrafted players, or transfer to 2026.
+Measurement, not alpha — every product surface still says "powered by
+Sleeper's projections vs the draft market."
+
+**Fences (Amendment 4 by analogy, bound from the moment the number
+existed):** no re-slicing, no alternate windows or freshness axes, no
+dropping the format-delta caveat, no variant of any kind, regardless of this
+result's direction. The descriptive curve may never be promoted, cited as a
+pass, or used to license window-level products. **Volatile-slice validation
+and H10 remain declared, blind, next in queue, untouched by this outcome —
+each fires only under its own prereg.** Per the H11 embargo's own terms, the
+historical dated-disagreement index is now unlockable; the volatile-slice
+and H10 embargoes are unaffected. Product unchanged: Phase 4 ships; the
+campaign's validated-signal ledger now reads H6 PASS + H11 PASS (freshness
+control) vs H4/H7/H8v FAIL.
+
+---
+
+## H12 — Volatile-slice validation: the R0 population under the dated FINAL
+## benchmark (pre-registered 2026-07-12, BEFORE any harness or any
+## volatile-row signal×outcome metric exists)
+
+**Session discipline note.** This T-step computed population taxonomy and
+cell counts from dataset membership columns, cited J1's recorded coverage
+facts (no re-scan of the staged 17.5 GB), and ran counts-only power
+simulations with synthetic N(0,1) perf. No signal×outcome quantity exists on
+any volatile row under any campaign instrument. No harness exists; the
+F-step follows Joseph's review and rulings on D1–D6 below.
+
+**Lineage and serial burden.** R0 (H6 Amendment 1) fenced the volatile
+population — rookies, team-changers, low-prior-games players, "most of what
+a draft-day user actually sees flagged" — because against the SUMMER-
+AGGREGATE ADP, Sleeper's week-1-eve snapshot is maximally freshness-
+advantaged exactly where summer news moves prices. **H11's PASS removes that
+objection in principle**: against the FINAL dated window the benchmark is
+contemporaneous with the projection, so staleness cannot carry the
+correlation. H12 transports the H6/H11 instrument — verbatim, no new signal
+engineering — to the fenced population. Sixth fired instrument in the
+program; third on the disagreement axis (H6, H11, H12); thresholds stay at
+campaign severity; the placebo binds; the multiplicity burden is on the
+claim (H3).
+
+**Blindness disclosure (required reading).** Known aggregates: H6 +0.300
+(stable rows), H11 +0.296 with its descriptive curve (stable rows) — nothing
+signal×outcome has ever been computed on VOLATILE rows under campaign
+instruments. Contaminations, disclosed honestly: (i) the one anchor row H5/H6
+confessed — Puka-23, projection >> ADP with huge outperformance — is a
+VOLATILE (rookie) row; it sits inside this test's population as a known
+confirming anecdote, one row of 420, powerless against a permutation-tested
+rank correlation but named. (ii) The June-2026 product arc (pre-campaign)
+computed board BUY hit-rates on drafted pools that included team-changers,
+with the `sleeper_agrees` flag visible on the same screens; those were OUR-
+model-vs-ADP calls, not this signal, but they are outcome-adjacent contact
+with this population. (iii) J1's market-side coverage tables for the volatile
+slice were seen (they shaped the coverage teeth, not the thresholds).
+Mitigation: every numeric choice below is inherited (H6/H11 machinery and
+thresholds, J1's window grid) or frozen mechanically here (seed). PARTIALLY
+blind, declared; Joseph rules before the F-step.
+
+**Hypothesis, frozen.** Among volatile players (the R0 population), Sleeper's
+disagreement with the FINAL dated market predicts that market's error:
+Spearman(signal_FINAL, perf_FINAL) > 0, with signal and perf exactly as
+frozen in H11 (signal_FINAL = adp_FINAL_pos_rank − sleeper_pos_rank;
+perf_FINAL = z(actual_pts − implied(adp_FINAL_pos_rank))).
+
+**Population, frozen (audited counts, this session).** Pool = phase0
+convention (reconstructed == 0, ADP-top-180, 2021–2025). H12 population =
+pool ∧ signal-present ∧ NOT stable-role — the exact complement R0 fenced,
+audited taxonomy: rookies 130 (is_rookie == 1), team-changers 129
+(is_rookie == 0, both teams non-null, team ≠ prior_team), low-prior-games
+veterans 151 (team-stable, prior_games < 14), full-miss returners 10
+(is_rookie == 0, no (player, N−1) row — verified real returners, not data
+artifacts; disclosed, included). Union = **420 rows**; ONE pooled gate over
+the union (D1). **Position scope: RB and WR only (D2)** — audited cells
+RB 34/35/34/35/28 (166), WR 30/38/37/32/29 (166), total **332 rows**;
+QB (8–11/season) and TE (5–9/season) are OUT OF SCOPE entirely — not gated,
+not descriptive, not computed — their cells are too thin to inform the
+pooled statistic (they raise the null SE faster than they add rows: 4-pos
+MDE ≈ .198 vs RB/WR ≈ .154) and the H8v precedent (exclude with reasons,
+don't stretch) applies. NO sub-group statistic (rookie-only, changer-only,
+etc.) is computed at fire, descriptive or otherwise — the gate reads on the
+union only (D1, D4).
+
+**Signal and z-perf, transported verbatim (no new engineering).** Signal and
+perf constructions, the FINAL-window definitions (W10; 2024 = W9 per q4/D5),
+window-ADP = mean overall_pick_number with the shared alias table (q1 + the
+Taysom rule — moot for RB/WR scope but carried), pool-ranks recomputed on the
+full pool BEFORE any subset filter, and the campaign walk-forward isotonic
+curve (aggregate-ADP-trained, seasons < t from 2014+, 2020 in) EVALUATED at
+the FINAL-window rank (H11 D2) — all identical to H11's frozen text. Noted
+explicitly, as required: **the isotonic curve is a rank→points prior and
+needs no player history — rookies having no prior-season row is irrelevant
+to perf construction.** z within position-season over all pool rows carrying
+the FINAL rank. The dated benchmark is Underdog best-ball; the D6 format
+delta rides on every claim. Signal-present convention inherited (missing
+projection ≤ 3%; audited: 0.8% pool-wide). GATE-ONLY: no EARLY frame, no
+window curve (D3) — J1 recorded real early-window coverage holes for
+volatile players (rookies/late-signees absent from July boards), so an EARLY
+frame would require row-dropping rules H11 never needed; the freshness
+question was H11's and is answered.
+
+**Placebo / bar / seed.** Permutation placebo, 1,000 draws, signal shuffled
+among H12-population rows within position-season (the exchangeable unit is
+the population, per the P4 doctrine), FINAL frame only. **Frozen seed
+20260717.** Bar fixed at the F-step under the frozen seed; design estimate
+≈ 0.093 (this session's sim at the audited cells: null SE 0.0561, joint FPR
+4.3%).
+
+**PASS rule — one shot, at campaign severity. PASS iff ALL of:**
+  (a) pooled 5-season mean r (RB/WR, FINAL benchmark, H12 population) above
+      the fire-time frozen-seed placebo 95th percentile;
+  (b) season-level pooled r positive in ≥ 4 of 5 seasons;
+  (c) neither RB nor WR 5-season mean r below −0.03 (floor assessable
+      exactly where the instrument runs, M3/H8v precedent);
+  (d) one shot, rejection final — no threshold changes, no position
+      re-inclusion, no sub-group re-slicing, no window/panel/vendor swaps.
+A FAIL headlines as **"FAIL (true r up to ≈ 0.15 not excluded at 80%
+power)."**
+
+**Pre-declared descriptive diagnostic (V5 mirror; gates nothing, never
+promotable):** at fire, the same Spearman against the PER-GAME residual
+(actual_pts/games − isotonic rank→PPG at the FINAL rank, walk-forward, games
+≥ 3 = MIN_GAMES_TARGET convention, z over eligible rows). Declared reason,
+recorded now: 151 of the 420 union rows are low-prior-games veterans
+(injury-returners) and availability noise is the pre-named suspect if the
+totals gate fails. Printed once beside the gate; may never be promoted,
+cited as a pass, or used to reopen a FAIL.
+
+**Power (blind, at the audited cells; J1's ≈ .14–.15 sketch reproduced and
+CORRECTED — the real cells are thinner).** RB/WR design: null SE 0.0561,
+design bar ≈ 0.093, joint FPR 4.3%, power 19% at r* = 0.05, 50% at 0.10,
+**79% at 0.15**, 99% at 0.25; **MDE(80%) ≈ 0.154** — H6-class. Context: if
+the volatile edge matches the class the validated signal has shown on stable
+rows (~0.30), power ≈ 99%. The rejected 4-position variant: MDE ≈ 0.198
+(61% at 0.15) — recorded so the scope choice is auditable. Sub-groups alone
+are all H8r-class underpowered (130–151 rows each); none is gated, none is
+computed; if any future sub-group question matters it gets its own prereg
+(rookie-specific questions remain H8r's territory, untouched).
+
+**Pre-committed outcomes.**
+- *PASS licenses exactly:* "Sleeper's disagreement with the dated final
+  market predicts that market's error among volatile RB/WR (rookies,
+  team-changers, low-prior veterans), in aggregate" — the board's volatile
+  RB/WR rows may carry **"validated in aggregate, freshness-controlled
+  (dated best-ball market; format delta)"**. It does NOT license: QB/TE
+  volatile rows (out of scope — labels stay unvalidated), threshold tiers,
+  player-level calls, any sub-group claim (no rookie-specific claim — that
+  is H8r's fenced territory), other vendors, undrafted players, or 2026
+  transfer. Measurement, not alpha.
+- *FAIL leaves the volatile labels exactly as today — "sized but
+  unvalidated"* — with no variant hunt, no sub-group rescue, no
+  window-shopping; headline carries the power caveat; H6/H11's stable-row
+  claims are untouched either way.
+
+**Deviations flagged for Joseph's ruling (D1–D6; frozen as written unless he
+amends, blind):**
+- **D1 — ONE pooled gate over the union**, not separate rookie/changer
+  gates: separate gates are three underpowered tests (MDE ~0.25–0.30 each)
+  with tripled multiplicity, and R0 fenced the population as one class —
+  which is also what the board label needs. Cost: a PASS cannot say WHICH
+  mechanism carries it; the license wording is aggregate-only.
+- **D2 — RB/WR-only scope** (MDE .154 vs .198): QB/TE volatile labels stay
+  unvalidated. The audited alternative is recorded above if Joseph prefers
+  license coverage over power.
+- **D3 — Gate-only, no EARLY frame/curve** (volatile early-window coverage
+  holes are real; freshness is H11's settled question).
+- **D4 — Rookie rows INCLUDED despite H8r adjacency:** different signal axis
+  (disagreement, not capital), aggregate-only outputs, no capital variable
+  anywhere in the harness; H8r's deferred design, trigger, and blindness are
+  untouched (knowing disagreement×error on rookie rows does not reveal
+  capital×error). Alternative if Joseph judges the adjacency too risky:
+  exclude rookies — but that guts 130 of 420 rows and the most-asked board
+  rows.
+- **D5 — Full-miss returners (10 rows) included** in the union (they are
+  R0-fenced volatile rows; verified real, not artifacts).
+- **D6 — Per-game diagnostic included** (V5 mirror, reason declared above).
+**Hardness note:** one restriction is ADDED here, not loosened: the
+historical dated-disagreement index that H11's fire unlocked is hereby
+RESTRICTED to stable-role rows until H12 fires — an index over volatile rows
+would be this test's answer sheet.
+
+**Fences and embargoes.** Two-designs cap: this design plus at most one
+blind power-grounds redesign before the fire, never a third. Amendment 4
+binds from the moment any number exists. Embargo: no historical (≤2025)
+volatile-row disagreement index, window-ADP-vs-outcome table, or any
+volatile signal×outcome surface until H12 fires; 2026-forward volatile
+indexes are free once this prereg freezes. **H10 remains declared, blind,
+untouched** — decomposition of H6's signal on its own prereg. H8r remains
+deferred on its counts-only trigger. Product: Phase 4 ships regardless; the
+Q1/R0 label duties stand until this gate speaks.
+
+*Locked 2026-07-12, T-step only. Joseph reviews and rules on D1–D6; the
+F-step (harness + structural asserts + frozen-seed bar + sha256, no outcome
+statistic) is a separate session; the shot is the session after that, same
+staging as H4/H6/H7/H8v/H11. I commit nothing — Joseph commits.*
+
+---
+
+## OUTCOMES — H12 (2026-07-12): **PASS** — fired exactly once
+
+**H12 volatile-slice validation: PASS** (`h12_volatile_signal.py --fire`,
+script sha256
+e4fba9f781aaf226d2ba7e6bed0bdaaf8b3f7c83e1a243f7841b61b8b23eed93 — verified
+against the frozen F-step hash before firing; placebo seed 20260717;
+fire-time frozen-seed bar 0.0894; no-prior-fire check clean (zero
+outcome-style hits); all structural asserts passed on the fire run: manifest
+16/16, capital fence, union 420 with sub-groups 130/129/151/10, disjoint
+from the 473 stable rows, gate cells exact, join losses zero, rookie
+no-history assert, walk-forward/z/placebo/embargo fences).
+
+Criteria, verbatim against the frozen rule (volatile RB/WR union, FINAL
+dated benchmark):
+- (a) pooled 5-season mean r = **+0.254** > frozen placebo bar **0.089** →
+  PASS (≈ 4.5 null SEs);
+- (b) season-level pooled r positive in **4 of 5** seasons ≥ 4 → PASS
+  (2021 +0.147, 2022 +0.408, 2023 +0.271, 2024 +0.485, 2025 −0.040 — the
+  one miss is ≈ zero and is the same 2025 miss H6 and H11 recorded; the
+  pattern is reported flat, not interpreted);
+- (c) per-position floor: RB **+0.189**, WR **+0.320** — worst +0.189 ≥
+  −0.03 → PASS.
+
+*Pre-declared V5-mirror diagnostic (DESCRIPTIVE — NEVER PROMOTABLE, gates
+nothing):* per-game-residual Spearman pooled **+0.324** (RB +0.290,
+WR +0.357; games ≥ 3 floor). Reported beside the availability question it
+was declared to watch (151 of the 420 union rows are injury-returners): the
+per-game number sits at least as high as the totals number, so availability
+noise did not manufacture the totals result. It may never be promoted,
+cited as a pass, or used to reopen anything.
+
+**Pre-committed branch reading applied (PASS branch, verbatim):**
+"Sleeper's disagreement with the dated final market predicts that market's
+error among volatile RB/WR (rookies, team-changers, low-prior veterans), in
+aggregate." The board's volatile RB/WR rows may carry **"validated in
+aggregate, freshness-controlled (dated best-ball market; format delta)."**
+It does NOT license: QB/TE volatile rows (out of scope — labels stay
+unvalidated on this branch and every branch), threshold tiers, player-level
+calls, any sub-group claim (no rookie-specific claim — H8r's fenced
+territory, untouched), other vendors, undrafted players, or 2026 transfer.
+Measurement, not alpha — surfaces say "powered by Sleeper's projections vs
+the draft market."
+
+**Hardness-rule status update (per the prereg's own terms):** H12 has fired,
+so the volatile-row restriction on the historical dated-disagreement index
+LIFTS; the index unlocked by H11 may now include volatile rows. (Building
+any such index remains its own decision; none exists.)
+
+**Fences (Amendment 4 by analogy, bound from the moment the number
+existed):** no re-slicing, no sub-group peeking (no rookie-only or
+changer-only statistic exists and none may be computed), no alternate
+windows, no position re-inclusion, no variant of any kind, regardless of
+this result's direction. Two-designs cap: SPENT for H12. **H10 remains
+declared, blind, untouched — the next and final queued test.** H8r remains
+deferred on its counts-only trigger. Campaign ledger: **H6 PASS + H11 PASS
++ H12 PASS vs H4/H7/H8v FAIL** — the Sleeper-disagreement signal is
+validated, freshness-controlled, and now extends in aggregate to the
+volatile RB/WR population.
