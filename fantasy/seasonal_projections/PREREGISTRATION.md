@@ -794,3 +794,636 @@ closed for public sources under this program.
 
 *Locked 2026-07-10. Sub-step N (build + structural asserts, F/G split) awaits
 Joseph's approval; the shot gets a fresh session. I commit nothing.*
+
+---
+
+## H6 Amendment 1 (2026-07-10, R0) — the scope gap, named as a limitation on any PASS.
+## Amended BLIND (no H6 code or outcome metric exists). This weakens a claim we are
+## licensed to make; it loosens no gate.
+
+**The gap.** H6 tests the signal on the STABLE-ROLE subset — the slice
+deliberately constructed to minimize the freshness confound. The SHIPPED BOARD
+ranks the FULL pool, including the rookies, team-changers, and low-prior-games
+players that the subset strips out. Those volatile players are where the
+largest disagreements and the Puka-class hits concentrate — the blind bucket
+counts showed |gap| ≥ 8 rows are scarce inside the subset and common outside
+it (an observation partly confounded by pool size, per P3's requalification,
+but sufficient to establish that the subset is not the shipped population).
+
+**Pre-committed reading of any H6 PASS:** it licenses "disagreement predicts
+ADP error among stable veterans, in aggregate" — and NOTHING about the board
+as shipped. It does NOT license "the board's rankings are validated." The Q1
+labeling duty already covers the threshold tiers; this amendment adds that the
+VOLATILE-PLAYER population — most of what a draft-day user actually sees
+flagged — is also outside H6's reach. Any surface language must respect both
+limits: tiers unvalidated, volatile slice unvalidated.
+
+**Path to a full-pool validation:** the dated-ADP instrument (P5 — e.g. FFC
+ADP by draft-date window), which measures the freshness effect directly
+instead of excluding the exposed population. That is a future pre-registration
+with a fresh data pull. Nothing about it is attempted now.
+
+*Locked 2026-07-10, before Sub-step N exists. Next session: N (build +
+structural asserts + freeze hash, F/G split). The shot itself: the session
+after, same staging as Step 2.*
+
+---
+
+## H6 Amendment 2 (2026-07-11, Sub-step S) — blind count correction to the pinned
+## pool convention. STRIKE-DON'T-REPLACE. No outcome statistic exists; everything
+## below is membership metadata. Hardness: loosens no gate — it corrects recorded
+## metadata TOWARD the pinned definition.
+
+**What the build assert caught (Sub-step N, first run).** The H6 harness's
+subset-count reconciliation halted the build: 2021 QB came out 14 (recorded 15)
+and 2021 WR 44 (recorded 43); the other 18 cells matched. Root cause: the
+Q-session feasibility script that produced the recorded blind counts read the
+raw dataset WITHOUT phase0's `reconstructed == 0` pool filter. The pinned
+convention (H6: "ADP-top-180 pool (phase0 convention)") includes that filter —
+`phase0_benchmark.py` line 122, `df = df[df["reconstructed"] == 0].copy()`,
+inherited by every instrument in this campaign (phase0 main, step2, the
+extension gate, the ex-2020 recompute).
+
+**Independent derivation (raw pool + convention, harness not consulted).** The
+old Q-style 2021 top-180 contained four reconstructed rows (players who missed
+the entire 2021 season but were drafted): Deshaun Watson (QB, overall 159,
+prior_games 16, projection present, team-stable → the only one that qualified
+for the subset, i.e. the recorded 15th QB), Gus Edwards (RB, no projection),
+Irv Smith (TE, prior_games 13), Michael Thomas (WR, prior_games 9). Dropping
+the four promotes old ranks 181–184: Emmanuel Sanders (WR, team changed),
+Parris Campbell (WR, prior_games 2), Mark Ingram (RB, prior_games 11, team
+changed), and Marquez Valdes-Scantling (WR, prior_games 18, projection
+present, team-stable → the qualifying +1 WR). The independent path reproduces
+the harness exactly: 2021 QB 14, WR 44, every other cell unchanged; totals
+473 in both versions.
+
+**Correction (operative counts for the N2 assert and all H6 reporting):**
+~~QB 15/14/13/14/16~~ → **QB 14/14/13/14/16**; RB 23/23/25/24/34 (unchanged);
+TE 14/14/15/18/16 (unchanged); ~~WR 43/36/34/41/41~~ → **WR 44/36/34/41/41**
+(seasons 2021→2025). Justification is twofold: (a) the phase0 pool convention
+is pinned and every prior instrument used it; (b) substantive — a player who
+missed the entire season has degenerate ADP error (pure availability), and
+must not enter a disagreement-vs-error correlation.
+
+**Power impact: nil.** Pooled null SE moves 0.0517 → ~0.0518 (Σ1/(n−1) shifts
+by +0.005 at QB-2021, −0.0005 at WR-2021); the Q3 power verdict (MDE(80%)
+r ≈ 0.144, adequately powered) stands unchanged.
+
+**Assert-teeth note (recorded so the check does not go self-referential):**
+after this correction the harness's count assert validates 18 cells against
+the independent Q computation and the 2 corrected cells against the named
+derivation above — two independent paths, neither derived from the harness.
+
+---
+
+## OUTCOMES — H6 (2026-07-11): **PASS** (fired exactly once)
+
+**H6 continuous value-signal test: PASS** (`h6_value_signal.py --fire`, script
+sha256 51a103faaf5d60d090a55eb7285f467dbe55d3e0ef3a50e78894572f2eeaeab5 —
+verified against the frozen Sub-step N hash before firing; placebo seed
+20260710; run exactly once, Gate 0 confirmed no prior fire).
+
+Criteria, verbatim against the frozen rule:
+- (a) pooled 5-season mean r = **+0.300** > frozen placebo 95th-pctile bar
+  **0.083** → PASS (≈5.8 null SEs above zero at SE 0.052);
+- (b) season-level pooled r positive in **4 of 5** seasons ≥ 4 → PASS
+  (2021 +0.434, 2022 +0.457, 2023 +0.161, 2024 +0.450, 2025 −0.003 — the one
+  miss is ≈zero, reported as-is);
+- (c) per-position floor: QB +0.177, RB +0.367, WR +0.252, TE +0.403 — worst
+  +0.177 ≥ −0.03 → PASS (all four positions positive).
+Structural preamble on the fire run: all 20 subset-count cells matched the
+Amendment-2 operative counts (473 rows); every N2 assert passed.
+
+*Secondary (descriptive, gates nothing, pre-stated WEAK evidence per M3):*
+full-pool pooled r = **+0.296** — consistent with the primary; cited as
+context only, never as confirmation.
+
+*Context (pre-declared, non-gating):* per-position signal r vs the corrected
+ladder's Sleeper-over-ADP ρ edge — QB .177 vs .158, RB .367 vs .126,
+WR .252 vs .088, TE .403 vs .090. The disagreement signal is strongest at
+TE/RB, not where the raw ladder edge was largest.
+
+**Pre-committed reading applied (five-way, row 1 — primary passes + full-pool
+passes): real forecasting edge among news-insulated veterans.** What this
+licenses, verbatim: "Among stable-role veterans, Sleeper's disagreement with
+ADP carries aggregate information about ADP error not explained by last-days
+news exposure" — a **verified, sized public signal; measurement, not alpha**;
+any product surface must say "powered by Sleeper's projections vs the draft
+market," never "our model finds value."
+
+**What it does NOT license (both limits attached, verbatim):**
+1. (Q1) NOT the |gap| ≥ 8 threshold tiers or the board's HIGH /
+   `sleeper_agrees` surfaces — the label may soften only to **"signal
+   validated in aggregate; threshold tiers unvalidated."**
+2. (Amendment 1 / R0) NOT the board as shipped — the VOLATILE-PLAYER
+   population (rookies, team-changers, low-prior-games; most of what a
+   draft-day user sees flagged) is outside H6's reach; full-pool validation
+   would need the dated-ADP instrument (P5, future prereg).
+Also unlicensed: tail-specific claims, undrafted players, other vendors,
+other panels, transfer to 2026.
+
+**Standing fences unchanged by a PASS:** no third statistic (two-designs cap
+spent), no panel swaps, no re-tests, no |gap| variants, no dated-ADP work
+without a fresh prereg, no Phase-4 laundering, 2008–2015 sealed. Amendment 4
+applies by analogy and was invoked in advance by Joseph.
+
+---
+
+## H7 — Efficiency-over-expectation signal (pre-registered 2026-07-11, BEFORE any
+## harness or outcome-joined metric exists)
+
+**Session discipline note.** This prereg was written from a data audit that
+joined efficiency sources to POOL MEMBERSHIP only (ids, position, season, ADP,
+is_rookie). No efficiency field has ever been joined to panel-season actual
+points, perf, residuals, or any outcome-derived quantity. The signal's own
+construction contains PRIOR-season actuals (that is what over-expectation
+means); prior-season actuals are features throughout this project, and the
+embargo concerns projected-season outcomes only.
+
+**Third test against the ADP-error null — acknowledged (L1-style ruling).**
+H4 (failed) tested a LEARNED correction from the 31 prior-stats features —
+which include raw efficiency rates (yptarget, ypc, td_rate) but nothing
+situation-adjusted. H6 (passed) tested a vendor projection's disagreement. H7
+tests a NEW DATA CLASS — play-level expectation models (NGS) absent from every
+prior instrument — with a fit-free signal test, no learned weights anywhere.
+Different data, different mechanism, same null; the multiplicity burden sits
+on the claim (H3), and thresholds stay at the established severity.
+
+**T1 — Sources audited (counts/coverage only, id-joined).**
+`load_nextgen_stats` (week-0 REG season aggregates, vendor-qualified, gsis id
+100%, metric fields 100% populated, seasons 2016+): passing ~40 QB/season,
+rushing ~50 RB, receiving ~96 WR + ~33 TE. Join into the veteran ADP-top-180
+pool on gsis ids for feature-seasons 2020–2024: QB 93%, RB 82%, WR 92%,
+TE 89% (overall 680/770; the gap is the vendor's qualification floor,
+concentrated in low-carry RBs). `load_ff_opportunity` (weekly, 2006+, gsis id,
+99% pool match) audited as the cross-check source; NOT chosen as the signal —
+its fantasy-points-over-expected mixes play-level skill with TD variance,
+whose documented behavior is mean reversion, making the hypothesis direction
+ambiguous. No display-name join anywhere (J-audit rule).
+
+**T2 — Signal, frozen (one metric per position, no composite, no weights):**
+- QB: `completion_percentage_above_expectation` (CPOE)
+- RB: `rush_yards_over_expected_per_att` (RYOE/att)
+- WR: `avg_yac_above_expectation` (xYAC +/-)
+- TE: `avg_yac_above_expectation` — the same RECEIVING mechanism, not a
+  cross-position patch; TE cells are the thinnest (17–20 rows) and xYAC+/-
+  covers only the after-catch slice of receiving skill. Disclosed, frozen.
+Justification: these are the NFL's own canonical over-expectation metrics
+(external convention), chosen from mechanics and the T1 coverage counts only.
+The signal for pool season t is the player's season-(t−1) week-0 NGS value.
+**Volume floor = the vendor's week-0 qualification itself** (external,
+mechanical, frozen). Rookies (no prior NFL season) and unqualified players
+carry no signal: excluded from correlation rows, never imputed. **Direction,
+pinned: positive** — higher prior-season efficiency-over-expectation predicts
+POSITIVE ADP error (talent persists; the market anchors on volume/points).
+The competing mechanism (over-performance mean-reverts, implying the opposite
+sign) is disclosed; a negative-direction result FAILS H7, and a
+regression-signal hypothesis would need its own prereg — H7's design cap does
+not transfer to it.
+
+**T3 — No-freshness argument, VERIFIED not assumed.** Channels enumerated:
+(1) temporal — the prior season ends in January; ADP forms June–September; no
+path. (2) Stat corrections — settle within days of games; empirically,
+`ff_opportunity` re-pulled today matches the repo's May-2026 cache on 20,923
+player-weeks with ZERO changed values; NGS week-0 frames are byte-identical
+across independent pulls. (3) Vendor model retrains/backfills — a
+reproducibility concern, not a leakage channel: expectation models are fit on
+play mechanics, never on player-season outcomes. (4) "The market already
+reads NGS" is the NULL, not a confound. Verdict: no freshness channel; the
+FULL-pool design stands, which places the volatile players R0 fenced out of
+H6's license inside H7's scope. Rookies remain excluded by construction.
+
+**T4 — Instrument, rule, and power (P1/Q3 discipline, blind).**
+Instrument: Spearman(h7_signal, z-perf) per position-season on the full
+ADP-top-180 pool (phase0 convention, reconstructed == 0), signal-present rows
+only; unweighted pooling over the four positions (per-position 5-season
+means); panel 2021–2025; 2017–2019 MAY be reported as descriptive context
+(FFC-ADP era, NGS reaches back to 2016 feature-seasons) — never gating.
+z-perf machinery unchanged from H4/H6: actual − walk-forward isotonic
+ADP-implied, z-scored within position-season over all pool rows. Null claim:
+ADP already prices efficiency-over-expectation. Placebo: signal permuted
+within position-season among signal-present pool rows, 1,000 draws, **frozen
+seed 20260712**; bar = 95th percentile, fixed at the build step (F) before
+the shot, as in H6. Power at the audited row counts (QB 19–21, RB 39–42,
+WR 52–60, TE 17–20 per season; 680 rows total vs H6's 473 — 1.4×, not more,
+because the NGS floor caps it; what it buys: pooled null SE 0.052 → 0.043):
+design-estimate bar ≈ 0.071, joint FPR 4.3%, power 27% at true r = 0.05,
+**69% at 0.10, 93% at 0.15**, ~100% at 0.25; **MDE(80%) ≈ r 0.115** (vs
+H6's 0.144). **PASS iff ALL of:** (a) pooled r above the fire-time frozen-seed
+placebo bar; (b) season-level pooled r positive in ≥ 4 of 5 seasons; (c) no
+position's 5-season mean below −0.03. One shot, rejection final. The
+two-designs cap applies to H7 as its own question: this design plus at most
+one blind power-grounds redesign, never a third.
+
+**T5 — H9 declared now, blind.** The deep-pool hypothesis — does a talent
+signal carry information in the LOW-attention slice (ADP ranks ~150–300,
+outside the top-180 pool)? — is a DISTINCT future hypothesis, to be
+pre-registered and tested separately REGARDLESS of H7's outcome. Declared
+before H7's result exists so it is a first look later, not a second.
+
+**T6 — Descriptive-index embargo (standing rule).** No historical
+efficiency-over-expected index with visible outcomes (any season ≤ 2025) may
+be built, printed, or published until H7 fires — a historical index IS the H7
+signal sitting next to its outcomes. A 2026-forward index (no outcomes exist)
+is free any time now that T2 is frozen.
+
+**T7 — Both outcomes pre-committed.** *Negative:* the market prices
+efficiency-over-expectation too; the talent angle closes for this data class;
+H8 (rookie draft-capital signal) becomes the last declared modeling angle;
+product direction unchanged (Phase 4). A FAIL headline carries the power
+caveat: true r up to ≈ 0.115 not excluded at 80% power. *Positive:* licenses
+"prior-season efficiency-over-expectation predicts ADP error on the drafted
+pool, in aggregate" — volatile players included this time (unlike H6), but
+still aggregate only: not tiers, not player-level calls, measurement not
+alpha, and the T6 embargo lifts only per its own terms.
+
+*Locked 2026-07-11. Next session: F-step (harness + structural asserts +
+frozen bar + sha256, no outcome statistic). The shot: the session after,
+same staging as Step 2 and H6. I commit nothing — Joseph commits.*
+
+---
+
+## OUTCOMES — H7 (2026-07-12): **FAIL (true r up to ~0.115 not excluded at 80%
+## power)** — fired exactly once
+
+**H7 efficiency-over-expectation signal: FAIL** (`h7_talent_signal.py --fire`,
+script sha256 6347df724ed7c4fbe0d848a9d3ad8df717a6976bdd8bffe9f697c4e4d1e5b0ae —
+verified against the frozen U-step hash before firing; placebo seed 20260712;
+Gate 0 confirmed no prior fire; all structural asserts passed on the fire run,
+including the season-(t−1) lag assert on all 680 matched rows).
+
+Criteria, verbatim against the frozen rule:
+- (a) pooled 5-season mean r = **−0.013** vs frozen placebo bar **0.067** → FAIL
+  (the point estimate is zero-to-slightly-negative);
+- (b) season-level pooled r positive in **3 of 5** seasons (< 4) → FAIL
+  (2021 +0.011, 2022 +0.055, 2023 −0.142, 2024 +0.093, 2025 −0.081);
+- (c) per-position floor: QB −0.019, RB **−0.060**, WR −0.033, TE +0.061 —
+  RB breaches −0.03 → FAIL.
+
+*Pre-declared context (descriptive, gates nothing):* per-position r, H7 talent
+vs H6 disagreement vs corrected-ladder Sleeper edge — QB −.02 / +.18 / +.16;
+RB −.06 / +.37 / +.13; WR −.03 / +.25 / +.09; TE +.06 / +.40 / +.09. Talent is
+NOT where disagreement was: Sleeper's validated disagreement information is not
+reducible to public play-level efficiency metrics. The mild negative lean at
+three positions is directionally consistent with the disclosed mean-reversion
+mechanism but nowhere near significant; the honest read is a null.
+
+**Pre-committed reading applied (T7 negative, verbatim):** prior-season
+efficiency-over-expectation does not measurably predict ADP error on the
+drafted pool at this power. **The talent-via-efficiency angle CLOSES for this
+data class** (NGS play-level over-expectation metrics). H8 (rookie draft
+capital) is the remaining declared modeling angle. Product direction
+unchanged: Phase 4 ships as validated.
+
+**Fences (Amendment 4 by analogy, invoked in advance by Joseph):** no third
+statistic (H7's design cap is spent as far as any non-blind redesign is
+concerned — a power-grounds redesign was permitted only BEFORE firing and none
+was used), no panel swaps, no descriptive variant as salvage, no sign-flipped
+regression hypothesis without its own blind prereg, 2008–2015 sealed.
+
+**T6 embargo status:** the outcome is now recorded, so per T6's own terms a
+**2026-FORWARD talent index is unblocked** (definition frozen since T2; no
+outcomes exist for 2026). NOT built here. A historical (≤2025) index — the H7
+signal beside its outcomes — remains unauthorized and would need its own
+treatment.
+
+---
+
+## H8 — Offseason situation change: veteran room competition + rookie draft
+## capital (pre-registered 2026-07-11, BEFORE any harness or outcome-joined
+## metric exists)
+
+**Session discipline note.** This prereg was written from a data audit that
+joined candidate sources to POOL MEMBERSHIP only (gsis ids, position, season,
+team, ADP, is_rookie, prior_games). The season dataset was read under an
+explicit usecols ALLOWLIST — target_ppg, target_games, sleeper_pts_half_ppr,
+and every actual-points-derived column were never loaded into any audit frame.
+Signal-side structure (tie masses, real signal vectors) and null-power
+simulations with SYNTHETIC N(0,1) perf were computed; no candidate feature has
+ever shared a frame with actual points, perf, residuals, or any
+outcome-derived quantity. Pool construction was validated against H6
+Amendment 2's blind subset counts (counts only): all 20 cells consistent
+within the ≤3% missing-projection bound.
+
+**Serial-test acknowledgment (L1-style ruling, written first).** H8's veteran
+sub-test is the FOURTH fired test against the top-180 ADP-error null (H4 FAIL
+— learned correction from 31 prior-stats features; H6 PASS — vendor
+disagreement; H7 FAIL — NGS efficiency-over-expectation). Per H3 the
+multiplicity burden is on the claim; thresholds stay at the established
+severity; the permutation placebo binds each gate. Distancing from H4, argued
+explicitly because it matters here: H4's 31 features INCLUDED
+vacated_target_share, vacated_rush_share, coach_changed, qb_changed, and the
+player's own draft_round/draft_pick (verified against the dataset header and
+phase0's EXCLUDE list this session). Those columns are therefore DEAD for this
+null and are NOT components of any H8 signal. The H8 veteran component —
+TEAM-level draft-capital inflow into the player's position room — is a
+quantity absent from the dataset and from every prior instrument (H4 saw the
+player's OWN capital, never his room's incoming competition).
+
+**Blindness disclosure (required reading before accepting this prereg).** The
+June-2026 product arc (pre-campaign, pre-discipline) saw outcome-joined
+quantities ADJACENT to both sub-tests: (a) `diagnose_vet_rookie.py` printed
+rookie-slice ordering correlations (ADP ρ ≈ .46, our model ≈ .17, 2020–2024);
+(b) `rookie_model_experiment.py` / `rookie_blend_test.py` evaluated a CatBoost
+built on draft capital + combine + landing spot against rookie outcomes
+(standalone ρ .26 vs ADP .46; blend rookie-slice ρ .457/.488/.457); (c) the
+shipped incoming-competition guard (`incoming_competition.py`) was designed
+FROM outcome-selected anecdotes (the Conner/Benson class) and board BUY
+hit-rates with that guard in force were computed (`surprise_eval.py`). Item
+(c) is the serious one: H8v's pinned direction (new room competition →
+incumbent underperforms) is partly ANCHORED on those outcome-selected
+anecdotes. Mitigations, stated honestly: no correlation of room-level draft
+inflow with ADP error has ever been computed anywhere in this project; no
+capital-vs-ADP-error statistic has ever been computed within the rookie
+slice; every numeric choice below is mechanical (min pick, max-pick+1
+sentinel, no cutoffs, no weights, no charts); and the placebo pins the
+false-positive rate regardless of anchoring. The prereg is PARTIALLY blind,
+declared as such; Joseph rules on acceptability before the F-step.
+
+**V1 — Data audit (counts/coverage only, id-joined; the J rule throughout).**
+- `load_draft_picks` (nflreadpy 0.1.5): seasons 1980–2026; 2021–2025 = 1,294
+  picks (259/262/259/257/257 per season, so no-pick sentinels = 260/263/260/
+  258/258). gsis_id coverage on 2021–2025 skill picks 99.7% (397/398). Rookie
+  id-join into the pool (gsis only, same-season): **128/130 matched**; the 2
+  unmatched (2021, 2023, one each) are dataset-undrafted rookies → sentinel
+  rows, not id gaps. Round agreement with the dataset's own draft_round on
+  matches: 100%. Team-code map to the dataset convention: the
+  build_2026_board map MINUS its ARI→AZ entry (dataset uses ARI), i.e.
+  {GNB→GB, KAN→KC, LAR→LA, LVR→LV, NOR→NO, NWE→NE, SFO→SF, TAM→TB}; verified
+  bijective 32↔32 against pool team codes. Draft position codes HB/FB
+  normalize to RB (pinned). **Refetch stability: two independent pulls of the
+  nflverse draft_picks asset byte-identical (sha256 7b41d3437d8172ed619f…,
+  699,050 bytes).** The event date is external and public: every panel draft
+  concluded in late April, before any Sleeper ADP window opens (June+).
+- `load_contracts` (OTC): granularity is **year_signed (int) only — no
+  signing date exists**. A March free-agency departure is indistinguishable
+  from an August one. → Free-agency-based VACATED VOLUME IS OUT: the design
+  intent named it the cleanest class; the audit REFUTES that — departures
+  cannot prove a pre-window date in this source.
+- `load_trades`: trade_date 100% populated (1,436 rows 2021–2025) but ids are
+  pfr-only (bridge required — J risk) and trades are a small, mechanically
+  biased sliver of departures (free agency, cuts, retirements are the bulk).
+  A trades-only vacated volume would misclassify most departures as retained.
+  OUT — dating one sliver does not date the class.
+- `load_depth_charts`: week-based (weeks 1–22), IN-SEASON ONLY; no offseason
+  snapshot exists in the source. Any depth-chart-derived competition feature
+  is dated at-or-after week 1. OUT (the H6-class freshness confound,
+  precisely as anticipated).
+- Coaching/scheme change: the only public sources (schedules' per-game coach
+  fields; the dataset's coach_changed) are game-dated September artifacts —
+  the source cannot prove the hire predates the ADP window — AND
+  coach_changed/qb_changed sit in H4's dead feature set. OUT on both grounds.
+- O-line turnover: requires OL room composition, which exists only in
+  week-dated rosters / in-season depth charts. Not computable without
+  August/September-dated sources. OUT.
+- **Audit verdict: the NFL draft is the ONLY offseason-situation source that
+  proves a before-ADP-window date.** Both H8 signals are therefore
+  draft-derived; every other candidate component is dropped, not imputed.
+- Populations at the phase0 pool convention (reconstructed == 0, ADP top-180,
+  2021–2025): rookies in pool **130** (22/24/27/28/29 by season; per-position
+  cells 0–14, incl. zero QB and TE rookies in 2022 — a per-position rookie
+  instrument is structurally infeasible). Team-stable veterans (is_rookie ==
+  0, week-1 team == prior-season week-1 team, both non-null, NO prior-games
+  floor): 630 rows; RB cells 38/40/39/35/41 (193), WR 56/44/48/49/50 (247),
+  QB 99, TE 91. Sentinel (no own-room pick) share: WR 26%, RB 47%, TE 71%,
+  QB 80% — the QB/TE signal barely varies (structure, not outcomes).
+
+**V2 — Signals, frozen (mechanics + V1 coverage only; drops, never imputes).**
+- **H8v (veterans).** Population: team-stable non-rookie pool rows, RB and WR
+  only (scope argument in V3). The H6 prior_games ≥ 14 floor is NOT inherited:
+  it was a freshness-insulation device for a signal that postdated part of the
+  ADP window; H8v's signal is April-dated with no freshness channel (H7
+  T3-style: the draft precedes the entire window; the source is refetch-stable
+  and static). Team-stability is retained solely for J-class room assignment:
+  a mover's season-N room is knowable only from September-dated rosters; a
+  stable player's room is the incumbent room by construction. Signal, one
+  definition: **room_competition = the minimum pick number spent by the
+  player's team on his position in the season-N draft; rooms receiving no
+  such pick take the sentinel (that draft's max pick + 1).** Higher signal =
+  less new competition. Direction, pinned: **Spearman(signal, z-perf) > 0**
+  (less incoming competition → outperform ADP). Single component — the
+  composite rule degenerates; disclosed rather than padded. Monotone
+  invariance dissolves the value-curve question (the Q2 argument): any
+  published draft-value chart applied to min-pick yields the identical
+  Spearman, so no chart is needed and no chart provenance is owed. Competing
+  mechanisms, disclosed: (i) selection — teams add competition to rooms they
+  privately judge weak; SAME sign; a PASS therefore licenses only an
+  aggregate predictive claim, never a causal touches-competition story;
+  (ii) market OVER-reaction to draft-day competition (incumbents faded too
+  far, then outperform) — OPPOSITE sign; a negative-direction result FAILS
+  H8v, and an over-reaction hypothesis would need its own blind prereg. The
+  null is strong and stated: ADP forms entirely AFTER the draft; the market
+  has seen every pick; H8v asks only whether it prices them fully.
+- **H8r (rookies).** Population: pool rows with is_rookie == 1, all four
+  positions, pooled per season (per-position cells infeasible, V1). Signal,
+  one definition: **−(overall pick number)** from load_draft_picks, gsis-id
+  join; the two undrafted pool rookies take −(that draft's max pick + 1).
+  Direction, pinned: **Spearman(signal, z-perf) > 0** (more draft capital →
+  outperform ADP; the market chases camp/landing hype over capital).
+  Competing mechanism disclosed: the market may OVER-weight capital
+  (early-pick name value) — opposite sign, fails H8r, own prereg required.
+  Landing-spot vacancy is NOT a component (V1: vacancy is undateable as a
+  class); no substitute room-weakness proxy is smuggled in — capital stands
+  alone, and pick number's Spearman-invariance to every published value curve
+  dissolves the chart-choice question here too.
+- **QB and TE veteran rooms are OUT OF SCOPE entirely** — not gated, not
+  descriptive, not computed. At 80%/71% sentinel share the instrument cannot
+  resolve them (and the per-position floor would burn joint power on noise —
+  the 4-position variant's MDE is WORSE, V3). Any future QB/TE
+  room-competition test is a new hypothesis requiring its own prereg.
+- z-perf machinery UNCHANGED from H4/H6/H7: actual_pts − walk-forward
+  per-position isotonic ADP-implied points (curve seasons < t from 2014+,
+  2020 ADP participates — audited clean), z within position-season over ALL
+  pool rows; ranks and curves computed on the full pool BEFORE any subset
+  filter (h6_value_signal pattern). Signal presence is 100% by construction
+  (sentinels), so there is no exclusion clause; id-join integrity is asserted
+  instead.
+
+**V3 — Structure + power (pinned blind from the audited counts; tie-aware).**
+Two sub-tests, not one pooled test: the signals are different quantities with
+different directions on different mechanics (a rookie's own capital vs a
+veteran's incoming room competition); no common signal definition exists to
+pool, and a pooled gate would let the 440-row veteran slice carry a claim
+about the 130-row rookie slice — exactly the licensing muddle H3 exists to
+prevent. Each sub-test gets its own placebo, own bar, own frozen seed, own
+PASS rule; **a pass on one licenses NOTHING about the other.** The two-designs
+cap applies per sub-test (this design plus at most one blind power-grounds
+redesign before its fire, never a third).
+
+Power method (structure only, zero outcomes): real signal vectors per cell
+(the audited tie structure included), synthetic perf = r*·z(avg-rank(signal))
++ √(1−r*²)·N(0,1) at underlying association r*; 20,000 null trials give the
+design bar (95th pctile of the pooled statistic) and joint FPR; power = joint
+pass rate at r*; sim seed 20260711. Tie attenuation is therefore INSIDE these
+power figures (the honest, harder number — r* is the underlying association;
+measured Spearman is attenuated wherever the signal ties).
+
+- **H8v instrument:** per position-season Spearman(signal, z-perf) on the H8v
+  population; pooled = unweighted mean over {RB, WR} of per-position 5-season
+  means; panel 2021–2025. Placebo: signal permuted among H8v-population rows
+  within position-season, 1,000 draws, **frozen seed 20260713**, bar fixed at
+  the F-step. Design estimates: null SE 0.0491, bar ≈ 0.080, joint FPR 4.2%.
+  Power: 22% at r* = 0.05, 60% at 0.10, **90% at 0.15**, ~100% at 0.25;
+  **MDE(80%) ≈ 0.129.** Adequately powered against moderate effects; a coin
+  flip at 0.10 — stated plainly. **PASS iff ALL of:** (a) pooled 5-season
+  mean r above the fire-time frozen-seed placebo 95th percentile; (b)
+  season-level pooled r positive in ≥ 4 of 5 seasons; (c) neither RB nor WR
+  5-season mean r below −0.03 (floor assessable exactly where the instrument
+  runs, M3 precedent); (d) one shot, rejection final — no threshold changes,
+  no panel swaps, no component additions. A FAIL headlines as **"FAIL (true
+  r up to ≈ 0.13 not excluded at 80% power)."** Assert-teeth for the F-step:
+  population cells must reproduce RB 38/40/39/35/41, WR 56/44/48/49/50; the
+  rookie join must reproduce 128/130 with the two named-season sentinels; the
+  team map must be bijective; every cell's signal variance > 0. A mismatch
+  means drift: STOP, report, do not fire.
+- **H8r instrument (frozen NOW; firing DEFERRED on power grounds):**
+  per-season Spearman(signal, z-perf) pooled across positions on the rookie
+  rows; K-season mean; placebo permutes signal within position-season among
+  rookie rows, 1,000 draws, **frozen seed 20260714**. At K = 5 (2021–2025):
+  null SE 0.0903, bar ≈ 0.151, joint FPR 4.4%, power 16% at r* = 0.10, 27% at
+  0.15, 57% at 0.25; **MDE(80%) ≈ 0.335 — underpowered-by-construction**;
+  the population is capped by how many rookies exist inside the top-180
+  (130), not by any design choice. **Ruling, argued against both options the
+  session brief offered:** firing an underpowered gate now repeats the
+  mistake P2 fenced (the modal outcome against a real moderate effect is an
+  uninformative FAIL, and rejection-final would close the angle on a panel
+  that GROWS every year); computing it "descriptively" instead repeats the
+  laundering pattern Q1 struck (harvests a weak number AND unblinds the
+  2021–2025 rookie slice for any future properly-powered test). Therefore:
+  **H8r is recorded as DESIGNED-DEFERRED-ON-POWER-GROUNDS** (the H5/P2
+  pattern — not a negative, and not fired). Its definition, seed, and rule
+  are frozen above; NOTHING rookie-signal×outcome is computed until the
+  trigger. **Mechanical trigger, counts only:** each offseason after season
+  Y completes, recompute this power method at the then-audited rookie counts
+  (classes 2021..Y, fixed start, pool convention unchanged, each added
+  season's ADP passing the same provenance standard); H8r fires in the first
+  year MDE(80%) ≤ 0.25, with the season-positivity criterion generalized to
+  ≥ ⌈0.8·K⌉ of K seasons. Design estimate: ~9 rookie classes (≈ 2029). The
+  trigger computation touches row counts only; it can never peek.
+
+**V4 — Declarations (pre-committed before any H8 number exists).**
+- *H8v negative:* the market fully prices draft-day room competition for
+  stable RB/WR veterans; the offseason-situation angle CLOSES for this data
+  class (dated public offseason-event data — which V1 showed means the draft;
+  the undateable classes are already out by audit). Headline carries the
+  power caveat. Product unchanged: Phase 4 ships as validated. *H8v
+  positive:* licenses "incoming draft-day room competition predicts ADP error
+  among team-stable RB/WR veterans, in aggregate" — measurement, not alpha;
+  aggregate only. It does NOT license: player-level calls, tiers, the shipped
+  board's Contested/BUY surfaces (the incoming-competition guard REMAINS
+  unvalidated product convention either way — its labeling duty mirrors Q1),
+  QB/TE rooms, movers, rookies, undrafted players, other panels, or transfer
+  to 2026 drafts.
+- *H8r at its eventual fire:* negative closes the rookie-capital angle for
+  the accumulated panel (with its power caveat); positive licenses "draft
+  capital predicts rookie ADP error in aggregate" — NEVER a rookie-ranking
+  product surface, never player-level rookie calls.
+- **Embargo:** no historical (≤ 2025) competition/vacancy/rookie-capital
+  index with visible outcomes may be built, printed, or published until the
+  relevant sub-test fires (H8v's fire lifts only the veteran-room index; the
+  rookie index stays embargoed until H8r's deferred fire). A 2026-FORWARD
+  index (no outcomes exist) is free now that V2 is frozen.
+- **Last-angle declaration, blind:** H8 is the LAST new pre-registered angle
+  against the top-180 ADP-error null on the already-audited public data
+  classes. Any further hypothesis requires a NEW data source with its own
+  J-class provenance audit BEFORE its prereg — the dated-ADP instrument (P5)
+  is first in that queue. Reconciliation with prior declarations: H9
+  (deep-pool, declared blind in T5) is grandfathered as a declaration but
+  targets a pool slice (ADP ~150–300) whose ADP provenance has never been
+  audited — its prereg therefore also requires its own J-class audit first,
+  consistent with this fence. H8r's deferred fire is part of H8, not a new
+  angle. This declaration is the fence against serial hypothesis mining on a
+  five-season panel.
+
+**V5 — Target addendum (pinned blind before any H8 number exists).**
+- **The gate stays on total-points z-perf, unchanged.** It is the validated
+  instrument family (H4/H6/H7), and ADP prices season totals — totals error
+  is the true economic mispricing. The gate does not move.
+- **One pre-declared descriptive diagnostic, gating nothing, never
+  promotable:** at each sub-test's fire (H8v now, H8r at its trigger), the
+  same Spearman computed against a PER-GAME residual — per-game actual
+  (actual_pts / games) minus per-game ADP-implied (per-position isotonic
+  rank→PPG curve, fit walk-forward on pool rows of seasons < t with the same
+  floor), z within position-season over eligible rows; minimum-games floor =
+  **3**, inherited from the dataset's own PPG-label convention
+  (MIN_GAMES_TARGET = 3, build_season_dataset.py), disclosed as such.
+  Declared reason, recorded now: offseason-opportunity signals are
+  mechanistically PER-GAME signals (vacated touches and room competition
+  change usage, not health), so if the totals gate fails, availability noise
+  is the pre-named suspect — this diagnostic is where that question lives,
+  declared blind so later curiosity has a pre-registered home instead of
+  becoming target-shopping. It is printed once, beside the gate, and may
+  never be promoted to a gate, cited as a pass, or used to reopen a FAIL.
+- **STANDING FENCE — dead signals stay dead against every target.** H4's 31
+  features and H7's efficiency metrics may not be re-tested against PPG,
+  per-game residuals, or any other target variant: a target changed after
+  seeing a failure is outcome-informed shopping. New-target work is licensed
+  only for (a) not-yet-fired hypotheses whose diagnostics were declared blind
+  (this addendum), and (b) decomposition of VALIDATED signals under their own
+  fresh prereg. Under (b), **H10 is declared now, blind:** what does H6's
+  validated disagreement signal predict — per-game mispricing, availability,
+  or both? (Sleeper's verified full-slate projection convention vs the
+  market's injury discounting makes the decomposition mechanistically
+  informative.) NOTHING about H10 may be computed before its own prereg
+  exists.
+
+*Locked 2026-07-11. Next session: the F-step for H8v ONLY (harness +
+structural asserts + frozen-seed bar + sha256, no outcome statistic). The
+shot: the session after, same staging as H4/H6/H7. H8r fires only at its
+counts-only power trigger, years from now. I commit nothing — Joseph commits.*
+
+---
+
+## OUTCOMES — H8v (2026-07-11): **FAIL (true r up to ≈ 0.13 not excluded at
+## 80% power)** — fired exactly once
+
+**H8v veteran room-competition signal: FAIL**
+(`h8v_competition_signal.py --fire`, script sha256
+a72b1b01e666697d9c6279d429313ab55a6be6b6271ea08ce01c819b955d6615 — verified
+against the frozen F-step hash before firing; placebo seed 20260713; fire-time
+frozen-seed bar 0.0792 (V3 design estimate ~0.080); no-prior-fire check clean;
+all structural asserts passed on the fire run: population cells RB
+38/40/39/35/41, WR 56/44/48/49/50 (440 rows), POS4 team-stable 630, rookie
+id-join integrity 128/130 counts-only, team map bijective, walk-forward and
+z-denominator fences, placebo scope, embargo self-check).
+
+Criteria, verbatim against the frozen rule:
+- (a) pooled 5-season mean r = **−0.009** vs frozen placebo bar **0.079** →
+  FAIL;
+- (b) season-level pooled r positive in **3 of 5** seasons (< 4) → FAIL
+  (2021 +0.050, 2022 +0.001, 2023 −0.061, 2024 +0.002, 2025 −0.036);
+- (c) per-position floor: RB **−0.073**, WR **+0.055** — RB breaches −0.03 →
+  FAIL.
+
+*Pre-declared V5 diagnostic (DESCRIPTIVE — NEVER PROMOTABLE, gates nothing):*
+per-game-residual Spearman pooled **−0.017** (RB −0.061, WR +0.026; games ≥ 3
+floor, MIN_GAMES_TARGET convention). Printed once beside the gate as declared;
+it may never be promoted, cited as a pass, or used to reopen this FAIL. The
+totals gate and the per-game diagnostic agree: there is nothing here on either
+target.
+
+**Pre-committed reading applied (V4 negative, verbatim):** the market fully
+prices draft-day room competition for stable RB/WR veterans; **the
+offseason-situation angle CLOSES for this data class** (dated public
+offseason-event data — which V1 showed means the draft; the undateable classes
+were already out by audit). Headline carries the power caveat. Product
+unchanged: **Phase 4 ships as validated.**
+
+*Context, reported flat:* the RB lean (−0.073) is directionally consistent
+with the disclosed competing over-reaction mechanism (V2, mechanism ii) but
+sits ≈1 null SE from zero — the honest read is a null. A sign-flipped
+over-reaction hypothesis is NOT licensed by this result and would need its own
+blind prereg, which the last-angle declaration additionally conditions on a
+new dated data source.
+
+**Fences (Amendment 4 by analogy, bound from the moment the number existed):**
+no re-slicing, no alternate target, no dropping sentinel players, no pick
+thresholds or position subsets, no panel swaps, no variant of any kind,
+regardless of framing. H8r stays DEFERRED to its counts-only power trigger —
+this outcome neither advances nor prejudices it. QB/TE rooms stay out of
+scope. Embargo per V4's own terms: H8v's fire lifts only the historical
+veteran-room index (not built here); the rookie-capital index stays embargoed
+until H8r's deferred fire. The campaign ledger stands: H4 FAIL, H6 PASS, H7
+FAIL, H8v FAIL — Sleeper-vs-ADP disagreement remains the program's one
+validated signal, and the dated-ADP instrument (P5) heads the queue for any
+future work, behind its own J-class audit.
