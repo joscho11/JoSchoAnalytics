@@ -1,0 +1,229 @@
+{
+  "pulled_utc": "2026-07-12 02:13:50",
+  "files": [
+    {
+      "file": "BBM_II_Data_Dump_Regular_Season_01312022.csv",
+      "url": "https://assets.underdogfantasy.com/underblog/BBM_II_Data_Dump_Regular_Season_01312022.csv",
+      "bytes": 452358431,
+      "sha256": "a5cda6c31f20891d89a587378f69405538dc75d70a66b49eeedb791dea03baa5",
+      "md5_b64": "uHyp2hbAn2qnbhhm4eIJFw==",
+      "server_md5_match": null,
+      "headers": {
+        "ETag": "\"b87ca9da16c09f6aa76e1866e1e20917\"",
+        "Last-Modified": "Mon, 31 Jan 2022 18:33:24 GMT",
+        "x-goog-hash": "crc32c=2K1Qsg==",
+        "Content-Length": "452358431"
+      }
+    },
+    {
+      "file": "BBM_III_Regular_Season_Dump_Part_00_01302023.csv",
+      "url": "https://storage.googleapis.com/underdog-inc/underblog/BBM_III_Dumps/BBM_III_Regular_Season_Dump_Part_00_01302023.csv",
+      "bytes": 156403619,
+      "sha256": "5e22207a74ebe302aecccd1f00342d99dbcbe5332ebdd66595fba3535d42ed1f",
+      "md5_b64": "AEN9g6gkVNcbFrHrII1r/g==",
+      "server_md5_match": null,
+      "headers": {
+        "ETag": "\"00437d83a82454d71b16b1eb208d6bfe\"",
+        "Last-Modified": "Mon, 30 Jan 2023 23:00:40 GMT",
+        "x-goog-hash": "crc32c=gVcXvQ==",
+        "Content-Length": "156403619"
+      }
+    },
+    {
+      "file": "BBM_III_Regular_Season_Dump_Part_01_01302023.csv",
+      "url": "https://storage.googleapis.com/underdog-inc/underblog/BBM_III_Dumps/BBM_III_Regular_Season_Dump_Part_01_01302023.csv",
+      "bytes": 155705700,
+      "sha256": "7a23c3105d84ebfdacc380ed53c848dc4c5d754ad795f06bab00db70be754b13",
+      "md5_b64": "3ou3T8rcaamXkSJY3cboIg==",
+      "server_md5_match": null,
+      "headers": {
+        "ETag": "\"de8bb74fcadc69a997912258ddc6e822\"",
+        "Last-Modified": "Mon, 30 Jan 2023 23:00:32 GMT",
+        "x-goog-hash": "crc32c=kmSFzg==",
+        "Content-Length": "155705700"
+      }
+    },
+    {
+      "file": "BBM_III_Regular_Season_Dump_Part_02_01302023.csv",
+      "url": "https://storage.googleapis.com/underdog-inc/underblog/BBM_III_Dumps/BBM_III_Regular_Season_Dump_Part_02_01302023.csv",
+      "bytes": 156135315,
+      "sha256": "2c0a2d61489a3934279434bed014ad4f32abb425470ea7c0ae44e8f9271fec8d",
+      "md5_b64": "cS4E89mT026gGfQn0BWieQ==",
+      "server_md5_match": null,
+      "headers": {
+        "ETag": "\"712e04f3d993d36ea019f427d015a279\"",
+        "Last-Modified": "Mon, 30 Jan 2023 23:00:29 GMT",
+        "x-goog-hash": "crc32c=ZwrEMw==",
+        "Content-Length": "156135315"
+      }
+    },
+    {
+      "file": "BBM_III_Regular_Season_Dump_Part_03_01302023.csv",
+      "url": "https://storage.googleapis.com/underdog-inc/underblog/BBM_III_Dumps/BBM_III_Regular_Season_Dump_Part_03_01302023.csv",
+      "bytes": 155150742,
+      "sha256": "c46ed9fad58d1a88ca17cea5846622767a0c21a2e84191062b67325d9a93e064",
+      "md5_b64": "0tSVHCKD/dmadg1p/OkBaw==",
+      "server_md5_match": null,
+      "headers": {
+        "ETag": "\"d2d4951c2283fdd99a760d69fce9016b\"",
+        "Last-Modified": "Mon, 30 Jan 2023 22:59:00 GMT",
+        "x-goog-hash": "crc32c=JtllAw==",
+        "Content-Length": "155150742"
+      }
+    },
+    {
+      "file": "BBM_III_Regular_Season_Dump_Part_04_01302023.csv",
+      "url": "https://storage.googleapis.com/underdog-inc/underblog/BBM_III_Dumps/BBM_III_Regular_Season_Dump_Part_04_01302023.csv",
+      "bytes": 155147786,
+      "sha256": "36cdf6b9d451918af5bf514a43d3e324738c1b90aba45658d13cc333eb7ba4e8",
+      "md5_b64": "hDALr+/Ez8F8V872ty+svA==",
+      "server_md5_match": null,
+      "headers": {
+        "ETag": "\"84300bafefc4cfc17c57cef6b72facbc\"",
+        "Last-Modified": "Mon, 30 Jan 2023 22:58:46 GMT",
+        "x-goog-hash": "crc32c=ODyGAg==",
+        "Content-Length": "155147786"
+      }
+    },
+    {
+      "file": "BBM_III_Regular_Season_Dump_Part_05_01302023.csv",
+      "url": "https://storage.googleapis.com/underdog-inc/underblog/BBM_III_Dumps/BBM_III_Regular_Season_Dump_Part_05_01302023.csv",
+      "bytes": 155149458,
+      "sha256": "ad33a908d7bd22ec497b82359bb0afe7cfc145e90d1d452f937cdf3f33ae3321",
+      "md5_b64": "ij6+PkTdOK6O5OdtnxKFYg==",
+      "server_md5_match": null,
+      "headers": {
+        "ETag": "\"8a3ebe3e44dd38ae8ee4e76d9f128562\"",
+        "Last-Modified": "Mon, 30 Jan 2023 22:58:44 GMT",
+        "x-goog-hash": "crc32c=5q/5YA==",
+        "Content-Length": "155149458"
+      }
+    },
+    {
+      "file": "BBM_III_Regular_Season_Dump_Part_06_01302023.csv",
+      "url": "https://storage.googleapis.com/underdog-inc/underblog/BBM_III_Dumps/BBM_III_Regular_Season_Dump_Part_06_01302023.csv",
+      "bytes": 155149812,
+      "sha256": "7c2e9f2d870e7afd7dcd755cc737e6379c4e3129fd9632ee6df00faa08c959ac",
+      "md5_b64": "WXAusWVa/4JxPvEDZu0fuA==",
+      "server_md5_match": null,
+      "headers": {
+        "ETag": "\"59702eb1655aff82713ef10366ed1fb8\"",
+        "Last-Modified": "Mon, 30 Jan 2023 22:57:20 GMT",
+        "x-goog-hash": "crc32c=VgSexA==",
+        "Content-Length": "155149812"
+      }
+    },
+    {
+      "file": "BBM_III_Regular_Season_Dump_Part_07_01302023.csv",
+      "url": "https://storage.googleapis.com/underdog-inc/underblog/BBM_III_Dumps/BBM_III_Regular_Season_Dump_Part_07_01302023.csv",
+      "bytes": 155150690,
+      "sha256": "a8f09c8316a365552af645d488f334eaff651feda6bd106f383bb16aeda35272",
+      "md5_b64": "XXsxLUPSs3ZKL1Vwm93ZkA==",
+      "server_md5_match": null,
+      "headers": {
+        "ETag": "\"5d7b312d43d2b3764a2f55709bddd990\"",
+        "Last-Modified": "Mon, 30 Jan 2023 22:57:06 GMT",
+        "x-goog-hash": "crc32c=EBsplw==",
+        "Content-Length": "155150690"
+      }
+    },
+    {
+      "file": "BBM_III_Regular_Season_Dump_Part_08_01302023.csv",
+      "url": "https://storage.googleapis.com/underdog-inc/underblog/BBM_III_Dumps/BBM_III_Regular_Season_Dump_Part_08_01302023.csv",
+      "bytes": 155146194,
+      "sha256": "9b08775a69f2458a0a9401ea347cb24017b7706ad7d36b815a0cb3b7bb841d9d",
+      "md5_b64": "pPYshQljZnu1kZDF31gYig==",
+      "server_md5_match": null,
+      "headers": {
+        "ETag": "\"a4f62c850963667bb59190c5df58188a\"",
+        "Last-Modified": "Mon, 30 Jan 2023 22:57:05 GMT",
+        "x-goog-hash": "crc32c=7m1Gtg==",
+        "Content-Length": "155146194"
+      }
+    },
+    {
+      "file": "BBM_III_Regular_Season_Dump_Part_09_01302023.csv",
+      "url": "https://storage.googleapis.com/underdog-inc/underblog/BBM_III_Dumps/BBM_III_Regular_Season_Dump_Part_09_01302023.csv",
+      "bytes": 155146512,
+      "sha256": "989cd02522bd85998fdb7be6ef4132481dc365f068344427fbb4d6bf67d511d8",
+      "md5_b64": "HjEHhwggovohOpF6hz4cLA==",
+      "server_md5_match": null,
+      "headers": {
+        "ETag": "\"1e3107870820a2fa213a917a873e1c2c\"",
+        "Last-Modified": "Mon, 30 Jan 2023 22:55:42 GMT",
+        "x-goog-hash": "crc32c=OLud2Q==",
+        "Content-Length": "155146512"
+      }
+    },
+    {
+      "file": "BBM_III_Regular_Season_Dump_Part_010_01302023.csv",
+      "url": "https://storage.googleapis.com/underdog-inc/underblog/BBM_III_Dumps/BBM_III_Regular_Season_Dump_Part_010_01302023.csv",
+      "bytes": 155149371,
+      "sha256": "363e8cae5a3ac3e482ec431237bb9927db17af8585c755c3c7deb775f4140d82",
+      "md5_b64": "zUwovbjJmkBNJXWHOxC5Vg==",
+      "server_md5_match": null,
+      "headers": {
+        "ETag": "\"cd4c28bdb8c99a404d2575873b10b956\"",
+        "Last-Modified": "Mon, 30 Jan 2023 22:55:27 GMT",
+        "x-goog-hash": "crc32c=cu7RGw==",
+        "Content-Length": "155149371"
+      }
+    },
+    {
+      "file": "BBM_III_Regular_Season_Dump_Part_011_01302023.csv",
+      "url": "https://storage.googleapis.com/underdog-inc/underblog/BBM_III_Dumps/BBM_III_Regular_Season_Dump_Part_011_01302023.csv",
+      "bytes": 155148575,
+      "sha256": "ff4b7813d404d9b9727cefeffb34baaed5a83f2805499ef514a0f487e4be56be",
+      "md5_b64": "TJogL5FtHYaM/LFJcZFfPA==",
+      "server_md5_match": null,
+      "headers": {
+        "ETag": "\"4c9a202f916d1d868cfcb14971915f3c\"",
+        "Last-Modified": "Mon, 30 Jan 2023 22:55:26 GMT",
+        "x-goog-hash": "crc32c=pMiS/g==",
+        "Content-Length": "155148575"
+      }
+    },
+    {
+      "file": "best_ball_mania_iv_2023_r1_results_pick_by_pick.csv",
+      "url": "https://storage.googleapis.com/underdog-inc/underblog/BBM_IV_Rosters/best_ball_mania_iv_2023_r1_results_pick_by_pick.csv",
+      "bytes": 4805397501,
+      "sha256": "b2fbf1f13d12fc8cc0219611f8fbd7eb9e9ee71fd1db8bb578e8f39ac49b2f8b",
+      "md5_b64": "DnpfEcTpBZXYgnaDjCnt4g==",
+      "server_md5_match": null,
+      "headers": {
+        "ETag": "\"0e7a5f11c4e90595d88276838c29ede2\"",
+        "Last-Modified": "Thu, 16 May 2024 16:24:43 GMT",
+        "x-goog-hash": "crc32c=bnCuRw==",
+        "Content-Length": "4805397501"
+      }
+    },
+    {
+      "file": "best_ball_mania_v_rd1.csv",
+      "url": "https://storage.googleapis.com/underdog-inc/underblog/2025_Best_Ball_Mania_V/best_ball_mania_v_rd1.csv",
+      "bytes": 5222749906,
+      "sha256": "45aab0134245779851374808a40512d9ebbf1a58a31c915c78a8dc6ca712fa09",
+      "md5_b64": "fTHWnSMEV3l3BYMopZ1ozA==",
+      "server_md5_match": null,
+      "headers": {
+        "ETag": "\"7d31d69d2304577977058328a59d68cc\"",
+        "Last-Modified": "Mon, 05 May 2025 19:08:13 GMT",
+        "x-goog-hash": "crc32c=U8i8JQ==",
+        "Content-Length": "5222749906"
+      }
+    },
+    {
+      "file": "best_ball_mania_vi_rd1.csv",
+      "url": "https://storage.googleapis.com/underdog-inc/underblog/2025_best_ball_mania_vi/best_ball_mania_vi_rd1.csv",
+      "bytes": 5131627460,
+      "sha256": "cdaff5c89dc08c87c73379f8b03cfc6e65d2a857001ef16bf62a9cdbda1c7615",
+      "md5_b64": "jUHAHChu4EEemhnIBIqqLw==",
+      "server_md5_match": null,
+      "headers": {
+        "ETag": "\"8d41c01c286ee0411e9a19c8048aaa2f\"",
+        "Last-Modified": "Wed, 13 May 2026 20:22:34 GMT",
+        "x-goog-hash": "crc32c=+Mb1Xw==",
+        "Content-Length": "5131627460"
+      }
+    }
+  ]
+}

@@ -1427,3 +1427,218 @@ until H8r's deferred fire. The campaign ledger stands: H4 FAIL, H6 PASS, H7
 FAIL, H8v FAIL — Sleeper-vs-ADP disagreement remains the program's one
 validated signal, and the dated-ADP instrument (P5) heads the queue for any
 future work, behind its own J-class audit.
+
+---
+
+## PLAN QUEUE AMENDMENT (2026-07-11, recorded at J1 session open, per
+## change-control: appended, never silent)
+
+Plan queue amended 2026-07-11: P5 instrument audit (J1) promoted ahead of
+H10. Rationale: H10's availability decomposition requires a dated-ADP
+instrument to be computable; J1 is a candidate prerequisite. H10 remains
+declared, blind, untouched. Piece 5 proceeds on the parallel product track.
+Follow-on audit queue declared: J2 = FFA historical projections archive
+(pending subscription), J3 = ProSportsTransactions dated transactions, J4 =
+season-long props/futures scoping memo (no purchase; gated on MDE math).
+Joseph ratified.
+
+---
+
+## DATA AUDITS — J1: P5 dated-ADP instrument audit (2026-07-11; AUDIT ONLY —
+## no hypothesis tested, nothing fired)
+
+**Blindness attestation: no signal×outcome quantity was computed in this
+session.** The season dataset was read under the usecols allowlist (identity/
+membership/market columns only); the BBM dumps were loaded through a column
+ALLOWLIST projection — pick_points, roster_points, playoff_team, and
+tournament_* were never selected into any frame. The only correlation
+computed was Underdog-ADP vs Sleeper-ADP: two market inputs, sanctioned by
+the session's blindness contract.
+
+### Source A — Underdog BBM pick-by-pick dumps (2021–2025 = BBM II–VI):
+### VERDICT **CONDITIONAL-CLEAN** (dateable, massive, published-for-research;
+### the quirk register below rides on any future prereg using it)
+
+- **Provenance (explicit research grant):** official Underdog Network dump
+  pages for BBM II, III, IV, V, VI (underdognetwork.com/football/
+  best-ball-research/…-downloadable-pick-by-pick-data), published "for
+  research and transparency purposes"; BBM II page: "We at Underdog Fantasy
+  want to be the industry leader in fantasy football draft data for those
+  doing research." BBM VI (2025 season) confirmed live.
+- **Staged:** `data_audits/underdog/` — 16 files, 17.48 GB, complete-draft
+  files only (BBM II Regular Season; BBM III RS parts 00–011; BBM IV r1;
+  BBM V rd1; BBM VI rd1). The playoff/r2–r4 files are roster SUBSETS of the
+  same drafts re-scored — redundant for a dated-ADP instrument and the most
+  outcome-laden, deliberately not pulled. Raw CSVs gitignored inside the dir;
+  `manifest.json` records url/bytes/sha256/md5/server-headers per file
+  (pulled 2026-07-12 02:13 UTC). Anchor hashes: BBM II a5cda6c31f20891d89a5…,
+  IV r1 b2fbf1f13d12fc8cc021…, V rd1 45aab013424577985137…, VI rd1
+  cdaff5c89dc08c87c733….
+- **Integrity (2021→2025):** rows 2.80M / 8.12M / 12.19M / 12.11M / 12.11M;
+  drafts 12,948 / 37,600 / 56,448 / 56,056 / 56,056; drafts ≠216 rows
+  1/0/0/0/0; duplicate (draft_id, pick) pairs 0 everywhere; drafts with >1
+  draft_time 0 everywhere (the BBM-I-class timestamp quirk did NOT reproduce
+  in any later season); picks span exactly 1..216; zero draft_time parse
+  failures; drafts run May-open → final pre-kickoff, none after Sep 10.
+- **Dating model:** draft_time is DRAFT-LEVEL (start time). Fast drafts
+  (clock = 30 s/pick; 83–88% of drafts where measurable) complete within the
+  hour — start ≈ pick time. **Quirk q2:** slow drafts (1h/4h/8h clocks) span
+  days-to-weeks from start, so their picks postdate the recorded time; the
+  `clock` column exists 2021–2023 ONLY (BBM V/VI dumps dropped it), so the
+  slow-share of 2024–25 windows is unobservable in the dump. Slow drafts
+  concentrate pre-July; late windows are ~pure fast where measurable (2021
+  W8–W10: fast == all). Weekly-or-coarser granularity is the mitigation; any
+  finer-grained use must confront q2 explicitly.
+- **Windows (Jul 1–Sep 10; W1–W9 weekly, W10 = Sep 2–10):** every window in
+  every season holds ≥427 drafts (min = 2021 W2); typical late-season windows
+  3,000–7,700. **Quirk q4:** 2024's W10 is EMPTY (BBM V completed Aug 31) —
+  "final window" must be defined per season as the last POPULATED window.
+- **ID mapping (quirk q1 — no native ids; name+position via the campaign's
+  norm_name):** pool join 178/180, 180/180, 180/180, 178/180, 179/180. All
+  five misses are name/position-variant classes: 2021 Gabe Davis (UD
+  "Gabriel Davis") + Robbie Chosen (UD "Robby Anderson"); 2024 Taysom Hill
+  (position-code mismatch) + Marquise Brown (UD "Hollywood Brown"), 2025
+  Marquise Brown again. A ~4-entry alias table closes them. Pool-side
+  (norm_name, position) collisions within season: 0. Residual same-name risk
+  registered (ids do not exist in the source; permanent).
+- **Coverage:** the median matched pool player appears in EVERY draft of
+  every window (top-180 players are drafted in ~all 216-pick drafts), so
+  per-window ADP sampling error is ≤ ~1.5 picks at 400 drafts and ≤ ~0.4 at
+  5,000. A few volatile players have zero EARLY-window coverage (not yet on
+  UD boards) — itself dated market information, noted.
+- **Convention deltas (quirk q3, structural):** half-PPR (matches campaign
+  scoring) but BEST BALL (no in-season management), 18 rounds / 216 picks
+  (vs redraft ~15), tournament payout structure (stacking/upside incentives),
+  real money. Final-populated-window rank agreement vs the campaign's Sleeper
+  ADP (market-vs-market): 2021 .9495 (n=178), 2022 .9626 (180), 2023 .9646
+  (180), 2024 .9488 (W9, 179), 2025 .9583 (179). Strong shared ordering; the
+  residual bundles format difference with snapshot timing; any instrument
+  claim carries the format delta on its wording.
+- Also present: `projection_adp` (Underdog's own displayed ADP at draft
+  time) — a second dated market quantity in the same rows; registered,
+  unused here. **q6:** BBM V and VI drafts counts are identical (56,056 =
+  672,672 entries — same tournament cap); files verified distinct (sizes,
+  hashes, date ranges, contents). **q7:** BBM I (2020) exists but was not
+  pulled — outside every campaign panel. Timezone of draft_time is
+  undocumented (register; immaterial at weekly granularity).
+
+### Source B — FFC ADP REST API: dated-HISTORICAL role **VOID**;
+### forward-archiving role **CLEAN**
+
+- Probe (2026-07-11, 10 polite calls): historical payloads are FINAL-WINDOW
+  frozen aggregates — year=2021 meta reads start 2021-08-29 / end 2021-09-01
+  / 3,949 drafts; five date-parameter variants (&date, &end_date,
+  &start_date+&end_date, &asof, &week) returned byte-identical payloads with
+  unchanged meta. No by-date historical access exists. Depth n ≈ 167–222
+  skill players; standard reaches 2008, ppr/half-ppr error out at 2008.
+- **Corollary recorded:** the repo's existing FFC caches (ffc_adp_2014_2019,
+  ffc_adp_2008_2013) are therefore FINAL-WINDOW snapshots, not summer-long
+  aggregates — this sharpens, and does not contradict, every prior use.
+- Forward archiving: the live endpoint IS a dated rolling window (year=2026
+  call: start 2026-07-06 / end 2026-07-11 / 588 drafts). **Snapshot #1 taken
+  2026-07-11** → `data_audits/ffc/ffc_halfppr_12t_snapshot_2026-07-11.json`
+  (sha256 c3856b4e51e5e649…). Declared cadence: weekly (Wednesdays), Jul 1 –
+  Sep 10, half-ppr 12-team; automating it as a scheduled task is Joseph's
+  call and was NOT created this session.
+
+### Blind power memo (counts only; Q3 normal-approx design sketches for the
+### PARKED uses; nothing here is a pre-registration and no ordering is chosen)
+
+Instrument family assumed: per-position-season Spearman vs z-perf, panel
+2021–2025; window-ADP measurement error is negligible per the coverage
+counts; each future prereg owes its own exact simulation.
+- **H11 (freshness confound, full-pool dated instrument):** pool cells
+  QB ~24 / RB ~60 / WR ~72 / TE ~24 → pooled null SE ≈ .038, design bar
+  ≈ .063, **MDE(80%) ≈ .10** — the best-powered instrument this campaign has
+  ever had available.
+- **Volatile-slice validation (the R0 scope gap population = pool minus
+  stable-role):** cells ≈ QB 10 / RB 34 / WR 33 / TE 9 → pooled SE ≈ .061,
+  **MDE ≈ .15** four-position, **≈ .14** RB/WR-only — H6-power-class.
+- **H10 availability side:** bounded by H6's stable-role cells (473 rows) →
+  **MDE ≈ .144** per target — H6-power-class.
+- Ranking: all three parked uses are adequately powered against moderate
+  effects at the audited counts; **none is an H8r-style deferral.** The
+  ordering decision is Joseph's; no hypothesis was pre-registered in this
+  session.
+
+**Follow-on audit queue (declared-not-started):** J2 = FFA historical
+projections archive (pending subscription); J3 = ProSportsTransactions dated
+transactions; J4 = season-long props/futures scoping memo (no purchase;
+gated on MDE math).
+
+---
+
+### J2 — FFA weighted-average projections, 2021 + 2025 bookends (2026-07-11;
+### AUDIT ONLY — nothing fired). VERDICT: **CONDITIONAL, asymmetric by
+### column — adp final-window-dateable; points UNDATEABLE historically →
+### the second-projector role FAILS the bar. Both seasons agree.**
+
+**Blindness attestation: no signal×outcome quantity was computed; no
+FFA-vs-market disagreement quantity was constructed as a signal.** All
+comparisons were market-input vs market-input, reported as dating evidence
+("best-matching window") only.
+
+- **Files:** `data_audits/ffa/projections_2021_wk0.csv` (sha256
+  f463511c0a776328746e…, 48,669 B) and `projections_2025_wk0.csv`
+  (66476bda379059dc7806…, 50,899 B); hashes in `data_audits/ffa/
+  manifest.json` (J1 convention); whitelisted via `data_audits/.gitignore`
+  (small provenance tracked; Underdog raws stay ignored). No generation-date
+  column exists in either file — dating was this audit's central question.
+- **Structure:** data rows 477 / 492 (the briefed 478/493 were file lines
+  incl. header); per-position counts reproduce the brief exactly. `rank`
+  spans 1–1190/1200 → computed over FFA's full ~1,200-player universe, so
+  the 32/24 ordering inversions vs points_vor inside the export are a
+  subsetting/tie artifact, minor. **adp NA pattern is a cross-season
+  coverage inconsistency, not stable semantics** (2021: QB 8%/TE 8%/RB 6%/
+  K 38%/DST 19%; 2025: QB/K/DST 0%, RB 8%/TE 6%) — the ADP source or its
+  depth changed between exports.
+- **Dating, event evidence (pre-kickoff facts only).** 2021: Cam Akers
+  (Achilles, Jul 19), Travis Etienne (foot, Aug 23), and J.K. Dobbins (ACL,
+  Aug 28) are ALL ABSENT from a 72-RB-deep export → the roster postdates
+  Aug 28; Julio Jones listed TEN (post-Jun 6); Michael Thomas at 168 pts /
+  adp 91 is consistent with post-Jun-25 discounting. 2025: Diggs NE, Deebo
+  WAS, Rodgers PIT, Fields NYJ, Darnold SEA, Kirk HOU — all post-March/June
+  moves priced in. Event evidence bounds the ROSTER at final-window (2021)
+  and ≥ June (2025); it does not pin the points-generation time.
+- **Dating, window ruler (J1's Underdog machinery, alias table applied).**
+  FFA-adp agreement rises monotonically toward the last window in BOTH
+  seasons — best match **W10** (2021 .9447; 2025 .9513), and FFA-adp sits
+  closest of all to Sleeper's final aggregate (.9875 / .9822). The
+  points-RANK sweep is **non-discriminating** (flat ≈ .59–.62 across all
+  windows, both seasons; supporting-only as pre-declared) — projections
+  cannot be dated by this ruler.
+- **The FFC trap, confirmed in form:** FFA's 2021 adp matches FFC's frozen
+  final-window payload at .9815 (n=166) and Sleeper at .9875 — the adp
+  column is a FINAL-WINDOW market consensus whatever its vendor, so per the
+  J1 finding it **dates only the ADP source, not the projections**. (FFC
+  serves no 2025 historical payload — empty response; the 2025 leg rests on
+  the W10 curve + Sleeper agreement, same conclusion.) The adp and points
+  columns can and plausibly do have different generation times; FFA's
+  product is a weighted average of sources updated on their own clocks.
+- **Joins:** 170/180 both seasons on the top-180 pool. Zero new aliases
+  needed (J1's table + the Taysom Hill rule sufficed). All 20 unmatched are
+  EXPORT-DEPTH misses (rookies/depth players outside FFA's ~72-73 per
+  skill position export: Amon-Ra St. Brown 2021, Chuba Hubbard 2021, 2025
+  rookie class tail) — a truncation quirk, not aliasing; a deeper UI export
+  setting may exist (Joseph's call, only matters if J2 is ever rescued).
+- **Verdict consequence (the bar was pre-stated: Underdog is the primary
+  instrument; FFA is a luxury second projector):** an H6-analog
+  FFA-disagreement instrument needs the POINTS column's date proven, and it
+  is not provable from the files — the freshness confound H6 spent its
+  design controlling would ride on FFA uncontrolled. **Not usable as-is.**
+  Rescue paths, recorded: (i) Wayback-captured snapshots of the Insider
+  tool output at dated crawl times; (ii) written confirmation from FFA of
+  projection freeze timing; (iii) forward-archiving dated pulls (2026+,
+  FFC-cadence style, manual or API). Absent one of these, the historical
+  second-projector idea is dead on dating grounds — the vacated-volume fate.
+- **Power sketch (counts only, moot unless rescued):** two-season bookend
+  panel (~170 matched/season) → pooled null SE ≈ .063, MDE(80%) ≈ **.16**;
+  a five-season panel → SE ≈ .040, MDE ≈ **.10**. Two seasons alone are
+  H5-class underpowered; any rescued FFA instrument wants five.
+- **Cost/access (record, not a recommendation):** manual UI export ≈ free
+  beyond the ~$5 Insider sub, doesn't scale; FFA API $1,000/season Basic or
+  $1,500/season Premier — NOT purchased; any purchase is Joseph's call,
+  gated on a rescued verdict plus MDE math if a hypothesis is ever queued.
+
+**Queue state: J3 (ProSportsTransactions) and J4 (props/futures scoping)
+remain declared-not-started.**

@@ -1,0 +1,15 @@
+{
+  "convention": "J1",
+  "files": [
+    {
+      "file": "projections_2021_wk0.csv",
+      "bytes": 48669,
+      "sha256": "f463511c0a776328746ebea5f8035da09eb83e83c7a0b0228708db0efc3f263a"
+    },
+    {
+      "file": "projections_2025_wk0.csv",
+      "bytes": 50899,
+      "sha256": "66476bda379059dc78062a6be85e9350eea22de248f31c98781fa97f3ea2ec7f"
+    }
+  ]
+}
