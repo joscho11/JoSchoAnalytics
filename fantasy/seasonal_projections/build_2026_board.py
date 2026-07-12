@@ -88,6 +88,35 @@ def seed_upcoming_rows(full):
             print(f"  + {len(miss)} drafted rookies not yet on the roster feed "
                   f"(e.g. {', '.join(miss['player'].head(3))})")
 
+    # ADP-holding players absent from BOTH the roster feed and the draft class
+    # (unsigned veteran free agents still being drafted in best ball, e.g. the
+    # 2026-07 cases Diggs/Hill/Samuel) would be silently dropped — the same gap
+    # class as the rookie fix above, on the veteran side. Seed them from the
+    # Sleeper ADP cache; id + canonical name from their most recent prior
+    # dataset row (norm_name+position); team stays NaN — they are unsigned,
+    # and a missing team is the honest value.
+    adp_cache = pd.read_csv(ADP_CSV)
+    a26 = adp_cache[(adp_cache["season"] == UPCOMING)
+                    & adp_cache["adp_half_ppr"].notna()
+                    & adp_cache["position"].isin(SKILL)].copy()
+    a26["norm_name"] = a26["player"].map(norm_name)
+    have_nm = set(ros["player"].map(norm_name))
+    miss_adp = a26[~a26["norm_name"].isin(have_nm)]
+    if len(miss_adp):
+        prior_rows = (full[full["games"] > 0].sort_values("season")
+                      .drop_duplicates(["norm_name", "position"], keep="last")
+                      [["norm_name", "position", "player_id", "player"]])
+        rec = miss_adp[["norm_name", "position"]].merge(
+            prior_rows, on=["norm_name", "position"], how="inner")
+        rec = rec.drop_duplicates("player_id")
+        rec = rec[~rec["player_id"].isin(set(ros["player_id"]))]
+        rec = rec[["player_id", "player", "position"]].copy()
+        rec["team"] = np.nan
+        if len(rec):
+            ros = pd.concat([ros, rec], ignore_index=True)
+            print(f"  + {len(rec)} ADP-holding unsigned veterans missing from "
+                  f"roster+draft feeds (e.g. {', '.join(rec['player'].head(3))})")
+
     # veteran vs rookie from prior NFL activity (any games>0 before 2026)
     active = full[full["games"] > 0]
     rookie_season = active.groupby("player_id")["season"].min()
@@ -181,8 +210,9 @@ def main():
     full = bsd.add_snaps(full)
     full = bsd.add_rates(full)
     full = bsd.add_bio(full)
-    full = bsd.add_team_context(full, primary_qb)
-    full = bsd.add_vacated(full)
+    full = bsd.add_context_team(full)      # added 2026-07-12: bsd gained this step
+    full = bsd.add_team_context(full, primary_qb)   # in the 07-09 leakage fixes;
+    full = bsd.add_vacated(full)                    # this script predated it
 
     seed = seed_upcoming_rows(full)
     full = pd.concat([full, seed[full.columns]], ignore_index=True)

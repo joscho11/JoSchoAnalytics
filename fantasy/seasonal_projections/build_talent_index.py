@@ -273,13 +273,21 @@ def main():
     if OUT.exists():
         v1 = pd.read_csv(OUT)
         shared = [c for c in v1.columns if c in out.columns]
-        a = out.loc[~rmask.to_numpy(), shared].reset_index(drop=True)
-        b = v1.loc[v1.coverage_flag != "rookie_no_prior_season", shared] \
+        cmp_cols = [c for c in shared if c != "coverage_flag"]
+        a = out.loc[~rmask.to_numpy(), cmp_cols].reset_index(drop=True)
+        b = v1.loc[v1.coverage_flag != "rookie_no_prior_season", cmp_cols] \
               .reset_index(drop=True)
-        for c in shared:                       # None (in-memory) == NaN (CSV)
+        for c in cmp_cols:                     # None (in-memory) == NaN (CSV)
             if pd.api.types.is_numeric_dtype(b[c]):
                 a[c] = pd.to_numeric(a[c], errors="coerce")
         pd.testing.assert_frame_equal(a, b, check_dtype=False)
+        flag_diff = (out.loc[~rmask.to_numpy(), "coverage_flag"].reset_index(drop=True)
+                     != v1.loc[v1.coverage_flag != "rookie_no_prior_season",
+                               "coverage_flag"].reset_index(drop=True))
+        if flag_diff.any():
+            ch = out.loc[~rmask.to_numpy()].reset_index(drop=True)[flag_diff.to_numpy()]
+            print(f"coverage flags changed (expected after dataset repair): "
+                  f"{list(zip(ch.player, ch.coverage_flag))}")
         print("veteran rows verified value-identical to v1 on original columns")
     out.to_csv(OUT, index=False)
 

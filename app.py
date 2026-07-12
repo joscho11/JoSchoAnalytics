@@ -481,9 +481,9 @@ if not season_active:
     )
 
 # ── Tabs ──────────────────────────────────────────────────────────────────────
-# Draft Value Finder (tab5) re-enabled 2026-06-08 — our model's calls vs ADP (value_board_*.csv).
-# Film Room sits 3rd (after Track Record); the unpack order maps each content block to its slot.
-tab1, tab2, tab8, tab3, tab4, tab5, tab6, tab7 = st.tabs(["🏈 Weekly Predictions", "📈 Track Record", "📺 Film Room", "🏆 Weekly Fantasy", "🎯 DFS Optimizer", "📋 Draft Value Finder", "🏅 League History", "❓ Help & Guide"])
+# Draft Board (tab5, the 2026 board) sits 3rd, between Track Record and Film Room (moved + renamed 2026-07-12).
+# The unpack order maps each content block to its slot.
+tab1, tab2, tab5, tab8, tab3, tab4, tab6, tab7 = st.tabs(["🏈 Weekly Predictions", "📈 Track Record", "📋 Draft Board", "📺 Film Room", "🏆 Weekly Fantasy", "🎯 DFS Optimizer", "🏅 League History", "❓ Help & Guide"])
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 1: WEEKLY PREDICTIONS
@@ -1701,223 +1701,13 @@ with tab4:
 # TAB 5: SEASONAL VALUE FINDER — our model's calls vs the draft room (ADP)
 # ══════════════════════════════════════════════════════════════════════════════
 with tab5:
+    # 2026 Draft Board (Piece 5, 2026-07-12) - replaced the retired Draft
+    # Value Finder tab. Legacy engine files (build_value_board.py,
+    # value_board_*.csv) are kept in the repo; the inline rendering block
+    # lives in git history. License-frozen copy lives in draft_board_2026.py.
+    import draft_board_2026
+    draft_board_2026.render()
 
-    st.title("📋 Draft Value Finder")
-
-    st.markdown(
-        "<div style='background:#1f1a0e;border:1px dashed #b88a1c;border-radius:8px;"
-        "padding:12px 16px;margin:4px 0 14px 0;font-size:13.5px;line-height:1.5'>"
-        "<span style='color:#e0a93a;font-weight:700'>Our model vs the draft room (ADP) — values the room is sleeping on.</span>"
-        "<br><span style='color:#bbb'>Our <b>independent</b> season projection ranked against the market's "
-        "<b>ADP</b>. <b>BUY</b> = we rank a player above their ADP (undervalued); <b>FADE</b> = below (overvalued). "
-        "On confident calls it beats the casual ADP line (~68% on HIGH buys, stable across seasons). <b>Fades</b> are "
-        "only shown with a real decline catalyst (aging / declining), never young players. Sharper public projections "
-        "(e.g. <b>Sleeper</b>, shown for comparison) are still better than our model — treat this as a draft "
-        "cross-check, not a guarantee.</span>"
-        "</div>",
-        unsafe_allow_html=True,
-    )
-
-    _vb_files = glob.glob(str(_HERE / "fantasy" / "seasonal_projections" / "value_board_*.csv"))
-    _vbs = {}
-    for _f in _vb_files:
-        try:
-            _vbs[int(os.path.basename(_f).replace("value_board_", "").replace(".csv", ""))] = _f
-        except ValueError:
-            continue
-    if not _vbs:
-        st.info(
-            "No value board found. Generate one with "
-            "`python fantasy/seasonal_projections/build_value_board.py`."
-        )
-    else:
-        _seasons = sorted(_vbs, reverse=True)
-        _bseason = st.selectbox("Season", _seasons, index=0, key="vb_season") if len(_seasons) > 1 else _seasons[0]
-        vdf = pd.read_csv(_vbs[_bseason])
-        for _c in ("our_rank", "adp_rank", "value", "sleeper_rank", "actual_rank",
-                   "our_proj", "actual_total", "sleeper_agrees"):
-            if _c in vdf.columns:
-                vdf[_c] = pd.to_numeric(vdf[_c], errors="coerce")
-        for _c in ("call", "contested", "reason", "injury_return"):  # empty cells read back as NaN -> ""
-            vdf[_c] = vdf[_c].fillna("") if _c in vdf.columns else ""
-        # injured = missed >6 games; outcome is injury-driven so we don't grade the call (robust bool parse)
-        vdf["injured"] = (vdf["injured"].astype(str).str.lower().isin(["true", "1", "1.0"])
-                          if "injured" in vdf.columns else False)
-        _has_actuals = "actual_rank" in vdf.columns and vdf["actual_rank"].notna().any()
-        _has_slp = "sleeper_rank" in vdf.columns
-
-        st.caption(
-            f"{_bseason} season · {len(vdf):,} drafted players · our model's calls vs ADP."
-            + ("  Results are in — actual finishes shown." if _has_actuals
-               else "  Upcoming season — projections only, no results yet.")
-        )
-
-        with st.expander("How to read this (and what it is / isn't)"):
-            st.markdown(
-                "Our **independent** season-projection model (LightGBM, no Sleeper) ranked against the market's "
-                "draft order, within each position. Each rank reads like a draft label — **RB12** = the 12th "
-                "running back. Columns:\n"
-                "- **ADP** — Average Draft Position, where the draft market ranks the player. **Our Rank** — where our model does.\n"
-                "- **Verdict** — our call. 🟢 green = we rank them above the room (a *value/buy*); 🔴 red = below "
-                "(a *fade*); ⚠️ **Contested** = we liked them, but new competition for touches just arrived (a drafted "
-                "rookie, a free-agent signing, a starter returning from injury, or a newly-crowded backfield) that our "
-                "prior-stats model can't see — so we hold off rather than flag a false value. The number is how many "
-                "positional spots we differ. Fades are only shown for aging/declining players, never young ones.\n"
-                "- **Finished** *(completed season)* — where the player actually finished; **Result** — ✅ the call "
-                "paid off, ❌ it didn't.\n"
-                "- **Sleeper** — Sleeper's own projected rank, shown *for comparison only*. It is **not** part of our "
-                "call; the call-outs just note whether Sleeper happens to agree.\n\n"
-                "**Honest scope:** our confident BUY calls beat the casual ADP line ~68% of the time (season-stable). "
-                "Sharper public projections like Sleeper's are still better than our model — so use this as a cross-check "
-                "on your draft room, not as gospel. Injuries are unpredictable and not modeled."
-            )
-
-        _pos = st.radio("Position", ["All", "QB", "RB", "WR", "TE"], horizontal=True, key="vb_pos")
-        view = (vdf if _pos == "All" else vdf[vdf["position"] == _pos]).copy()
-
-        if view.empty:
-            st.info("No players for this filter.")
-        else:
-            def _fin(r):
-                if not (_has_actuals and pd.notna(r.get("actual_rank"))):
-                    return ""
-                tag = " 🏥 (missed time)" if r.get("injured") else ""
-                return f" → finished {r['position']}{int(r['actual_rank'])}{tag}"
-
-            def _agree(r):
-                if _has_slp and pd.notna(r.get("sleeper_agrees")):
-                    return " · ✓ Sleeper agrees" if r["sleeper_agrees"] else " · ✗ Sleeper disagrees"
-                return ""
-
-            # drop any row missing a rank so the int(...) formatters below can't crash
-            _called = view.dropna(subset=["our_rank", "adp_rank", "value"])
-            buys = _called[_called["call"] == "BUY"].sort_values("value", ascending=False)
-            fades = _called[_called["call"] == "FADE"].sort_values("value")
-
-            # 🔥 CONSENSUS VALUES — the headline. Where OUR model AND Sleeper BOTH rank a player above
-            # their ADP. That agreement is the single strongest signal in the tool (~78% have beaten
-            # their draft cost vs ~68% for our model alone), so we lead with it.
-            if _has_slp:
-                cons = buys[buys["sleeper_agrees"] == 1].copy()
-                cons["_c"] = (cons["adp_rank"] - cons["our_rank"]) + (cons["adp_rank"] - cons["sleeper_rank"])
-                cons = cons.sort_values("_c", ascending=False)
-                if len(cons):
-                    def _finh(r):
-                        if not (_has_actuals and pd.notna(r.get("actual_rank"))):
-                            return ""
-                        if r.get("injured"):    # injury-shortened season -> don't grade it
-                            return f" &rarr; finished {r['position']}{int(r['actual_rank'])} 🏥"
-                        return (f" &rarr; finished {r['position']}{int(r['actual_rank'])} "
-                                f"{'✅' if r['actual_rank'] < r['adp_rank'] else '❌'}")
-                    items = "".join(
-                        f"<li style='margin:4px 0'><b>{r['player']}</b> "
-                        f"<span style='color:#888'>({r['position']})</span> — drafted "
-                        f"{r['position']}{int(r['adp_rank'])}; we say <b style='color:#3fbf5f'>"
-                        f"{r['position']}{int(r['our_rank'])}</b>, Sleeper <b style='color:#3fbf5f'>"
-                        f"{r['position']}{int(r['sleeper_rank'])}</b>{_finh(r)}</li>"
-                        for _, r in cons.head(6).iterrows())
-                    st.markdown(
-                        "<div style='background:#0f1a0e;border:1px solid #1a9850;border-radius:8px;"
-                        "padding:12px 16px;margin:2px 0 16px 0'>"
-                        "<div style='color:#3fbf5f;font-weight:700;font-size:15px;margin-bottom:3px'>"
-                        "🔥 Consensus values</div>"
-                        "<div style='color:#aaa;font-size:12.5px;margin-bottom:8px'>The players our model "
-                        "<b>and</b> Sleeper both rank above where the draft room takes them — the strongest "
-                        "signal here (~78% have beaten their ADP, vs ~68% for our model alone).</div>"
-                        f"<ul style='margin:0;padding-left:18px;font-size:13.5px;color:#ddd'>{items}</ul></div>",
-                        unsafe_allow_html=True)
-
-            cL, cR = st.columns(2)
-            with cL:
-                st.markdown("**🟢 Best values** — drafted cheap, we rank them higher")
-                if len(buys):
-                    for _, r in buys.head(8).iterrows():
-                        st.markdown(
-                            f"- **{r['player']}** ({r['position']}) — drafted {r['position']}{int(r['adp_rank'])}, "
-                            f"we rank **{r['position']}{int(r['our_rank'])}** (+{int(r['value'])} spots){_agree(r)}{_fin(r)}"
-                        )
-                else:
-                    st.caption("None at this filter.")
-            with cR:
-                st.markdown("**🔴 Fades** — drafted high, we'd let someone else pay")
-                if len(fades):
-                    for _, r in fades.head(8).iterrows():
-                        st.markdown(
-                            f"- **{r['player']}** ({r['position']}) — drafted {r['position']}{int(r['adp_rank'])}, "
-                            f"we rank **{r['position']}{int(r['our_rank'])}** ({int(r['value'])} spots, {r['reason']}){_agree(r)}{_fin(r)}"
-                        )
-                else:
-                    st.caption("None at this filter.")
-
-            # full table — readable AND correctly sortable. Ranks stay NUMERIC (so the grid sorts 1,2,..,10,11
-            # not 1,10,11,2), but column_config DISPLAYS them with the position prefix ("RB%d" -> RB12) when a
-            # single position is filtered. The 🟢/🔴 emoji in Verdict carry the color, so no Styler is needed.
-            st.markdown("**Full board** — every drafted player, by position")
-            st.caption(
-                "Read a row like this: the market drafts this player at **ADP** and our model ranks them at "
-                "**Our Rank** (both within their position — filter to one position to see them labelled RB12, WR8, "
-                "etc.). A 🟢 green **Verdict** = a value vs the draft room; 🔴 red = overvalued. **Sleeper** is a "
-                "sharper public projection, shown only to compare against. Click any header to sort."
-            )
-            view = view.sort_values(["position", "adp_rank"]).reset_index(drop=True)
-
-            def _verdict(r):
-                v = r["value"]
-                if r["call"] == "BUY":
-                    return f"🟢 {'Strong buy' if r['tier'] == 'HIGH' else 'Buy'} (+{int(v)})"
-                if r["call"] == "FADE":
-                    return f"🔴 {'Strong fade' if r['tier'] == 'HIGH' else 'Fade'} ({int(v)})"
-                if str(r.get("contested", "")):      # our model liked them, but new competition arrived
-                    return f"⚠️ Contested ({r['contested']})"
-                if str(r.get("injury_return", "")):   # player's own injury-shortened prior year -> unreliable
-                    return "⚠️ Returning from injury"
-                return "—"
-
-            def _result(r):
-                if r["call"] not in ("BUY", "FADE") or pd.isna(r.get("actual_rank")):
-                    return ""
-                if r.get("injured"):        # missed >6 games -> outcome is injury luck, not our call
-                    return "🏥 injured"
-                better = r["actual_rank"] < r["adp_rank"]       # finished above their draft slot
-                hit = better if r["call"] == "BUY" else not better
-                return "✅ hit" if hit else "❌ miss"
-
-            disp = pd.DataFrame({
-                "Player": view["player"], "Pos": view["position"], "Team": view["team"],
-                "ADP": view["adp_rank"].astype("Int64"),
-                "Our Rank": view["our_rank"].astype("Int64"),
-                "Verdict": view.apply(_verdict, axis=1),
-            })
-            if _has_actuals:
-                disp["Finished"] = view["actual_rank"].astype("Int64")
-                disp["Result"] = view.apply(_result, axis=1)
-            if _has_slp:
-                disp["Sleeper"] = view["sleeper_rank"].astype("Int64")
-            disp["Proj Pts"] = view["our_proj"].round(0).astype("Int64")
-
-            # prefix the rank display with the position when one is filtered (numbers stay numeric -> sortable)
-            _rankfmt = f"{_pos}%d" if _pos != "All" else "%d"
-            _num = st.column_config.NumberColumn
-            _txt = st.column_config.TextColumn
-            _allcfg = {
-                "ADP": _num("ADP", help="Average Draft Position — where the draft market ranks this player at their position.", format=_rankfmt),
-                "Our Rank": _num("Our Rank", help="Where OUR independent model ranks them at their position (no Sleeper).", format=_rankfmt),
-                "Finished": _num("Finished", help="Where the player actually finished at their position.", format=_rankfmt),
-                "Sleeper": _num("Sleeper", help="Sleeper's projected rank — shown only for comparison, not part of our call.", format=_rankfmt),
-                "Proj Pts": _num("Proj Pts", help="Our model's projected half-PPR season total.", format="%d"),
-                "Verdict": _txt("Verdict", help="Our call vs the market — 🟢 = undervalued (buy), 🔴 = overvalued (fade), "
-                                "⚠️ Contested = we liked them but new competition arrived (a rookie, signing, returning starter, or "
-                                "crowded backfield) that our stats model can't price, so we hold off. ⚠️ Returning from injury = the "
-                                "player's OWN prior season was injury-shortened, so the projection off it is unreliable — no call. "
-                                "The number is how many positional spots we differ. Fades only for aging/declining players, never young ones."),
-                "Result": _txt("Result", help="Did the call pay off? ✅ = finished on our side of the market, ❌ = it didn't."),
-            }
-            _colcfg = {c: cfg for c, cfg in _allcfg.items() if c in disp.columns}
-            st.dataframe(disp, hide_index=True, use_container_width=True, height=560, column_config=_colcfg)
-
-# ══════════════════════════════════════════════════════════════════════════════
-# TAB 6: LEAGUE HISTORY
-# ══════════════════════════════════════════════════════════════════════════════
 with tab6:
 
     st.title("🏅 Fantasy League History")
@@ -2664,15 +2454,15 @@ The DFS Optimizer tab is a DraftKings NFL Classic lineup optimizer launching wit
 Upload your DraftKings salary CSV and the optimizer generates the highest-projected legal 9-player lineup under the $50,000 salary cap. See the DFS Optimizer section below for a full breakdown.
         """)
 
-    with st.expander("What is the Draft Value Finder tab?"):
+    with st.expander("What is the Draft Board tab?"):
         st.markdown("""
-The Draft Value Finder is a **pre-season draft tool**, separate from the Weekly Fantasy tab. It runs our own season-projection model and compares it to the market's **ADP** (average draft position) to flag players the draft room is **mis-pricing**.
+The Draft Board is a **pre-season draft tool** for the 2026 season, separate from the Weekly Fantasy tab. The point estimate for each player is the market's — powered by Sleeper's season projections compared against the draft market (ADP, average draft position). Our contribution is a calibrated range around that estimate: a floor and ceiling, the chance of a top-12 or top-24 finish at the position, and a bust-risk figure for players typically drafted early at their position.
 
-**What it's doing:** our independent model projects each player's upcoming season and ranks them within their position (e.g. RB12). The board compares our rank to where the draft market (ADP) takes them, and shows a plain-English **Verdict**: 🟢 green means we rank a player *above* their draft cost — a **buy** (undervalued); 🔴 red means below — a **fade** (overvalued). The number is how many positional spots we differ, and HIGH-confidence calls are the biggest disagreements. For a completed season it also shows where they **Finished** and whether the call **hit**.
+**How the range was checked:** across 900 player-seasons (2021–2025), about 8 in 10 players finished inside their 80% range — close to what the math promises. The projections-vs-price comparison itself has a tested track record as a group pattern for some player groups (marked with a "Signal check" badge on the board) and is untested for others — the badge tells you which group a player falls into. None of this is a guarantee, or a recommendation, about any individual player — it describes patterns across many players.
 
-**Honest scope:** on our confident BUY calls this beats the casual ADP draft line about **68%** of the time, and it's been stable season to season — a real, if modest, edge over the room. It is **not** better than the sharpest public projections (e.g. Sleeper, which we show next to our ranks purely for comparison). **Fades** are only shown when there's a real decline catalyst (aging or declining production) and never for young players — those are the only fades that beat a coin flip. Injuries are unpredictable and not modeled.
+A separate "2025 Efficiency" column shows context only — it is not part of the value signal, and testing showed it does not predict draft value.
 
-Use the **season selector** to switch years and the **Position** filter to focus. For a **completed season** (2025) we show where each player **actually finished**, so you can see which calls hit. Treat it as a cross-check on your draft room, not a guarantee.
+Use the **Position** filter to narrow the board, and the **Show advanced view** toggle for the full percentiles, raw metrics, and verbatim research labels behind the plain columns.
         """)
 
     st.divider()

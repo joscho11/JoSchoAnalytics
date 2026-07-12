@@ -2148,3 +2148,40 @@ deferred on its counts-only trigger. Campaign ledger: **H6 PASS + H11 PASS
 + H12 PASS vs H4/H7/H8v FAIL** — the Sleeper-disagreement signal is
 validated, freshness-controlled, and now extends in aggregate to the
 volatile RB/WR population.
+
+---
+
+## OUTCOMES — Phase 4 uncertainty band, v2 validation record (documentation
+## append 2026-07-12; validated 2026-07-11 — nothing recomputed here)
+
+Recorded so the prereg file carries the product's validation record (it
+previously lived only in `phase4_validation.json` and the `phase4_band.py`
+docstring; this entry restates those artifacts verbatim — a documentation
+gap flagged at Piece 5, closed on Joseph's instruction).
+
+**Design (v2, pinned blind before any refined number existed):**
+position-level empirical residual quantile pools per estimate source
+(rank-banding dropped after v1 measured it losing to a constant-width
+baseline); Weibull (n+1) plotting-position quantiles (the standard
+exceedance-unbiased convention — zero tuned parameters); levels
+P10/25/50/75/90; additive residuals; P(top-N) and bust per the phase0
+convention; isotonic ADP curve fit on calibration seasons only; Q1 scope
+fence (functions of point estimate/position/rank/actuals ONLY); H7 embargo
+honored (no efficiency fields); `is_unprojected` rows draw from the
+unprojected residual pool with band_confidence = LOW.
+
+**LOSO validation 2021–2025 (900 player-seasons; `phase4_validation.json`):**
+80% band covers **79.4%** (QB 80.8 / RB 79.3 / WR 79.3 / TE 78.8); 50% band
+covers **49.8%** — essentially nominal. Pinball loss beats the v1
+constant-width baseline at every level (+0.3% to +2.0%). Known limits,
+reported flat: P(top-12) is overconfident in its top two deciles (n = 12
+each; documented, left); `adp_implied` (unprojected) rows covered 1/7 —
+the LOW label is the mitigation (a 5-row training pool cannot cover that
+population). Reproduced exactly on the 2026-07-12 regeneration.
+
+**Artifacts:** engine `phase4_band.py` (v2 pins in docstring); validation
+`phase4_validation.json`; product payload `phase4_band_2026.csv` (180 rows,
+licensed labels applied in-schema by `apply_board_labels.py`). This is
+ENGINEERING validation of interval calibration, not a gated hypothesis
+test; the Q1 fence (no disagreement-conditioned statistic under a product
+label) remains in force.
