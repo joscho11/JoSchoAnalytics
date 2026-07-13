@@ -43,3 +43,29 @@ continuation on budget grounds**, tree left GREEN (72 passed). app.py + its test
   old tab layer/sidebar/banner and swap the entrypoint to `app.py`**.
 - **Batch 4:** per-page GA pageviews + `board_view` absorb + cross-links (incl. Film Room) + per-page
   `set_page_config` titles.
+
+## Batch 3 attempt (2026-07-13) — STOPPED before the swap; no net change
+
+Batch 3 was attempted and **deliberately not landed** — reverted to the clean committed Batch-2
+baseline (`7596f4a`), suite green (72), frozen data untouched. Reason: the batch is too large to
+complete green in one session, and the entrypoint swap must not be half-done.
+
+**Key finding that must reshape the Batch-3 plan:** the **Help tab is NOT a self-contained slice.**
+Its prose interpolates live model stats — `_hc_pct`, `_overall_pct`/`_overall_correct`/`_overall_total`,
+`_acc_col`, and `_completed` (best/worst weeks) — all computed in `app.py` (166–202) from
+`_compute_hc_stats(df)`. So Help shares the **same betting-stats plumbing** as Weekly Predictions and
+Track Record; it cannot be extracted independently.
+
+**Revised Batch-3 sub-batch order (for a dedicated session, each its own STOP + green):**
+1. **3a — shared betting stats:** extract `_compute_hc_stats` + the `_acc_col` / `_hc_*` / `_overall_*`
+   / `_completed` derivations into `dashboard_data` (byte-identical), consuming `load_predictions()`.
+   No page changes yet; verify importable + a small test.
+2. **3b — Weekly Predictions + Track Record** page modules (byte-identical bodies) consuming 3a's
+   stats + their own per-page controls (filter independence carried over). ATS blurb → these two pages.
+3. **3c — Weekly Fantasy + League History** page modules (byte-identical), per-page controls.
+4. **3d — Help** page (byte-identical) consuming 3a's stats. Now unblocked.
+5. **3e — THE SWAP:** `page_film_room` wrapper (4d header + archived-card cross-link); remove the old
+   tab layer + sidebar + inline banner; swap `app_multipage.py` → `app.py`; migrate `app.py`'s tests
+   to the page harnesses (4j). Full suite green before AND after the swap.
+
+Each of 3a–3d leaves app.py live and the suite green; only 3e is the point of no easy return.
