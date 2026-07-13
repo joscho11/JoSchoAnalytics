@@ -32,4 +32,4 @@ def render():
         os.environ.get("BOARD_REFRESH_SEASON_START", SEASON_START.isoformat()))
     if date.today() < _ss:
         chrome.render_preseason_banner(nav_registry.PAGES.get("draft-board"), _ss.year)
-    board.render(use_table=True)
+    board.render()

@@ -337,12 +337,16 @@ def _column_config():
     return cfg
 
 
-def render(use_table=False):
+BOARD_HEIGHT = 1050   # px — fixed-height scroll box (~30 rows visible; all 180 scroll
+                      # inside). Trivially tunable after on-device eyeballing.
+
+
+def render():
     df = _load_board_2026()
 
     st.title("📋 2026 Draft Board")
 
-    with st.expander("How to read this board", expanded=True):
+    with st.expander("How to read this board", expanded=False):
         st.markdown(
             "This board compares season projections with where players are "
             "actually being drafted — their draft price. **Position rank** "
@@ -368,12 +372,12 @@ def render(use_table=False):
             "describes patterns across many players — it cannot guarantee "
             "what any single player will do.")
         _worked_example(df)
-        if use_table:
-            # column tooltips relocated verbatim into a visible guide (mobile has no
-            # hover) — merged into this one honesty surface (design 4m).
-            st.markdown("**What each column means:**")
-            for _key, _kind, _label, _help, _extra in COLUMN_META:
-                st.markdown(f"- **{_label}** — {_help}")
+        # The column tooltips also shown as a visible guide (mobile has no hover),
+        # inside this collapsed expander so nothing about it renders open on load.
+        # Strings from COLUMN_META — byte-identical to the column_config tooltips.
+        st.markdown("**What each column means:**")
+        for _key, _kind, _label, _help, _extra in COLUMN_META:
+            st.markdown(f"- **{_label}** — {_help}")
 
     fc1, fc2 = st.columns([1.2, 1.4])
     with fc1:
@@ -392,14 +396,11 @@ def render(use_table=False):
     with sc2:
         order = st.radio("Order", ["Descending", "Ascending"], index=0,
                          horizontal=True, key="db26_sortdir")
-    if use_table:
-        st.caption("Sort with these controls — they order the whole board numerically, "
-                   "with no-data rows (Rookie / – / blank) always at the bottom.")
-    else:
-        st.caption("Sort with these controls — they order the whole board numerically, "
-                   "with no-data rows (Rookie / – / blank) always at the bottom. "
-                   "(Clicking a column header sorts within the grid, but only these "
-                   "controls sort Gap, Expected and Efficiency correctly.)")
+    st.caption("Sort with these controls — they order the whole board numerically, "
+               "with no-data rows (Rookie / – / blank) always at the bottom.")
+    st.caption("Note: clicking a column header sorts too, but Gap, Expected and "
+               "Efficiency won't sort correctly that way — a Streamlit limitation. "
+               "Use the controls above.")
 
     view = df[df.position.isin(pos)]
     if name.strip():
@@ -408,28 +409,14 @@ def render(use_table=False):
 
     cols = _DISPLAY_COLS
     st.caption(_adp_caption())
-    if use_table:
-        # Static st.table (no header-click sort at all) — the Sort-by control is the
-        # ONLY sort (design 4m). Top-40 default so the 180-row board isn't a giant
-        # mobile scroll; "Show all" expands. Display strings render byte-identical
-        # (gap "–" / "%ile" / Rookie); index hidden via the Styler.
-        show_all = st.checkbox(f"Show all {len(view)} players", value=False,
-                               key="db26_showall")
-        shown = view[cols] if show_all else view[cols].head(40)
-        sty = (shown.rename(columns=_EXPORT_NAMES).style.hide(axis="index")
-               .format({_EXPORT_NAMES[k]: v for k, v in _STYLE_FMT.items()}, na_rep="–"))
-        st.table(sty)
-        if not show_all and len(view) > 40:
-            st.caption(f"Showing the top 40 of {len(view)} by the current sort — tick "
-                       "“Show all” above for the full board.")
-    else:
-        # key encodes the current sort, so the grid REMOUNTS on every sort change —
-        # this discards st.dataframe's sticky client-side header-sort so the control's
-        # order always wins. See audit/board_sort_diagnosis_2026-07-13.md.
-        st.dataframe(
-            view[cols], width="stretch", height=520, hide_index=True,
-            key=f"db26_grid_{SORT_KEYS[sort_label]}_{order}",
-            column_config=_column_config())
+    # Fixed-height scroll box holds all 180 rows (BOARD_HEIGHT ≈ 30 rows visible), so no
+    # row cap is needed. The key encodes the current sort, so the grid REMOUNTS on every
+    # sort change — this discards st.dataframe's sticky client-side header-sort so the
+    # control's order always wins. See audit/board_sort_diagnosis_2026-07-13.md.
+    st.dataframe(
+        view[cols], width="stretch", height=BOARD_HEIGHT, hide_index=True,
+        key=f"db26_grid_{SORT_KEYS[sort_label]}_{order}",
+        column_config=_column_config())
 
     # CSV export — always the FULL sorted view (uncapped by the Top-40 display),
     # with the on-screen column names (design 4m: full-board export unchanged).

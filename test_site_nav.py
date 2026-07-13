@@ -1,4 +1,4 @@
-"""Batch-1 proof for the multipage nav skeleton (app_multipage.py).
+"""Batch-1 proof for the multipage nav skeleton (app.py).
 
 Asserts: the seasonal default lands on the right page on BOTH sides of SEASON_START
 (env-forced), the sidebar renders EMPTY (nav is top, footer is in page flow), the
@@ -15,7 +15,7 @@ from streamlit.testing.v1 import AppTest
 
 _HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(_HERE))
-ENTRY = str(_HERE / "app_multipage.py")
+ENTRY = str(_HERE / "app.py")   # the multipage entrypoint (post-3e swap)
 
 
 def _run(preseason: bool):

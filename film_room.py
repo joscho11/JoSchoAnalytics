@@ -7,6 +7,7 @@ import os
 
 import streamlit as st
 
+import nav_registry
 from video_content import INTRO_VIDEO, VIDEOS
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
@@ -78,6 +79,13 @@ def render_film_room() -> None:
                         caption = item.get("subtitle") or item.get("short_caption")
                         if caption:
                             st.caption(caption)
+                # cross-link an archived card to the live Draft Board (design 4g).
+                # Guarded by the nav registry, so it renders only in the multipage nav
+                # (the tab app never populated it) — page_link needs a nav Page object.
+                if item.get("archived"):
+                    _board_pg = nav_registry.PAGES.get("draft-board")
+                    if _board_pg is not None:
+                        st.page_link(_board_pg, label="Open the Draft Board", icon="📋")
                 _tiktok_embed(item["video_id"], item["tiktok_url"])
                 st.markdown(
                     f"<div style='text-align:center;margin-top:-6px'>"
