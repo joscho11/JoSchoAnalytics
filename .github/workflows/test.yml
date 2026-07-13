@@ -79,6 +79,8 @@ jobs:
           test_site_nav.py
           test_board_page.py
           test_betting_pages.py
+          test_fantasy_league_pages.py
+          test_help_page.py
 
   deploy-parity:
     name: deploy parity (py3.12 + requirements.txt, as the cloud installs)
@@ -115,3 +117,5 @@ jobs:
           test_site_nav.py
           test_board_page.py
           test_betting_pages.py
+          test_fantasy_league_pages.py
+          test_help_page.py
