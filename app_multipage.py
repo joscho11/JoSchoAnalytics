@@ -24,6 +24,8 @@ import film_room
 import nav_registry
 import page_dfs
 import page_draft_board
+import page_track_record
+import page_weekly_predictions
 from refresh_board_adp import SEASON_START   # single source of truth (design 4c)
 
 st.set_page_config(page_title="JoScho Analytics | NFL Predictions",
@@ -47,13 +49,6 @@ def _stub(title, icon, line):
     return _page
 
 
-_wp = _stub("Weekly Predictions", "🏈",
-            "My model's call against the Vegas spread for every game this week, with "
-            "an honest confidence tier and the reasoning behind each one. "
-            "Break-even is 52.4%.")
-_tr = _stub("Track Record", "📈",
-            "Every graded pick, by confidence tier and week — wins, losses, and profit "
-            "at standard odds. Nothing hidden.")
 _wf = _stub("Weekly Fantasy", "🏆",
             "My weekly half-PPR projections for every skill player — with the actual "
             "results filled in once games are played.")
@@ -66,11 +61,11 @@ _help = _stub("Help & Guide", "❓",
 # ── Pages (Draft Board + Film Room wired real; url_paths per design 4b) ──
 board_pg = st.Page(page_draft_board.render, title="Draft Board", icon="📋",
                    url_path="draft-board", default=_preseason)
-wp_pg = st.Page(_wp, title="Weekly Predictions", icon="🏈",
+wp_pg = st.Page(page_weekly_predictions.render, title="Weekly Predictions", icon="🏈",
                 url_path="weekly-predictions", default=not _preseason)
 wf_pg = st.Page(_wf, title="Weekly Fantasy", icon="🏆", url_path="weekly-fantasy")
 dfs_pg = st.Page(page_dfs.render, title="DFS Optimizer", icon="🎯", url_path="dfs-optimizer")
-tr_pg = st.Page(_tr, title="Track Record", icon="📈", url_path="track-record")
+tr_pg = st.Page(page_track_record.render, title="Track Record", icon="📈", url_path="track-record")
 film_pg = st.Page(film_room.render_film_room, title="Film Room", icon="📺",
                   url_path="film-room")
 lh_pg = st.Page(_lh, title="League History", icon="🏅", url_path="league-history")

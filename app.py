@@ -25,6 +25,7 @@ from dashboard_utils import (
     load_tracker, load_totals_tracker, _md_to_html, get_confidence, metric_card,
 )
 from calibration import build_calibration
+import dashboard_data   # Batch 3a: shared accuracy-stats plumbing (compute_hc_stats + derivations)
 
 st.set_page_config(
     page_title="JoScho Analytics | NFL Predictions",
@@ -162,44 +163,22 @@ try:
 except Exception:
     _calib = {"n_graded": 0, "by_tier": {}, "overall": None}
 
-@st.cache_data(ttl=300)
-def _compute_hc_stats(acc_col: str, _df: pd.DataFrame) -> tuple:
-    hc_correct, hc_total = 0, 0
-    for af in glob.glob(str(_HERE / "betting" / "agent_analysis_*.json")):
-        try:
-            stem = os.path.basename(af).replace('.json', '').split('_')
-            s, w = int(stem[2]), int(stem[3].replace('week', ''))
-            wdf = _df[(_df['season'] == s) & (_df['week'] == w) & _df[acc_col].notna()]
-            with open(af) as f:
-                ga = json.load(f)
-            _gc = ga.get('game_confidence', {})
-            _ga = ga.get('game_analysis',   {})
-            for _, r in wdf.iterrows():
-                key  = f"{r['home_team']}_{r['away_team']}"
-                conf = _gc.get(key) if _gc else None
-                if conf is None:
-                    text = _ga.get(key, '')
-                    conf = 'HIGH' if '🟢' in text else None
-                if conf == 'HIGH':
-                    hc_total += 1
-                    hc_correct += int(float(r[acc_col]))
-        except Exception:
-            pass
-    return hc_correct, hc_total
-
 @st.cache_data(ttl=3600)
 def _load_proj_csv(path: str) -> pd.DataFrame:
     return pd.read_csv(path)
 
 # ── Live accuracy stats (used in Help tab) ────────────────────────────────────
-_acc_col   = 'ens_model_correct' if 'ens_model_correct' in df.columns and df['ens_model_correct'].notna().any() else 'model_correct'
-_completed = df[df[_acc_col].notna()]
-_overall_correct = int(_completed[_acc_col].sum())
-_overall_total   = len(_completed)
-_overall_pct     = round(_overall_correct / _overall_total * 100, 1) if _overall_total > 0 else 0
-
-_hc_correct, _hc_total = _compute_hc_stats(_acc_col, df)
-_hc_pct = round(_hc_correct / _hc_total * 100, 1) if _hc_total > 0 else None
+# Batch 3a: _compute_hc_stats + these derivations moved to dashboard_data (shared by
+# Help / Weekly Predictions / Track Record). Same expressions, same values.
+_stats = dashboard_data.accuracy_stats(df)
+_acc_col         = _stats["acc_col"]
+_completed       = _stats["completed"]
+_overall_correct = _stats["overall_correct"]
+_overall_total   = _stats["overall_total"]
+_overall_pct     = _stats["overall_pct"]
+_hc_correct      = _stats["hc_correct"]
+_hc_total        = _stats["hc_total"]
+_hc_pct          = _stats["hc_pct"]
 
 @st.cache_data(ttl=3600)
 def load_actual_stats(season: int, week: int) -> dict:

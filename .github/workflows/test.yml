@@ -78,6 +78,7 @@ jobs:
           test_app_draft_board.py
           test_site_nav.py
           test_board_page.py
+          test_betting_pages.py
 
   deploy-parity:
     name: deploy parity (py3.12 + requirements.txt, as the cloud installs)
@@ -113,3 +114,4 @@ jobs:
           test_app_draft_board.py
           test_site_nav.py
           test_board_page.py
+          test_betting_pages.py

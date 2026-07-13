@@ -39,7 +39,9 @@ def test_preseason_default_is_draft_board():
 
 def test_inseason_default_is_weekly_predictions():
     at = _run(preseason=False)
-    assert "Weekly Predictions" in _titles(at), \
+    # the real Weekly Predictions page titles "🏈 Week N Predictions: SEASON Season"
+    # (only this page carries "Predictions"); the WP stub's literal title is gone.
+    assert "Predictions" in _titles(at), \
         f"in-season should land on Weekly Predictions; titles={_titles(at)!r}"
 
 
