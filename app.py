@@ -14,6 +14,9 @@ import plotly.graph_objects as go
 import concurrent.futures as _cf
 
 _HERE = Path(__file__).parent
+# Hermetic-test switch: when "1" (set by test_app_draft_board.py), the app
+# attempts NO network calls — GA is off and remote loaders return empty.
+_OFFLINE = os.environ.get("APP_OFFLINE") == "1"
 
 import sys as _sys
 _sys.path.insert(0, str(_HERE))   # ensure local modules resolve regardless of launch CWD
@@ -29,36 +32,56 @@ st.set_page_config(
     layout="wide"
 )
 
-def track_pageview(measurement_id, api_secret):
+CANONICAL_URL = "https://joschoanalytics.streamlit.app"
+
+
+def _utm_params():
+    """utm_* query params from the URL (campaign attribution), passed to GA."""
+    try:
+        return {k: v for k, v in st.query_params.items() if k.startswith("utm_")}
+    except Exception:
+        return {}
+
+
+def _send_ga_event(measurement_id, api_secret, name, extra_params=None):
     if 'ga_client_id' not in st.session_state:
         st.session_state.ga_client_id = str(uuid.uuid4())
     if 'ga_session_id' not in st.session_state:
         st.session_state.ga_session_id = str(int(time.time()))
+    params = {
+        "page_title": "JoScho Analytics | NFL Predictions",
+        "page_location": CANONICAL_URL,
+        "session_id": st.session_state.ga_session_id,
+        "engagement_time_msec": "100",
+    }
+    params.update(_utm_params())
+    if extra_params:
+        params.update(extra_params)
     try:
         req.post(
             "https://www.google-analytics.com/mp/collect",
             params={"measurement_id": measurement_id, "api_secret": api_secret},
             json={
                 "client_id": st.session_state.ga_client_id,
-                "events": [{
-                    "name": "page_view",
-                    "params": {
-                        "page_title": "JoScho Analytics | NFL Predictions",
-                        "page_location": "https://joschoanalytics.streamlit.app",
-                        "session_id": st.session_state.ga_session_id,
-                        "engagement_time_msec": "100"
-                    }
-                }]
+                "events": [{"name": name, "params": params}],
             },
             timeout=3
         )
     except Exception:
         pass
 
-GOOGLE_ANALYTICS_ID = st.secrets.get('GOOGLE_ANALYTICS_ID', '')
-GA_API_SECRET       = st.secrets.get('GA_API_SECRET', '')
 
-if GOOGLE_ANALYTICS_ID and GA_API_SECRET and 'ga_tracked' not in st.session_state:
+def track_pageview(measurement_id, api_secret):
+    _send_ga_event(measurement_id, api_secret, "page_view")
+
+try:
+    # a missing/unreadable secrets.toml degrades to analytics-off, never a crash
+    GOOGLE_ANALYTICS_ID = st.secrets.get('GOOGLE_ANALYTICS_ID', '')
+    GA_API_SECRET       = st.secrets.get('GA_API_SECRET', '')
+except Exception:
+    GOOGLE_ANALYTICS_ID, GA_API_SECRET = '', ''
+
+if not _OFFLINE and GOOGLE_ANALYTICS_ID and GA_API_SECRET and 'ga_tracked' not in st.session_state:
     st.session_state.ga_tracked = True
     track_pageview(GOOGLE_ANALYTICS_ID, GA_API_SECRET)
 
@@ -181,6 +204,8 @@ _hc_pct = round(_hc_correct / _hc_total * 100, 1) if _hc_total > 0 else None
 @st.cache_data(ttl=3600)
 def load_actual_stats(season: int, week: int) -> dict:
     """Load all actual player stats for a given season/week in one nflreadpy call."""
+    if _OFFLINE:
+        return {}
     try:
         import nflreadpy as nfl
         raw = nfl.load_player_stats([season])
@@ -238,6 +263,8 @@ def load_agent_analysis(week: int, season: int) -> dict:
 
 @st.cache_data(ttl=3600)
 def _sleeper_get(url: str):
+    if _OFFLINE:
+        return None
     try:
         r = req.get(url, timeout=15)
         r.raise_for_status()
@@ -396,7 +423,7 @@ def _fetch_sleeper_history(start_league_id: str) -> dict:
 # _md_to_html / get_confidence now live in dashboard_utils.py (testable, no st.* coupling).
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
-st.sidebar.image(str(_HERE / "assets" / "logo.svg"), use_container_width=True)
+st.sidebar.image(str(_HERE / "assets" / "logo.svg"), width="stretch")
 st.sidebar.divider()
 
 st.sidebar.markdown(
@@ -433,24 +460,30 @@ st.sidebar.markdown(
     unsafe_allow_html=True
 )
 
-st.sidebar.divider()
-
-seasons = sorted(df['season'].unique(), reverse=True)
-season  = st.sidebar.selectbox("Season", seasons, key="season_select")
-
-weeks   = sorted(df[df['season'] == season]['week'].unique(), reverse=True)
-_default_week_idx = next((i for i, w in enumerate(weeks) if w == 10), 0)
-week    = st.sidebar.selectbox("Week", weeks, index=_default_week_idx, key="week_select")
-
-edge_threshold = st.sidebar.slider(
-    "Min Edge (pts)",
-    min_value=0.0,
-    max_value=5.0,
-    value=0.0,
-    step=0.5,
-    key="edge_slider",
-    help="Only show games where model disagrees with spread by at least this many points"
-)
+# Season / Week / Min-edge controls moved OUT of the global sidebar into each tab's
+# own body (2026-07-13). Weekly Predictions owns Season + Week + Min-edge; Track Record
+# owns Season; Weekly Fantasy owns Season + Week. Each tab's controls are INDEPENDENT
+# (unique widget keys), so changing one tab's Season never moves another tab's.
+def _season_week_controls(cols_container, key_prefix, with_week=True, with_edge=False):
+    """Render a tab's own Season (+ optional Week, Min-edge) controls in its body.
+    Returns (season, week, edge_threshold). df-based options preserve prior behavior."""
+    _seasons = sorted(df['season'].unique(), reverse=True)
+    _season = cols_container[0].selectbox("Season", _seasons, key=f"{key_prefix}_season")
+    _week = None
+    _edge = 0.0
+    _i = 1
+    if with_week:
+        _weeks = sorted(df[df['season'] == _season]['week'].unique(), reverse=True)
+        _dwk = next((i for i, w in enumerate(_weeks) if w == 10), 0)
+        _week = cols_container[_i].selectbox("Week", _weeks, index=_dwk,
+                                             key=f"{key_prefix}_week")
+        _i += 1
+    if with_edge:
+        _edge = cols_container[_i].slider(
+            "Min Edge (pts)", min_value=0.0, max_value=5.0, value=0.0, step=0.5,
+            key=f"{key_prefix}_edge",
+            help="Only show games where model disagrees with spread by at least this many points")
+    return _season, _week, _edge
 
 # ── UI helpers ───────────────────────────────────────────────────────────────
 # metric_card now lives in dashboard_utils.py (testable, no st.* coupling).
@@ -489,6 +522,9 @@ tab1, tab2, tab5, tab8, tab3, tab4, tab6, tab7 = st.tabs(["🏈 Weekly Predictio
 # TAB 1: WEEKLY PREDICTIONS
 # ══════════════════════════════════════════════════════════════════════════════
 with tab1:
+
+    season, week, edge_threshold = _season_week_controls(
+        st.columns(3), "wp", with_week=True, with_edge=True)
 
     week_df    = df[(df['season'] == season) & (df['week'] == week)].copy()
     results_in = week_df['actual_margin'].notna().any()
@@ -927,6 +963,9 @@ with tab1:
 # ══════════════════════════════════════════════════════════════════════════════
 with tab2:
 
+    season, _, _ = _season_week_controls(
+        [st.columns([1, 2])[0]], "tr", with_week=False, with_edge=False)
+
     st.title(f"📈 {season} Track Record")
     season_df = df[
         (df['season'] == season) &
@@ -1057,7 +1096,7 @@ with tab2:
             height=350,
             margin=dict(t=20, b=20)
         )
-        st.plotly_chart(fig_bar, use_container_width=True)
+        st.plotly_chart(fig_bar, width="stretch")
 
         st.divider()
 
@@ -1087,7 +1126,7 @@ with tab2:
             height=350,
             margin=dict(t=20, b=20)
         )
-        st.plotly_chart(fig_line, use_container_width=True)
+        st.plotly_chart(fig_line, width="stretch")
 
         st.divider()
 
@@ -1123,7 +1162,7 @@ with tab2:
             height=350,
             margin=dict(t=20, b=20)
         )
-        st.plotly_chart(fig_edge, use_container_width=True)
+        st.plotly_chart(fig_edge, width="stretch")
 
         if _has_ct:
             st.divider()
@@ -1178,7 +1217,7 @@ with tab2:
                 height=350,
                 margin=dict(t=20, b=20)
             )
-            st.plotly_chart(fig_ct, use_container_width=True)
+            st.plotly_chart(fig_ct, width="stretch")
 
         st.divider()
 
@@ -1191,13 +1230,13 @@ with tab2:
             st.markdown("**🏆 Best Weeks**")
             best = weekly.nlargest(3, 'pct')[['week_lbl', 'record', 'pct']]
             best.columns = ['Week', 'Record', 'Win %']
-            st.dataframe(best, hide_index=True, use_container_width=True)
+            st.dataframe(best, hide_index=True, width="stretch")
 
         with col_worst:
             st.markdown("**📉 Worst Weeks**")
             worst = weekly.nsmallest(3, 'pct')[['week_lbl', 'record', 'pct']]
             worst.columns = ['Week', 'Record', 'Win %']
-            st.dataframe(worst, hide_index=True, use_container_width=True)
+            st.dataframe(worst, hide_index=True, width="stretch")
 
         st.divider()
 
@@ -1257,7 +1296,7 @@ with tab2:
                     dow_col, streak_col = st.columns(2)
                     with dow_col:
                         st.markdown("**📅 By day of week**")
-                        st.dataframe(dow_table, hide_index=True, use_container_width=True)
+                        st.dataframe(dow_table, hide_index=True, width="stretch")
                     with streak_col:
                         # Streaks — sort by gameday + game_id for deterministic order
                         _str_df = season_df.sort_values(['gameday', 'game_id'] if 'game_id' in season_df.columns else ['gameday'])
@@ -1293,7 +1332,7 @@ with tab2:
         with st.expander("📋 Full season week by week"):
             table = weekly[['week_lbl', 'record', 'pct', 'cum_pct']].copy()
             table.columns = ['Week', 'Record', 'Win %', 'Cumulative %']
-            st.dataframe(table, hide_index=True, use_container_width=True)
+            st.dataframe(table, hide_index=True, width="stretch")
 
         # ── Totals model performance ──────────────────────────────────────────
         totals_season = (
@@ -1306,7 +1345,7 @@ with tab2:
             st.warning(
                 "**Tracking only — do not bet.** The totals model has a CV edge (55.7% on 575 picks across "
                 "2020–2025) but the live 2025 sample is too small to confirm it. Currently sitting near "
-                "break-even live. We track it through the 2026 season and reassess after a full season "
+                "break-even live. I track it through the 2026 season and reassess after a full season "
                 "(~96 picks) of real evidence."
             )
             st.caption("UNDER picks only — model bets UNDER when both XGBoost and Ridge agree. Break-even: 52.4%.")
@@ -1340,12 +1379,15 @@ with tab2:
                     st.dataframe(
                         _t_weekly[['week', 'record', 'pct']].rename(
                             columns={'week': 'Week', 'record': 'Record', 'pct': 'Win %'}),
-                        hide_index=True, use_container_width=True)
+                        hide_index=True, width="stretch")
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 3: FANTASY PROJECTIONS
 # ══════════════════════════════════════════════════════════════════════════════
 with tab3:
+
+    season, week, _ = _season_week_controls(
+        st.columns(2), "wf", with_week=True, with_edge=False)
 
     st.title(f"🏆 Week {week} Fantasy Projections — Half-PPR")
 
@@ -1373,7 +1415,7 @@ with tab3:
         st.info(
             f"No fantasy projections available for Season {season} · Week {week}. "
             f"Available weeks: {', '.join(f'W{w}' for (s, w) in sorted(available) if s == season) or 'none for this season'}. "
-            "Use the sidebar to select a week with projections, or run the fantasy notebook to generate them."
+            "Use the Week selector above to pick a week with projections, or run the fantasy notebook to generate them."
         )
     else:
         proj_df = _load_proj_csv(available[(season, week)])
@@ -1565,7 +1607,7 @@ with tab3:
                     "Health":     st.column_config.TextColumn("Health",
                                       help="Player's injury status from the weekly NFL injury report.\n\n✅ Healthy  🟡 Questionable  ⚠️ Doubtful  ❌ Out\n\nNote: sorts alphabetically due to a Streamlit limitation."),
                     "Proj Pts":   st.column_config.NumberColumn("Proj Pts",   format="%.1f",
-                                      help="Projected half-PPR fantasy points for this week, generated by our XGBoost model. Half-PPR scoring: 0.5 pts per reception, 1 pt per 10 rush/rec yards, 6 pts per TD."),
+                                      help="Projected half-PPR fantasy points for this week, generated by my XGBoost model. Half-PPR scoring: 0.5 pts per reception, 1 pt per 10 rush/rec yards, 6 pts per TD."),
                     "Off EPA":    st.column_config.NumberColumn("Off EPA",    format="%+.3f",
                                       help="Team's offensive Expected Points Added (EPA) per play, averaged over the last 4 games. EPA measures how many points each play is worth above expectation. Higher = more efficient offense."),
                     "Team Total": st.column_config.NumberColumn("Team Total", format="%.1f",
@@ -1600,7 +1642,7 @@ with tab3:
 
                 st.dataframe(
                     tbl.style.apply(style_fn, axis=None),
-                    use_container_width=True,
+                    width="stretch",
                     column_config=col_config,
                 )
 
@@ -1694,17 +1736,25 @@ with tab4:
 
     st.caption(
         "Under the hood: `fantasy/dfs/dfs_pipeline.ipynb` — "
-        "integer linear program via PuLP, projections from our per-position XGBoost models."
+        "integer linear program via PuLP, projections from my per-position XGBoost models."
     )
 
 # ══════════════════════════════════════════════════════════════════════════════
-# TAB 5: SEASONAL VALUE FINDER — our model's calls vs the draft room (ADP)
+# TAB 5: 2026 DRAFT BOARD — market point estimate + a calibrated uncertainty band
 # ══════════════════════════════════════════════════════════════════════════════
 with tab5:
     # 2026 Draft Board (Piece 5, 2026-07-12) - replaced the retired Draft
-    # Value Finder tab. Legacy engine files (build_value_board.py,
-    # value_board_*.csv) are kept in the repo; the inline rendering block
-    # lives in git history. License-frozen copy lives in draft_board_2026.py.
+    # Value Finder tab. Legacy engine files (build_value_board.py) are kept
+    # in the repo; the inline rendering block lives in git history.
+    # License-frozen copy lives in draft_board_2026.py.
+    # Once-per-session board-view event. Caveat: st.tabs executes every tab
+    # body on each run, so this marks "visited the app this session", not
+    # proof the user focused this tab.
+    if not _OFFLINE and GOOGLE_ANALYTICS_ID and GA_API_SECRET \
+            and 'ga_board_view' not in st.session_state:
+        st.session_state.ga_board_view = True
+        _send_ga_event(GOOGLE_ANALYTICS_ID, GA_API_SECRET, "board_view",
+                       {"page_title": "2026 Draft Board"})
     import draft_board_2026
     draft_board_2026.render()
 
@@ -1714,17 +1764,22 @@ with tab6:
 
     _league_id_input = st.text_input(
         "Sleeper League ID",
-        value="1255197436951932928",
+        value="",
         placeholder="e.g. 1255197436951932928",
         help="Find it in your Sleeper league URL: sleeper.com/leagues/{ID}/league",
         key="lh_league_id",
     )
 
-    if not _league_id_input.strip().isdigit():
-        st.info("Enter a numeric Sleeper league ID above to load your league history.")
+    _lid = _league_id_input.strip()
+    # Resting state (empty field, including offline): a neutral prompt, no fetch.
+    if not _lid.isdigit():
+        st.info("Enter your Sleeper league ID to load your league history.")
+    elif _OFFLINE:
+        st.info("League history needs a live connection to Sleeper and is "
+                "unavailable offline.")
     else:
         with st.spinner("Loading league history from Sleeper…"):
-            _lh = _fetch_sleeper_history(_league_id_input.strip())
+            _lh = _fetch_sleeper_history(_lid)
 
         if not _lh["seasons"]:
             st.error("No data found — double-check the league ID and try again.")
@@ -1849,7 +1904,7 @@ with tab6:
                 _at_df.index += 1
                 st.dataframe(
                     _at_df,
-                    use_container_width=True,
+                    width="stretch",
                     column_config={
                         "Titles":    st.column_config.NumberColumn("Titles",   help="Championship wins"),
                         "Finals":    st.column_config.NumberColumn("Finals",   help="Championship appearances"),
@@ -2013,7 +2068,7 @@ with tab6:
                     _matrix_rows.append(_row_d)
 
                 _h2h_df = pd.DataFrame(_matrix_rows).set_index("Manager")
-                st.dataframe(_h2h_df, use_container_width=True)
+                st.dataframe(_h2h_df, width="stretch")
 
             # ── Sub-tab D: Report Cards ───────────────────────────────────────
             with _lhD:
@@ -2083,7 +2138,7 @@ with tab6:
                     st.dataframe(
                         pd.DataFrame(_s_hist),
                         hide_index=True,
-                        use_container_width=True,
+                        width="stretch",
                         column_config={
                             "PF": st.column_config.NumberColumn("PF", format="%.2f"),
                             "PA": st.column_config.NumberColumn("PA", format="%.2f"),
@@ -2106,7 +2161,7 @@ with tab6:
                          for _o, _v in _opp_recs.items()],
                         key=lambda r: -r["+/-"]
                     )
-                    st.dataframe(pd.DataFrame(_h2h_rows4), hide_index=True, use_container_width=True)
+                    st.dataframe(pd.DataFrame(_h2h_rows4), hide_index=True, width="stretch")
 
             # ── Sub-tab E: Consistency & Luck ─────────────────────────────────
             with _lhE:
@@ -2162,7 +2217,7 @@ with tab6:
                 )
                 _cl_df.index += 1
                 st.dataframe(
-                    _cl_df, use_container_width=True,
+                    _cl_df, width="stretch",
                     column_config={
                         "Avg Score":       st.column_config.NumberColumn("Avg Score",       format="%.2f"),
                         "Std Dev":         st.column_config.NumberColumn("Std Dev",         format="%.2f",
@@ -2250,7 +2305,7 @@ with tab6:
                                 max(d["Avg Score"] for d in _bar_data) * 1.03,
                             ]),
                         )
-                        st.plotly_chart(_fig_bar, use_container_width=True)
+                        st.plotly_chart(_fig_bar, width="stretch")
                 else:
                     # All-time: multi-season line chart
                     st.caption("Average regular season score per manager, by season.")
@@ -2273,7 +2328,7 @@ with tab6:
                         legend_title="Manager",
                         hovermode="x unified",
                     )
-                    st.plotly_chart(_fig_trend, use_container_width=True)
+                    st.plotly_chart(_fig_trend, width="stretch")
 
 
 
@@ -2435,7 +2490,7 @@ A pick is only flagged as **UNDER** when both the XGBoost and Ridge models indep
 - Walk-forward CV (2020–2025, n=575): **55.7%** hit rate, comfortably above the 52.4% break-even.
 - Live 2025 (weeks 10–17, n=46): **52.2%** hit rate, essentially at break-even. The sample is too small to distinguish real edge from CV noise (95% CI is roughly 37–67%).
 
-That's why the badges on the game cards are amber/dashed instead of green — the model says UNDER, but we haven't yet confirmed live that it's actually profitable. We track it through the 2026 season and reassess after a full season of real evidence (~96 picks). **Don't bet these picks; treat them as something to watch.**
+That's why the badges on the game cards are amber/dashed instead of green — the model says UNDER, but I haven't yet confirmed live that it's actually profitable. I track it through the 2026 season and reassess after a full season of real evidence (~96 picks). **Don't bet these picks; treat them as something to watch.**
         """)
 
     with st.expander("What is the Weekly Fantasy tab?"):
@@ -2456,7 +2511,7 @@ Upload your DraftKings salary CSV and the optimizer generates the highest-projec
 
     with st.expander("What is the Draft Board tab?"):
         st.markdown("""
-The Draft Board is a **pre-season draft tool** for the 2026 season, separate from the Weekly Fantasy tab. The point estimate for each player is the market's — powered by Sleeper's season projections compared against the draft market (ADP, average draft position). Our contribution is a calibrated range around that estimate: a floor and ceiling, the chance of a top-12 or top-24 finish at the position, and a bust-risk figure for players typically drafted early at their position.
+The Draft Board is a **pre-season draft tool** for the 2026 season, separate from the Weekly Fantasy tab. The point estimate for each player is the market's — powered by Sleeper's season projections compared against the draft market (ADP, average draft position). My contribution is a calibrated range around that estimate: a floor and ceiling, the chance of a top-12 or top-24 finish at the position, and a bust-risk figure for players typically drafted early at their position.
 
 **How the range was checked:** across 900 player-seasons (2021–2025), about 8 in 10 players finished inside their 80% range — close to what the math promises. The projections-vs-price comparison itself has a tested track record as a group pattern for some player groups (marked with a "Signal check" badge on the board) and is untested for others — the badge tells you which group a player falls into. None of this is a guarantee, or a recommendation, about any individual player — it describes patterns across many players.
 
@@ -2579,7 +2634,7 @@ It takes this site's weekly fantasy projections and solves for the highest-proje
 The workflow each week is:
 1. Download your DraftKings salary CSV from any NFL Classic contest lobby
 2. Upload it in the DFS Optimizer tab
-3. The optimizer fuzzy-matches DK player names to our projected points and solves the lineup
+3. The optimizer fuzzy-matches DK player names to my projected points and solves the lineup
 4. Lock or exclude specific players and re-run if you want to tweak it
 5. Download the finished lineup ready for DraftKings import
 
@@ -2649,7 +2704,7 @@ Each game is evaluated by all four models. The consensus tier is assigned based 
 
 A separate two-model system (XGBoost + Ridge) trained to predict whether the final combined score will be over or under the Vegas total line. Uses 35 spread features plus 14 totals-specific inputs (total line, implied team totals, weather, dome status, rolling points, league scoring environment, pace, division game flag).
 
-The CV result (2020–2025, 55.7% on 575 picks) suggests a real UNDER-side edge, consistent with the known retail OVER bias. **But live 2025 results so far (52.2% on 46 picks) are at break-even, not yet confirming the CV.** The 2025 sample is too small to tell — we're tracking through 2026 before treating these as real picks.
+The CV result (2020–2025, 55.7% on 575 picks) suggests a real UNDER-side edge, consistent with the known retail OVER bias. **But live 2025 results so far (52.2% on 46 picks) are at break-even, not yet confirming the CV.** The 2025 sample is too small to tell — I'm tracking through 2026 before treating these as real picks.
 
 All models are retrained each offseason as new data comes in.
         """)

@@ -14,6 +14,19 @@ The repo is the full system: ATS predictions, an experimental over/under model, 
 
 ---
 
+## Guides
+
+Each subsystem has a plain-language guide — what it is trying to do, how it works end to end, the key files, and the honest results:
+
+- [betting/GUIDE.md](betting/GUIDE.md) — the ATS spread model, the experimental totals model, and the LLM agent.
+- [fantasy/GUIDE.md](fantasy/GUIDE.md) — the weekly fantasy projection system (per-position and per-stat models).
+- [fantasy/seasonal_projections/GUIDE.md](fantasy/seasonal_projections/GUIDE.md) — the pre-season Draft Board and the value-signal research campaign behind it.
+- [fantasy/dfs/GUIDE.md](fantasy/dfs/GUIDE.md) — the DraftKings lineup optimizer.
+
+`fantasy/breakout/` is a one-off research notebook (a breakout-probability experiment with saved charts); it is not wired into the dashboard or any pipeline, so it has no guide.
+
+---
+
 ## The Thinking Behind It
 
 This section is the part I care about most, because the modeling choices only make sense once you understand the problem.
@@ -166,9 +179,9 @@ A LlamaIndex ReActAgent with 5 tools (predictions, live injuries, line movement,
 
 ### Dashboard
 
-A Streamlit app with tabs for Weekly Predictions, Track Record, Film Room, Weekly Fantasy, DFS Optimizer, a pre-season Draft Value Finder, League History, and a Help guide.
+A Streamlit app with tabs for Weekly Predictions, Track Record, Draft Board, Film Room, Weekly Fantasy, DFS Optimizer, League History, and a Help guide.
 
-- **Draft Value Finder**: our own season projection ranked against the market's ADP to flag who the draft room is mispricing. It leads with a **🔥 Consensus values** box, the players our model and Sleeper both rank above their ADP, which is the strongest signal (about 78% have beaten their draft cost). BUY means we rank a player above their ADP and FADE means below, and we only show fades when there's a real decline reason. On our confident calls alone it beats the casual ADP line about 68% of the time, season to season. It does not beat the sharpest public projections, so Sleeper sits next to our ranks purely for comparison. Treat it as an honest draft day second opinion, not a market beating edge. For a finished season it shows where each player actually landed and whether the call hit, and anyone who lost a big chunk of the year to injury just shows 🏥 instead of a hit or miss, since injuries are not something the model can predict.
+- **Draft Board**: my pre-season board for QB, RB, WR, and TE. It compares season projections against where players are actually being drafted — their draft price (ADP, average draft position). The point estimate is the market's, powered by Sleeper's projections versus the draft market; what I add is a calibrated range around it — a Floor, Expected, and Ceiling for the season, plus a Top-12 chance and a bust risk. When I drew those ranges for the 2021 through 2025 seasons, about 8 in 10 players finished inside their 80% range. The gap between projection and price has a tested track record as a group pattern — validated in aggregate across five past seasons, including a check that it wasn't just the projections being fresher than the draft prices — for established players and for running backs and receivers in changing situations; it is not yet tested for quarterbacks and tight ends in changing situations, and those rows are marked. Everything on the board describes patterns across many players, not a call about any single player. (This replaced the retired Draft Value Finder tab on 2026-07-12; see `fantasy/seasonal_projections/GUIDE.md`.)
 
 - **Weekly Predictions**: game cards with edge, confidence tier, and expandable agent reasoning. Games where the experimental totals model says UNDER show a dashed amber badge below the spread card.
 - **Track Record**: ATS record by tier and week, profit at standard odds, longest streaks, and a separate over/under section flagged as tracking-only.
@@ -230,6 +243,7 @@ Best week: 9 of 14 (Week 14, 64.3%). These are encouraging but it is a small liv
 app.py                                 # Streamlit dashboard (entry point)
 dashboard_utils.py                     # Streamlit-free dashboard helpers (testable; metric_card, loaders, etc.)
 test_dashboard_utils.py                # Unit tests for dashboard_utils.py (run in CI)
+draft_board_2026.py                    # Draft Board tab renderer (license-frozen copy; reads the frozen 2026 artifacts)
 film_room.py                           # Film Room tab renderer (embedded TikToks + breakdown popups)
 video_content.py                       # Registry of published videos (embed ids + breakdown files)
 video_breakdowns/                      # Long-form written breakdowns (markdown), one per video
@@ -266,13 +280,17 @@ fantasy/
   dfs/
     optimizer.ipynb                    # ILP formulation and helper reference
     dfs_pipeline.ipynb                 # Weekly DFS workflow (papermill)
-  seasonal_projections/                # Pre-season Draft Value Finder tab + value-edge research
-    train_model_a.py                   # Per-position season PPG models (LightGBM, injury features removed)
-    build_value_board.py               # Builds the live tab data: our calls vs ADP (+ Sleeper comparison)
-    surprise_eval.py                   # Canonical eval: ADP-mispricing skill (can we spot over/undervalued players, injury-filtered)
-    model_bakeoff.py                   # Algorithm + hyperparameter bakeoff on the projection (LightGBM wins)
-    fade_deep_dive.py                  # Why fades struggle + the decline-catalyst gate that fixes them
-    build_draft_board.py               # Older three-way blend board (retained for reference)
+  seasonal_projections/                # Draft Board artifacts + the value-signal research campaign
+    phase4_band_2026.csv               # SHIPPED, FROZEN: the 2026 board (point estimate + calibrated band)
+    talent_index_2026.csv              # SHIPPED, FROZEN: descriptive 2025 efficiency context column
+    phase4_band.py                     # Band engine (walk-forward isotonic + residual quantiles)
+    apply_board_labels.py              # Post-process: population flags + licensed signal_status wording
+    build_talent_index.py              # Regenerates talent_index_2026.csv (descriptive only, never blended)
+    PREREGISTRATION.md                 # The campaign constitution (blind decision rules, OUTCOMES ledger)
+    h6/h7/h8v/h11/h12_*.py, *_results.json  # Fired pre-registered tests + their frozen results
+    build_value_board.py               # RETIRED engine for the old Draft Value Finder (kept for history)
+    ARTIFACTS.md                       # Every file in this dir: frozen / regenerable / retired
+    GUIDE.md                           # Plain-language guide to the board and the campaign
     README.md                          # Design decisions, results, and the honest verdict
 memory/                                # Persistent notes for future work
 .github/workflows/

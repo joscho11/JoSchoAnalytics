@@ -76,3 +76,36 @@ jobs:
           fantasy/seasonal_projections/test_seasonal_projections.py
           fantasy/seasonal_projections/test_draft_board.py
           test_app_draft_board.py
+
+  deploy-parity:
+    name: deploy parity (py3.12 + requirements.txt, as the cloud installs)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python (runtime.txt version)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      # Install EXACTLY what Streamlit Cloud installs (requirements.txt,
+      # floating resolution) plus pytest as the runner. This is the permanent
+      # fix for "the deployed combination is the only one nothing tests"
+      # (audit 2026-07-12, H2): a resolver conflict or API break in the
+      # deployed environment fails here before it fails on the live site.
+      - name: Install the cloud deploy set
+        run: pip install -r requirements.txt pytest
+
+      - name: Run every suite under the deploy environment
+        run: >-
+          pytest -v
+          betting/test_features.py
+          betting/test_calibration.py
+          test_dashboard_utils.py
+          fantasy/seasonal_projections/test_seasonal_projections.py
+          fantasy/seasonal_projections/test_draft_board.py
+          test_app_draft_board.py

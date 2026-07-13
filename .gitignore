@@ -19,3 +19,9 @@ betting/data/
 
 # Walk-forward OOS predictions — regenerable via experiments/walkforward_oos_preds.py
 betting/experiments/walkforward_oos_preds*.csv
+# content-sourcing sheets (video raw material, not product)
+fantasy/seasonal_projections/content/
+# PRIVATE daily-ADP research log (dated snapshots + ledger) — fenced research
+# artifact, never committed to the public tip. The live overlay
+# (board_adp_live_2026.csv) IS committed; only the log dir is ignored.
+fantasy/seasonal_projections/adp_logs/

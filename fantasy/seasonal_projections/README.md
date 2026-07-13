@@ -5,7 +5,32 @@ model in `fantasy/`. The goal: project each player's upcoming season and compare
 to the market (ADP) to surface over/undervalued players. It is the fantasy analog
 of the betting side's "model vs the Vegas line" thesis (here the market line is ADP).
 
-## What ships today: the Seasonal Value Finder (2026-06-08)
+## What ships today: the 2026 Draft Board (2026-07-12)
+
+The live dashboard tab is now the **2026 Draft Board** (`draft_board_2026.py`, reading the
+frozen `phase4_band_2026.csv` + `talent_index_2026.csv`). It pairs the market's point
+estimate — powered by Sleeper's projections versus the draft market — with a calibrated
+range I built around it: a Floor, Expected, and Ceiling for the season, a Top-12 chance,
+and a bust risk. When I drew those ranges for the 2021 through 2025 seasons, about 8 in 10
+players finished inside their 80% range.
+
+The board also shows the gap between projection and draft price. That gap has a tested
+track record as a group pattern — validated in aggregate across five past seasons,
+including a check that it wasn't just the projections being fresher than the prices — for
+established players and for running backs and receivers in changing situations; it is not
+yet tested for quarterbacks and tight ends in changing situations, and those rows are
+marked. It describes patterns across many players, never a call about any one player. The
+full story is in `GUIDE.md`, the file-by-file status is in `ARTIFACTS.md`, and the
+pre-registered research campaign behind the signal is in `PREREGISTRATION.md`.
+
+The Seasonal Value Finder described below was the earlier shipped tab; I retired it on
+2026-07-12 and keep it here as history.
+
+## ~~What ships today:~~ the Seasonal Value Finder (2026-06-08) — **RETIRED 2026-07-12**
+
+**[RETIRED 2026-07-12 — replaced by the 2026 Draft Board (see the section above and
+`draft_board_2026.py`). The BUY/FADE tab described in this section no longer ships. The
+text below is kept verbatim as history and is not rewritten.]**
 
 The live dashboard tab is the **Seasonal Value Finder** — **our independent model's
 calls vs the draft room's ADP**. `train_model_a.py` (per-position **LightGBM**, injury

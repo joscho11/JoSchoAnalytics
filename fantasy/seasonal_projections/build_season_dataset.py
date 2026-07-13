@@ -54,7 +54,7 @@ import pandas as pd
 import nflreadpy as nfl
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))   # so _utils imports regardless of CWD
-from _utils import norm_name, SKILL_POSITIONS
+from _utils import norm_name, SKILL_POSITIONS, SLEEPER_NAME_ALIASES
 from snapshots import snap
 
 if hasattr(sys.stdout, "reconfigure"):
@@ -462,6 +462,7 @@ def main():
 
     if ADP_CSV.exists():
         adp = pd.read_csv(ADP_CSV)
+        adp["norm_name"] = adp["norm_name"].replace(SLEEPER_NAME_ALIASES)
         keep = ["season", "norm_name", "position", "adp_half_ppr", "adp_overall_rank", "adp_pos_rank", "sleeper_pts_half_ppr"]
         rows = rows.merge(adp[[c for c in keep if c in adp.columns]], on=["season", "norm_name", "position"], how="left")
         print(f"  ADP benchmark joined: {rows['adp_half_ppr'].notna().sum():,} rows (2020+ only)")

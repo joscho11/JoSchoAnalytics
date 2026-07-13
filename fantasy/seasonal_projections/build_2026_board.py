@@ -36,7 +36,7 @@ if hasattr(sys.stdout, "reconfigure"):
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import build_season_dataset as bsd
-from _utils import norm_name, SKILL_POSITIONS
+from _utils import norm_name, SKILL_POSITIONS, SLEEPER_NAME_ALIASES
 
 HERE     = Path(__file__).resolve().parent
 UPCOMING = 2026
@@ -227,6 +227,7 @@ def main():
 
     if ADP_CSV.exists():
         adp = pd.read_csv(ADP_CSV)
+        adp["norm_name"] = adp["norm_name"].replace(SLEEPER_NAME_ALIASES)
         keep = ["season", "norm_name", "position", "adp_half_ppr", "adp_overall_rank", "adp_pos_rank", "sleeper_pts_half_ppr"]
         rows = rows.merge(adp[[c for c in keep if c in adp.columns]], on=["season", "norm_name", "position"], how="left")
         print(f"\nADP joined: {int(rows.adp_half_ppr.notna().sum())} of the {len(rows)} {UPCOMING} rows have ADP")

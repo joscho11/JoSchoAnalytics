@@ -4,6 +4,6 @@
 -r requirements-ci.txt
 scipy==1.16.3
 catboost==1.2.10
-streamlit==1.57.0
+streamlit==1.59.1
 plotly==6.7.0
 pytest==9.0.2

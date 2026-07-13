@@ -11,12 +11,16 @@ exception, no rendered st.error) at each step.
 
 Run:  python test_app_draft_board.py    (or: pytest test_app_draft_board.py)
 """
+import os
 import re
 import sys
 from pathlib import Path
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
+
+# hermetic: the app attempts no network calls (GA off, remote loaders empty)
+os.environ["APP_OFFLINE"] = "1"
 
 import pandas as pd
 from streamlit.testing.v1 import AppTest
@@ -26,7 +30,7 @@ APP = str(_HERE / "app.py")
 BAND_CSV = _HERE / "fantasy" / "seasonal_projections" / "phase4_band_2026.csv"
 TAB_LABEL = "📋 Draft Board"
 DEFAULT_COLS = ["player_disp", "position_disp", "team", "adp_half_ppr",
-                "adp_pos_rank", "proj_pos_rank", "value_gap",
+                "adp_pos_rank", "proj_pos_rank", "gap_disp",
                 "p10", "p50_disp", "p90",
                 "top12_pct", "eff_disp"]
 PCTILE_RE = re.compile(r"^-?\d+ \(\d+(st|nd|rd|th) %ile\)$")
@@ -60,6 +64,14 @@ def test_draft_value_2026_tab_renders_and_filters():
     assert list(df.columns) == DEFAULT_COLS, \
         f"default columns changed: {list(df.columns)}"
 
+    # default load is Gap-descending (parse gap_disp back to numeric; "–" -> NaN):
+    # non-blank gaps descend and the blank-gap row sits last.
+    _gap = pd.to_numeric(df["gap_disp"], errors="coerce")
+    _real = _gap.dropna().to_numpy()
+    assert (_real[:-1] >= _real[1:]).all(), "default board load must be Gap-descending"
+    if _gap.isna().any():
+        assert pd.isna(_gap.iloc[-1]), "blank-gap row must sit last on default load"
+
     # † appears on exactly the volatile-QB/TE rows, never elsewhere
     n_untested = int((pd.read_csv(BAND_CSV)["population"] == "volatile_qb_te").sum())
     dagger = df["position_disp"].str.contains("†", na=False)
@@ -68,10 +80,14 @@ def test_draft_value_2026_tab_renders_and_filters():
     assert df.loc[dagger, "position_disp"].str.startswith(("QB", "TE")).all(), \
         "† must only mark QB/TE rows"
 
-    # the two ranks reconstruct the gap (value_gap = position rank − proj rank)
-    ok = df.dropna(subset=["adp_pos_rank", "proj_pos_rank", "value_gap"])
-    assert ((ok["adp_pos_rank"] - ok["proj_pos_rank"]) == ok["value_gap"]).all(), \
+    # the two ranks reconstruct the gap (gap_disp = position rank − proj rank,
+    # rendered as text so a missing gap shows "–" instead of a blank cell)
+    ok = df.dropna(subset=["adp_pos_rank", "proj_pos_rank"])
+    ok = ok[ok["gap_disp"] != "–"]
+    assert ((ok["adp_pos_rank"] - ok["proj_pos_rank"])
+            == ok["gap_disp"].astype(float)).all(), \
         "Position rank − Proj position rank must equal Gap"
+    assert (df["gap_disp"] == "–").sum() <= 1, "unexpected '–' gap rows"
 
     # Expected renders as "VALUE (Nth %ile)"; Floor/Ceiling stay numeric-sortable
     cells = df["p50_disp"].dropna()
@@ -90,7 +106,9 @@ def test_draft_value_2026_tab_renders_and_filters():
     assert (eff == "Rookie").sum() > 0, "rookie rows should display 'Rookie'"
 
     # ── ADP snapshot caption + CSV download button ──
-    assert any("Sleeper ADP as of July 10, 2026" in str(c.value)
+    # The date is auto-stamped from the live ADP overlay (refresh_board_adp.py),
+    # so anchor on the stable, date-independent substring rather than a fixed date.
+    assert any("Sleeper ADP" in str(c.value)
                for c in at.caption), "ADP snapshot caption missing"
     dl = at.get("download_button")
     assert any("Download board (CSV)" in b.label for b in dl), \
@@ -145,5 +163,60 @@ def test_draft_value_2026_tab_renders_and_filters():
           "view carries equivalents + relocated columns")
 
 
+def test_board_sort_is_numeric_and_sentinels_sink():
+    """Regression guard against the recurring string-sort bug (see
+    audit/board_sort_diagnosis_2026-07-13.md). For every one of the 9 sortable
+    columns, ascending AND descending order must be numerically correct, and every
+    sentinel row — Gainwell's blank Gap/Proj rank, and all 'Rookie' and all '–'
+    efficiency rows — must land at the BOTTOM in BOTH directions. Fails if any column
+    reverts to string sorting or a sentinel floats to the top."""
+    sys.path.insert(0, str(_HERE))
+    import draft_board_2026 as board
+
+    df = board._load_board_2026()
+    assert list(board.SORT_KEYS)[0] == "Gap", "default sort column must be Gap"
+    assert len(board.SORT_KEYS) == 9, "expected 9 sortable columns"
+
+    for label, key in board.SORT_KEYS.items():
+        for asc in (True, False):
+            v = board._sort_board(df, label, ascending=asc)
+            k = pd.to_numeric(v[key], errors="coerce").to_numpy()
+            isna = pd.isna(k)
+            n_sent = int(isna.sum())
+            # sentinels (NaN key) form the trailing block, in BOTH directions
+            if n_sent:
+                assert isna[len(k) - n_sent:].all() and not isna[:len(k) - n_sent].any(), \
+                    f"{label} asc={asc}: sentinel rows not all pinned to the bottom"
+            # non-sentinel keys strictly ordered by the numeric value (not the string)
+            real = k[~isna]
+            if asc:
+                assert (real[:-1] <= real[1:]).all(), \
+                    f"{label} ascending is not numerically ordered (string sort?)"
+            else:
+                assert (real[:-1] >= real[1:]).all(), \
+                    f"{label} descending is not numerically ordered (string sort?)"
+
+    # column-specific sentinel identity: Gainwell (blank Gap) last on Gap, both ways
+    for asc in (True, False):
+        g = board._sort_board(df, "Gap", ascending=asc)
+        assert pd.isna(g["value_gap"].iloc[-1]), \
+            f"Gainwell (blank Gap) must be last on Gap sort (asc={asc})"
+        p = board._sort_board(df, "Proj position rank", ascending=asc)
+        assert pd.isna(p["proj_pos_rank"].iloc[-1]), \
+            f"blank Proj-rank row must be last on Proj-rank sort (asc={asc})"
+        # every 'Rookie' and every '–' efficiency row sits in the bottom block
+        e = board._sort_board(df, "NFL Efficiency %ile (pos)", ascending=asc)
+        n_rk = int((df["eff_disp"] == "Rookie").sum())
+        n_dash = int((df["eff_disp"] == "–").sum())
+        tail = set(e["eff_disp"].iloc[-(n_rk + n_dash):])
+        assert tail <= {"Rookie", "–"}, \
+            f"Efficiency sort (asc={asc}): a real value floated into the sentinel block"
+
+    print(f"OK  board sort: 9 columns numeric asc+desc; sentinels "
+          f"(Gainwell, {int((df['eff_disp']=='Rookie').sum())} Rookie, "
+          f"{int((df['eff_disp']=='–').sum())} '–') sink to bottom both ways; default Gap-desc")
+
+
 if __name__ == "__main__":
     test_draft_value_2026_tab_renders_and_filters()
+    test_board_sort_is_numeric_and_sentinels_sink()

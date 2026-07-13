@@ -1,0 +1,23 @@
+# Research / notebook-only packages, split out of requirements.txt on
+# 2026-07-12 so the Streamlit Cloud deploy stops installing things the
+# dashboard never imports (audit H2: the exact-pinned 2024-era llama-index
+# was the likeliest resolver conflict on a Python 3.12 cloud rebuild).
+#
+# Who uses what:
+#   llama-index (+anthropic ext)  -> betting/sports_betting_agent.ipynb,
+#                                    fantasy/fantasy_agent.ipynb (the weekly
+#                                    cron installs its own copies — see
+#                                    .github/workflows/weekly_predictions.yml)
+#   papermill + ipykernel         -> notebook execution (weekly cron uses
+#                                    requirements-ci.txt's pins)
+#   matplotlib + seaborn          -> research notebooks only
+#
+# Install on top of the deploy set:  pip install -r requirements.txt -r requirements-research.txt
+-r requirements.txt
+
+llama-index==0.11.0
+llama-index-llms-anthropic==0.2.0
+papermill>=2.4,<3.0
+ipykernel>=6.0,<7.0
+matplotlib>=3.7,<4.0
+seaborn>=0.12,<1.0

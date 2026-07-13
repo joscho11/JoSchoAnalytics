@@ -8,6 +8,14 @@ import unicodedata
 # Sleeper fills 999.0 for "no ADP / undrafted"; anything at/above this is a sentinel.
 ADP_SENTINEL = 900.0
 
+# Cross-source name variants the normalizer can't bridge: Sleeper-side
+# norm_name -> nflverse/dataset-side norm_name. Applied to the ADP frame at
+# merge time in both dataset builders (the cached ADP CSV stores norm_name,
+# so an alias inside norm_name() would never reach it).
+SLEEPER_NAME_ALIASES = {
+    "kenny gainwell": "kenneth gainwell",   # 2026: Sleeper "Kenny", nflverse "Kenneth" (audit M1)
+}
+
 # Skill positions we model.
 SKILL_POSITIONS = ("QB", "RB", "WR", "TE")
 

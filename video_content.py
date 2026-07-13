@@ -26,19 +26,26 @@ INTRO_VIDEO = {
 }
 
 # Player / topic videos — each gets an embed + a click-to-open written breakdown.
+# `archived: True` + `archive_note` puts an always-visible archive frame on the
+# card and replaces its description copy (see film_room.render_film_room).
 VIDEOS = [
     {
         "slug": "brian-thomas-jr",
         "title": "The Market Is Wrong About Brian Thomas Jr.",
-        "subtitle": "WR · Jacksonville — Sleeper ADP WR31, our model WR17",
         "date": "2026-07-07",
         "tiktok_url": "https://www.tiktok.com/@joschoanalytics/video/7660252626046553374",
         "video_id": "7660252626046553374",
         "breakdown_file": "brian_thomas_jr.md",
-        "teaser": (
-            "The short covers the headline. The full breakdown digs into the quarterback "
-            "split, the touchdown regression, the honest drops question, and exactly why "
-            "the model has him at WR17."
+        "archived": True,
+        "archive_note": (
+            "📼 Archived — posted July 7, 2026, before my validation work "
+            "finished. This video makes a call about one player using a model "
+            "I've since retired. When testing finished, what held up were "
+            "group-level patterns and calibrated ranges — never claims about "
+            "individual players — so I don't make single-player calls anymore, "
+            "and this video doesn't reflect how I work now. It stays up, "
+            "unedited, as part of the record. For what I publish today: the "
+            "Draft Board tab."
         ),
     },
 ]

@@ -9,13 +9,20 @@ accuracy or hit-rate claims, player-level calls, sub-group claims. The talent
 column is descriptive only and is never combined with any other column.
 Data: phase4_band_2026.csv + talent_index_2026.csv (frozen artifacts, read-only).
 """
+from datetime import date
 from pathlib import Path
 
 import pandas as pd
 import streamlit as st
 
+_MONTHS = ("January", "February", "March", "April", "May", "June", "July",
+           "August", "September", "October", "November", "December")
+
 _HERE = Path(__file__).resolve().parent
 SEAS = _HERE / "fantasy" / "seasonal_projections"
+# LIVE ADP overlay written by refresh_board_adp.py (regenerable; market data only).
+# The frozen band + season-dataset ADP are the fallback when it is absent.
+LIVE_OVERLAY = SEAS / "board_adp_live_2026.csv"
 
 # plain badge per population (short, default view)
 BADGE = {
@@ -28,7 +35,7 @@ BADGE = {
 PLAIN_LABEL = {
     "stable_role": (
         "Verified: for established players (same team as last year, played "
-        "most of last season), we tested this projections-vs-price comparison "
+        "most of last season), I tested this projections-vs-price comparison "
         "on five past seasons and it held up as a group pattern — including a "
         "check that it wasn't just projections being newer than draft prices. "
         "It was tested on a large best-ball drafting platform, a slightly "
@@ -54,7 +61,7 @@ PLAIN_LABEL = {
 ADV_DEFS = [
     ("in aggregate", "a pattern confirmed across groups of many players, "
      "not a claim about any individual"),
-    ("freshness-controlled", "we checked that the signal isn't explained by "
+    ("freshness-controlled", "I checked that the signal isn't explained by "
      "projections simply being more up-to-date than draft prices"),
     ("dated best-ball market", "draft prices reconstructed week by week from "
      "Underdog best-ball drafts, so projections and prices could be compared "
@@ -82,6 +89,16 @@ def _load_board_2026():
                 "is_rookie_context", "draft_round", "draft_pick",
                 "coverage_flag", "disclosure"]]
     df = band.merge(t, on="player_id", how="left").merge(adp, on="player_id", how="left")
+    # LIVE ADP overlay: prefer the freshly-refreshed price columns where present, else
+    # keep the frozen band's adp_pos_rank/value_gap and the season-dataset adp_half_ppr
+    # (so a fresh clone and the hermetic AppTest still render). proj_pos_rank stays
+    # frozen either way, since value_gap moves in lockstep with adp_pos_rank.
+    if LIVE_OVERLAY.exists():
+        ov = pd.read_csv(LIVE_OVERLAY).set_index("player_id")
+        for col in ("adp_half_ppr", "adp_pos_rank", "value_gap"):
+            if col in ov.columns:
+                fresh = df["player_id"].map(ov[col])
+                df[col] = fresh.where(fresh.notna(), df[col])
     df["badge"] = df["population"].map(BADGE)
     df["plain_label"] = df["population"].map(PLAIN_LABEL)
     df["talent_pct"] = df["pct_among_2025_qualifiers"].fillna(
@@ -99,6 +116,8 @@ def _load_board_2026():
 
     # the two ranks behind the gap (value_gap = adp_pos_rank - proj_pos_rank)
     df["proj_pos_rank"] = (df["adp_pos_rank"] - df["value_gap"]).astype("Int64")
+    # display: a missing gap renders as "–", never a blank cell
+    df["gap_disp"] = [f"{v:.0f}" if pd.notna(v) else "–" for v in df["value_gap"]]
     # exception-only mark: † on the Pos cell for the untested volatile QB/TE group
     df["position_disp"] = df["position"].where(
         df["population"] != "volatile_qb_te", df["position"] + " †")
@@ -136,6 +155,35 @@ def _ordinal(n):
     if 10 <= n % 100 <= 13:
         return f"{n}th"
     return f"{n}{ {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th') }"
+
+
+@st.cache_data
+def _refresh_date():
+    """The ADP snapshot date from the live overlay (ISO string), or None if absent."""
+    if not LIVE_OVERLAY.exists():
+        return None
+    try:
+        s = pd.read_csv(LIVE_OVERLAY, usecols=["refreshed_at"])["refreshed_at"]
+        return str(s.iloc[0]) if len(s) else None
+    except (KeyError, ValueError, pd.errors.EmptyDataError):
+        return None
+
+
+def _adp_caption():
+    """Auto-stamped, first-person ADP caption. Flags a snapshot older than 7 days."""
+    iso = _refresh_date()
+    if not iso:
+        return ("I refresh these draft prices from Sleeper ADP; prices move as real "
+                "drafts happen.")
+    try:
+        stamp = date.fromisoformat(str(iso)[:10])
+        pretty = f"{_MONTHS[stamp.month - 1]} {stamp.day}, {stamp.year}"
+        stale = (date.today() - stamp).days > 7
+    except (ValueError, TypeError):
+        pretty, stale = str(iso), False
+    note = (" These prices are more than a week old, so they may be behind the market."
+            if stale else " Prices move as real drafts happen.")
+    return f"I refresh these draft prices from Sleeper ADP — latest pull {pretty}.{note}"
 
 
 @st.cache_data
@@ -201,6 +249,33 @@ def _worked_example(df):
         f"position.{eff_sent} What you do with that is your call.")
 
 
+# Sortable display column -> the underlying NUMERIC field it sorts on (never the
+# display string). Every sentinel — Gainwell's blank Gap/Proj rank, and the
+# "Rookie"/"–" efficiency rows — is NaN in its numeric key, so na_position="last"
+# sinks it to the BOTTOM in BOTH directions. Insertion order sets the selector order;
+# "Gap" is first so it is the default. Display strings are never touched by sorting.
+SORT_KEYS = {
+    "Gap": "value_gap",                              # numeric gap, not "-11"/"–"
+    "Draft Price (ADP)": "adp_half_ppr",
+    "Position rank": "adp_pos_rank",
+    "Proj position rank": "proj_pos_rank",
+    "Expected": "p50",                               # numeric p50 only, ignore the %ile suffix
+    "Floor": "p10",
+    "Ceiling": "p90",
+    "Top-12 chance": "top12_pct",
+    "NFL Efficiency %ile (pos)": "pct_among_2025_qualifiers",  # NaN for Rookie/– rows
+}
+
+
+def _sort_board(view, sort_label, ascending):
+    """Sort the board by the numeric field behind a display column. Sentinels (NaN
+    sort keys) always sink to the bottom, in both ascending and descending order
+    (na_position='last' is direction-independent). Stable so ties keep board order.
+    Display strings are unchanged — this is a display-layer sort only."""
+    key = SORT_KEYS.get(sort_label, "value_gap")
+    return view.sort_values(key, ascending=ascending, na_position="last", kind="stable")
+
+
 def render():
     df = _load_board_2026()
 
@@ -218,7 +293,7 @@ def render():
             "untested (QBs and TEs in changing situations); every other "
             "row's group has a tested track record. **Floor, Expected, and "
             "Ceiling** show a realistic range for his season in points — "
-            "most players land inside their range, and we checked that on "
+            "most players land inside their range, and I checked that on "
             "five past seasons; the percentile in parentheses after "
             "Expected shows where he stands among players at his position "
             "on this board. **Top-12 chance** turns the range into a simple "
@@ -227,7 +302,7 @@ def render():
             "his position, is not part of the Gap, and is never mixed into "
             "any other column; 'Rookie' means no NFL "
             "data yet, and '–' means not enough 2025 playing time to "
-            "qualify. A ⚠ beside a name means we have limited data on "
+            "qualify. A ⚠ beside a name means I have limited data on "
             "that player and his range is extra-wide. Everything here "
             "describes patterns across many players — it cannot guarantee "
             "what any single player will do.")
@@ -240,19 +315,38 @@ def render():
     with fc2:
         name = st.text_input("Player search", "", key="db26_search")
 
+    # Explicit numeric sort (st.dataframe's header-click sorts the display strings
+    # lexicographically — see audit/board_sort_diagnosis_2026-07-13.md). This routes
+    # every sortable column through one numeric path with sentinels pinned to the
+    # bottom. Default: Gap, descending (most positive gap first) on load.
+    sc1, sc2 = st.columns([1.4, 1.2])
+    with sc1:
+        sort_label = st.selectbox("Sort by", list(SORT_KEYS), index=0, key="db26_sortby")
+    with sc2:
+        order = st.radio("Order", ["Descending", "Ascending"], index=0,
+                         horizontal=True, key="db26_sortdir")
+    st.caption("Sort with these controls — they order the whole board numerically, "
+               "with no-data rows (Rookie / – / blank) always at the bottom. "
+               "(Clicking a column header sorts within the grid, but only these "
+               "controls sort Gap, Expected and Efficiency correctly.)")
+
     view = df[df.position.isin(pos)]
     if name.strip():
         view = view[view.player.str.contains(name.strip(), case=False, na=False)]
-    view = view.sort_values("adp_half_ppr")     # market order — neutral default
+    view = _sort_board(view, sort_label, ascending=(order == "Ascending"))
 
     cols = ["player_disp", "position_disp", "team", "adp_half_ppr",
-            "adp_pos_rank", "proj_pos_rank", "value_gap",
+            "adp_pos_rank", "proj_pos_rank", "gap_disp",
             "p10", "p50_disp", "p90",
             "top12_pct", "eff_disp"]
-    st.caption("Draft prices are Sleeper ADP as of July 10, 2026; "
-               "prices move as real drafts happen.")
+    st.caption(_adp_caption())
+    # key encodes the current sort, so the grid REMOUNTS on every sort change —
+    # this discards st.dataframe's sticky client-side header-sort so the control's
+    # order always wins (otherwise a prior header click masks it and the table
+    # looks static). See audit/board_sort_diagnosis_2026-07-13.md.
     st.dataframe(
         view[cols], width="stretch", height=520, hide_index=True,
+        key=f"db26_grid_{SORT_KEYS[sort_label]}_{order}",
         column_config={
             "player_disp": st.column_config.TextColumn(
                 "Player",
@@ -275,12 +369,12 @@ def render():
             "proj_pos_rank": st.column_config.NumberColumn(
                 "Proj position rank", format="%d", width="small",
                 help="His rank at his position by season projection"),
-            "value_gap": st.column_config.NumberColumn(
-                "Gap", format="%.0f", width="small",
+            "gap_disp": st.column_config.TextColumn(
+                "Gap", width="small",
                 help="Position rank minus Proj position rank. Positive = "
                      "projections see him finishing better than his price; "
                      "negative = worse. A group pattern, not a rating of "
-                     "this player."),
+                     "this player. '–' = no gap available for this row."),
             "p10": st.column_config.NumberColumn(
                 "Floor", format="%.0f",
                 help="A tough season: about 1 in 10 players finish below "
@@ -315,9 +409,19 @@ def render():
                      "to qualify."),
         })
 
+    # export with the on-screen column names (rename at export time only —
+    # the rendered table above is unchanged)
+    export_names = {
+        "player_disp": "Player", "position_disp": "Pos", "team": "Team",
+        "adp_half_ppr": "Draft Price (ADP)", "adp_pos_rank": "Position rank",
+        "proj_pos_rank": "Proj position rank", "gap_disp": "Gap",
+        "p10": "Floor", "p50_disp": "Expected", "p90": "Ceiling",
+        "top12_pct": "Top-12 chance", "eff_disp": "NFL Efficiency %ile (pos)",
+    }
     st.download_button(
         "Download board (CSV)",
-        data=view[cols].to_csv(index=False).encode("utf-8"),
+        data=view[cols].rename(columns=export_names)
+                       .to_csv(index=False).encode("utf-8"),
         file_name="draft_value_2026.csv", mime="text/csv",
         key="db26_dl")
 
@@ -357,7 +461,7 @@ def render():
                          "this player"),
                 "data_note": st.column_config.TextColumn(
                     "Data note",
-                    help="Flags players our ranges know least about"),
+                    help="Flags players my ranges know least about"),
                 "rookie_note": st.column_config.TextColumn("Rookie context"),
                 "talent_pct": st.column_config.NumberColumn(
                     "2025 Efficiency", format="%.0f",
@@ -386,7 +490,7 @@ def render():
     st.caption(
         "**About these numbers.** The point estimates are the market's — "
         "powered by Sleeper's projections vs the draft market. The ranges, "
-        "chances, and bust risk are our contribution: when we drew these "
+        "chances, and bust risk are my contribution: when I drew these "
         "ranges for past seasons, about 8 in 10 players finished inside "
         "their 80% range — almost exactly what the math promises (checked "
         "on 900 player-seasons, 2021–2025). The projections-vs-price signal "
