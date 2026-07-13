@@ -77,6 +77,7 @@ jobs:
           fantasy/seasonal_projections/test_draft_board.py
           test_app_draft_board.py
           test_site_nav.py
+          test_board_page.py
 
   deploy-parity:
     name: deploy parity (py3.12 + requirements.txt, as the cloud installs)
@@ -111,3 +112,4 @@ jobs:
           fantasy/seasonal_projections/test_draft_board.py
           test_app_draft_board.py
           test_site_nav.py
+          test_board_page.py

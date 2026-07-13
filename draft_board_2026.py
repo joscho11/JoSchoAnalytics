@@ -276,7 +276,68 @@ def _sort_board(view, sort_label, ascending):
     return view.sort_values(key, ascending=ascending, na_position="last", kind="stable")
 
 
-def render():
+# Single source of truth for each display column's label + tooltip, shared by the
+# st.dataframe column_config (legacy default view) AND the st.table page's visible
+# "what each column means" guide (use_table=True) — so the tooltip strings are the
+# SAME Python string in both places (byte-identical by construction, design 4m).
+_TXT, _NUM = "text", "number"
+COLUMN_META = [
+    ("player_disp", _TXT, "Player",
+     "⚠ beside a name = limited data — extra-wide uncertainty; details in the advanced view", {}),
+    ("position_disp", _TXT, "Pos",
+     "† = the Gap comparison is untested for QBs and TEs in changing situations — details in advanced view",
+     {"width": "small"}),
+    ("team", _TXT, "Team", "Blank = not signed with a team yet", {"width": "small"}),
+    ("adp_half_ppr", _NUM, "Draft Price (ADP)",
+     "Average draft position — the spot where drafters are actually taking this player",
+     {"format": "%.1f"}),
+    ("adp_pos_rank", _NUM, "Position rank",
+     "His rank at his position by draft price (1 = first off the board at the position)",
+     {"format": "%d", "width": "small"}),
+    ("proj_pos_rank", _NUM, "Proj position rank",
+     "His rank at his position by season projection", {"format": "%d", "width": "small"}),
+    ("gap_disp", _TXT, "Gap",
+     "Position rank minus Proj position rank. Positive = projections see him finishing "
+     "better than his price; negative = worse. A group pattern, not a rating of this "
+     "player. '–' = no gap available for this row.", {"width": "small"}),
+    ("p10", _NUM, "Floor",
+     "A tough season: about 1 in 10 players finish below this number (season points). "
+     "Its ≈ finish equivalent is in the advanced view.", {"format": "%.0f"}),
+    ("p50_disp", _TXT, "Expected",
+     "The middle of the range — half of players finish above this, half below. The "
+     "percentile in parentheses is where his Expected stands among players at his "
+     "position on this board (Floor and Ceiling rank players in the same order, so one "
+     "percentile covers all three).", {}),
+    ("p90", _NUM, "Ceiling",
+     "A great season: about 1 in 10 players finish above this number. Its ≈ finish "
+     "equivalent is in the advanced view.", {"format": "%.0f"}),
+    ("top12_pct", _NUM, "Top-12 chance", "Chance to finish top-12 at his position",
+     {"format": "%.0f%%"}),
+    ("eff_disp", _TXT, "NFL Efficiency %ile (pos)",
+     "0–100, within his position only: where his 2025 NFL efficiency ranked among "
+     "players at his position who played enough to qualify — 88 means more efficient "
+     "than 88% of them. Context only — NOT part of the value signal; testing showed it "
+     "does not predict draft value. 'Rookie' = no NFL data yet; college production "
+     "context is in the advanced view. '–' = not enough 2025 playing time to qualify.", {}),
+]
+_DISPLAY_COLS = [m[0] for m in COLUMN_META]
+_EXPORT_NAMES = {m[0]: m[2] for m in COLUMN_META}       # colkey -> on-screen label
+_STYLE_FMT = {m[0]: ("{:.1f}" if m[4].get("format") == "%.1f"
+                     else "{:.0f}%" if m[4].get("format") == "%.0f%%"
+                     else "{:.0f}") for m in COLUMN_META if m[1] == _NUM}
+
+
+def _column_config():
+    """Build the st.dataframe column_config from COLUMN_META (identical output to the
+    former inline config — verified by the app.py board AppTest)."""
+    cfg = {}
+    for key, kind, label, help_, extra in COLUMN_META:
+        col = st.column_config.NumberColumn if kind == _NUM else st.column_config.TextColumn
+        cfg[key] = col(label, help=help_, **extra)
+    return cfg
+
+
+def render(use_table=False):
     df = _load_board_2026()
 
     st.title("📋 2026 Draft Board")
@@ -307,6 +368,12 @@ def render():
             "describes patterns across many players — it cannot guarantee "
             "what any single player will do.")
         _worked_example(df)
+        if use_table:
+            # column tooltips relocated verbatim into a visible guide (mobile has no
+            # hover) — merged into this one honesty surface (design 4m).
+            st.markdown("**What each column means:**")
+            for _key, _kind, _label, _help, _extra in COLUMN_META:
+                st.markdown(f"- **{_label}** — {_help}")
 
     fc1, fc2 = st.columns([1.2, 1.4])
     with fc1:
@@ -325,102 +392,50 @@ def render():
     with sc2:
         order = st.radio("Order", ["Descending", "Ascending"], index=0,
                          horizontal=True, key="db26_sortdir")
-    st.caption("Sort with these controls — they order the whole board numerically, "
-               "with no-data rows (Rookie / – / blank) always at the bottom. "
-               "(Clicking a column header sorts within the grid, but only these "
-               "controls sort Gap, Expected and Efficiency correctly.)")
+    if use_table:
+        st.caption("Sort with these controls — they order the whole board numerically, "
+                   "with no-data rows (Rookie / – / blank) always at the bottom.")
+    else:
+        st.caption("Sort with these controls — they order the whole board numerically, "
+                   "with no-data rows (Rookie / – / blank) always at the bottom. "
+                   "(Clicking a column header sorts within the grid, but only these "
+                   "controls sort Gap, Expected and Efficiency correctly.)")
 
     view = df[df.position.isin(pos)]
     if name.strip():
         view = view[view.player.str.contains(name.strip(), case=False, na=False)]
     view = _sort_board(view, sort_label, ascending=(order == "Ascending"))
 
-    cols = ["player_disp", "position_disp", "team", "adp_half_ppr",
-            "adp_pos_rank", "proj_pos_rank", "gap_disp",
-            "p10", "p50_disp", "p90",
-            "top12_pct", "eff_disp"]
+    cols = _DISPLAY_COLS
     st.caption(_adp_caption())
-    # key encodes the current sort, so the grid REMOUNTS on every sort change —
-    # this discards st.dataframe's sticky client-side header-sort so the control's
-    # order always wins (otherwise a prior header click masks it and the table
-    # looks static). See audit/board_sort_diagnosis_2026-07-13.md.
-    st.dataframe(
-        view[cols], width="stretch", height=520, hide_index=True,
-        key=f"db26_grid_{SORT_KEYS[sort_label]}_{order}",
-        column_config={
-            "player_disp": st.column_config.TextColumn(
-                "Player",
-                help="⚠ beside a name = limited data — extra-wide "
-                     "uncertainty; details in the advanced view"),
-            "position_disp": st.column_config.TextColumn(
-                "Pos", width="small",
-                help="† = the Gap comparison is untested for QBs and TEs "
-                     "in changing situations — details in advanced view"),
-            "team": st.column_config.TextColumn("Team", width="small",
-                                                help="Blank = not signed with a team yet"),
-            "adp_half_ppr": st.column_config.NumberColumn(
-                "Draft Price (ADP)", format="%.1f",
-                help="Average draft position — the spot where drafters are "
-                     "actually taking this player"),
-            "adp_pos_rank": st.column_config.NumberColumn(
-                "Position rank", format="%d", width="small",
-                help="His rank at his position by draft price (1 = first "
-                     "off the board at the position)"),
-            "proj_pos_rank": st.column_config.NumberColumn(
-                "Proj position rank", format="%d", width="small",
-                help="His rank at his position by season projection"),
-            "gap_disp": st.column_config.TextColumn(
-                "Gap", width="small",
-                help="Position rank minus Proj position rank. Positive = "
-                     "projections see him finishing better than his price; "
-                     "negative = worse. A group pattern, not a rating of "
-                     "this player. '–' = no gap available for this row."),
-            "p10": st.column_config.NumberColumn(
-                "Floor", format="%.0f",
-                help="A tough season: about 1 in 10 players finish below "
-                     "this number (season points). Its ≈ finish equivalent "
-                     "is in the advanced view."),
-            "p50_disp": st.column_config.TextColumn(
-                "Expected",
-                help="The middle of the range — half of players finish "
-                     "above this, half below. The percentile in "
-                     "parentheses is where his Expected stands among "
-                     "players at his position on this board (Floor and "
-                     "Ceiling rank players in the same order, so one "
-                     "percentile covers all three)."),
-            "p90": st.column_config.NumberColumn(
-                "Ceiling", format="%.0f",
-                help="A great season: about 1 in 10 players finish above "
-                     "this number. Its ≈ finish equivalent is in the "
-                     "advanced view."),
-            "top12_pct": st.column_config.NumberColumn(
-                "Top-12 chance", format="%.0f%%",
-                help="Chance to finish top-12 at his position"),
-            "eff_disp": st.column_config.TextColumn(
-                "NFL Efficiency %ile (pos)",
-                help="0–100, within his position only: where his 2025 NFL "
-                     "efficiency ranked among players at his position who "
-                     "played enough to qualify — 88 means more efficient "
-                     "than 88% of them. Context "
-                     "only — NOT part of the value signal; testing showed "
-                     "it does not predict draft value. 'Rookie' = no NFL "
-                     "data yet; college production context is in the "
-                     "advanced view. '–' = not enough 2025 playing time "
-                     "to qualify."),
-        })
+    if use_table:
+        # Static st.table (no header-click sort at all) — the Sort-by control is the
+        # ONLY sort (design 4m). Top-40 default so the 180-row board isn't a giant
+        # mobile scroll; "Show all" expands. Display strings render byte-identical
+        # (gap "–" / "%ile" / Rookie); index hidden via the Styler.
+        show_all = st.checkbox(f"Show all {len(view)} players", value=False,
+                               key="db26_showall")
+        shown = view[cols] if show_all else view[cols].head(40)
+        sty = (shown.rename(columns=_EXPORT_NAMES).style.hide(axis="index")
+               .format({_EXPORT_NAMES[k]: v for k, v in _STYLE_FMT.items()}, na_rep="–"))
+        st.table(sty)
+        if not show_all and len(view) > 40:
+            st.caption(f"Showing the top 40 of {len(view)} by the current sort — tick "
+                       "“Show all” above for the full board.")
+    else:
+        # key encodes the current sort, so the grid REMOUNTS on every sort change —
+        # this discards st.dataframe's sticky client-side header-sort so the control's
+        # order always wins. See audit/board_sort_diagnosis_2026-07-13.md.
+        st.dataframe(
+            view[cols], width="stretch", height=520, hide_index=True,
+            key=f"db26_grid_{SORT_KEYS[sort_label]}_{order}",
+            column_config=_column_config())
 
-    # export with the on-screen column names (rename at export time only —
-    # the rendered table above is unchanged)
-    export_names = {
-        "player_disp": "Player", "position_disp": "Pos", "team": "Team",
-        "adp_half_ppr": "Draft Price (ADP)", "adp_pos_rank": "Position rank",
-        "proj_pos_rank": "Proj position rank", "gap_disp": "Gap",
-        "p10": "Floor", "p50_disp": "Expected", "p90": "Ceiling",
-        "top12_pct": "Top-12 chance", "eff_disp": "NFL Efficiency %ile (pos)",
-    }
+    # CSV export — always the FULL sorted view (uncapped by the Top-40 display),
+    # with the on-screen column names (design 4m: full-board export unchanged).
     st.download_button(
         "Download board (CSV)",
-        data=view[cols].rename(columns=export_names)
+        data=view[cols].rename(columns=_EXPORT_NAMES)
                        .to_csv(index=False).encode("utf-8"),
         file_name="draft_value_2026.csv", mime="text/csv",
         key="db26_dl")

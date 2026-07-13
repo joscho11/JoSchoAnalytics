@@ -130,6 +130,18 @@ def inject_css():
 """, unsafe_allow_html=True)
 
 
+def render_preseason_banner(board_page=None, season_year=2026):
+    """Pre-season banner variant (design 4d.ii, verbatim-ratified). Points to the live
+    daily-refreshing board. `board_page` is the Draft Board st.Page for the page_link
+    (skipped gracefully if not registered, e.g. in a test harness)."""
+    st.info(
+        f"🏈 The {season_year} season hasn't kicked off yet. My **2026 Draft Board** is "
+        "live and refreshing daily from the latest draft data — jump in below. Weekly "
+        "predictions return at Week 1.")
+    if board_page is not None:
+        st.page_link(board_page, label="Open the Draft Board", icon="📋")
+
+
 def render_footer():
     """Rendered on every page AFTER nav.run(), in the page flow (mobile-visible) —
     replaces the retired sidebar. Tip jar (with a lightest-touch click count),
