@@ -19,6 +19,7 @@ sys.path.insert(0, str(_HERE / "betting"))
 sys.path.insert(0, str(_HERE / "fantasy" / "seasonal_projections"))
 
 import dashboard_chrome as chrome
+import theme_redesign  # redesign preview skin (revertible) — delete this import + the call below to revert
 import nav_registry
 import page_dfs
 import page_film_room
@@ -32,6 +33,7 @@ import page_weekly_predictions
 st.set_page_config(page_title="JoScho Analytics | NFL Predictions",
                    page_icon="🏈", layout="wide")
 chrome.inject_css()
+theme_redesign.inject()  # redesign preview skin (revertible) — remove this line to restore the stock look
 chrome.site_pageview_once()
 
 # ── Pages — all real now (stubs retired in Batch 3d); url_paths per design 4b ──
@@ -59,8 +61,8 @@ nav_registry.PAGES = {
 chrome.render_header()
 
 nav = st.navigation(
-    {"Fantasy": [board_pg, wf_pg, dfs_pg],
-     "Betting": [wp_pg, tr_pg],
+    {"Betting": [wp_pg, tr_pg],
+     "Fantasy": [board_pg, wf_pg, dfs_pg],
      "More": [film_pg, lh_pg, help_pg]},
     position="top",
 )

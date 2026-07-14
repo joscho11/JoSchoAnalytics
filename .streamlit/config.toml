@@ -1,0 +1,10 @@
+# Redesign preview theme (additive, revertible). DELETE this file to restore the
+# stock default-dark look. Paired with theme_redesign.inject() in app.py.
+# Direction (impeccable product-register + emil/apple skills): restrained analytics
+# terminal — deep cool-neutral base + ONE emerald "edge" accent used sparingly.
+[theme]
+base = "dark"
+primaryColor = "#35D08A"
+backgroundColor = "#0B0F14"
+secondaryBackgroundColor = "#121821"
+textColor = "#E7ECF3"

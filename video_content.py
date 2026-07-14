@@ -26,8 +26,8 @@ INTRO_VIDEO = {
 }
 
 # Player / topic videos — each gets an embed + a click-to-open written breakdown.
-# `archived: True` + `archive_note` puts an always-visible archive frame on the
-# card and replaces its description copy (see film_room.render_film_room).
+# `archived: True` + `archive_note` adds a compact "📼 Archived — why?" pop-out to the
+# card (the note + Draft Board cross-link live inside it; see film_room.render_film_room).
 VIDEOS = [
     {
         "slug": "brian-thomas-jr",

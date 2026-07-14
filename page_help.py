@@ -1,7 +1,11 @@
-"""Help & Guide page (site revamp Batch 3d). Tab7 body moved BYTE-IDENTICAL from
-app.py (~433 lines, licensed-adjacent throughout). The live model stats its prose
-interpolates come from dashboard_data.accuracy_stats (3a) — the same shared plumbing
-app.py uses — so the rendered copy is byte-identical. Stale "tab" wording is verbatim.
+"""Help & Guide page. Originally moved byte-identical from the retired app.py Help tab
+(Batch 3d); refreshed 2026-07-14 to match the current multipage site — "tab" → "page"
+throughout, the retired-sidebar references replaced (each page carries its own controls at
+the top now), a Film Room entry + a site-organization note added, and the offseason /
+Draft-Board and agent data-source notes corrected. Licensed-adjacent throughout: the
+honest-numbers discipline (no CLV / beat-the-close claims) and the aggregate-only Draft
+Board language are preserved unchanged. The live model stats the prose interpolates still
+come from dashboard_data.accuracy_stats — the same shared plumbing app.py uses.
 """
 import streamlit as st
 
@@ -67,7 +71,7 @@ Edge is the gap between what the model predicts and what Vegas set as the spread
 
 If the model thinks the Chiefs will win by 10 but the spread is only 7.5, that's a 2.5 point edge on the Chiefs. The model is saying Vegas underpriced the Chiefs.
 
-The bigger the edge, the more the model disagrees with the market. Games with a small edge (under 1 point) are basically coin flips in the model's eyes. Use the Min Edge slider in the sidebar to filter down to only the games where the model has real conviction.
+The bigger the edge, the more the model disagrees with the market. Games with a small edge (under 1 point) are basically coin flips in the model's eyes. Use the **Min Edge (pts)** slider at the top of the Weekly Predictions page to filter down to only the games where the model has real conviction.
 
 You want to be betting games where the model has conviction, not games where it's a coin flip.
         """)
@@ -113,6 +117,17 @@ When the model and sharp money agree on the same side, that's a strong signal. W
     # ── Section 2: How to Use the Website ────────────────────────────────────
     st.subheader("🖥️ How to Use This Website")
 
+    with st.expander("How is the site organized?"):
+        st.markdown("""
+Everything lives in the top navigation bar, grouped into three menus:
+
+- **Betting** — Weekly Predictions (the page you land on) and Track Record.
+- **Fantasy** — Draft Board, Weekly Fantasy, and DFS Optimizer.
+- **More** — Film Room, League History, and this Help & Guide.
+
+The site opens on **Weekly Predictions** every time. There's no sidebar — each page carries its own controls (like the Season, Week, and Min Edge pickers) right at the top.
+        """)
+
     with st.expander("How do I read the game cards?"):
         st.markdown("""
 Each card shows one matchup for the week. Here's what the columns mean:
@@ -141,9 +156,9 @@ The colored button on each game card tells you how confident the AI agent is aft
 Click the Matchup Analysis button on any card to read the full reasoning.
         """)
 
-    with st.expander("What is the edge filter in the sidebar?"):
+    with st.expander("What is the Min Edge filter?"):
         st.markdown("""
-The Min Edge slider controls which games show up on the page.
+The **Min Edge (pts)** slider at the top of the Weekly Predictions page controls which games show up.
 
 At 0.0 (the default) you see every game. At 1.0 you only see games where the model disagrees with Vegas by at least 1 point. At 3.0 you're only seeing the high conviction plays.
 
@@ -156,12 +171,12 @@ During the season the site runs on an automated schedule through GitHub Actions.
 
 Tuesday morning it fills in the previous week's results and posts initial predictions for the upcoming week using the opening Vegas lines. Thursday night it refreshes those predictions after injury reports drop. Sunday morning it locks in final predictions before kickoff. Then the cycle repeats on Tuesday.
 
-During the offseason the site just shows historical data from past seasons. Everything spins back up when the season kicks off in September.
+During the offseason the weekly predictions pause, but the pre-season **Draft Board** stays live and refreshes daily from the latest draft data. Weekly predictions spin back up when the season kicks off in September.
         """)
 
-    with st.expander("What is the Track Record tab?"):
+    with st.expander("What is the Track Record page?"):
         st.markdown("""
-The Track Record tab is where you can see how the model has done across the whole season, not just one week.
+The Track Record page is where you can see how the model has done across the whole season, not just one week.
 
 It shows a week by week bar chart of ATS win percentage, a cumulative trend line showing how accuracy has moved over time, and a breakdown of how high edge games performed compared to low edge games.
 
@@ -185,31 +200,38 @@ A pick is only flagged as **UNDER** when both the XGBoost and Ridge models indep
 That's why the badges on the game cards are amber/dashed instead of green — the model says UNDER, but I haven't yet confirmed live that it's actually profitable. I track it through the 2026 season and reassess after a full season of real evidence (~96 picks). **Don't bet these picks; treat them as something to watch.**
         """)
 
-    with st.expander("What is the Weekly Fantasy tab?"):
+    with st.expander("What is the Weekly Fantasy page?"):
         st.markdown("""
-The Weekly Fantasy tab shows weekly half-PPR fantasy projections for every active QB, RB, WR, and TE. Each position has its own subtab.
+The Weekly Fantasy page shows weekly half-PPR fantasy projections for every active QB, RB, WR, and TE. Each position has its own subtab.
 
 You can filter by team or health status and see projected fantasy points alongside position-specific stat projections (passing yards, rushing yards, receptions, receiving yards). Once the week's games are played, actual stats fill in automatically.
 
 See the Fantasy Projections section below for more detail on how the models work.
         """)
 
-    with st.expander("What is the DFS Optimizer tab?"):
+    with st.expander("What is the DFS Optimizer page?"):
         st.markdown("""
-The DFS Optimizer tab is a DraftKings NFL Classic lineup optimizer launching with the 2026 season.
+The DFS Optimizer page is a DraftKings NFL Classic lineup optimizer launching with the 2026 season.
 
 Upload your DraftKings salary CSV and the optimizer generates the highest-projected legal 9-player lineup under the $50,000 salary cap. See the DFS Optimizer section below for a full breakdown.
         """)
 
-    with st.expander("What is the Draft Board tab?"):
+    with st.expander("What is the Draft Board page?"):
         st.markdown("""
-The Draft Board is a **pre-season draft tool** for the 2026 season, separate from the Weekly Fantasy tab. The point estimate for each player is the market's — powered by Sleeper's season projections compared against the draft market (ADP, average draft position). My contribution is a calibrated range around that estimate: a floor and ceiling, the chance of a top-12 or top-24 finish at the position, and a bust-risk figure for players typically drafted early at their position.
+The Draft Board is a **pre-season draft tool** for the 2026 season, separate from the Weekly Fantasy page. The point estimate for each player is the market's — powered by Sleeper's season projections compared against the draft market (ADP, average draft position). My contribution is a calibrated range around that estimate: a floor and ceiling, the chance of a top-12 or top-24 finish at the position, and a bust-risk figure for players typically drafted early at their position.
 
 **How the range was checked:** across 900 player-seasons (2021–2025), about 8 in 10 players finished inside their 80% range — close to what the math promises. The projections-vs-price comparison itself has a tested track record as a group pattern for some player groups (marked with a "Signal check" badge on the board) and is untested for others — the badge tells you which group a player falls into. None of this is a guarantee, or a recommendation, about any individual player — it describes patterns across many players.
 
 A separate "2025 Efficiency" column shows context only — it is not part of the value signal, and testing showed it does not predict draft value.
 
 Use the **Position** filter to narrow the board, and the **Show advanced view** toggle for the full percentiles, raw metrics, and verbatim research labels behind the plain columns.
+        """)
+
+    with st.expander("What is the Film Room page?"):
+        st.markdown("""
+The Film Room page collects short, model-backed video breakdowns — each TikTok short sits next to the full written analysis it's based on. Click **📖 Full breakdown** under a video to open the deep dive the short couldn't fit.
+
+Some older videos predate my validation work and make calls I wouldn't make today. Those carry a **📼 Archived — why?** pop-out explaining what's changed; they stay up, unedited, as part of the record, and point you to what I publish now.
         """)
 
     st.divider()
@@ -219,7 +241,7 @@ Use the **Position** filter to narrow the board, and the **Show advanced view** 
 
     with st.expander("How do the fantasy projections work?"):
         st.markdown("""
-The Weekly Fantasy tab uses a separate machine learning system from the betting model. There are four XGBoost models — one for each position (QB, RB, WR, TE) — each trained on NFL player stats from 2020 through 2024 with the 2025 season held out as a real-world test.
+The Weekly Fantasy page uses a separate machine learning system from the betting model. There are four XGBoost models — one for each position (QB, RB, WR, TE) — each trained on NFL player stats from 2020 through 2024 with the 2025 season held out as a real-world test.
 
 Each model predicts **half-PPR fantasy points** for the upcoming week based on roughly 80 features, including:
 
@@ -319,18 +341,18 @@ If you're looking at a past week, the actuals shown are the real NFL stats for t
 
     with st.expander("What is the DFS Optimizer?"):
         st.markdown("""
-The DFS Optimizer tab is a DraftKings NFL Classic lineup optimizer launching with the 2026 season.
+The DFS Optimizer page is a DraftKings NFL Classic lineup optimizer launching with the 2026 season.
 
 It takes this site's weekly fantasy projections and solves for the highest-projected legal lineup under the $50,000 salary cap using an integer linear program. The optimizer fills all 9 roster slots — QB, 2 RB, 3 WR, TE, FLEX, DST — subject to DraftKings' constraints.
 
 The workflow each week is:
 1. Download your DraftKings salary CSV from any NFL Classic contest lobby
-2. Upload it in the DFS Optimizer tab
+2. Upload it in the DFS Optimizer page
 3. The optimizer fuzzy-matches DK player names to my projected points and solves the lineup
 4. Lock or exclude specific players and re-run if you want to tweak it
 5. Download the finished lineup ready for DraftKings import
 
-Note that DST currently uses DraftKings' season average since there is no team-defense projection model yet. That's listed as a known limitation in the tab.
+Note that DST currently uses DraftKings' season average since there is no team-defense projection model yet. That's listed as a known limitation on that page.
         """)
 
     with st.expander("How does the optimizer actually work?"):
@@ -358,11 +380,11 @@ Projections are converted to full DraftKings Classic scoring (full PPR, mileston
     # ── Section 5: League History ─────────────────────────────────────────────
     st.subheader("🏅 League History")
 
-    with st.expander("What is the League History tab?"):
+    with st.expander("What is the League History page?"):
         st.markdown("""
-The League History tab pulls your Sleeper fantasy league's historical data and displays it in one place.
+The League History page pulls your Sleeper fantasy league's historical data and displays it in one place.
 
-Enter your Sleeper league ID (found in your league's URL: `sleeper.com/leagues/{ID}/league`) and the tab loads standings, matchup results, and season-by-season records for every manager in the league.
+Enter your Sleeper league ID (found in your league's URL: `sleeper.com/leagues/{ID}/league`) and the page loads standings, matchup results, and season-by-season records for every manager in the league.
 
 You can filter by season or view all-time records across every year your league has existed. It's useful for settling debates about who's actually been the best manager historically versus just the most recent champion.
         """)
@@ -436,7 +458,7 @@ The model pulls play-by-play and schedule data from nflreadpy going back to 1999
 
 The All-Pro data is a custom CSV covering selections from 1997 to 2025. It's used as a proxy for roster talent: players are weighted over a 3-year lookback (4/2/1) so recent selections matter more. This gets updated manually each January.
 
-The agent currently uses mock injury and line movement data for demonstration purposes. Integrating real-time APIs for those two sources is on the roadmap for the 2026 season.
+The agent's line-movement tool currently uses mock data for demonstration; wiring in a live odds API is on the roadmap for the 2026 season. Injury data, by contrast, is real — pulled live from nflreadpy — both in the model's features and in the agent's injury tool.
         """)
 
     with st.expander("Is this financial advice?"):
