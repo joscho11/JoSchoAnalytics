@@ -1,6 +1,8 @@
 """Proof for the Draft Board page after the st.dataframe revert (the st.table
-experiment was rejected). Drives the pre-season entrypoint so the board is the default
-page. Hermetic (APP_OFFLINE=1).
+experiment was rejected). Renders the board page function directly via
+AppTest.from_function — the seasonal board-default entry route was retired
+2026-07-14 (Weekly Predictions is the fixed default, and AppTest.switch_page
+cannot target st.navigation function-pages). Hermetic (APP_OFFLINE=1).
 
 Asserts: the board renders via st.dataframe (NOT st.table); the "What each column means"
 guide lives INSIDE the How-to-read expander which is collapsed on load; all 180 rows
@@ -14,17 +16,25 @@ import sys
 from pathlib import Path
 
 os.environ["APP_OFFLINE"] = "1"
-os.environ["BOARD_REFRESH_SEASON_START"] = "2099-01-01"   # force pre-season -> board default
 
 from streamlit.testing.v1 import AppTest
 
 _HERE = Path(__file__).resolve().parent
+# process-wide: AppTest runs the entry function in this same process, so these
+# path inserts (and APP_OFFLINE above) are visible inside it
 sys.path.insert(0, str(_HERE))
-ENTRY = str(_HERE / "app.py")   # the multipage entrypoint (post-3e swap)
+sys.path.insert(0, str(_HERE / "betting"))
+sys.path.insert(0, str(_HERE / "fantasy" / "seasonal_projections"))
+
+
+def _entry():
+    """Board page as a standalone AppTest script (nav-independent)."""
+    import page_draft_board
+    page_draft_board.render()
 
 
 def _run():
-    at = AppTest.from_file(ENTRY, default_timeout=180).run()
+    at = AppTest.from_function(_entry, default_timeout=180).run()
     assert not at.exception, at.exception
     assert not at.error, [e.value for e in at.error]
     return at

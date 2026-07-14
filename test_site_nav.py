@@ -1,9 +1,9 @@
 """Batch-1 proof for the multipage nav skeleton (app.py).
 
-Asserts: the seasonal default lands on the right page on BOTH sides of SEASON_START
-(env-forced), the sidebar renders EMPTY (nav is top, footer is in page flow), the
-shared footer is present, and the shared modules are import-safe. Hermetic: APP_OFFLINE=1
-so no network. Run: pytest test_site_nav.py
+Asserts: the default landing page is Weekly Predictions (always — the seasonal
+default was retired 2026-07-14), the sidebar renders EMPTY (nav is top, footer is
+in page flow), the shared footer is present, and the shared modules are import-safe.
+Hermetic: APP_OFFLINE=1 so no network. Run: pytest test_site_nav.py
 """
 import os
 import sys
@@ -18,9 +18,7 @@ sys.path.insert(0, str(_HERE))
 ENTRY = str(_HERE / "app.py")   # the multipage entrypoint (post-3e swap)
 
 
-def _run(preseason: bool):
-    # SEASON_START far future -> pre-season (board default); far past -> in-season (WP default)
-    os.environ["BOARD_REFRESH_SEASON_START"] = "2099-01-01" if preseason else "2000-01-01"
+def _run():
     at = AppTest.from_file(ENTRY, default_timeout=180).run()
     assert not at.exception, at.exception
     assert not at.error, [e.value for e in at.error]
@@ -31,22 +29,19 @@ def _titles(at):
     return " ".join(str(t.value) for t in at.title)
 
 
-def test_preseason_default_is_draft_board():
-    at = _run(preseason=True)
-    assert "Draft Board" in _titles(at), \
-        f"pre-season should land on the Draft Board; titles={_titles(at)!r}"
-
-
-def test_inseason_default_is_weekly_predictions():
-    at = _run(preseason=False)
-    # the real Weekly Predictions page titles "🏈 Week N Predictions: SEASON Season"
-    # (only this page carries "Predictions"); the WP stub's literal title is gone.
+def test_default_is_weekly_predictions():
+    # Weekly Predictions is the fixed landing page year-round (ruling 2026-07-14);
+    # the real page titles "🏈 Week N Predictions: SEASON Season" (only this page
+    # carries "Predictions").
+    at = _run()
     assert "Predictions" in _titles(at), \
-        f"in-season should land on Weekly Predictions; titles={_titles(at)!r}"
+        f"default landing page should be Weekly Predictions; titles={_titles(at)!r}"
+    assert "Draft Board" not in _titles(at), \
+        f"Draft Board must no longer be the default; titles={_titles(at)!r}"
 
 
 def test_sidebar_is_empty_and_footer_present():
-    at = _run(preseason=True)
+    at = _run()
     # nav is position="top"; nothing writes to the sidebar -> empty
     assert len(list(at.sidebar.markdown)) == 0, "sidebar must carry no markdown"
     # the tip jar moved UP into the header, so it is no longer a button anywhere
@@ -60,7 +55,7 @@ def test_sidebar_is_empty_and_footer_present():
 
 
 def test_header_has_brand_and_tip_jar():
-    at = _run(preseason=True)
+    at = _run()
     # the persistent header strip carries the brand (left) and the tip jar (right),
     # moved byte-identical from the old footer — both live in one markdown div.
     hdr = [str(m.value) for m in at.markdown
@@ -84,9 +79,8 @@ def test_shared_modules_import_safe():
 
 
 if __name__ == "__main__":
-    test_preseason_default_is_draft_board()
-    test_inseason_default_is_weekly_predictions()
+    test_default_is_weekly_predictions()
     test_sidebar_is_empty_and_footer_present()
     test_header_has_brand_and_tip_jar()
     test_shared_modules_import_safe()
-    print("OK  nav skeleton: seasonal default both sides, empty sidebar, header brand+tip jar, footer repo link")
+    print("OK  nav skeleton: WP fixed default, empty sidebar, header brand+tip jar, footer repo link")
