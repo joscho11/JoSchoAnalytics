@@ -3,10 +3,16 @@ default, technical detail in the advanced view.
 
 License discipline: the plain strings TRANSLATE the licensed claims — never
 strengthen, never weaken. The verbatim licensed strings ship in-schema and in
-the advanced view. Plain translations pend Joseph's ratification. Forbidden
-everywhere: buy/sell/fade/target/steal/reach language, tier names or colors,
-accuracy or hit-rate claims, player-level calls, sub-group claims. The talent
-column is descriptive only and is never combined with any other column.
+the advanced view. Plain translations pend Joseph's ratification.
+
+Color coding: ALLOWED (Joseph-ratified 2026-07-13), uniform with the Weekly
+Fantasy table — a red→green heat on the Gap and on the descriptive magnitude
+columns (Top-12 chance, NFL Efficiency %ile), plus a bold, enlarged Gap headline.
+Color conveys magnitude/direction only; it adds no claim the WORDING doesn't
+already make, and the text still states validation IN AGGREGATE (never a rating
+of an individual player). Still forbidden in the WORDING: buy/sell/fade/target/
+steal/reach language, named tiers, accuracy or hit-rate claims, sub-group claims.
+The talent column stays descriptive only and is never combined with another column.
 Data: phase4_band_2026.csv + talent_index_2026.csv (frozen artifacts, read-only).
 """
 from datetime import date
@@ -133,14 +139,22 @@ def _load_board_2026():
         else (f"{v:.0f}" if pd.notna(v) else "–")
         for rc, v in zip(df["is_rookie_context"],
                          df["pct_among_2025_qualifiers"])]
-    # Expected as "VALUE (Nth %ile)" — percentile within position among this
-    # board's rows (display transform; no new data). Expected ONLY: the band
-    # spread is flat per position, so Floor/Ceiling percentiles would be
-    # identical copies of this one.
+    # Expected as "VALUE (Nth)" — percentile within position among this board's
+    # rows, shown in the header ("Expected (Percentile)") so the cell stays
+    # compact (display transform; no new data). Expected ONLY: the band spread is
+    # flat per position, so Floor/Ceiling percentiles would be identical copies.
     pct = df.groupby("position")["p50"].rank(pct=True) * 100
     df["p50_pct"] = pct
+    # Season fantasy points can't be negative. The band is a flat P50 ± position-constant
+    # spread, so low-projection players (near-zero P50) get a mechanically negative lower
+    # tail — e.g. a -76 "Floor". Clip the band at 0 for display: coverage-safe, since no
+    # real season total is < 0, so the validated P10-P90 coverage is unchanged. The
+    # percentile above ranks on the RAW P50, so ordering among low-projection players is
+    # preserved.
+    for _c in ("p10", "p25", "p50", "p75", "p90"):
+        df[_c] = df[_c].clip(lower=0)
     df["p50_disp"] = [
-        f"{v:.0f} ({_ordinal(int(round(p)))} %ile)"
+        f"{v:.0f} ({_ordinal(int(round(p)))})"
         if pd.notna(v) and pd.notna(p) else ""
         for v, p in zip(df["p50"], pct)]
     # rank equivalents (display-only units table; see build_rank_equiv_reference.py)
@@ -261,7 +275,7 @@ SORT_KEYS = {
     "Draft Price (ADP)": "adp_half_ppr",
     "Position rank": "adp_pos_rank",
     "Proj position rank": "proj_pos_rank",
-    "Expected": "p50",                               # numeric p50 only, ignore the %ile suffix
+    "Expected": "p50",                               # numeric p50 only, ignore the percentile suffix
     "Floor": "p10",
     "Ceiling": "p90",
     "Top-12 chance": "top12_pct",
@@ -305,11 +319,11 @@ COLUMN_META = [
     ("p10", _NUM, "Floor",
      "A tough season: about 1 in 10 players finish below this number (season points). "
      "Its ≈ finish equivalent is in the advanced view.", {"format": "%.0f"}),
-    ("p50_disp", _TXT, "Expected",
+    ("p50_disp", _TXT, "Expected (Percentile)",
      "The middle of the range — half of players finish above this, half below. The "
-     "percentile in parentheses is where his Expected stands among players at his "
-     "position on this board (Floor and Ceiling rank players in the same order, so one "
-     "percentile covers all three).", {}),
+     "number in parentheses is the percentile: where his Expected stands among players "
+     "at his position on this board (Floor and Ceiling rank players in the same order, "
+     "so one percentile covers all three).", {}),
     ("p90", _NUM, "Ceiling",
      "A great season: about 1 in 10 players finish above this number. Its ≈ finish "
      "equivalent is in the advanced view.", {"format": "%.0f"}),
@@ -339,14 +353,60 @@ def _column_config():
     return cfg
 
 
+def _rg_color(ratio):
+    """Weekly-Fantasy-uniform red→green tint. ratio in [0,1]: 0 = red (rgb 255,82,82),
+    ~0.5 = amber, 1 = green (rgb 0,200,82). Same formula as the Weekly Fantasy table's
+    rank_color / total_color, so the two tables read identically."""
+    ratio = max(0.0, min(1.0, ratio))
+    r = int(round(255 * (1 - ratio)))
+    g = int(round(82 + 118 * ratio))
+    return f"rgb({r},{g},82)"
+
+
+def _style_board(view, gap_cap):
+    """pandas Styler callback (axis=None), uniform with the Weekly Fantasy table
+    (Joseph-ratified color coding, 2026-07-13):
+      • Gap — the headline value signal: bold + enlarged, red→green DIVERGING around
+        zero (gap_cap is the symmetric ±full-saturation bound), so negative = red,
+        zero ≈ amber, positive = green. Blank '–' rows stay bold, uncolored.
+      • Top-12 chance and NFL Efficiency %ile — red→green SEQUENTIAL over 0–100.
+    Underlying numeric series come from `view` positionally — the displayed frame is
+    `view[cols]`, same row order — so the tint tracks the true number, not the
+    formatted string (Gap's and efficiency's numeric keys are NaN for '–'/Rookie, so
+    those cells stay untinted)."""
+    gap = view["value_gap"].to_numpy()
+    top12 = view["top12_pct"].to_numpy()
+    eff = view["pct_among_2025_qualifiers"].to_numpy()
+    cap = gap_cap if (gap_cap and gap_cap > 0) else 1.0
+
+    def _style(df):
+        styles = pd.DataFrame("", index=df.index, columns=df.columns)
+        if "gap_disp" in df.columns:
+            loc = df.columns.get_loc("gap_disp")
+            for i, v in enumerate(gap):
+                if pd.isna(v):
+                    styles.iloc[i, loc] = "font-weight: 700"
+                else:
+                    ratio = (max(-cap, min(cap, v)) + cap) / (2 * cap)
+                    styles.iloc[i, loc] = (f"color: {_rg_color(ratio)}; "
+                                           "font-weight: 700; font-size: 15px")
+        for col, src in (("top12_pct", top12), ("eff_disp", eff)):
+            if col in df.columns:
+                loc = df.columns.get_loc(col)
+                for i, v in enumerate(src):
+                    if not pd.isna(v):
+                        styles.iloc[i, loc] = (f"color: {_rg_color(v / 100.0)}; "
+                                               "font-weight: 600")
+        return styles
+    return _style
+
+
 # Board scroll-box height is the shared site-wide TABLE_HEIGHT (~20 rows visible; all
 # 180 scroll inside) — imported from dashboard_chrome so every long table matches.
 
 
 def render():
     df = _load_board_2026()
-
-    st.title("📋 2026 Draft Board")
 
     with st.expander("How to read this board", expanded=False):
         st.markdown(
@@ -380,29 +440,29 @@ def render():
         st.markdown("**What each column means:**")
         for _key, _kind, _label, _help, _extra in COLUMN_META:
             st.markdown(f"- **{_label}** — {_help}")
+        st.caption("Sort with these controls — they order the whole board numerically, "
+                   "with no-data rows (Rookie / – / blank) always at the bottom.")
 
-    fc1, fc2 = st.columns([1.2, 1.4])
-    with fc1:
-        pos = st.multiselect("Position", ["QB", "RB", "WR", "TE"],
-                             default=["QB", "RB", "WR", "TE"], key="db26_pos")
-    with fc2:
-        name = st.text_input("Player search", "", key="db26_search")
-
-    # Explicit numeric sort (st.dataframe's header-click sorts the display strings
-    # lexicographically — see audit/board_sort_diagnosis_2026-07-13.md). This routes
-    # every sortable column through one numeric path with sentinels pinned to the
-    # bottom. Default: Gap, descending (most positive gap first) on load.
-    sc1, sc2 = st.columns([1.4, 1.2])
-    with sc1:
-        sort_label = st.selectbox("Sort by", list(SORT_KEYS), index=0, key="db26_sortby")
-    with sc2:
-        order = st.radio("Order", ["Descending", "Ascending"], index=0,
-                         horizontal=True, key="db26_sortdir")
-    st.caption("Sort with these controls — they order the whole board numerically, "
-               "with no-data rows (Rookie / – / blank) always at the bottom.")
-    st.caption("Note: clicking a column header sorts too, but Gap, Expected and "
-               "Efficiency won't sort correctly that way — a Streamlit limitation. "
-               "Use the controls above.")
+    # Filter + sort toolbar: one grouped row (Position · search · sort · order) so the
+    # controls read as a single bar instead of sprawling down the page. Explicit numeric
+    # sort — st.dataframe's header-click sorts the display strings lexicographically (see
+    # audit/board_sort_diagnosis_2026-07-13.md); this routes every sortable column through
+    # one numeric path with sentinels pinned to the bottom. Default: Gap, descending.
+    with st.container(border=True):
+        fc1, fc2, fc3, fc4 = st.columns([1.4, 1.3, 1.3, 1.15])
+        with fc1:
+            pos = st.multiselect("Position", ["QB", "RB", "WR", "TE"],
+                                 default=["QB", "RB", "WR", "TE"], key="db26_pos")
+        with fc2:
+            name = st.text_input("Player search", "", key="db26_search")
+        with fc3:
+            sort_label = st.selectbox("Sort by", list(SORT_KEYS), index=0, key="db26_sortby")
+        with fc4:
+            order = st.radio("Order", ["Descending", "Ascending"], index=0,
+                             horizontal=True, key="db26_sortdir")
+        st.caption("Note: clicking a column header sorts too, but Gap, Expected and "
+                   "Efficiency won't sort correctly that way — a Streamlit limitation. "
+                   "Use the controls above.")
 
     view = df[df.position.isin(pos)]
     if name.strip():
@@ -412,12 +472,21 @@ def render():
     cols = _DISPLAY_COLS
     st.caption(_adp_caption())
     # Fixed-height scroll box holds all 180 rows (TABLE_HEIGHT ≈ 20 rows visible), so no
-    # row cap is needed. The key encodes the current sort, so the grid REMOUNTS on every
-    # sort change — this discards st.dataframe's sticky client-side header-sort so the
-    # control's order always wins. See audit/board_sort_diagnosis_2026-07-13.md.
+    # row cap is needed. The key encodes the current sort AND the filter state (position,
+    # search, row count), so the grid REMOUNTS on any change to the visible rows — this
+    # discards st.dataframe's sticky client-side header-sort (which otherwise survives a
+    # filter change and overrides the control) so the Sort-by control always wins. See
+    # audit/board_sort_diagnosis_2026-07-13.md.
+    # Symmetric ±bound for the diverging Gap tint, taken from the FULL board so the
+    # shading stays stable when the position filter changes the visible rows.
+    _cap = df["value_gap"].abs().max()
+    gap_cap = float(_cap) if pd.notna(_cap) else 20.0
     st.dataframe(
-        view[cols], width="stretch", height=TABLE_HEIGHT, hide_index=True,
-        key=f"db26_grid_{SORT_KEYS[sort_label]}_{order}",
+        view[cols].style.apply(_style_board(view, gap_cap), axis=None),
+        width="stretch", height=TABLE_HEIGHT, hide_index=True,
+        key=("db26_grid_"
+             f"{SORT_KEYS[sort_label]}_{order}_"
+             f"{'-'.join(sorted(pos))}_{name.strip().lower()}_{len(view)}"),
         column_config=_column_config())
 
     # CSV export — always the FULL sorted view (uncapped by the Top-40 display),

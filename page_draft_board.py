@@ -14,7 +14,6 @@ import streamlit as st
 
 import dashboard_chrome as chrome
 import draft_board_2026 as board
-import nav_registry
 from refresh_board_adp import SEASON_START
 
 # Ratified 4d copy (verbatim).
@@ -26,10 +25,13 @@ PURPOSE = ("My pre-season draft board: the market's price for each player paired
 
 
 def render():
+    # Lead with the title, then the byline + purpose, then (pre-season) the notice.
+    st.title("📋 2026 Draft Board")
     st.caption(ORIENTATION)
     st.markdown(f"**{PURPOSE}**")
     _ss = date.fromisoformat(
         os.environ.get("BOARD_REFRESH_SEASON_START", SEASON_START.isoformat()))
     if date.today() < _ss:
-        chrome.render_preseason_banner(nav_registry.PAGES.get("draft-board"), _ss.year)
+        # No page_link here — this IS the Draft Board page, so the link would be circular.
+        chrome.render_preseason_banner(None, _ss.year)
     board.render()

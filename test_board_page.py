@@ -70,7 +70,12 @@ def test_full_board_no_cap_sentinels_sink_strings_intact():
     assert t["gap_disp"].iloc[-1] == "–", "blank-gap sentinel must be last on default Gap-desc"
     assert int((t["gap_disp"] == "–").sum()) == 1
     assert int((t["eff_disp"] == "Rookie").sum()) == 14
-    assert t["p50_disp"].str.contains("%ile").any(), "Expected keeps its %ile suffix"
+    # Expected cell drops the redundant "%ile" (now stated in the header
+    # "Expected (Percentile)") but keeps the parenthesized ordinal, e.g. "112 (39th)".
+    assert not t["p50_disp"].str.contains("%ile").any(), \
+        "Expected cell must drop the %ile suffix (moved to the header)"
+    assert t["p50_disp"].str.contains(r"\(\d+(?:st|nd|rd|th)\)").any(), \
+        "Expected cell keeps the parenthesized percentile ordinal, e.g. '(39th)'"
 
 
 def test_csv_download_present():

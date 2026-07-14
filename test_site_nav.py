@@ -54,8 +54,9 @@ def test_sidebar_is_empty_and_footer_present():
         "the footer tip-jar button must be gone (tip jar moved to the header)"
     caps = " ".join(str(c.value) for c in at.caption)
     assert "buy me a coffee" not in caps, "the coffee caption must not remain in the footer"
-    # footer now carries only the public-repo link
-    assert "github.com/joscho11/BettingEdgeContinued" in caps, "footer repo link missing"
+    # footer now carries only the centered public-repo line (an st.markdown, not a caption)
+    md = " ".join(str(m.value) for m in at.markdown)
+    assert "github.com/joscho11/BettingEdgeContinued" in md, "footer repo link missing"
 
 
 def test_header_has_brand_and_tip_jar():

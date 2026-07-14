@@ -381,11 +381,15 @@ leave-one-season-out coverage 79.4% at nominal 80% and 49.8% at 50% — beats a 
 baseline); `apply_board_labels.py` adds the population flags and the licensed `signal_status`
 wording.
 
-**License discipline (absolute).** Board copy states disagreements descriptively and validation
-*in aggregate* only — never player-level calls, hit-rate claims, tiers, or buy/sell/fade/steal/
-reach language. The verbatim licensed labels ship in-schema; plain-language translations must not
-strengthen or weaken them. The talent column is descriptive only and is never combined with the
-value signal. See `draft_board_2026.py`'s module docstring and `apply_board_labels.py`.
+**License discipline.** Board *copy* states disagreements descriptively and validation
+*in aggregate* only — never player-level calls, hit-rate claims, named tiers, or buy/sell/fade/
+steal/reach language. The verbatim licensed labels ship in-schema; plain-language translations must
+not strengthen or weaken them. The talent column is descriptive only and is never combined with the
+value signal. **Color coding is permitted (Joseph-ratified 2026-07-13):** a red→green heat on the
+Gap and on the descriptive magnitude columns (Top-12 chance, NFL Efficiency %ile) plus a bold,
+enlarged Gap headline — uniform with the Weekly Fantasy table. Color conveys magnitude/direction
+only and the copy stays aggregate-only; the *wording* restrictions above are unchanged. See
+`draft_board_2026.py`'s module docstring and `apply_board_labels.py`.
 
 ### The campaign, settled (do not re-fight — see PREREGISTRATION.md OUTCOMES)
 
