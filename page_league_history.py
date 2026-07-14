@@ -19,7 +19,7 @@ import streamlit as st
 import dashboard_data
 import page_common
 from dashboard_utils import metric_card, get_confidence, _md_to_html
-from dashboard_chrome import _OFFLINE
+from dashboard_chrome import _OFFLINE, TABLE_HEIGHT
 
 _HERE = Path(__file__).resolve().parent
 
@@ -331,6 +331,7 @@ def render():
                 st.dataframe(
                     _at_df,
                     width="stretch",
+                    height=TABLE_HEIGHT,
                     column_config={
                         "Titles":    st.column_config.NumberColumn("Titles",   help="Championship wins"),
                         "Finals":    st.column_config.NumberColumn("Finals",   help="Championship appearances"),
@@ -643,7 +644,7 @@ def render():
                 )
                 _cl_df.index += 1
                 st.dataframe(
-                    _cl_df, width="stretch",
+                    _cl_df, width="stretch", height=TABLE_HEIGHT,
                     column_config={
                         "Avg Score":       st.column_config.NumberColumn("Avg Score",       format="%.2f"),
                         "Std Dev":         st.column_config.NumberColumn("Std Dev",         format="%.2f",

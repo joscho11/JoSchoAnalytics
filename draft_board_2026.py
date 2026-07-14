@@ -15,6 +15,8 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
+from dashboard_chrome import TABLE_HEIGHT   # shared ~20-row height for long tables
+
 _MONTHS = ("January", "February", "March", "April", "May", "June", "July",
            "August", "September", "October", "November", "December")
 
@@ -337,8 +339,8 @@ def _column_config():
     return cfg
 
 
-BOARD_HEIGHT = 1050   # px — fixed-height scroll box (~30 rows visible; all 180 scroll
-                      # inside). Trivially tunable after on-device eyeballing.
+# Board scroll-box height is the shared site-wide TABLE_HEIGHT (~20 rows visible; all
+# 180 scroll inside) — imported from dashboard_chrome so every long table matches.
 
 
 def render():
@@ -409,12 +411,12 @@ def render():
 
     cols = _DISPLAY_COLS
     st.caption(_adp_caption())
-    # Fixed-height scroll box holds all 180 rows (BOARD_HEIGHT ≈ 30 rows visible), so no
+    # Fixed-height scroll box holds all 180 rows (TABLE_HEIGHT ≈ 20 rows visible), so no
     # row cap is needed. The key encodes the current sort, so the grid REMOUNTS on every
     # sort change — this discards st.dataframe's sticky client-side header-sort so the
     # control's order always wins. See audit/board_sort_diagnosis_2026-07-13.md.
     st.dataframe(
-        view[cols], width="stretch", height=BOARD_HEIGHT, hide_index=True,
+        view[cols], width="stretch", height=TABLE_HEIGHT, hide_index=True,
         key=f"db26_grid_{SORT_KEYS[sort_label]}_{order}",
         column_config=_column_config())
 
@@ -442,7 +444,7 @@ def render():
                     "population", "metric_name", "raw_value",
                     "pct_among_2025_qualifiers", "pct_among_2026_drafted_class"]
         st.dataframe(
-            view[adv_cols], width="stretch", hide_index=True,
+            view[adv_cols], width="stretch", height=TABLE_HEIGHT, hide_index=True,
             column_config={
                 "floor_equiv": st.column_config.TextColumn(
                     "≈ finish (Floor)",
@@ -483,7 +485,7 @@ def render():
                                "signal_status": "licensed label (verbatim)",
                                "plain_label": "plain reading",
                                "disclosure": "talent disclosure (verbatim)"}),
-                     width="stretch", hide_index=True)
+                     width="stretch", height=TABLE_HEIGHT, hide_index=True)
         st.markdown("**Term definitions:**")
         for term, definition in ADV_DEFS:
             st.markdown(f"- **{term}** — {definition}")

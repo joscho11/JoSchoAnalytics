@@ -62,6 +62,10 @@ nav_registry.PAGES = {
     "league-history": lh_pg, "help": help_pg,
 }
 
+# Persistent branded header ABOVE the top nav — rendered before st.navigation so the
+# brand + tip jar strip sits on top of the page links, on every page.
+chrome.render_header()
+
 nav = st.navigation(
     {"Fantasy": [board_pg, wf_pg, dfs_pg],
      "Betting": [wp_pg, tr_pg],

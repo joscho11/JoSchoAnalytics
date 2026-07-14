@@ -14,6 +14,8 @@ import nflreadpy as nfl
 import pandas as pd
 import streamlit as st
 
+from dashboard_chrome import TABLE_HEIGHT   # shared ~20-row height for long tables
+
 import dashboard_data
 import page_common
 from dashboard_utils import metric_card, get_confidence, _md_to_html
@@ -348,6 +350,7 @@ def render():
                 st.dataframe(
                     tbl.style.apply(style_fn, axis=None),
                     width="stretch",
+                    height=TABLE_HEIGHT,
                     column_config=col_config,
                 )
 

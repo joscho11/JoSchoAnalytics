@@ -21,6 +21,12 @@ _LOGO = _HERE / "assets" / "logo.svg"
 _VENMO = "https://venmo.com/u/JoScho"
 _REPO = "https://github.com/joscho11/BettingEdgeContinued"   # repo ROOT only (Q3)
 
+# Shared fixed height for every long, scrolling st.dataframe on the site (~20 data
+# rows visible; the rest scroll inside). One source of truth — the Draft Board and
+# the long per-position / all-time tables all import this. Trivially tunable after
+# on-device eyeballing.
+TABLE_HEIGHT = 735
+
 
 def _ga_creds():
     # a missing/unreadable secrets.toml degrades to analytics-off, never a crash
@@ -142,21 +148,36 @@ def render_preseason_banner(board_page=None, season_year=2026):
         st.page_link(board_page, label="Open the Draft Board", icon="📋")
 
 
+def render_header():
+    """Persistent branded header strip. Rendered by the entrypoint BEFORE nav.run() so
+    it sits above the top nav and shows on every page (tab-independent, always present).
+    Brand far-left; the tip jar — moved byte-identical from the old footer — pinned
+    far-right. A flex bar that wraps on narrow screens, so on a phone the brand and the
+    tip jar stack instead of overflowing, staying legible. The 'buy me a coffee' line
+    travels byte-identical as the tip jar's hover title; the direct Venmo link replaces
+    the old two-click GA button (see render_footer history)."""
+    st.markdown(
+        f'<div style="display:flex;flex-wrap:wrap;gap:6px 16px;'
+        'justify-content:space-between;align-items:center;padding:12px 18px;'
+        'margin-bottom:8px;background:#0e1117;border:1px solid #262730;'
+        'border-radius:10px;">'
+        '<span style="font-size:22px;font-weight:800;letter-spacing:.3px;'
+        'color:#fafafa;">JoScho Analytics</span>'
+        f'<a href="{_VENMO}" target="_blank" rel="noopener noreferrer" '
+        'title="If you find this useful, buy me a coffee ☕" '
+        'style="background:#3D95CE;color:#fff;font-weight:600;font-size:13px;'
+        'padding:7px 15px;border-radius:8px;text-decoration:none;'
+        'white-space:nowrap;">💙 Tip Jar — Venmo @JoScho</a></div>',
+        unsafe_allow_html=True)
+
+
 def render_footer():
     """Rendered on every page AFTER nav.run(), in the page flow (mobile-visible) —
-    replaces the retired sidebar. Tip jar (with a lightest-touch click count),
-    small brand logo, and a public-repo link."""
+    replaces the retired sidebar. Small brand logo and a public-repo link only; the
+    tip jar moved UP into the persistent header (render_header), so it is not duplicated."""
     st.divider()
     _mid = st.columns([1, 2, 1])[1]
     with _mid:
-        # Tip jar: st.button so the click reruns and fires a GA count server-side
-        # (lightest outbound-click mechanism, no attribution plumbing — Q2). The
-        # tip-jar COPY strings are byte-identical to the retired sidebar version.
-        if st.button("💙 Tip Jar — Venmo @JoScho", key="tip_jar_btn",
-                     width="stretch"):
-            send_ga_event("tip_jar_click")
-            st.markdown(f"[Open Venmo → @JoScho]({_VENMO})")
-        st.caption("If you find this useful, buy me a coffee ☕")
         if _LOGO.exists():
             st.image(str(_LOGO), width=120)   # small brand furniture (Q4)
         # NEW footer line (Q3, repo ROOT). Wording from design 4e proposal — flagged
