@@ -319,4 +319,10 @@ DFS follow-ups (lower priority, already functional):
 
 ---
 
+## License
+
+The code in this repository is source-available under the [PolyForm Noncommercial License 1.0.0](LICENSE): you're free to read it, learn from it, and use it for any **noncommercial** purpose. Using it commercially (including running it as a paid product or service) requires a separate license. Copyright © 2026 Joseph Schoenbaum.
+
+---
+
 *Not financial advice. Sports betting involves real risk. Bet responsibly.*
