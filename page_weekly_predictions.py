@@ -8,18 +8,44 @@ import html as _html
 import itertools as _it
 import json
 import os
+from datetime import date
 from datetime import datetime as dt
 
 import pandas as pd
 import streamlit as st
 
 import dashboard_data
+import nav_registry
 import page_common
 from dashboard_utils import metric_card, get_confidence, _md_to_html
 from page_common import load_agent_analysis, _MODE_BADGE_COLORS
+from refresh_board_adp import SEASON_START
+
+
+def _preseason():
+    """True until 2026 kickoff (env-overridable, same source as the board)."""
+    ss = date.fromisoformat(
+        os.environ.get("BOARD_REFRESH_SEASON_START", SEASON_START.isoformat()))
+    return date.today() < ss
+
+
+def _demo_notice():
+    """Pre-season demo banner: this page shows past games until Week 1, and points
+    visitors to the live Draft Board. Auto-hides once the season starts."""
+    st.info(
+        "👋 **Heads up — Weekly Predictions is a demo until the 2026 season kicks "
+        "off.** The games below are from 2025, shown so you can see how the model "
+        "works; live 2026 predictions start at Week 1. In the meantime, take a look "
+        "at the other tabs — my **2026 Draft Board is live and in production**, "
+        "refreshing daily from the latest draft data.")
+    board = nav_registry.PAGES.get("draft-board")
+    if board is not None:
+        st.page_link(board, label="Open the Draft Board", icon="📋")
 
 
 def render():
+    if _preseason():
+        _demo_notice()
     try:
         df = dashboard_data.load_predictions()
     except FileNotFoundError:

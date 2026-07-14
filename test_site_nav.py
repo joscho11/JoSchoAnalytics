@@ -40,6 +40,23 @@ def test_default_is_weekly_predictions():
         f"Draft Board must no longer be the default; titles={_titles(at)!r}"
 
 
+def test_preseason_demo_banner_shows_then_hides():
+    # pre-season: the Weekly Predictions demo banner is shown and points to the board
+    os.environ["BOARD_REFRESH_SEASON_START"] = "2099-01-01"
+    at = _run()
+    infos = " ".join(str(i.value) for i in at.info)
+    assert "demo until the 2026 season" in infos, "pre-season demo banner missing"
+    assert "Draft Board is live and in production" in infos, \
+        "banner must point visitors to the in-production Draft Board"
+    # in-season: the banner is gone
+    os.environ["BOARD_REFRESH_SEASON_START"] = "2000-01-01"
+    at = _run()
+    infos = " ".join(str(i.value) for i in at.info)
+    assert "demo until the 2026 season" not in infos, \
+        "demo banner must auto-hide once the season has started"
+    os.environ.pop("BOARD_REFRESH_SEASON_START", None)
+
+
 def test_sidebar_is_empty_and_footer_present():
     at = _run()
     # nav is position="top"; nothing writes to the sidebar -> empty
@@ -80,6 +97,7 @@ def test_shared_modules_import_safe():
 
 if __name__ == "__main__":
     test_default_is_weekly_predictions()
+    test_preseason_demo_banner_shows_then_hides()
     test_sidebar_is_empty_and_footer_present()
     test_header_has_brand_and_tip_jar()
     test_shared_modules_import_safe()
