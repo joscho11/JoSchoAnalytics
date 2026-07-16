@@ -1,0 +1,109 @@
+{
+ "written": "2026-07-16",
+ "protocol": "R9 archival (one sanctioned execution)",
+ "pbp_rho": {
+  "preregistration_verbatim": [
+   "PRE-REG: rho=corr(R_z_new,alpha-hat), all JOIN-B w>0, disattenuated by sqrt(mean w); raw+w-weighted+Spearman; per-pos+pooled.",
+   "Committed: rho_new>=.50 pipe ships / .35-.50 weak / <.35 dead. Box-score baseline: RB .385 WR .000 TE .254."
+  ],
+  "target": "UNSHRUNK composite sum(W_f*z_f) (alpha-hat), median-k w for the sample filter",
+  "bands_carried_by": "disattenuated estimator (R8, committed before Spearman seen)",
+  "coverage_caveat": "PBP college index covers 2016/18/19/21/22 final seasons only",
+  "estimators": {
+   "RB": {
+    "n": 323,
+    "raw": 0.18291745428686895,
+    "spearman": 0.1753362319674078,
+    "wwt": 0.1257564301786662,
+    "disatt": 0.40705731050830196
+   },
+   "WR": {
+    "n": 331,
+    "raw": 0.15455200682872708,
+    "spearman": 0.16586830706511851,
+    "wwt": 0.32102525856614056,
+    "disatt": 0.3759291223544055
+   },
+   "TE": {
+    "n": 123,
+    "raw": 0.1535539589317326,
+    "spearman": 0.15552488681946577,
+    "wwt": 0.09464318233770144,
+    "disatt": 0.2883788912144127
+   },
+   "pooled": {
+    "n": 777,
+    "raw": 0.16618557135594653,
+    "spearman": 0.16407336421562577,
+    "wwt": 0.16425188290308745,
+    "disatt": 0.3708363679606378
+   }
+  },
+  "printed_by_byte_identical_run": {
+   "RB": {
+    "n": 323,
+    "raw": 0.183,
+    "wwt": 0.126,
+    "disatt": 0.407
+   },
+   "WR": {
+    "n": 331,
+    "raw": 0.155,
+    "wwt": 0.321,
+    "disatt": 0.376
+   },
+   "TE": {
+    "n": 123,
+    "raw": 0.154,
+    "wwt": 0.095,
+    "disatt": 0.288
+   },
+   "pooled": {
+    "n": 777,
+    "raw": 0.166,
+    "wwt": 0.164,
+    "disatt": 0.371
+   }
+  },
+  "note_spearman": "Spearman was registered and computed by the prototype but never printed or saved; recovered here deterministically (no RNG in any point estimate). Pooled Spearman was registered and never computed by the prototype; computed here on the same pooled frame.",
+  "verification_alerts": [],
+  "stdout_verbatim": "=== STEP 6 rho_new (PBP college index) vs alpha_NFL \u2014 SAME design as test#2 ===\n  PRE-REG: rho=corr(R_z_new,alpha-hat), all JOIN-B w>0, disattenuated by sqrt(mean w); raw+w-weighted+Spearman; per-pos+pooled.\n  COVERAGE CAVEAT: PBP only 2016/18/19/21/22 -> only NFL players whose college FINAL season is in those years join.\n  Committed: rho_new>=.50 pipe ships / .35-.50 weak / <.35 dead. Box-score baseline: RB .385 WR .000 TE .254.\n  RB n=323 mean-w=0.20 | raw=0.183(np.float64(0.09), np.float64(0.27)) w-wt=0.126(np.float64(0.04), np.float64(0.22)) disatt=0.407(np.float64(0.2), np.float64(0.61)) | BOX=0.385  <-- vs box\n  WR n=331 mean-w=0.17 | raw=0.155(np.float64(0.06), np.float64(0.25)) w-wt=0.321(np.float64(0.21), np.float64(0.42)) disatt=0.376(np.float64(0.14), np.float64(0.6)) | BOX=0.000  <-- vs box\n  TE n=123 mean-w=0.28 | raw=0.154(np.float64(0.02), np.float64(0.28)) w-wt=0.095(np.float64(-0.05), np.float64(0.23)) disatt=0.288(np.float64(0.04), np.float64(0.53)) | BOX=0.254  <-- vs box\n  POOLED n=777 | raw=0.166 w-wt=0.164 disatt=0.371 | box pooled .192\n"
+ },
+ "box_score_test2": {
+  "target": "UNSHRUNK composite sum(W_f*z_f), all JOIN-B w>0 (step2.py)",
+  "estimator_map": {
+   "rp": "raw Pearson",
+   "rs": "Spearman",
+   "rw": "w-weighted Pearson",
+   "rc": "disattenuated"
+  },
+  "values": {
+   "RB": {
+    "n": 195.0,
+    "meanw": 0.28730250579932626,
+    "rp": 0.20646269142596485,
+    "rs": 0.2478702713550638,
+    "rw": 0.2895728589144785,
+    "rc": 0.3851872272360518
+   },
+   "WR": {
+    "n": 278.0,
+    "meanw": 0.20734717136440486,
+    "rp": 0.00013711034062439774,
+    "rs": -0.019973586753050103,
+    "rw": -0.033761420781639184,
+    "rc": 0.00030110720821075214
+   },
+   "TE": {
+    "n": 120.0,
+    "meanw": 0.32895724590104,
+    "rp": 0.14573018004994473,
+    "rs": 0.17896381693173136,
+    "rw": 0.2651977008036691,
+    "rc": 0.25408543639311937
+   }
+  },
+  "pooled_rc": 0.19175590330084186,
+  "pooled_rw": 0.18474149793193675
+ }
+}

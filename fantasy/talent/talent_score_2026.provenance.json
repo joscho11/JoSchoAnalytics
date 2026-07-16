@@ -1,0 +1,10 @@
+{
+ "built_utc": "2026-07-16T20:26:32.454039+00:00",
+ "git_head": "a055cffc6abffdc14c965cd4eb17a813e8c6bbed (dirty)",
+ "config_md5": "8dc275860fe9b8d116abb8b054e65439",
+ "NS": 60,
+ "seed": 20260716,
+ "code_version": "talent-build 2026-07-16 phase2",
+ "weights": "PROVISIONAL-UNRATIFIED; QB deepCPOE 0.00 UNSET",
+ "pipe": "RB-only, rho=.385 box-score disattenuated (R10)"
+}

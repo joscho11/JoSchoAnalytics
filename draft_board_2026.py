@@ -31,6 +31,20 @@ SEAS = _HERE / "fantasy" / "seasonal_projections"
 # LIVE ADP overlay written by refresh_board_adp.py (regenerable; market data only).
 # The frozen band + season-dataset ADP are the fallback when it is absent.
 LIVE_OVERLAY = SEAS / "board_adp_live_2026.csv"
+# Talent/Rookie Score artifacts (fantasy/talent/, provenance-stamped). The dash
+# rule's single source of truth is the ARTIFACT SPLIT itself — both files were
+# built through schemas.is_nfl (zero NFL regular-season stat lines -> Rookie;
+# any -> Talent), so cell population here derives ONLY from artifact membership.
+# H7 LAYOUT FENCE: these columns are context-only and are NEVER combined with —
+# or placed to imply combination with — the Gap, bands, Top-N, or bust columns.
+TALENT_DIR = _HERE / "fantasy" / "talent"
+TALENT_CSV = TALENT_DIR / "talent_score_2026.csv"
+ROOKIE_CSV = TALENT_DIR / "rookie_score_2026.csv"
+SCALE_DISCLOSURE = (
+    "Talent Score ranks NFL players against NFL players; Rookie Score ranks "
+    "2026 prospects against past drafted prospects. They are different "
+    "instruments on different scales — a 90 in one column is not a 90 in the "
+    "other, and neither feeds any other column on this board.")
 
 # plain badge per population (short, default view)
 BADGE = {
@@ -163,6 +177,46 @@ def _load_board_2026():
                      ("p90", "ceiling_equiv")):
         df[dst] = [_equiv_label(equiv, p, v)
                    for p, v in zip(df["position"], df[src])]
+
+    # ---- Talent Score + Rookie Score (two-cell display, R12/R23) ----------------
+    # Cells populate from artifact membership ONLY (the dash rule's single source
+    # of truth — see TALENT_DIR comment). Null-last sorting via the numeric keys.
+    df["talent_score_num"] = pd.NA
+    df["rookie_score_num"] = pd.NA
+    df["talent_disp"] = "–"
+    df["rookie_disp"] = "–"
+    df["talent_w"] = pd.NA
+    df["college_share"] = pd.NA
+    if TALENT_CSV.exists():
+        t = pd.read_csv(TALENT_CSV).set_index("gsis_id")
+        m = df["player_id"].isin(t.index)
+        idx = df.loc[m, "player_id"]
+        df.loc[m, "talent_score_num"] = t.loc[idx, "score"].values
+        df.loc[m, "talent_w"] = t.loc[idx, "w"].values
+        df.loc[m, "college_share"] = t.loc[idx, "college_share"].values
+        df.loc[m, "talent_disp"] = [
+            f"{s:.0f} [{lo:.0f}–{hi:.0f}]{f if isinstance(f, str) else ''}"
+            for s, lo, hi, f in zip(t.loc[idx, "score"], t.loc[idx, "ci_lo"],
+                                    t.loc[idx, "ci_hi"], t.loc[idx, "flag"].fillna(""))]
+    if TALENT_CSV.exists():
+        for c in [c for c in t.columns if c.startswith(("z_", "w_"))]:
+            df.loc[m, "tal_" + c] = t.loc[idx, c].values   # advanced-view facet detail
+    if ROOKIE_CSV.exists():
+        r = pd.read_csv(ROOKIE_CSV).set_index("gsis_id")
+        m = df["player_id"].isin(r.index)
+        idx = df.loc[m, "player_id"]
+        df.loc[m, "rookie_score_num"] = r.loc[idx, "rookie_score"].values
+        df.loc[m, "rookie_disp"] = [f"{s:.0f}" for s in r.loc[idx, "rookie_score"]]
+    # R23 neither-cell tooltips live in the cell text's column help; QB rookies
+    # get the scope note (Rookie Score covers RB/WR/TE only).
+    neither = (df["talent_disp"] == "–") & (df["rookie_disp"] == "–")
+    qb_rookie = neither & (df["position"] == "QB") & (
+        df["eff_disp"] == "Rookie" if "eff_disp" in df.columns else False)
+    df["cell_note"] = ""
+    df.loc[neither, "cell_note"] = "insufficient qualifying data"
+    df.loc[qb_rookie, "cell_note"] = "Rookie Score covers RB/WR/TE"
+    for c in ("talent_score_num", "rookie_score_num", "talent_w", "college_share"):
+        df[c] = pd.to_numeric(df[c], errors="coerce")
     return df
 
 
@@ -280,6 +334,8 @@ SORT_KEYS = {
     "Ceiling": "p90",
     "Top-12 chance": "top12_pct",
     "NFL Efficiency %ile (pos)": "pct_among_2025_qualifiers",  # NaN for Rookie/– rows
+    "Talent Score (2026)": "talent_score_num",       # NaN (dash) rows sink null-last
+    "Rookie Score (2026)": "rookie_score_num",       # NaN (dash) rows sink null-last
 }
 
 
@@ -335,6 +391,18 @@ COLUMN_META = [
      "than 88% of them. Context only — NOT part of the value signal; testing showed it "
      "does not predict draft value. 'Rookie' = no NFL data yet; college production "
      "context is in the advanced view. '–' = not enough 2025 playing time to qualify.", {}),
+    ("talent_disp", _TXT, "Talent Score (2026)",
+     "My model-based estimate of what a player does per opportunity, net of situation "
+     "where that's identifiable — shown as score [range]. The range is the honest "
+     "uncertainty; † = lower-confidence, ‡ = lowest-confidence. Players with no NFL "
+     "data show '–' (see Rookie Score). Context only — never part of the Gap or any "
+     "other column. It ranks NFL players against NFL players.", {}),
+    ("rookie_disp", _TXT, "Rookie Score (2026)",
+     "A college-production read for 2026 rookies (RB/WR/TE), scaled against past "
+     "drafted prospects — NOT the same scale as the Talent Score. '–' for anyone "
+     "with NFL data (see Talent Score), for rookie QBs (no college QB instrument "
+     "ships), and for rookies whose college data couldn't be matched. Context only — "
+     "never part of the Gap or any other column.", {"width": "small"}),
 ]
 _DISPLAY_COLS = [m[0] for m in COLUMN_META]
 _EXPORT_NAMES = {m[0]: m[2] for m in COLUMN_META}       # colkey -> on-screen label
@@ -471,6 +539,7 @@ def render():
 
     cols = _DISPLAY_COLS
     st.caption(_adp_caption())
+    st.caption(SCALE_DISCLOSURE)   # two-cell scale warning (R12), beside the columns
     # Fixed-height scroll box holds all 180 rows (TABLE_HEIGHT ≈ 20 rows visible), so no
     # row cap is needed. The key encodes the current sort AND the filter state (position,
     # search, row count), so the grid REMOUNTS on any change to the visible rows — this
@@ -511,7 +580,8 @@ def render():
                     "p_top12", "p_top24", "p_bust", "band_confidence",
                     "badge", "data_note", "rookie_note", "talent_pct",
                     "population", "metric_name", "raw_value",
-                    "pct_among_2025_qualifiers", "pct_among_2026_drafted_class"]
+                    "pct_among_2025_qualifiers", "pct_among_2026_drafted_class",
+                    "talent_w", "college_share", "cell_note"]
         st.dataframe(
             view[adv_cols], width="stretch", height=TABLE_HEIGHT, hide_index=True,
             column_config={
@@ -558,6 +628,15 @@ def render():
         st.markdown("**Term definitions:**")
         for term, definition in ADV_DEFS:
             st.markdown(f"- **{term}** — {definition}")
+        facet_cols = [c for c in view.columns if c.startswith("tal_")]
+        if facet_cols:
+            st.markdown("**Talent Score facet detail** — per-facet standardized "
+                        "read (z) and its reliability (w) behind each score; "
+                        "columns apply per position, blank elsewhere. "
+                        f"{SCALE_DISCLOSURE}")
+            st.dataframe(view[view["talent_disp"] != "–"][["player", "position",
+                         "talent_disp", "talent_w", "college_share"] + facet_cols],
+                         width="stretch", height=TABLE_HEIGHT, hide_index=True)
 
     st.markdown("---")
     st.caption(

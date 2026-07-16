@@ -24,7 +24,8 @@ def test_board_sort_is_numeric_and_sentinels_sink():
 
     df = board._load_board_2026()
     assert list(board.SORT_KEYS)[0] == "Gap", "default sort column must be Gap"
-    assert len(board.SORT_KEYS) == 9, "expected 9 sortable columns"
+    assert len(board.SORT_KEYS) == 11, \
+        "expected 11 sortable columns (9 + Talent Score + Rookie Score, 2026-07-16)"
 
     for label, key in board.SORT_KEYS.items():
         for asc in (True, False):
