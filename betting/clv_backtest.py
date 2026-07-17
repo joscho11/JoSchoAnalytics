@@ -61,7 +61,8 @@ def run(min_edge: float, preds_path: str | None = None) -> pd.DataFrame:
     df = preds.merge(lines[["date", "home", "away", "spread_open", "spread_close",
                             "ls_home", "ls_away"]],
                      left_on=["date", "home_team", "away_team"],
-                     right_on=["date", "home", "away"], how="inner")
+                     right_on=["date", "home", "away"], how="inner",
+                     validate="one_to_one")   # dup fan-out guard (review U4A-11)
     dropped = len(preds) - len(df)
     if dropped > 0.05 * len(preds):
         miss = preds.merge(lines[["date", "home", "away"]], left_on=["date", "home_team", "away_team"],

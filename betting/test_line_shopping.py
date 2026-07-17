@@ -58,3 +58,34 @@ if __name__ == "__main__":
         fn()
         print(f"ok  {fn.__name__}")
     print(f"\n{len(fns)} passed")
+
+
+# ---- review 2026-07-17 U4A-3 / U4B-6: divergent totals, favorability by side ----
+def _divergent_totals_event():
+    return {"home_team": "Atlanta Falcons", "away_team": "Los Angeles Rams",
+            "commence_time": "2026-09-13T17:00:00Z",
+            "bookmakers": [
+                {"key": b, "title": b, "markets": [{"key": "totals", "outcomes": [
+                    {"name": "Over", "point": pt, "price": 1.91},
+                    {"name": "Under", "point": pt, "price": 1.91}]}]}
+                for b, pt in [("bookA", 46.5), ("bookB", 47.5), ("bookC", 48.5)]]}
+
+
+def test_totals_over_prefers_lowest_point():
+    ev = _divergent_totals_event()
+    best = ls.best_for_pick(ev, "Over", "totals")
+    assert best["point"] == 46.5, "Over must shop to the LOWEST total"
+    assert best["shop_gain"] == 1.0          # 47.5 median - 46.5, positive gain
+
+
+def test_totals_under_prefers_highest_point():
+    ev = _divergent_totals_event()
+    best = ls.best_for_pick(ev, "Under", "totals")
+    assert best["point"] == 48.5, "Under must shop to the HIGHEST total"
+    assert best["shop_gain"] == 1.0
+
+
+def test_best_quote_tiebreak_deterministic():
+    quotes = [(47.5, 1.91, "zbook"), (47.5, 1.91, "abook")]
+    assert ls.best_quote(quotes)["book"] == "zbook"       # (pt, price, book) max
+    assert ls.best_quote(quotes, prefer_low_point=True)["book"] == "abook"

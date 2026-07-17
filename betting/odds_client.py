@@ -10,8 +10,11 @@ credits, free tier ~500/month). Books post lines months early, so this is fully
 testable in the offseason.
 
     python betting/odds_client.py lines                 # current consensus board
-    python betting/odds_client.py snapshot --which pick  # write pick_line for this week
-    python betting/odds_client.py snapshot --which closing  # write closing_line + clv
+    python betting/odds_client.py snapshot --which pick --season 2026 --week 1
+    python betting/odds_client.py snapshot --which closing --season 2026 --week 1
+    # --season/--week are REQUIRED (review L-16): an unscoped snapshot would walk the
+    # whole tracker and can overwrite HISTORICAL rows whose matchup repeats on the
+    # currently posted board.
 
 The model's pick side comes from the tracker's `recommendation` column
 ("HOME (ATL)" / "AWAY (LA)" / "PASS"). Lines are home-relative, matching
@@ -119,7 +122,10 @@ def consensus(event: dict, min_books: int = MIN_BOOKS) -> dict | None:
     return {"home_team": home, "away_team": away,
             "date": str(event.get("commence_time", ""))[:10],
             "spread": round(-median(home_pts), 2),  # negate -> nflverse sign; can be a quarter-point
-            "total": round(median(totals), 1) if totals else None,
+            # totals gated on its OWN book count (review U4A-8): the spread guard
+            # above says nothing about how many books quoted the total.
+            "total": round(median(totals), 1) if len(totals) >= min_books else None,
+            "n_books_total": len(totals),
             "n_books": len(home_pts)}
 
 
@@ -151,9 +157,9 @@ def clv_points(pick_line: float, closing_line: float, side: str) -> float:
     the close when the close is MORE home-favored than the pick (closing > pick);
     an AWAY bettor when the close is LESS home-favored."""
     if side == "HOME":
-        return round(closing_line - pick_line, 1)
+        return round(closing_line - pick_line, 2)   # 2dp matches clv_backtest (U4A-9)
     if side == "AWAY":
-        return round(pick_line - closing_line, 1)
+        return round(pick_line - closing_line, 2)   # 2dp matches clv_backtest (U4A-9)
     return float("nan")
 
 
@@ -170,10 +176,38 @@ def lines_cmd(args) -> None:
     print(f"\nquota: {hdr['remaining']} remaining, {hdr['used']} used")
 
 
+def _write_tracker_atomic(df: pd.DataFrame, orig: pd.DataFrame) -> None:
+    """Integrity-checked atomic replace of the forward log (review L-2 / R34).
+
+    The tracker is an append-only forward record. Before replacing it: row count
+    and column list must be unchanged, and every NON-TARGET column must equal the
+    original frame — a snapshot may only fill pick_line/closing_line/clv."""
+    target_cols = {"pick_line", "closing_line", "clv"}
+    if len(df) != len(orig):
+        sys.exit(f"REFUSING tracker write: row count changed {len(orig)} -> {len(df)}")
+    if list(df.columns) != list(orig.columns):
+        sys.exit("REFUSING tracker write: column list changed")
+    for c in df.columns:
+        if c in target_cols:
+            continue
+        if not df[c].fillna("__nan__").equals(orig[c].fillna("__nan__")):
+            sys.exit(f"REFUSING tracker write: non-target column '{c}' was mutated")
+    tmp = TRACKER.with_suffix(TRACKER.suffix + ".tmp")
+    df.to_csv(tmp, index=False)
+    os.replace(tmp, TRACKER)
+
+
 def snapshot_cmd(args) -> None:
     if not TRACKER.exists():
         sys.exit(f"tracker not found: {TRACKER}")
+    # R33 (review L-16): a write command must be scoped. Refuse BEFORE any API
+    # fetch or file write.
+    if not getattr(args, "season", None) or not getattr(args, "week", None):
+        sys.exit("snapshot requires --season and --week: an unscoped snapshot walks "
+                 "the whole tracker and can overwrite historical rows whose matchup "
+                 "repeats on the current board.")
     df = pd.read_csv(TRACKER)
+    orig = df.copy(deep=True)
     sub = df
     if args.season:
         sub = sub[sub["season"] == args.season]
@@ -194,7 +228,8 @@ def snapshot_cmd(args) -> None:
             continue
         # pick_line is the CLV baseline (line WHEN you picked) — first write wins so a
         # re-run doesn't stomp it; closing_line is always refreshed to the latest.
-        if col == "pick_line" and pd.notna(df.at[i, "pick_line"]) and not args.force:
+        if (col == "pick_line" and pd.notna(df.at[i, "pick_line"])
+                and not getattr(args, "force", False)):   # R32 (review L-15)
             skipped += 1
         else:
             df.at[i, col] = lines[key]["spread"]
@@ -205,7 +240,7 @@ def snapshot_cmd(args) -> None:
             df.at[i, "clv"] = clv_points(float(pl), float(cl), side)
             graded += 1
 
-    df.to_csv(TRACKER, index=False)
+    _write_tracker_atomic(df, orig)   # R34 (review L-2)
     print(f"wrote {col} for {updated} game(s); computed clv for {graded}; "
           f"{skipped} kept existing pick_line; {unmatched} unmatched (no line / team-name "
           f"mismatch).")
@@ -226,8 +261,8 @@ def main() -> None:
 
     sn = sub.add_parser("snapshot", help="write pick_line/closing_line + clv into the tracker")
     sn.add_argument("--which", choices=["pick", "closing"], required=True)
-    sn.add_argument("--season", type=int)
-    sn.add_argument("--week", type=int)
+    sn.add_argument("--season", type=int, required=True)   # R33 (review L-16)
+    sn.add_argument("--week", type=int, required=True)     # R33 (review L-16)
     sn.add_argument("--force", action="store_true",
                     help="overwrite an existing pick_line (default: first write wins)")
     sn.set_defaults(func=snapshot_cmd)

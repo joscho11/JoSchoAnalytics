@@ -81,6 +81,22 @@ jobs:
           test_betting_pages.py
           test_fantasy_league_pages.py
           test_help_page.py
+          test_app_talent_columns.py
+          fantasy/talent/tests/test_talent_build.py
+          fantasy/talent/tests/test_phase2.py
+
+      # Betting execution layer (review 2026-07-17 L-17/R36a): hermetic, sibling
+      # imports require running from betting/. Explicit list, never discovery.
+      - name: Run betting execution-layer suites
+        working-directory: betting
+        run: >-
+          pytest -v
+          test_odds_client.py
+          test_kelly_staking.py
+          test_line_shopping.py
+          test_props_scanner.py
+          test_historical_clv.py
+          test_weekly_clv.py
 
   deploy-parity:
     name: deploy parity (py3.12 + requirements.txt, as the cloud installs)

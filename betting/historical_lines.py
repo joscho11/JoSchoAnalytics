@@ -73,9 +73,12 @@ def movement_summary(df: pd.DataFrame) -> dict:
             "max_move": float(spread_move.max()),
         },
         "total": {
+            # ONE denominator (review U4A-4): all stats on the non-null total moves;
+            # NaN >= 1.0 silently coerces False and understated the pcts before.
             "mean_abs_move": float(total_move.dropna().mean()),
-            "pct_moved_1+": float((total_move >= 1.0).mean() * 100),
-            "pct_moved_2+": float((total_move >= 2.0).mean() * 100),
+            "pct_moved_1+": float((total_move.dropna() >= 1.0).mean() * 100),
+            "pct_moved_2+": float((total_move.dropna() >= 2.0).mean() * 100),
+            "n_totals": int(total_move.notna().sum()),
         },
     }
 

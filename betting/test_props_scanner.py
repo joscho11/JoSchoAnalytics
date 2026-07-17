@@ -75,3 +75,39 @@ if __name__ == "__main__":
         fn()
         print(f"ok  {fn.__name__}")
     print(f"\n{len(fns)} passed")
+
+
+# ---- review 2026-07-17 U4A-5 / U4A-7 / U4B-8 -----------------------------------
+def test_events_on_matches_eastern_date(monkeypatch):
+    # SNF 8:20pm ET on 2026-09-13 = 00:20Z on 09-14: must be INCLUDED for 09-13
+    evs = [{"id": "snf", "commence_time": "2026-09-14T00:20:00Z"},
+           {"id": "next_week", "commence_time": "2026-09-20T17:00:00Z"}]
+    monkeypatch.setattr(ps.oc, "api_get", lambda *a, **k: (evs, {"remaining": 1, "used": 1}))
+    got, _ = ps._events_on("2026-09-13")
+    assert [e["id"] for e in got] == ["snf"]
+
+
+def test_scan_rejects_unknown_market_before_api(monkeypatch):
+    import pytest
+    import types
+    def boom(*a, **k):
+        raise AssertionError("api_get must not be called for an unknown market")
+    monkeypatch.setattr(ps.oc, "api_get", boom)
+    with pytest.raises(SystemExit):
+        ps.scan_cmd(types.SimpleNamespace(markets="player_anytime_td",
+                                          proj="x.csv", date="2026-09-13",
+                                          min_edge=5.0))
+
+
+def test_thin_consensus_skipped(monkeypatch):
+    ev = {"bookmakers": [
+        {"key": "b1", "markets": [{"key": "player_rush_yds", "outcomes": [
+            {"name": "Over", "description": "Test Player", "point": 70.5, "price": 1.9},
+            {"name": "Under", "description": "Test Player", "point": 70.5, "price": 1.9}]}]},
+        {"key": "b2", "markets": [{"key": "player_rush_yds", "outcomes": [
+            {"name": "Over", "description": "Test Player", "point": 71.5, "price": 1.95},
+            {"name": "Under", "description": "Test Player", "point": 71.5, "price": 1.9}]}]},
+    ]}
+    rows = ps.scan_event(ev, {"test player": {"proj_rush_yds": 90.0}},
+                         ["player_rush_yds"], min_edge=5.0)
+    assert rows == []   # n=2 books < MIN_PROP_BOOKS=3 -> skipped, no EV row

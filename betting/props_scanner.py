@@ -27,11 +27,16 @@ from __future__ import annotations
 import argparse
 import math
 import re
+import sys
+from datetime import datetime
 from statistics import median
+from zoneinfo import ZoneInfo
 
 import pandas as pd
 
 import odds_client as oc
+
+MIN_PROP_BOOKS = 3   # consensus discipline (review U4A-5, matches odds_client.MIN_BOOKS)
 
 YARDAGE_MARKETS = ["player_pass_yds", "player_rush_yds",
                    "player_reception_yds", "player_receptions"]
@@ -115,10 +120,14 @@ def consensus_props(event: dict, market: str) -> dict:
 def scan_event(event: dict, projections: dict, markets: list[str],
                min_edge: float) -> list[dict]:
     rows = []
+    thin = 0
     for market in markets:
         cons = consensus_props(event, market)
         sd = DEFAULT_SD[market]
         for player, info in cons.items():
+            if info["n"] < MIN_PROP_BOOKS:     # review U4A-5: no 1-book "consensus"
+                thin += 1
+                continue
             if player not in projections:
                 continue
             proj = projected_stat(projections[player], market)
@@ -140,16 +149,29 @@ def scan_event(event: dict, projections: dict, markets: list[str],
                              "price": price, "ev": round(ev, 3),
                              "edge_units": round(edge_units, 1)})
     rows.sort(key=lambda r: -r["ev"])
+    if thin:
+        print(f"  ({thin} prop(s) skipped: fewer than {MIN_PROP_BOOKS} books)")
     return rows
 
 
 # ---- commands ------------------------------------------------------------
+def _et_date(commence_time: str) -> str:
+    """Commence time (UTC ISO) -> the game's EASTERN date. A Sunday-night 8:20pm
+    ET kickoff is 00:20Z Monday — comparing UTC dates silently dropped SNF/MNF
+    from scans (review U4A-7)."""
+    try:
+        dt = datetime.fromisoformat(str(commence_time).replace("Z", "+00:00"))
+        return str(dt.astimezone(ZoneInfo("America/New_York")).date())
+    except (ValueError, TypeError):
+        return ""
+
+
 def _events_on(date_str: str):
     # floor the API window at the requested date (was hardcoded 2026 -> 2025 scans
-    # returned nothing); then filter to the exact date client-side.
+    # returned nothing); then filter to the exact EASTERN date client-side.
     ev_list, hdr = oc.api_get(f"/sports/{oc.SPORT}/events/",
                               commenceTimeFrom=f"{date_str}T00:00:00Z")
-    return [e for e in ev_list if str(e.get("commence_time", ""))[:10] == date_str], hdr
+    return [e for e in ev_list if _et_date(e.get("commence_time", "")) == date_str], hdr
 
 
 def available_cmd(args):
@@ -168,12 +190,16 @@ def available_cmd(args):
 
 
 def scan_cmd(args):
+    # validate markets BEFORE any API spend (review U4B-8)
+    markets = args.markets.split(",") if args.markets else YARDAGE_MARKETS
+    unknown = [m for m in markets if m not in DEFAULT_SD]
+    if unknown:
+        sys.exit(f"unknown market(s) {unknown}; supported: {sorted(DEFAULT_SD)}")
     projections = load_projections(args.proj)
     evs, hdr = _events_on(args.date)
     if not evs:
         print(f"No events on {args.date}.")
         return
-    markets = args.markets.split(",") if args.markets else YARDAGE_MARKETS
     print(f"Player-prop value, {args.date}, min edge {args.min_edge} units, "
           f"projections={args.proj.split('/')[-1]}\n")
     any_found = False

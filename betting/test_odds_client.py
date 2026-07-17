@@ -75,3 +75,25 @@ if __name__ == "__main__":
         fn()
         print(f"ok  {fn.__name__}")
     print(f"\n{len(fns)} passed")
+
+
+# ---- review 2026-07-17 U4A-8 / U4A-9 -------------------------------------------
+def test_clv_points_two_decimals():
+    assert oc.clv_points(3.0, 3.25, "HOME") == 0.25    # was banker-rounded to 0.2
+    assert oc.clv_points(3.25, 3.0, "AWAY") == 0.25
+
+
+def test_consensus_totals_gated_on_own_book_count():
+    spread_books = [{"key": f"s{i}", "markets": [{"key": "spreads", "outcomes": [
+        {"name": "Atlanta Falcons", "point": -3.0},
+        {"name": "Los Angeles Rams", "point": 3.0}]}]} for i in range(3)]
+    totals_books = [{"key": "t1", "markets": [{"key": "totals", "outcomes": [
+        {"name": "Over", "point": 44.5}, {"name": "Under", "point": 44.5}]}]},
+                    {"key": "t2", "markets": [{"key": "totals", "outcomes": [
+        {"name": "Over", "point": 45.0}, {"name": "Under", "point": 45.0}]}]}]
+    ev = {"home_team": "Atlanta Falcons", "away_team": "Los Angeles Rams",
+          "commence_time": "2026-09-13T17:00:00Z",
+          "bookmakers": spread_books + totals_books}
+    c = oc.consensus(ev)
+    assert c is not None and c["spread"] == 3.0        # 3 spread books pass
+    assert c["total"] is None and c["n_books_total"] == 2   # 2 totals books gated

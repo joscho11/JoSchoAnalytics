@@ -51,16 +51,23 @@ def shop_event(event: dict) -> dict | None:
             "spreads": spreads, "totals": totals}
 
 
-def best_quote(quotes: list[tuple]) -> dict | None:
-    """Best (most favorable) quote: highest point, then best price. `shop_gain` =
-    points gained vs the median book (the value of shopping)."""
+def best_quote(quotes: list[tuple], prefer_low_point: bool = False) -> dict | None:
+    """Best (most favorable) quote. Favorability BRANCHES ON SIDE (review U4A-3):
+    highest point for spreads and totals UNDER; LOWEST point for totals OVER.
+    Ties break on price then book name (deterministic — review U4B-11).
+    `shop_gain` = points gained vs the median book, positive in both directions."""
     if not quotes:
         return None
-    best = max(quotes, key=lambda t: (t[0], t[1]))
     pts = [q[0] for q in quotes]
+    if prefer_low_point:                      # totals OVER: lower total is better
+        best = min(quotes, key=lambda t: (t[0], -t[1], t[2]))
+        gain = round(median(pts) - best[0], 2)
+    else:
+        best = max(quotes, key=lambda t: (t[0], t[1], t[2]))
+        gain = round(best[0] - median(pts), 2)
     return {"point": best[0], "price": best[1], "book": best[2], "n_books": len(quotes),
             "worst_point": min(pts), "median_point": median(pts),
-            "shop_gain": round(best[0] - median(pts), 2)}
+            "shop_gain": gain}
 
 
 def best_for_pick(event: dict, side: str, market: str = "spreads") -> dict | None:
@@ -70,7 +77,7 @@ def best_for_pick(event: dict, side: str, market: str = "spreads") -> dict | Non
     if not shopped:
         return None
     quotes = shopped["spreads"].get(side) if market == "spreads" else shopped["totals"].get(side)
-    return best_quote(quotes or [])
+    return best_quote(quotes or [], prefer_low_point=(market == "totals" and side == "Over"))
 
 
 def board_cmd(args) -> None:

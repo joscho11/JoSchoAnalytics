@@ -86,3 +86,35 @@ if __name__ == "__main__":
         fn()
         print(f"ok  {fn.__name__}")
     print(f"\n{len(fns)} passed")
+
+
+# ---- review 2026-07-17 U4A-4: totals pcts on ONE denominator (dropna) ----------
+def test_totals_movement_single_denominator():
+    import pandas as pd
+    df = pd.DataFrame({
+        "season": [2025, 2025, 2025],
+        "spread_open": [3.0, -2.0, 1.0], "spread_close": [3.0, -2.0, 1.0],
+        "total_open": [44.0, 47.0, float("nan")],
+        "total_close": [45.5, 47.0, float("nan")],
+    })
+    s = hl.movement_summary(df)["total"]
+    assert s["n_totals"] == 2
+    assert s["pct_moved_1+"] == 50.0   # 1 of the 2 NON-NULL rows moved 1+ (was 33.3)
+
+
+# ---- review 2026-07-17 U4A-11: duplicate-key merge guard ------------------------
+def test_backtest_merge_rejects_duplicate_keys(monkeypatch, tmp_path):
+    import pytest
+    import pandas as pd
+    dup_lines = pd.DataFrame({
+        "date": ["2025-12-28", "2025-12-28"], "home": ["ATL", "ATL"],
+        "away": ["LA", "LA"], "spread_open": [2.5, 2.0], "spread_close": [3.0, 2.5],
+        "home_score": [24, 24], "away_score": [20, 20]})
+    monkeypatch.setattr(cb.hl, "load_lines", lambda: dup_lines)
+    preds = tmp_path / "preds.csv"
+    pd.DataFrame({"date": ["2025-12-28"], "home_team": ["ATL"], "away_team": ["LA"],
+                  "spread_line": [2.5], "recommendation": ["HOME (ATL)"],
+                  "ridge_margin": [3.0], "lgbm_margin": [3.0], "xgb_margin": [3.0],
+                  "actual_margin": [4.0]}).to_csv(preds, index=False)
+    with pytest.raises(Exception):        # pandas MergeError on validate="one_to_one"
+        cb.run(str(preds))

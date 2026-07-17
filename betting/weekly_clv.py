@@ -29,9 +29,12 @@ import odds_client as oc
 def current_target(df: pd.DataFrame, today: date):
     """(season, week) of the nearest upcoming tracked slate, or None (offseason)."""
     df = df.copy()
-    df["gd"] = pd.to_datetime(df["gameday"], errors="coerce").dt.date
+    gd = pd.to_datetime(df["gameday"], errors="coerce")
+    df = df[gd.notna()].assign(gd=gd.dropna().dt.date)   # drop NaT BEFORE .dt.date (R35)
+    if df.empty:
+        return None
     upcoming = df[(df["gd"] >= today - timedelta(days=1))
-                  & (df["gd"] <= today + timedelta(days=8))].dropna(subset=["gd"])
+                  & (df["gd"] <= today + timedelta(days=8))]
     if upcoming.empty:
         return None
     row = upcoming.sort_values("gd").iloc[0]

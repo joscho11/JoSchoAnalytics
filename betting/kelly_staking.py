@@ -104,9 +104,9 @@ def main() -> None:
 
     print()
     if total_note:
-        t, pct, d = total_note[0]
-        print(f"  => Bet the {t} tier at {pct*100:.1f}% (${d:.0f}) per play; "
-              f"other tiers don't clear the vig on this conservative read.")
+        for t, pct, d in total_note:            # EVERY clearing tier (review U4A-10)
+            print(f"  => Bet the {t} tier at {pct*100:.1f}% (${d:.0f}) per play.")
+        print("     Tiers not listed don't clear the vig on this conservative read.")
     else:
         print("  => No tier clears break-even on the conservative read at this price.")
     print(f"\n  Win prob = ATS vs the line you BET (the open), out-of-sample, pushes excluded.")
