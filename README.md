@@ -21,6 +21,7 @@ Each subsystem has a plain-language guide — what it is trying to do, how it wo
 - [betting/GUIDE.md](betting/GUIDE.md) — the ATS spread model, the experimental totals model, and the LLM agent.
 - [fantasy/GUIDE.md](fantasy/GUIDE.md) — the weekly fantasy projection system (per-position and per-stat models).
 - [fantasy/seasonal_projections/GUIDE.md](fantasy/seasonal_projections/GUIDE.md) — the pre-season Draft Board and the value-signal research campaign behind it.
+- [fantasy/talent/GUIDE.md](fantasy/talent/GUIDE.md) — the Talent Score and Rookie Score columns: how they're built, what they measure, and where they fail.
 - [fantasy/dfs/GUIDE.md](fantasy/dfs/GUIDE.md) — the DraftKings lineup optimizer.
 
 `fantasy/breakout/` is a one-off research notebook (a breakout-probability experiment with saved charts); it is not wired into the dashboard or any pipeline, so it has no guide.

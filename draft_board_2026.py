@@ -540,6 +540,9 @@ def render():
     cols = _DISPLAY_COLS
     st.caption(_adp_caption())
     st.caption(SCALE_DISCLOSURE)   # two-cell scale warning (R12), beside the columns
+    st.caption("For a full explanation of the Talent Score and Rookie Score columns — "
+               "how they're built and what they do and don't measure — see the "
+               "Help & Guide page.")
     # Fixed-height scroll box holds all 180 rows (TABLE_HEIGHT ≈ 20 rows visible), so no
     # row cap is needed. The key encodes the current sort AND the filter state (position,
     # search, row count), so the grid REMOUNTS on any change to the visible rows — this

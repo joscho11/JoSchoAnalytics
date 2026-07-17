@@ -336,6 +336,35 @@ If you're looking at a past week, the actuals shown are the real NFL stats for t
 
     st.divider()
 
+    # ── Section 3b: Talent Score & Rookie Score (Draft Board columns) ─────────
+    st.subheader("🧮 Talent Score & Rookie Score")
+
+    with st.expander("What are the two score columns on the Draft Board?"):
+        st.markdown("""
+The Draft Board carries two context columns I build myself, answering two different questions.
+
+**The Talent Score** is my model-based estimate of what a player does with each opportunity — each carry, route, or throw — separated from his situation where that separation is statistically possible. It is not a summary of his production, and models can be wrong. Volume is excluded by design: how often a player is used lives in the confidence channel instead, so a thin sample gets a wider range and a lower confidence weight, not a lower score.
+
+**The Rookie Score** is a college-production read for 2026 rookies at RB, WR, and TE, scaled against past drafted prospects at the same position. It describes what a prospect did in college; it does not claim to predict NFL careers or fantasy value.
+
+**They are two different scales.** The Talent Score ranks NFL players against NFL players; the Rookie Score ranks prospects against past prospects. A 90 in one column is not a 90 in the other, and neither feeds any other number on this board.
+        """)
+
+    with st.expander("How the Talent Score is built (and what it doesn't measure)"):
+        st.markdown("""
+For running backs, receivers, and tight ends, a week-by-week model splits performance into the player's own effect, his team's effect, and the opponent's effect, then keeps the player's part. Honestly, that adjustment is small — team and opponent together explain roughly 8% of week-to-week variance; most weekly movement is noise, and the score is built to look through it.
+
+Quarterbacks are the asterisk: one starter per team means a QB's situation cannot be separated from him, so QB scores ship **unadjusted** — a different kind of estimate under the same header. The QB facets measure completion rate versus expectation (overall and on throws of 20+ air yards), ball-placement discipline, and rushing value. They do **not** measure performance under pressure, off-script play, or pre-snap work — I screened a pressure-performance facet family under a pre-registered rule and none survived it, so that gap stays open and disclosed.
+
+Recent seasons count more (a declared decay, roughly a 3.5-season half-life). Every score comes with a range — the honest uncertainty — plus † for lower-confidence rows and ‡ for the lowest. A 50 means the weakest draftable player at the position, not a league-average one, and an individual score is not each player's single best point estimate: ranks and ranges are the reliable reads. For early-career running backs I blend in a college prior at the weak agreement level I actually measured (about 0.385); at WR and TE the measured agreement was near zero, so their scores are NFL-only.
+
+These columns are context only: a pre-registered test found measures like these do not predict where the draft market is wrong, so they never combine with the Gap, ranges, or chance columns anywhere on the board.
+
+The full write-up — every design choice, the admission gates, and where it fails — lives in `fantasy/talent/GUIDE.md` in the repo.
+        """)
+
+    st.divider()
+
     # ── Section 4: DFS Optimizer ──────────────────────────────────────────────
     st.subheader("🎯 DFS Optimizer")
 

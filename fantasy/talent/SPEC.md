@@ -48,6 +48,32 @@ Joseph ratifies and commits. `talent_index_2026.csv` (the single-metric H7 prove
 record) is NOT modified, NOT superseded in place — the Talent Score is a NEW artifact with
 a NEW name. `refresh_board_adp.py` never touches any of the three new artifacts.
 
+### Frozen fence — THREE classes (R30, amended 2026-07-16 after committing the build)
+
+The fence does two separate jobs; conflating them tripped a false red-alert (a scheduled
+ADP refresh moved `board_adp_live_2026.csv` and halted a deploy session). It is now split:
+
+- **CLASS A — cross-session pinned, BLOB basis** (`git show HEAD:<path> | md5`, which is
+  checkout-invariant; the working-tree hash is NOT the pin because autocrlf makes it
+  checkout-dependent). Print BOTH blob and working-tree hashes every session, labeled.
+  - `talent_index_2026.csv` — blob `391b4381cbadbde8adfb46a03f2b48ab` (also: special —
+    preserves the single-metric H7 provenance record; NEVER modified)
+  - `phase4_band_2026.csv` — blob `776a861e377ac4928a95934b140f6793`
+  - `talent_score_2026.csv` — blob `d7c1a57547be4ab8060c053de02aaead`
+  - `rookie_score_2026.csv` — blob `2040df2e7e8ca80adcb67552edb14cd1`
+  (talent_score/rookie_score match on both bases today only because Python wrote them LF and
+  they have not been re-checked-out; a fresh clone flips them to CRLF — the blob is the pin.)
+- **CLASS B — cross-session pinned, FILE basis** (outside git, no line-ending conversion):
+  `S2.pkl` `9b3d9df67ae88272f4eab0a0ae1cbb21` · snapshot aggregate (PowerShell method)
+  `208fde4ee59b79a13eff0e23d0f7694c`.
+- **CLASS C — WITHIN-session integrity only, never cross-session pinned:**
+  `board_adp_live_2026.csv`. Verify before==after WITHIN a session (proves Fable did not
+  mutate it); its hash moving BETWEEN sessions is never a finding — `board_refresh.yml` is
+  designed to rewrite it daily. Do NOT re-pin it. Within-session movement IS a red alert.
+
+Legitimate regeneration of any Class A/B artifact happens ONLY via an owner-ruled rebuild
+(a new R-numbered ratification) with old and new hashes both reported and the delta attributed.
+
 ## (b) Build scripts
 
 | Script | Reads | Writes |
