@@ -1,0 +1,40 @@
+# Baseline hashes — review/2026-07-17 (before)
+## Class A (blob basis)
+391b4381cbadbde8adfb46a03f2b48ab  blob:fantasy/seasonal_projections/talent_index_2026.csv
+776a861e377ac4928a95934b140f6793  blob:fantasy/seasonal_projections/phase4_band_2026.csv
+d7c1a57547be4ab8060c053de02aaead  blob:fantasy/talent/talent_score_2026.csv
+2040df2e7e8ca80adcb67552edb14cd1  blob:fantasy/talent/rookie_score_2026.csv
+## Class B
+9b3d9df67ae88272f4eab0a0ae1cbb21 */c/tmp/S2.pkl
+## Class C (within-session)
+3ac81a488e02f62121877916826a3e52 *fantasy/seasonal_projections/board_adp_live_2026.csv
+## Model pkls
+42a61911f6600852d9dcb094896735f0 *betting/models/ensemble_prod_model.pkl
+c6fcf0921bbeaefc3a700e95834b1c0a *betting/models/lgbm_prod_model.pkl
+023a0f1b30ff800cd6aabcdb7ec6c6ae *betting/models/totals_ridge.pkl
+995aebedb0833de9df3bfc3fbe7ec214 *betting/models/totals_xgboost.pkl
+a0a209e55573e6dd3355cdc186b5a9bb *betting/models/xgboost_prod_model.pkl
+9bd2df487697bad07ffb75ef2aea8c66 *fantasy/models/qb_model.pkl
+2c37423c85ff07221ad3c2c09fbf53d2 *fantasy/models/qb_pass_yards_model.pkl
+8a644a524b7b38a329a84644d0a794f1 *fantasy/models/qb_rush_yards_model.pkl
+2fc03bf0e0c4ef913e3d21c335ac2b9f *fantasy/models/rb_model.pkl
+180438969313d9905f1128f4cd24e51e *fantasy/models/rb_rec_yards_model.pkl
+a219b5c4a995357e09f2e3cc368983eb *fantasy/models/rb_rush_yards_model.pkl
+b0cd4b594889a803c8e40f27bf1598f0 *fantasy/models/te_model.pkl
+2a9bab8f6bd61e6c99fb448fe02773ea *fantasy/models/te_rec_yards_model.pkl
+3b5957b351bf363d9077d2d7e2c500ee *fantasy/models/te_receptions_model.pkl
+6dd99c3cd329b6236c340890de3138dc *fantasy/models/wr_model.pkl
+9cb0aade4ad3cf75a61d1b2dc216a1c4 *fantasy/models/wr_rec_yards_model.pkl
+2387aa83d4d0dc0f22ccf0bf33a71c15 *fantasy/models/wr_receptions_model.pkl
+87a79b9608ced32da039b81b120770db *fantasy/seasonal_projections/models/availability_model.pkl
+ced57a60c9395cf144770973e775f784 *fantasy/seasonal_projections/models/qb_ppg_model.pkl
+e732b8ffe15d51ec8b57bc04443915dc *fantasy/seasonal_projections/models/rb_ppg_model.pkl
+872467b2295fce27761f9e04da01b6e8 *fantasy/seasonal_projections/models/rookie_ppg_model.pkl
+cdadc3be184ca0df23eefbb91178c50f *fantasy/seasonal_projections/models/te_ppg_model.pkl
+63fd4502fe5441ff691e1fab9c768248 *fantasy/seasonal_projections/models/wr_ppg_model.pkl
+## Trackers + value boards + goldens
+88d526ca46e8cbb9f1eea77a3d96fa08 *betting/predictions_tracker.csv
+3fe18604dbd951869e2c3ea940454b71 *betting/totals_tracker.csv
+0ee5bd28f47c397c3f5143a30e43552e *fantasy/talent/tests/golden/golden_facets.json
+1f6841c8760391f1bb6a7272dc3f265b *fantasy/talent/tests/golden/golden_ruled.json
+8fc2842c50b21851e5721eb46e91b299 *fantasy/talent/tests/golden/golden_weighted.json

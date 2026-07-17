@@ -8,7 +8,7 @@ BettingEdge is an NFL sports betting prediction system with two independent mode
 - **Spread model**: Ensemble fixed75 as primary edge-setter (0.75 XGBoost + 0.25 Ridge), with XGBoost, Ridge, and LightGBM as three direction voters. HIGH/MEDIUM/PASS tiers.
 - **Totals model**: XGBoost + Ridge predicting whether games go over/under the Vegas total. UNDER-only strategy (books shade totals high due to recreational OVER-bias). HIGH = both models predict UNDER.
 - A Claude-powered LLM agent (via LlamaIndex) for qualitative game reasoning
-- A Streamlit dashboard for visualization (deployed at joschobetting.streamlit.app)
+- A Streamlit dashboard for visualization (deployed at joschoanalytics.streamlit.app)
 - GitHub Actions for weekly automated predictions (Mon/Thu/Sun)
 - A pre-season fantasy **2026 Draft Board** (`fantasy/seasonal_projections/`), surfaced as the Draft Board dashboard tab (`draft_board_2026.py`) — the market point estimate plus a calibrated uncertainty band, from a closed pre-registered research campaign. See that directory's `GUIDE.md` / `ARTIFACTS.md` / `PREREGISTRATION.md` and the `bettingedge-seasonal-h5-campaign` skill.
 
