@@ -60,9 +60,14 @@ ADP refresh moved `board_adp_live_2026.csv` and halted a deploy session). It is 
     preserves the single-metric H7 provenance record; NEVER modified)
   - `phase4_band_2026.csv` — blob `776a861e377ac4928a95934b140f6793`
   - `talent_score_2026.csv` — blob `d7c1a57547be4ab8060c053de02aaead`
-  - `rookie_score_2026.csv` — blob `ee0d9c4d32b6f59a6d118ebbba65f5c7` (R31, 2026-07-17;
-    was `2040df2e7e8ca80adcb67552edb14cd1`. Value shown is the worktree md5, LF; it becomes
-    the blob pin on Joseph's commit per the LF note below.)
+  - `rookie_score_2026.csv` — blob `57b5b6c51637f11a2067bb7249ac7805` (R32/R33, 2026-07-18;
+    was `ee0d9c4d…` R31, was `2040df2e…` pre-R31. RB now scored on the frozen PBP instrument;
+    WR reverted to equal thirds. Proven blob-basis: `git hash-object <path>` == `git hash-object
+    --stdin` this session (filter no-op), so the worktree md5 shown IS the blob pin.)
+  - `rb_pbp_facets_2026.csv` — blob `29de781601adc58e7bf9a941cde8e3b8` (R32, 2026-07-18; the
+    8 RB rookies' frozen PBP career facets + the scoped-pool z/anchor constants in its
+    provenance sidecar. cfbfastR 2.0.0, version-pinned cache. This provenance is the
+    methodological upgrade the cfbfastR parquet mirror never carried.)
   (talent_score/rookie_score match on both bases today only because Python wrote them LF and
   they have not been re-checked-out; a fresh clone flips them to CRLF — the blob is the pin.)
 - **CLASS B — cross-session pinned, FILE basis** (outside git, no line-ending conversion):
@@ -101,7 +106,7 @@ golden hash in `tests/golden/golden_weighted.json` must move to the new pin in t
 | `model.py` | facet checkpoints | — (fit, sigma_alpha at NS splits, R1 k derivation, residual sigma^2_eps) |
 | `composite.py` | model outputs | — (z, w, ONE composite branch, CB anchor, boards, RB pipe) |
 | `build_talent_score.py` | all above | Phase 1: measurement checkpoints only. Phase 2 (post-ratification): `talent_score_2026.csv` |
-| `build_rookie_score.py` | college_production CSVs (frozen college snapshot per the freeze plan) | Phase 2: `rookie_score_2026.csv` — box-score index per the standing outcome (WR rookie prior is a validated null; PBP index not deployable — cfbfastR lacks 2020/2023-25, CFBD ruled NO) |
+| `build_rookie_score.py` | college_production CSVs + `rb_pbp_facets_2026.csv` (frozen) | Phase 2b: `rookie_score_2026.csv` — RB scored on the frozen PBP instrument (R32, weak-disclosed .474); WR/TE box-score DESCRIPTIVE-ONLY, equal weights (R33 reverted WR; TE equal). Old note "PBP not deployable — cfbfastR lacks 2020/2023-25" is SUPERSEDED: CFBD carries 2016-2025, version-pinned via cfbfastR 2.0.0 (2025 receiver/passer parse still degraded → WR/QB class-scoring blocked; RB rusher parse clean) |
 | `archive_rho.py` | frozen `C:/tmp/S2.pkl`, `C:/tmp/CFBFAC.pkl`, `C:/tmp/RHO2.pkl`, prototype `cfb_rho.py` stdout | `rho_provenance.json` (once) |
 | `tests/test_talent_build.py` | checkpoints + accepted-table constants | — |
 
@@ -146,8 +151,20 @@ with a printed collision audit); PERCENTILE NOWHERE in the pipeline (report-rend
   frozen pickles, to persist the four registered estimators. No other rho execution, ever.
 - **R10 — rho disclosure:** no rho describes the shipped board; copy states rho was measured
   against the unshrunk composite and the shipped score applies per-facet reliability
-  shrinkage on top. Pipe ships RB-only at the box-score disattenuated rho (.385,
-  weak-disclosed), w and rho from the SAME new median-k build; WR/TE pipe DEAD per bands.
+  shrinkage on top. ~~Pipe ships RB-only at the box-score disattenuated rho (.385,
+  weak-disclosed)~~ **[SUPERSEDED 2026-07-18 by R32/R33 — see below]**; WR/TE pipe DEAD per bands.
+- **R32/R33 — rookie pipe re-measured on a clean panel (2026-07-18, PREREG_pbp_index_2026-07-17
+  OUTCOMES).** The .385 box-score RB figure came from the DEFECTIVE step2 panel (cfb_screen
+  `career()` enforced no final-season condition → ~38% of the registered WRs, and RBs likewise,
+  scored on wrong-window truncated careers). On the clean true-final / full-career / FBS panel
+  (version-pinned cfbfastR 2.0.0), same R8 disattenuated estimator: **box RB .298 (DEAD)**; the
+  RB **PBP** instrument (EPA/rush + explosive, z over the scoped pool) measures **.474 raw .215,
+  n=300 → WEAK-DISCLOSED**, so **R32: RB ships on the PBP instrument** (`rb_pbp_facets_2026.csv`),
+  replacing the box pipe. Same-panel WR box .028 / PBP .086, TE box .295 / PBP .312 — all DEAD,
+  so WR/TE stay box-score DESCRIPTIVE-ONLY. **R33: WR reverted to equal thirds** — R31's fitted
+  vector (OOF Spearman +.106) did not replicate on the clean panel (−.009) and was fitted on the
+  defective step2 panel. No rho_provenance record is superseded; those are the archived
+  defective-panel estimators and stay verbatim.
 - **R12 — two-cell display:** zero NFL regular-season snaps → Rookie Score populated /
   Talent Score dashed; inverse otherwise. Sorting a score column sinks the dashed group
   (null-last), never filters. Scale-disclosure line beside the columns. (Sort behavior

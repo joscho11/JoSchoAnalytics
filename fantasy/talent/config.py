@@ -16,14 +16,19 @@ WEIGHTS = {
            "qsucc": .16, "q10": .07},                               # RATIFIED-2026-07-16b
 }
 
-# R31 (RATIFIED-2026-07-17): rookie box-score index weights, set by the one-shot
-# out-of-fold test PREREG_rookie_weights_2026-07-17.md (NOT by hand): WR fitted
-# (OOF Spearman IC equal -.021 -> fitted .106, gate +.05/+.10 passed); RB & TE
-# equal weights RATIFIED (below gate). NO CODE PATH MAY ALTER THESE VECTORS.
+# Rookie index weights. History: R31 (2026-07-17) set WR fitted weights off the
+# one-shot PREREG_rookie_weights_2026-07-17.md; R32/R33 (2026-07-18) supersede:
+# - R32: RB is scored on the frozen PBP instrument (rb_pbp_facets_2026.csv +
+#   PREREG_pbp_index_2026-07-17.md OUTCOMES: PBP disatt .474 weak-disclosed vs
+#   box .298 dead on the clean panel) — the legacy RB box vector is NOT consulted.
+# - R33: WR REVERTED to equal thirds. R31's fit did not replicate on the clean
+#   panel (+.106 OOF Spearman -> -.009; fitted on the defective step2 panel,
+#   ~89/275 = 32% truncated/out-of-scope rows). Equal is the deliberate default.
+# NO CODE PATH MAY ALTER THESE VECTORS.
 ROOKIE_WEIGHTS = {
-    "RB": {"dom_best": .50, "ypc": .50},                        # equal RATIFIED
-    "WR": {"dom_best": .80, "recshare": .00, "ypr": .20},       # FITTED (R31)
-    "TE": {"dom_best": 1 / 3, "recshare": 1 / 3, "ypr": 1 / 3},  # equal RATIFIED
+    "RB": {"dom_best": .50, "ypc": .50},                         # LEGACY (R32: unused)
+    "WR": {"dom_best": 1 / 3, "recshare": 1 / 3, "ypr": 1 / 3},  # R33 equal (reverted)
+    "TE": {"dom_best": 1 / 3, "recshare": 1 / 3, "ypr": 1 / 3},  # equal RATIFIED (R31 gate-fail)
 }
 
 PF = list(range(2018, 2026))   # lookback 2018+ (ruled)

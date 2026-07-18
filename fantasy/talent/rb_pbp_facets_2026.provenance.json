@@ -1,0 +1,28 @@
+{
+ "built_utc": "2026-07-18T15:46:11.102737+00:00",
+ "git_head": "a7de7f6584a0a7eb787decf38e4b3499adeb1974 (dirty)",
+ "config_md5": "b2610bd9e72d5181c6dfbd060240870b",
+ "NS": 60,
+ "seed": 20260716,
+ "code_version": "talent-build 2026-07-16 phase2",
+ "instrument": "RB PBP college index (fired composite, PREREG_pbp_index_2026-07-17.md): z(EPA/rush)+z(explosive) equal mean over the scoped qualifying pool; NO reweighting",
+ "cfbfastR": "2.0.0",
+ "R": "4.6.1",
+ "cache_provenance": "scratchpad/cfbd_cache/provenance.json md5 1ba5cff696edf2f10dcab577f3488310",
+ "pull_date": "2026-07-17",
+ "scope": "FBS-school only (team >=7 games in a single 2016-2021 cache season); plays filtered to FBS pos_team; pool = true-final 2016-2023 (any-2024-name excluded), career >=40 carries, full careers 2016-2023; rookies = full careers 2021-2025 (rusher parse 100% clean incl. 2025)",
+ "pool_n": 1569,
+ "pool_mu": {
+  "EPA/rush": 0.030243810988205232,
+  "explosive": 0.07130194120485658
+ },
+ "pool_sd": {
+  "EPA/rush": 0.17731046111961096,
+  "explosive": 0.035813784248572844
+ },
+ "anchor_z5": -0.916605053365383,
+ "anchor_z98": 1.641712552967754,
+ "anchor_derivation": "percentile 5/98 of pool rz = mean-z composite x G/(G+6) (K_GAMES=6, the shipped reliability convention); mapped 52-95, clip 40-99 per config.ANCHOR",
+ "reliability_channel": "wg = games/(games+6), games = distinct PBP game count (same K as box build)",
+ "identity_correction": "00-0040878 Mike Washington: PBP name variants unified by (name,team) pairs verified against college_production ESPN pid 4686658 (Buffalo 2021-23 / New Mexico State 2024 / Arkansas 2025)"
+}

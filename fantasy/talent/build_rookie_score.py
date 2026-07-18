@@ -1,18 +1,24 @@
-"""Rookie Score build (Phase 2a) — the BOX-SCORE college index, 2026 class.
+"""Rookie Score build (Phase 2b) — 2026 class.
 
-Standing outcome: the PBP college index is validated history but not deployable
-(cfbfastR misses 2020/2023-25; CFBD ruled NO), so the Rookie Score ships on the
-box-score index: RB {dom_best, ypc} · WR/TE {dom_best, recshare, ypr}, EQUAL
-WEIGHT (owner sets weights later), z within position over the drafted-prospect
-reference pool (2014-2026 classes, games>=8), shrink w = games/(games+6), then
-the same monotone anchor family as the Talent Score FIT ON THE ROOKIE POOL —
-a different instrument on a different population (the scale-disclosure line is
-the reader's warning). QB: no college QB instrument shipped — no QB rookie rows.
+R32/R33 state (2026-07-18; supersedes the "not deployable" era):
+- RB ships the FROZEN PBP instrument — mean(z(EPA/rush), z(explosive)) against the
+  frozen scoped-pool constants in rb_pbp_facets_2026.provenance.json, x games/(games+6),
+  anchored 52-95 / clipped 40-99. Clean-panel evidence (PREREG_pbp_index_2026-07-17
+  OUTCOMES): disatt .474 (raw .215, n=300) = WEAK-DISCLOSED; box RB .298 = dead,
+  superseded. Reads ONLY the frozen artifact — no CFBD cache, no scratchpad.
+- WR/TE ship the box-score index DESCRIPTIVE ONLY {dom_best, recshare, ypr}, EQUAL
+  thirds (WR reverted by R33 — R31's fit did not replicate on the clean panel;
+  TE ratified by R31's gate-fail), z within position over the drafted-prospect
+  reference pool (2014-2026 classes, games>=8), shrink w = games/(games+6), same
+  monotone anchor family FIT ON THE ROOKIE POOL. Clean-panel box agreement with the
+  NFL talent construct: WR .028 / TE .295 — both dead; the column describes college
+  production, it does not predict. QB: no instrument ships — no QB rookie rows.
 
 2025 college season: fetched ONCE via fetch_college.aggregate_season(2025) and
 cached to college_production_2025_cache.csv (the freeze plan); subsequent builds
 read the cache — deterministic.
 """
+import json
 import sys
 import pickle
 from pathlib import Path
@@ -141,6 +147,42 @@ def build(out_path=None):
         if P == "QB":
             dropped_qb = rookies      # no college QB instrument shipped
             continue
+        if P == "RB":
+            # R32 (2026-07-18): RB is scored on the FROZEN PBP instrument — the fired
+            # composite from PREREG_pbp_index_2026-07-17.md (clean-panel disatt .474
+            # weak-disclosed; box .298 dead): mean(z(EPA/rush), z(explosive)) against
+            # the frozen scoped-pool constants, x games/(games+6), anchored 52-95,
+            # clip 40-99. NO reweighting. Reads ONLY rb_pbp_facets_2026.csv + its
+            # provenance (pool mu/sd, anchor percentiles) — no cache, no scratchpad.
+            fz = pd.read_csv(HERE / "rb_pbp_facets_2026.csv")
+            fprov = json.loads(
+                (HERE / "rb_pbp_facets_2026.provenance.json").read_text())
+            fmu, fsd = fprov["pool_mu"], fprov["pool_sd"]
+            z5, z98 = fprov["anchor_z5"], fprov["anchor_z98"]
+            Bm = (ANCHOR["hi_score"] - ANCHOR["lo_score"]) / (z98 - z5)
+            am = ANCHOR["lo_score"] - Bm * z5
+            assert set(fz.gsis_id) == set(rookies), (
+                "frozen RB artifact != scored universe: "
+                f"{sorted(set(fz.gsis_id) ^ set(rookies))}")
+            nn_of = {g: (NAME_ALIASES.get(g) or gname.get(g)
+                         or norm_name(str(names.get(g, g)))) for g in rookies}
+            for _, r in fz.iterrows():
+                z1 = (r.epa_per_rush - fmu["EPA/rush"]) / fsd["EPA/rush"]
+                z2 = (r.explosive - fmu["explosive"]) / fsd["explosive"]
+                wg = r.games / (r.games + K_GAMES)
+                rz = float(np.mean([z1, z2])) * wg
+                att = (dp26.loc[nn_of[r.gsis_id]]
+                       if nn_of[r.gsis_id] in dp26.index else None)
+                rows.append(dict(gsis_id=r.gsis_id, display_name=r.display_name,
+                                 position="RB",
+                                 rookie_score=round(float(np.clip(am + Bm * rz,
+                                                                  *ANCHOR["clip"])), 1),
+                                 games=int(r.games), wg=round(float(wg), 4),
+                                 draft_round=(int(att["round"]) if att is not None
+                                              and pd.notna(att.get("round")) else pd.NA),
+                                 z_epa_rush=round(float(z1), 4),
+                                 z_explosive=round(float(z2), 4)))
+            continue
         # R26/R27: assemble the CLASS rows from the ADP-board rookies themselves.
         nn_of = {g: (NAME_ALIASES.get(g) or gname.get(g)
                      or norm_name(str(names.get(g, g)))) for g in rookies}
@@ -196,6 +238,14 @@ def build(out_path=None):
     df = df.sort_values(["position", "rookie_score", "gsis_id"],
                         ascending=[True, False, True], kind="mergesort")
     df["rank_pos"] = df.groupby("position").cumcount() + 1
+    # Column contract: the original 12 columns in their original order (z_ypc kept,
+    # now all-NA — RB moved to the PBP instrument), then the two RB PBP z columns
+    # appended AFTER rank_pos so WR/TE lines stay byte-prefix-identical to the
+    # pre-R32 artifact (their line + ",,").
+    df = df.reindex(columns=["gsis_id", "display_name", "position", "rookie_score",
+                             "games", "wg", "draft_round", "z_dom_best", "z_ypc",
+                             "z_recshare", "z_ypr", "rank_pos",
+                             "z_epa_rush", "z_explosive"])
     validate(df, "rookie_score_2026",
              required=["gsis_id", "display_name", "position", "rookie_score",
                        "games", "wg", "rank_pos"],
@@ -203,13 +253,16 @@ def build(out_path=None):
              checks={"rookies only": lambda d: ~d.gsis_id.map(
                  lambda g: is_nfl(g, nfl_ids))})
     write_artifact(df, out_path, RULED["NS"], RULED["SEED"],
-                   extra={"index": "box-score; weights RATIFIED 2026-07-17 (R31) via "
-                                   "one-shot PREREG_rookie_weights_2026-07-17.md: WR "
-                                   "FITTED {dom_best .80, recshare .00, ypr .20} (OOF "
-                                   "Spearman IC equal -.021 -> fitted .106, gate "
-                                   "+.05/+.10 passed); RB {dom_best .50, ypc .50} and "
-                                   "TE {dom_best, recshare, ypr equal} = EQUAL WEIGHTS "
-                                   "RATIFIED (below gate). pending-owner-weights RESOLVED.",
+                   extra={"index": "R32/R33 (2026-07-18): RB = frozen PBP instrument "
+                                   "(rb_pbp_facets_2026.csv; PREREG_pbp_index_2026-07-17 "
+                                   "OUTCOMES: disatt .474 raw .215 n=300 weak-disclosed; "
+                                   "box RB .298 dead, superseded). WR REVERTED to equal "
+                                   "thirds (R33: R31's fitted vector did not replicate on "
+                                   "the clean panel, +.106 OOF -> -.009; fitted on the "
+                                   "defective step2 panel, ~32% truncated/out-of-scope). "
+                                   "TE equal RATIFIED (R31 gate-fail). WR/TE box columns "
+                                   "are DESCRIPTIVE ONLY (clean-panel box .028/.295, "
+                                   "both dead).",
                           "scale": "rookie drafted-prospect pool; NOT the NFL scale"})
     return df
 
