@@ -102,8 +102,15 @@ the position mean. For a several-year veteran the college share is about 10%.
 **Rookies.** The Rookie Score covers RB, WR, and TE rookies on the 2026 ADP board
 — including undrafted players the market is drafting — scored on a box-score
 college index (production share, per-carry and per-catch efficiency) against a
-pool of past drafted prospects. No college QB instrument ships, so rookie QBs show
-a dash in both columns with a note saying why. **The two columns are two different
+pool of past drafted prospects. The weights inside that index are no longer a
+placeholder. On 2026-07-17 a pre-registered, one-shot test — its pass/fail rule
+written down before I looked — chose them by how well each college signal lines
+up, out of fold, with my NFL talent estimate. For receivers the test put almost
+all the weight on best-season dominator (the share of a college offense a player
+accounted for) and none on final-season yardage share, which pointed the wrong
+way; for running backs and tight ends the test kept equal weights. No hand,
+including mine, moved a weight to flatter a player. No college QB instrument
+ships, so rookie QBs show a dash in both columns with a note saying why. **The two columns are two different
 scales**: the Talent Score ranks NFL players against NFL players, the Rookie Score
 ranks prospects against past prospects, and a 90 in one is not a 90 in the other.
 
@@ -133,6 +140,15 @@ not the score, is where usage shows up.
 about 0.385, WR about zero (a well-powered null, n=278 players), TE about 0.254 —
 all measured 2018–2025, all lower bounds because only players who made the NFL can
 be measured. That is why the rookie blend is RB-only and labeled weak.
+
+**Even with its weights re-set, the rookie index barely lines up with fantasy
+scoring, and I keep the honest label.** As a report-only check I compared the
+re-weighted index against each prospect's best per-game half-PPR season in his
+first three NFL years: the rank correlation is 0.086 for receivers (n=244) —
+essentially nothing — and 0.283 for running backs (n=166) and 0.261 for tight
+ends (n=107), both weak. That is the measurement behind the sentence up top: the
+Rookie Score describes what a player did per opportunity in college; it does not
+claim to predict his NFL or fantasy outcome.
 
 **The pressure screen came back negative.** All three candidate facets failed
 their pre-registered gates: the best (sacks per pressure) repeated at 0.266
@@ -177,7 +193,11 @@ precisely; I disclose them rather than pretend otherwise.
   requires an owner ruling with old and new hashes reported. Nothing regenerates
   silently.
 - **Weights are owner config.** Every weight vector is set by me on football
-  logic, dated and ratified in `config.py`; no automated search chooses them.
+  logic, dated and ratified in `config.py`; no automated search chooses them. One
+  deliberate exception: the rookie box-score index weights were set by a
+  pre-registered, one-shot out-of-fold test against my NFL talent estimate (rule
+  written down first, then ratified) — because there I wanted the data, not my
+  hand, to choose among a few college signals.
 
 The one-line version of this whole document: two honest, uncertain, deliberately
 narrow measurements — shown with their uncertainty, fenced away from the value

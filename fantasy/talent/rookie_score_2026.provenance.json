@@ -1,10 +1,10 @@
 {
- "built_utc": "2026-07-16T20:03:39.269049+00:00",
- "git_head": "a055cffc6abffdc14c965cd4eb17a813e8c6bbed (dirty)",
- "config_md5": "5a59e238c274506e6ef9aadc3add28a0",
+ "built_utc": "2026-07-17T20:50:48.592647+00:00",
+ "git_head": "5c218d9a0cd058d06687a36abdf1a09013742b72 (dirty)",
+ "config_md5": "b2610bd9e72d5181c6dfbd060240870b",
  "NS": 60,
  "seed": 20260716,
  "code_version": "talent-build 2026-07-16 phase2",
- "index": "box-score (dom_best/ypc/recshare/ypr), EQUAL WEIGHT \u2014 owner sets weights later",
+ "index": "box-score; weights RATIFIED 2026-07-17 (R31) via one-shot PREREG_rookie_weights_2026-07-17.md: WR FITTED {dom_best .80, recshare .00, ypr .20} (OOF Spearman IC equal -.021 -> fitted .106, gate +.05/+.10 passed); RB {dom_best .50, ypc .50} and TE {dom_best, recshare, ypr equal} = EQUAL WEIGHTS RATIFIED (below gate). pending-owner-weights RESOLVED.",
  "scale": "rookie drafted-prospect pool; NOT the NFL scale"
 }

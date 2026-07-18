@@ -60,7 +60,9 @@ ADP refresh moved `board_adp_live_2026.csv` and halted a deploy session). It is 
     preserves the single-metric H7 provenance record; NEVER modified)
   - `phase4_band_2026.csv` — blob `776a861e377ac4928a95934b140f6793`
   - `talent_score_2026.csv` — blob `d7c1a57547be4ab8060c053de02aaead`
-  - `rookie_score_2026.csv` — blob `2040df2e7e8ca80adcb67552edb14cd1`
+  - `rookie_score_2026.csv` — blob `ee0d9c4d32b6f59a6d118ebbba65f5c7` (R31, 2026-07-17;
+    was `2040df2e7e8ca80adcb67552edb14cd1`. Value shown is the worktree md5, LF; it becomes
+    the blob pin on Joseph's commit per the LF note below.)
   (talent_score/rookie_score match on both bases today only because Python wrote them LF and
   they have not been re-checked-out; a fresh clone flips them to CRLF — the blob is the pin.)
 - **CLASS B — cross-session pinned, FILE basis** (outside git, no line-ending conversion):
@@ -73,6 +75,22 @@ ADP refresh moved `board_adp_live_2026.csv` and halted a deploy session). It is 
 
 Legitimate regeneration of any Class A/B artifact happens ONLY via an owner-ruled rebuild
 (a new R-numbered ratification) with old and new hashes both reported and the delta attributed.
+
+**R31 (RATIFIED-2026-07-17) — rookie box-score facet weights installed; equal-weight-pending
+RESOLVED.** The Rookie Score's "EQUAL WEIGHT — owner sets weights later" state is closed by the
+one-shot `PREREG_rookie_weights_2026-07-17.md`: **WR = {dom_best .80, recshare .00, ypr .20}**
+(fitted — leave-one-draft-class-out out-of-fold Spearman IC equal −.021 → fitted .106, gate
++.05/+.10 passed at Δ+.127; the rec-share facet graded backwards, corner IC −.094), **RB =
+{dom_best .50, ypc .50}** and **TE = {dom_best, recshare, ypr equal}** = equal weights RATIFIED
+(Δ +.024 / +.038, below gate). `rookie_score_2026.csv` regenerated via
+`schemas.write_artifact`: **old blob `2040df2e7e8ca80adcb67552edb14cd1` → new
+`ee0d9c4d32b6f59a6d118ebbba65f5c7`** (worktree md5, LF; equals the blob pin once committed).
+Delta attributed ENTIRELY to the WR weight change — RB + TE rows are byte-identical to the old
+file (verified line-by-line); only the 16 WR rows moved (Tyson 87.0→93.4, rank 1 unchanged;
+Bernard 79.8→86.4; Bell 71.9→58.0). **Not done here (flagged):** `build_rookie_score.py` still
+hardcodes an equal-weight nanmean, so it no longer regenerates this artifact — it must be wired
+to the ratified WR vector (or a config ROOKIE_WEIGHTS block) before the next rebuild, and the
+golden hash in `tests/golden/golden_weighted.json` must move to the new pin in the same commit.
 
 ## (b) Build scripts
 

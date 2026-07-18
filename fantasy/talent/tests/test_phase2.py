@@ -52,8 +52,8 @@ def test_board_and_artifact_determinism():
     B1, B2 = _ck("BOARD_ruled.pkl"), _ck("BOARD_ruled2.pkl")
     for P in B1["boards"]:
         pd.testing.assert_frame_equal(B1["boards"][P], B2["boards"][P])
-    h = [hashlib.md5((HERE / n).read_bytes()).hexdigest()
-         for n in ["talent_score_2026.csv"] if (HERE / n).exists()]
+    h = [hashlib.md5((HERE / n).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+         for n in ["talent_score_2026.csv"] if (HERE / n).exists()]   # LF-normalize (see rookie test)
     g = json.loads(GOLDEN_W.read_text()) if GOLDEN_W.exists() else pytest.skip("no golden")
     assert h and h[0] == g["artifact_md5"]["talent_score_2026.csv"]
 
@@ -92,7 +92,11 @@ def test_golden_rookie_artifact():
     p = HERE / "rookie_score_2026.csv"
     if not p.exists():
         pytest.skip("rookie artifact not built")
-    assert hashlib.md5(p.read_bytes()).hexdigest() == \
+    # LF-normalize before hashing: the golden is a blob-basis (LF) md5, but
+    # `* text=auto` + core.autocrlf=true smudges this CSV to CRLF on a fresh
+    # Windows checkout — so a raw worktree hash is checkout-dependent and would
+    # fail on a fresh clone. Normalizing makes the check checkout-independent.
+    assert hashlib.md5(p.read_bytes().replace(b"\r\n", b"\n")).hexdigest() == \
         g["artifact_md5"]["rookie_score_2026.csv"]
 
 

@@ -24,7 +24,7 @@ HERE = Path(__file__).resolve().parent
 SEASONAL = HERE.parent / "seasonal_projections"
 sys.path.insert(0, str(SEASONAL))
 from _utils import norm_name                      # noqa: E402
-from config import ANCHOR, RULED, WORK, NAME_ALIASES   # noqa: E402
+from config import ANCHOR, RULED, WORK, NAME_ALIASES, ROOKIE_WEIGHTS   # noqa: E402
 from schemas import (validate, join_audit, is_nfl, write_artifact,  # noqa: E402
                      SchemaError)
 
@@ -34,6 +34,18 @@ FAC = {"RB": ["dom_best", "ypc"], "WR": ["dom_best", "recshare", "ypr"],
        "TE": ["dom_best", "recshare", "ypr"]}
 GAMES_MIN = 8
 K_GAMES = 6          # the heuristic college-games shrink (prototype convention)
+
+
+def _wcomp(zdf, facs, wv):
+    """R31 weighted composite = renormalized weighted nanmean over the facets a
+    player actually has. Reduces EXACTLY to the old equal-weight nanmean when the
+    weights are equal and all facets are present (RB/TE), so those rows are
+    byte-unchanged; WR uses the fitted ROOKIE_WEIGHTS vector."""
+    Z = zdf[facs].to_numpy(dtype=float)
+    Wv = np.array([wv[f] for f in facs])
+    num = np.nansum(Z * Wv, axis=1)
+    den = (~np.isnan(Z) * Wv).sum(axis=1)
+    return num / np.where(den == 0, np.nan, den)
 CACHE_2025 = HERE / "college_production_2025_cache.csv"
 COLS = ["pid", "name", "team", "rec_yds", "rec", "rush_yds", "car", "games",
         "dominator", "rec_yds_share", "season"]
@@ -64,7 +76,8 @@ def load_college():
     return both
 
 
-def build():
+def build(out_path=None):
+    out_path = Path(out_path) if out_path else (HERE / "rookie_score_2026.csv")
     import nflreadpy as nfl
     cpall = load_college()
     cpall["ypc"] = cpall.rush_yds / cpall.car.replace(0, np.nan)
@@ -153,7 +166,8 @@ def build():
         mu = {c: pool[c].mean() for c in FAC[P]}
         sdv = {c: pool[c].std() for c in FAC[P]}
         pool_z = pd.DataFrame({c: (pool[c] - mu[c]) / sdv[c] for c in FAC[P]})
-        pool_rz = pool_z.mean(axis=1) * (pool.games / (pool.games + K_GAMES))
+        pool_rz = pd.Series(_wcomp(pool_z, FAC[P], ROOKIE_WEIGHTS[P])) * (
+            pool.games / (pool.games + K_GAMES))
         sl = pool_rz.dropna()
         z2, z98 = np.percentile(sl, [ANCHOR["lo_pct"], ANCHOR["hi_pct"]])
         if not z98 > z2:
@@ -163,7 +177,7 @@ def build():
         for g, s in cls_rows.items():
             zs = {c: (s[c] - mu[c]) / sdv[c] for c in FAC[P]}
             wg = s["games"] / (s["games"] + K_GAMES)
-            rz = float(np.nanmean(list(zs.values()))) * wg
+            rz = float(_wcomp(pd.DataFrame([zs]), FAC[P], ROOKIE_WEIGHTS[P])[0]) * wg
             att = dp26.loc[nn_of[g]] if nn_of[g] in dp26.index else None
             rows.append(dict(gsis_id=g,
                              display_name=names.get(g, nn_of[g].title()),
@@ -188,9 +202,14 @@ def build():
              no_nan=["gsis_id", "position", "rookie_score", "rank_pos"],
              checks={"rookies only": lambda d: ~d.gsis_id.map(
                  lambda g: is_nfl(g, nfl_ids))})
-    write_artifact(df, HERE / "rookie_score_2026.csv", RULED["NS"], RULED["SEED"],
-                   extra={"index": "box-score (dom_best/ypc/recshare/ypr), EQUAL "
-                                   "WEIGHT — owner sets weights later",
+    write_artifact(df, out_path, RULED["NS"], RULED["SEED"],
+                   extra={"index": "box-score; weights RATIFIED 2026-07-17 (R31) via "
+                                   "one-shot PREREG_rookie_weights_2026-07-17.md: WR "
+                                   "FITTED {dom_best .80, recshare .00, ypr .20} (OOF "
+                                   "Spearman IC equal -.021 -> fitted .106, gate "
+                                   "+.05/+.10 passed); RB {dom_best .50, ypc .50} and "
+                                   "TE {dom_best, recshare, ypr equal} = EQUAL WEIGHTS "
+                                   "RATIFIED (below gate). pending-owner-weights RESOLVED.",
                           "scale": "rookie drafted-prospect pool; NOT the NFL scale"})
     return df
 
