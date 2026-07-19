@@ -2185,3 +2185,255 @@ licensed labels applied in-schema by `apply_board_labels.py`). This is
 ENGINEERING validation of interval calibration, not a gated hypothesis
 test; the Q1 fence (no disagreement-conditioned statistic under a product
 label) remains in force.
+
+---
+
+## H13 — PFF-featured seasonal model vs the Sleeper ex-2020 baseline
+## (pre-registered 2026-07-19, BEFORE any harness or any PFF-field ×
+## fantasy-outcome statistic exists — the FIRST hypothesis on the newly
+## licensed PFF data class)
+
+**Session discipline note.** This T-step used the session-1 PFF audit
+(schemas, counts, join/coverage rates, PFF-field-only distributions — no
+PFF×outcome quantity) and the standing phase0 pool convention. No PFF field
+has ever been joined to any outcome, target, or market-error axis in this
+project. No harness exists; the F-step (structural asserts, no metric)
+follows Joseph's review, the shot the session after.
+
+**Lineage and serial burden.** H4 CLOSED "beat ADP with prior-stats
+features" (λ=0 in 28/30 folds). H13 is a **new hypothesis on a new,
+paid-licensed data class**, not a second look at H4: different feature
+source (film-based per-play grades, never before available to this
+program), different baseline (Sleeper's projection, the strongest public
+projector, not raw ADP), different claim kind. It is the fifth
+prior-stats-vs-market swing in the campaign's history; the serial burden is
+priced by holding thresholds at campaign severity with no relaxation, and by
+declaring PFF the SOLE new licensed class — H4's prior-stats closure stands
+untouched, H7's efficiency closure stands untouched.
+
+**Blindness disclosure (required reading).** No PFF↔outcome statistic has
+ever been computed in this program. Disclosed contacts: (i) the 2026-07-19
+Tyson content brief computed college-PFF-only percentile distributions among
+drafted WRs 2021–25 (no outcome join); (ii) anchor stat lines were read
+during acquisition-verification and the session-1 audit (Nabers, Daniels,
+Jeanty, Hampton, McMillan, Olave, Jeremiah Smith — membership/stat lines,
+never joined to fantasy outcomes); (iii) public-narrative knowledge of named
+players. Mitigation: every numeric choice below is inherited (H4/H6
+machinery, campaign severity, the phase0 pool) or frozen mechanically
+(seed at F-step). PARTIALLY blind, declared; Joseph rules on acceptability
+before firing.
+
+**Hypothesis, frozen.** Prior-season PFF grades carry information about
+next-season fantasy outcomes beyond what Sleeper's projection prices: a
+PFF-featured, walk-forward model out-ranks Sleeper's within-position
+projection on the drafted pool. Mechanism: PFF grades measure per-play
+quality independent of box-score volume, while market projections weight
+volume and situation; if conditionally-predictive film quality is
+under-priced, a PFF-featured model can beat the projection at ranking.
+
+**Panel, frozen.** phase0 pool (`reconstructed == 0`, ADP-top-180),
+outcome seasons **2021–2025**, positions QB/RB/WR/TE. **Primary panel =
+`is_rookie == 0` ∧ a prior-season (`nfl_{t−1}`) PFF row with non-null
+`grades_offense`.** Audited session-1 coverage on this panel: QB 98.2 /
+RB 99.2 / WR 98.7 / TE 98.1 % of veterans; the ~10 uncovered veterans (all
+genuine missed-full-seasons — Watson '22, Ridley '23, OBJ '23, J.J.
+McCarthy '25, etc.) are excluded and named in the F-report. The 130 rookie
+rows are mechanically out (no prior NFL season) — **this claim is
+veterans-only.** Join = the 100 % gsis↔pff_id crosswalk
+(`snapshots/players.parquet`, 1477/1477, zero duplicate ids, zero
+collisions on all three audited axes); no name-joins on the NFL side.
+**Reuse declaration (H11/H12 convention):** 2021–2025 outcomes on this pool
+were consumed by phase0/A4/H4, H6/H11/H12, and Phase 4 LOSO — declared,
+priced at campaign severity.
+
+**Features, frozen at F-step (no additions after).** Three blocks:
+(i) market anchor — pool-recomputed `adp_pos_rank`, Sleeper within-position
+rank ex-2020 (2020 training rows: Sleeper projection declared-NaN, frozen
+imputation; ADP clean); (ii) PFF block — position-relevant `nfl_{t−1}`
+summary fields, the exact frozen list pinned in the F-report (e.g. QB
+`grades_pass`, `btt_rate`, `twp_rate`, `ypa`; RB `grades_run`,
+`elusive_rating`, `yco_attempt`, `yprr`; WR/TE `grades_pass_route`, `yprr`,
+`avg_depth_of_target`, `contested_catch_rate`); (iii) age (`players.parquet`
+birth_date via gsis) + `prior_games`. Target: season half-PPR points →
+within-position-season rank. **PFF aggregates are Reg+Post, finalized ~Feb
+of year t (season t−1's playoffs), months before season-t draft season —
+point-in-time clean as a prior-season feature; disclosed.**
+
+**Per-position model selection (frozen grid, inner CV only — H4's F/G
+pattern).** Each of QB, RB, WR, TE gets its OWN independent selection —
+four selections, no shared winner imposed across positions. Per position,
+the inner walk-forward CV (training folds only, seasons < t) chooses one
+{family × hyperparameter × feature-subset} configuration from a frozen
+enumerated grid: families {Ridge/ElasticNet, LightGBM, XGBoost}; small
+enumerated hyperparameter grids per family (pinned at F-step); feature-block
+subsets {anchor-only, anchor+PFF}. The **anchor-only** configurations are
+the designed honest-collapse path (H4's λ=0 analog): if a position's inner
+CV never prefers a PFF-bearing config, that position's Δ ≈ 0 by construction
+and the gate fails on its own terms. Walk-forward: eval t trains on outcome
+seasons 2020..t−1 (2020 outcomes legal in training — ADP clean, actuals
+real; only the Sleeper 2020 projection is void). First fold thin (one train
+season); disclosed.
+
+**Statistic.** Δρ_cell = Spearman(model rank, actual rank) −
+Spearman(Sleeper rank, actual rank) per position-season on identical rows;
+per-position 5-season means; pooled = unweighted 4-position mean. Sleeper
+baseline recomputed at fire on the primary panel (ex-2020 full-pool
+context: QB .578 / RB .711 / WR .659 / TE .544).
+
+**PASS rule — one shot, at campaign severity. PASS iff ALL of:**
+  (a) paired player-level cluster bootstrap (resample players within
+      position-season, B = 2,000, frozen seed set at F-step, computed once
+      at fire) puts the one-sided 95 % lower bound of pooled Δρ **> 0** —
+      the binding criterion; it adapts to model–baseline dependence that no
+      blind computation can know in advance;
+  (b) pooled Δρ ≥ **+0.020** (H4-severity magnitude floor);
+  (c) season-level pooled Δρ positive in **≥ 4 of 5** seasons;
+  (d) no position's 5-season mean Δρ below **−0.030**;
+  (e) one shot, rejection final — no family/grid extensions, no threshold
+      changes, no panel or vendor swaps, no per-position re-selection.
+A FAIL headlines as **"FAIL (true pooled Δρ up to ≈ 0.15 not excluded at
+80 % power, worst case)."**
+
+**Power (blind, counts-only).** Worst-case independent bound at the audited
+veteran cells (QB ≈ 21 / RB ≈ 49 / WR ≈ 61 / TE ≈ 21 per season): per-cell
+Δρ SE ≈ √2/√(n−1) → pooled null SE ≈ 0.059 → **MDE(80 %) ≈ 0.146**. Under
+realistic paired-estimator dependence (√(1−r) shrinkage of the difference
+SE): ≈ 0.10 at r = .5, ≈ 0.07 at r = .75. The bootstrap in (a) measures the
+true dependence at fire; exact size/power pinned by counts-only simulation
+at the F-step under the frozen seed. A placebo-controlled PASS stays
+meaningful regardless of power; low power inflates false negatives only.
+
+**Pre-committed outcomes.** FAIL closes "beat Sleeper with prior-season PFF
+features (this grid, this panel)" — no variant hunt, no per-position rescue,
+no target swap (the standing dead-signals-stay-dead fence binds PFF the
+moment a number exists); PFF-NFL data remains usable for non-gated purposes
+under their own regimes. PASS licenses only: "a PFF-featured model
+out-ranked Sleeper's projection in aggregate among stable-market veterans,
+2021–2025, walk-forward" — measurement, not alpha; no player-level calls, no
+tiers, no 2026 transfer without a fresh prereg. Freshness note (favorable
+direction stated NOW): the model's features (t−1 finals, ~Feb) are STALER
+than both ADP and Sleeper's week-1-eve snapshot, so a PASS cannot be a
+freshness artifact.
+
+**PRODUCT CLAUSE (replaces the generic "product unchanged either way").**
+The model's within-position projected-rank column **ships regardless of
+H13's outcome**; only its LABEL is outcome-conditional. On PASS: the column
+may carry the aggregate, licensed "out-ranked the market projection in
+backtesting (in aggregate; measurement, not advice)" wording. On FAIL: the
+column ships **labeled plainly that it did NOT beat Sleeper in
+backtesting** — it is offered as an alternative projection, not a validated
+edge. Under EITHER outcome the shipping artifact is the **frozen final
+per-position config produced by the fire** (no post-fire retune), and **no
+board copy frames model-vs-market disagreement as predictive** — that is a
+separate, un-run claim with no registered test. The Q1/R0 disagreement-label
+duties and the Phase-4 scope fence are unchanged.
+
+**Deviations flagged for Joseph's ruling (D1–D3; none resolved silently):**
+- **D1 — Veterans-only primary panel.** Rookies are mechanically uncovered
+  (no prior NFL season); the rookie half of the board's projected-rank
+  column is served by a SEPARATE engine (the two-engine column spec below)
+  and validated by its own future stub, never by H13.
+- **D2 — Bootstrap lower bound as the binding gate** (vs a fixed-bar-only
+  rule): the model and baseline ranks are highly dependent, so the naive
+  independent SE overstates uncertainty; the paired bootstrap is the honest
+  test. The fixed +0.020 / ≥4-of-5 / −0.030 floors ride alongside so a
+  bootstrap pass on a trivially-small effect cannot license the claim.
+- **D3 — Per-position independent selection** (four selections): positions
+  differ in how much film quality the market under-prices; forcing one
+  family across all four would blunt the test. Cost: four selections widen
+  the multiplicity surface — priced by the pooled gate and the per-position
+  −0.030 floor, not by any per-position PASS.
+
+**Fences and embargoes.** One shot; rejection final. Two-designs cap: this
+design plus at most one blind power-grounds redesign before the fire, never
+a third. No dead-signal resurrection (H4's 31 features, H7's efficiency
+metrics) through any PFF-featured variant. If H13 fails: no grid extensions,
+no vendor swaps, no per-position re-selection, no panel swaps — a revisit
+needs a fresh prereg that opens by admitting it is a second look. Sealed
+2008–2015 untouched; H10 remains declared, blind, untouched. Product ships
+under the PRODUCT CLAUSE either way.
+
+*Locked 2026-07-19, T-step only. Joseph reviews this prereg; the F-step
+(harness + structural asserts + the frozen grid + frozen seed + sha256, no
+outcome statistic) is a separate session; the shot is the session after
+that, same staging as H4/H6/H7/H8v/H11/H12. I commit nothing — Joseph
+commits.*
+
+---
+
+## PRODUCT CLAUSE — the two-engine "projected position rank" column
+## (pre-registered 2026-07-19, BEFORE either engine's projections are wired
+## to the board; product scope only, gates nothing)
+
+**What ships.** ONE "projected position rank" column on the Draft Board,
+**no blanks**: every drafted player carries a projected within-position rank.
+It is served by two engines behind a single column:
+- **Veterans** (`is_rookie == 0`) → the **H13 frozen final per-position
+  config** (whatever the fire produces).
+- **Rookies** (`is_rookie == 1`) → a **separate college-PFF projection
+  model, built LATER — only after the rookie PFF talent instrument (the
+  `fantasy/talent/` PREREG_pff_rookie_index prereg) has fired.** The
+  sequencing is deliberate: building the rookie projection engine now would
+  require touching rookie college-PFF-vs-outcome relationships that could
+  contaminate that instrument's blind. The rookie engine waits.
+
+**Scale + ranking.** Both engines emit **half-PPR points on the same
+scale**; the displayed rank is computed over the **pooled veteran + rookie
+set within each position** (a rookie and a veteran compete for the same
+positional rank slots, as in a real draft).
+
+**Draft capital (stated to prevent conflation).** Draft capital (draft
+slot / round) is **ALLOWED as a feature in both engines' point
+PROJECTIONS** — projecting fantasy points is a market-aware forecasting
+task and draft capital is legitimate signal there. Draft capital is
+**EXCLUDED from the Rookie Score and the Talent Score**, which measure the
+player independent of the market's opinion — a different question. The two
+uses never share a column and the distinction is stated in board copy.
+
+**Validation status at ship.** The column **ships regardless of H13's
+outcome** (per H13's PRODUCT CLAUSE). **Rookie rows ship UNVALIDATED** — no
+accuracy claim, no "beats the market" claim, no hit-rate, no player-level
+call — until the rookie-projection-test stub below fires. Board copy for
+rookie rows states plainly that they are projections, not a validated edge.
+
+---
+
+## ROOKIE-PROJECTION-TEST STUB — declared now, blind; decision rule frozen
+## BEFORE any number exists (pre-registered 2026-07-19)
+
+**Declared now, blind.** Does the rookie college-PFF projection engine
+out-rank the market's projection of rookies at forecasting rookie fantasy
+outcomes? **NOTHING about this test may be computed before its own F-step
+prereg and harness exist** — this stub freezes the decision rule and the
+territory, not a result.
+
+**Hypothesis, frozen.** The rookie projection engine's within-position rank
+beats the strongest available rookie projector at ranking realized rookie
+half-PPR outcomes. **Baseline = Sleeper's rookie projection** (the strongest
+projector, mirroring H13); **ADP is a secondary baseline** reported only if
+the panel powers it. Metric and gate structure mirror H13 exactly (paired
+Δρ, one-sided bootstrap lower bound > 0 binding, magnitude floor,
+≥ 4-of-N-season consistency, per-position floor, one shot).
+
+**Counts trigger (fires once, when powered).** The rookie panel accrues one
+class of realized NFL outcomes per season. The test fires in the first year
+its accrued panel powers a detectable effect — **exact trigger MDE computed
+blind, counts-only, at the eventual F-step** (expected ~2–3 seasons as
+classes accrue NFL results; the H8r pattern). **The 2026 rookie projections
+become the first out-of-sample evidence when the 2026 NFL season ends** —
+they are logged, not peeked. **No informal backtest glance in the interim:**
+one look at too-small an n spends the shot.
+
+**Territory declaration (so the two never conflate).** This test is
+**DISTINCT from H8r**. H8r tests rookie **draft capital vs fantasy
+outcomes** and is DEFERRED on power grounds to its own counts trigger
+(~2029). This stub tests a rookie **projection engine (which MAY use draft
+capital as one feature) vs the market's projection** — a forecasting-skill
+question, not a capital-signal question. The two have separate panels,
+separate baselines, separate triggers; neither's blind may be spent to
+inform the other.
+
+*Locked 2026-07-19, declaration only. The F-step prereg (full frozen rule +
+harness + counts-trigger arithmetic) is a future session, after the rookie
+projection engine is built (itself gated on the `fantasy/talent/`
+PREREG_pff_rookie_index fire). I commit nothing — Joseph commits.*
