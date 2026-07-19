@@ -1,10 +1,11 @@
 {
  "built_utc": "2026-07-16T20:26:32.454039+00:00",
  "git_head": "a055cffc6abffdc14c965cd4eb17a813e8c6bbed (dirty)",
- "config_md5": "8dc275860fe9b8d116abb8b054e65439",
+ "config_md5": "2130822fa94a401baedce30dea5652b2",
  "NS": 60,
  "seed": 20260716,
  "code_version": "talent-build 2026-07-16 phase2",
- "weights": "PROVISIONAL-UNRATIFIED; QB deepCPOE 0.00 UNSET",
- "pipe": "RB-only, rho=.385 box-score disattenuated (R10)"
+ "weights": "RATIFIED R21 (RB/WR/TE, 2026-07-16) + R29 (QB, 2026-07-16b: deep=0.22 APPLIED). Verified 2026-07-18: a re-emit from BOARD_ruled.pkl is byte-identical to this artifact (md5 d7c1a57547be4ab8060c053de02aaead), so the QB deep facet is LIVE in these rows — the earlier 'deepCPOE 0.00 UNSET' stamp described a stale config string, not the artifact values.",
+ "restamp_note": "2026-07-18: stamp corrected IN PLACE; artifact bytes untouched (pin unchanged). Prior stamp cited config_md5 8dc275860fe9b8d116abb8b054e65439, which predated the R29 comment block and ROOKIE_WEIGHTS (R31/R32/R33) config edits; current config md5 recorded above. build_talent_score.py:277 still hardcodes the old stamp string — flagged for a future session (outside 2026-07-18's writable set); a naive re-emit would resurrect the stale wording.",
+ "pipe": "R32 (2026-07-18) supersedes the R10 '.385 box-score' line: the RB rookie pipe ships the frozen PBP instrument (disatt .474 / raw .215, n=300, weak-disclosed; PREREG_pbp_index_2026-07-17.md). Veteran college_share mechanics in THIS artifact are unchanged."
 }
