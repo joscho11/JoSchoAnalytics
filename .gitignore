@@ -25,3 +25,8 @@ fantasy/seasonal_projections/content/
 # artifact, never committed to the public tip. The live overlay
 # (board_adp_live_2026.csv) IS committed; only the log dir is ignored.
 fantasy/seasonal_projections/adp_logs/
+
+# PFF exports live here as their OWN private nested git repo (github: pff-data, private).
+# The public BettingEdge repo ignores the ENTIRE folder so the licensed raw data can
+# never leak here; the nested repo (pff/.git) tracks the CSVs privately.
+fantasy/seasonal_projections/pff/
