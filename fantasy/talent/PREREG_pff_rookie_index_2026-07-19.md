@@ -37,16 +37,35 @@ across facets:
 From `panel_fire.pkl` md5 `0c6f1e15a7bd534fa25c0bd10ab21c3e`, true-final college season 2016–2023,
 then restricted to **2019–2023 finals ∧ position-pure ∧ PFF-covered**. Frozen n (identity/coverage
 recon, NO value read):
-- **RB = 121.** Raw RB cell 300 − 56 confirmed non-RB (44 NFL-QB, 10 gadget-WR, 1 CB Marcus Jones,
-  1 TE Connor Heyward, matched to their PFF final-season `position`) − 123 uncoverable (final
-  pre-2019, outside PFF college coverage, incl. the in-era BYU/Liberty/NMSU hole) = 121. **This is
-  6 below the ~127 estimate; the contaminant split is exactly as predicted (44+10+1+1=56), and the
-  −6 is the documented BYU/Liberty/NMSU 2019–22 data hole applied to genuine RBs (e.g. Allgeier,
-  BYU '21). The number wins: 121.**
-- **WR = 176.** Raw 308 − 2 flips (De'Michael Harris→HB, Lynn Bowden→QB) − 130 uncoverable = 176.
-- **TE = 81 scorable** (roster 133 kept whole — estimand is NFL-TE, so the college-WR converts stay;
-  133 − 52 uncoverable = 81). Michael Roberts EXCLUDED (his PFF match is a distinct Army WR, a name
-  collision disconfirmed by school; 7 genuine WR-converts remain).
+
+**BLIND COUNT CORRECTION (2026-07-19, F-step roster reconstruction) — STRIKE-DON'T-REPLACE, per the
+H6-Amendment-2 precedent.** Membership metadata only; no alpha/outcome value was read; it loosens no
+gate and the blind is intact. The three per-cell counts first frozen below were the raw
+`norm_name`+final join totals; the three registered adjudications in THIS prereg (Gore-by-gsis,
+Roberts exclusion, the alias table) were not folded into them. Corrected frozen n, each cell moving
+exactly one player TOWARD this prereg's own rulings: **~~RB 121~~ → 120 · ~~WR 176~~ → 178 ·
+~~TE 81~~ → 80** (QB unchanged, F-step-pinned). Per-cell reasons in the struck bullets + the ALIAS
+TABLE fix below.
+
+- ~~**RB = 121.**~~ → **RB = 120.** Raw RB cell 300 − 56 confirmed non-RB (44 NFL-QB, 10 gadget-WR,
+  1 CB Marcus Jones, 1 TE Connor Heyward, matched to their PFF final-season `position`) −
+  ~~123~~ → **124** uncoverable = ~~121~~ → **120**. **Correction (gsis-key ruling): Frank Gore Sr
+  `00-0023500` moves kept→uncoverable** — the raw name-join wrongly attached Frank Gore Jr's Southern
+  Miss HB row to Sr under the collapsed nn `frank gore`; gsis-keyed, Sr's final-season match is 0 rows.
+  This is now ~~6~~ → **7** below the ~127 estimate: 6 genuine RBs in the documented BYU/Liberty/NMSU
+  2019–22 data hole (e.g. Allgeier, BYU '21) + the 1 Gore-Sr collision; the contaminant split is
+  exactly as predicted (44+10+1+1=56). The number wins: ~~121~~ → **120**.
+- ~~**WR = 176.**~~ → **WR = 178.** Raw 308 − 2 flips (De'Michael Harris→HB, Lynn Bowden→QB) −
+  ~~130~~ → **128** uncoverable = ~~176~~ → **178**. **Correction (alias ruling): the alias recovers
+  BOTH Josh Palmer and Mike Woods** (final 2020, WR) — the raw 176 applied no alias; both have a PFF
+  final-season WR row under a name `norm_name` can't bridge unaided (PFF "Joshua Palmer", Tennessee;
+  "Michael Woods II", Arkansas). See the ALIAS TABLE key fix below (the `michael woods` key was dead
+  as first written).
+- ~~**TE = 81 scorable**~~ → **TE = 80 scorable** (roster 133 kept whole — estimand is NFL-TE, so the
+  college-WR converts stay; 133 − ~~52~~ → **53** uncoverable = ~~81~~ → **80**). **Correction
+  (collision ruling): Michael Roberts `00-0033559` EXCLUDED** — his only PFF match is a
+  school-disconfirmed Army WR 2021 (a name collision, not a genuine convert), moving scorable
+  81→80; the 7 genuine WR-converts still remain.
 - **QB = the FIRST QB talent instrument, panel assembled value-free at F-step** (membership only,
   the `PREREG_pbp_index` precedent: index membership + `ne` read, no alpha value): NFL QBs holding
   an alpha-hat entry ∩ true-final college 2019–2023 ∩ ≥ 150 career college dropbacks. Expected
@@ -55,8 +74,13 @@ recon, NO value read):
 
 **Adjudications, frozen (identity recon):** RB college rows for `frank gore` key to **Jr.
 `00-0039471`** (Southern Miss 2020–23); **Frank Gore Sr. `00-0023500` is UNCOVERABLE** (his college
-predates PFF) and must NOT inherit the son's rows. Alias table (2 entries, applied before matching):
-`{joshua palmer ↔ josh palmer, michael woods ii ↔ mike woods}`.
+predates PFF) and must NOT inherit the son's rows. Alias table (2 entries, applied before matching;
+keys are the POST-`norm_name` form): ~~`{joshua palmer ↔ josh palmer, michael woods ii ↔ mike woods}`~~
+→ **`{joshua palmer ↔ josh palmer, michael woods ↔ mike woods}`**. **Key fix (2026-07-19):** the
+struck `michael woods ii` was a DEAD key — `norm_name` strips the trailing " ii" suffix before the
+alias lookup, so it never fired; the operative key is `michael woods` (PFF source lists "Michael
+Woods II", Arkansas WR 2020). `joshua palmer → josh palmer` is unchanged and fires as written (PFF
+"Joshua Palmer", Tennessee WR 2020). Both recoveries land in the corrected WR count (176 → 178).
 
 ## ALPHA-HAT ARTIFACT (values UNREAD until the fire)
 `C:/tmp/S2.pkl` md5 `9b3d9df67ae88272f4eab0a0ae1cbb21` (== SPEC.md Class-B pin). Key: `gsis_id`.
@@ -108,10 +132,12 @@ weak-disclosed / < .35 dead.** Applied to each position's chosen instrument:
 
 ## POWER (blind; frozen n, PBP-fire disattenuation factors as priors; re-pinned at F-step)
 Disattenuated SE ≈ (1/√(n−3)) · (1/√(mean wt)); disatt factors taken from the PBP fire
-(RB ≈ 2.2×, WR ≈ 2.4×, TE ≈ 1.9×):
-- **RB n=121:** SE_disatt ≈ .20 → MDE(80 %, one-sided vs 0) ≈ **.51**.
-- **WR n=176:** SE_disatt ≈ .18 → MDE ≈ **.45**.
-- **TE n=81:** SE_disatt ≈ .21 → MDE ≈ **.53**.
+(RB ≈ 2.2×, WR ≈ 2.4×, TE ≈ 1.9×). **Frozen n corrected 2026-07-19 to RB 120 / WR 178 / TE 80 (see
+the PANEL blind count correction); the one-player-per-cell change moves SE/MDE below rounding — the
+figures below stand, exact values re-pinned mechanically at the F-step:**
+- **RB n=~~121~~ → 120:** SE_disatt ≈ .20 → MDE(80 %, one-sided vs 0) ≈ **.51**.
+- **WR n=~~176~~ → 178:** SE_disatt ≈ .18 → MDE ≈ **.45**.
+- **TE n=~~81~~ → 80:** SE_disatt ≈ .21 → MDE ≈ **.53**.
 - **QB n≈40–70 (new instrument, no prior disatt factor):** raw-Pearson SE ≈ .13–.16; with a
   plausible 2–2.5× disattenuation, SE_disatt ≈ .28–.41 → MDE ≈ **.7–1.0**. QB band assignment is
   INDICATIVE at this power; Joseph may rule **QB SIZED-NOT-SHIPPED** after the fire. Exact QB SE/MDE
