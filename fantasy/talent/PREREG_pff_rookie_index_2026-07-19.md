@@ -167,6 +167,24 @@ promoted after results. A crash is not a result; a completed run's numbers are f
 script and its sha256 are recorded here at the F-step (harness built in a separate session, no
 metric printed), run exactly once.
 
+**F-step build recorded 2026-07-19 — CODE IS FROZEN.** Fire script:
+`scratchpad/fire_pff_rho.py` sha256
+`a34768d849058e92ecad7a8f536001cccb3b573c483db6bfc0611f348ce49d59`, run exactly once. The build
+session printed NO outcome statistic and read NO alpha-hat (`S2.pkl` present but unopened; panel
+`pbp_index`/`box_index` dropped on load). Structural asserts all PASSED: panel md5
+`0c6f1e15…`; position-pure roster counts **RB 120 / WR 178 / TE 80** exact; Gore keyed by gsis
+(Sr `00-0023500` uncoverable, Jr `00-0039471` kept HB); Roberts `00-0033559` excluded; alias
+recovers both Josh Palmer and Mike Woods; the 331-scar guard finds ZERO multi-matches post-alias;
+378/378 roster gsis resolve in `players.parquet`; the disattenuated-Pearson estimator, the band
+thresholds, and the RB supersession rule verified on a seeded synthetic signal (rho≈0.6 planted,
+noise≈0). **QB panel (value-free):** college QB careers with true-final ≤ 2023 and ≥ 150
+dropbacks = 278, of which **84 resolve to an NFL gsis** (the upper bound on the QB panel n; the
+fired panel is 84 ∩ alpha-hat membership, pinned at the shot). QB power at the plausible n:
+n = 40 → MDE(80 %) ≈ 0.82–1.02; n = 55 → ≈ 0.69–0.86; n = 70 → ≈ 0.61–0.76 — thin, band
+assignment indicative, **QB SIZED-NOT-SHIPPED** remains Joseph's option after the fire. The shot
+is the next session; the fire path (alpha-hat read, PBP `pbp_index` re-measured on the pure rows)
+is wired but was not entered.
+
 ## BLINDNESS DISCLOSURE
 Everything seen across sessions, none of which related a college value to an NFL value: the
 session-1 PFF audit (schemas, counts, join/coverage rates, PFF-field-only distributions); the
