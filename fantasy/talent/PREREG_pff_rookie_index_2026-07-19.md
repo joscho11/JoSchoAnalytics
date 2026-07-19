@@ -205,7 +205,51 @@ are INHERITED from the fired instrument family. PARTIALLY blind, declared; Josep
 F-step.
 
 ## OUTCOMES (recorded after the fact; rules above were not modified)
-*Pending fire. This section is filled at the shot with: fire script + sha256 + "run exactly once",
-the two-instrument disattenuated table (pos | instr | n | rawPearson | Spearman | w-wt | DISATT |
-band), the mechanical SHIP VERDICTS, the QB SE/MDE at its pinned n, and the pre-committed
-supersession of the .474.*
+
+**PFF college talent index vs alpha-hat — RB/WR/TE FIRED (2026-07-19).** Fired once,
+`fire_pff_rho.py --fire` sha256
+`773a46b8fb5d01d5aff1a392b8febde6a13ee12d3ca593ebf5f3af817a6a8e54` (verified == the committed
+ONE SHOT stamp before firing) → `scratchpad/fire_pff_results.pkl`. The shot read `S2.pkl`
+alpha-hat + wt (`alpha_w` verbatim, `knew=kold·(sam/sad)²`) and the panel's frozen `pbp_index`
+re-measured on the position-pure rows; both instruments' raw/Spearman/disattenuated Pearson
+(R8, `rc = rawP/√mean-wt`) on the pure rows. QB: sized-only, NOT fired (shot preserved).
+
+| pos | instr | n | rawPearson | Spearman | w-wt | DISATT | band |
+|---|---|---|---|---|---|---|---|
+| RB | PFF | 120 | −0.059 | +0.233 | +0.308 | **−0.117** | DEAD (<.35) |
+| RB | PBP | 120 | +0.254 | +0.219 | +0.164 | **+0.501** | CLEAN (>=.50) |
+| WR | PFF | 178 | −0.026 | +0.056 | +0.095 | **−0.062** | DEAD (<.35) |
+| WR | PBP | 178 | −0.010 | +0.113 | +0.333 | **−0.024** | DEAD (<.35) |
+| TE | PFF | 80 | +0.153 | +0.150 | +0.140 | **+0.294** | DEAD (<.35) |
+| TE | PBP | 80 | +0.164 | +0.162 | +0.165 | **+0.316** | DEAD (<.35) |
+
+SHIP VERDICTS (ship rules applied mechanically):
+- **RB: the PFF index is DEAD (−0.117); the PBP index carries RB, and SHIPS CLEAN at +0.501.**
+  PFF does NOT replace PBP (PFF −0.117 < .35, so the +.05 swap rule cannot trigger) → keep the
+  higher instrument (PBP) at its band. The new grade+share+age PFF index adds nothing for RB over
+  the PBP index on the clean panel.
+- **WR: DEAD on both** (PFF −0.062, PBP −0.024). WR stays dead on all instruments.
+- **TE: DEAD on both** (PFF +0.294, PBP +0.316) — a recorded near-miss below the .35 bar; the
+  bar does not move. TE stays dead.
+
+**SUPERSESSION (as pre-registered): the old-panel RB PBP .474 (WEAK, measured on the 300-row cell
+that included 44 NFL-QBs + 10 gadget-WRs) is RETIRED for its same-panel, position-pure re-measure
+= +0.501 (CLEAN).** Removing the contaminants LIFTED the RB PBP index from WEAK-DISCLOSED to CLEAN
+— the shipping RB pipe stays PBP and its band upgrades .474→.501. The `PREREG_pbp_index` OUTCOMES
+table is append-only and unedited; this supersession applies from this fire forward.
+
+**QB — SIZED-NOT-SHIPPED (shot preserved for a dedicated QB cycle).** No QB rho was computed:
+the verbatim RB/WR/TE `alpha_w` k-recipe does not cover QB's distinct (MoM-k / √w) estimator, and
+QB power is thin. Value-free sizing at the frozen 2019-2025 college scope: **84** QBs resolve to an
+NFL gsis (final ≤ 2023, ≥ 150 dropbacks); MDE(80%) ≈ 0.62–0.78 at n=84. The 2026-07-19 audit of the
+newly-uploaded 2014-2018 college PASSING data projects the QB panel to **≈178** over finals
+2014-2023 (+93 finals-2014-18 QBs incl. Mahomes/Watson/Mayfield/Lamar/Allen/Kyler; +1 finals-2019
+via career-dropback pooling), which would tighten MDE(80%) to ≈ 0.43–0.53 (borderline vs the .50
+band). QB therefore ships **SIZED-NOT-SHIPPED this cycle**, deferred to a dedicated QB prereg on the
+expanded 2014-2023 panel that also sources the QB `alpha_w` spec. RB/WR/TE remain unaffected by that
+data (passing-only upload). One shot spent for RB/WR/TE; QB shot unspent.
+
+**Campaign result:** the fresh grade+share+age PFF college index is **DEAD at all of RB/WR/TE** vs
+alpha-hat on the clean panel. RB continues to ship the **PBP index, now CLEAN (+0.501)** after the
+position-pure supersession; WR/TE stay dead on every instrument; QB deferred. No re-slicing, no
+metric substitution, no panel re-cut — rejection final per position.
