@@ -144,7 +144,50 @@ not values). No QB alpha-hat VALUE was read. Components are RULED (grade + age),
 (unfitted), bands INHERITED from the fired instrument family. PARTIALLY blind, declared; Joseph rules
 before the F-step. The blind is spent only by the fire.
 
+## Amendment 1 (2026-07-20) — full 2008+ PFF upload audited; panel n=103 UNCHANGED; fire RATIFIED
+**Amended BLIND: no QB metric of any kind exists at commit time** — this amendment records a
+read-only coverage audit and a ratification, computes nothing. Hardness: it adds a disclosure and
+PINS that the panel is unchanged; it loosens no gate and alters no frozen section above.
+- The 2026-07-20 "data back to 2008" upload was audited (identity/coverage only): college full 11
+  tables 2014–2025 + `time_in_pocket`-only 2008/2010–2013 (2009 empty); NFL full 11 tables 2006–2025.
+  The bare-named 2014–2018 college files were renamed to the `college_<table>_<YYYY>.csv` convention
+  (pff repo commit `b70f291`); the harness `passing_path` dual-pattern loader resolves the renamed
+  files transparently, and the fire's own `assert len(panel) == 103` is the backstop.
+- **Panel n = 103 UNCHANGED.** The target is the frozen 4-facet S2 QB alpha-hat, built from nflverse
+  feeds (PF = 2018–2025), which the new PFF files do not feed; pre-2014 college is `time_in_pocket`-only
+  (no `grades_pass`), adding no scorable QB; the QB college index still reads college `passing_summary`
+  2014–2023 only. Nothing in the upload perturbs the panel or the alpha-hat.
+- **Fire RATIFIED by Joseph 2026-07-20.** The earlier "hold for supersession on the expanded panel"
+  is dissolved — this prereg already incorporated the 2014–2018 college passing data at n=103. One
+  shot, this session, on the frozen harness (sha `d21e82e7…21ae6ee`), under the ONE SHOT and
+  SHIP-REGARDLESS rules above (unmodified).
+
 ## OUTCOMES (recorded after the fact; rules above were not modified)
-*Pending fire. Filled at the shot with: fire script + sha256 + "run exactly once"; the single-row
-disattenuated result (n | rawPearson | Spearman | w-wt | DISATT | band); the descriptive-ship
-disclosure wording the band selects; and the power caveat at the fired n.*
+**FIRED 2026-07-20 — ONE SHOT, run exactly once.** Script `scratchpad/fire_pff_qb_rho.py`
+sha256 `d21e82e710479787dff9bbd8332997372d8a1aa725c45c2c7548accee21ae6ee` (== frozen sha; S2 md5
+`9b3d9df6…` re-verified at fire). Interpreter: AI_hedge_fund venv. Panel reproduced n=103 EXACT.
+
+**RESULT (n = 103):** rawPearson **+0.459** | Spearman **+0.464** | w-wt Pearson **+0.426** |
+mean-wt **0.449** | **DISATT rc = +0.685** → **BAND: CLEAN (≥ .50).**
+- The reliability-disattenuated rho (rc = rawPearson / √mean-wt = 0.459 / √0.449) = **+0.685**, above
+  the .50 clean band. Raw and Spearman (+0.46) are the pre-registered non-gating companions.
+- **VERDICT: the PFF college passing index (z(grades_pass) + z(−age), equal-weight) TRACKS the
+  4-facet S2 QB talent construct — CLEAN.** Rejection/acceptance is final: no metric substitution,
+  no panel re-cut, no second estimator.
+- **POWER CAVEAT (carried onto every claim):** MDE(80%) ≈ .56–.70 at n=103 — the point estimate sits
+  near the MDE and the CI is wide (small sample); a placebo/disattenuation-controlled PASS stays
+  meaningful regardless of power (low power inflates false negatives only, not false positives).
+- **TARGET FOOTNOTE (registered):** validated against the **4-facet** S2 QB alpha-hat
+  (cpoe/bad/qsucc/q10, W = .35/.25/.25/.15), NOT the shipped **R29 5-facet** QB score (deepCPOE,
+  weight .22, is absent from this artifact). A 5-facet re-measure would be a NEW prereg on a NEW
+  artifact.
+- Fire wrote exactly one artifact: `fire_pff_qb_results.pkl` (cd8c93d8 scratchpad). No repo write;
+  `talent_score_2026.csv` untouched.
+
+**BOARD DISCLOSURE COPY (ship-regardless rule; band = CLEAN selects the wording):**
+> QB college passing score — a **descriptive** composite of PFF college passing grade and age
+> (younger = higher), equal-weighted. In aggregate it tracks our NFL QB-talent measure
+> (reliability-corrected rank correlation ≈ 0.69; raw ≈ 0.46) over 103 QBs with 2014–2023 final
+> college seasons. **Small sample — treat individual rankings with caution.** Validated against a
+> 4-facet talent construct, which differs slightly from the shipped 5-facet QB talent score. It is
+> **not** a projection and does not use draft capital.
