@@ -117,6 +117,24 @@ after results. A crash is not a result; a completed run's numbers are final. The
 sha256 are recorded here at the F-step (harness built in a separate session, no metric printed — it
 must implement the QB MoM-k/√w assembler above), run exactly once.
 
+**F-step build recorded 2026-07-19 — CODE IS FROZEN.** Fire script:
+`scratchpad/fire_pff_qb_rho.py` sha256
+`d21e82e710479787dff9bbd8332997372d8a1aa725c45c2c7548accee21ae6ee`, run exactly once. The build
+read NO QB alpha-hat VALUE (S2 opened for membership indexes + structure only; value-read counter
+= 0) and printed no outcome statistic. Structural asserts all PASSED: S2 md5 `9b3d9df6…` verified;
+both filename patterns load (anchors Mariota '14, Goff '14–15); S2 `F['QB']` structure =
+{cpoe, bad, qsucc, q10} × [w, zmed] as registered; panel stages 650 → 178 gsis-resolved → **103
+alpha-members EXACT** with the per-final-year table matching the frozen PANEL row
+(6/8/13/13/13/11/10/7/13/9); Patti pids (46582, 77614) excluded; QB index finite for all 103;
+**end-to-end synthetic fire** drove the REAL fire path against a FAKE S2-shaped QB artifact and
+reproduced the hand answers (+2.000 CLEAN / −2.000 DEAD / mixed-weight disatt = 1/√0.15); NO stub
+tokens in any fire code path. Power pinned at the F-step: n = 103, raw-SE 0.100, disatt-SE ≈
+0.200–0.250, **MDE(80 %) ≈ 0.56–0.70** — above the .50 band; the ship-regardless rule governs.
+**Membership clarification (metadata, counts unchanged):** Ryan Willis is gsis-RESOLVED (in the
+178) but holds NO alpha-hat entry — he is one of the 75 resolved-without-alpha QBs, NOT one of the
+103; the frozen counts already reflect this. The shot is the next session; the fire path (real
+w/zmed read + assembler + band + ship-regardless wording) is fully implemented and was not entered.
+
 ## BLINDNESS DISCLOSURE
 Everything seen, none of which related a QB college value to an NFL value: the session-1/9 PFF audits
 (schemas, counts, coverage); the 2026-07-19 QB recon that froze this panel (college dropback counts,
