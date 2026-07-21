@@ -135,6 +135,40 @@ Fire script + sha256 recorded below at build.
 
 ## OUTCOMES (recorded after the fact; rules above were not modified)
 
-*Pending fire (RB/WR/TE = one shot each; QB = descriptive re-measure, no fresh band claim). Filled at
-the shot with: per-position n | rawPearson | Spearman | w-wt | DISATT rc | band; disclosure wording;
-power caveat.*
+**FIRED 2026-07-20 — ONE SHOT per position, run exactly once.** Script
+`scratchpad/fire_pff_richer_rho.py` sha256 `4402219cf7adc039f8475d08fc45267cdd95c624b6208d7d2fe321ebdd7f72a6`
+(== committed); S2 md5 `9b3d9df6…` re-verified at fire. Interpreter: AI_hedge_fund venv. Panels
+reproduced 261/358/150/103 EXACT. rc = rawPearson / √mean-wt; bands ≥.50 CLEAN / .35–.50 WEAK / <.35 DEAD.
+
+| Pos | n | rawP | Spearman | w-wt | mean-wt | DISATT rc | BAND |
+|---|---|---|---|---|---|---|---|
+| RB | 261 | +0.163 | +0.254 | +0.254 | 0.245 | **+0.329** | **DEAD (<.35)** |
+| WR | 358 | +0.083 | +0.141 | +0.248 | 0.175 | **+0.198** | **DEAD (<.35)** |
+| TE | 150 | +0.169 | +0.181 | +0.122 | 0.269 | **+0.326** | **DEAD (<.35)** |
+| QB | 103 | +0.408 | +0.355 | +0.365 | 0.449 | **+0.609** | CLEAN (≥.50) — **DESCRIPTIVE re-measure only** |
+
+**VERDICTS (pre-registered numbers only; acceptance/rejection FINAL — no metric substitution, re-cut, or re-weight):**
+- **RB — DEAD (+0.329 < .35).** The richer PFF college index does NOT clear the band and sits below the
+  shipped PBP instrument (+.501). **DOES-PFF-ADD = FAIL:** the richer PFF RB index adds nothing; RB
+  continues to ship its PBP score. Blind SPENT.
+- **WR — DEAD (+0.198).** Fresh pre-specified WR PFF instrument fails; consistent with the prior WR PFF
+  nulls. Blind SPENT.
+- **TE — DEAD (+0.326).** The live flip candidate did NOT clear .35 (near the old grade+share+age
+  near-miss .294/.316, still DEAD). Blind SPENT.
+- **QB — +0.609 CLEAN, but a DESCRIPTIVE RE-MEASURE, NOT a fresh validation.** grades_pass-driven,
+  foreknown-positive. **The grade+age +0.685 REMAINS the pre-registered QB validation of record;** this
+  richer QB index makes NO second independent validation claim and NO fresh band claim. Ships as the
+  richer descriptive QB score.
+- **POWER caveat (pre-committed):** MDE(80%) RB .35–.44 · WR .30–.37 · TE .46–.58 · QB .56–.70. Low
+  power inflates false negatives only. WR's DEAD is a reasonably-powered negative (rc .198 well under
+  the MDE); **RB and especially TE are under-powered** (TE MDE .46–.58 exceeds the .50 bar), so their
+  DEAD band calls carry a wide-CI / small-sample caveat — but the band is the pre-registered verdict and
+  rejection is final. No placebo/permutation in this harness; the disattenuated rc is the banded stat.
+
+**BOARD DISCLOSURE COPY (ship-regardless clause; band selects wording; wide-CI/small-sample caveat on every claim):**
+- **RB / WR / TE (all DEAD):** "This PFF-college composite is **descriptive only** — at this sample it
+  is not shown to track our NFL-talent measure (small sample, wide CI)." *(RB additionally: the shipped
+  RB talent score continues to use the play-by-play instrument; the PFF composite adds nothing here.)*
+- **QB (CLEAN, descriptive):** "QB college passing composite — descriptive; tracks the NFL QB-talent
+  measure in aggregate (reliability-corrected rank corr ≈ 0.61; small sample, wide CI). The QB talent
+  **validation of record** is the grade+age index (rc ≈ 0.69)."
