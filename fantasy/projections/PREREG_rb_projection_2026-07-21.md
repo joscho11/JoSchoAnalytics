@@ -246,3 +246,28 @@ build session cannot shop them against the outcome.
   artifact into the repo this session.
 - The build session (next) fits the pinned models under this prereg, joins Sleeper, runs the
   walk-forward, and builds the board column — nothing here may be re-shopped there.
+
+---
+
+## AMENDMENT 1 (2026-07-21, build session) — `depth_rank` DROPPED (data-validity; STRICTLY NARROWS the pool)
+
+**Hardness assertion:** this amendment only REMOVES a feature from the frozen §3 pool. It adds no
+feature, relaxes no gate (there is no gate — this is a product prereg), and cannot be used to fish for
+a Sleeper win. It makes the design strictly more honest.
+
+**What changed.** The pinned "projected depth-chart position/rank (preseason, `load_depth_charts`,
+point-in-time)" feature (listed in §3 for BOTH the veteran and rookie buckets, and as §6(a)) is
+**removed from both feature pools.** No other feature, model, grid, fold, or metric changes.
+
+**Why (measured, not shopped).** `nflreadpy.load_depth_charts` has **zero rows for 2025 and 2026** —
+the source table ends at 2024. So `depth_rank` is well-populated in veteran TRAINING (82–84% for
+2014–2024) but **entirely absent at inference for the 2025 fold and the 2026 deploy**. That
+train-present / deploy-absent asymmetry breaks the native-NaN tree models: an all-NaN-at-inference
+column routes every 2025 veteran down LightGBM's learned NaN-default branch, collapsing the 2025
+veteran fold (MAE 65.4 / ρ +0.322, Bijan Robinson predicted 4 vs actual 331) and flipping the 2026
+veteran deploy selection to ElasticNet. Confirmed by an ablation on the 2025 veteran fold (fixed
+LightGBM): WITH depth MAE 74.0 / ρ +0.271; WITHOUT depth MAE 40.1 / ρ +0.758 — the latter in line
+with the healthy 2021–2024 folds. This is a data-availability defect for the deploy target, not a
+metric shopped after the fact; §3 already pinned the feature "where available," and it is not
+available for the seasons that ship. `depth_rank` is still COMPUTED for coverage/disclosure and may be
+shown as descriptive board context, but it is NOT a model feature. Approved by Joseph 2026-07-21.

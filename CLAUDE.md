@@ -421,6 +421,33 @@ them). The earlier Model A/B + three-way-blend arc (`build_draft_board.py`, `tra
 is also retained, not shipped. The blind decision rules, sealed slices, and data-provenance facts all
 live in `PREREGISTRATION.md` and the campaign skill.
 
+## RB Season Projection (`fantasy/projections/`)
+
+A from-scratch **RB season-total half-PPR projection for 2026** (built + shipped 2026-07-21), separate
+from the seasonal Draft Board and the weekly fantasy model. **Two models sharing one target** — veteran
+(≥1 prior NFL season) and rookie (none) — merged into one projection column, shown on the **Rookie Board
+page beside Sleeper's projection + a difference column**. It replaces the starved per-game `rookie_ppg`
+surface on display (that pkl is untouched; md5 `872467b2…` asserted). RB-only; WR/TE/QB are later builds.
+
+- **Governing prereg:** `fantasy/projections/PREREG_rb_projection_2026-07-21.md` (design frozen before
+  fitting; **Amendment 1 dropped `depth_rank`** — nflreadpy `load_depth_charts` ends at 2024, so the
+  feature was absent for the 2025 fold + 2026 deploy and collapsed the native-NaN tree models; kept the
+  drop as a data-validity fix). Target = **observed season-total half-PPR summed from weekly stats**
+  (NOT `target_ppg×games`, which filters games≥11 and drops partial/injury seasons).
+- **Pipeline:** `build_rb_projection.py` — `--assemble` (feature matrices + pre-registered asserts),
+  `--walk-forward` (registered nested-CV walk-forward 2021–2025 + gates-nothing Sleeper reference),
+  `--ship` (fit final models, write derived artifacts). Interpreter = the AI_hedge_fund venv (repo .venv
+  broken). PFF-derived rookie matrix regenerated in a TEMP scratch dir — **no parquet / no raw-PFF season
+  tables in the repo**; only derived projections land in `results/`. Synthetic proof: `rb_projection_harness.py --build`.
+- **Models:** `models/rb_veteran_model.pkl`, `models/rb_rookie_model.pkl` (both LightGBM, inner-CV-chosen).
+  **Results:** `results/rb_projection_2026.csv` (full veteran+rookie surface), `rb_rookie_board_projection.csv`
+  (the board join file), `walkforward_predictions.csv`, `sleeper_comparison.csv`.
+- **Honest numbers:** walk-forward 2021–2025 (n=802) pooled Spearman **+0.689**; **does NOT beat Sleeper**
+  (Sleeper ρ +0.799 vs +0.671 on the 486 covered rows) — Sleeper is **shown, not a gate**, and this is
+  **backtested, not live-validated** (first live test = end of 2026). Board display retires `proj_ppg` and
+  shows *Proj (season ½-PPR) / Sleeper Proj / Diff vs Sleeper* (RB rows only). Guide: `fantasy/projections/GUIDE.md`.
+  AppTest: `test_page_rookie_board.py` (not yet in CI).
+
 ## Active Experiments
 
 ### Seasonal value-signal campaign — CLOSED (2026-07-12)
