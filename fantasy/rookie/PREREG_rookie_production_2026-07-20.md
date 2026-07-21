@@ -336,5 +336,55 @@ backtest-not-live qualifier and its n / class range / baseline.
 
 ## OUTCOMES (recorded after the fact; rules above were not modified)
 
-_None yet — no model has been fit. To be appended after the build (structural asserts, no
-metrics) and the one-shot fire, per cowork-research-methodology Steps 7–9._
+**FIRED 2026-07-20 — ONE SHOT, run exactly once. Blind spent.** Frozen harness committed at
+`fantasy/rookie/harness/` (harness.py sha256 `81b83a7f…`, assemble_panel `cd6d43cf…`,
+assemble_features `3a530f2d…`, feature_groups `c44f322a…`; all re-verified == manifest at fire).
+Interpreter: AI_hedge_fund venv. Panel reproduced 712 (135 hits); headline = CatBoost, full vs
+draft-capital-only, pooled OOS on test classes 2019–2023 (391 rows). Build proofs (synthetic
+noise/planted/peek + real-shape fire-path + decide self-test) all passed pre-fire; blind-MDE pooled
+≈ +0.020 ΔAUC = the §8(b) bar (pooled gate adequately powered, not decorative; QB/TE descriptive).
+
+**§8 CLAIM — "college/athletic features add signal beyond draft capital" — REJECTED (ACCEPT = False):**
+
+| criterion | measured | bar | verdict |
+|---|---|---|---|
+| (a) pooled Δlog-loss | **+0.017** | ≥ 0.010 | PASS |
+| (b) pooled ΔAUC | **+0.005** | ≥ 0.020 | **FAIL** |
+| (c) folds improved | **2 / 5** | ≥ 3 / 5 | **FAIL** |
+| (d) RB/WR per-pos AUC floor | RB −0.024, WR +0.001 | ≥ −0.030 | PASS |
+| (e) placebo | obs **+0.005** vs shuffled-95th **+0.069** | obs > bar | **FAIL** |
+
+Headline metrics (CatBoost, pooled OOS 2019–2023): **full log-loss 0.373 / AUC 0.843** vs
+**draft-only log-loss 0.390 / AUC 0.838**. Draft capital ALONE reaches AUC 0.838; the full feature
+set adds only **+0.005 AUC**, inside the placebo null (+0.069) → indistinguishable from zero. The
++0.017 log-loss gain is minor calibration refinement, not discrimination, and does not clear the joint
+gate. Secondary comparator (logistic): full AUC 0.809 vs draft-only 0.862 — draft-only WINS; no
+full-model edge in either family.
+
+**Diagnostics (one mechanism covers all observations — the market already prices college/athletic):**
+- **college-only** (attributes minus draft, §5 median-no-flag "back-door close"): CatBoost AUC **0.713**
+  — real signal (≫ 0.5) but far below draft-only's 0.838.
+- **combine-out** (college box + PFF + age, no combine): AUC **0.676**. Combine adds a little; the whole
+  non-market bundle still trails draft capital badly.
+- Per-position CatBoost full/draft AUC: QB 0.842/0.758, RB 0.853/0.877, WR 0.808/0.807, TE 0.867/0.856
+  — mixed, no consistent edge (QB/TE reported descriptive/underpowered per §8d).
+
+**Calibration (§7a):** log-loss (a proper, calibration-aware score) = **0.373** (full CatBoost). The
+fire results pkl saved metrics only (no per-row y/p), so ECE / reliability is NOT computable post-hoc;
+that would require a harness change — NOT done here (no re-fire, no harness edit). Log-loss stands as
+the calibration-aware score.
+
+**Pre-committed consequence (§8 FAIL branch — the honest prior; rookie H4 analog):** reported AS-IS —
+**"the hit probabilities ≈ draft capital; college/athletic add no measured edge beyond the market."**
+NOT iterated around. **Rejection is FINAL** (Amendment-4: no metric-shopping, no re-cut, no threshold
+change, no panel swap). The PRODUCT SHIPS REGARDLESS (§10): the full calibrated CatBoost hit-probability
+(AUC 0.843, log-loss 0.373, backtested 2019–2023) + the surfaced rookie-year projection + college
+percentiles, labeled **"BACKTESTED, NOT LIVE-VALIDATED"** (H8r; first live test = the 2026 class).
+
+**Board disclosure copy (ship-regardless):** "Rookie hit probabilities are calibrated on 2015–2023
+draft classes and backtested on 2019–2023 (not live-validated). At this sample, college production and
+athletic testing add no measured edge beyond draft capital — the probability tracks where a player was
+drafted. Backtested, not live-validated; the first live test is the 2026 class."
+
+Derived-only results archived at `fantasy/rookie/harness/fire_rookie_results.pkl` (metrics + verdict; no
+raw PFF, no per-row values). Rules above (§0–§11) were not modified.
