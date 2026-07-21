@@ -26,6 +26,7 @@ import page_film_room
 import page_draft_board
 import page_help
 import page_league_history
+import page_rookie_board
 import page_track_record
 import page_weekly_fantasy
 import page_weekly_predictions
@@ -48,12 +49,13 @@ film_pg = st.Page(page_film_room.render, title="Film Room", icon="📺",
                   url_path="film-room")
 lh_pg = st.Page(page_league_history.render, title="League History", icon="🏅", url_path="league-history")
 help_pg = st.Page(page_help.render, title="Help & Guide", icon="❓", url_path="help")
+rb_pg = st.Page(page_rookie_board.render, title="Rookie Board", icon="🧬", url_path="rookie-board")
 
 # cross-link registry (design 4g) — populated before nav.run() so pages can link
 nav_registry.PAGES = {
     "draft-board": board_pg, "weekly-predictions": wp_pg, "weekly-fantasy": wf_pg,
     "dfs-optimizer": dfs_pg, "track-record": tr_pg, "film-room": film_pg,
-    "league-history": lh_pg, "help": help_pg,
+    "league-history": lh_pg, "help": help_pg, "rookie-board": rb_pg,
 }
 
 # Persistent branded header ABOVE the top nav — rendered before st.navigation so the
@@ -62,7 +64,7 @@ chrome.render_header()
 
 nav = st.navigation(
     {"Betting": [wp_pg, tr_pg],
-     "Fantasy": [board_pg, wf_pg, dfs_pg],
+     "Fantasy": [board_pg, rb_pg, wf_pg, dfs_pg],
      "More": [film_pg, lh_pg, help_pg]},
     position="top",
 )
