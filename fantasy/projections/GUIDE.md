@@ -1,8 +1,8 @@
-# RB & WR Season-Total Projection — a plain-language guide
+# RB, WR & TE Season-Total Projection — a plain-language guide
 
-> This guide was written for the running-back model and then extended to wide receivers, which use
-> the identical method with a receiving-flavored feature set (see "What's different for wide
-> receivers" at the end). Tight ends and quarterbacks are still to come.
+> This guide was written for the running-back model and then extended to wide receivers and tight
+> ends, which use the identical method with a receiving-flavored feature set (see "What's different
+> for wide receivers and tight ends" at the end). Quarterbacks are still to come.
 
 ## 1. What I'm trying to do
 
@@ -16,8 +16,8 @@ they already bake in everything the crowd knows.
 This subproject builds my own from-scratch projection of one thing: **how many half-PPR points
 each running back will score across the entire 2026 regular season.** ("Half-PPR" is a scoring
 rule — a player earns his normal points plus half a point per catch. "Season-total" means summed
-over all his games, not a per-game average.) I now build it for running backs **and wide receivers**;
-tight ends and quarterbacks are separate later builds.
+over all his games, not a per-game average.) I now build it for running backs, **wide receivers, and
+tight ends**; quarterbacks are a separate later build.
 
 The point of the exercise is honesty about a hard problem. A season projection has to guess two
 things at once — how good a player is *per game*, and *how many games' worth of work he'll get* —
@@ -150,7 +150,7 @@ quarterbacks have no projection here yet.
   live-validated; the position coverage of the moment (RB and WR so far); and explicitly not a claim to
   beat Sleeper. Those labels stay until a live season earns their removal.
 
-## What's different for wide receivers
+## What's different for wide receivers and tight ends
 
 The WR model is the **same machinery** — same target, same two-model split, same walk-forward, same
 frozen model slate, same "Sleeper shown, not gated" rule — with a receiving-flavored feature set. The
@@ -177,3 +177,16 @@ the highest-projected receivers (Ja'Marr Chase, CeeDee Lamb, Puka Nacua) below S
 negative gap on a star is the model's known low-bias, not a signal. Both 2026 models deploy as gradient-boosted
 trees; for two of the five veteran validation folds a plain regularized-linear model won the internal
 selection instead, which is just a sign that for receivers the linear and tree fits are very close.
+
+**Tight ends** use the same receiving feature set as wide receivers (tight ends are receivers too) — the
+identical method again — with two honest cautions. First, tight end is the **thinnest position**: only
+about two dozen rookies a year, so the rookie model is the smallest sample of the three (~22–27 test
+players per validation season). Second, tight end scoring is **lopsided** — a few every-down tight ends
+score a lot, a long tail scores near nothing — which makes the average-error number look small and makes
+ranking the real producers the hard part. It held up better than I expected: across 2021–2025 (677
+tight-end-seasons) rank correlation with actual totals is **+0.73** pooled (veterans +0.74; the thin
+rookie arm **+0.64**, a bit *stronger* than the RB rookie arm's +0.55 — partly because the heavier zero
+mass is easier to order). Against Sleeper on the 304 covered seasons, Sleeper is better on both rank
+(+0.80 vs +0.74) and error — I do not beat the market, shown plainly beside it. One surprise: the
+tight-end model is **less conservative at the top** (it projects Kyle Pitts and George Kittle *above*
+Sleeper), so the "large negative gap on a star = low-bias" caution matters less here.

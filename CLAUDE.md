@@ -421,14 +421,27 @@ them). The earlier Model A/B + three-way-blend arc (`build_draft_board.py`, `tra
 is also retained, not shipped. The blind decision rules, sealed slices, and data-provenance facts all
 live in `PREREGISTRATION.md` and the campaign skill.
 
-## RB & WR Season Projection (`fantasy/projections/`)
+## RB, WR & TE Season Projection (`fantasy/projections/`)
 
-From-scratch **season-total half-PPR projections for 2026** (RB + WR built + shipped 2026-07-21),
+From-scratch **season-total half-PPR projections for 2026** (RB + WR + TE built + shipped 2026-07-21),
 separate from the seasonal Draft Board and the weekly fantasy model. Per position, **two models share one
 target** — veteran (≥1 prior NFL season) and rookie (none) — merged into one projection column, shown on
 the **Rookie Board page beside Sleeper's projection + a difference column**. They replace the starved
-per-game `rookie_ppg` surface on display (that pkl is untouched; md5 `872467b2…` asserted). RB + WR so
-far; TE/QB are later builds.
+per-game `rookie_ppg` surface on display (that pkl is untouched; md5 `872467b2…` asserted). RB + WR + TE so
+far; QB is a later build. The Rookie Board's `_load_proj()` concatenates the per-position board-projection
+files (`{rb,wr,te}_rookie_board_projection.csv`) — **position is in the join key, so each position's rows
+draw its own model and the others' rows are byte-identical**; the board displays rookies (veteran
+projections live only in `results/{pos}_projection_2026.csv`). Every build IMPORTS the RB engine from
+`build_rb_projection.py` (never modifies it) + a ~15-line per-position frozen-matrix twin; `depth_rank` is
+excluded from every bucket (nflreadpy depth charts end at 2024 → train-present/deploy-absent), enforced by
+a deploy-gap check each build.
+
+**TE (2026-07-21):** `build_te_projection.py` (WR's receiving block — TEs are receivers). Walk-forward
+(n=677) pooled Spearman **+0.734** (veteran +0.742, **rookie +0.636** — above the shipped RB rookie arm's
++0.55, so the rookie arm ships; TE is the thinnest position with a zero-heavy target, disclosed). vs
+Sleeper ρ +0.741 vs +0.798 (does not beat). Notably **less elite-conservative** than RB/WR (projects Pitts
+& Kittle above Sleeper). Models `models/te_{veteran,rookie}_model.pkl` (LightGBM); a `TE_SHIP_ROOKIE` env
+toggle honors a rookie ship/hold decision. GUIDE broadened to "RB, WR & TE".
 
 **WR (2026-07-21):** `build_wr_projection.py` **imports the RB engine** (`season_total_target`,
 `nested_select`, `walk_forward`, `fit_final_model`, `_prep`, `_grid`, metrics) + a ~15-line WR

@@ -19,7 +19,8 @@ import streamlit as st
 _HERE = Path(__file__).resolve().parent
 _BOARD = _HERE / "fantasy" / "rookie" / "board_data"
 _PROJ_DIR = _HERE / "fantasy" / "projections" / "results"
-_PROJ_FILES = ["rb_rookie_board_projection.csv", "wr_rookie_board_projection.csv"]  # RB + WR (TE/QB later)
+_PROJ_FILES = ["rb_rookie_board_projection.csv", "wr_rookie_board_projection.csv",
+               "te_rookie_board_projection.csv"]  # RB + WR + TE (QB later)
 _CLASSES = [2026, 2025, 2024]
 
 sys.path.insert(0, str(_HERE / "fantasy" / "seasonal_projections"))
@@ -59,7 +60,8 @@ PROJ_HELP = (
     "back drafted into a crowded room projects lower than his draft slot alone would suggest. "
     "For the 2026 class this is the deploy projection; for 2024/2025 it is the walk-forward "
     "out-of-sample projection. Backtested 2021–2025 (pooled Spearman ~0.69–0.74 vs actual season "
-    "totals), NOT live-validated. RB and WR for now — TE/QB are separate later builds."
+    "totals), NOT live-validated. RB, WR, and TE for now — QB is a separate later build. TE is the "
+    "thinnest position (small rookie sample, zero-heavy scoring) — its projection is noisier, disclosed."
 )
 SLEEPER_HELP = (
     "Sleeper's published season-total half-PPR projection (the market), shown for context. The model "
@@ -168,8 +170,9 @@ def render():
     )
     st.caption(
         f"Class of {cls} · {len(show)} rookies · {HIT_DEF} **Proj (season ½-PPR)** is the projected "
-        "season-total half-PPR from the RB and WR season-total models — RB and WR for now (TE/QB coming), "
-        "shown beside Sleeper's projection with the difference; no claim to beat Sleeper. College "
+        "season-total half-PPR from the RB, WR, and TE season-total models — RB/WR/TE for now (QB coming; "
+        "TE is thinnest/noisiest), shown beside Sleeper's projection with the difference; no claim to beat "
+        "Sleeper. College "
         "Talent covers RB/WR/TE only (no QB) and the 2026 class only. Percentiles are within-position "
         "across the 2015–2026 drafted-skill panel. College grade/efficiency values per PFF. Hit "
         "probability and projection are backtested, not live-validated."
