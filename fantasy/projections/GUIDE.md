@@ -1,8 +1,8 @@
-# RB, WR & TE Season-Total Projection — a plain-language guide
+# RB, WR, TE & QB Season-Total Projection — a plain-language guide
 
-> This guide was written for the running-back model and then extended to wide receivers and tight
-> ends, which use the identical method with a receiving-flavored feature set (see "What's different
-> for wide receivers and tight ends" at the end). Quarterbacks are still to come.
+> This guide was written for the running-back model and then extended to wide receivers, tight ends,
+> and quarterbacks (see "What's different for the other positions" at the end). The QB *rookie* model
+> was built, judged too thin, and held back — only QB veterans are projected.
 
 ## 1. What I'm trying to do
 
@@ -16,8 +16,9 @@ they already bake in everything the crowd knows.
 This subproject builds my own from-scratch projection of one thing: **how many half-PPR points
 each running back will score across the entire 2026 regular season.** ("Half-PPR" is a scoring
 rule — a player earns his normal points plus half a point per catch. "Season-total" means summed
-over all his games, not a per-game average.) I now build it for running backs, **wide receivers, and
-tight ends**; quarterbacks are a separate later build.
+over all his games, not a per-game average.) I now build it for running backs, **wide receivers, tight
+ends, and quarterbacks** — with one caveat: the QB *rookie* model was held back as too unreliable (see
+the end), so only QB veterans are projected.
 
 The point of the exercise is honesty about a hard problem. A season projection has to guess two
 things at once — how good a player is *per game*, and *how many games' worth of work he'll get* —
@@ -150,43 +151,37 @@ quarterbacks have no projection here yet.
   live-validated; the position coverage of the moment (RB and WR so far); and explicitly not a claim to
   beat Sleeper. Those labels stay until a live season earns their removal.
 
-## What's different for wide receivers and tight ends
+## What's different for the other positions
 
-The WR model is the **same machinery** — same target, same two-model split, same walk-forward, same
-frozen model slate, same "Sleeper shown, not gated" rule — with a receiving-flavored feature set. The
-veteran model draws on the same season-level pool, where the receiving priors (targets per game, target
-share, air-yards share, average depth of target, yards per target, receiving efficiency) carry the
-signal. The rookie model swaps the running-back college block for the receiving one: the same combine
-measurements, but college **receiving** production and the PFF **receiving** grades (route grade,
-yards-per-route-run, contested-catch rate, drop rate, and so on).
+Each later position uses the **same machinery** — same target, two-model split, walk-forward, frozen
+model slate, and "Sleeper shown, not gated" rule — with a position-appropriate feature set. Every build
+also excludes the depth-chart-rank feature from the start (its data stops at 2024, so it was missing for
+exactly the 2026 season I project — it had broken the RB trees until I dropped it) and runs a check that
+no *other* feature has that "present in training, absent for 2026" problem.
 
-**One deliberate choice, learned from the RB build:** I excluded the depth-chart-rank feature from the
-start. It was genuinely useful but its data source stops at 2024, so it was missing for exactly the
-2026 season I need to project — which had broken the RB tree models until I dropped it. For WR I never
-put it in, and I ran an explicit check confirming no *other* feature has that same "present in training,
-absent for 2026" problem.
+**Wide receivers** swap the running-back college block for a receiving one: college receiving production
+and the PFF receiving grades (route grade, yards-per-route-run, contested-catch rate, drop rate). Results
+(2021–2025, 1,242 receiver-seasons): rank correlation **+0.74** (veterans +0.74, rookies +0.68). Against
+Sleeper on the 657 covered seasons, **Sleeper ranks a little better (+0.80 vs. +0.74)** but the average
+errors are essentially even (38.5 vs. 39.2) — I do not beat the market on ranking, though closer than RB.
+Like RB it is conservative at the very top (Chase, Lamb, Nacua below Sleeper), so a large negative gap on
+a star is the model's low-bias, not a signal.
 
-**Honest WR results (walk-forward 2021–2025, 1,242 receiver-seasons).** Rank correlation with actual
-season totals is **+0.74** pooled (veterans +0.74, rookies +0.68), average absolute error about 31
-points. This came out a bit stronger than the running-back model. Against the market, on the 657
-receiver-seasons where Sleeper published a projection: **Sleeper still ranks a little better (+0.80 vs.
-my +0.74)**, but the average errors are essentially even (about 38.5 for me vs. 39.2 for Sleeper). So —
-same headline as always, stated plainly: **I do not beat Sleeper on ranking**, though the WR model is
-noticeably closer than the RB one. Like the RB model, it is conservative at the very top: it projects
-the highest-projected receivers (Ja'Marr Chase, CeeDee Lamb, Puka Nacua) below Sleeper, so a large
-negative gap on a star is the model's known low-bias, not a signal. Both 2026 models deploy as gradient-boosted
-trees; for two of the five veteran validation folds a plain regularized-linear model won the internal
-selection instead, which is just a sign that for receivers the linear and tree fits are very close.
+**Tight ends** use that same receiving feature set (tight ends are receivers too), with two cautions.
+It is the thinnest of the three receiving positions (~22–27 rookie test players a season), and TE scoring
+is lopsided — a few every-down tight ends score a lot, a long tail near nothing — which flatters the
+average-error number and makes ranking the real producers the hard part. It held up better than I
+expected: **+0.73** pooled (veterans +0.74; the thin rookie arm +0.64, a bit above RB's +0.55, partly
+because the heavy zero mass is easy to order). Sleeper is still better (+0.80 vs +0.74). One surprise:
+the TE model is *less* conservative at the top (it projects Kyle Pitts and George Kittle *above* Sleeper).
 
-**Tight ends** use the same receiving feature set as wide receivers (tight ends are receivers too) — the
-identical method again — with two honest cautions. First, tight end is the **thinnest position**: only
-about two dozen rookies a year, so the rookie model is the smallest sample of the three (~22–27 test
-players per validation season). Second, tight end scoring is **lopsided** — a few every-down tight ends
-score a lot, a long tail scores near nothing — which makes the average-error number look small and makes
-ranking the real producers the hard part. It held up better than I expected: across 2021–2025 (677
-tight-end-seasons) rank correlation with actual totals is **+0.73** pooled (veterans +0.74; the thin
-rookie arm **+0.64**, a bit *stronger* than the RB rookie arm's +0.55 — partly because the heavier zero
-mass is easier to order). Against Sleeper on the 304 covered seasons, Sleeper is better on both rank
-(+0.80 vs +0.74) and error — I do not beat the market, shown plainly beside it. One surprise: the
-tight-end model is **less conservative at the top** (it projects Kyle Pitts and George Kittle *above*
-Sleeper), so the "large negative gap on a star = low-bias" caution matters less here.
+**Quarterbacks are the one place I held part of the model back.** QBs use a passing set — college passing
+*grades* (accuracy, completion, big-time-throw rate, pressure handling) rather than a box-score — and the
+*veteran* model works fine (ranks QB seasons at **+0.70**). But the *rookie* model failed the honesty
+test, so I did not ship it: there are only 7–13 rookie QBs a year, and a rookie QB's season hinges on the
+one thing the data can't see — whether he starts. Fit anyway, it mostly re-sorted players by draft
+position (which the market already prices) and projected full starter seasons for QBs everyone expects to
+sit (a mid-round rookie the market pegged at ~14 points came out at ~136). So **QB veterans are projected
+and QB rookies show no projection.** And bluntly: quarterback is where the market is *best* — Sleeper ranks
+QB seasons at +0.85 vs. my +0.73, the furthest behind the market of any position — and, like RB and WR,
+the QB model is conservative on the very top. That completes all four skill positions.

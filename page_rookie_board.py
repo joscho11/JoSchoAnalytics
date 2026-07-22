@@ -20,7 +20,9 @@ _HERE = Path(__file__).resolve().parent
 _BOARD = _HERE / "fantasy" / "rookie" / "board_data"
 _PROJ_DIR = _HERE / "fantasy" / "projections" / "results"
 _PROJ_FILES = ["rb_rookie_board_projection.csv", "wr_rookie_board_projection.csv",
-               "te_rookie_board_projection.csv"]  # RB + WR + TE (QB later)
+               "te_rookie_board_projection.csv", "qb_rookie_board_projection.csv"]  # RB+WR+TE rookie;
+# QB rookie arm HELD (too thin — file is empty), so QB rookies show no projection. QB veteran
+# projections ship as a data export only (results/qb_projection_2026.csv), not on this rookie board.
 _CLASSES = [2026, 2025, 2024]
 
 sys.path.insert(0, str(_HERE / "fantasy" / "seasonal_projections"))
@@ -60,8 +62,10 @@ PROJ_HELP = (
     "back drafted into a crowded room projects lower than his draft slot alone would suggest. "
     "For the 2026 class this is the deploy projection; for 2024/2025 it is the walk-forward "
     "out-of-sample projection. Backtested 2021–2025 (pooled Spearman ~0.69–0.74 vs actual season "
-    "totals), NOT live-validated. RB, WR, and TE for now — QB is a separate later build. TE is the "
-    "thinnest position (small rookie sample, zero-heavy scoring) — its projection is noisier, disclosed."
+    "totals), NOT live-validated. RB, WR, and TE rookies for now. TE is the thinnest of those (small "
+    "rookie sample, zero-heavy scoring) — noisier, disclosed. The QB rookie arm was built but HELD (too "
+    "thin — 7–13 QBs/year, and a rookie QB's season hinges on whether he starts, which the features can't "
+    "see) — QB rookies show no projection; QB veteran projections exist only as a data export."
 )
 SLEEPER_HELP = (
     "Sleeper's published season-total half-PPR projection (the market), shown for context. The model "
@@ -170,9 +174,9 @@ def render():
     )
     st.caption(
         f"Class of {cls} · {len(show)} rookies · {HIT_DEF} **Proj (season ½-PPR)** is the projected "
-        "season-total half-PPR from the RB, WR, and TE season-total models — RB/WR/TE for now (QB coming; "
-        "TE is thinnest/noisiest), shown beside Sleeper's projection with the difference; no claim to beat "
-        "Sleeper. College "
+        "season-total half-PPR from the RB, WR, and TE season-total models — RB/WR/TE rookies (the QB "
+        "rookie arm was held as too thin), shown beside Sleeper's projection with the difference; no claim "
+        "to beat Sleeper. College "
         "Talent covers RB/WR/TE only (no QB) and the 2026 class only. Percentiles are within-position "
         "across the 2015–2026 drafted-skill panel. College grade/efficiency values per PFF. Hit "
         "probability and projection are backtested, not live-validated."

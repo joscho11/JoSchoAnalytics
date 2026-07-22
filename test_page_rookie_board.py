@@ -14,6 +14,7 @@ from pathlib import Path
 
 os.environ["APP_OFFLINE"] = "1"
 
+import pandas as pd
 from streamlit.testing.v1 import AppTest
 
 _HERE = Path(__file__).resolve().parent
@@ -23,32 +24,11 @@ sys.path.insert(0, str(_HERE / "fantasy" / "seasonal_projections"))
 
 
 def _entry():
+    # Default render = the "All" positions view of the newest class (2026), where the RB/WR/TE/QB
+    # rookies below all appear — no position-filter forcing needed (AppTest.from_function re-execs the
+    # source, so closures/monkeypatches into the page's column-selectbox don't survive anyway).
     import page_rookie_board
     page_rookie_board.render()
-
-
-def _entry_pos(pos):
-    """Force a position filter so that position's projection column is populated."""
-    def _entry():
-        import page_rookie_board as p
-        import streamlit as st
-        orig = st.selectbox
-
-        def patched(label, options, index=0, **kw):
-            if label == "Position" and pos in options:
-                return pos
-            return orig(label, options, index=index, **kw)
-        st.selectbox = patched
-        try:
-            p.render()
-        finally:
-            st.selectbox = orig
-    return _entry
-
-
-_entry_rb = _entry_pos("RB")
-_entry_wr = _entry_pos("WR")
-_entry_te = _entry_pos("TE")
 
 
 def _run(fn):
@@ -70,38 +50,36 @@ def _find_df(at, col):
     return None
 
 
-def test_rookie_page_renders_and_swaps_projection():
-    at = _run(_entry_rb)
+def _proj_of(df, name):
+    r = df[df["Player"].astype(str).str.contains(name, na=False)]
+    assert len(r) == 1, f"{name} must appear exactly once in the 2026 board view"
+    return float(pd.to_numeric(r["Proj (season ½-PPR)"], errors="coerce").iloc[0])
+
+
+def test_rookie_page_swaps_in_season_projections():
+    """The 2026 'All' view shows the RB/WR/TE season-total projections (starved PPG surface retired);
+    each replaces its old per-game number with a real season total."""
+    at = _run(_entry)
     df = _find_df(at, "Proj (season ½-PPR)")
     assert df is not None, "projection column 'Proj (season ½-PPR)' must render"
     assert "Rookie Proj (PPG)" not in list(df.columns), "the starved per-game surface must be retired from display"
-    for c in ("Sleeper Proj", "Diff vs Sleeper", "Full Hit-%"):
+    for c in ("Sleeper Proj", "Diff vs Sleeper", "Full Hit-%", "Pos"):
         assert c in list(df.columns), f"expected column {c} missing"
-    love = df[df["Player"].astype(str).str.contains("Jeremiyah Love", na=False)]
-    assert len(love) == 1, "Jeremiyah Love row must be present in the RB view"
-    proj = float(love["Proj (season ½-PPR)"].iloc[0])
-    assert proj > 100, f"Love projection must be the season-total (~153), not the starved 4.7 (got {proj})"
+    assert _proj_of(df, "Jeremiyah Love") > 100, "RB Love must show the season-total (~153), not the starved 4.7"
+    assert _proj_of(df, "Makai Lemon") > 50, "WR Makai Lemon must show the season-total (~133)"
+    assert _proj_of(df, "Eli Stowers") > 20, "TE Eli Stowers must show the season-total (~84)"
 
 
-def test_wr_rows_show_season_total_projection():
-    at = _run(_entry_wr)
+def test_qb_rows_held_no_projection():
+    """QB rookie arm was HELD (§3B) — the empty qb board file must not break the join, and QB-position
+    rows must show NO projection (the 'coming' state)."""
+    at = _run(_entry)
     df = _find_df(at, "Proj (season ½-PPR)")
-    assert df is not None, "projection column must render for the WR view"
-    assert "Rookie Proj (PPG)" not in list(df.columns), "starved per-game surface must stay retired"
-    ml = df[df["Player"].astype(str).str.contains("Makai Lemon", na=False)]
-    assert len(ml) == 1, "a known 2026 WR rookie (Makai Lemon) must be present in the WR view"
-    proj = float(ml["Proj (season ½-PPR)"].iloc[0])
-    assert proj > 50, f"WR projection must be the season-total (~133), not the starved ~4.5 (got {proj})"
-
-
-def test_te_rows_show_season_total_projection():
-    at = _run(_entry_te)
-    df = _find_df(at, "Proj (season ½-PPR)")
-    assert df is not None, "projection column must render for the TE view"
-    es = df[df["Player"].astype(str).str.contains("Eli Stowers", na=False)]
-    assert len(es) == 1, "a known 2026 TE rookie (Eli Stowers) must be present in the TE view"
-    proj = float(es["Proj (season ½-PPR)"].iloc[0])
-    assert proj > 20, f"TE projection must be the season-total (~84), not the starved ~3 (got {proj})"
+    assert df is not None, "board must render"
+    qb = df[df["Pos"].astype(str) == "QB"]
+    assert len(qb) > 0, "QB rookies must still appear on the board (hit-%/percentiles)"
+    vals = pd.to_numeric(qb["Proj (season ½-PPR)"], errors="coerce").dropna()
+    assert len(vals) == 0, f"QB rookie arm is HELD — no QB projection should show (got {len(vals)})"
 
 
 def test_app_boots():
@@ -111,9 +89,8 @@ def test_app_boots():
 
 
 if __name__ == "__main__":
-    test_rookie_page_renders_and_swaps_projection()
-    test_wr_rows_show_season_total_projection()
-    test_te_rows_show_season_total_projection()
+    test_rookie_page_swaps_in_season_projections()
+    test_qb_rows_held_no_projection()
     test_app_boots()
-    print("OK  rookie page swaps in RB (Love ~153), WR (Makai Lemon ~133), TE (Eli Stowers ~84) "
-          "season-total projections; PPG surface retired; Sleeper+Diff present; app boots clean")
+    print("OK  RB (Love ~153) / WR (Makai Lemon ~133) / TE (Eli Stowers ~84) project; QB rookies HELD "
+          "(no projection); PPG surface retired; app boots clean")

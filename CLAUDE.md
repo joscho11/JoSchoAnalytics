@@ -421,20 +421,33 @@ them). The earlier Model A/B + three-way-blend arc (`build_draft_board.py`, `tra
 is also retained, not shipped. The blind decision rules, sealed slices, and data-provenance facts all
 live in `PREREGISTRATION.md` and the campaign skill.
 
-## RB, WR & TE Season Projection (`fantasy/projections/`)
+## RB, WR, TE & QB Season Projection (`fantasy/projections/`)
 
-From-scratch **season-total half-PPR projections for 2026** (RB + WR + TE built + shipped 2026-07-21),
-separate from the seasonal Draft Board and the weekly fantasy model. Per position, **two models share one
-target** — veteran (≥1 prior NFL season) and rookie (none) — merged into one projection column, shown on
-the **Rookie Board page beside Sleeper's projection + a difference column**. They replace the starved
-per-game `rookie_ppg` surface on display (that pkl is untouched; md5 `872467b2…` asserted). RB + WR + TE so
-far; QB is a later build. The Rookie Board's `_load_proj()` concatenates the per-position board-projection
-files (`{rb,wr,te}_rookie_board_projection.csv`) — **position is in the join key, so each position's rows
-draw its own model and the others' rows are byte-identical**; the board displays rookies (veteran
-projections live only in `results/{pos}_projection_2026.csv`). Every build IMPORTS the RB engine from
-`build_rb_projection.py` (never modifies it) + a ~15-line per-position frozen-matrix twin; `depth_rank` is
-excluded from every bucket (nflreadpy depth charts end at 2024 → train-present/deploy-absent), enforced by
-a deploy-gap check each build.
+From-scratch **season-total half-PPR projections for 2026** (all four skill positions built + shipped
+2026-07-21), separate from the seasonal Draft Board and the weekly fantasy model. Per position, **two models
+share one target** — veteran (≥1 prior NFL season) and rookie (none) — merged into one projection column,
+shown on the **Rookie Board page beside Sleeper's projection + a difference column**. They replace the
+starved per-game `rookie_ppg` surface on display (that pkl is untouched; md5 `872467b2…` asserted). The
+Rookie Board's `_load_proj()` concatenates the per-position board-projection files
+(`{rb,wr,te,qb}_rookie_board_projection.csv`) — **position is in the join key, so each position's rows draw
+its own model and the others' rows are byte-identical**; the board displays ROOKIES (veteran projections
+live only in `results/{pos}_projection_2026.csv`, not displayed anywhere yet). Every build IMPORTS the RB
+engine from `build_rb_projection.py` (never modifies it) + a ~15-line per-position frozen-matrix twin;
+`depth_rank` is excluded from every bucket (nflreadpy depth charts end at 2024 → train-present/deploy-absent),
+enforced by a deploy-gap check each build. Honest walk-forward (2021–2025) pooled Spearman: RB +0.689, WR
++0.736, TE +0.734, QB +0.695 — **none beat Sleeper** (Sleeper shown, not gated; it's strongest at QB, 0.849).
+
+**TE (2026-07-21):** `build_te_projection.py` (WR's receiving block). Rookie ρ +0.636 (above RB's +0.55) →
+rookie arm shipped; less elite-conservative than RB/WR (projects Pitts & Kittle above Sleeper). `TE_SHIP_ROOKIE`
+env toggle honors a ship/hold call.
+
+**QB (2026-07-21) — VETERAN-ONLY:** `build_qb_projection.py` uses the PFF **passing** block (there is NO
+college passing box-score in the frozen matrix — the `cfb_*` block is scrimmage-only — and no QB talent
+instrument). Veteran ρ +0.697 ships. The **rookie arm was HELD** (`QB_SHIP_ROOKIE=0` default): its ρ +0.627
+is near-meaningless (50 rows / 7–13 per fold), and a draft-order diagnostic showed it just re-ranks by draft
+capital and projects starter seasons for QBs the market expects to sit (Ty Simpson proj 135.9 vs Sleeper 13.6)
+— it has no "will he start" signal. So `qb_rookie_board_projection.csv` is empty and QB rookies show no
+projection. GUIDE broadened to "RB, WR, TE & QB".
 
 **TE (2026-07-21):** `build_te_projection.py` (WR's receiving block — TEs are receivers). Walk-forward
 (n=677) pooled Spearman **+0.734** (veteran +0.742, **rookie +0.636** — above the shipped RB rookie arm's
