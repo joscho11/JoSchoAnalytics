@@ -1,0 +1,4 @@
+scope,n,MAE,RMSE,spearman
+projection_all,1242,30.72,43.13,0.736
+projection_vs_sleeper_rows,657,38.54,51.19,0.738
+sleeper_vs_actual,657,39.23,51.77,0.797

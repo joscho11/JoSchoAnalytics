@@ -27,21 +27,27 @@ def _entry():
     page_rookie_board.render()
 
 
-def _entry_rb():
-    """Force the RB position filter so the projection columns are populated."""
-    import page_rookie_board as p
-    import streamlit as st
-    orig = st.selectbox
+def _entry_pos(pos):
+    """Force a position filter so that position's projection column is populated."""
+    def _entry():
+        import page_rookie_board as p
+        import streamlit as st
+        orig = st.selectbox
 
-    def patched(label, options, index=0, **kw):
-        if label == "Position" and "RB" in options:
-            return "RB"
-        return orig(label, options, index=index, **kw)
-    st.selectbox = patched
-    try:
-        p.render()
-    finally:
-        st.selectbox = orig
+        def patched(label, options, index=0, **kw):
+            if label == "Position" and pos in options:
+                return pos
+            return orig(label, options, index=index, **kw)
+        st.selectbox = patched
+        try:
+            p.render()
+        finally:
+            st.selectbox = orig
+    return _entry
+
+
+_entry_rb = _entry_pos("RB")
+_entry_wr = _entry_pos("WR")
 
 
 def _run(fn):
@@ -76,6 +82,17 @@ def test_rookie_page_renders_and_swaps_projection():
     assert proj > 100, f"Love projection must be the season-total (~153), not the starved 4.7 (got {proj})"
 
 
+def test_wr_rows_show_season_total_projection():
+    at = _run(_entry_wr)
+    df = _find_df(at, "Proj (season ½-PPR)")
+    assert df is not None, "projection column must render for the WR view"
+    assert "Rookie Proj (PPG)" not in list(df.columns), "starved per-game surface must stay retired"
+    ml = df[df["Player"].astype(str).str.contains("Makai Lemon", na=False)]
+    assert len(ml) == 1, "a known 2026 WR rookie (Makai Lemon) must be present in the WR view"
+    proj = float(ml["Proj (season ½-PPR)"].iloc[0])
+    assert proj > 50, f"WR projection must be the season-total (~133), not the starved ~4.5 (got {proj})"
+
+
 def test_app_boots():
     at = AppTest.from_file(str(_HERE / "app.py"), default_timeout=240).run()
     assert not at.exception, at.exception
@@ -84,6 +101,7 @@ def test_app_boots():
 
 if __name__ == "__main__":
     test_rookie_page_renders_and_swaps_projection()
+    test_wr_rows_show_season_total_projection()
     test_app_boots()
-    print("OK  rookie page swaps in the RB season-total projection (Love ~153, PPG surface retired); "
-          "Sleeper+Diff columns present; app boots clean")
+    print("OK  rookie page swaps in RB (Love ~153) AND WR (Makai Lemon ~133) season-total projections; "
+          "PPG surface retired; Sleeper+Diff present; app boots clean")

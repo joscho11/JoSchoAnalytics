@@ -421,13 +421,25 @@ them). The earlier Model A/B + three-way-blend arc (`build_draft_board.py`, `tra
 is also retained, not shipped. The blind decision rules, sealed slices, and data-provenance facts all
 live in `PREREGISTRATION.md` and the campaign skill.
 
-## RB Season Projection (`fantasy/projections/`)
+## RB & WR Season Projection (`fantasy/projections/`)
 
-A from-scratch **RB season-total half-PPR projection for 2026** (built + shipped 2026-07-21), separate
-from the seasonal Draft Board and the weekly fantasy model. **Two models sharing one target** — veteran
-(≥1 prior NFL season) and rookie (none) — merged into one projection column, shown on the **Rookie Board
-page beside Sleeper's projection + a difference column**. It replaces the starved per-game `rookie_ppg`
-surface on display (that pkl is untouched; md5 `872467b2…` asserted). RB-only; WR/TE/QB are later builds.
+From-scratch **season-total half-PPR projections for 2026** (RB + WR built + shipped 2026-07-21),
+separate from the seasonal Draft Board and the weekly fantasy model. Per position, **two models share one
+target** — veteran (≥1 prior NFL season) and rookie (none) — merged into one projection column, shown on
+the **Rookie Board page beside Sleeper's projection + a difference column**. They replace the starved
+per-game `rookie_ppg` surface on display (that pkl is untouched; md5 `872467b2…` asserted). RB + WR so
+far; TE/QB are later builds.
+
+**WR (2026-07-21):** `build_wr_projection.py` **imports the RB engine** (`season_total_target`,
+`nested_select`, `walk_forward`, `fit_final_model`, `_prep`, `_grid`, metrics) + a ~15-line WR
+frozen-matrix twin (`position=='WR'` + `pff_receiving`) — **`build_rb_projection.py` is NOT modified**.
+Governing prereg `PREREG_wr_projection_2026-07-21.md`; **`depth_rank` excluded from the start** (the RB
+lesson) with an explicit deploy-gap check confirming no other feature is train-present/2026-absent.
+Walk-forward (n=1242) pooled Spearman **+0.736** (stronger than RB); vs Sleeper ρ +0.738 vs +0.799 — does
+not beat on ranking, though MAE is even (38.5 vs 39.2). Models `models/wr_{veteran,rookie}_model.pkl`
+(LightGBM); results `results/wr_*.csv`. The Rookie Board's `_load_proj()` concatenates the RB + WR
+board-projection files (position is in the join key, so RB rows are byte-identical); WR rows now carry the
+projection/Sleeper/Diff columns. GUIDE broadened to "RB & WR".
 
 - **Governing prereg:** `fantasy/projections/PREREG_rb_projection_2026-07-21.md` (design frozen before
   fitting; **Amendment 1 dropped `depth_rank`** — nflreadpy `load_depth_charts` ends at 2024, so the

@@ -1,4 +1,8 @@
-# RB Season-Total Projection — a plain-language guide
+# RB & WR Season-Total Projection — a plain-language guide
+
+> This guide was written for the running-back model and then extended to wide receivers, which use
+> the identical method with a receiving-flavored feature set (see "What's different for wide
+> receivers" at the end). Tight ends and quarterbacks are still to come.
 
 ## 1. What I'm trying to do
 
@@ -12,8 +16,8 @@ they already bake in everything the crowd knows.
 This subproject builds my own from-scratch projection of one thing: **how many half-PPR points
 each running back will score across the entire 2026 regular season.** ("Half-PPR" is a scoring
 rule — a player earns his normal points plus half a point per catch. "Season-total" means summed
-over all his games, not a per-game average.) I build it only for running backs in this first pass;
-wide receivers, tight ends, and quarterbacks are separate later builds.
+over all his games, not a per-game average.) I now build it for running backs **and wide receivers**;
+tight ends and quarterbacks are separate later builds.
 
 The point of the exercise is honesty about a hard problem. A season projection has to guess two
 things at once — how good a player is *per game*, and *how many games' worth of work he'll get* —
@@ -143,5 +147,33 @@ quarterbacks have no projection here yet.
   rank — is a written amendment justified by the data not existing for 2026, and it only *removes* a
   feature; it can't be used to fish for a better result.
 - **Every projection carries its honesty label.** On the board the projection reads as backtested, not
-  live-validated; RB-only for now; and explicitly not a claim to beat Sleeper. Those labels stay until a
-  live season earns their removal.
+  live-validated; the position coverage of the moment (RB and WR so far); and explicitly not a claim to
+  beat Sleeper. Those labels stay until a live season earns their removal.
+
+## What's different for wide receivers
+
+The WR model is the **same machinery** — same target, same two-model split, same walk-forward, same
+frozen model slate, same "Sleeper shown, not gated" rule — with a receiving-flavored feature set. The
+veteran model draws on the same season-level pool, where the receiving priors (targets per game, target
+share, air-yards share, average depth of target, yards per target, receiving efficiency) carry the
+signal. The rookie model swaps the running-back college block for the receiving one: the same combine
+measurements, but college **receiving** production and the PFF **receiving** grades (route grade,
+yards-per-route-run, contested-catch rate, drop rate, and so on).
+
+**One deliberate choice, learned from the RB build:** I excluded the depth-chart-rank feature from the
+start. It was genuinely useful but its data source stops at 2024, so it was missing for exactly the
+2026 season I need to project — which had broken the RB tree models until I dropped it. For WR I never
+put it in, and I ran an explicit check confirming no *other* feature has that same "present in training,
+absent for 2026" problem.
+
+**Honest WR results (walk-forward 2021–2025, 1,242 receiver-seasons).** Rank correlation with actual
+season totals is **+0.74** pooled (veterans +0.74, rookies +0.68), average absolute error about 31
+points. This came out a bit stronger than the running-back model. Against the market, on the 657
+receiver-seasons where Sleeper published a projection: **Sleeper still ranks a little better (+0.80 vs.
+my +0.74)**, but the average errors are essentially even (about 38.5 for me vs. 39.2 for Sleeper). So —
+same headline as always, stated plainly: **I do not beat Sleeper on ranking**, though the WR model is
+noticeably closer than the RB one. Like the RB model, it is conservative at the very top: it projects
+the highest-projected receivers (Ja'Marr Chase, CeeDee Lamb, Puka Nacua) below Sleeper, so a large
+negative gap on a star is the model's known low-bias, not a signal. Both 2026 models deploy as gradient-boosted
+trees; for two of the five veteran validation folds a plain regularized-linear model won the internal
+selection instead, which is just a sign that for receivers the linear and tree fits are very close.

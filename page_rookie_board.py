@@ -18,7 +18,8 @@ import streamlit as st
 
 _HERE = Path(__file__).resolve().parent
 _BOARD = _HERE / "fantasy" / "rookie" / "board_data"
-_PROJ = _HERE / "fantasy" / "projections" / "results" / "rb_rookie_board_projection.csv"
+_PROJ_DIR = _HERE / "fantasy" / "projections" / "results"
+_PROJ_FILES = ["rb_rookie_board_projection.csv", "wr_rookie_board_projection.csv"]  # RB + WR (TE/QB later)
 _CLASSES = [2026, 2025, 2024]
 
 sys.path.insert(0, str(_HERE / "fantasy" / "seasonal_projections"))
@@ -57,8 +58,8 @@ PROJ_HELP = (
     "share, drafting-team context, ADP-implied role) and college/athletic/draft profile — so a "
     "back drafted into a crowded room projects lower than his draft slot alone would suggest. "
     "For the 2026 class this is the deploy projection; for 2024/2025 it is the walk-forward "
-    "out-of-sample projection. Backtested 2021–2025 (pooled Spearman +0.69 vs actual season totals), "
-    "NOT live-validated. RB only for now — WR/TE/QB projections are separate later builds."
+    "out-of-sample projection. Backtested 2021–2025 (pooled Spearman ~0.69–0.74 vs actual season "
+    "totals), NOT live-validated. RB and WR for now — TE/QB are separate later builds."
 )
 SLEEPER_HELP = (
     "Sleeper's published season-total half-PPR projection (the market), shown for context. The model "
@@ -67,7 +68,9 @@ SLEEPER_HELP = (
 )
 DIFF_HELP = (
     "Projection − Sleeper (season-total half-PPR). Positive = the model is higher than the market on "
-    "this player; negative = lower. Descriptive only — it is not a recommendation."
+    "this player; negative = lower. Descriptive only — it is not a recommendation. Note: the models are "
+    "known to be conservative at the very top (they compress the highest projections), so a large "
+    "negative Diff on a top-projected player is the model's low-bias, not a read."
 )
 
 _COLS = {
@@ -88,10 +91,13 @@ def _load(cls: int) -> pd.DataFrame:
 
 @st.cache_data(ttl=3600)
 def _load_proj() -> pd.DataFrame:
-    """RB season-total projection join file (norm_name, position, entry_class, projection, sleeper, diff)."""
-    if not _PROJ.exists():
+    """Season-total projection join files (norm_name, position, entry_class, projection, sleeper, diff).
+    Concatenates the per-position files (RB + WR); position is in the join key, so RB rows draw the RB
+    model and WR rows the WR model. Missing files are skipped (positions not built yet stay blank)."""
+    frames = [pd.read_csv(_PROJ_DIR / f) for f in _PROJ_FILES if (_PROJ_DIR / f).exists()]
+    if not frames:
         return pd.DataFrame(columns=["norm_name", "position", "entry_class", "projection", "sleeper", "diff"])
-    return pd.read_csv(_PROJ)
+    return pd.concat(frames, ignore_index=True)
 
 
 def _attach_projection(df: pd.DataFrame, cls: int) -> pd.DataFrame:
@@ -162,7 +168,7 @@ def render():
     )
     st.caption(
         f"Class of {cls} · {len(show)} rookies · {HIT_DEF} **Proj (season ½-PPR)** is the projected "
-        "season-total half-PPR from the RB season-total model — RB only for now (WR/TE/QB coming), "
+        "season-total half-PPR from the RB and WR season-total models — RB and WR for now (TE/QB coming), "
         "shown beside Sleeper's projection with the difference; no claim to beat Sleeper. College "
         "Talent covers RB/WR/TE only (no QB) and the 2026 class only. Percentiles are within-position "
         "across the 2015–2026 drafted-skill panel. College grade/efficiency values per PFF. Hit "
