@@ -1,5 +1,12 @@
 # A guide to the 2026 Draft Board
 
+> **Note (2026-07-22): the Draft Board TAB was rebuilt** into a season-projection comparison table
+> (Sleeper ADP + Position Rank beside Sleeper's and a from-scratch model's season projections, with the
+> rank gap for each; ~245 players). It **no longer renders the calibrated band** described below. This
+> GUIDE now documents the **closed band research campaign** and the frozen `phase4_band_2026.csv` (kept on
+> disk for the campaign + the daily ADP refresh), NOT the live tab. For the current tab, see the repo
+> `CLAUDE.md` "RB, WR, TE & QB Season Projection" section.
+
 This is the plain-language tour of the pre-season Draft Board and the research behind it. I built
 this, and I ran a long, disciplined research program to figure out what it can honestly say. My
 aim here is to explain how it works and to be careful and exact about what has been shown and what

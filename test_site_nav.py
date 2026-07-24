@@ -68,7 +68,7 @@ def test_sidebar_is_empty_and_footer_present():
     assert "buy me a coffee" not in caps, "the coffee caption must not remain in the footer"
     # footer now carries only the centered public-repo line (an st.markdown, not a caption)
     md = " ".join(str(m.value) for m in at.markdown)
-    assert "github.com/joscho11/BettingEdgeContinued" in md, "footer repo link missing"
+    assert "github.com/joscho11/JoSchoAnalytics" in md, "footer repo link missing"
 
 
 def test_header_has_brand_and_tip_jar():

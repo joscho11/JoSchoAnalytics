@@ -2,4 +2,6 @@
 - [Feature list order is contract](feature-list-order-is-contract.md) — PROD_FEATURES_35 / FEATURE_COLS_85 order = X_tr column order = pkl identity; never reorder for readability.
 - [BettingEdge model experiments May 2026](bettingedge-model-experiments-2026-05.md) — rejected experiments: weather, ensemble re-weighting, consensus filter, ULTRA tier, time-decay weighting, extended training range. Don't re-run. Always audit data-source coverage before "extend the data" experiments.
 - [Experiment rejection criteria](experiment-rejection-criteria.md) — concrete ship/reject thresholds for model-improvement experiments (+0.5pp CV ATS minimum, ≥3 of 5 models improve, live data wins on borderline evidence, etc.).
+- [Completed work log](completed-work-log.md) — dated implementation history, including the 2026-07-24 Draft Board visual restoration and its validation boundary.
+- [Daily 2026-07-24](daily/2026-07-24.md) — board visual restoration, deferred projection-outlier audit, and Cloud-throttle diagnosis.
 - [Never mention commits](never-mention-commits.md) — user handles all git operations; don't prompt, propose messages, or frame work as commit-ready.

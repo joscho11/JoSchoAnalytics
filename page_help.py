@@ -505,7 +505,7 @@ Nothing on this site should be taken as betting or financial advice. Sports bett
             <div style='font-size:13px;color:#666'>
                 Built by <b style='color:#999'>Joseph Schoenbaum</b>
                 &nbsp;·&nbsp;
-                <a href='https://github.com/joscho11/BettingEdgeContinued'
+                <a href='https://github.com/joscho11/JoSchoAnalytics'
                    style='color:#3D95CE;text-decoration:none'>GitHub</a>
                 &nbsp;·&nbsp;
                 <a href='https://venmo.com/u/JoScho'

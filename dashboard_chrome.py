@@ -19,7 +19,7 @@ _OFFLINE = os.environ.get("APP_OFFLINE") == "1"
 CANONICAL_URL = "https://joschoanalytics.streamlit.app"
 _LOGO = _HERE / "assets" / "logo.svg"
 _VENMO = "https://venmo.com/u/JoScho"
-_REPO = "https://github.com/joscho11/BettingEdgeContinued"   # repo ROOT only (Q3)
+_REPO = "https://github.com/joscho11/JoSchoAnalytics"   # repo ROOT only (Q3)
 
 # Shared fixed height for every long, scrolling st.dataframe on the site (~20 data
 # rows visible; the rest scroll inside). One source of truth — the Draft Board and
@@ -202,5 +202,5 @@ def render_footer():
         "The models and code behind this are public → "
         f"<a href='{_REPO}' target='_blank' rel='noopener noreferrer' "
         "style='color:#6ea8d8;text-decoration:none;'>"
-        "github.com/joscho11/BettingEdgeContinued</a></div>",
+        "github.com/joscho11/JoSchoAnalytics</a></div>",
         unsafe_allow_html=True)

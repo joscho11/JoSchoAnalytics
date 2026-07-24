@@ -1,8 +1,8 @@
-"""Draft Board sort-regression guard (survives the multipage swap — it imports
-draft_board_2026 directly and never renders the entrypoint). The former tab-render
-test (test_draft_value_2026_tab_renders_and_filters) was retired when the tab monolith
-was removed in Batch 3e; the board's rendered behaviour is now covered by
-test_board_page.py against the st.table page.
+"""Draft Board sort-regression guard for the rebuilt tab (2026-07-22). Imports
+draft_board_2026 directly and never renders the entrypoint. For every one of the 10 sortable
+columns, ascending AND descending order must be numerically correct (never a string sort), and
+every sentinel row — a rookie QB with no projection (NaN gap/rank/proj) or a player with no
+talent score — must land at the BOTTOM in BOTH directions (na_position='last').
 """
 import sys
 from pathlib import Path
@@ -13,19 +13,13 @@ _HERE = Path(__file__).resolve().parent
 
 
 def test_board_sort_is_numeric_and_sentinels_sink():
-    """Regression guard against the recurring string-sort bug (see
-    audit/board_sort_diagnosis_2026-07-13.md). For every one of the 9 sortable
-    columns, ascending AND descending order must be numerically correct, and every
-    sentinel row — Gainwell's blank Gap/Proj rank, and all 'Rookie' and all '–'
-    efficiency rows — must land at the BOTTOM in BOTH directions. Fails if any column
-    reverts to string sorting or a sentinel floats to the top."""
     sys.path.insert(0, str(_HERE))
     import draft_board_2026 as board
 
     df = board._load_board_2026()
-    assert list(board.SORT_KEYS)[0] == "Gap", "default sort column must be Gap"
-    assert len(board.SORT_KEYS) == 11, \
-        "expected 11 sortable columns (9 + Talent Score + Rookie Score, 2026-07-16)"
+    assert list(board.SORT_KEYS)[0] == "Sleeper ADP", "default sort column must be Sleeper ADP"
+    assert len(board.SORT_KEYS) == 10, \
+        "expected 10 sortable columns (2026-07-22 projection-table rebuild)"
 
     for label, key in board.SORT_KEYS.items():
         for asc in (True, False):
@@ -39,32 +33,23 @@ def test_board_sort_is_numeric_and_sentinels_sink():
                     f"{label} asc={asc}: sentinel rows not all pinned to the bottom"
             # non-sentinel keys strictly ordered by the numeric value (not the string)
             real = k[~isna]
-            if asc:
-                assert (real[:-1] <= real[1:]).all(), \
-                    f"{label} ascending is not numerically ordered (string sort?)"
-            else:
-                assert (real[:-1] >= real[1:]).all(), \
-                    f"{label} descending is not numerically ordered (string sort?)"
+            if len(real) > 1:
+                if asc:
+                    assert (real[:-1] <= real[1:]).all(), \
+                        f"{label} ascending is not numerically ordered (string sort?)"
+                else:
+                    assert (real[:-1] >= real[1:]).all(), \
+                        f"{label} descending is not numerically ordered (string sort?)"
 
-    # column-specific sentinel identity: Gainwell (blank Gap) last on Gap, both ways
+    # rookie QBs (no Model Proj) sink last on Model Gap / Model Proj, both ways
     for asc in (True, False):
-        g = board._sort_board(df, "Gap", ascending=asc)
-        assert pd.isna(g["value_gap"].iloc[-1]), \
-            f"Gainwell (blank Gap) must be last on Gap sort (asc={asc})"
-        p = board._sort_board(df, "Proj position rank", ascending=asc)
-        assert pd.isna(p["proj_pos_rank"].iloc[-1]), \
-            f"blank Proj-rank row must be last on Proj-rank sort (asc={asc})"
-        # every 'Rookie' and every '–' efficiency row sits in the bottom block
-        e = board._sort_board(df, "NFL Efficiency %ile (pos)", ascending=asc)
-        n_rk = int((df["eff_disp"] == "Rookie").sum())
-        n_dash = int((df["eff_disp"] == "–").sum())
-        tail = set(e["eff_disp"].iloc[-(n_rk + n_dash):])
-        assert tail <= {"Rookie", "–"}, \
-            f"Efficiency sort (asc={asc}): a real value floated into the sentinel block"
+        for label in ("Model Gap", "Model Proj", "Sleeper Gap", "Sleeper Proj"):
+            g = board._sort_board(df, label, ascending=asc)
+            assert pd.isna(pd.to_numeric(g[board.SORT_KEYS[label]], errors="coerce").iloc[-1]), \
+                f"a no-data row must be last on {label} sort (asc={asc})"
 
-    print(f"OK  board sort: 9 columns numeric asc+desc; sentinels "
-          f"(Gainwell, {int((df['eff_disp']=='Rookie').sum())} Rookie, "
-          f"{int((df['eff_disp']=='–').sum())} '–') sink to bottom both ways; default Gap-desc")
+    print(f"OK  board sort: {len(board.SORT_KEYS)} columns numeric asc+desc; "
+          f"no-data rows sink to bottom both ways; default Sleeper-ADP")
 
 
 if __name__ == "__main__":

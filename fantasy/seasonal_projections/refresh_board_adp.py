@@ -1,15 +1,22 @@
 """Daily ADP refresh for the shipped 2026 Draft Board — MARKET DATA ONLY.
 
-The model is FROZEN for 2026. This script re-pulls LIVE Sleeper ADP and recomputes
-ONLY the three price-derived columns (adp_half_ppr, adp_pos_rank, value_gap) against
-the FROZEN projections, then writes one regenerable overlay CSV. It never writes
-phase4_band_2026.csv, talent_index_2026.csv, the season dataset, or the ADP cache.
+The projections/model are FROZEN for 2026. This script re-pulls LIVE Sleeper ADP and
+refreshes the price columns (adp_half_ppr, adp_pos_rank) for the fixed board universe,
+then writes one regenerable overlay CSV. It never writes phase4_band_2026.csv,
+talent_index_2026.csv, the season dataset, or the ADP cache.
+
+Board universe (2026-07-22): the tab was rebuilt as a season-projection comparison table
+over EVERY player with a 2026 Sleeper ADP (~245), so the refresh now covers that full
+universe — taken from the FROZEN season dataset — not just the old 180-player band. The
+band file stays on disk, read-only, for the closed research campaign; the refresh no
+longer reads it, and the band-derived value_gap column was dropped from the overlay.
 
 Freeze boundary (see .claude/skills/board-refresh/SKILL.md):
-  - FROZEN, read-only: phase4_band_2026.csv gives the 180-player set and each row's
-    frozen projection rank = adp_pos_rank - value_gap (ADP-independent).
+  - FROZEN, read-only: season_dataset_2014_2026.csv defines the fixed ~245-player universe
+    and the fallback price; the model projections are frozen and joined by the tab, not here.
   - LIVE: Sleeper ADP, pulled fresh via fetch_adp's own functions (no fork).
-  - REGENERABLE, written: board_adp_live_2026.csv (the overlay the tab reads).
+  - REGENERABLE, written: board_adp_live_2026.csv (the overlay the tab reads:
+    player_id, adp_half_ppr, adp_pos_rank, refreshed_at).
 
 In-season pause (option i, hard date guard): on/after SEASON_START a SCHEDULED run
 is a no-op that writes nothing and logs "in-season: pre-draft board frozen, refresh
@@ -42,8 +49,7 @@ from fetch_adp import fetch_season, load_players
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-BAND = HERE / "phase4_band_2026.csv"                 # FROZEN — read only
-DATASET = HERE / "season_dataset_2014_2026.csv"      # FROZEN — read only (fallback price)
+DATASET = HERE / "season_dataset_2014_2026.csv"      # FROZEN — defines the ~245 universe + fallback price
 OVERLAY = HERE / "board_adp_live_2026.csv"           # REGENERABLE — the only committed output
 LOGS_DIR = HERE / "adp_logs"                          # PRIVATE — gitignored
 LEDGER = LOGS_DIR / "refresh_ledger.jsonl"
@@ -87,6 +93,38 @@ def _atomic_write(df: pd.DataFrame, path: Path) -> None:
     os.replace(tmp, path)
 
 
+def load_board_universe() -> pd.DataFrame:
+    """The fixed board universe: every player with a 2026 Sleeper ADP in the frozen season
+    dataset (~245). Columns: player_id, player, position, adp_frozen (the frozen fallback price)."""
+    ds = pd.read_csv(DATASET, usecols=["player_id", "season", "player", "position", "adp_half_ppr"])
+    u = ds[(ds.season == BOARD_SEASON) & ds.adp_half_ppr.notna()].drop_duplicates("player_id")
+    return u[["player_id", "player", "position", "adp_half_ppr"]] \
+             .rename(columns={"adp_half_ppr": "adp_frozen"}).reset_index(drop=True)
+
+
+def build_overlay(universe: pd.DataFrame, fresh: pd.DataFrame, source_date: str):
+    """Refresh every universe player's price from a live pull, keeping the row set FIXED.
+    Fresh price where the player matches by (normalized name, position); else the frozen
+    fallback — so the overlay is complete and stateless, never partial. Returns
+    (overlay[player_id, adp_half_ppr, adp_pos_rank, refreshed_at], matched_count)."""
+    u = universe.copy()
+    u["nn"] = u["player"].map(nmz)
+    f = fresh.copy()
+    f["nn"] = f["player"].map(nmz)
+    fresh_adp = f.drop_duplicates(["nn", "position"])[["nn", "position", "adp_half_ppr"]] \
+                 .rename(columns={"adp_half_ppr": "adp_fresh"})
+    m = u.merge(fresh_adp, on=["nn", "position"], how="left")
+    matched = int(m["adp_fresh"].notna().sum())
+    m["adp_half_ppr"] = m["adp_fresh"].where(m["adp_fresh"].notna(), m["adp_frozen"])
+    # deterministic within-position ADP rank over the fixed universe (1 = lowest ADP)
+    m = m.sort_values(["adp_half_ppr", "player_id"]).reset_index(drop=True)
+    m["adp_pos_rank"] = m.groupby("position").cumcount() + 1
+    m["refreshed_at"] = source_date
+    overlay = m[["player_id", "adp_half_ppr", "adp_pos_rank", "refreshed_at"]] \
+                .sort_values("player_id").reset_index(drop=True)
+    return overlay, matched
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--force", action="store_true",
@@ -128,38 +166,11 @@ def main() -> int:
                         "mean_abs_rank_change": None, "movers": []})
         return 1
 
-    # --- frozen inputs (read only) ---
-    band = pd.read_csv(BAND, usecols=["player", "player_id", "position",
-                                      "adp_pos_rank", "value_gap"])
-    assert len(band) == 180, f"frozen band is {len(band)} rows, expected 180"
-    band["proj_pos_rank"] = band["adp_pos_rank"] - band["value_gap"]   # ADP-independent
-    band["nn"] = band["player"].map(nmz)
-
-    frozen_price = pd.read_csv(DATASET, usecols=["player_id", "season", "adp_half_ppr"])
-    frozen_price = frozen_price[frozen_price.season == BOARD_SEASON][
-        ["player_id", "adp_half_ppr"]].rename(columns={"adp_half_ppr": "adp_frozen"})
-
-    # --- bridge fresh ADP to the frozen 180 (same alias bridge the band was built with) ---
-    fresh = fresh.copy()
-    fresh["nn"] = fresh["player"].map(nmz)
-    fresh_adp = fresh.drop_duplicates(["nn", "position"])[["nn", "position", "adp_half_ppr"]] \
-                     .rename(columns={"adp_half_ppr": "adp_fresh"})
-
-    m = band.merge(fresh_adp, on=["nn", "position"], how="left") \
-            .merge(frozen_price, on="player_id", how="left")
-    matched = int(m["adp_fresh"].notna().sum())
-    # per-player fallback to the frozen price when a frozen-board player is absent from a
-    # healthy pull — keeps the overlay complete and stateless, never partial.
-    m["adp_half_ppr"] = m["adp_fresh"].where(m["adp_fresh"].notna(), m["adp_frozen"])
-
-    # --- deterministic recompute over the fixed 180 pool ---
-    m = m.sort_values(["adp_half_ppr", "player_id"]).reset_index(drop=True)
-    m["adp_pos_rank"] = m.groupby("position").cumcount() + 1          # 1 = lowest ADP
-    m["value_gap"] = m["adp_pos_rank"] - m["proj_pos_rank"]
-    m["refreshed_at"] = source_date
-
-    overlay = m[["player_id", "adp_half_ppr", "adp_pos_rank", "value_gap", "refreshed_at"]] \
-                .sort_values("player_id").reset_index(drop=True)
+    # --- fixed board universe (frozen, read only) + fresh-ADP overlay over ALL of it ---
+    universe = load_board_universe()
+    assert len(universe) >= 200, \
+        f"board universe is {len(universe)} rows, expected ~245 (2026 Sleeper-ADP players)"
+    overlay, matched = build_overlay(universe, fresh, source_date)
 
     # --- movement vs the prior dated snapshot (private research metrics) ---
     today_name = f"board_adp_{source_date}.csv"
@@ -172,7 +183,7 @@ def main() -> int:
         j["delta"] = j["adp_pos_rank"] - j["adp_pos_rank_prev"]
         if len(j):
             mean_abs = round(float(j["delta"].abs().mean()), 3)
-            names = band.set_index("player_id")[["player", "position"]]
+            names = universe.set_index("player_id")[["player", "position"]]
             top = j.reindex(j["delta"].abs().sort_values(ascending=False).index).head(5)
             for _, r in top.iterrows():
                 pid = r["player_id"]
@@ -189,7 +200,7 @@ def main() -> int:
                     "pull_players": int(len(fresh)), "matched": matched,
                     "mean_abs_rank_change": mean_abs, "movers": movers})
 
-    print(f"refresh OK: {matched}/180 matched to fresh ADP; source {source_date}; "
+    print(f"refresh OK: {matched}/{len(universe)} matched to fresh ADP; source {source_date}; "
           f"mean|Δrank| {mean_abs}; wrote {OVERLAY.name} + snapshot + ledger row")
     return 0
 
