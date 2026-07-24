@@ -11,7 +11,6 @@ from datetime import datetime as dt
 from pathlib import Path
 
 import pandas as pd
-import plotly.graph_objects as go
 import streamlit as st
 
 import dashboard_data
@@ -23,6 +22,10 @@ _HERE = Path(__file__).resolve().parent
 
 
 def render():
+    # Plotly is only needed for this page's charts. Keeping it here avoids paying its
+    # import cost when a visitor opens a different top-level navigation page.
+    import plotly.graph_objects as go
+
     try:
         df = dashboard_data.load_predictions()
     except FileNotFoundError:

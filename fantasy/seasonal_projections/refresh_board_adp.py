@@ -42,9 +42,12 @@ from pathlib import Path
 import pandas as pd
 
 HERE = Path(__file__).resolve().parent
+REPO_ROOT = HERE.parent.parent
+sys.path.insert(0, str(REPO_ROOT))
 sys.path.insert(0, str(HERE))
 from apply_board_labels import ALIAS, nmz  # reuse the exact band-join alias bridge
 from fetch_adp import fetch_season, load_players
+from seasonal_config import SEASON_START, board_refresh_season_start
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
@@ -57,14 +60,8 @@ LEDGER = LOGS_DIR / "refresh_ledger.jsonl"
 BOARD_SEASON = 2026
 MIN_PULL_PLAYERS = 150                                # healthy-pull floor; abort below this
 # In-season guard: on/after this date a scheduled run pauses (option i). Override with
-# BOARD_REFRESH_SEASON_START=YYYY-MM-DD. Kickoff-week default so the pre-draft board
-# freezes once real drafts are done.
-SEASON_START = date(2026, 9, 4)
-
-
 def _season_start() -> date:
-    raw = os.environ.get("BOARD_REFRESH_SEASON_START")
-    return date.fromisoformat(raw) if raw else SEASON_START
+    return board_refresh_season_start()
 
 
 def _forced(cli_force: bool) -> bool:

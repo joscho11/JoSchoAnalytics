@@ -1,7 +1,4 @@
-"""League History page (site revamp Batch 3c). Tab6 body + its _sleeper_get /
-_fetch_sleeper_history helpers moved byte-identical from app.py. The empty-league-ID
-default + "enter your league ID" resting state (the earlier fix) move verbatim.
-"""
+"""League History page backed by Sleeper's public league-history endpoints."""
 import concurrent.futures as _cf
 import glob
 import html as _html
@@ -12,7 +9,6 @@ from datetime import datetime as dt
 from pathlib import Path
 
 import pandas as pd
-import plotly.graph_objects as go
 import requests as req
 import streamlit as st
 
@@ -23,8 +19,30 @@ from dashboard_chrome import _OFFLINE, TABLE_HEIGHT
 
 _HERE = Path(__file__).resolve().parent
 
+# Sleeper league IDs in the local history fixture are 18--19 digit snowflakes. This is
+# deliberately a plausibility gate, not a claim that every ID in this range exists.
+_MIN_LEAGUE_ID_DIGITS = 15
+_MAX_LEAGUE_ID_DIGITS = 20
+_SLEEPER_GET_CACHE_ENTRIES = 128
+_HISTORY_CACHE_ENTRIES = 8
+_MATCHUP_FETCH_WORKERS = 6
 
-@st.cache_data(ttl=3600)
+
+def _league_id_error(raw_league_id: str) -> str | None:
+    league_id = raw_league_id.strip()
+    if not league_id:
+        return "Enter your Sleeper league ID to load your league history."
+    if not league_id.isdigit():
+        return "Sleeper league IDs contain digits only."
+    if not _MIN_LEAGUE_ID_DIGITS <= len(league_id) <= _MAX_LEAGUE_ID_DIGITS:
+        return (
+            f"That does not look like a Sleeper league ID. Enter a "
+            f"{_MIN_LEAGUE_ID_DIGITS}-{_MAX_LEAGUE_ID_DIGITS} digit ID from your league URL."
+        )
+    return None
+
+
+@st.cache_data(ttl=3600, max_entries=_SLEEPER_GET_CACHE_ENTRIES)
 def _sleeper_get(url: str):
     if _OFFLINE:
         return None
@@ -36,7 +54,7 @@ def _sleeper_get(url: str):
         return None
 
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=3600, max_entries=_HISTORY_CACHE_ENTRIES)
 def _fetch_sleeper_history(start_league_id: str) -> dict:
     seasons = {}
     league_name = None
@@ -137,7 +155,9 @@ def _fetch_sleeper_history(start_league_id: str) -> dict:
             except Exception:
                 return wk, None
 
-        with _cf.ThreadPoolExecutor(max_workers=18) as _pool:
+        # A history can span ten seasons, so keep public API pressure bounded rather
+        # than opening eighteen weekly requests at once for every season.
+        with _cf.ThreadPoolExecutor(max_workers=_MATCHUP_FETCH_WORKERS) as _pool:
             _wk_data = dict(_pool.map(_fetch_wk, range(1, 19)))
 
         _matchups_season: list = []
@@ -188,18 +208,34 @@ def _fetch_sleeper_history(start_league_id: str) -> dict:
 def render():
     st.title("🏅 Fantasy League History")
 
-    _league_id_input = st.text_input(
-        "Sleeper League ID",
-        value="",
-        placeholder="e.g. 1255197436951932928",
-        help="Find it in your Sleeper league URL: sleeper.com/leagues/{ID}/league",
-        key="lh_league_id",
-    )
+    # A form batches text entry. Without it, every numeric keystroke could start a
+    # multi-season public API crawl on the next Streamlit rerun.
+    with st.form("lh_load_form", border=False):
+        _league_id_input = st.text_input(
+            "Sleeper League ID",
+            value="",
+            placeholder="e.g. 1255197436951932928",
+            help="Find it in your Sleeper league URL: sleeper.com/leagues/{ID}/league",
+            key="lh_league_id",
+        )
+        _load_requested = st.form_submit_button("Load league history", type="primary")
 
-    _lid = _league_id_input.strip()
-    # Resting state (empty field, including offline): a neutral prompt, no fetch.
-    if not _lid.isdigit():
-        st.info("Enter your Sleeper league ID to load your league history.")
+    _form_error = None
+    if _load_requested:
+        _submitted_lid = _league_id_input.strip()
+        _form_error = _league_id_error(_submitted_lid)
+        if _form_error is None:
+            st.session_state["lh_loaded_league_id"] = _submitted_lid
+
+    # Keep a successfully loaded result visible while users change page controls or
+    # prepare a different ID. Only an explicit, valid Load submits a new public request.
+    _lid = st.session_state.get("lh_loaded_league_id", "")
+    if _form_error:
+        st.warning(_form_error)
+
+    if not _lid:
+        if not _form_error:
+            st.info("Enter your Sleeper league ID, then select Load league history.")
     elif _OFFLINE:
         st.info("League history needs a live connection to Sleeper and is "
                 "unavailable offline.")
@@ -686,6 +722,9 @@ def render():
 
             # ── Sub-tab F: Score Trends ───────────────────────────────────────
             with _lhF:
+                # Plotly is only needed after a league has been loaded.
+                import plotly.graph_objects as go
+
                 st.subheader("Score Trends")
 
                 # Build avg score per manager per season (always uses full unfiltered data)

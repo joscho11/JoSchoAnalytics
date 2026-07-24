@@ -14,7 +14,7 @@ import streamlit as st
 
 import dashboard_chrome as chrome
 import draft_board_2026 as board
-from refresh_board_adp import SEASON_START
+from seasonal_config import board_refresh_season_start
 
 # Ratified 4d copy (verbatim).
 ORIENTATION = ("I build machine-learning models for NFL betting and fantasy, run them "
@@ -30,8 +30,7 @@ def render():
     st.title("📋 2026 Draft Board")
     st.caption(ORIENTATION)
     st.markdown(f"**{PURPOSE}**")
-    _ss = date.fromisoformat(
-        os.environ.get("BOARD_REFRESH_SEASON_START", SEASON_START.isoformat()))
+    _ss = board_refresh_season_start()
     if date.today() < _ss:
         # No page_link here — this IS the Draft Board page, so the link would be circular.
         chrome.render_preseason_banner(None, _ss.year)

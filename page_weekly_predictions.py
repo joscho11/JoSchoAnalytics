@@ -19,14 +19,12 @@ import nav_registry
 import page_common
 from dashboard_utils import metric_card, get_confidence, _md_to_html
 from page_common import load_agent_analysis, _MODE_BADGE_COLORS
-from refresh_board_adp import SEASON_START
+from seasonal_config import board_refresh_season_start
 
 
 def _preseason():
     """True until 2026 kickoff (env-overridable, same source as the board)."""
-    ss = date.fromisoformat(
-        os.environ.get("BOARD_REFRESH_SEASON_START", SEASON_START.isoformat()))
-    return date.today() < ss
+    return date.today() < board_refresh_season_start()
 
 
 def _demo_notice():

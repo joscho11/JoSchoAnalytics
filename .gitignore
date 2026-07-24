@@ -4,6 +4,7 @@ secrets/
 __pycache__/
 .ipynb_checkpoints/
 .venv
+.venv-test/
 .streamlit/secrets.toml
 .claude/
 

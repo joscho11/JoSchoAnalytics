@@ -1,6 +1,6 @@
-"""Weekly Fantasy page (site revamp Batch 3c). Tab3 body + its _load_proj_csv /
-load_actual_stats helpers moved byte-identical from app.py; own Season+Week controls
-(wf_*, filter independence) preserved. Stale "tab" wording is verbatim.
+"""Weekly Fantasy page (site revamp Batch 3c). Its projection loader and actual-stat
+lookup originated in app.py; own Season+Week controls (wf_*, filter independence) are
+preserved. Stale "tab" wording is verbatim.
 """
 import glob
 import html as _html
@@ -10,7 +10,6 @@ import os
 from datetime import datetime as dt
 from pathlib import Path
 
-import nflreadpy as nfl
 import pandas as pd
 import streamlit as st
 
@@ -29,21 +28,42 @@ def _load_proj_csv(path: str) -> pd.DataFrame:
     return pd.read_csv(path)
 
 
-@st.cache_data(ttl=3600)
-def load_actual_stats(season: int, week: int) -> dict:
-    """Load all actual player stats for a given season/week in one nflreadpy call."""
-    if _OFFLINE:
-        return {}
+_ACTUAL_STAT_COLUMNS = [
+    'season_type', 'week', 'position', 'player_id',
+    'passing_yards', 'passing_tds', 'passing_interceptions',
+    'rushing_yards', 'rushing_tds', 'receptions', 'receiving_yards',
+    'receiving_tds', 'rushing_fumbles_lost', 'receiving_fumbles_lost',
+]
+
+
+@st.cache_data(ttl=3600, max_entries=4)
+def _load_actual_stats_season(season: int) -> pd.DataFrame | None:
+    """Fetch one season once; week selection stays a cheap local filter."""
     try:
         import nflreadpy as nfl
         raw = nfl.load_player_stats([season])
         if hasattr(raw, 'to_pandas'):
             raw = raw.to_pandas()
-        stats = raw[
+        return raw.loc[
             (raw['season_type'] == 'REG') &
-            (raw['week'] == week) &
-            raw['position'].isin(['QB', 'RB', 'WR', 'TE'])
+            raw['position'].isin(['QB', 'RB', 'WR', 'TE']),
+            _ACTUAL_STAT_COLUMNS,
         ].copy()
+    except Exception as _e:
+        import logging as _logging
+        _logging.warning(f"_load_actual_stats_season({season}) failed: {_e}")
+        return None
+
+
+def load_actual_stats(season: int, week: int) -> dict:
+    """Build the existing weekly lookup schema from a cached season pull."""
+    if _OFFLINE:
+        return {}
+    raw = _load_actual_stats_season(season)
+    if raw is None:
+        return {}
+    try:
+        stats = raw[raw['week'] == week].copy()
         stats['actual_half_ppr'] = (
             stats['passing_yards'].fillna(0) * 0.04 +
             stats['passing_tds'].fillna(0) * 4 +
