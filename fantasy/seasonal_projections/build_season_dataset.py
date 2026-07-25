@@ -179,6 +179,8 @@ def add_snaps(full):
     _need = {"offense_snaps", "offense_pct", "player", "season", "week"}
     _missing = _need - set(sc.columns)
     assert not _missing, f"snap_counts schema changed; missing {sorted(_missing)}"
+    if "game_type" in sc.columns:
+        sc = sc[sc["game_type"].astype(str).str.upper().eq("REG")].copy()
     sc = sc[sc["offense_snaps"].fillna(0) > 0].copy()
     sc["norm_name"] = sc["player"].map(norm_name)
     snap_agg = sc.groupby(["norm_name", "season"]).agg(

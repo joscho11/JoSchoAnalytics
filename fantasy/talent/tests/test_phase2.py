@@ -182,7 +182,10 @@ def test_cross_artifact_reproduces_from_pickles():
         S = B["boards"][P]
         m = grp.set_index("gsis_id")
         assert np.allclose(m.w, S.loc[m.index, "w"].round(4), atol=1e-9)
-        assert (m.rank_pos == S.loc[m.index, "rank_pos"]).all()
+        # CSV loading gives player IDs an object index; the scratch checkpoint preserves
+        # pandas StringDtype. The selected rows are already in m's player order, so compare
+        # their rank values directly instead of requiring identical index dtypes.
+        assert np.array_equal(m.rank_pos.to_numpy(), S.loc[m.index, "rank_pos"].to_numpy())
         if P == "RB":
             has = m.college_share > 0
             expect = ((1 - S.loc[m.index, "w"]) * RHO_RB_BOX_DISATT).round(4)

@@ -176,18 +176,8 @@ def surface_projection():
     return rk[["player_id", "norm_name", "position", "season", "proj_ppg"]]
 
 
-def unified_pff(df):
-    pos = df["position"]
-    g = lambda c: df[c] if c in df.columns else pd.Series(np.nan, index=df.index)
-    grade = np.where(pos.isin(["WR", "TE"]), g("pff_receiving_grades_offense"),
-             np.where(pos == "RB", g("pff_rushing_grades_run"), g("pff_passing_grades_pass")))
-    eff = np.where(pos.isin(["WR", "TE"]), g("pff_receiving_yprr"),
-           np.where(pos == "RB", g("pff_rushing_elusive_rating"), g("pff_passing_btt_rate")))
-    return pd.Series(grade, index=df.index), pd.Series(eff, index=df.index)
-
-
 DISPLAY = ["draft_pick", "age", "forty", "vertical", "broad_jump", "wt", "bmi", "speed_score",
-           "cfb_final_dom", "cfb_scrim_ypg", "pff_grade", "pff_eff"]
+           "cfb_final_dom", "cfb_scrim_ypg"]
 
 
 def add_percentiles(board, refpop):
@@ -225,8 +215,6 @@ def main():
         if arm == "full":
             oof.to_csv(BOARD / "oof_predictions.csv", index=False)   # derived (y,p) only
     (MODELS / "rookie_hit_model.pkl").unlink(missing_ok=True)        # superseded by the 3 arm files
-    feat_score["pff_grade"], feat_score["pff_eff"] = unified_pff(feat_score)
-
     # projection surface — COALESCE: real-gsis join (reliable for 2024/25), then name+position+class
     # bridge fallback only for still-missing rows (the placeholder-gsis 2026 seam). Skip ambiguous.
     feat_score = feat_score.copy()
@@ -259,7 +247,6 @@ def main():
 
     # reference population for percentiles = 2015-2026 drafted-skill panel
     refpop = pd.concat([feat_hit, feat_score], ignore_index=True)
-    refpop["pff_grade"], refpop["pff_eff"] = unified_pff(refpop)
     feat_score = add_percentiles(feat_score, refpop)
 
     hitcols = ["hit_prob_draft", "hit_prob_college", "hit_prob_full"]

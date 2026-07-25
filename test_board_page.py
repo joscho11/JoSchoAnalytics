@@ -116,7 +116,7 @@ def test_semantic_gap_colors_and_active_sort_tint():
     model_proj_col = view[board._DISPLAY_COLS].columns.get_loc("model_proj")
 
     active_style = dict(ctx[(0, model_gap_col)])
-    assert active_style["background-color"] == "#16281f"
+    assert active_style["background-color"] == "#1b5e3a"
     assert active_style["font-weight"] == "700"
     assert active_style["font-size"] == "15px"
 
@@ -145,6 +145,31 @@ def test_csv_download_present():
     at = _run()
     dl = at.get("download_button")
     assert any("Download board (CSV)" in b.label for b in dl), "full-board CSV download missing"
+
+
+def test_board_cache_key_tracks_projection_artifact_changes(monkeypatch, tmp_path):
+    import draft_board_2026 as board
+
+    projection = tmp_path / "wr_projection_2026.csv"
+    projection.write_text("projection\n69.0\n", encoding="utf-8")
+    monkeypatch.setattr(
+        board,
+        "_board_source_fingerprint",
+        lambda: (("wr", projection.stat().st_mtime_ns, projection.stat().st_size),),
+    )
+    seen = []
+    monkeypatch.setattr(
+        board,
+        "_load_board_2026_cached",
+        lambda fingerprint: seen.append(fingerprint),
+    )
+
+    board._load_board_2026()
+    projection.write_text("projection\n127.9\n", encoding="utf-8")
+    board._load_board_2026()
+
+    assert len(seen) == 2
+    assert seen[0] != seen[1]
 
 
 if __name__ == "__main__":

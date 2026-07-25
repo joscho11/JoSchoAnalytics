@@ -57,6 +57,28 @@ def _pdf(x):
         return x
 
 
+def compute_vacated_opportunity(active_prior, current_roster):
+    """Return prior-team opportunity held by players no longer on that same team."""
+    prior = active_prior[["player_id", "team", "target_share", "carries"]].copy()
+    roster = current_roster.dropna(subset=["player_id", "team"]).drop_duplicates("player_id")
+    prior["team"] = prior["team"].replace(DRAFT_TEAM_MAP)
+    roster["team"] = roster["team"].replace(DRAFT_TEAM_MAP)
+    current_team = roster.set_index("player_id")["team"]
+    prior["current_team"] = prior["player_id"].map(current_team)
+    prior["gone"] = prior["current_team"].isna() | prior["current_team"].ne(prior["team"])
+
+    team_carries = prior.groupby("team")["carries"].sum().rename("team_carries")
+    prior = prior.merge(team_carries, on="team", how="left")
+    prior["rush_share"] = prior["carries"] / prior["team_carries"].replace(0, np.nan)
+
+    vac = (prior[prior["gone"]].groupby("team").agg(
+        vacated_target_share=("target_share", lambda s: s.fillna(0).sum()),
+        vacated_rush_share=("rush_share", lambda s: s.fillna(0).sum()))
+        .reindex(sorted(prior["team"].dropna().unique()), fill_value=0.0)
+        .reset_index())
+    return vac
+
+
 def seed_upcoming_rows(full):
     """One games=0 row per 2026 rostered skill player, with bio/draft/team/vacated set."""
     ros = _pdf(nfl.load_rosters([UPCOMING]))
@@ -175,16 +197,11 @@ def seed_upcoming_rows(full):
     except Exception as e:
         print(f"  coach_changed left NaN ({type(e).__name__})")
 
-    # vacated opportunity: 2025 target/rush share held by players NOT on the 2026 roster
-    roster26 = set(ros["player_id"])
+    # vacated opportunity: 2025 target/rush share held by players no longer on
+    # that SAME team in 2026. A league-wide membership set would incorrectly
+    # treat trades/free-agent moves as retained and would omit teams with zero.
     a25 = full[(full.season == 2025) & (full.games > 0)][["player_id", "team", "target_share", "carries"]].copy()
-    tcar = a25.groupby("team")["carries"].sum().rename("tot")
-    a25 = a25.merge(tcar, on="team", how="left")
-    a25["rush_share"] = a25["carries"] / a25["tot"].replace(0, np.nan)
-    a25["gone"] = ~a25["player_id"].isin(roster26)
-    vac = a25[a25.gone].groupby("team").agg(
-        vacated_target_share=("target_share", lambda s: s.fillna(0).sum()),
-        vacated_rush_share=("rush_share", lambda s: s.fillna(0).sum())).reset_index()
+    vac = compute_vacated_opportunity(a25, ros)
     ros = ros.merge(vac, on="team", how="left")
 
     # assemble rows with full's columns (unplayed stats stay NaN; flags/bio set)

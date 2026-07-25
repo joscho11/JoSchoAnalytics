@@ -18,6 +18,7 @@ import pandas as pd
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import build_rb_projection as B                       # the RB engine (reused by import; NOT modified)
+from rookie_deploy_recovery import recover_missing_deploy_profiles, assert_drafted_deploy_profiles
 from build_rb_projection import (
     season_total_target, nested_select, walk_forward, fit_final_model, _prep, _score_bundle,
     metrics_block, _mae, _rmse, _rank, VET_FEATS, ROOK_DRAFT, ROOK_AGE, ROOK_COMBINE, ROOK_LAND,
@@ -86,6 +87,8 @@ def assemble():
         fill.index = rook.loc[need].index
         for c in FROZEN_JOIN_QB:
             rook.loc[need, c] = fill[c].values
+    rook = recover_missing_deploy_profiles(rook, FROZEN_JOIN_QB, "passing", deploy_season=DEPLOY)
+    assert_drafted_deploy_profiles(rook, FROZEN_JOIN_QB, deploy_season=DEPLOY)
     return vet, rook, qb
 
 
@@ -273,16 +276,39 @@ def do_ship():
     print("SHIP ARTIFACTS WRITTEN (derived only; no parquet / no raw PFF in repo).")
 
 
+def do_refresh_deploy():
+    """Re-score 2026 veteran QBs from the current season dataset; never retrain the model."""
+    import joblib
+    print("=" * 74); print("QB DEPLOY REFRESH — existing veteran model only (no retrain)"); print("=" * 74)
+    model_path = MODELS_DIR / "qb_veteran_model.pkl"
+    before = _md5(model_path)
+    bundle = joblib.load(model_path)
+    current = pd.read_csv(SEAS / "season_dataset_2014_2026.csv")
+    v26 = current[(current["season"] == DEPLOY) & (current["position"] == "QB")
+                  & (current["is_rookie"] == 0)].copy()
+    v26["projection"] = np.round(_score_bundle(bundle, v26), 1)
+    v26["sleeper"] = v26["sleeper_pts_half_ppr"]
+    v26["diff"] = np.round(v26["projection"] - v26["sleeper"], 1)
+    cols = ["player_id", "player", "position", "team", "is_rookie", "draft_pick", "adp_pos_rank",
+            "projection", "sleeper", "diff"]
+    v26[cols].sort_values("projection", ascending=False).to_csv(
+        RESULTS_DIR / "qb_projection_2026.csv", index=False)
+    assert before == _md5(model_path), "deploy refresh changed the QB veteran model pkl"
+    print(f"refreshed {len(v26)} 2026 veteran rows; model pkl unchanged: {before}")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--assemble", action="store_true")
     ap.add_argument("--walk-forward", dest="wf", action="store_true")
     ap.add_argument("--ship", action="store_true")
+    ap.add_argument("--refresh-deploy", action="store_true")
     a = ap.parse_args()
     if a.assemble: do_assemble()
     elif a.wf: do_walk_forward()
     elif a.ship: do_ship()
-    else: raise SystemExit("pass --assemble, --walk-forward, or --ship")
+    elif a.refresh_deploy: do_refresh_deploy()
+    else: raise SystemExit("pass --assemble, --walk-forward, --ship, or --refresh-deploy")
 
 
 if __name__ == "__main__":

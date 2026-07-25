@@ -17,6 +17,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _utils import norm_name, ADP_SENTINEL, SKILL_POSITIONS
 import build_season_dataset as bsd
+import build_2026_board as b26
 
 
 # ── _utils.norm_name ─────────────────────────────────────────────────────────
@@ -84,6 +85,43 @@ def test_add_rates_zero_game_is_nan_not_error():
 
 
 # ── build_feature_rows: prior join (gap-aware), flags, targets, soft floor ──
+def test_add_snaps_excludes_postseason(monkeypatch):
+    full = pd.DataFrame({
+        "norm_name": ["ann"], "season": [2025], "games": [2.0],
+        "reconstructed": [0],
+    })
+    snaps = pd.DataFrame({
+        "player": ["Ann", "Ann", "Ann"],
+        "season": [2025, 2025, 2025],
+        "week": [1, 2, 19],
+        "game_type": ["REG", "REG", "POST"],
+        "offense_snaps": [40.0, 50.0, 60.0],
+        "offense_pct": [0.5, 0.7, 0.9],
+    })
+    monkeypatch.setattr(bsd, "snap", lambda *args, **kwargs: snaps)
+    out = bsd.add_snaps(full)
+    assert out.loc[0, "games"] == 2.0
+    assert abs(out.loc[0, "snap_share_pg"] - 0.6) < 1e-9
+
+
+def test_vacated_opportunity_is_team_specific_and_zero_complete():
+    prior = pd.DataFrame({
+        "player_id": ["stay", "move", "leave", "other"],
+        "team": ["KC", "KC", "KC", "ARI"],
+        "target_share": [0.30, 0.20, 0.10, 0.40],
+        "carries": [60.0, 30.0, 10.0, 100.0],
+    })
+    roster = pd.DataFrame({
+        "player_id": ["stay", "move", "other", "rookie"],
+        "team": ["KC", "BUF", "AZ", "KC"],
+    })
+    vac = b26.compute_vacated_opportunity(prior, roster).set_index("team")
+    assert abs(vac.loc["KC", "vacated_target_share"] - 0.30) < 1e-9
+    assert abs(vac.loc["KC", "vacated_rush_share"] - 0.40) < 1e-9
+    assert vac.loc["AZ", "vacated_target_share"] == 0.0
+    assert vac.loc["AZ", "vacated_rush_share"] == 0.0
+
+
 def _synthetic_full():
     """Two players across seasons with all columns build_feature_rows expects.
     Player A: 2018 active, 2019 MISSED (reconstructed 0-game), 2020 active.

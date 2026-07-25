@@ -17,6 +17,7 @@ import pandas as pd
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import build_rb_projection as B                       # the RB engine (reused by import; NOT modified)
+from rookie_deploy_recovery import recover_missing_deploy_profiles, assert_drafted_deploy_profiles
 from build_rb_projection import (
     season_total_target, nested_select, walk_forward, fit_final_model, _prep, _score_bundle,
     metrics_block, _mae, _rmse, _rank, VET_FEATS, ROOK_DRAFT, ROOK_AGE, ROOK_COMBINE, ROOK_LAND,
@@ -87,6 +88,8 @@ def assemble():
         fill.index = rook.loc[need].index
         for c in FROZEN_JOIN_TE:
             rook.loc[need, c] = fill[c].values
+    rook = recover_missing_deploy_profiles(rook, FROZEN_JOIN_TE, "receiving", deploy_season=DEPLOY)
+    assert_drafted_deploy_profiles(rook, FROZEN_JOIN_TE, deploy_season=DEPLOY)
     return vet, rook, te
 
 
@@ -273,15 +276,50 @@ def do_ship():
     print("SHIP ARTIFACTS WRITTEN (derived only; no parquet / no raw PFF in repo).")
 
 
+def do_refresh_deploy():
+    """Re-score the deploy season with the existing final models; never retrain or rewrite pkls."""
+    import joblib
+    print("=" * 74); print("TE DEPLOY REFRESH — existing models only (no retrain)"); print("=" * 74)
+    vet = pd.read_parquet(TE_SCRATCH / "vet.parquet"); rook = pd.read_parquet(TE_SCRATCH / "rook.parquet")
+    paths = [MODELS_DIR / "te_veteran_model.pkl", MODELS_DIR / "te_rookie_model.pkl"]
+    before = {p.name: _md5(p) for p in paths}
+    vb, rb_ = (joblib.load(p) for p in paths)
+    v26 = vet[vet.season == DEPLOY].copy(); r26 = rook[rook.season == DEPLOY].copy()
+    v26["projection"] = np.round(_score_bundle(vb, v26), 1)
+    r26["projection"] = np.round(_score_bundle(rb_, r26), 1)
+    merged = pd.concat([v26, r26], ignore_index=True)
+    merged["sleeper"] = merged["sleeper_pts_half_ppr"]
+    merged["diff"] = np.round(merged["projection"] - merged["sleeper"], 1)
+    cols = ["player_id", "player", "position", "team", "is_rookie", "draft_pick", "adp_pos_rank",
+            "projection", "sleeper", "diff"]
+    merged[cols].sort_values("projection", ascending=False).to_csv(RESULTS_DIR / "te_projection_2026.csv", index=False)
+
+    board_path = RESULTS_DIR / "te_rookie_board_projection.csv"
+    prior = pd.read_csv(board_path)
+    prior = prior[pd.to_numeric(prior["entry_class"], errors="coerce") != DEPLOY]
+    r26b = r26.rename(columns={"season": "entry_class"})[["player", "entry_class", "projection",
+                                                              "sleeper_pts_half_ppr"]].rename(
+        columns={"sleeper_pts_half_ppr": "sleeper"})
+    r26b["norm_name"] = r26b["player"].map(norm_name); r26b["position"] = "TE"
+    r26b["diff"] = np.round(r26b["projection"] - r26b["sleeper"], 1)
+    board = pd.concat([prior, r26b[["norm_name", "position", "entry_class", "projection", "sleeper", "diff"]]],
+                      ignore_index=True).drop_duplicates(["norm_name", "position", "entry_class"], keep="last")
+    board.to_csv(board_path, index=False)
+    assert before == {p.name: _md5(p) for p in paths}, "deploy refresh changed a model pkl"
+    print(f"refreshed {len(r26)} 2026 rookie rows; model pkls unchanged: {before}")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--assemble", action="store_true")
     ap.add_argument("--walk-forward", dest="wf", action="store_true")
     ap.add_argument("--ship", action="store_true")
+    ap.add_argument("--refresh-deploy", action="store_true")
     a = ap.parse_args()
     if a.assemble: do_assemble()
     elif a.wf: do_walk_forward()
     elif a.ship: do_ship()
+    elif a.refresh_deploy: do_refresh_deploy()
     else: raise SystemExit("pass --assemble, --walk-forward, or --ship")
 
 

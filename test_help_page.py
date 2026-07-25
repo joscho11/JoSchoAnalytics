@@ -28,6 +28,10 @@ def test_help_renders_offline_clean(tmp_path):
     at = _render(tmp_path)
     assert any("Help & Guide" in str(t.value) for t in at.title), "Help title missing"
     assert len(list(at.markdown)) > 10, "Help body (expanders/markdown) did not render"
+    assert any("What Drives the Models" in str(s.value) for s in at.subheader)
+    assert any("Spread · XGBoost component" in str(m.value) for m in at.markdown)
+    assert any("Review historical season-projection bias" in str(e.label) for e in at.expander)
+    assert any("2,589 non-rookie season projections" in str(m.value) for m in at.markdown)
 
 
 def test_help_interpolates_shared_stats_byte_identical(tmp_path):

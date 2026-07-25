@@ -91,6 +91,7 @@ Sleeper's projection and the difference between them, replacing an older, weaker
 |---|---|
 | `PREREG_rb_projection_2026-07-21.md` | The pre-registration: every choice (target, features, models, validation) frozen in writing before any model was fit, plus Amendment 1 (dropping depth rank). |
 | `build_rb_projection.py` | The whole pipeline: assembles the two feature matrices, runs the walk-forward, and (in `--ship` mode) fits the final models and writes the outputs. |
+| `rookie_deploy_recovery.py` | Deploy-only identity recovery: if nflverse has not assigned a new draftee's GSIS ID but the season dataset already has one, restores that player's existing college/PFF profile by normalized name. It never changes historical training rows or the frozen hit-probability harness. |
 | `rb_projection_harness.py` | A synthetic-data proof that the machinery routes players correctly, detects planted signal, and screams on a deliberately leaked target — run before trusting any real number. |
 | `models/rb_veteran_model.pkl`, `models/rb_rookie_model.pkl` | The two trained deploy models. |
 | `results/rb_projection_2026.csv` | The full 2026 RB projection (veteran + rookie) with Sleeper and the difference. |
@@ -99,6 +100,13 @@ Sleeper's projection and the difference between them, replacing an older, weaker
 
 The raw PFF college tables are licensed and never stored in this repo; the rookie feature matrix that
 uses them is regenerated in a temporary folder each run and never written here.
+
+**Deploy refresh.** After a source-identity correction or an in-season data refresh, first run the
+position's `--assemble` step, then `--refresh-deploy`. The latter re-scores only the 2026 rows with the
+already-saved veteran and rookie models, rewrites the two derived projection CSVs, and asserts the model
+file hashes did not change. It is deliberately not a retrain. A hard guard stops the build if a drafted
+2026 RB/WR/TE would otherwise be scored with no college, combine, or PFF profile at all. QB rookie
+projections remain withheld by design.
 
 ## 4. Honest results
 

@@ -66,7 +66,7 @@ def _load_projections():
 
 
 @st.cache_data
-def _load_board_2026():
+def _load_board_2026_cached(source_fingerprint):
     ds = pd.read_csv(DATASET, usecols=["player_id", "season", "player", "position",
                                        "team", "adp_half_ppr"])
     df = ds[(ds.season == BOARD_SEASON) & ds.adp_half_ppr.notna()].copy()
@@ -117,6 +117,32 @@ def _load_board_2026():
     df["sleeper_gap"] = (df["pos_rank"] - df["sleeper_proj_pos_rank"]).astype("Int64")
     df["model_gap"] = (df["pos_rank"] - df["model_proj_pos_rank"]).astype("Int64")
     return df
+
+
+def _board_source_fingerprint():
+    """Cache key for every local artifact that contributes to the board."""
+    paths = [
+        DATASET,
+        LIVE_OVERLAY,
+        *(PROJ_RESULTS / f"{position}_projection_2026.csv"
+          for position in ("rb", "wr", "te", "qb")),
+        TALENT_CSV,
+        ROOKIE_CSV,
+    ]
+    return tuple(
+        (str(path), path.stat().st_mtime_ns, path.stat().st_size)
+        if path.exists() else (str(path), None, None)
+        for path in paths
+    )
+
+
+def _load_board_2026():
+    return _load_board_2026_cached(_board_source_fingerprint())
+
+
+# Preserve the existing test/maintenance API while the cached implementation
+# receives a real source-dependent key.
+_load_board_2026.clear = _load_board_2026_cached.clear
 
 
 @st.cache_data
@@ -249,7 +275,7 @@ COLUMN_META = [
      {"format": "%d", "width": "small"}),
     ("model_proj", _NUM, "Model Proj",
      "Season-total half-PPR points from a separate, from-scratch model I built (RB/WR/TE plus "
-     "QB veterans; rookie QBs are not projected). Same points scale as Sleeper Proj, but built "
+     "non-rookie QBs; rookie QBs are not projected). Same points scale as Sleeper Proj, but built "
      "independently of the market — backtested on 2021–2025, NOT live-validated, and not "
      "presented as a better number than the market. Blank = not in the projection set.",
      {"format": "%d", "width": "small"}),
@@ -309,10 +335,10 @@ def _style_board(view: pd.DataFrame, universe: pd.DataFrame, active_sort_key: st
     def _style(df: pd.DataFrame) -> pd.DataFrame:
         styles = pd.DataFrame("", index=df.index, columns=df.columns)
 
-        # A subtle surface tint is deliberately separate from the red/green value
+        # A visible green surface tint is deliberately separate from the red/green value
         # encoding. It marks interaction state, not player direction or quality.
         if active_sort_key in df.columns:
-            styles.loc[:, active_sort_key] = "background-color: #16281f"
+            styles.loc[:, active_sort_key] = "background-color: #1b5e3a"
 
         for key, values in gap_values.items():
             if key not in df.columns:

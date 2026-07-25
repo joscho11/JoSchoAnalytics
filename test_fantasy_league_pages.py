@@ -115,6 +115,35 @@ def test_league_history_rejects_implausible_ids_before_fetch():
     assert "does not look like" in page_league_history._league_id_error("123")
 
 
+def test_rookie_board_excludes_direct_pff_fields_and_explains_availability(tmp_path):
+    """The public Rookie Board excludes direct PFF data and explains blank projections."""
+    at = _render_page(tmp_path, "page_rookie_board")
+    assert any(w.label == "Draft class" for w in at.selectbox)
+    assert any(w.label == "Position" for w in at.selectbox)
+    assert len(at.dataframe) == 1
+
+    value = at.dataframe[0].value
+    shown = value.data if hasattr(value, "data") else value
+    assert {"Draft-Capital Hit-%", "College Hit-%", "Full Hit-%", "College Talent",
+            "Athleticism (Percentile)", "Production (Percentile)"} <= set(shown.columns)
+    assert not {"PFF Grade", "PFF Grade (Percentile)", "PFF Efficiency",
+                "PFF Efficiency (Percentile)"} & set(shown.columns)
+
+    copy = " ".join(str(x.value) for x in at.caption)
+    assert "top-24 for RB/WR or top-12 for QB/TE" in copy
+    assert "RB/WR/TE" in copy
+    assert "Sleeper has not published one" in copy
+    assert "Rookie QB model projections are intentionally withheld" in copy
+
+
+def test_rookie_board_csvs_exclude_direct_pff_columns():
+    banned = {"pff_grade", "pff_eff", "pct_pff_grade", "pct_pff_eff"}
+    board_dir = _HERE / "fantasy" / "rookie" / "board_data"
+    for cls in (2024, 2025, 2026):
+        columns = set(pd.read_csv(board_dir / f"rookie_board_{cls}.csv", nrows=0).columns)
+        assert not columns & banned
+
+
 def test_league_history_caps_matchup_workers_without_network(monkeypatch):
     """A submitted history may fetch many weeks, but never unbounded concurrency."""
     seen_workers = []

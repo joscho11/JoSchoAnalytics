@@ -128,11 +128,12 @@ lower than their draft slots suggest (so few rookie QBs finish top-12), and the 
 features spread scores widely within a draft neighborhood even though they add no edge in aggregate.
 
 **Coverage, and two honest limits.** Hit probability is filled for 100% of drafted rookies in all
-three scored classes, since it needs only draft-day inputs. The rookie-year projection fills ~90–99%,
-but it is a per-game rate that assumes the player is on the field: it draws on draft capital, athletic
-testing, and landing-spot team context, but it does not know the depth chart, so a rookie who will
-back up a healthy starter still gets a projected per-game number. Read it as an if-he-plays rate, not
-a games-played forecast. The college talent score is read only from my separate 2026 talent library,
+three scored classes, since it needs only draft-day inputs. The rookie-year projection is a
+season-total half-PPR estimate from the RB, WR, and TE season-total models; QB rookie projections are
+intentionally withheld because the available QB sample is too thin and start-status uncertainty is too
+large. Sleeper projections are shown only where Sleeper has published one, so a blank Sleeper column is
+an unavailable market projection, not a failed load. The college talent score is read only from my
+separate 2026 talent library,
 which covers running backs, receivers, and tight ends only — no quarterbacks — and only a subset of
 them (23 of its 28 players match my board; the five gaps are name variants I left blank rather than
 guess). It is blank for 2024–2025 by design; I never backfill it.
@@ -146,14 +147,13 @@ guess). It is blank for 2024–2025 by design; I never backfill it.
 - **Re-scoring is not re-firing.** Next spring I can rebuild the board for the new class with
   `build_rookie_board.py` — that just applies the settled model to new players. It does not reopen
   the research and makes no new accuracy claim.
-- **The projection model is borrowed, not rebuilt.** The rookie-year projection is surfaced from the
-  existing `rookie_ppg_model.pkl`, which I load and never retrain; the build asserts its fingerprint
-  is unchanged every run.
+- **The projection models are surfaced, not rebuilt.** The Rookie Board reads the RB, WR, and TE
+  season-total projection exports and never retrains them as part of the board build.
 - **The talent score is read-only.** It comes from a separate library I don't own here; I join it,
   never regenerate it, and never fill its gaps.
 - **PFF data stays private.** The licensed PFF season tables live in a git-ignored folder and never
-  enter the public repository. Only derived per-rookie display values reach the board CSVs, shown per
-  PFF.
+  enter the public repository. The public board does not expose PFF grades, efficiency values, or
+  percentiles; it shows only its non-PFF college-production and athletic context fields.
 - **The placeholder-ID seam.** Brand-new draft classes arrive from the data feed with temporary,
   name-based player IDs (e.g. `LOV121782`) instead of the permanent IDs older players have. The hit
   probability is unaffected, but the projection and talent joins would miss the whole 2026 class on

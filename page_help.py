@@ -10,6 +10,7 @@ come from dashboard_data.accuracy_stats — the same shared plumbing app.py uses
 import streamlit as st
 
 import dashboard_data
+import model_explanations
 
 
 def render():
@@ -420,7 +421,82 @@ You can filter by season or view all-time records across every year your league 
 
     st.divider()
 
-    # ── Section 6: Behind the Scenes ─────────────────────────────────────────
+    # ── Section 6: Model explanations ────────────────────────────────────────
+    st.subheader("🧠 What Drives the Models")
+    st.caption(
+        "Top-five global feature influence for every production model currently surfaced by the site."
+    )
+
+    with st.expander("Explore model feature influence"):
+        st.markdown("""
+These charts summarize how strongly each model uses a feature **across many predictions**. They do
+not say that a feature caused an outcome, and they are not an accuracy ranking. Percentages are
+normalized within each model; the five displayed bars will not usually add to 100% because the
+remaining features are omitted.
+
+Season-projection and spread charts use mean absolute Tree SHAP. Weekly fantasy and the totals
+XGBoost model use the model's gain importance. The totals Ridge chart uses absolute standardized
+coefficients. The production spread prediction is a fixed 75% XGBoost / 25% Ridge blend; its SHAP
+chart covers the tree component that supplies 75% of the prediction.
+        """)
+        st.markdown(model_explanations.CHART_CSS, unsafe_allow_html=True)
+        _shap_models, _stale_models = model_explanations.shap_models()
+        _all_models = _shap_models + model_explanations.native_models()
+        for _group in (
+            "Season projections · Non-rookie models",
+            "Season projections · Rookie models",
+            "Weekly fantasy",
+            "Betting",
+        ):
+            _group_models = [m for m in _all_models if m["group"] == _group]
+            if not _group_models:
+                continue
+            st.markdown(f"#### {_group}")
+            _subgroups = ("QB", "RB", "WR", "TE") if _group == "Weekly fantasy" else (None,)
+            for _subgroup in _subgroups:
+                _display_models = (
+                    [m for m in _group_models if m.get("subgroup") == _subgroup]
+                    if _subgroup else _group_models
+                )
+                if not _display_models:
+                    continue
+                if _subgroup:
+                    st.markdown(f"##### {_subgroup}")
+                _left, _right = st.columns(2)
+                for _idx, _model in enumerate(_display_models):
+                    (_left if _idx % 2 == 0 else _right).markdown(
+                        model_explanations.chart_html(_model), unsafe_allow_html=True
+                    )
+        if _stale_models:
+            st.warning(
+                "Updated model artifacts detected. Explanations withheld until recomputed: "
+                + ", ".join(_stale_models)
+            )
+
+    with st.expander("Review historical season-projection bias"):
+        st.markdown("""
+This is a **2021–2025 walk-forward out-of-sample audit** of 2,589 non-rookie season projections.
+Bias is model projection minus actual half-PPR points: a negative number means the model
+underprojected the player, while a positive number means it overprojected him. The top 20%
+is selected by the model's prediction within each position and season—not by the eventual
+result—so the comparison does not manufacture underprojection by selecting actual stars.
+        """)
+        st.markdown(
+            model_explanations.calibration_audit_html(),
+            unsafe_allow_html=True,
+        )
+        st.markdown("""
+**What it says:** there is no global top-end compression. Non-rookie WR and TE projections are
+approximately neutral at the top, and QB is slightly high. RB is the exception: its top
+predicted group finished 21.3 points above its projection on average. That RB result was
+found during a multi-position diagnostic scan, so it is an exploratory lead for a future
+pre-registered calibration test—not a production adjustment or a guarantee for an
+individual player.
+        """)
+
+    st.divider()
+
+    # ── Section 7: Behind the Scenes ─────────────────────────────────────────
     st.subheader("🔧 Behind the Scenes")
 
     with st.expander("How does the prediction model work?"):
