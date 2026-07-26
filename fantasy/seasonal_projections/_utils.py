@@ -14,6 +14,16 @@ ADP_SENTINEL = 900.0
 # so an alias inside norm_name() would never reach it).
 SLEEPER_NAME_ALIASES = {
     "kenny gainwell": "kenneth gainwell",   # 2026: Sleeper "Kenny", nflverse "Kenneth" (audit M1)
+    # 2026-07-26 code review: ADP + Sleeper projection were silently dropped for these
+    # players. Each target was verified to exist in the dataset before being added; only
+    # unambiguous same-person variants are listed. Fuzzy near-matches are deliberately NOT
+    # aliased -- a wrong alias silently attaches another player's market number.
+    "william fuller": "will fuller",           # Sleeper "William", nflverse "Will" (Fuller V)
+    "joshua palmer": "josh palmer",            # Sleeper "Joshua", nflverse "Josh"
+    "nyheim millerhines": "nyheim hines",      # legal name change; nflverse kept "Hines"
+    "scotty miller": "scott miller",           # Sleeper "Scotty", nflverse "Scott"
+    "drew ogletree": "andrew ogletree",        # Sleeper "Drew", nflverse "Andrew"
+    "mitch tinsley": "mitchell tinsley",       # Sleeper "Mitch", nflverse "Mitchell"
 }
 
 # Skill positions we model.

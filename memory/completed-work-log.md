@@ -5,6 +5,70 @@ working guidance lean. This is the archive; `CLAUDE.md` links here. Newest first
 Append new dated entries at the top. The live "how to edit the shared features
 module" guidance stays in `CLAUDE.md`, not here.
 
+**2026-07-26 (non-rookie WR PPG target architecture; REJECT):**
+- Pre-registered and fired one fixed comparison on all 1,006 corrected 2021–2025
+  non-rookie WR rows: the current direct season-total target versus games-weighted
+  active-game PPG multiplied by the inherited 16.5-game constant. Both sides used the
+  same ordered 32 features and fixed LightGBM configuration.
+- The challenger regressed every aggregate metric: MAE 31.071 to 39.679 (+8.609),
+  RMSE 43.999 to 50.198, Spearman .75341 to .72907, and bias
+  `actual - prediction` +1.98 to -22.05. It lost MAE in 0/5 seasons; the paired
+  player-cluster interval for the MAE delta was [+6.919, +10.372] across 363 clusters.
+  **Verdict: REJECT; all six frozen switch conditions failed.**
+- The apparent player-level win is a healthy-season scenario effect. Pearsall, Rome
+  Odunze, and Luther Burden III moved from corrected direct-total refits
+  76.1 / 100.1 / 113.2 to 119.4 / 136.7 / 125.7, but historical MAE on realized
+  12-or-fewer-game rows worsened 24.606 to 44.978 (n=494). The production architecture
+  remains direct season total.
+- Preserved `PREREG_wr_ppg_target_architecture_2026-07-26.md` and
+  `wr_ppg_target_architecture_harness.py`. Protected WR model and result artifacts
+  remained byte-identical. See [[seasonal-wr-negative-gap-experiments-2026-07]].
+
+**2026-07-26 (WR depth-signal falsification; REJECT for July production):**
+- Followed the Pearsall depth sensitivity with a frozen presence-versus-tier test on the
+  same 1,006 expanding-window 2021–2025 WR rows. Binary listing presence recovered 67.3%
+  of the original MAE gain (31.071 to 29.712); aligned ordinal tier improved to 29.229
+  with rho .75341 to .80058.
+- Tier survived a listed-only complete-case refit (n=658): MAE 38.368 to 37.753, rho
+  .71085 to .73213, 3/5 MAE-winning seasons. The historical rank is not merely a
+  missingness flag. Early-August to Week-1 2025 stability also passed at 88.2% listing
+  retention and 86.6% exact tier agreement among 127 common players.
+- The current-source transport check failed. In 2025, the only fold using the same dated
+  ESPN schema as 2026, aligned tier worsened MAE 28.672 to 29.191 and rho .81991 to
+  .81571; complete-case MAE worsened 34.468 to 34.943. **Verdict: REJECT ordinal depth
+  for the July production model.** Preserve it as a mechanism awaiting forward
+  current-schema evidence; Pearsall's 89.4 remains a role scenario, not a calibrated
+  production projection.
+- Preserved
+  `PREREG_wr_depth_signal_falsification_2026-07-26.md` and
+  `wr_depth_signal_falsification_harness.py`. Both protected WR model hashes and every
+  projection result remained byte-identical. See
+  [[seasonal-wr-negative-gap-experiments-2026-07]].
+
+**2026-07-26 (Pearsall college/depth sensitivity; DEPTH CANDIDATE, no model change):**
+- Preregistered and ran a four-way corrected-panel comparison for Ricky Pearsall:
+  fixed 32-feature baseline, the existing richer PFF college WR index with
+  1.0/0.5/0.25 three-season decay, nflverse preseason depth tier, and both. The
+  expanding 2021–2025 walk-forward contained 1,006 non-rookie WR seasons; Sleeper and
+  ADP were excluded from features, fits, and gates.
+- College failed: MAE 31.071 to 30.943 (-0.128, short of the -0.25 gate), rho .75341
+  to .75192, 3/5 MAE-winning seasons. Pearsall's +0.115-SD college score decayed to
+  +0.029 in Year 3 and moved the corrected-panel projection only 76.06 to 76.10.
+  **Verdict: REJECT college talent.**
+- Depth passed the sensitivity gate: MAE **31.071 to 29.053**, rho **.75341 to
+  .80523**, 3/5 MAE-winning seasons. The new ESPN schema was normalized within
+  `(team, pos_slot)` to legacy depth tiers and capped at its top two layers after the
+  target-blind check exposed overly deep July roster coverage. Evans, Pearsall, and
+  Kirk are tier 1; Stribling is tier 2. Pearsall scored **89.4 at tier 1** and **79.2
+  at tier 2**, versus the 76.1 corrected refit and the separately reported 63.9
+  protected pre-correction result. **Verdict: DEVELOPMENTAL CANDIDATE**, requiring a
+  separate production-wide validation.
+- The combined model passed but did not beat depth alone historically (MAE 29.058,
+  0.005 worse); its 91.0 Pearsall score does not rescue the college feature.
+  `PREREG_wr_pearsall_sensitivity_2026-07-26.md` records the full outcomes;
+  `wr_pearsall_sensitivity_harness.py` is the read-only harness. Both protected WR
+  model hashes and every existing projection result remained byte-identical.
+
 **2026-07-24 (Global veteran projection-compression audit; no model change):**
 - Audited all 2,589 veteran 2021–2025 walk-forward out-of-fold predictions against actual half-PPR totals, joined one-to-one to the historical feature panel with no duplicate keys and without using ADP or Sleeper as an outcome benchmark.
 - The blanket-compression hypothesis failed. Top predicted-quintile bias (prediction minus actual) was QB +16.3, RB -21.3, TE -1.6, and WR +4.2 points. WR was also neutral overall (+0.5), while high-prior-PPG WRs coming off 12 or fewer games were overprojected by 21.3 points (n=45), so a global WR or shortened-season uplift is contradicted by the historical evidence.

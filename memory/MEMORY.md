@@ -1,8 +1,10 @@
 - [Prefer .ipynb over .py for new files](prefer-ipynb-not-py.md) — repo is notebook-centric; new shared code goes in .ipynb with inline tests, consumed via json+exec from another notebook.
 - [Feature list order is contract](feature-list-order-is-contract.md) — PROD_FEATURES_35 / FEATURE_COLS_85 order = X_tr column order = pkl identity; never reorder for readability.
 - [BettingEdge model experiments May 2026](bettingedge-model-experiments-2026-05.md) — rejected experiments: weather, ensemble re-weighting, consensus filter, ULTRA tier, time-decay weighting, extended training range. Don't re-run. Always audit data-source coverage before "extend the data" experiments.
+- [Seasonal WR negative-gap experiments July 2026](seasonal-wr-negative-gap-experiments-2026-07.md) — college/current-schema depth failed; full WR validation rejected PPG × 16.5 despite attractive Pearsall/Odunze/Burden scenarios.
 - [Experiment rejection criteria](experiment-rejection-criteria.md) — concrete ship/reject thresholds for model-improvement experiments (+0.5pp CV ATS minimum, ≥3 of 5 models improve, live data wins on borderline evidence, etc.).
 - [Completed work log](completed-work-log.md) — dated implementation history, including the 2026-07-24 Draft Board visual restoration and its validation boundary.
 - [Daily 2026-07-24](daily/2026-07-24.md) — board/UI and data fixes, projection diagnostics, 22-model explanations, and the position-by-position continuation queue.
+- [Daily 2026-07-26](daily/2026-07-26.md) — WR negative-gap experiments all rejected; full production-path code review (19 confirmed bugs); 14 fixed and left unstaged; models NOT retrained and the board unchanged.
 - [Never mention commits](never-mention-commits.md) — user handles all git operations; don't prompt, propose messages, or frame work as commit-ready.
 - [Communication preferences](communication-preferences.md) — start every message with `Joseph,`; Joseph runs interactive localhost reviews after automated validation.

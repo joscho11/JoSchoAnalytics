@@ -74,6 +74,23 @@ SNAP_FROM        = 2013                       # snap_counts reliable from 2013
 AIR_YARDS_FROM   = 2006                       # pre-2006 air-yards values are junk -> NaN
 MIN_GAMES_TARGET = 3
 
+# Canonical team codes = the load_player_stats convention, which is modernized in EVERY
+# season. Three feeds disagree and every team-keyed join in this file used to mix them:
+#   load_player_stats   ARI BAL CLE HOU LA  LAC LV   (canonical)
+#   load_rosters_weekly ARZ BLT CLV HST SL  SD  OAK  (legacy GSIS codes, 2014-2019)
+#   load_schedules      ARI BAL CLE HOU STL SD  OAK  (era codes)
+# Unmapped, context_team carried legacy codes into the coach / QB1 / vacated joins, which
+# then silently produced NaN (vacated) or a hard 0 (coach_changed/qb_changed). Folding the
+# relocations onto one code additionally lets coaches.shift(1) bridge STL->LA, SD->LAC and
+# OAK->LV, which previously broke prev_coach across each move.
+TEAM_CANON = {"ARZ": "ARI", "AZ": "ARI", "BLT": "BAL", "CLV": "CLE", "HST": "HOU",
+              "SL": "LA", "STL": "LA", "SD": "LAC", "OAK": "LV"}
+
+
+def canon_team(s):
+    """Map any feed's team codes onto the canonical (player_stats) convention."""
+    return s.replace(TEAM_CANON)
+
 
 # ── 1. Season aggregates from weekly player stats ────────────────────────────
 def build_season_aggregates():
@@ -93,6 +110,12 @@ def build_season_aggregates():
     # reconstructed weekly target share (fills the 2003-2008 native hole; validated below)
     tt = ps.groupby(["team", "season", "week"])["targets"].transform("sum")
     ps["recon_tgt_share"] = ps["targets"] / tt.replace(0, np.nan)
+    # Season-level share denominators. A season share MUST be volume-weighted
+    # (sum player targets / sum team targets over the weeks the player was on that team).
+    # Averaging weekly shares is not a share: it gives a 2-game 40%-share player the same
+    # weight as a 17-game one, and the per-team totals summed to 1.38 on average (max 2.19).
+    ps["_team_wk_tgt"] = tt
+    ps["_team_wk_ay"]  = ps.groupby(["team", "season", "week"])["receiving_air_yards"].transform("sum")
     ps["touches"]  = ps["carries"].fillna(0) + ps["receptions"].fillna(0)
     ps["total_td"] = ps["rushing_tds"].fillna(0) + ps["receiving_tds"].fillna(0) + ps["passing_tds"].fillna(0)
 
@@ -112,34 +135,50 @@ def build_season_aggregates():
         pass_att=("attempts", "sum"),
         total_td=("total_td", "sum"),
         touches=("touches", "sum"),
-        target_share=("target_share", "mean"),
-        recon_target_share=("recon_tgt_share", "mean"),
-        air_yards_share=("air_yards_share", "mean"),
+        mean_wk_target_share=("target_share", "mean"),      # legacy (NOT a share) - diagnostic only
+        team_tgt_den=("_team_wk_tgt", "sum"),
+        team_ay_den=("_team_wk_ay", "sum"),
         rec_epa=("receiving_epa", "sum"),
         rush_epa=("rushing_epa", "sum"),
     ).reset_index()
     agg.loc[agg["season"] < AIR_YARDS_FROM, "rec_air_yards"] = np.nan
     agg["norm_name"] = agg["player"].map(norm_name)
-    # pre-registered fill rule (PREREGISTRATION.md A1): fill native target_share
-    # holes with the reconstruction ONLY if overlap corr >= 0.95 and |rel bias| <= 10%
-    both = agg[agg["target_share"].notna() & agg["recon_target_share"].notna() & (agg["targets"] > 10)]
-    if len(both) > 500:
-        corr = float(both["target_share"].corr(both["recon_target_share"]))
-        bias = float(both["recon_target_share"].mean() / both["target_share"].mean() - 1)
-        ok = corr >= 0.95 and abs(bias) <= 0.10
-        print(f"  target_share reconstruction: overlap n={len(both):,}, corr {corr:.4f}, "
-              f"rel bias {bias:+.2%} -> {'FILL holes' if ok else 'REJECT (holes stay NaN)'}")
-        if ok:
-            agg["target_share"] = agg["target_share"].fillna(agg["recon_target_share"])
-    agg.drop(columns=["recon_target_share"], inplace=True)
+    # TRUE volume-weighted shares, at (player, season, TEAM) grain so the denominator is
+    # that team's own season total and the per-team shares sum to exactly 1. The old
+    # mean-of-weekly-shares aggregation was not a share (per-team totals averaged 1.38,
+    # max 2.19), and a season-last team key additionally credited a traded player's whole
+    # season to his final team.
+    pt = ps.groupby(["player_id", "season", "team"], as_index=False).agg(
+        _tgt=("targets", "sum"), _ay=("receiving_air_yards", "sum"))
+    tden = pt.groupby(["team", "season"], as_index=False).agg(
+        _tgt_den=("_tgt", "sum"), _ay_den=("_ay", "sum"))
+    share_tbl = pt.merge(tden, on=["team", "season"], how="left")
+    share_tbl["target_share"]    = share_tbl["_tgt"] / share_tbl["_tgt_den"].replace(0, np.nan)
+    share_tbl["air_yards_share"] = share_tbl["_ay"] / share_tbl["_ay_den"].replace(0, np.nan)
+    chk = share_tbl.groupby(["team", "season"])["target_share"].sum()
+    print(f"  target_share now volume-weighted per team: per-team season totals mean "
+          f"{chk.mean():.4f} (max {chk.max():.4f}); legacy mean-of-weekly averaged 1.384")
+    assert chk.max() <= 1.0001, f"target_share still not a share (max team total {chk.max():.4f})"
+    share_tbl = share_tbl[["player_id", "season", "team", "target_share", "air_yards_share"]]
+    # the model feature is the player's share with the team he is listed under (season-last)
+    agg = agg.merge(share_tbl, on=["player_id", "season", "team"], how="left")
+    agg.drop(columns=["team_tgt_den", "team_ay_den", "mean_wk_target_share"], inplace=True)
     # primary passer per team-season (for qb_changed): the QB with most attempts.
     # Tiebreak on player_id so the choice is deterministic when attempts tie.
     qb = ps[ps["position"] == "QB"].groupby(["team", "season", "player_id"])["attempts"].sum().reset_index()
     primary_qb = (qb.sort_values(["attempts", "player_id"], ascending=[False, True])
                     .groupby(["team", "season"]).head(1)[["team", "season", "player_id"]])
     primary_qb = primary_qb.rename(columns={"player_id": "primary_qb_id"})
+    # Team offensive volume, aggregated from the WEEKLY rows so each snap of volume is
+    # credited to the team the player was actually on that week. Aggregating from
+    # player-season rows keyed on team=("team","last") gave a traded player's entire
+    # season to his final team and removed it from his original one.
+    team_vol = ps.groupby(["team", "season"]).agg(
+        team_pass_att=("attempts", "sum"), team_carries=("carries", "sum")).reset_index()
+    team_vol["team"] = canon_team(team_vol["team"])
+    team_vol = team_vol.groupby(["team", "season"], as_index=False).sum()
     print(f"  active player-seasons: {len(agg):,}")
-    return agg, primary_qb
+    return agg, primary_qb, team_vol, share_tbl
 
 
 # ── 2. Reconstruct full-miss (0-game) seasons between first & last active ────
@@ -182,12 +221,36 @@ def add_snaps(full):
     if "game_type" in sc.columns:
         sc = sc[sc["game_type"].astype(str).str.upper().eq("REG")].copy()
     sc = sc[sc["offense_snaps"].fillna(0) > 0].copy()
+    # Join on a STABLE ID, not the normalized name. Name-keyed, two different players who
+    # share a name collapsed into one snap row and both inherited the same wrong games /
+    # snap_share_pg. snap_counts carries pfr_player_id; players.parquet crosswalks it to gsis.
     sc["norm_name"] = sc["player"].map(norm_name)
-    snap_agg = sc.groupby(["norm_name", "season"]).agg(
-        snap_games=("week", "nunique"),
-        snap_share_pg=("offense_pct", "mean"),
-    ).reset_index()
-    full = full.merge(snap_agg, on=["norm_name", "season"], how="left")
+    xw = snap("players", nfl.load_players)
+    xw = (xw[["pfr_id", "gsis_id"]].dropna().drop_duplicates("pfr_id")
+            .rename(columns={"pfr_id": "pfr_player_id", "gsis_id": "player_id"}))
+    if "pfr_player_id" in sc.columns:
+        sc = sc.merge(xw, on="pfr_player_id", how="left")
+    else:
+        sc["player_id"] = np.nan
+    by_id = (sc[sc["player_id"].notna()].groupby(["player_id", "season"])
+             .agg(snap_games=("week", "nunique"), snap_share_pg=("offense_pct", "mean")).reset_index())
+    full = full.merge(by_id, on=["player_id", "season"], how="left")
+    # Name fallback ONLY for snap rows with no id crosswalk, and only where the name is
+    # unambiguous in that season (a colliding name is left unmatched rather than guessed).
+    rest = sc[sc["player_id"].isna()]
+    if len(rest):
+        amb = (sc.groupby(["norm_name", "season"])["pfr_player_id"].nunique()
+                 .rename("n_ids").reset_index())
+        by_nm = (rest.groupby(["norm_name", "season"])
+                 .agg(sg=("week", "nunique"), ss=("offense_pct", "mean")).reset_index()
+                 .merge(amb, on=["norm_name", "season"], how="left"))
+        by_nm = by_nm[by_nm["n_ids"] <= 1].drop(columns="n_ids")
+        full = full.merge(by_nm, on=["norm_name", "season"], how="left")
+        full["snap_games"]    = full["snap_games"].fillna(full["sg"])
+        full["snap_share_pg"] = full["snap_share_pg"].fillna(full["ss"])
+        full.drop(columns=["sg", "ss"], inplace=True)
+    print(f"  snap join: {int(full['snap_games'].notna().sum()):,} rows matched "
+          f"({int(by_id['player_id'].nunique()):,} players by id)")
     # Prefer snap-based games where available (more accurate availability), but
     # NEVER let a name-collision snap match resurrect a reconstructed 0-game
     # season — those must stay games=0. Fall back to stat-line weeks otherwise.
@@ -283,7 +346,6 @@ def _load_qb1_week1(seasons):
     (dt/team/pos_abb/pos_rank). For 2025+ we take the last snapshot strictly
     BEFORE the season's first REG gameday (from schedules), so it is pre-kickoff.
     """
-    ERA = {"STL": "LA", "SD": "LAC", "OAK": "LV"}
     frames = []
     old = [s for s in seasons if s <= 2024]
     if old:
@@ -292,7 +354,7 @@ def _load_qb1_week1(seasons):
                 (dc["position"].astype(str).str.strip() == "QB") &
                 (dc["depth_team"].astype(str) == "1")]
         f = dc[["season", "club_code", "gsis_id"]].dropna().rename(columns={"club_code": "team"})
-        f["team"] = f["team"].replace(ERA)
+        f["team"] = canon_team(f["team"])
         frames.append(f)
     for s in [s for s in seasons if s >= 2025]:
         dc = nfl.load_depth_charts([s]).to_pandas()
@@ -321,6 +383,7 @@ def add_context_team(full):
     rw1 = snap(f"rosters_weekly_w1_{W1_FROM}_2025", _load_rosters_week1, list(range(W1_FROM, 2026)))
     w1 = (rw1.drop_duplicates(["season", "gsis_id"])
              .rename(columns={"gsis_id": "player_id", "team": "w1_team"}))
+    w1["w1_team"] = canon_team(w1["w1_team"])   # legacy ARZ/BLT/CLV/HST/SL/SD/OAK -> canonical
     full = full.merge(w1, on=["player_id", "season"], how="left")
     full["context_team"] = full["w1_team"].fillna(full["team"])
     n = full["season"].isin(TARGET_SEASONS)
@@ -333,10 +396,13 @@ def add_context_team(full):
 
 
 # ── 6. Team context: pass rate, coaching change, QB change, vacated opp ─────
-def add_team_context(full, primary_qb):
-    # team offensive volume per season
-    team = full[full["games"] > 0].groupby(["team", "season"]).agg(
-        team_pass_att=("pass_att", "sum"), team_carries=("carries", "sum")).reset_index()
+def add_team_context(full, primary_qb, team_vol=None):
+    # team offensive volume per season (weekly-sourced; see build_season_aggregates)
+    if team_vol is None:
+        team = full[full["games"] > 0].groupby(["team", "season"]).agg(
+            team_pass_att=("pass_att", "sum"), team_carries=("carries", "sum")).reset_index()
+    else:
+        team = team_vol.copy()
     team["team_pass_rate"] = team["team_pass_att"] / (team["team_pass_att"] + team["team_carries"]).replace(0, np.nan)
     team["team_plays_est"] = team["team_pass_att"] + team["team_carries"]
     full = full.merge(team[["team", "season", "team_pass_rate", "team_plays_est"]], on=["team", "season"], how="left")
@@ -344,9 +410,17 @@ def add_team_context(full, primary_qb):
     # coaching change (clean: coaches known at season start); joined on the
     # preseason-knowable context_team (fix c)
     sched = snap(f"schedules_{LOAD_FROM}_2025", nfl.load_schedules, list(range(LOAD_FROM, 2026)))
-    h = sched[["season", "home_team", "home_coach"]].rename(columns={"home_team": "team", "home_coach": "coach"})
-    a = sched[["season", "away_team", "away_coach"]].rename(columns={"away_team": "team", "away_coach": "coach"})
-    coaches = pd.concat([h, a]).dropna().groupby(["team", "season"])["coach"].agg(lambda s: s.mode().iat[0]).reset_index()
+    _sc = sched[sched.get("game_type", "REG").astype(str).eq("REG")] if "game_type" in sched.columns else sched
+    _ord = "gameday" if "gameday" in _sc.columns else "week"
+    h = _sc[["season", _ord, "home_team", "home_coach"]].rename(columns={"home_team": "team", "home_coach": "coach"})
+    a = _sc[["season", _ord, "away_team", "away_coach"]].rename(columns={"away_team": "team", "away_coach": "coach"})
+    coaches = pd.concat([h, a]).dropna(subset=["team", "season", "coach"])
+    coaches["team"] = canon_team(coaches["team"])          # schedules use STL/SD/OAK
+    # Use the WEEK-1 coach, not the season-mode coach. The mode reflects whoever coached
+    # most of season Y, so a mid-season firing IN season Y flipped coach_changed for that
+    # season -- an event that had not happened at draft time. Week 1 is preseason-knowable.
+    coaches = (coaches.sort_values(["team", "season", _ord])
+                      .groupby(["team", "season"], as_index=False).first()[["team", "season", "coach"]])
     coaches = coaches.sort_values(["team", "season"])
     coaches["prev_coach"] = coaches.groupby("team")["coach"].shift(1)
     coaches["coach_changed"] = (coaches["coach"] != coaches["prev_coach"]) & coaches["prev_coach"].notna()
@@ -372,16 +446,39 @@ def add_team_context(full, primary_qb):
     return full
 
 
-def add_vacated(full):
+def add_vacated(full, share_tbl=None):
     # vacated opportunity: share of a team's N-1 targets/carries held by players
     # NOT on the team's WEEK-1 roster in season N (fix b — was full-season-N
     # rosters, which include in-season signings). Joined on context_team (fix c).
     print("Loading week-1 rosters for vacated-opportunity ...")
     ros = snap(f"rosters_weekly_w1_{W1_FROM}_2025", _load_rosters_week1, list(range(W1_FROM, 2026)))
     ros = ros.rename(columns={"gsis_id": "player_id"})
+    ros["team"] = canon_team(ros["team"])   # roster feed uses legacy codes; `active` uses stats codes
     roster_set = ros.groupby(["team", "season"])["player_id"].apply(set).to_dict()
+    # Fallback for team-seasons absent from the week-1 feed. 2017 MIA and TB had Week 1
+    # postponed (Hurricane Irma), so `if (team, s_next) not in roster_set: continue` skipped
+    # those team-seasons entirely and every player on them lost both vacated_* features.
+    # Fall back to the season roster snapshot rather than dropping the team-season.
+    try:
+        sr = snap(f"rosters_{LOAD_FROM}_2025", nfl.load_rosters, list(range(LOAD_FROM, 2026)))
+        idc = "gsis_id" if "gsis_id" in sr.columns else "player_id"
+        sr = sr[["season", "team", idc]].dropna().rename(columns={idc: "player_id"})
+        sr["team"] = canon_team(sr["team"])
+        for key, pids in sr.groupby(["team", "season"])["player_id"].apply(set).items():
+            roster_set.setdefault(key, pids)
+    except Exception as e:                                    # snapshot absent / schema drift
+        print(f"  (season-roster fallback unavailable: {type(e).__name__})")
 
-    active = full[full["games"] > 0][["player_id", "season", "team", "target_share", "carries"]].copy()
+    if share_tbl is not None:
+        # per-(player, season, TEAM) shares -> each team's shares sum to exactly 1, so the
+        # vacated sum is a real fraction of the team's prior opportunity. Using the
+        # season-last-team player rows instead double-counted traded players.
+        active = full[full["games"] > 0][["player_id", "season", "team", "carries"]].copy()
+        active = (share_tbl[["player_id", "season", "team", "target_share"]]
+                  .merge(active[["player_id", "season", "team", "carries"]],
+                         on=["player_id", "season", "team"], how="left"))
+    else:
+        active = full[full["games"] > 0][["player_id", "season", "team", "target_share", "carries"]].copy()
     # team-season totals for share denominators
     tcar = active.groupby(["team", "season"])["carries"].sum().rename("team_carries_tot")
     active = active.merge(tcar, on=["team", "season"], how="left")
@@ -403,6 +500,10 @@ def add_vacated(full):
     vac = pd.DataFrame(vac_rows)
     full = full.merge(vac.rename(columns={"team": "context_team"}),
                       on=["context_team", "season"], how="left")
+    tgt = full["season"].isin(TARGET_SEASONS)
+    miss = int(full.loc[tgt, "vacated_target_share"].isna().sum())
+    print(f"  vacated join: {miss:,} of {int(tgt.sum()):,} target-season rows unmatched "
+          f"({miss / max(int(tgt.sum()), 1) * 100:.1f}%)")
     return full
 
 
@@ -438,9 +539,12 @@ def build_feature_rows(full):
     sched_games = np.where(out["season"] - 1 >= 2021, 17, 16)
     out["prior_games_missed"] = np.clip(sched_games - out["prior_games"], 0, None)
 
-    # flags to clean bool->int (.eq avoids the object-dtype fillna downcast warning)
+    # Bool -> float, PRESERVING NaN. The old .eq(True).astype(int) turned a failed
+    # team join into a hard 0, i.e. "no coach/QB change", indistinguishable from a real
+    # answer. The deploy models are native-NaN trees, so an honest NaN routes correctly
+    # and an unknown never masquerades as an informative value.
     for c in ["coach_changed", "qb_changed"]:
-        out[c] = out[c].eq(True).astype(int)
+        out[c] = out[c].map({True: 1.0, False: 0.0}).astype(float)
 
     # targets — only on rows that actually happened (reconstructed rows are
     # Model-B examples: games=0, target_ppg NaN, kept for availability)
@@ -451,14 +555,14 @@ def build_feature_rows(full):
 
 
 def main():
-    agg, primary_qb = build_season_aggregates()
+    agg, primary_qb, team_vol, share_tbl = build_season_aggregates()
     full = reconstruct_missed(agg)
     full = add_snaps(full)
     full = add_rates(full)
     full = add_bio(full)
     full = add_context_team(full)
-    full = add_team_context(full, primary_qb)
-    full = add_vacated(full)
+    full = add_team_context(full, primary_qb, team_vol)
+    full = add_vacated(full, share_tbl)
     rows = build_feature_rows(full)
     rows["team"] = rows["context_team"].fillna(rows["team"])   # fix (c): output team = preseason team
 

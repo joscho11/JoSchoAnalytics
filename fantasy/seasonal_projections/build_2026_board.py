@@ -46,8 +46,13 @@ ADP_CSV  = bsd.ADP_CSV
 SKILL    = set(SKILL_POSITIONS)
 # draft-picks use pfr-style abbreviations; rosters/Sleeper use these -- normalize so a drafted
 # rookie groups with their actual team (e.g. Jeremiyah Love ARI -> AZ, with Conner/Benson).
-DRAFT_TEAM_MAP = {"ARI": "AZ", "GNB": "GB", "KAN": "KC", "LAR": "LA", "LVR": "LV",
-                  "NOR": "NO", "NWE": "NE", "SFO": "SF", "TAM": "TB"}
+# pfr-style -> canonical. "ARI" is NOT remapped: the roster feed, the historical dataset and
+# every season 2014-2025 already use ARI, so the old ARI->AZ entry invented a team code that
+# existed nowhere else, split Arizona across two keys, and left 27 live 2026 players (incl.
+# Marvin Harrison Jr., Trey McBride, James Conner) with NaN vacated_target_share.
+DRAFT_TEAM_MAP = {"GNB": "GB", "KAN": "KC", "LAR": "LA", "LVR": "LV",
+                  "NOR": "NO", "NWE": "NE", "SFO": "SF", "TAM": "TB",
+                  **bsd.TEAM_CANON}
 
 
 def _pdf(x):
@@ -139,13 +144,22 @@ def seed_upcoming_rows(full):
             print(f"  + {len(rec)} ADP-holding unsigned veterans missing from "
                   f"roster+draft feeds (e.g. {', '.join(rec['player'].head(3))})")
 
-    # veteran vs rookie from prior NFL activity (any games>0 before 2026)
+    # veteran vs rookie -- MUST match the training definition in
+    # build_season_dataset.add_bio: entry_year = draft_year, falling back to first active
+    # season for UDFAs. Deploy previously used first-active only, which reintroduced the
+    # exact pre-2011 truncation fix (d) removed and split the feature's meaning between
+    # train and serve (a drafted player who redshirted a year got the wrong years_exp).
     active = full[full["games"] > 0]
-    rookie_season = active.groupby("player_id")["season"].min()
-    ros["rookie_season"] = ros["player_id"].map(rookie_season)
-    ros["is_rookie"]  = ros["rookie_season"].isna().astype(int)
-    ros["rookie_season"] = ros["rookie_season"].fillna(UPCOMING)
-    ros["years_exp"]  = UPCOMING - ros["rookie_season"]
+    first_active = active.groupby("player_id")["season"].min()
+    dp_all = _pdf(nfl.load_draft_picks())
+    draft_year = (dp_all[dp_all["gsis_id"].notna()].sort_values("season")
+                  .groupby("gsis_id")["season"].first())
+    ros["_draft_year"]   = ros["player_id"].map(draft_year)
+    ros["_first_active"] = ros["player_id"].map(first_active)
+    ros["entry_year"] = ros["_draft_year"].fillna(ros["_first_active"]).fillna(UPCOMING)
+    ros["is_rookie"]  = (ros["entry_year"] >= UPCOMING).astype(int)
+    ros["years_exp"]  = (UPCOMING - ros["entry_year"]).clip(lower=0)
+    ros.drop(columns=["_draft_year", "_first_active"], inplace=True)
     ros["norm_name"]  = ros["player"].map(norm_name)
     print(f"  veterans: {(ros.is_rookie==0).sum()}  rookies: {(ros.is_rookie==1).sum()}")
 
@@ -170,13 +184,26 @@ def seed_upcoming_rows(full):
         ros.drop(columns=["dr", "dp_"], inplace=True)
     nmcol = next((c for c in ["pfr_player_name", "full_name", "player_name"] if c in dp.columns), None)
     if nmcol:
-        dp["norm_name"] = dp[nmcol].map(norm_name)
-        by_nm = (dp.sort_values("season").groupby("norm_name")
+        # Name fallback ONLY for the UPCOMING draft class, and only for names that are
+        # unique within it. Searching every draft class since 1980 and taking .first()
+        # (= earliest season) handed a 2026 rookie the draft capital of a same-named player
+        # from a previous era: 2026 WR Mario Williams inherited the 2006 #1 overall pick,
+        # projecting 91.6 instead of 15.0 in the shipped WR CSV. Veterans are already
+        # matched by gsis_id above, so nothing legitimate needs the historical scan.
+        cls = dp[dp["season"] == UPCOMING].copy()
+        cls["norm_name"] = cls[nmcol].map(norm_name)
+        dupes = set(cls["norm_name"][cls["norm_name"].duplicated(keep=False)])
+        by_nm = (cls[~cls["norm_name"].isin(dupes)].groupby("norm_name")
                  .agg(dr=("round", "first"), dp_=("pick", "first")).reset_index())
         ros = ros.merge(by_nm, on="norm_name", how="left")
-        ros["draft_round"] = ros["draft_round"].fillna(ros["dr"])
-        ros["draft_pick"]  = ros["draft_pick"].fillna(ros["dp_"])
+        # only fill ROOKIES -- a veteran with no gsis draft link is a UDFA, not a 2026 pick
+        fillable = ros["is_rookie"].eq(1)
+        ros.loc[fillable, "draft_round"] = ros.loc[fillable, "draft_round"].fillna(ros.loc[fillable, "dr"])
+        ros.loc[fillable, "draft_pick"]  = ros.loc[fillable, "draft_pick"].fillna(ros.loc[fillable, "dp_"])
         ros.drop(columns=["dr", "dp_"], inplace=True)
+        if dupes:
+            print(f"  draft-name fallback: {len(dupes)} ambiguous name(s) in the {UPCOMING} "
+                  f"class left unmatched rather than guessed")
     print(f"  draft capital matched: {ros['draft_pick'].notna().sum()}")
 
     # coach change (2026 vs 2025), if the 2026 schedule is out
@@ -213,7 +240,7 @@ def seed_upcoming_rows(full):
     seed["team"] = ros["team"];           seed["season"] = UPCOMING
     seed["games"] = 0.0;                  seed["reconstructed"] = 0
     seed["half_ppr"] = 0.0
-    for c in ["is_rookie", "years_exp", "rookie_season", "age", "draft_round", "draft_pick",
+    for c in ["is_rookie", "years_exp", "entry_year", "age", "draft_round", "draft_pick",
               "coach_changed", "vacated_target_share", "vacated_rush_share"]:
         seed[c] = ros[c].values
     seed["qb_changed"] = np.nan            # unknowable pre-season from stats
@@ -222,14 +249,14 @@ def seed_upcoming_rows(full):
 
 def main():
     # standard 2014-2025 pipeline (unchanged)
-    agg, primary_qb = bsd.build_season_aggregates()
+    agg, primary_qb, team_vol, share_tbl = bsd.build_season_aggregates()
     full = bsd.reconstruct_missed(agg)
     full = bsd.add_snaps(full)
     full = bsd.add_rates(full)
     full = bsd.add_bio(full)
     full = bsd.add_context_team(full)      # added 2026-07-12: bsd gained this step
-    full = bsd.add_team_context(full, primary_qb)   # in the 07-09 leakage fixes;
-    full = bsd.add_vacated(full)                    # this script predated it
+    full = bsd.add_team_context(full, primary_qb, team_vol)   # in the 07-09 leakage fixes;
+    full = bsd.add_vacated(full, share_tbl)                   # this script predated it
 
     seed = seed_upcoming_rows(full)
     full = pd.concat([full, seed[full.columns]], ignore_index=True)

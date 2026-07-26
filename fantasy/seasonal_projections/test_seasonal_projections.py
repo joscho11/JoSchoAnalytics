@@ -87,21 +87,45 @@ def test_add_rates_zero_game_is_nan_not_error():
 # ── build_feature_rows: prior join (gap-aware), flags, targets, soft floor ──
 def test_add_snaps_excludes_postseason(monkeypatch):
     full = pd.DataFrame({
-        "norm_name": ["ann"], "season": [2025], "games": [2.0],
+        "player_id": ["00-ann"], "norm_name": ["ann"], "season": [2025], "games": [2.0],
         "reconstructed": [0],
     })
     snaps = pd.DataFrame({
         "player": ["Ann", "Ann", "Ann"],
+        "pfr_player_id": ["AnnX00", "AnnX00", "AnnX00"],
         "season": [2025, 2025, 2025],
         "week": [1, 2, 19],
         "game_type": ["REG", "REG", "POST"],
         "offense_snaps": [40.0, 50.0, 60.0],
         "offense_pct": [0.5, 0.7, 0.9],
     })
-    monkeypatch.setattr(bsd, "snap", lambda *args, **kwargs: snaps)
+    # snaps now join on a stable id (pfr -> gsis via players), not the normalized name
+    players = pd.DataFrame({"pfr_id": ["AnnX00"], "gsis_id": ["00-ann"]})
+    monkeypatch.setattr(bsd, "snap",
+                        lambda key, *a, **k: players if key == "players" else snaps)
     out = bsd.add_snaps(full)
     assert out.loc[0, "games"] == 2.0
     assert abs(out.loc[0, "snap_share_pg"] - 0.6) < 1e-9
+
+
+def test_snaps_do_not_collide_on_shared_names(monkeypatch):
+    """Two different players sharing a name must NOT inherit each other's snap row."""
+    full = pd.DataFrame({
+        "player_id": ["00-a", "00-b"], "norm_name": ["mike williams", "mike williams"],
+        "season": [2025, 2025], "games": [4.0, 9.0], "reconstructed": [0, 0],
+    })
+    snaps = pd.DataFrame({
+        "player": ["Mike Williams"] * 3,
+        "pfr_player_id": ["WillA00", "WillA00", "WillB00"],
+        "season": [2025] * 3, "week": [1, 2, 1], "game_type": ["REG"] * 3,
+        "offense_snaps": [40.0, 40.0, 10.0], "offense_pct": [0.8, 0.8, 0.2],
+    })
+    players = pd.DataFrame({"pfr_id": ["WillA00", "WillB00"], "gsis_id": ["00-a", "00-b"]})
+    monkeypatch.setattr(bsd, "snap",
+                        lambda key, *a, **k: players if key == "players" else snaps)
+    out = bsd.add_snaps(full).set_index("player_id")
+    assert out.loc["00-a", "games"] == 2.0 and abs(out.loc["00-a", "snap_share_pg"] - 0.8) < 1e-9
+    assert out.loc["00-b", "games"] == 1.0 and abs(out.loc["00-b", "snap_share_pg"] - 0.2) < 1e-9
 
 
 def test_vacated_opportunity_is_team_specific_and_zero_complete():
@@ -113,13 +137,16 @@ def test_vacated_opportunity_is_team_specific_and_zero_complete():
     })
     roster = pd.DataFrame({
         "player_id": ["stay", "move", "other", "rookie"],
-        "team": ["KC", "BUF", "AZ", "KC"],
+        "team": ["KC", "BUF", "AZ", "KC"],      # "AZ" must normalize onto "ARI"
     })
     vac = b26.compute_vacated_opportunity(prior, roster).set_index("team")
     assert abs(vac.loc["KC", "vacated_target_share"] - 0.30) < 1e-9
     assert abs(vac.loc["KC", "vacated_rush_share"] - 0.40) < 1e-9
-    assert vac.loc["AZ", "vacated_target_share"] == 0.0
-    assert vac.loc["AZ", "vacated_rush_share"] == 0.0
+    # Arizona is ONE franchise. The old DRAFT_TEAM_MAP sent ARI -> AZ, inventing a code that
+    # exists in no season of the dataset and stranding 27 live 2026 players on NaN.
+    assert "AZ" not in vac.index, "AZ must normalize onto ARI, not split the franchise"
+    assert vac.loc["ARI", "vacated_target_share"] == 0.0
+    assert vac.loc["ARI", "vacated_rush_share"] == 0.0
 
 
 def _synthetic_full():
