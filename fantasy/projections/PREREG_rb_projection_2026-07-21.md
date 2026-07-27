@@ -271,3 +271,71 @@ with the healthy 2021–2024 folds. This is a data-availability defect for the d
 metric shopped after the fact; §3 already pinned the feature "where available," and it is not
 available for the seasons that ship. `depth_rank` is still COMPUTED for coverage/disclosure and may be
 shown as descriptive board context, but it is NOT a model feature. Approved by Joseph 2026-07-21.
+
+---
+
+## AMENDMENT 1 — FACTUAL CORRECTION ON THE RECORD (2026-07-26)
+
+**Amendment 1's text above is left unedited. This note corrects its factual premise. The decision it
+made is UNCHANGED and remains correct; only the stated reason was wrong.**
+
+**What was claimed (2026-07-21):** "`nflreadpy.load_depth_charts` has **zero rows for 2025 and 2026** —
+the source table ends at 2024."
+
+**What is true (verified 2026-07-26):** that premise is **FALSE**. The data exists and is substantial.
+`nflreadpy.load_depth_charts(seasons=2014..2026)` returns 1,328,109 rows, of which **554,215 are 2025 and
+372,120 are 2026**. nflverse changed depth-chart *providers* for 2025. Seasons ≤2024 use the weekly-chart
+schema (`season, club_code, week, game_type, position, depth_team`); 2025+ use an ESPN daily-snapshot
+schema (`dt, team, player_name, espn_id, gsis_id, pos_grp, pos_abb, pos_slot, pos_rank`) with **no
+`season` and no `position`/`depth_team` column**.
+
+The rows were not missing from the source. They were being discarded by our own code:
+`build_rb_projection.py:122` filtered `dc[dc["position"].astype(str) == "RB"]`, and in the combined frame
+the new-feed rows carry NaN in `position`, so `.astype(str)` yields `"nan"` and **100% of 2025 and 2026
+was silently dropped**. Surviving RB rows per season were 2,431–3,017 for 2014–2024 and **0 for 2025 and
+2026**. `build_season_dataset.py::_load_qb1_week1` had already handled both schemas correctly since the
+July fixes; the projection builder had not.
+
+**Why the exclusion decision still stands.** Amendment 1 removed `depth_rank` from both feature pools.
+That removal is re-affirmed, now on the correct evidence — the deploy-realism results from the
+2026-07-26 RB and WR sessions rather than data absence:
+
+- 64% of the pooled MAE gain is the **missingness channel**, not the ordering: train-absent 29.7% versus
+  2026 deploy-absent 8.7%, because a July file carries 90-man camp rosters.
+- The 2025 fold is the only one whose depth values come from the deploy-era source. Its gain is −0.23,
+  and re-timed to an honest early-August snapshot it becomes **+0.40 — worse than baseline**.
+- Dropping the 20 most pro-variant players (8.4%, all preseason-injury/roster-status cases) leaves −1.13
+  with a confidence interval that includes zero.
+- Season-clustered t(4) p = 0.019, and face validity fails: `depth_rank` becomes the rank-1 feature by
+  mean |SHAP| at 34.8 while `prior_half_ppr` collapses 26.85 → 8.70, the 2026 slate inflates +10%, and the
+  stack ranks Chris Rodriguez above Bhayshul Tuten — inverting the very case it was built to fix.
+- The WR session reached the same conclusion independently the same day.
+
+**So: the amendment reached the right answer for the wrong reason.** Had the premise been true, exclusion
+would have been a data-availability necessity. It is in fact a *judgement* that the signal does not
+transport to deploy time. That distinction matters, because a data-absence story would be repaired by new
+data whereas a deploy-realism story is not.
+
+**What changed in code on 2026-07-26 (parsing and disclosure only):**
+
+- `depth_rank_table()` now parses **both** schemas. Legacy ≤2024 logic is verbatim and its output is
+  proven unchanged: 1,614 rows, row-for-row identical, and the downstream join coverage moves 0.0 pp in
+  every legacy season (87.5 / 93.5 / 93.5 / 92.6 / 94.2 / 90.2 / 89.0 / 87.0 / 86.1 / 83.0 / 83.4).
+- New-feed seasons now resolve: 2025 and 2026 go from 0.0% to 42.4% and 29.3% join coverage.
+- **As-of rule**, inherited from `_load_qb1_week1`: the last daily snapshot strictly before the season's
+  first REG gameday, so the row is pre-kickoff; for an unplayed season that degenerates to the most
+  recent snapshot. Deterministic, and tested against a fixture containing a stale snapshot, the intended
+  one, and a post-kickoff one.
+- **Canonical tier** = rank within `(team, pos_slot)`, emitted for tiers **1–2 only** (the translation
+  established by the WR depth work). Deeper camp-roster players are left unlisted rather than fabricated
+  into a tier. The provider's raw rank is preserved verbatim in a new `source_pos_rank` column.
+- The two are **not a comparable series across the 2024/2025 boundary** — legacy emits ~150 listed RBs
+  per season across tiers 1–3, the new feed 64 across tiers 1–2. Documented in the function docstring.
+- `depth_rank` and `source_pos_rank` are in **no** feature pool, and `run_asserts` now fails the build if
+  either ever appears in one.
+- **No model was retrained and no projection or result artifact was rescored.** All 7 projection pkls,
+  `rookie_ppg_model.pkl` and all 17 result CSVs are byte-identical, asserted by
+  `test_depth_chart_schema.py::test_no_protected_artifact_changed`.
+
+Tests: `fantasy/projections/test_depth_chart_schema.py`, 8/8 passing, hermetic (both nflreadpy loaders
+monkeypatched).

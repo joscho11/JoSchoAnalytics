@@ -405,3 +405,16 @@ Pearsall 76.1 → 119.4, Rome Odunze 100.1 → 136.7, Luther Burden III 113.2 �
 Treat the challenger values as healthy-season scenarios only. Artifacts:
 `fantasy/projections/PREREG_wr_ppg_target_architecture_2026-07-26.md` and
 `wr_ppg_target_architecture_harness.py`. Protected models/results remained unchanged.
+
+## Analyst-overlay evidence rule
+
+For the 2026 WR adjustment review, Joseph explicitly excluded Sleeper projections and
+ADP from both candidate selection and adjustment-size decisions. A player-specific
+overlay must be supported by non-market evidence such as availability, established role,
+verified roster/context change, or a documented model blind spot. Market disagreement
+may be displayed separately but is not evidence for moving the projection.
+
+Malik Washington was subsequently removed from the 2026 adjustment slate because he is
+outside the board's current Sleeper-ADP-245 display universe. This is an eligibility
+decision, not evidence about his football projection; ADP remains excluded from the
+direction and magnitude of any adjustment that is evaluated.

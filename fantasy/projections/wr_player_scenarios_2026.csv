@@ -1,0 +1,4 @@
+player_id,player,team,shipped_projection,low,base,high,scenario_type,as_of,note
+00-0036613,Jaylen Waddle,DEN,114.3,115.0,145.8,170.0,destination_volume,2026-07-26,New-team range; base is games-weighted PPG architecture output and is not a board override
+00-0034827,DJ Moore,BUF,107.0,105.0,139.7,165.0,destination_volume,2026-07-26,New-team range; base is games-weighted PPG architecture output and is not a board override
+00-0037740,Garrett Wilson,NYJ,129.7,125.0,144.3,185.0,health_qb_role,2026-07-26,Health and new-QB range; base is games-weighted PPG architecture output and is not a board override

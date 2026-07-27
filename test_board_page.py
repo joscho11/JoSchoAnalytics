@@ -87,6 +87,66 @@ def test_full_board_245_default_adp_ascending_rookie_qbs_kept():
     assert int(pd.isna(t["sleeper_proj"]).sum()) == 2
 
 
+def test_final_analyst_overlays_apply_and_preserve_raw_model_values():
+    import draft_board_2026 as board
+
+    expected = {
+        "Josh Downs": (92.2, 109.6),
+        "Xavier Worthy": (82.4, 131.0),
+        "Ladd McConkey": (153.0, 174.7),
+        "Ricky Pearsall": (63.9, 119.4),
+        "Bijan Robinson": (230.2, 248.2),
+        "Chase Brown": (201.6, 219.6),
+        "De'Von Achane": (193.6, 211.6),
+        "Jahmyr Gibbs": (237.2, 255.2),
+        "Javonte Williams": (162.9, 180.9),
+        "Jonathan Taylor": (177.8, 195.8),
+        "Kenneth Walker III": (160.2, 178.2),
+        "Brenton Strange": (70.0, 95.0),
+        "George Kittle": (151.2, 105.0),
+        "Gunnar Helm": (46.9, 70.0),
+        "Isaiah Likely": (56.4, 95.0),
+        "Theo Johnson": (90.4, 75.0),
+        "Brock Purdy": (160.8, 285.0),
+        "Jaxson Dart": (248.6, 270.0),
+        "Jayden Daniels": (102.4, 285.0),
+        "Joe Burrow": (249.8, 300.0),
+        "Lamar Jackson": (218.5, 315.0),
+        "Malik Willis": (23.0, 220.0),
+        "Trevor Lawrence": (226.7, 285.0),
+        "Tyler Shough": (115.6, 215.0),
+    }
+
+    overlay = pd.read_csv(board.ANALYST_PROJECTION_ADJUSTMENTS)
+    assert len(overlay) == len(expected) == 24
+    assert not overlay["player_id"].duplicated().any()
+    assert not {"sleeper", "adp", "diff"}.intersection(overlay.columns)
+    assert set(overlay["player"]) == set(expected)
+
+    projections = board._load_projections().set_index("player")
+    for player, (raw_value, board_value) in expected.items():
+        row = projections.loc[player]
+        assert row["model_projection_raw"] == raw_value
+        assert row["projection"] == board_value
+        assert pd.notna(row["projection_adjustment"])
+
+    board_rows = board._load_board_2026().set_index("player")
+    for player, (raw_value, board_value) in expected.items():
+        row = board_rows.loc[player]
+        assert row["model_proj_raw"] == raw_value
+        assert row["model_proj"] == board_value
+
+    held_conditions = {
+        "Rome Odunze", "Michael Wilson", "Zach Charbonnet",
+        "Sam LaPorta", "T.J. Hockenson", "Oronde Gadsden II", "Mark Andrews",
+        "Kyler Murray", "J.J. McCarthy", "Patrick Mahomes", "Daniel Jones",
+    }
+    assert held_conditions.isdisjoint(set(overlay["player"]))
+    assert "model_proj" in board._DISPLAY_COLS
+    assert "model_proj_raw" not in board._DISPLAY_COLS
+    assert "projection_adjustment" not in board._DISPLAY_COLS
+
+
 def test_exact_column_labels_present():
     import draft_board_2026 as board
     labels = [m[2] for m in board.COLUMN_META]
@@ -176,6 +236,7 @@ if __name__ == "__main__":
     test_board_uses_dataframe_not_table()
     test_column_guide_inside_collapsed_expander()
     test_full_board_245_default_adp_ascending_rookie_qbs_kept()
+    test_final_analyst_overlays_apply_and_preserve_raw_model_values()
     test_exact_column_labels_present()
     test_semantic_gap_colors_and_active_sort_tint()
     test_no_forbidden_language_in_rendered_copy()

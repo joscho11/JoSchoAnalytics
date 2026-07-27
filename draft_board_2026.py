@@ -2,8 +2,9 @@
 
 This tab retires the licensed Phase-4 band as its spine. It now lists every player with
 a 2026 Sleeper ADP (~245) and shows, side by side, the market's draft price and positional
-rank next to TWO independent season-total half-PPR projections — Sleeper's and a from-scratch
-model I built — plus the positional-rank gap for each, and descriptive talent scores.
+rank next to Sleeper's season-total projection and a model-based estimate I built — plus the
+positional-rank gap for each and descriptive talent scores. Selected named 2026 players use a
+disclosed analyst overlay on that model-based estimate.
 
 The frozen artifacts (phase4_band_2026.csv, talent_index_2026.csv) stay on disk, read-only —
 the closed H-campaign and the daily ADP refresh still reference them. This module no longer
@@ -11,9 +12,9 @@ reads the band.
 
 Compliance — DESCRIPTIVE ONLY.
   • Sleeper ADP + Sleeper Proj are Sleeper's data (attributed).
-  • Model Proj + Model Gap come from a separate, from-scratch model, BACKTESTED (2021–2025)
-    and NOT live-validated, built independently of the market and NOT presented as a better
-    number than the market.
+  • Model Proj + Model Gap use a separate, from-scratch model, BACKTESTED (2021–2025)
+    and NOT live-validated. A frozen, disclosed 2026 analyst overlay replaces the displayed
+    point estimate for selected players while preserving every raw model output.
   • The gap columns are neutral positional-rank differences, not recommendations.
   • Talent Scores are descriptive context on their own scales, and feed no other column.
   • No buy/sell/fade/steal/reach/target/tier/valued/hit-rate/accuracy language anywhere.
@@ -40,6 +41,9 @@ LIVE_OVERLAY = SEAS / "board_adp_live_2026.csv"
 # The two independent season-total projections + the raw Sleeper projection they are
 # compared against live here (from-scratch model, read-only).
 PROJ_RESULTS = _HERE / "fantasy" / "projections" / "results"
+ANALYST_PROJECTION_ADJUSTMENTS = (
+    PROJ_RESULTS / "analyst_projection_adjustments_2026.csv"
+)
 # Descriptive talent artifacts (fantasy/talent/, provenance-stamped). NFL Talent scores
 # players with NFL history against NFL players; College Talent scores 2026 rookies (RB/WR/TE)
 # against past drafted prospects. Disjoint by construction (artifact membership), different
@@ -52,17 +56,97 @@ BOARD_SEASON = 2026
 
 def _load_projections():
     """player_id -> (model projection, raw Sleeper projection) from the from-scratch
-    season-total results. Concatenated across positions, deduped by player_id."""
+    season-total results. Concatenated across positions, deduped by player_id.
+
+    Raw result CSVs remain model-only artifacts. A frozen explicit analyst overlay can
+    replace the displayed point estimate for preselected 2026 player scenarios.
+    """
     frames = []
     for p in ("rb", "wr", "te", "qb"):
         f = PROJ_RESULTS / f"{p}_projection_2026.csv"
         if f.exists():
-            frames.append(pd.read_csv(f, usecols=["player_id", "team", "projection", "sleeper"]))
+            frames.append(
+                pd.read_csv(
+                    f,
+                    usecols=[
+                        "player_id", "player", "position", "team",
+                        "projection", "sleeper",
+                    ],
+                )
+            )
     if not frames:
-        return pd.DataFrame(columns=["player_id", "team", "projection", "sleeper"]) \
-                 .set_index("player_id")
-    return pd.concat(frames, ignore_index=True).drop_duplicates("player_id") \
-             .set_index("player_id")
+        return pd.DataFrame(
+            columns=[
+                "player_id", "player", "position", "team",
+                "projection", "sleeper",
+            ]
+        ).set_index("player_id")
+    out = pd.concat(frames, ignore_index=True).drop_duplicates("player_id")
+    out["model_projection_raw"] = out["projection"]
+    out["projection_adjustment"] = pd.NA
+    out["projection_adjustment_as_of"] = pd.NA
+    if ANALYST_PROJECTION_ADJUSTMENTS.exists():
+        adj = pd.read_csv(ANALYST_PROJECTION_ADJUSTMENTS)
+        required = {
+            "player_id", "player", "position", "raw_projection",
+            "adjusted_projection", "method", "as_of",
+        }
+        missing_columns = required.difference(adj.columns)
+        if missing_columns:
+            raise ValueError(
+                "Analyst projection overlay is missing columns: "
+                f"{sorted(missing_columns)}"
+            )
+        if adj["player_id"].duplicated().any():
+            duplicates = adj.loc[
+                adj["player_id"].duplicated(keep=False), "player_id"
+            ].tolist()
+            raise ValueError(
+                f"Duplicate analyst projection overlay player_id values: {duplicates}"
+            )
+
+        raw = out.set_index("player_id")
+        overlay = adj.set_index("player_id")
+        orphaned = overlay.index.difference(raw.index)
+        if len(orphaned):
+            raise ValueError(
+                "Analyst projection overlay contains unknown player_id values: "
+                f"{orphaned.tolist()}"
+            )
+
+        joined = raw.loc[overlay.index]
+        identity_mismatch = (
+            joined["player"].ne(overlay["player"])
+            | joined["position"].ne(overlay["position"])
+        )
+        if identity_mismatch.any():
+            bad = overlay.index[identity_mismatch].tolist()
+            raise ValueError(
+                "Analyst projection overlay player/position mismatch for: "
+                f"{bad}"
+            )
+
+        expected_raw = pd.to_numeric(
+            overlay["raw_projection"], errors="raise"
+        )
+        current_raw = pd.to_numeric(joined["projection"], errors="raise")
+        stale = current_raw.sub(expected_raw).abs().gt(0.05)
+        if stale.any():
+            bad = overlay.index[stale].tolist()
+            raise ValueError(
+                "Analyst projection overlay is stale against raw projection "
+                f"artifacts for: {bad}"
+            )
+
+        adjusted = pd.to_numeric(
+            overlay["adjusted_projection"], errors="raise"
+        )
+        out = out.set_index("player_id")
+        out.loc[overlay.index, "projection"] = adjusted
+        out.loc[overlay.index, "projection_adjustment"] = overlay["method"]
+        out.loc[overlay.index, "projection_adjustment_as_of"] = overlay["as_of"]
+        out = out.reset_index()
+    return out.set_index("player_id")
 
 
 @st.cache_data
@@ -84,6 +168,14 @@ def _load_board_2026_cached(source_fingerprint):
     # The two projections + the raw Sleeper projection, joined read-only by player_id.
     proj = _load_projections()
     df["model_proj"] = df["player_id"].map(proj["projection"]) if len(proj) else pd.NA
+    df["model_proj_raw"] = (
+        df["player_id"].map(proj["model_projection_raw"])
+        if len(proj) else pd.NA
+    )
+    df["projection_adjustment"] = (
+        df["player_id"].map(proj["projection_adjustment"])
+        if len(proj) else pd.NA
+    )
     df["sleeper_proj"] = df["player_id"].map(proj["sleeper"]) if len(proj) else pd.NA
     # Team from the projection roster where present (current 2026 team), else the dataset.
     if len(proj) and "team" in proj.columns:
@@ -100,7 +192,10 @@ def _load_board_2026_cached(source_fingerprint):
         r = pd.read_csv(ROOKIE_CSV, usecols=["gsis_id", "rookie_score"]).set_index("gsis_id")
         df["college_talent"] = df["player_id"].map(r["rookie_score"])
 
-    for c in ("model_proj", "sleeper_proj", "nfl_talent", "college_talent"):
+    for c in (
+        "model_proj", "model_proj_raw", "sleeper_proj",
+        "nfl_talent", "college_talent",
+    ):
         df[c] = pd.to_numeric(df[c], errors="coerce")
 
     # Positional ranks. ADP ascending (1 = earliest pick at the position); projection ranks
@@ -126,6 +221,7 @@ def _board_source_fingerprint():
         LIVE_OVERLAY,
         *(PROJ_RESULTS / f"{position}_projection_2026.csv"
           for position in ("rb", "wr", "te", "qb")),
+        ANALYST_PROJECTION_ADJUSTMENTS,
         TALENT_CSV,
         ROOKIE_CSV,
     ]
@@ -133,6 +229,36 @@ def _board_source_fingerprint():
         (str(path), path.stat().st_mtime_ns, path.stat().st_size)
         if path.exists() else (str(path), None, None)
         for path in paths
+    )
+
+
+def _load_adjustment_disclosure():
+    """Small audit table for the collapsed on-page overlay disclosure."""
+    if not ANALYST_PROJECTION_ADJUSTMENTS.exists():
+        return pd.DataFrame(
+            columns=["Position", "Player", "Raw model", "Board value", "Basis", "As of"]
+        )
+    adj = pd.read_csv(
+        ANALYST_PROJECTION_ADJUSTMENTS,
+        usecols=[
+            "position", "player", "raw_projection", "adjusted_projection",
+            "method", "as_of",
+        ],
+    )
+    adj["method"] = adj["method"].str.replace("_", " ", regex=False)
+    return (
+        adj.rename(
+            columns={
+                "position": "Position",
+                "player": "Player",
+                "raw_projection": "Raw model",
+                "adjusted_projection": "Board value",
+                "method": "Basis",
+                "as_of": "As of",
+            }
+        )
+        .sort_values(["Position", "Player"], kind="stable")
+        .reset_index(drop=True)
     )
 
 
@@ -274,10 +400,11 @@ COLUMN_META = [
      "Sleeper's projected season-total half-PPR points (raw).",
      {"format": "%d", "width": "small"}),
     ("model_proj", _NUM, "Model Proj",
-     "Season-total half-PPR points from a separate, from-scratch model I built (RB/WR/TE plus "
-     "non-rookie QBs; rookie QBs are not projected). Same points scale as Sleeper Proj, but built "
-     "independently of the market — backtested on 2021–2025, NOT live-validated, and not "
-     "presented as a better number than the market. Blank = not in the projection set.",
+     "Season-total half-PPR points based on a separate, from-scratch model I built (RB/WR/TE "
+     "plus non-rookie QBs; rookie QBs are not projected). Selected 2026 players use the "
+     "disclosed analyst overlay below; every raw model output remains preserved. The model "
+     "was built independently of the market, backtested on 2021–2025, and is NOT "
+     "live-validated. Blank = not in the projection set.",
      {"format": "%d", "width": "small"}),
     ("nfl_talent", _NUM, "NFL Talent Score",
      "My model-based per-opportunity talent estimate for players with NFL history, net of "
@@ -428,9 +555,28 @@ def render():
     direction = "low to high" if ascending else "high to low"
     st.caption(f"Sorted by **{sort_label}** ({direction}). The arrow and soft green tint mark "
                "the active sort column.")
-    st.caption("Model Proj and Model Gap come from a separate, from-scratch model, "
-               "backtested on 2021–2025 and not yet live-validated — shown for context, "
-               "built independently of the market.")
+    st.caption("Model Proj and Model Gap use a separate, from-scratch model, backtested "
+               "on 2021–2025 and not yet live-validated. Selected 2026 players use the "
+               "disclosed analyst overlay; every raw model output remains preserved.")
+    disclosure = _load_adjustment_disclosure()
+    with st.expander(
+        f"2026 analyst projection overlays ({len(disclosure)})",
+        expanded=False,
+    ):
+        st.caption(
+            "These named-player scenarios replace only the single displayed Model Proj. "
+            "They do not retrain a model or rewrite a raw projection file, and Sleeper "
+            "values did not determine selection or size."
+        )
+        st.dataframe(
+            disclosure,
+            width="stretch",
+            hide_index=True,
+            column_config={
+                "Raw model": st.column_config.NumberColumn(format="%.1f"),
+                "Board value": st.column_config.NumberColumn(format="%.1f"),
+            },
+        )
     st.caption("NFL Talent Score ranks NFL players against NFL players; College Talent Score "
                "ranks 2026 rookies against past drafted prospects — different instruments on "
                "different scales, and neither feeds any other column.")
@@ -455,7 +601,8 @@ def render():
     st.markdown("---")
     st.caption(
         "**About these numbers.** Sleeper ADP and Sleeper Proj are Sleeper's; the Model Proj "
-        "is my own model's, built independently of the market and backtested on 2021–2025 — "
-        "not live-validated (the first live test is the 2026 season). The gap columns are "
-        "simple positional-rank differences shown for context. All of this is descriptive "
-        "information for your own judgment — not a recommendation about any player.")
+        "is based on my own independently built model, with the named 2026 analyst overlays "
+        "disclosed above. The model was backtested on 2021–2025 and is not live-validated "
+        "(the first live test is the 2026 season). The gap columns are simple positional-rank "
+        "differences shown for context. All of this is descriptive information for your own "
+        "judgment — not a recommendation about any player.")

@@ -63,9 +63,14 @@ VET_FEATS = ["prior_ppg", "prior_half_ppr", "prior_games", "ppg_2yr", "ppg_3yr",
              "prior_rush_epa", "age", "years_exp", "draft_round", "draft_pick", "prior_team_pass_rate",
              "prior_team_plays", "vacated_target_share", "vacated_rush_share", "coach_changed",
              "qb_changed", "prior_games_missed", "missed_prior_season"]
-VET_ALL = list(VET_FEATS)          # AMENDMENT 1 (2026-07-21): depth_rank DROPPED from the feature pool
-                                   # (absent in nflreadpy for 2025/2026 -> breaks native-NaN trees at deploy).
-                                   # depth_rank is still computed for coverage/disclosure, not a model feature.
+VET_ALL = list(VET_FEATS)          # AMENDMENT 1 (2026-07-21): depth_rank DROPPED from the feature pool.
+                                   # FACTUAL CORRECTION 2026-07-26: Amendment 1's stated premise ("absent in
+                                   # nflreadpy for 2025/2026") was FALSE — the data exists, under a new ESPN
+                                   # schema this file's own filter silently dropped. The EXCLUSION still
+                                   # stands, on the deploy-realism evidence (64% of the pooled gain is the
+                                   # missingness channel; the only deploy-era fold regresses when honestly
+                                   # re-timed). See PREREG_rb_projection_2026-07-21.md, Amendment 1 correction.
+                                   # depth_rank is computed for coverage/disclosure only, never a feature.
 
 # --- ROOKIE feature pool (prereg §3 RB-slice: the §3-named cols; excludes cfb id/metadata cols) ---
 ROOK_DRAFT = ["draft_round", "draft_pick", "log_pick"]
@@ -112,20 +117,104 @@ def season_total_target():
 
 
 # --------------------------------------------------------------------- PRESEASON DEPTH RANK (§3/§6a)
-def depth_rank_table():
-    """Per (gsis_id, season) preseason RB depth rank = depth_team ('1'=starter) at the MIN REG week
-    (season-open snapshot; point-in-time — contains no within-season-Y performance)."""
+# nflverse changed depth-chart providers for 2025: <=2024 are weekly charts
+# (season/club_code/week/game_type/position/depth_team), 2025+ are ESPN daily snapshots
+# (dt/team/pos_abb/pos_slot/pos_rank) with NO season and NO position/depth_team column. The old
+# single `position == "RB"` filter silently dropped 100% of 2025 (554k rows) and 2026 (372k rows).
+# Both schemas are parsed here; the two-schema rule mirrors
+# build_season_dataset.py::_load_qb1_week1. depth_rank remains DISCLOSURE-ONLY — it is in no
+# feature pool (Amendment 1) and this parsing fix does not change any model or projection.
+DEPTH_SRC = "source_pos_rank"       # provider-raw rank, preserved verbatim; new feed only
+NEW_FEED_FIRST_SEASON = 2025        # first season on the ESPN daily-snapshot schema
+NEW_FEED_MAX_TIER = 2               # canonical new-feed tiers are 1-2 only (see _depth_modern)
+
+
+def _depth_legacy(seasons, position):
+    """<=2024 weekly charts. Preseason rank = depth_team ('1'=starter) at the player's MIN REG
+    week (season-open snapshot; point-in-time — contains no within-season-Y performance).
+    This body is the pre-2026-07-26 logic verbatim; legacy output must not move."""
     import nflreadpy as nfl
-    dc = pdf(nfl.load_depth_charts(seasons=list(range(2014, DEPLOY + 1))))
+    dc = pdf(nfl.load_depth_charts(seasons=list(seasons)))
     if "game_type" in dc.columns:
         dc = dc[dc["game_type"].astype(str).str.upper().isin(["REG", "R", ""]) | dc["game_type"].isna()]
-    dc = dc[dc["position"].astype(str) == "RB"].copy()
+    dc = dc[dc["position"].astype(str) == position].copy()
     dc["depth_num"] = pd.to_numeric(dc["depth_team"], errors="coerce")
     dc = dc.dropna(subset=["gsis_id", "week", "depth_num"])
     dc["week"] = pd.to_numeric(dc["week"], errors="coerce")
     idx = dc.groupby(["gsis_id", "season"])["week"].idxmin()   # season-open (earliest week) row
     out = dc.loc[idx, ["gsis_id", "season", "depth_num"]].rename(columns={"depth_num": DEPTH})
+    out[DEPTH_SRC] = np.nan                                    # legacy feed has no provider rank
     return out.drop_duplicates(["gsis_id", "season"])
+
+
+def _depth_modern(season, position):
+    """2025+ ESPN daily snapshots -> one point-in-time row per (gsis_id, season).
+
+    AS-OF RULE (deterministic; inherited from `build_season_dataset._load_qb1_week1`): of the many
+    daily snapshots, take the LAST one strictly BEFORE the season's first REG gameday, so the row
+    is pre-kickoff. For an unplayed season no snapshot is filtered out and the rule degenerates to
+    "the most recent snapshot", which is still point-in-time.
+
+    CANONICAL TIER: rank within (team, pos_slot), emitted ONLY for tiers 1..NEW_FEED_MAX_TIER.
+    This is the translation established by the WR depth work: the provider's raw `pos_rank` is not
+    comparable to legacy `depth_team`, and an uncapped July chart carries 90-man camp rosters,
+    which would swing listed-coverage against the legacy seasons. Deeper players are therefore left
+    UNLISTED rather than fabricated into a tier. The provider's raw rank is preserved verbatim in
+    `source_pos_rank` for provenance."""
+    import nflreadpy as nfl
+    dc = pdf(nfl.load_depth_charts(seasons=[season]))
+    if not len(dc) or "dt" not in dc.columns:
+        return None
+    dc = dc.copy()
+    dc["dt"] = pd.to_datetime(dc["dt"], utc=True)
+    sched = pdf(nfl.load_schedules([season]))
+    reg = sched.loc[sched["game_type"] == "REG", "gameday"].dropna() if "game_type" in sched.columns \
+        else pd.Series(dtype=object)
+    if len(reg):
+        dc = dc[dc["dt"] < pd.Timestamp(min(reg), tz="UTC")]   # strictly pre-kickoff
+    if not len(dc):
+        return None
+    dc = dc[dc["dt"] == dc["dt"].max()].copy()                 # the deterministic as-of snapshot
+    dc = dc[dc["pos_abb"].astype(str) == position].copy()
+    dc["pos_rank"] = pd.to_numeric(dc["pos_rank"], errors="coerce")
+    dc = dc.dropna(subset=["gsis_id", "team", "pos_slot", "pos_rank"])
+    if not len(dc):
+        return None
+    dc = dc.sort_values(["team", "pos_slot", "pos_rank", "gsis_id"], kind="mergesort")
+    dc[DEPTH] = dc.groupby(["team", "pos_slot"])["pos_rank"].rank(method="first")
+    # a player listed in more than one slot keeps his best (lowest) tier
+    dc = dc.sort_values([DEPTH, "pos_rank", "gsis_id"], kind="mergesort") \
+           .drop_duplicates(["gsis_id"], keep="first")
+    out = dc[dc[DEPTH] <= NEW_FEED_MAX_TIER].copy()
+    out["season"] = season
+    out = out.rename(columns={"pos_rank": DEPTH_SRC})
+    return out[["gsis_id", "season", DEPTH, DEPTH_SRC]].drop_duplicates(["gsis_id", "season"])
+
+
+def depth_rank_table(position="RB", seasons=None):
+    """Per (gsis_id, season) preseason depth rank across BOTH provider schemas.
+    Returns gsis_id, season (int64), depth_rank (int64), source_pos_rank (float; new feed only).
+
+    NOT A COMPARABLE SERIES ACROSS THE 2024/2025 BOUNDARY. Legacy seasons emit whatever tiers the
+    weekly chart carried (1-3 for RB, ~150 listed players per season); new-feed seasons emit tiers
+    1-2 only (64 per season, 32 teams x 2). Listed-coverage therefore steps down at 2025 by
+    construction. Any future consumer that wants a single cross-era series must handle that step
+    explicitly — it is exactly the missingness channel that sank depth_rank as a feature."""
+    seasons = list(seasons) if seasons is not None else list(range(2014, DEPLOY + 1))
+    legacy = [s for s in seasons if s < NEW_FEED_FIRST_SEASON]
+    modern = [s for s in seasons if s >= NEW_FEED_FIRST_SEASON]
+    frames = [_depth_legacy(legacy, position)] if legacy else []
+    for s in modern:
+        f = _depth_modern(s, position)
+        if f is not None and len(f):
+            frames.append(f)
+    if not frames:
+        return pd.DataFrame(columns=["gsis_id", "season", DEPTH, DEPTH_SRC])
+    out = pd.concat(frames, ignore_index=True)
+    out["season"] = pd.to_numeric(out["season"], errors="coerce").astype("int64")
+    out[DEPTH] = pd.to_numeric(out[DEPTH], errors="coerce").astype("int64")
+    out[DEPTH_SRC] = pd.to_numeric(out[DEPTH_SRC], errors="coerce")
+    return out.drop_duplicates(["gsis_id", "season"]).reset_index(drop=True)
 
 
 # --------------------------------------------------- FROZEN ROOKIE MATRIX (regen in TEMP scratch)
@@ -228,10 +317,16 @@ def run_asserts(vet, rook):
                 "vacated_rush_share", "coach_changed", "qb_changed", "missed_prior_season"}
     same_season_stat = [c for c in VET_FEATS if not (c.startswith("prior_") or c in prior_derived
                                                      or c in knowable)]
-    a2 = (not talent_leak) and (not same_season_stat)
+    # Amendment 1 stands: depth_rank (and its provider-raw provenance column) are computed for
+    # disclosure only and must never appear in a feature pool.
+    depth_leak = [c for c in (VET_ALL + ROOK_ALL)
+                  if c in (DEPTH, DEPTH_SRC) or "depth_rank" in c or "depth_chart" in c
+                  or "depth_team" in c]
+    a2 = (not talent_leak) and (not same_season_stat) and (not depth_leak)
     ok &= a2
-    print(f"2. <=Y-1 LAG: target/talent/efficiency in features {talent_leak or 'none'} | "
-          f"non-prior veteran stat cols {same_season_stat or 'none'}  -> {'PASS' if a2 else 'FAIL'}")
+    print(f"2. <=Y-1 LAG + NO-DEPTH: target/talent/efficiency in features {talent_leak or 'none'} | "
+          f"non-prior veteran stat cols {same_season_stat or 'none'} | "
+          f"depth cols {depth_leak or 'none'}  -> {'PASS' if a2 else 'FAIL'}")
 
     # 3. SHUFFLED-YEAR leakage probe: a proof-model (native-NaN HGB) carries aligned prior signal on the
     #    veteran slice, and DESTROYS it when the target is shuffled within season. (Machinery, not a metric.)

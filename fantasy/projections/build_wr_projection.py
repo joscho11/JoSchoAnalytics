@@ -5,7 +5,10 @@ REUSES the position-agnostic RB engine by IMPORT (build_rb_projection) — seaso
 nested_select, walk_forward, fit_final_model, _prep, _grid, _score_bundle, metrics, FAMILIES, the 32-col
 veteran pool, and the rookie draft/age/combine/landing lists. Defines only WR-specific assembly: a WR
 frozen-matrix twin (position=='WR' + pff_receiving) and the WR feature pools. **build_rb_projection.py is
-NOT modified.** NO depth_rank in either bucket (carry-forward lesson: nflreadpy depth charts end at 2024).
+NOT modified.** NO depth_rank in either bucket. (The carry-forward lesson was originally recorded as
+"nflreadpy depth charts end at 2024"; that premise was FALSE — corrected 2026-07-26, the 2025+ data exists
+under a new ESPN schema. The exclusion stands on deploy-realism evidence, not on data absence. This build
+never joined depth charts at all, so nothing here changes.)
 
 MODES  --assemble | --walk-forward | --ship  (mirror the RB build).
 
