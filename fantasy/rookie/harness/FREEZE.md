@@ -53,3 +53,21 @@ These files live ONLY in the temp scratchpad
 `…/86d5b45d-…/scratchpad/rookie_build/`. Temp cleanup would destroy the frozen harness (the Session-9
 near-loss class). Fire soon in a fresh session, OR preserve the code (`.py`+`.json`, no raw PFF) to a durable
 location first. The `.parquet` need not be preserved — it regenerates from the frozen scripts.
+
+
+## FIRED 2026-07-20 — SPENT. Do not execute "THE FIRE" checklist again.
+
+Appended 2026-07-27; nothing above this line was modified.
+
+The one-shot fired exactly once on 2026-07-20. Outcomes are recorded in
+`../PREREG_rookie_production_2026-07-20.md`, and `fire_rookie_results.pkl` sits in this
+directory. Headline: the §8 claim was REJECTED — CatBoost full-vs-draft-only ΔAUC was only
++0.005, inside the placebo null of +0.069, and a college-only model scored 0.713 against draft
+capital's 0.838. The product ships anyway, labelled BACKTESTED NOT LIVE-VALIDATED.
+
+**The status header at the top of this file ("build complete, NOT fired" / "Blindness intact")
+describes the state on the day it was written and is no longer true.** The checklist above is
+history, not instructions: re-firing a spent one-shot would destroy the result.
+
+**The preservation risk recorded below is DISCHARGED.** These files no longer live only in a
+temp scratchpad — the harness was preserved into the repo at `fantasy/rookie/harness/`.

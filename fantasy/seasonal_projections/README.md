@@ -7,12 +7,21 @@ of the betting side's "model vs the Vegas line" thesis (here the market line is 
 
 ## What ships today: the 2026 Draft Board (2026-07-12)
 
-The live dashboard tab is now the **2026 Draft Board** (`draft_board_2026.py`, reading the
-frozen `phase4_band_2026.csv` + `talent_index_2026.csv`). It pairs the market's point
-estimate — powered by Sleeper's projections versus the draft market — with a calibrated
-range I built around it: a Floor, Expected, and Ceiling for the season, a Top-12 chance,
-and a bust risk. When I drew those ranges for the 2021 through 2025 seasons, about 8 in 10
-players finished inside their 80% range.
+> **Update 2026-07-22 — the Draft Board page was REBUILT and no longer renders the band.**
+> It is now a season-projection comparison table: 245 rows, 13 columns — Sleeper ADP and
+> Position Rank beside Sleeper's and my own from-scratch season projections, the positional-rank
+> gap for each, and two descriptive talent columns from `fantasy/talent/`. A detail toggle (on by
+> default) can collapse it to a compact 9-column comparison view. There is no Floor/Expected/
+> Ceiling, no Top-12 chance and no bust risk on the page. `phase4_band_2026.csv` and
+> `talent_index_2026.csv` stay FROZEN on disk for this closed campaign only — **neither is an
+> input to the daily ADP refresh** (its one frozen input is `season_dataset_2014_2026.csv`), and
+> the page reads the band nowhere. **The description below documents the RETIRED band product,
+> for history.**
+
+The band product paired the market's point estimate — powered by Sleeper's projections versus
+the draft market — with a calibrated range I built around it: a Floor, Expected, and Ceiling for
+the season, a Top-12 chance, and a bust risk. When I drew those ranges for the 2021 through 2025
+seasons, about 8 in 10 players finished inside their 80% range.
 
 The board also shows the gap between projection and draft price. That gap has a tested
 track record as a group pattern — validated in aggregate across five past seasons,
@@ -68,7 +77,17 @@ target share). None of those exist before Week 1. So this is a distinct problem:
 a season-long projection built only from information known at draft time
 (prior-season aggregates, multi-year trend, age, draft capital, team context).
 
-## Pipeline (run in order)
+## Pipeline (run in order) — **RETIRED ARC, kept for history**
+
+> **Do not run these to produce anything shipped.** Every "SHIPPED" / "CANONICAL" tag below dates
+> from the Model-A / value-board era, which was retired on 2026-07-12. `train_model_a.py`,
+> `build_value_board.py` and `surprise_eval.py` are all marked RETIRED in `ARTIFACTS.md`; the
+> Seasonal Value tab they fed no longer exists (the site is a multipage app with no such page), and
+> `value_board_*.csv` was deliberately removed from git. **`build_value_board.py` emits BUY/FADE
+> verdict language that the current licensing fence forbids on any live surface.**
+>
+> **The one command that is live today** is the daily ADP refresh:
+> `python fantasy/seasonal_projections/refresh_board_adp.py` — see "Daily ADP refresh" below.
 
 | Step | File | Output | Notes |
 |------|------|--------|-------|
@@ -211,7 +230,30 @@ since nflreadpy data drifts and the models were trained on them). Then
 dashboard season selector shows it. The 2026 board correctly ranks rookies like Ashton
 Jeanty and Omarion Hampton via the rookie model plus their ADP.
 
-## Annual refresh
+## Daily ADP refresh — the live one
+
+The board's draft prices are re-pulled from Sleeper daily by
+`.github/workflows/board_refresh.yml`, which runs `refresh_board_adp.py` and writes the
+regenerable overlay `board_adp_live_2026.csv` (all 245 board rows, with a `refreshed_at` stamp the
+page's "latest pull" caption reads).
+
+```powershell
+python fantasy/seasonal_projections/refresh_board_adp.py
+```
+
+**The freeze boundary is the point of it:** the refresh pulls **live ADP only** and recomputes the
+price-derived rank and gap columns against a FROZEN projection side. It never writes
+`phase4_band_2026.csv`, `talent_index_2026.csv`, the season dataset, or the ADP cache — and
+(verified 2026-07-27) it does not even *read* the first two; its one frozen input is
+`season_dataset_2014_2026.csv`. If a row is missing from the overlay, the page falls back to the
+frozen dataset snapshot, so a fresh clone still renders.
+
+## Annual refresh — **RETIRED ARC**
+
+> **Superseded.** The section below describes regenerating the retired Model-A blend board via
+> `build_draft_board.py`. That is not what ships; use the daily ADP refresh above. Kept because the
+> annual data steps (extending `fetch_adp.py`, re-running `build_season_dataset.py` once actuals
+> are final) are still the right offseason sequence for the dataset itself.
 
 The board is kept as a projection and cross-check tool, so it is worth regenerating
 each offseason. `build_draft_board.py` is season-parameterized: by default it builds
@@ -230,11 +272,16 @@ that season once Sleeper ADP lands, around late August; (2) re-run
 fold the prior holdout season into training and re-run `train_model_a.py` and
 `train_model_b.py`; (4) run `build_draft_board.py` with the new `BOARD_SEASON`.
 
-One limitation to know: a true pre-draft board for a season with zero games played
+~~One limitation to know: a true pre-draft board for a season with zero games played
 needs the player list seeded from rosters and depth charts joined to prior-year stats,
 because dataset rows come from `load_player_stats`, which is empty until games are
 played. That seeding is not built, so the pipeline today produces a board for the
-current or just-completed season.
+current or just-completed season.~~
+
+**[RESOLVED — the seeding was built.]** `build_2026_board.py` seeds every 2026 rostered skill
+player plus every drafted rookie from `load_draft_picks`, which is exactly the zero-games-played
+case described above. `season_dataset_2014_2026.csv` exists on disk and the shipped 2026 board is
+a genuine pre-draft board over 245 players. The limitation as written is no longer true.
 
 ## Two targets (two-model design)
 

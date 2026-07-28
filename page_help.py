@@ -123,7 +123,7 @@ When the model and sharp money agree on the same side, that's a strong signal. W
 Everything lives in the top navigation bar, grouped into three menus:
 
 - **Betting** — Weekly Predictions (the page you land on) and Track Record.
-- **Fantasy** — Draft Board, Weekly Fantasy, and DFS Optimizer.
+- **Fantasy** — Draft Board, Rookie Board, Weekly Fantasy, and DFS Optimizer.
 - **More** — Film Room, League History, and this Help & Guide.
 
 The site opens on **Weekly Predictions** every time. There's no sidebar — each page carries its own controls (like the Season, Week, and Min Edge pickers) right at the top.
@@ -219,13 +219,28 @@ Upload your DraftKings salary CSV and the optimizer generates the highest-projec
 
     with st.expander("What is the Draft Board page?"):
         st.markdown("""
-The Draft Board is a **pre-season draft tool** for the 2026 season, separate from the Weekly Fantasy page. The point estimate for each player is the market's — powered by Sleeper's season projections compared against the draft market (ADP, average draft position). My contribution is a calibrated range around that estimate: a floor and ceiling, the chance of a top-12 or top-24 finish at the position, and a bust-risk figure for players typically drafted early at their position.
+The Draft Board is a **pre-season comparison table** for the 2026 season, separate from the Weekly Fantasy page. It lists every player with a 2026 Sleeper ADP — 245 of them. For each player it puts the market's draft price and his positional rank next to **two independent season-total projections**: Sleeper's, and a from-scratch model I built. Alongside each projection is the gap between the player's draft-price rank and his projected rank at his position.
 
-**How the range was checked:** across 900 player-seasons (2021–2025), about 8 in 10 players finished inside their 80% range — close to what the math promises. The projections-vs-price comparison itself has a tested track record as a group pattern for some player groups (marked with a "Signal check" badge on the board) and is untested for others — the badge tells you which group a player falls into. None of this is a guarantee, or a recommendation, about any individual player — it describes patterns across many players.
+**What the gap is.** Position Rank minus that projection's position rank. Positive means the projection ranks him above his draft cost; negative means below. It is a plain arithmetic difference between two ranks shown on the same row — descriptive context, never a recommendation about any player.
 
-A separate "2025 Efficiency" column shows context only — it is not part of the value signal, and testing showed it does not predict draft value.
+**How good is my model?** It was backtested on 2021–2025 and is **not live-validated** — the first live test is the 2026 season. On that backtest it does not rank players better than Sleeper does. I show both side by side rather than claiming mine is the better number.
 
-Use the **Position** filter to narrow the board, and the **Show advanced view** toggle for the full percentiles, raw metrics, and verbatim research labels behind the plain columns.
+For selected named 2026 players, the Model Proj cell shows **my own scenario** in place of the model's point estimate — a judgment call about availability and role, not a measured improvement and not backtested. Sleeper's projections, ranks and draft prices determined neither the direction nor the magnitude of any of them, and every raw model output is preserved unchanged underneath.
+
+The two talent columns are described in their own section further down this page. They are descriptive context on their own scales and feed no other column.
+
+Use the **Position** filter and the **Player search** box to narrow the board, and the **Sort by** and **Order** controls to reorder it — those sort numerically, with no-data rows always at the bottom. **Show projection and talent detail** is on by default; turn it off for a compact nine-column view showing just the price-versus-projection comparison. The CSV download always contains all thirteen columns.
+        """)
+
+    with st.expander("What is the Rookie Board page?"):
+        st.markdown("""
+The Rookie Board covers drafted rookies from the 2024, 2025 and 2026 classes. For each one it shows a **hit probability** — the share of historical players with a similar profile who had at least one startable season in their first three years (top-24 for RB/WR, top-12 for QB/TE, in season-total half-PPR). It is a best-of-three-years outcome, not a per-season rate.
+
+Three versions of that same number sit side by side: one from **draft capital only** (where he was picked), one from **college production and athletic testing only**, and one from **both**. They land close together, and that is the honest finding — at this sample, college production and testing added no measured edge beyond draft position. Backtested on the 2019–2023 classes, not live-validated.
+
+Beside those sit the rookie-year **season-total projections** for RB, WR and TE, next to Sleeper's projection and the difference. The quarterback rookie arm was built and then held back as too thin — a rookie QB's season hinges mostly on whether he starts, which the features cannot see — so rookie QBs show no projection.
+
+The page also carries four collapsed lists of **college players who are not in this year's rookie class** — same College Talent instrument, same scale. Most are still in college. They appear on no rookie board and the list says nothing about whether or when any of them will be drafted.
         """)
 
     with st.expander("What is the Film Room page?"):
@@ -337,29 +352,33 @@ If you're looking at a past week, the actuals shown are the real NFL stats for t
 
     st.divider()
 
-    # ── Section 3b: Talent Score & Rookie Score (Draft Board columns) ─────────
-    st.subheader("🧮 Talent Score & Rookie Score")
+    # ── Section 3b: NFL & College Talent Score (Draft Board columns) ──────────
+    st.subheader("🧮 NFL Talent Score & College Talent Score")
 
     with st.expander("What are the two score columns on the Draft Board?"):
         st.markdown("""
 The Draft Board carries two context columns I build myself, answering two different questions.
 
-**The Talent Score** is my model-based estimate of what a player does with each opportunity — each carry, route, or throw — separated from his situation where that separation is statistically possible. It is not a summary of his production, and models can be wrong. Volume is excluded by design: how often a player is used lives in the confidence channel instead, so a thin sample gets a wider range and a lower confidence weight, not a lower score.
+**The NFL Talent Score** is my model-based estimate of what a player does with each opportunity — each carry, route, or throw — separated from his situation where that separation is statistically possible. It is not a summary of his production, and models can be wrong. Volume is excluded by design: how often a player is used tells you about his coach's plans, not his per-play skill. Every position reads its own dedicated build, scored against qualified starters at that position. A player below his position's volume floor is left **blank** rather than quietly placed on another position's scale.
 
-**The Rookie Score** is a college-production read for 2026 rookies at RB, WR, and TE, scaled against past drafted prospects at the same position. It describes what a prospect did in college; it does not claim to predict NFL careers or fantasy value.
+**The College Talent Score** is a college-production read for 2026 rookies at all four positions — QB, RB, WR and TE — each from its own dedicated college build, scaled against past prospects at that position who reached the NFL. It describes what a prospect did in college; it does not claim to predict NFL careers or fantasy outcomes.
 
-**They are two different scales.** The Talent Score ranks NFL players against NFL players; the Rookie Score ranks prospects against past prospects. A 90 in one column is not a 90 in the other, and neither feeds any other number on this board.
+**Two limits on the college side, stated plainly.** There is no strength-of-schedule adjustment: production against a weaker opponent counts exactly the same as production against a stronger one, which is why several of the highest college scores belong to small-school players the draft market rated far lower. And the underlying data covers FBS only, so a prospect from a smaller division can never be scored — that blank is by construction, not a missing lookup.
+
+**They are two different scales.** The NFL column ranks NFL players against NFL players; the college column ranks prospects against past prospects. A 90 in one is not a 90 in the other, and neither feeds any other number on this board.
         """)
 
-    with st.expander("How the Talent Score is built (and what it doesn't measure)"):
+    with st.expander("How the talent scores are built (and what they don't measure)"):
         st.markdown("""
-For running backs, receivers, and tight ends, a week-by-week model splits performance into the player's own effect, his team's effect, and the opponent's effect, then keeps the player's part. Honestly, that adjustment is small — team and opponent together explain roughly 8% of week-to-week variance; most weekly movement is noise, and the score is built to look through it.
+There are eight builds behind these two columns — one for each of NFL and college, at each of the four positions. Each takes a small set of per-opportunity measures I call facets (broken tackles per carry, yards per route run, completion rate versus expectation, and so on), scores every player against his own position in his own season, and then shrinks each measure toward the position average according to how much data sits behind it. A thin sample gets pulled toward the middle rather than being trusted at face value.
 
-Quarterbacks are the asterisk: one starter per team means a QB's situation cannot be separated from him, so QB scores ship **unadjusted** — a different kind of estimate under the same header. The QB facets measure completion rate versus expectation (overall and on throws of 20+ air yards), ball-placement discipline, and rushing value. They do **not** measure performance under pressure, off-script play, or pre-snap work — I screened a pressure-performance facet family under a pre-registered rule and none survived it, so that gap stays open and disclosed.
+That shrinkage has a consequence worth stating: **a facet measured on very few plays contributes far less than its nominal weight suggests.** Contested catches are the clearest case — a tight end sees a handful of them a season, so that facet ends up carrying a few percent of the score no matter what weight I assign it. I measured this before reading any results, and where I tried to compensate by raising the weight, the players the facet exists to reward generally got *worse*, not better. So the weights ship as ratified.
 
-Recent seasons count more (a declared decay, roughly a 3.5-season half-life). Every score comes with a range — the honest uncertainty — plus † for lower-confidence rows and ‡ for the lowest. A 50 means the weakest draftable player at the position, not a league-average one, and an individual score is not each player's single best point estimate: ranks and ranges are the reliable reads. For early-career running backs I blend in a college prior at the weak agreement level I actually measured (about 0.385); at WR and TE the measured agreement was near zero, so their scores are NFL-only.
+Quarterbacks are the asterisk on the NFL side: one starter per team means a QB's situation cannot be separated from him, so QB scores ship **unadjusted** — a different kind of estimate under the same header. The QB build does now measure performance under pressure, though on a small enough sample that it contributes little. A consequence I have not engineered away: an immobile quarterback cannot score well here, because designed rushing carries a quarter of the composite.
 
-These columns are context only: a pre-registered test found measures like these do not predict where the draft market is wrong, so they never combine with the Gap, ranges, or chance columns anywhere on the board.
+Recent seasons count more, on a decay I chose and wrote down rather than fitted. Scores are clipped to a 50–99 display range (40–99 for college quarterbacks), so **50 is the floor of the display, not a league-average player**. Ranks are a more reliable read than any single number.
+
+These columns are context only: a pre-registered test found that efficiency measures like these do not predict where the draft market misprices players, so they never combine with the projections, the ranks, or the gap columns anywhere on the board. The college instruments in particular were each measured against NFL outcomes and each came back **dead** — they ship as description of college production, and nothing more.
 
 The full write-up — every design choice, the admission gates, and where it fails — lives in `fantasy/talent/GUIDE.md` in the repo.
         """)

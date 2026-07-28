@@ -64,11 +64,18 @@ capital, so I can see whether the non-market signal exists at all). I also ran a
 shuffle the hit labels a thousand times and confirm the full model's apparent edge over draft capital
 isn't the kind of thing that shows up by chance.
 
-**What ships.** The board shows five things per rookie: (a) a descriptive college talent score, read
-only from my separate talent library; (b) the hit probability, 0–100; (c) a rookie-year points
-projection, surfaced from an existing model I did not retrain; (d) the underlying feature stats; and
-(e) each rookie's percentile within his position across the 2015–2026 drafted panel, so you can see
-where he sits among peers.
+**What ships.** The board shows six things per rookie: (a) a descriptive college talent score, read
+only from my separate talent library; (b) the hit probability, 0–100; (c) a rookie-year **season-total
+half-PPR projection** from the RB, WR and TE season-total models, shown beside Sleeper's projection
+with the difference between them (the QB rookie arm was built and held as too thin, so rookie QBs
+show no projection); (d) the underlying feature stats; (e) each rookie's percentile within his
+position across the 2015–2026 drafted panel, so you can see where he sits among peers; and (f) his
+team, normalised at display time from the board CSVs' PFR-style codes to the site's canonical set.
+
+Below the table sit four collapsed lists of **college players at each position who are not in this
+year's rookie class** — the same College Talent instrument on the same scale. Most are still in
+college; they appear on no rookie board, and the list says nothing about whether or when any of them
+will be drafted.
 
 **Three hit-probability columns.** I show the hit probability three ways, side by side — the fired
 result made visible. The **Draft-Capital** column trains on only where a player was picked; the
@@ -133,10 +140,21 @@ season-total half-PPR estimate from the RB, WR, and TE season-total models; QB r
 intentionally withheld because the available QB sample is too thin and start-status uncertainty is too
 large. Sleeper projections are shown only where Sleeper has published one, so a blank Sleeper column is
 an unavailable market projection, not a failed load. The college talent score is read only from my
-separate 2026 talent library,
-which covers running backs, receivers, and tight ends only — no quarterbacks — and only a subset of
-them (23 of its 28 players match my board; the five gaps are name variants I left blank rather than
-guess). It is blank for 2024–2025 by design; I never backfill it.
+separate 2026 talent library. Since 2026-07-27 **every position has a dedicated college build**:
+quarterback, running back, receiver and tight end each get their own, and the RB/WR/TE builds replace
+the older box-score value wherever they cover a player while the QB build fills cells that were
+previously blank. Remaining blanks are prospects outside FBS, who can never be covered because the
+underlying charting data does not reach them, or names too ambiguous to match — which I leave blank
+rather than guess. None of it carries a strength-of-schedule adjustment. It is blank for 2024–2025 by
+design; I never backfill it.
+
+The page also carries four collapsed lists of **college players at each position who are NOT in this
+year's rookie class** — the same instrument on the same scale. Most are still in college. They appear
+on no rookie board, and the list says nothing about whether or when any of them will be drafted.
+
+Team codes on this page are normalised at display time: the board CSVs carry PFR-style codes
+(NWE, KAN, LVR, …) and every other surface on the site uses the nflverse canonical set, so they are
+mapped on render while the build artifact is left untouched.
 
 ## 5. The rules and fences that govern it
 

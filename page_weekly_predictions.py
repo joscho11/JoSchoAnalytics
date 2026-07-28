@@ -34,7 +34,7 @@ def _demo_notice():
         "👋 **Heads up — Weekly Predictions is a demo until the 2026 season kicks "
         "off.** The games below are from 2025, shown so you can see how the model "
         "works; live 2026 predictions start at Week 1. In the meantime, take a look "
-        "at the other tabs — my **2026 Draft Board is live and in production**, "
+        "around the top nav — my **2026 Draft Board is live and in production**, "
         "refreshing daily from the latest draft data.")
     board = nav_registry.PAGES.get("draft-board")
     if board is not None:

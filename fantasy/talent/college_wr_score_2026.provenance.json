@@ -1,0 +1,53 @@
+{
+  "spec": "R38 (RATIFIED-2026-07-27)",
+  "built": "2026-07-27",
+  "gamma": 0.5,
+  "route_floor": 150,
+  "weights": {
+    "grades_pass_route": 0.4,
+    "yprr": 0.25,
+    "contested_catch_rate": 0.1,
+    "avoided_tackles_rec": 0.1,
+    "grades_hands_drop": 0.075,
+    "yac_per_reception": 0.075
+  },
+  "mom_k": {
+    "grades_pass_route": 417.7,
+    "yprr": 419.6,
+    "contested_catch_rate": 94.9,
+    "avoided_tackles_rec": 69.9,
+    "grades_hands_drop": 220.9,
+    "yac_per_reception": 59.9
+  },
+  "effective_weights": {
+    "grades_pass_route": 0.4371,
+    "yprr": 0.2728,
+    "contested_catch_rate": 0.0552,
+    "avoided_tackles_rec": 0.0985,
+    "grades_hands_drop": 0.059,
+    "yac_per_reception": 0.0774
+  },
+  "anchor": {
+    "lo_pct": 5,
+    "hi_pct": 98,
+    "lo_score": 52,
+    "hi_score": 95,
+    "clip": [
+      50,
+      99
+    ],
+    "fitted_on": "WRs who reached the NFL",
+    "n": 755,
+    "ruled_for_wr": "4/7 in band vs 3/7 for all-WR pool"
+  },
+  "rows": 2872,
+  "rookies_2026": 122,
+  "missing_contested_rescaled": 709,
+  "missing_contested_rescaled_drafted": 228,
+  "known_defects": [
+    "contested_catch_rate delivers .055 effective vs .100 nominal",
+    "~30% of the drafted pool is scored on 5 facets, not 6"
+  ],
+  "framing": "WR is DEAD across six instrument classes; descriptive only",
+  "md5": "6e55edf52fc07f6f006cdfbc98457c37"
+}

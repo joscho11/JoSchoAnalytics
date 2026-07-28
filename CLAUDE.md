@@ -8,9 +8,9 @@ BettingEdge is an NFL sports betting prediction system with two independent mode
 - **Spread model**: Ensemble fixed75 as primary edge-setter (0.75 XGBoost + 0.25 Ridge), with XGBoost, Ridge, and LightGBM as three direction voters. HIGH/MEDIUM/PASS tiers.
 - **Totals model**: XGBoost + Ridge predicting whether games go over/under the Vegas total. UNDER-only strategy (books shade totals high due to recreational OVER-bias). HIGH = both models predict UNDER.
 - A Claude-powered LLM agent (via LlamaIndex) for qualitative game reasoning
-- A Streamlit dashboard for visualization (deployed at joschoanalytics.streamlit.app)
-- GitHub Actions for weekly automated predictions (Mon/Thu/Sun)
-- A pre-season fantasy **2026 Draft Board** dashboard tab (`draft_board_2026.py`) — **rebuilt 2026-07-22** into a **season-projection comparison table** over every player with a 2026 Sleeper ADP (~245): the market's draft price + positional rank beside Sleeper's and a from-scratch model's season projections, with the rank gap for each, plus descriptive talent scores. It **retired the licensed Phase-4 band** as the tab's spine (the frozen band + `talent_index_2026.csv` stay on disk, read-only, for the closed campaign + the ADP refresh). Band research campaign: `fantasy/seasonal_projections/` (`GUIDE.md` / `ARTIFACTS.md` / `PREREGISTRATION.md` + the `bettingedge-seasonal-h5-campaign` skill). Projection models: `fantasy/projections/`.
+- A Streamlit **multipage site** for visualization (deployed at joschoanalytics.streamlit.app) — 9 pages behind `st.navigation`, not tabs
+- GitHub Actions for weekly automated predictions (Tue/Thu/Sun)
+- A pre-season fantasy **2026 Draft Board** page (`draft_board_2026.py`) — **rebuilt 2026-07-22** into a **season-projection comparison table** over all **245** players with a 2026 Sleeper ADP: the market's draft price + positional rank beside Sleeper's and a from-scratch model's season projections, with the rank gap for each, plus two descriptive talent columns (**NFL Talent Score**, **College Talent Score**) fed by the eight per-position builds in `fantasy/talent/` (SPEC R34–R41, shipped 2026-07-27). Talent scores: `fantasy/talent/`. It **retired the licensed Phase-4 band** as the tab's spine (the frozen band + `talent_index_2026.csv` stay on disk, read-only, for the closed campaign + the ADP refresh). Band research campaign: `fantasy/seasonal_projections/` (`GUIDE.md` / `ARTIFACTS.md` / `PREREGISTRATION.md` + the `bettingedge-seasonal-h5-campaign` skill). Projection models: `fantasy/projections/`.
 
 ## Common Commands
 
@@ -72,7 +72,7 @@ pip install -r requirements.txt
   | 41–42 | Run Pipeline — execution cell |
 - **`betting/features.py`** — **Single source of truth** for the 85-feature engineering pipeline (Groups 1–10), shared by `predict_betting.ipynb`, `model_comparison.ipynb`, `predict_totals.ipynb`, and `totals_model.ipynb`. Plain importable Python (extracted verbatim from the former `features.ipynb` on 2026-06-15 — see Completed Work). Public surface: `build_features`, `build_numeric_features`, the per-group `_build_*` helpers, `FEATURE_COLS_85`, `PROD_FEATURES_35`, `TEAM_MAP`, `norm_name`, `canonicalize_ngs_team`. **Loading pattern** (all 4 consumers): add `betting/` to `sys.path`, `import features as _features`, then `globals().update({k:v for k,v in vars(_features).items() if not k.startswith("__")})` — this mirrors the old `exec(globals())` namespace population (including the `_build_*` helpers). Tests live in **`betting/test_features.py`** (hermetic synthetic-data tests, run in CI — see below); the `PROD_FEATURES_35`/`FEATURE_COLS_85` order-hash check is `test_constants_and_order_hashes`.
 - **`betting/features.ipynb`** — Now a **thin documentation notebook** (one import cell + the design-rationale markdown for each feature group). It is NO LONGER the source of truth and defines no production code — edit `features.py` instead. (Was the 53-cell source-of-truth notebook before 2026-06-15.)
-- **`app.py`** — Streamlit dashboard, **8 tabs** (built on a single `st.tabs` call, so one AppTest render exercises all of them): Weekly Predictions, Track Record, **📋 Draft Board** (`tab5` → `import draft_board_2026; draft_board_2026.render()`), Film Room, Weekly Fantasy, DFS Optimizer, League History, Help & Guide. The pure, Streamlit-free helpers (`metric_card`, `get_confidence`, `_md_to_html`, `load_tracker`, `load_totals_tracker`) live in **`dashboard_utils.py`** (unit-tested by `test_dashboard_utils.py`, in CI); tab-rendering stays in app.py (`st.*`-procedural, covered by `test_app_draft_board.py`'s AppTest). Game cards use the sportsbook-style display negation (see Key Constraints) and show a **dashed amber EXPERIMENTAL UNDER badge** when the totals model has a HIGH pick (amber because live 2025 is only at break-even). The Track Record totals section carries a "tracking only — do not bet" banner. **`APP_OFFLINE=1`** disables every network path (GA, nflreadpy, Sleeper) for hermetic AppTest runs. The Draft Board tab (`page_draft_board.render` → `draft_board_2026.render()`) was **rebuilt 2026-07-22** into a season-projection comparison table (retired the frozen Phase-4 band) — READ-ONLY over the projection results + `season_dataset` ADP + talent artifacts, descriptive-only, no BUY/FADE/tier/verdict language. (The old inline Draft Value Finder tab and its `value_board_*.csv` were retired 2026-07-12; `build_value_board.py`/`build_draft_board.py`/`board_view.py` stay on disk but no tab renders them.)
+- **`app.py`** — **Thin multipage entrypoint (73 lines), NOT a tab monolith.** The 8-tab app was migrated to page modules in site-revamp Batch 3. It builds **9 `st.Page` objects** and runs `st.navigation(..., position="top")` in three groups — **Betting:** Weekly Predictions (`default=True`), Track Record · **Fantasy:** 📋 Draft Board, 🧬 Rookie Board, Weekly Fantasy, DFS Optimizer · **More:** Film Room, League History, Help & Guide. Each page is its own module (`page_*.py`); shared chrome/data live in `dashboard_chrome.py` / `dashboard_data.py` / `page_common.py`, and cross-links go through `nav_registry.PAGES`. **Because pages render independently, there is NO single AppTest render that covers the whole site** — each page needs its own (`test_site_nav.py`, `test_board_page.py`, `test_betting_pages.py`, `test_fantasy_league_pages.py`, `test_help_page.py`, `test_app_draft_board.py`, `test_app_talent_columns.py`, `test_page_rookie_board.py`). The pure, Streamlit-free helpers (`metric_card`, `get_confidence`, `_md_to_html`, `load_tracker`, `load_totals_tracker`) live in **`dashboard_utils.py`** (unit-tested by `test_dashboard_utils.py`, in CI). Game cards use the sportsbook-style display negation (see Key Constraints) and show a **dashed amber EXPERIMENTAL UNDER badge** when the totals model has a HIGH pick (amber because live 2025 is only at break-even). The Track Record totals section carries a "tracking only — do not bet" banner. **`APP_OFFLINE=1`** disables every network path (GA, nflreadpy, Sleeper) for hermetic AppTest runs. The Draft Board page (`page_draft_board.render` → `draft_board_2026.render()`) was **rebuilt 2026-07-22** into a season-projection comparison table (retired the frozen Phase-4 band) — READ-ONLY over the projection results + `season_dataset` ADP + talent artifacts, descriptive-only, no BUY/FADE/tier/verdict language. (The old inline Draft Value Finder tab and its `value_board_*.csv` were retired 2026-07-12; `build_value_board.py`/`build_draft_board.py`/`board_view.py` stay on disk but no page renders them.)
 - **`betting/models/`** — All trained model pkl files:
   - `ensemble_prod_model.pkl` — **Primary spread model.** Ensemble fixed75: 0.75 XGBoost + 0.25 Ridge, trained 2014–2024. Sets the edge threshold and output sort order. Includes `scaler`, `feature_cols`, `roof_surface_encoder`, `xgb_model`, `ridge_model`, `xgb_weight`.
   - `xgboost_prod_model.pkl` — XGBoost sklearn pipeline (preprocessor + regressor). One of three spread direction voters.
@@ -116,7 +116,7 @@ Developed in `betting/sports_betting_agent.ipynb`. Uses LlamaIndex `ReActAgent` 
 ### Automation
 `.github/workflows/weekly_predictions.yml` runs the prediction pipelines via papermill on three cron schedules (Tue 9am ET, Thu 9pm ET, Sun 9am ET) and commits the updated trackers. Supports manual dispatch with mode selection. Steps in order: (1) `predict_betting.ipynb` (spread), (2) `predict_totals.ipynb` (totals), (3) `sports_betting_agent.ipynb` — **Tuesday only** (gated on the Tuesday cron / `mode == tuesday` dispatch; `continue-on-error: true` so an agent/API failure never blocks the tracker commit). Commit stages `predictions_tracker.csv`, `totals_tracker.csv`, and `agent_analysis_*.json`. Job timeout is 60 min (agent adds ~10 min for a full slate). Each notebook uploads its own failed-notebook artifact on error.
 
-`.github/workflows/test.yml` runs on every push and PR against `main`, with two jobs (both fast + offline): (1) **`features`** — `pytest betting/test_features.py` (the feature-pipeline contract tests, including the order-hash check that catches `PROD_FEATURES_35` / `FEATURE_COLS_85` reorder bugs); (2) **`pytests`** — the seasonal + dashboard suites (`test_seasonal_projections.py`, `test_draft_board.py`, `test_app_draft_board.py`) via `requirements-test.txt`.
+`.github/workflows/test.yml` runs on every push and PR against `main`, with **three** jobs: (1) **`features`** — `pytest betting/test_features.py` (the feature-pipeline contract tests, including the order-hash check that catches `PROD_FEATURES_35` / `FEATURE_COLS_85` reorder bugs) **plus `betting/test_calibration.py`**; (2) **`pytests`** — an explicit 12-file list of the seasonal / dashboard / talent suites (`test_dashboard_utils.py`, `test_seasonal_projections.py`, `test_draft_board.py`, `test_app_draft_board.py`, `test_site_nav.py`, `test_board_page.py`, `test_betting_pages.py`, `test_fantasy_league_pages.py`, `test_help_page.py`, `test_app_talent_columns.py`, `fantasy/talent/tests/test_talent_build.py`, `test_phase2.py`) via `requirements-test.txt`, **plus a second step running the six betting execution-layer suites from `working-directory: betting`**; (3) **`deploy-parity`** — every suite re-run on Python 3.12 against `requirements.txt` exactly as Streamlit Cloud resolves it (the permanent fix for audit-2026-07-12 H2). Explicit file lists, never auto-discovery, so the research scripts named `*_test.py` are never collected. Local full-suite total is **213 passing** — and that total **includes tests CI never runs**. Enumerated 2026-07-27, **nine** test files appear in no job in `test.yml`: `test_nfl_qb_score.py`, `test_college_qb_score.py`, `test_board_refresh.py`, `test_model_explanations.py`, `test_page_rookie_board.py`, and the four `fantasy/projections/test_*.py` files. The two talent suites additionally need the talent artifacts committed before they can be wired in; the other seven have no such blocker. Re-check the gap with: `for each test_*.py, grep its basename in .github/workflows/test.yml`.
 
 ## Model Comparison Notebook (`betting/model_comparison.ipynb`)
 
@@ -375,12 +375,14 @@ the **2026 Draft Board**.
 > **Update 2026-07-22 — the Draft Board TAB was rebuilt** into a season-projection comparison table
 > (see the RB/WR/TE/QB projection section below) and **no longer renders the Phase-4 band**.
 > `phase4_band_2026.csv` + `talent_index_2026.csv` stay FROZEN on disk for this closed campaign and
-> the daily ADP refresh; the description below documents the RETIRED band product, for history.
+> the closed campaign ONLY - neither is an input to the daily ADP refresh (verified 2026-07-27);
+> the description below documents the RETIRED band product, for history.
 
 `draft_board_2026.py` (a Streamlit tab in `app.py`, license-frozen copy) renders two FROZEN
 artifacts: `phase4_band_2026.csv` (the board — market point estimate + a calibrated Floor/
 Expected/Ceiling band, P(top-12/24), bust prob, and a descriptive `value_gap`) and
-`talent_index_2026.csv` (a separate, descriptive 2025-efficiency context column, never blended
+`talent_index_2026.csv` (the retired R29-era 2025-efficiency context artifact — frozen on disk,
+rendered by nothing, superseded by the per-position builds in `fantasy/talent/`; never blended
 into anything). The band engine is `phase4_band.py` (walk-forward isotonic + residual quantiles;
 leave-one-season-out coverage 79.4% at nominal 80% and 49.8% at 50% — beats a constant-width
 baseline); `apply_board_labels.py` adds the population flags and the licensed `signal_status`
@@ -391,7 +393,8 @@ wording.
 steal/reach language. The verbatim licensed labels ship in-schema; plain-language translations must
 not strengthen or weaken them. The talent column is descriptive only and is never combined with the
 value signal. **Color coding is permitted (Joseph-ratified 2026-07-13):** a red→green heat on the
-Gap and on the descriptive magnitude columns (Top-12 chance, NFL Efficiency %ile) plus a bold,
+Gap and on the descriptive magnitude columns (on the retired band that was Top-12 chance and the
+NFL Efficiency %ile; on today's rebuilt board it is the Gap and rank columns) plus a bold,
 enlarged Gap headline — uniform with the Weekly Fantasy table. Color conveys magnitude/direction
 only and the copy stays aggregate-only; the *wording* restrictions above are unchanged. See
 `draft_board_2026.py`'s module docstring and `apply_board_labels.py`.
@@ -445,14 +448,21 @@ enforced by a deploy-gap check each build. Honest walk-forward (2021–2025) poo
 **Display surfaces (updated 2026-07-22):** (1) the Rookie Board page shows each position's ROOKIE
 projection; (2) the **Draft Board tab** (`draft_board_2026.py`) was **REBUILT into a season-projection
 comparison table** — the licensed Phase-4 band was retired FROM THE TAB (the frozen band +
-`talent_index_2026.csv` stay on disk for the closed campaign + the ADP refresh; the tab reads the band
+`talent_index_2026.csv` stay on disk for the closed campaign ONLY - the ADP refresh reads neither; the page reads the band
 nowhere). It lists **every player with a 2026 Sleeper ADP (~245, from the frozen `season_dataset`)** with
 columns: Player · Position · Team · Sleeper ADP · Position Rank · Sleeper Proj Position Rank · Sleeper Gap ·
 Model Proj Position Rank · Model Gap · Sleeper Proj (raw) · Model Proj · NFL Talent Score · College Talent
-Score. Model Proj = `results/{pos}_projection_2026.csv` joined READ-ONLY by `player_id`; Sleeper Proj = the
+Score. Model Proj = `results/{pos}_projection_2026.csv` joined READ-ONLY by `player_id`, **with a disclosed
+44-row analyst overlay (`results/analyst_projection_adjustments_2026.csv`, QB 12 / WR 11 / RB 11 / TE 10)
+replacing the DISPLAYED point estimate for selected named 2026 players; the untouched model value is kept
+internally as `model_proj_raw` and is never displayed or exported**. Position ranks and both gaps derive from
+the ADJUSTED value. Sleeper Proj = the
 RAW Sleeper estimate (NOT the retired p50); gaps = Position Rank − Proj Position Rank (positive = projection
-ranks him above his draft cost). Descriptive-only, Sleeper-attributed, backtested-not-live labels, no color
-red-to-green semantic cell color: gaps run red for negative to green for positive; rank 1 is green and
+ranks him above his draft cost). **A "Show projection and talent detail" toggle (added 2026-07-27, ON by
+default) can drop the last four columns — Sleeper Proj, Model Proj, NFL Talent Score, College Talent Score —
+for a compact 9-column comparison view; `_DISPLAY_COLS` is unchanged, so the CSV download always carries all
+13 in either mode.** Descriptive-only, Sleeper-attributed, backtested-not-live labels.
+Red-to-green semantic cell color: gaps run red for negative to green for positive; rank 1 is green and
 later ranks fade toward red. The active sort column has an arrow and a quiet green surface tint. Color
 encodes direction or magnitude only, never advice; forbidden-language scan clean. The 2 unprojected rookie
 QBs (Mendoza/Simpson) are KEPT with blank
@@ -460,7 +470,7 @@ cells; keeping them in Position Rank (their true market slot) makes 8 deep QBs' 
 projected-only denominator — ACCEPTED (Position Rank is the true market rank, gaps stay transparent = the two
 shown ranks' difference). The daily **ADP refresh (`refresh_board_adp.py`) now covers all 245** (was 180):
 reads the `season_dataset` universe via a pure `build_overlay()` and dropped the band-based `value_gap` from
-the overlay (the committed overlay repopulates to 245 on the next refresh run). Tests: `test_board_page.py`,
+the overlay; the committed overlay now carries all 245 rows. Tests: `test_board_page.py`,
 `test_app_draft_board.py`, `test_app_talent_columns.py`, `test_board_refresh.py`. The full 891-row projection
 set still lives only in the results CSVs — no dedicated all-players page.
 
@@ -512,6 +522,66 @@ projection/Sleeper/Diff columns. GUIDE broadened to "RB & WR".
   **backtested, not live-validated** (first live test = end of 2026). Board display retires `proj_ppg` and
   shows *Proj (season ½-PPR) / Sleeper Proj / Diff vs Sleeper* (RB rows only). Guide: `fantasy/projections/GUIDE.md`.
   AppTest: `test_page_rookie_board.py` (not yet in CI).
+
+## Talent Scores (`fantasy/talent/`)
+
+Two descriptive columns on the Draft Board — **NFL Talent Score** and **College Talent Score** — plus the
+College Talent column on the Rookie Board. **Descriptive context only: neither feeds any other column, and
+neither is a projection.** Formulas of record and the full ratification ledger are in `fantasy/talent/SPEC.md`.
+
+**Eight dedicated per-position builds shipped 2026-07-27** (one session, SPEC R34–R41). Each writes its own
+`{nfl,college}_{qb,rb,wr,te}_score_2026.csv` plus a `.provenance.json` recording spec, gamma, weights,
+method-of-moments k vector, effective weights, anchor pool and the artifact's own md5:
+
+| Build | SPEC | Pool / floor | γ |
+|---|---|---|---|
+| `build_nfl_qb_score.py` | R34 | ≥300 dropbacks in 2023–25 | 0.55 |
+| `build_college_qb_score.py` | R35 | FBS, ≥200 dropbacks | 0.40 |
+| `build_college_rb_score.py` | R36 | FBS, ≥75 attempts | 0.60 |
+| `build_nfl_rb_score.py` | R37 | ≥100 carries in window | 0.55 |
+| `build_college_wr_score.py` | R38 | FBS, ≥150 routes | 0.50 |
+| `build_nfl_wr_score.py` | R39 | ≥250 routes in window | 0.55 |
+| `build_college_te_score.py` | R40 | FBS, ≥100 routes | 0.60 |
+| `build_nfl_te_score.py` | R41 | ≥150 routes in window | 0.55 |
+
+**Which artifact feeds which column.** NFL Talent Score reads the four NFL builds (R34/R37/R39/R41), disjoint
+by position. College Talent Score reads the four college builds (R35/R36/R38/R40). **`talent_score_2026.csv`
+(the older R29 build) now feeds NO rendered column** — the per-position migration superseded it at every
+position. It stays on disk, unregenerated, at pinned md5 `d7c1a57547be4ab8060c053de02aaead` (asserted by
+`test_nfl_qb_score.py`) and is read only as a base layer, so a *missing* per-position file degrades to the old
+value instead of blanking the column. `rookie_score_2026.csv` (`57b5b6c51637f11a2067bb7249ac7805`) survives
+only as the College Talent fallback where a college build has no coverage.
+
+**Key constraints:**
+- **Every build must be imported without running.** All eight expose `build()` behind an
+  `if __name__ == "__main__":` guard. Six of them originally did the work at module level, so
+  `import build_nfl_rb_score` in a test **rewrote the shipped artifact on every pytest run** — invisible
+  because the rebuild was byte-identical against a warm nflreadpy cache. `test_nfl_qb_score.py::test_importing_a_build_never_runs_it` now pins this.
+- **Board policy differs by position, deliberately.** College RB/WR/TE **REPLACE** the box-score value
+  wherever they cover a player (Joseph's direction 2026-07-27); college QB **FILLS BLANKS ONLY** (there were
+  no QB rows in the box-score build to overwrite).
+- **College joins are guarded NAME joins, by necessity.** Brand-new rookies carry placeholder ids
+  (`MEN516487`, `pfr_BeckCa01`) and the rookie board carries its own placeholders that differ from the season
+  dataset's (Taylen Green is `GRE361852` there vs `00-0041092` in the dataset), so no id namespace is shared
+  with PFF college. Names ambiguous on **either** side are refused, never guessed. NFL joins are exact on
+  `gsis_id`.
+- **No strength-of-schedule adjustment** anywhere on the college side, and PFF college is **FBS only** — FCS
+  prospects can never be scored and render blank by construction.
+- The college instruments all fired **DEAD** as predictors (RB rc +0.329, WR/TE similar) — they ship
+  descriptively at Joseph's direction and **must never be cited as validated**.
+- Each provenance file must name its **own** spec number. Both TE builds originally carried their WR
+  sibling's (college TE said R38, NFL TE said R39); `test_every_provenance_records_its_own_spec` pins it.
+- Block weights written into provenance are **computed from `W`, never transcribed** — the NFL TE file once
+  hardcoded WR's 0.400/0.175 against TE's real 0.430/0.145.
+
+**Not in CI (gap):** `test_nfl_qb_score.py` and `test_college_qb_score.py` are not in any `test.yml` job
+list; they depend on the talent artifacts, which are untracked until committed. Add them once those land.
+They are **not the only gap** — nine test files in total are absent from CI (see the Automation section).
+
+**Open items (untouched, need their own session):** winsorization at ±3 in Stage 1 of the college builds
+(Rohan Jones tops college TE at 99.0 on a yprr z of +6.56 from one 106-route season; Kittle's NFL TE 99.0 was
+checked and is genuine — clipped, not inflated); the college QB clip floor of 40 against the other three at
+50; and the measured-but-unapplied SPEC alternatives (RB "P1", WR "P3", TE "P3", `k_blend` units).
 
 ## Active Experiments
 

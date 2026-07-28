@@ -1,8 +1,10 @@
 player_id,player,position,raw_projection,adjusted_projection,method,as_of,note
 00-0038997,Josh Downs,WR,92.2,109.6,wr_games_weighted_ppg_x_16_5,2026-07-26,Expanded Indianapolis opportunity after confirmed receiver departures
 00-0039894,Xavier Worthy,WR,82.4,131.0,wr_games_weighted_ppg_x_16_5,2026-07-26,Healthy-rate scenario after a 14-game injury-disrupted season
-00-0039915,Ladd McConkey,WR,153.0,174.7,wr_games_weighted_ppg_x_16_5,2026-07-26,Healthy-rate scenario with an established target-earning role
+00-0039915,Ladd McConkey,WR,153.0,174.7,wr_games_weighted_ppg_x_16_5,2026-07-26,Healthy-rate scenario with an established role earning receptions
 00-0039916,Ricky Pearsall,WR,63.9,119.4,wr_games_weighted_ppg_x_16_5,2026-07-26,Player-specific healthy-role scenario after two injury-shortened seasons
+00-0039919,Rome Odunze,WR,94.4,125.0,wr_player_specific_role_scenario,2026-07-27,Availability-neutralized role scenario after a five-game absence in a shared receiver room
+00-0038559,Michael Wilson,WR,101.8,129.4,wr_player_specific_role_scenario,2026-07-27,Probability-weighted role scenario reflecting a healthy teammate's return to the receiver room
 00-0038542,Bijan Robinson,RB,230.2,248.2,rb_measured_compression_plus_18,2026-07-26,Conservative measured-compression overlay for a confirmed lead back
 00-0038597,Chase Brown,RB,201.6,219.6,rb_measured_compression_plus_18,2026-07-26,Conservative measured-compression overlay for a confirmed lead back
 00-0039040,De'Von Achane,RB,193.6,211.6,rb_measured_compression_plus_18,2026-07-26,Conservative measured-compression overlay for a confirmed lead back
@@ -10,11 +12,16 @@ player_id,player,position,raw_projection,adjusted_projection,method,as_of,note
 00-0036997,Javonte Williams,RB,162.9,180.9,rb_measured_compression_plus_18,2026-07-26,Conservative measured-compression overlay for a confirmed lead back
 00-0036223,Jonathan Taylor,RB,177.8,195.8,rb_measured_compression_plus_18,2026-07-26,Conservative measured-compression overlay for a confirmed lead back
 00-0038134,Kenneth Walker III,RB,160.2,178.2,rb_measured_compression_plus_18,2026-07-26,Conservative measured-compression overlay for a credible lead role
+00-0039165,Zach Charbonnet,RB,99.9,63.2,rb_player_specific_availability_scenario,2026-07-27,Reduced availability scenario after January ACL surgery and a training-camp PUP placement
 00-0038935,Brenton Strange,TE,70.0,95.0,te_player_specific_role_scenario,2026-07-26,Prior production preserved without blanket prorating after an injury-shortened season
 00-0033288,George Kittle,TE,151.2,105.0,te_player_specific_availability_scenario,2026-07-26,Base availability scenario following Achilles surgery and Active PUP placement
 00-0040584,Gunnar Helm,TE,46.9,70.0,te_player_specific_role_scenario,2026-07-26,Rookie production preserved with a verified path to expanded receiving work
-00-0037838,Isaiah Likely,TE,56.4,95.0,te_player_specific_role_scenario,2026-07-26,Verified move from a secondary role to New York's lead receiving-TE opportunity
+00-0037838,Isaiah Likely,TE,56.4,95.0,te_player_specific_role_scenario,2026-07-26,Verified move from a secondary role to New York's lead receiving tight end opportunity
 00-0039847,Theo Johnson,TE,90.4,75.0,te_player_specific_role_scenario,2026-07-26,Paired workload reduction after New York added Isaiah Likely
+00-0039065,Sam LaPorta,TE,104.3,134.2,te_player_specific_availability_scenario,2026-07-27,Availability scenario after back surgery with a cleared but load-managed workload
+00-0035229,T.J. Hockenson,TE,56.1,104.6,te_player_specific_role_scenario,2026-07-27,Role scenario for a confirmed lead receiving tight end after two reduced seasons
+00-0040189,Oronde Gadsden II,TE,83.3,109.0,te_player_specific_role_scenario,2026-07-27,Conservative role scenario in a crowded tight end room after a productive rookie season
+00-0034753,Mark Andrews,TE,97.0,117.1,te_player_specific_role_scenario,2026-07-27,Role scenario weighing vacated tight end work against an age-30 production decline
 00-0037834,Brock Purdy,QB,160.8,285.0,qb_player_specific_availability_scenario,2026-07-26,Healthy confirmed starter after a nine-game season
 00-0040691,Jaxson Dart,QB,248.6,270.0,qb_player_specific_role_scenario,2026-07-26,Modest second-year increase for a confirmed starter with added designed-run concepts
 00-0039910,Jayden Daniels,QB,102.4,285.0,qb_player_specific_availability_scenario,2026-07-26,Healthy confirmed starter after a seven-game injury season
@@ -23,3 +30,16 @@ player_id,player,position,raw_projection,adjusted_projection,method,as_of,note
 00-0038128,Malik Willis,QB,23.0,220.0,qb_player_specific_role_scenario,2026-07-26,Verified move from backup production to Miami's starting role
 00-0036971,Trevor Lawrence,QB,226.7,285.0,qb_player_specific_role_scenario,2026-07-26,Healthy established starter whose raw projection remained below the pre-set review trigger
 00-0040743,Tyler Shough,QB,115.6,215.0,qb_player_specific_role_scenario,2026-07-26,Confirmed second-year starter after a partial first season
+00-0035228,Kyler Murray,QB,97.8,186.0,qb_joint_starter_probability_scenario,2026-07-27,Joint Minnesota starter-probability scenario; sixty percent weight on the starting role
+00-0039923,J.J. McCarthy,QB,87.3,116.2,qb_joint_starter_probability_scenario,2026-07-27,Joint Minnesota starter-probability scenario; forty percent weight on the starting role
+00-0033873,Patrick Mahomes,QB,293.2,286.0,qb_player_specific_availability_scenario,2026-07-27,Availability and mobility weighted scenario in the first season after ACL and LCL surgery
+00-0035710,Daniel Jones,QB,232.3,239.3,qb_player_specific_availability_scenario,2026-07-27,Availability and mobility weighted scenario in the first season after Achilles surgery
+00-0041029,Jordyn Tyson,WR,83.4,149.5,wr_player_specific_role_scenario,2026-07-27,Feature second receiver scenario with lead-receiver upside in a two-man room
+00-0041047,Chris Brazzell,WR,12.8,55.6,wr_player_specific_role_scenario,2026-07-27,First-team rotation role scenario after a thousand-yard final college season
+00-0041525,Chris Bell,WR,34.1,24.3,wr_player_specific_availability_scenario,2026-07-27,Reduced availability scenario after a November knee injury and non-football injury list placement
+00-0041438,Carnell Tate,WR,117.0,138.4,wr_top_pick_compression_scenario,2026-07-27,Measured top-of-draft rookie compression for an uncontested lead outside role
+00-0041035,De'Zhaun Stribling,WR,106.1,99.3,wr_player_specific_role_scenario,2026-07-27,Conservative rotation scenario behind an established veteran receiver room
+00-0041032,Kenyon Sadiq,TE,56.2,77.3,te_player_specific_role_scenario,2026-07-27,Rotational receiving role in a multiple tight end scheme after offseason surgery cost him spring work
+00-0041027,Jeremiyah Love,RB,173.9,199.0,rb_player_specific_role_scenario,2026-07-27,Lead-back role scenario for a top-three selection in a rebuilt backfield
+00-0041512,Jadarian Price,RB,145.1,172.7,rb_player_specific_role_scenario,2026-07-27,Workhorse role scenario with the veteran room depleted by free agency and a recovery absence
+00-0041104,Demond Claiborne,RB,5.1,21.3,rb_player_specific_role_scenario,2026-07-27,Rotational third running back role scenario limited by pass-protection and ball-security work

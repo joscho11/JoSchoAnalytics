@@ -1,0 +1,57 @@
+{
+  "spec": "R40 (RATIFIED-2026-07-27)",
+  "built": "2026-07-27",
+  "gamma": 0.6,
+  "route_floor": 100,
+  "weights": {
+    "grades_pass_route": 0.435,
+    "yprr": 0.25,
+    "avoided_tackles_rec": 0.1,
+    "grades_hands_drop": 0.075,
+    "yac_per_reception": 0.075,
+    "contested_catch_rate": 0.065
+  },
+  "mom_k": {
+    "grades_pass_route": 274.1,
+    "yprr": 232.4,
+    "avoided_tackles_rec": 57.0,
+    "grades_hands_drop": 182.8,
+    "yac_per_reception": 53.7,
+    "contested_catch_rate": 62.9
+  },
+  "effective_weights": {
+    "grades_pass_route": 0.4815,
+    "yprr": 0.2882,
+    "avoided_tackles_rec": 0.086,
+    "grades_hands_drop": 0.0484,
+    "yac_per_reception": 0.0659,
+    "contested_catch_rate": 0.03
+  },
+  "anchor": {
+    "lo_pct": 5,
+    "hi_pct": 98,
+    "lo_score": 52,
+    "hi_score": 95,
+    "clip": [
+      50,
+      99
+    ],
+    "fitted_on": "TEs who reached the NFL",
+    "n": 318,
+    "pool_rule": "standardize on qualified FBS TEs; rank display within reached-NFL"
+  },
+  "rows": 1101,
+  "rookies_2026": 56,
+  "missing_contested_rescaled": 268,
+  "missing_contested_rescaled_drafted": 87,
+  "route_block": {
+    "nominal": 0.685,
+    "effective": 0.7697
+  },
+  "known_defects": [
+    "contested_catch_rate delivers 0.030 effective vs 0.065 nominal \u2014 functionally absent",
+    "rescaled rows are scored on 5 facets, not 6 (see missing_contested_rescaled)"
+  ],
+  "framing": "TE fired at +0.294 (grade+share+age) and +0.326 (richer) - both DEAD; descriptive only",
+  "md5": "36727e60e80ddfee7659c834d4894f0d"
+}

@@ -1,0 +1,69 @@
+{
+  "spec": "R34 (RATIFIED-2026-07-27)",
+  "built": "2026-07-27",
+  "gamma": 0.55,
+  "window": [
+    2023,
+    2024,
+    2025
+  ],
+  "z_reference_floor": 150,
+  "qualified_pool_floor": 300,
+  "weights": {
+    "grades_pass": 0.2,
+    "CPOE": 0.1,
+    "btt_rate": 0.1,
+    "twp_rate": 0.1,
+    "pressure_grades_pass": 0.1,
+    "accuracy_pct": 0.05,
+    "EPA_dropback": 0.05,
+    "deep_CPOE": 0.05,
+    "grades_run": 0.25
+  },
+  "hybrid": {
+    "pff": [
+      "grades_pass",
+      "btt_rate",
+      "twp_rate",
+      "pressure_grades_pass",
+      "accuracy_pct",
+      "EPA_dropback",
+      "grades_run"
+    ],
+    "nflverse": [
+      "CPOE",
+      "deep_CPOE"
+    ]
+  },
+  "mom_k": {
+    "grades_pass": 738.1,
+    "CPOE": 450.7,
+    "btt_rate": 1268.9,
+    "twp_rate": 844.5,
+    "pressure_grades_pass": 2183.8,
+    "accuracy_pct": 1414.9,
+    "EPA_dropback": 606.8,
+    "deep_CPOE": 154.6,
+    "grades_run": 30.8
+  },
+  "k_blend": 53.77,
+  "k_blend_units": "dropbacks (calibrated)",
+  "career_gate_max_seasons": 3,
+  "anchor": {
+    "lo_pct": 5,
+    "hi_pct": 98,
+    "lo_score": 52,
+    "hi_score": 95,
+    "clip": [
+      50,
+      99
+    ],
+    "fitted_on": "qualified-starter pool",
+    "n": 49,
+    "p5_raw": -0.411853,
+    "p98_raw": 0.68343
+  },
+  "rows": 49,
+  "blended": 13,
+  "md5": "47f8ea8104faeb895f0e705f8e29fe3d"
+}

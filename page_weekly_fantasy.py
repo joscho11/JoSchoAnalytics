@@ -321,10 +321,14 @@ def render():
                     tbl_cols = base_cols
 
                 tbl = display[tbl_cols].copy()
+                # Row counter for the table as currently sorted/searched — a reading aid only.
+                tbl.insert(0, "#", range(1, len(tbl) + 1))
                 style_fn = make_style_table(display)
 
                 _dnp_note = "Blank = player did not play (DNP) in this game."
                 col_config = {
+                    "#":          st.column_config.NumberColumn("#", format="%d", width=50, pinned=True,   # grid minimum; pinned = grow 0, so it keeps that exact width
+                                      help="Row number in this table as currently sorted and filtered — a counter to keep your place, not a ranking."),
                     "Player":     st.column_config.TextColumn("Player",
                                       help="Player name and NFL team."),
                     "Opponent":   st.column_config.TextColumn("Opponent",
@@ -369,6 +373,7 @@ def render():
 
                 st.dataframe(
                     tbl.style.apply(style_fn, axis=None),
+                    hide_index=True,          # the explicit "#" column replaces the index
                     width="stretch",
                     height=TABLE_HEIGHT,
                     column_config=col_config,

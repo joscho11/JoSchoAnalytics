@@ -1,0 +1,53 @@
+{
+  "spec": "R36 (RATIFIED-2026-07-27)",
+  "built": "2026-07-27",
+  "gamma": 0.6,
+  "attempt_floor": 75,
+  "weights": {
+    "grades_run": 0.35,
+    "yco_attempt": 0.1,
+    "avoided_tackles_rush": 0.1,
+    "explosive": 0.1,
+    "grades_pass_route": 0.2,
+    "yprr": 0.05,
+    "yac_per_reception": 0.05,
+    "avoided_tackles_rec": 0.05
+  },
+  "nominal_split": {
+    "rush": 0.65,
+    "receive": 0.35
+  },
+  "effective_split": {
+    "rush": 0.686,
+    "receive": 0.314
+  },
+  "mom_k": {
+    "grades_run": 259.6,
+    "yco_attempt": 323.7,
+    "avoided_tackles_rush": 182.5,
+    "explosive": 292.3,
+    "grades_pass_route": 409.8,
+    "yprr": 313.2,
+    "yac_per_reception": 85.1,
+    "avoided_tackles_rec": 39.2
+  },
+  "anchor": {
+    "lo_pct": 5,
+    "hi_pct": 98,
+    "lo_score": 52,
+    "hi_score": 95,
+    "clip": [
+      50,
+      99
+    ],
+    "fitted_on": "RBs who reached the NFL",
+    "n": 396,
+    "p5_raw": -0.27515,
+    "p98_raw": 1.162816
+  },
+  "rows": 1395,
+  "rookies_2026": 46,
+  "instrument_band": "DEAD rc +0.329 (< .35) \u2014 ships DESCRIPTIVELY; PBP index is +0.501 CLEAN",
+  "no_strength_of_schedule_adjustment": true,
+  "md5": "faaa5239cd52e987278c1fdec605a6b8"
+}

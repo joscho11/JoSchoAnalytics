@@ -1,6 +1,17 @@
-# Model-explanations handoff
+# Model-explanations handoff — **STATUS: COMPLETE (2026-07-24)**
 
-Paste the block below into the Codex chat that is finishing the model updates.
+> **This is a finished record, not a pending task.** The Help & Guide "What Drives the Models"
+> section shipped. **No model artifact changed during the update**, so every MD5 recorded below
+> as "pre-update" is still the *current* production hash. Re-verified 2026-07-27: all **8**
+> `SHAP_SNAPSHOTS` entries in `model_explanations.py` hash-match the artifacts on disk — 8 match,
+> 0 mismatch, 0 missing. The section fails closed: if a pinned artifact ever moves, the
+> explanation is withheld rather than shown against a model that no longer exists.
+>
+> Keep this file as the specification of that hash-pinning contract. **Re-open it only if a
+> production pkl is retrained** — in which case the SHAP snapshots must be regenerated and
+> re-pinned in the same change.
+
+The block below is the original instruction text, preserved verbatim for the record.
 
 ```text
 I need you to finish the Help & Guide model-explanations work after your current

@@ -1,14 +1,15 @@
-"""2026 Draft Board tab — season-projection comparison table (2026-07-22 rebuild).
+"""2026 Draft Board page — season-projection comparison table (2026-07-22 rebuild).
 
-This tab retires the licensed Phase-4 band as its spine. It now lists every player with
-a 2026 Sleeper ADP (~245) and shows, side by side, the market's draft price and positional
-rank next to Sleeper's season-total projection and a model-based estimate I built — plus the
-positional-rank gap for each and descriptive talent scores. Selected named 2026 players use a
-disclosed analyst overlay on that model-based estimate.
+This page retires the licensed Phase-4 band as its spine. It lists every player with a 2026
+Sleeper ADP (245) and shows, side by side, the market's draft price and positional rank next
+to Sleeper's season-total projection and a model-based estimate I built — plus the
+positional-rank gap for each and two descriptive talent scores. Selected named 2026 players
+use a disclosed analyst overlay on that model-based estimate. A detail toggle (ON by default)
+can drop the four raw-estimate/talent columns for a compact 9-column comparison view.
 
-The frozen artifacts (phase4_band_2026.csv, talent_index_2026.csv) stay on disk, read-only —
-the closed H-campaign and the daily ADP refresh still reference them. This module no longer
-reads the band.
+The frozen artifacts (phase4_band_2026.csv, talent_index_2026.csv) stay on disk, read-only,
+for the closed H-campaign. This module reads neither — and, verified 2026-07-27, neither does
+the daily ADP refresh, whose one frozen input is the season dataset.
 
 Compliance — DESCRIPTIVE ONLY.
   • Sleeper ADP + Sleeper Proj are Sleeper's data (attributed).
@@ -32,11 +33,12 @@ _MONTHS = ("January", "February", "March", "April", "May", "June", "July",
 
 _HERE = Path(__file__).resolve().parent
 SEAS = _HERE / "fantasy" / "seasonal_projections"
-# Draft-price universe: every player with a 2026 Sleeper ADP (~245), from the frozen
+# Draft-price universe: every player with a 2026 Sleeper ADP (245), from the frozen
 # season dataset. This defines the table's rows.
 DATASET = SEAS / "season_dataset_2014_2026.csv"
-# LIVE ADP overlay written by refresh_board_adp.py (regenerable, market data only). It
-# freshens the ADP of the ~180 board-overlap players; the rest keep the dataset snapshot.
+# LIVE ADP overlay written by refresh_board_adp.py (regenerable, market data only). It now
+# covers all 245 board rows (it was ~180 before the refresh was widened); any row it misses
+# keeps the frozen dataset snapshot, so a fresh clone and the hermetic AppTest still render.
 LIVE_OVERLAY = SEAS / "board_adp_live_2026.csv"
 # The two independent season-total projections + the raw Sleeper projection they are
 # compared against live here (from-scratch model, read-only).
@@ -44,13 +46,48 @@ PROJ_RESULTS = _HERE / "fantasy" / "projections" / "results"
 ANALYST_PROJECTION_ADJUSTMENTS = (
     PROJ_RESULTS / "analyst_projection_adjustments_2026.csv"
 )
-# Descriptive talent artifacts (fantasy/talent/, provenance-stamped). NFL Talent scores
-# players with NFL history against NFL players; College Talent scores 2026 rookies (RB/WR/TE)
-# against past drafted prospects. Disjoint by construction (artifact membership), different
-# scales, and context-only — neither feeds any other column.
+# Descriptive talent artifacts (fantasy/talent/, provenance-stamped). NFL Talent scores players
+# with NFL history against NFL players at their own position; College Talent scores 2026 rookies
+# (all four positions) against past prospects who reached the NFL. Disjoint by construction
+# (artifact membership), different scales, and context-only — neither feeds any other column.
 TALENT_DIR = _HERE / "fantasy" / "talent"
+# R29 box-score talent. Since the per-position migration completed 2026-07-27 (R34/R37/R39/R41),
+# every board position overwrites this, so it feeds NO rendered column. It is still read as the
+# base layer — and still fingerprinted — so a missing per-position artifact degrades to the old
+# value instead of blanking the column outright. Kept on disk, unregenerated, pinned md5.
 TALENT_CSV = TALENT_DIR / "talent_score_2026.csv"
 ROOKIE_CSV = TALENT_DIR / "rookie_score_2026.csv"
+# College QB talent (SPEC R35). rookie_score_2026.csv carries NO QB rows, so rookie QBs had a
+# blank College Talent cell; this fills them from the PFF-college QB build. Disjoint from
+# ROOKIE_CSV by position, so the two sources cannot collide.
+COLLEGE_QB_CSV = TALENT_DIR / "college_qb_score_2026.csv"
+# College RB talent (SPEC R36). DESCRIPTIVE ONLY — the 8-facet PFF index fired rc +0.329 (DEAD,
+# < .35 band) against the shipped PBP instrument at +0.501, and carries no strength-of-schedule
+# adjustment. Joseph directed it to REPLACE the box-score value on every RB row it covers.
+COLLEGE_RB_CSV = TALENT_DIR / "college_rb_score_2026.csv"
+# College WR talent (SPEC R38). DESCRIPTIVE ONLY — WR is dead across six instrument classes;
+# a high score for a future bust is the construct working. REPLACES the box-score value on every
+# WR row it covers, matching the RB policy.
+COLLEGE_WR_CSV = TALENT_DIR / "college_wr_score_2026.csv"
+# College TE talent (SPEC R40). DESCRIPTIVE ONLY — the TE instrument fired dead at +0.294 and
+# +0.326, contested is functionally absent at 3.0% effective, and route-craft runs 77% against
+# 68.5% nominal. REPLACES the box-score value on every TE row it covers.
+COLLEGE_TE_CSV = TALENT_DIR / "college_te_score_2026.csv"
+# NFL QB talent (SPEC R34) — supersedes the R29 QB vector inside talent_score_2026.csv, which is
+# NOT regenerated and keeps its pinned md5. QB rows prefer this artifact; every other position
+# reads talent_score_2026.csv unchanged, so the two can never collide.
+NFL_QB_CSV = TALENT_DIR / "nfl_qb_score_2026.csv"
+# NFL RB talent (SPEC R37) — dedicated 12-facet rush/receive build on qualified RBs (>=100
+# carries in the 3-season window). Replaces the R29 PBP value for RB rows only; an RB below the
+# volume floor is left BLANK rather than mixed across two scales.
+NFL_RB_CSV = TALENT_DIR / "nfl_rb_score_2026.csv"
+# NFL WR talent (SPEC R39) — dedicated 9-facet build on qualified WRs (>=250 routes in the
+# 3-season window). Replaces the R29 value for WR rows; a WR below the volume floor is left
+# BLANK rather than mixed across two scales.
+NFL_WR_CSV = TALENT_DIR / "nfl_wr_score_2026.csv"
+# NFL TE talent (SPEC R41) — the last per-position build. Replaces the R29 value for TE rows,
+# which completes the migration: talent_score_2026.csv now feeds NO board column.
+NFL_TE_CSV = TALENT_DIR / "nfl_te_score_2026.csv"
 BOARD_SEASON = 2026
 
 
@@ -156,9 +193,9 @@ def _load_board_2026_cached(source_fingerprint):
     df = ds[(ds.season == BOARD_SEASON) & ds.adp_half_ppr.notna()].copy()
     df = df.drop_duplicates("player_id").reset_index(drop=True)
 
-    # LIVE ADP overlay: prefer the freshly-refreshed price where present (the ~180
-    # board-overlap players), else keep the frozen-dataset snapshot (so a fresh clone and
-    # the hermetic AppTest still render, and the deeper ~65 have a price).
+    # LIVE ADP overlay: prefer the freshly-refreshed price where present (all 245 rows once
+    # the refresh has run), else keep the frozen-dataset snapshot (so a fresh clone and the
+    # hermetic AppTest still render).
     if LIVE_OVERLAY.exists():
         ov = pd.read_csv(LIVE_OVERLAY).set_index("player_id")
         if "adp_half_ppr" in ov.columns:
@@ -188,9 +225,65 @@ def _load_board_2026_cached(source_fingerprint):
     if TALENT_CSV.exists():
         t = pd.read_csv(TALENT_CSV, usecols=["gsis_id", "score"]).set_index("gsis_id")
         df["nfl_talent"] = df["player_id"].map(t["score"])
+    if NFL_QB_CSV.exists():
+        # R34 REPLACES the R29 value for QBs (different instrument, different pool). A QB below
+        # the qualified-starter pool is left BLANK rather than falling back to R29 — mixing two
+        # scales in one column would be dishonest.
+        nq = pd.read_csv(NFL_QB_CSV, usecols=["gsis_id", "score"]).dropna(subset=["gsis_id"])
+        r34 = df["player_id"].map(nq.set_index("gsis_id")["score"])
+        is_qb = df["position"].eq("QB")
+        df.loc[is_qb, "nfl_talent"] = r34[is_qb]
+    if NFL_RB_CSV.exists():
+        nr = pd.read_csv(NFL_RB_CSV, usecols=["gsis_id", "score"]).dropna(subset=["gsis_id"])
+        r37 = df["player_id"].map(nr.set_index("gsis_id")["score"])
+        is_rb = df["position"].eq("RB")
+        df.loc[is_rb, "nfl_talent"] = r37[is_rb]
+    if NFL_WR_CSV.exists():
+        nw = pd.read_csv(NFL_WR_CSV, usecols=["gsis_id", "score"]).dropna(subset=["gsis_id"])
+        r39 = df["player_id"].map(nw.set_index("gsis_id")["score"])
+        is_wr = df["position"].eq("WR")
+        df.loc[is_wr, "nfl_talent"] = r39[is_wr]
+    if NFL_TE_CSV.exists():
+        nt = pd.read_csv(NFL_TE_CSV, usecols=["gsis_id", "score"]).dropna(subset=["gsis_id"])
+        r41 = df["player_id"].map(nt.set_index("gsis_id")["score"])
+        is_te = df["position"].eq("TE")
+        df.loc[is_te, "nfl_talent"] = r41[is_te]
     if ROOKIE_CSV.exists():
         r = pd.read_csv(ROOKIE_CSV, usecols=["gsis_id", "rookie_score"]).set_index("gsis_id")
         df["college_talent"] = df["player_id"].map(r["rookie_score"])
+    if COLLEGE_QB_CSV.exists():
+        # 2026 rookie QBs only, keyed on the deploy player_id (brand-new players carry a
+        # placeholder id, not a gsis, so the build resolved them by guarded name join).
+        cq = pd.read_csv(COLLEGE_QB_CSV,
+                         usecols=["nfl_player_id", "score", "is_2026_rookie"])
+        cq = cq[cq["is_2026_rookie"].astype(bool) & cq["nfl_player_id"].notna()]
+        qb_score = df["player_id"].map(cq.set_index("nfl_player_id")["score"])
+        df["college_talent"] = df["college_talent"].where(
+            df["college_talent"].notna(), qb_score)
+    if COLLEGE_RB_CSV.exists():
+        # RB college talent REPLACES the box-score rookie value wherever R36 has one
+        # (Joseph's direction 2026-07-27, against the recommendation to fill blanks only —
+        # the PFF index fired rc +0.329 DEAD vs the PBP instrument's +0.501 CLEAN).
+        cr = pd.read_csv(COLLEGE_RB_CSV, usecols=["nfl_player_id", "score", "is_2026_rookie"])
+        cr = cr[cr["is_2026_rookie"].astype(bool) & cr["nfl_player_id"].notna()]
+        rb_score = df["player_id"].map(cr.set_index("nfl_player_id")["score"])
+        is_rb = df["position"].eq("RB")
+        df.loc[is_rb, "college_talent"] = rb_score[is_rb].where(
+            rb_score[is_rb].notna(), df.loc[is_rb, "college_talent"])
+    if COLLEGE_WR_CSV.exists():
+        cw = pd.read_csv(COLLEGE_WR_CSV, usecols=["nfl_player_id", "score", "is_2026_rookie"])
+        cw = cw[cw["is_2026_rookie"].astype(bool) & cw["nfl_player_id"].notna()]
+        wr_score = df["player_id"].map(cw.set_index("nfl_player_id")["score"])
+        is_wr = df["position"].eq("WR")
+        df.loc[is_wr, "college_talent"] = wr_score[is_wr].where(
+            wr_score[is_wr].notna(), df.loc[is_wr, "college_talent"])
+    if COLLEGE_TE_CSV.exists():
+        ct = pd.read_csv(COLLEGE_TE_CSV, usecols=["nfl_player_id", "score", "is_2026_rookie"])
+        ct = ct[ct["is_2026_rookie"].astype(bool) & ct["nfl_player_id"].notna()]
+        te_score = df["player_id"].map(ct.set_index("nfl_player_id")["score"])
+        is_te = df["position"].eq("TE")
+        df.loc[is_te, "college_talent"] = te_score[is_te].where(
+            te_score[is_te].notna(), df.loc[is_te, "college_talent"])
 
     for c in (
         "model_proj", "model_proj_raw", "sleeper_proj",
@@ -224,6 +317,14 @@ def _board_source_fingerprint():
         ANALYST_PROJECTION_ADJUSTMENTS,
         TALENT_CSV,
         ROOKIE_CSV,
+        COLLEGE_QB_CSV,
+        COLLEGE_RB_CSV,
+        COLLEGE_WR_CSV,
+        COLLEGE_TE_CSV,
+        NFL_QB_CSV,
+        NFL_RB_CSV,
+        NFL_WR_CSV,
+        NFL_TE_CSV,
     ]
     return tuple(
         (str(path), path.stat().st_mtime_ns, path.stat().st_size)
@@ -236,13 +337,14 @@ def _load_adjustment_disclosure():
     """Small audit table for the collapsed on-page overlay disclosure."""
     if not ANALYST_PROJECTION_ADJUSTMENTS.exists():
         return pd.DataFrame(
-            columns=["Position", "Player", "Raw model", "Board value", "Basis", "As of"]
+            columns=["Position", "Player", "Raw model", "Board value", "Basis",
+                     "Reason", "As of"]
         )
     adj = pd.read_csv(
         ANALYST_PROJECTION_ADJUSTMENTS,
         usecols=[
             "position", "player", "raw_projection", "adjusted_projection",
-            "method", "as_of",
+            "method", "as_of", "note",
         ],
     )
     adj["method"] = adj["method"].str.replace("_", " ", regex=False)
@@ -255,6 +357,7 @@ def _load_adjustment_disclosure():
                 "adjusted_projection": "Board value",
                 "method": "Basis",
                 "as_of": "As of",
+                "note": "Reason",
             }
         )
         .sort_values(["Position", "Player"], kind="stable")
@@ -401,30 +504,60 @@ COLUMN_META = [
      {"format": "%d", "width": "small"}),
     ("model_proj", _NUM, "Model Proj",
      "Season-total half-PPR points based on a separate, from-scratch model I built (RB/WR/TE "
-     "plus non-rookie QBs; rookie QBs are not projected). Selected 2026 players use the "
-     "disclosed analyst overlay below; every raw model output remains preserved. The model "
-     "was built independently of the market, backtested on 2021–2025, and is NOT "
-     "live-validated. Blank = not in the projection set.",
+     "plus non-rookie QBs; rookie QBs are not projected). For selected 2026 players this shows "
+     "my own named-player scenario in place of the model's point estimate — a judgment call "
+     "about availability and role, not a measured improvement to the model; every raw model "
+     "output is preserved unchanged. The model was built independently of the market, "
+     "backtested on 2021–2025, and is NOT live-validated. Blank = not in the projection set.",
      {"format": "%d", "width": "small"}),
     ("nfl_talent", _NUM, "NFL Talent Score",
      "My model-based per-opportunity talent estimate for players with NFL history, net of "
      "situation where identifiable. It ranks NFL players against NFL players — a different "
-     "scale from College Talent Score. Descriptive context only; feeds no other column. "
-     "Blank = no NFL history (see College Talent Score).",
+     "scale from College Talent Score. Every position uses a dedicated per-position build "
+     "scored against qualified starters at that position. "
+     "Descriptive context only; feeds no other column. Blank = no NFL history, or below "
+     "the qualified-starter volume floor.",
      {"format": "%d", "width": "small"}),
     ("college_talent", _NUM, "College Talent Score",
-     "A college-production read for 2026 rookies (RB/WR/TE), scaled against past drafted "
-     "prospects — a different scale from NFL Talent Score, and not shipped for rookie QBs. "
-     "Descriptive context only; feeds no other column. Blank = has NFL history, or college "
-     "data unavailable.", {"format": "%d", "width": "small"}),
+     "A college-production read for 2026 rookies, scaled against past prospects who reached the "
+     "NFL — a different scale from NFL Talent Score. Every position now has its own dedicated "
+     "college build (QB from college passing; RB, WR and TE from their own college charting "
+     "builds), each with its own volume floor; a rookie the build does not cover falls back to "
+     "the older college box-score value where one exists. It carries no strength-of-schedule "
+     "adjustment, so a big number against weaker opponents reads the same as one against "
+     "stronger. Descriptive context only; feeds no other column. Blank = has NFL history, or "
+     "college data unavailable (players outside FBS can never be covered).",
+     {"format": "%d", "width": "small"}),
 ]
 _DISPLAY_COLS = [m[0] for m in COLUMN_META]
 _EXPORT_NAMES = {m[0]: m[2] for m in COLUMN_META}       # colkey -> on-screen label
 
+# Optional compact view. The board's spine is the price-vs-projection COMPARISON (ranks and
+# gaps); these four are the raw point estimates and the two descriptive talent scores. They ship
+# VISIBLE by default (Joseph's call 2026-07-27) and the toggle drops them for a narrower table.
+# This is a DISPLAY split only: _DISPLAY_COLS is unchanged, so the CSV download always carries all
+# thirteen columns in either mode, and model_proj_raw stays out of both.
+_DETAIL_ONLY = ("sleeper_proj", "model_proj", "nfl_talent", "college_talent")
+_COMPACT_COLS = [c for c in _DISPLAY_COLS if c not in _DETAIL_ONLY]
+
+# Row counter for the rendered view only — it numbers the rows as currently sorted and
+# filtered, so a long scroll stays easy to follow. Deliberately NOT part of COLUMN_META /
+# _DISPLAY_COLS: it is not board data, carries no meaning, and stays out of the CSV export.
+_ROW_NO = "row_no"
+_ROW_NO_HELP = ("Row number in the board as currently sorted and filtered — a counter to keep "
+                "your place, not a ranking.")
+# 50px is the grid's hard minimum column width — three digits plus padding, nothing more.
+# It must ALSO be pinned: in a stretch-width table every unpinned column carries grow=1 and
+# absorbs an equal share of the leftover space, which is what made a "small" (75px) counter
+# render far wider than its contents. Pinned columns get grow=0, so this width is exact
+# (and the counter stays put when the wide board scrolls sideways).
+_ROW_NO_WIDTH = 50
+
 
 def _column_config(active_sort_key: str | None = None, ascending: bool = True):
     """Build the table config and visibly mark the active numeric sort key."""
-    cfg = {}
+    cfg = {_ROW_NO: st.column_config.NumberColumn("#", help=_ROW_NO_HELP, format="%d",
+                                                  width=_ROW_NO_WIDTH, pinned=True)}
     for key, kind, label, help_, extra in COLUMN_META:
         col = st.column_config.NumberColumn if kind == _NUM else st.column_config.TextColumn
         if key == active_sort_key:
@@ -517,7 +650,12 @@ def render():
             "or draft advice — and none of it guarantees what any player will do.")
         st.markdown("**What each column means:**")
         for _key, _kind, _label, _help, _extra in COLUMN_META:
-            st.markdown(f"- **{_label}** — {_help}")
+            _detail = " *(hidden in the compact view)*" if _key in _DETAIL_ONLY else ""
+            st.markdown(f"- **{_label}**{_detail} — {_help}")
+        st.caption("The board opens on the full view. Turn off **Show projection and talent "
+                   "detail** for a compact comparison view that drops the raw Sleeper and model "
+                   "point estimates and the two talent scores; the CSV download always contains "
+                   "every column either way.")
         st.caption("Sort with the controls below — they order the whole board numerically, "
                    "with no-data rows (blank projection / talent) always at the bottom.")
         st.caption("Visual cues: positive gaps are green and negative gaps red; rank 1 is green "
@@ -540,6 +678,11 @@ def render():
         with fc4:
             order = st.radio("Order", ["Ascending", "Descending"], index=0,
                              horizontal=True, key="db26_sortdir")
+        detail = st.toggle(
+            "Show projection and talent detail", value=True, key="db26_detail",
+            help="On: the full board, including the raw Sleeper and model season-point estimates "
+                 "and the two descriptive talent scores. Off: a compact view keeping the "
+                 "price-vs-projection comparison only.")
         st.caption("Note: clicking a column header also sorts, but a few columns won't sort "
                    "correctly that way — a Streamlit limitation. Use the controls above.")
 
@@ -550,33 +693,28 @@ def render():
     view = _sort_board(view, sort_label, ascending=ascending)
     active_sort_key = SORT_KEYS[sort_label]
 
-    cols = _DISPLAY_COLS
+    visible_cols = _DISPLAY_COLS if detail else _COMPACT_COLS
+    cols = [_ROW_NO] + visible_cols
+    # Numbered in the CURRENT sort/filter order — a reading aid, recomputed on every render.
+    display_view = view.copy()
+    display_view.insert(0, _ROW_NO, range(1, len(display_view) + 1))
     st.caption(_adp_caption())
     direction = "low to high" if ascending else "high to low"
-    st.caption(f"Sorted by **{sort_label}** ({direction}). The arrow and soft green tint mark "
-               "the active sort column.")
+    sort_note = (f"Sorted by **{sort_label}** ({direction}). The arrow and soft green tint mark "
+                 "the active sort column.")
+    if active_sort_key not in visible_cols:
+        # The sort is still applied to every row — the column it keys on just is not on screen.
+        sort_note += (f" **{sort_label}** is hidden in the compact view, so the ordering is "
+                      "applied but its values are off-screen; turn the detail toggle back on to "
+                      "see them.")
+    st.caption(sort_note)
     st.caption("Model Proj and Model Gap use a separate, from-scratch model, backtested "
-               "on 2021–2025 and not yet live-validated. Selected 2026 players use the "
-               "disclosed analyst overlay; every raw model output remains preserved.")
-    disclosure = _load_adjustment_disclosure()
-    with st.expander(
-        f"2026 analyst projection overlays ({len(disclosure)})",
-        expanded=False,
-    ):
-        st.caption(
-            "These named-player scenarios replace only the single displayed Model Proj. "
-            "They do not retrain a model or rewrite a raw projection file, and Sleeper "
-            "values did not determine selection or size."
-        )
-        st.dataframe(
-            disclosure,
-            width="stretch",
-            hide_index=True,
-            column_config={
-                "Raw model": st.column_config.NumberColumn(format="%.1f"),
-                "Board value": st.column_config.NumberColumn(format="%.1f"),
-            },
-        )
+               "on 2021–2025 and not yet live-validated. Selected 2026 players carry my own "
+               "named-player scenario in place of the model's point estimate — judgment "
+               "calls about availability and role, not a measured improvement to the model "
+               "and not backtested. Sleeper's projections, ranks and draft prices determined "
+               "neither the direction nor the magnitude of any of them. Every raw model "
+               "output is preserved unchanged.")
     st.caption("NFL Talent Score ranks NFL players against NFL players; College Talent Score "
                "ranks 2026 rookies against past drafted prospects — different instruments on "
                "different scales, and neither feeds any other column.")
@@ -584,25 +722,27 @@ def render():
     # current sort AND the filter state so the grid REMOUNTS on any change — this discards
     # st.dataframe's sticky client-side header-sort so the Sort-by control always wins.
     st.dataframe(
-        view[cols].style.apply(_style_board(view, df, active_sort_key), axis=None),
+        display_view[cols].style.apply(_style_board(view, df, active_sort_key), axis=None),
         width="stretch", height=TABLE_HEIGHT, hide_index=True,
         key=("db26_grid_"
-             f"{SORT_KEYS[sort_label]}_{order}_"
+             f"{SORT_KEYS[sort_label]}_{order}_{'detail' if detail else 'compact'}_"
              f"{'-'.join(sorted(pos))}_{name.strip().lower()}_{len(view)}"),
         column_config=_column_config(active_sort_key, ascending))
 
     st.download_button(
         "Download board (CSV)",
-        data=view[cols].rename(columns=_EXPORT_NAMES)
+        data=view[_DISPLAY_COLS].rename(columns=_EXPORT_NAMES)
                        .to_csv(index=False).encode("utf-8"),
         file_name="draft_board_2026.csv", mime="text/csv",
         key="db26_dl")
+    st.caption("The download carries every column, including any the compact view hides, for the "
+               "rows currently filtered and in the current sort order.")
 
     st.markdown("---")
     st.caption(
         "**About these numbers.** Sleeper ADP and Sleeper Proj are Sleeper's; the Model Proj "
-        "is based on my own independently built model, with the named 2026 analyst overlays "
-        "disclosed above. The model was backtested on 2021–2025 and is not live-validated "
+        "is based on my own independently built model, with my named 2026 scenarios applied "
+        "to selected players. The model was backtested on 2021–2025 and is not live-validated "
         "(the first live test is the 2026 season). The gap columns are simple positional-rank "
         "differences shown for context. All of this is descriptive information for your own "
         "judgment — not a recommendation about any player.")

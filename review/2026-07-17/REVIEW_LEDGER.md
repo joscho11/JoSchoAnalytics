@@ -91,3 +91,17 @@ absorbed into L-2; parent's math verifications AGREE with the subagent's).
 NO fix from this addendum was applied — every item is execution-layer behavior
 (GATED). The go-live implication is the headline: L-15 + L-16 + L-2 + L-17 should
 land BEFORE PRODUCTION_WIRING step 2 executes for 2026 Week 1.
+
+
+## RESOLUTIONS (appended 2026-07-27; findings above unmodified)
+
+- **L-1 and L-7/L-17 — CLOSED.** Both "not in CI" gaps are gone. `.github/workflows/test.yml`
+  now runs the betting execution layer (6 files, `working-directory: betting`) and
+  `test_app_talent_columns.py` + both `fantasy/talent/tests/` files under the `pytests` job,
+  and a third `deploy-parity` job re-runs the suites on Python 3.12 against `requirements.txt`
+  as Streamlit Cloud resolves it. The test counts in the original rows are 2026-07-17 snapshots
+  and are superseded — `betting/` now carries 77 tests across 8 files and the full repo suite is
+  213 passing.
+- **Still open from this ledger:** `test_nfl_qb_score.py` and `test_college_qb_score.py` (the
+  talent-build suites added 2026-07-27) are in no CI job. They read the talent artifacts, which
+  are untracked until committed, so wiring them into CI has to follow that commit.

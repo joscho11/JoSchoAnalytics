@@ -1,0 +1,76 @@
+{
+  "spec": "R39 (RATIFIED-2026-07-27)",
+  "built": "2026-07-27",
+  "gamma": 0.55,
+  "window": [
+    2023,
+    2024,
+    2025
+  ],
+  "z_route_floor": 150,
+  "qualified_pool_routes": 250,
+  "weights": {
+    "yprr": 0.2,
+    "grades_pass_route": 0.2,
+    "deep_explosive": 0.09,
+    "receiving_EPA_target": 0.085,
+    "avg_separation": 0.085,
+    "contested_catch_rate": 0.085,
+    "drop_rate": 0.085,
+    "YAC_over_expected": 0.085,
+    "MTF_rec": 0.085
+  },
+  "mom_k": {
+    "yprr": 292.7,
+    "grades_pass_route": 236.1,
+    "deep_explosive": 37.1,
+    "receiving_EPA_target": 131.0,
+    "avg_separation": 50.6,
+    "contested_catch_rate": 58.9,
+    "drop_rate": 214.9,
+    "YAC_over_expected": 86.0,
+    "MTF_rec": 43.1
+  },
+  "effective_weights": {
+    "yprr": 0.2284,
+    "grades_pass_route": 0.2367,
+    "deep_explosive": 0.0696,
+    "receiving_EPA_target": 0.0764,
+    "avg_separation": 0.0985,
+    "contested_catch_rate": 0.0565,
+    "drop_rate": 0.065,
+    "YAC_over_expected": 0.078,
+    "MTF_rec": 0.0908
+  },
+  "route_block": {
+    "nominal": 0.4,
+    "effective": 0.4651
+  },
+  "archetype_block": {
+    "nominal": 0.175,
+    "effective": 0.1261
+  },
+  "k_lambda": 52.95,
+  "career_gate_max_seasons": 3,
+  "median_college_weight_among_blended": 0.0701,
+  "confounded_facets": {
+    "deep_explosive": "QB dependency",
+    "avg_separation": "slot/scheme alignment"
+  },
+  "deep_explosive_construction": "mean EPA per target with air_yards >= 20",
+  "anchor": {
+    "lo_pct": 5,
+    "hi_pct": 98,
+    "lo_score": 52,
+    "hi_score": 95,
+    "clip": [
+      50,
+      99
+    ],
+    "fitted_on": "qualified WR pool",
+    "n": 164
+  },
+  "rows": 164,
+  "blended": 57,
+  "md5": "ca1e6b793cbe8fb0f635ccadf491324b"
+}

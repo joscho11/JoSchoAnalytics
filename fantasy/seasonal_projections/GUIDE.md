@@ -1,11 +1,18 @@
 # A guide to the 2026 Draft Board
 
-> **Note (2026-07-22): the Draft Board TAB was rebuilt** into a season-projection comparison table
-> (Sleeper ADP + Position Rank beside Sleeper's and a from-scratch model's season projections, with the
-> rank gap for each; ~245 players). It **no longer renders the calibrated band** described below. This
-> GUIDE now documents the **closed band research campaign** and the frozen `phase4_band_2026.csv` (kept on
-> disk for the campaign + the daily ADP refresh), NOT the live tab. For the current tab, see the repo
-> `CLAUDE.md` "RB, WR, TE & QB Season Projection" section.
+> **Note (2026-07-22): the Draft Board PAGE was rebuilt** into a season-projection comparison table —
+> 245 rows and 13 columns: Sleeper ADP + Position Rank beside Sleeper's and a from-scratch model's
+> season projections, the rank gap for each, two descriptive talent columns from `fantasy/talent/`, and
+> a disclosed 44-player analyst scenario on the displayed model number. A detail toggle (on by default)
+> collapses it to a compact 9-column comparison view; the CSV export always carries all 13.
+> It **no longer renders the calibrated band** described below, and it **no longer renders the single
+> 2025-efficiency column** described below either — that was superseded by the two per-position talent
+> columns. This GUIDE documents the **closed band research campaign** and the frozen
+> `phase4_band_2026.csv` / `talent_index_2026.csv` — kept on disk for the campaign **only**;
+> verified 2026-07-27, neither is an input to the daily ADP refresh, whose one frozen input is
+> `season_dataset_2014_2026.csv`. NOT the live page. For the current page see
+> `fantasy/projections/GUIDE.md` (the projection engine) and `fantasy/talent/GUIDE.md` (the
+> talent columns).
 
 This is the plain-language tour of the pre-season Draft Board and the research behind it. I built
 this, and I ran a long, disciplined research program to figure out what it can honestly say. My
@@ -75,11 +82,11 @@ retired). The handful that matter most:
 
 | File | What it is |
 |---|---|
-| `phase4_band_2026.csv` | The shipped board — the market point estimate plus my calibrated range. Frozen. |
-| `talent_index_2026.csv` | The separate, descriptive efficiency column. Frozen. |
+| `phase4_band_2026.csv` | The band from the closed campaign — the market point estimate plus my calibrated range. Frozen; **rendered nowhere since the 2026-07-22 page rebuild**. |
+| `talent_index_2026.csv` | The retired 2025-efficiency context column. Frozen; kept for the closed campaign only. **Renders nowhere and is read by nothing** — superseded by the per-position builds in `fantasy/talent/`. |
 | `phase4_band.py` | The engine that builds the range (isotonic line + error spread). |
 | `apply_board_labels.py` | Adds the population flags and the licensed wording to the board. |
-| `draft_board_2026.py` | The dashboard tab that shows the board. |
+| `draft_board_2026.py` | The Draft Board **page** (one of the site's nine `st.Page` modules) - the rebuilt season-projection comparison table, which reads none of the band artifacts. |
 | `PREREGISTRATION.md` | The research constitution — every test, its rule written in advance, and its result. |
 | `ARTIFACTS.md` | The full file manifest. |
 

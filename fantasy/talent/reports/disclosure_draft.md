@@ -1,3 +1,9 @@
+> **SUPERSEDED — do not use this copy.** This is an earlier draft. The signed-off version is
+> `disclosure_final.md` in this directory, revised 2026-07-27 for the per-position migration
+> (SPEC R34-R41). Everything below describes the retired R29 two-artifact build: the column
+> names ("Talent Score" / "Rookie Score"), the 40-99 scale, the dagger confidence markers, the
+> advanced view, the "no college QB instrument" claim and the 0.385 agreement figure are all
+> retired. Kept only as the drafting record.
 # Talent Score & Rookie Score — disclosure copy (DRAFT for owner sign-off)
 
 First-person singular throughout. Expands SPEC §f. Every claim below is bound by

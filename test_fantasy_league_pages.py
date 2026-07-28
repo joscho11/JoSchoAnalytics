@@ -120,14 +120,26 @@ def test_rookie_board_excludes_direct_pff_fields_and_explains_availability(tmp_p
     at = _render_page(tmp_path, "page_rookie_board")
     assert any(w.label == "Draft class" for w in at.selectbox)
     assert any(w.label == "Position" for w in at.selectbox)
-    assert len(at.dataframe) == 1
+    # Three tables since 2026-07-27: the rookie board itself, plus the collapsed
+    # "college QBs/RBs/WRs/TEs not in this rookie class" views. ALL must stay free of direct PFF fields.
+    assert len(at.dataframe) == 5
 
-    value = at.dataframe[0].value
-    shown = value.data if hasattr(value, "data") else value
+    banned_pff = {"PFF Grade", "PFF Grade (Percentile)", "PFF Efficiency",
+                  "PFF Efficiency (Percentile)", "grades_pass", "btt_rate", "twp_rate",
+                  "pressure_grade", "accuracy_pct", "grades_run"}
+    tables = []
+    for element in at.dataframe:
+        value = element.value
+        tables.append(value.data if hasattr(value, "data") else value)
+    for table in tables:
+        assert not banned_pff & set(table.columns),             f"direct PFF fields leaked into a public table: {banned_pff & set(table.columns)}"
+
+    shown = tables[0]
     assert {"Draft-Capital Hit-%", "College Hit-%", "Full Hit-%", "College Talent",
             "Athleticism (Percentile)", "Production (Percentile)"} <= set(shown.columns)
-    assert not {"PFF Grade", "PFF Grade (Percentile)", "PFF Efficiency",
-                "PFF Efficiency (Percentile)"} & set(shown.columns)
+
+    for watch in tables[1:]:
+        assert {"Player", "College", "College Talent"} <= set(watch.columns)
 
     copy = " ".join(str(x.value) for x in at.caption)
     assert "top-24 for RB/WR or top-12 for QB/TE" in copy

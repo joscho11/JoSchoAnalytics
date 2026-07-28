@@ -8,9 +8,13 @@ Live dashboard: [joschoanalytics.streamlit.app](https://joschoanalytics.streamli
 
 I built this to find out if a data-driven model can actually find an edge against the spread. Anyone can pick winners. The harder question is whether you can consistently beat the number Vegas sets.
 
-The answer so far is yes. Across the 2025 live test (weeks 10 through 17, 117 graded games) the ATS model sits at **56.4% overall**, with **HIGH-confidence picks at 64.7%** (11/17) and **MEDIUM-confidence picks at 59.5%** (25/42). Break-even after the bookmaker's cut is 52.4%.
+The evidence so far says yes, against the **opening** line. The number I stand behind is the walk-forward out-of-sample one: **HIGH-confidence picks hit 64.2% against the opening spread, 380 of 592 games, 2018–2025**, with a 95% Wilson lower bound of 60.2%. Break-even after the bookmaker's cut is 52.4%.
 
-The repo is the full system: ATS predictions, an experimental over/under model, fantasy football projections, a DFS lineup optimizer, and an LLM agent that explains why the model likes or fades each game.
+The model does **not** beat the closing line, and I do not claim it does — an earlier "beats the close" reading turned out to be an artifact of the closing line being one of the model's own inputs.
+
+The 2025 live sample (weeks 10 through 17, 117 graded games) reads 56.4% overall, HIGH 64.7% and MEDIUM 59.5% — but HIGH is only 11 of 17 graded picks there, far too few to separate from luck. Cite the walk-forward figure, not that one.
+
+The repo is the full system: ATS predictions, an experimental over/under model, weekly fantasy projections, a DFS lineup optimizer, an LLM agent that explains the model's read on each game, and a pre-season Draft Board and Rookie Board built on from-scratch season projections and descriptive talent scores.
 
 ---
 
@@ -20,8 +24,10 @@ Each subsystem has a plain-language guide — what it is trying to do, how it wo
 
 - [betting/GUIDE.md](betting/GUIDE.md) — the ATS spread model, the experimental totals model, and the LLM agent.
 - [fantasy/GUIDE.md](fantasy/GUIDE.md) — the weekly fantasy projection system (per-position and per-stat models).
-- [fantasy/seasonal_projections/GUIDE.md](fantasy/seasonal_projections/GUIDE.md) — the pre-season Draft Board and the value-signal research campaign behind it.
-- [fantasy/talent/GUIDE.md](fantasy/talent/GUIDE.md) — the Talent Score and Rookie Score columns: how they're built, what they measure, and where they fail.
+- [fantasy/projections/GUIDE.md](fantasy/projections/GUIDE.md) — the from-scratch 2026 season-total half-PPR projections (RB, WR, TE and veteran QB) behind the Draft Board's Model Proj column.
+- [fantasy/seasonal_projections/GUIDE.md](fantasy/seasonal_projections/GUIDE.md) — the closed value-signal research campaign behind the pre-season board (the band it validated was retired from the page on 2026-07-22).
+- [fantasy/talent/GUIDE.md](fantasy/talent/GUIDE.md) — the NFL Talent Score and College Talent Score columns: the eight per-position builds behind them, what they measure, and where they fail (no strength-of-schedule adjustment; FBS only on the college side).
+- [fantasy/rookie/GUIDE.md](fantasy/rookie/GUIDE.md) — the Rookie Board's hit-probability score.
 - [fantasy/dfs/GUIDE.md](fantasy/dfs/GUIDE.md) — the DraftKings lineup optimizer.
 
 `fantasy/breakout/` is a one-off research notebook (a breakout-probability experiment with saved charts); it is not wired into the dashboard or any pipeline, so it has no guide.
@@ -140,7 +146,7 @@ Live test (2025 weeks 10 through 17, 46 picks): **52.2%**, essentially at break-
 
 ### Fantasy Football Projections
 
-Half-PPR points for QB, RB, WR, and TE the night before each slate, plus per-stat prop projections for passing, rushing, and receiving yards and receptions. Three notebooks run in order.
+Half-PPR points for QB, RB, WR, and TE the night before each slate, plus per-stat prop projections for passing, rushing, and receiving yards and receptions. Three notebooks build the models and a fourth runs weekly inference.
 
 | Notebook | Role |
 |----------|------|
@@ -180,9 +186,11 @@ A LlamaIndex ReActAgent with 5 tools (predictions, live injuries, line movement,
 
 ### Dashboard
 
-A Streamlit app with tabs for Weekly Predictions, Track Record, Draft Board, Film Room, Weekly Fantasy, DFS Optimizer, League History, and a Help guide.
+A Streamlit multipage site with a top nav in three groups — **Betting**: Weekly Predictions, Track Record · **Fantasy**: Draft Board, Rookie Board, Weekly Fantasy, DFS Optimizer · **More**: Film Room, League History, Help & Guide.
 
-- **Draft Board**: my pre-season board for QB, RB, WR, and TE. It compares season projections against where players are actually being drafted — their draft price (ADP, average draft position). The point estimate is the market's, powered by Sleeper's projections versus the draft market; what I add is a calibrated range around it — a Floor, Expected, and Ceiling for the season, plus a Top-12 chance and a bust risk. When I drew those ranges for the 2021 through 2025 seasons, about 8 in 10 players finished inside their 80% range. The gap between projection and price has a tested track record as a group pattern — validated in aggregate across five past seasons, including a check that it wasn't just the projections being fresher than the draft prices — for established players and for running backs and receivers in changing situations; it is not yet tested for quarterbacks and tight ends in changing situations, and those rows are marked. Everything on the board describes patterns across many players, not a call about any single player. (This replaced the retired Draft Value Finder tab on 2026-07-12; see `fantasy/seasonal_projections/GUIDE.md`.)
+- **Draft Board**: my pre-season board for QB, RB, WR, and TE — every player with a 2026 Sleeper ADP, 245 of them. For each it puts the market's draft price and positional rank next to two independent season-total half-PPR projections — Sleeper's and a from-scratch model I built — with the positional-rank gap for each, plus two descriptive talent columns (NFL Talent Score, College Talent Score). Thirteen columns; a "Show projection and talent detail" toggle (on by default) drops the four raw-estimate and talent columns for a compact nine-column comparison, and the CSV download always contains all thirteen. My model is backtested on 2021–2025 and **not** live-validated — the first live test is the 2026 season — and it does not beat Sleeper on ranking. Selected named 2026 players carry a disclosed analyst scenario in place of the model's point estimate; the raw model output is preserved unchanged underneath. The gaps are neutral rank differences shown for context, not calls about any player. (This replaced the Phase-4 band spine on 2026-07-22, which had itself replaced the retired Draft Value Finder tab on 2026-07-12; see `fantasy/projections/GUIDE.md` for the projection engine and `fantasy/seasonal_projections/GUIDE.md` for the closed band campaign.)
+
+- **Rookie Board**: a per-position hit-probability score for drafted rookies, beside the rookie season-total projections (RB, WR and TE — the QB rookie arm was built and held as too thin), a College Talent score, and college/athletic percentiles. Backtested, not live-validated: at this sample college production and athletic testing added no measured edge beyond draft capital.
 
 - **Weekly Predictions**: game cards with edge, confidence tier, and expandable agent reasoning. Games where the experimental totals model says UNDER show a dashed amber badge below the spread card.
 - **Track Record**: ATS record by tier and week, profit at standard odds, longest streaks, and a separate over/under section flagged as tracking-only.
@@ -204,7 +212,7 @@ Two GitHub Actions workflows.
 
 The agent only runs on Tuesday (it costs API calls) and is allowed to fail without blocking the tracker commit.
 
-**`test.yml`** runs on every push and PR to `main`: a `features` job runs the `features.py` contract tests (including an order-hash check that catches feature-list changes which would silently alter the trained models) and a `pytests` job runs the seasonal + dashboard suites. Catches regressions in seconds instead of on the next cron.
+**`test.yml`** runs on every push and PR to `main`, in three jobs: a `features` job runs the `features.py` contract tests (including an order-hash check that catches feature-list changes which would silently alter the trained models) plus the calibration tests; a `pytests` job runs the seasonal, dashboard and talent suites plus the betting execution layer; and a `deploy-parity` job re-runs everything on Python 3.12 against the exact package set Streamlit Cloud installs, so a resolver conflict fails here instead of on the live site. Catches regressions in seconds instead of on the next cron.
 
 The only manual step each season is updating the All-Pro CSV in January.
 
@@ -241,11 +249,16 @@ Best week: 9 of 14 (Week 14, 64.3%). These are encouraging but it is a small liv
 ## Repo Structure
 
 ```
-app.py                                 # Streamlit dashboard (entry point)
+app.py                                 # Multipage entry point (st.navigation, 9 pages, top nav)
+page_*.py                              # One module per page (draft_board, rookie_board, weekly_predictions,
+                                       #   weekly_fantasy, dfs, track_record, film_room, league_history, help)
+nav_registry.py                        # Cross-link registry, populated before nav.run()
+dashboard_chrome.py / dashboard_data.py / page_common.py   # Shared chrome, loaders, page scaffolding
 dashboard_utils.py                     # Streamlit-free dashboard helpers (testable; metric_card, loaders, etc.)
 test_dashboard_utils.py                # Unit tests for dashboard_utils.py (run in CI)
-draft_board_2026.py                    # Draft Board tab renderer (license-frozen copy; reads the frozen 2026 artifacts)
-film_room.py                           # Film Room tab renderer (embedded TikToks + breakdown popups)
+draft_board_2026.py                    # Draft Board renderer (license-frozen copy; reads season_dataset ADP +
+                                       #   fantasy/projections/results + fantasy/talent scores)
+film_room.py                           # Film Room renderer (embedded TikToks + breakdown popups)
 video_content.py                       # Registry of published videos (embed ids + breakdown files)
 video_breakdowns/                      # Long-form written breakdowns (markdown), one per video
 betting/
@@ -281,9 +294,23 @@ fantasy/
   dfs/
     optimizer.ipynb                    # ILP formulation and helper reference
     dfs_pipeline.ipynb                 # Weekly DFS workflow (papermill)
-  seasonal_projections/                # Draft Board artifacts + the value-signal research campaign
-    phase4_band_2026.csv               # SHIPPED, FROZEN: the 2026 board (point estimate + calibrated band)
-    talent_index_2026.csv              # SHIPPED, FROZEN: descriptive 2025 efficiency context column
+  projections/                         # From-scratch season-total half-PPR builds (the Model Proj column)
+    build_{rb,wr,te,qb}_projection.py  # One per position; each imports the RB engine, never modifies it
+    results/                           # {pos}_projection_2026.csv, *_rookie_board_projection.csv, and
+                                       #   analyst_projection_adjustments_2026.csv (44-row display overlay)
+    PREREG_*.md, GUIDE.md              # Frozen pre-registrations + the plain-language guide
+  talent/                              # Descriptive talent scores (SPEC R34-R41, shipped 2026-07-27)
+    build_nfl_{qb,rb,wr,te}_score.py   # -> nfl_{pos}_score_2026.csv    (+ .provenance.json)
+    build_college_{qb,rb,wr,te}_score.py  # -> college_{pos}_score_2026.csv (+ .provenance.json)
+    talent_score_2026.csv              # R29, SUPERSEDED: feeds no rendered column; hash-pinned on disk
+    rookie_score_2026.csv              # Fallback only, where a college build has no coverage
+    SPEC.md, GUIDE.md, tests/          # Formulas of record, plain-language guide, build tests
+  rookie/                              # Rookie Board hit-probability score + its frozen (spent) harness
+  seasonal_projections/                # The closed value-signal research campaign
+    phase4_band_2026.csv               # FROZEN, RETIRED FROM THE PAGE (2026-07-22): kept for the closed
+                                       #   campaign and as a fixed input to the daily ADP refresh
+    talent_index_2026.csv              # FROZEN, RETIRED: superseded by fantasy/talent/ per-position builds
+    refresh_board_adp.py               # Daily Sleeper ADP refresh -> board_adp_live_2026.csv (245 rows)
     phase4_band.py                     # Band engine (walk-forward isotonic + residual quantiles)
     apply_board_labels.py              # Post-process: population flags + licensed signal_status wording
     build_talent_index.py              # Regenerates talent_index_2026.csv (descriptive only, never blended)
@@ -296,7 +323,9 @@ fantasy/
 memory/                                # Persistent notes for future work
 .github/workflows/
   weekly_predictions.yml               # Tue/Thu/Sun automation (spread, totals, agent)
-  test.yml                             # Push/PR CI: features.py contract tests + seasonal/dashboard suites
+  test.yml                             # Push/PR CI: features + calibration; seasonal/dashboard/talent +
+                                       #   betting execution layer; deploy-parity on py3.12
+  board_refresh.yml                    # Daily Sleeper ADP refresh for the Draft Board
 ```
 
 ---

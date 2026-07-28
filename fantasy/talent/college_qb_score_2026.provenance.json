@@ -1,0 +1,42 @@
+{
+  "spec": "R35 (RATIFIED-2026-07-27)",
+  "built": "2026-07-27",
+  "gamma": 0.4,
+  "dropback_floor": 200,
+  "weights": {
+    "grades_pass": 0.25,
+    "accuracy_pct": 0.2,
+    "btt_rate": 0.175,
+    "twp_rate": 0.1,
+    "grades_run": 0.25,
+    "pressure_grade": 0.025
+  },
+  "anchor": {
+    "lo_pct": 5,
+    "hi_pct": 98,
+    "lo_score": 52,
+    "hi_score": 95,
+    "clip": [
+      40,
+      99
+    ],
+    "min_rel": 0.3,
+    "fitted_on": "NFL-reaching QBs",
+    "n": 179,
+    "p5_raw": -0.226138,
+    "p98_raw": 1.071409
+  },
+  "mom_k": {
+    "grades_pass": 699.44,
+    "accuracy_pct": 550.28,
+    "btt_rate": 979.43,
+    "twp_rate": 690.94,
+    "grades_run": 85.62,
+    "pressure_grade": 679.29
+  },
+  "rows": 742,
+  "player_seasons": 1437,
+  "reached_nfl": 186,
+  "rookies_2026": 24,
+  "md5": "ffa9f0daa674d359e68a4bccf71ffcc8"
+}

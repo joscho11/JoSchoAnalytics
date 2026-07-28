@@ -1,6 +1,8 @@
 # Artifacts manifest — `fantasy/seasonal_projections/`
 
-Every tracked file in this directory, with its status. Facts only. Statuses:
+Every tracked file in this directory, plus the untracked directories worth knowing about
+(`pff/`, `adp_logs/`), with its status. Facts only. Last reconciled against the tree
+2026-07-27. Statuses:
 
 - **FROZEN** — hash-pinned or one-shot; do not regenerate or edit (the shipped 2026 board,
   the pre-registered test results, the campaign constitution). Re-running a one-shot test is a
@@ -13,13 +15,20 @@ Every tracked file in this directory, with its status. Facts only. Statuses:
 
 Frozen hashes recorded 2026-07-12 (SHA256, first 16 hex).
 
-## Shipped 2026 Draft Board (FROZEN)
+## Band artifacts — RETIRED FROM THE PAGE 2026-07-22, still FROZEN on disk
+
+> The Draft Board page was rebuilt on 2026-07-22 into a season-projection comparison table and
+> **renders neither of the first two files below**. They stay frozen for the **closed campaign
+> only** — verified 2026-07-27, **neither is an input to the daily ADP refresh**, whose one frozen
+> input is `season_dataset_2014_2026.csv`. The page's live inputs are that dataset (the ADP
+> universe), `board_adp_live_2026.csv`, `fantasy/projections/results/*` and
+> `fantasy/talent/*_score_2026.csv`.
 
 | File | Status | Notes |
 |---|---|---|
-| `phase4_band_2026.csv` | FROZEN | The shipped board. SHA256 `5727a65f012cd504`. Built by `phase4_band.py` → `apply_board_labels.py`, now byte-frozen. READ-ONLY. |
-| `talent_index_2026.csv` | FROZEN | Descriptive 2025-efficiency context column. SHA256 `e36b284efaf78b02`. Built by `build_talent_index.py`, now frozen. Never blended with the value signal. |
-| `season_dataset_2014_2026.csv` | FROZEN | Dataset feeding the 2026 board. SHA256 `ca3118c772d56f03` (regenerated 2026-07-12, Gainwell alias fix). Regenerable by `build_2026_board.py` but pinned to this hash for the shipped board. |
+| `phase4_band_2026.csv` | FROZEN | The band from the closed campaign. SHA256 `5727a65f012cd504`. Built by `phase4_band.py` → `apply_board_labels.py`, now byte-frozen. **Not rendered since 2026-07-22, and NOT read by the ADP refresh** (`refresh_board_adp.py` explicitly disclaims it). Its only live reader is `fantasy/talent/facets.py:123`, which uses it as a player list when building facet panels. READ-ONLY. |
+| `talent_index_2026.csv` | FROZEN | The retired 2025-efficiency context column. SHA256 `e36b284efaf78b02`. Built by `build_talent_index.py`, now frozen. **Renders nowhere and is read by nothing** — superseded by the eight per-position builds in `fantasy/talent/` (SPEC R34–R41). Never blended with the value signal. |
+| `season_dataset_2014_2026.csv` | FROZEN | Dataset feeding the 2026 board — the ADP universe (245 rows with a 2026 price) and the one frozen input `refresh_board_adp.py` reads. **SHA256 `f21a4bfe077321c2`, MD5 `8322a59e43251820cb393d40787f60e6` (re-pinned 2026-07-27).** The previously recorded `ca3118c772d56f03` was the 2026-07-12 Gainwell-alias build and went stale when the dataset was rebuilt on 2026-07-26 for the identity/join bug fixes; it matched no file on disk. Regenerable by `build_2026_board.py` but pinned to this hash for the shipped board. |
 | `rank_equiv_reference.csv` | REGENERABLE | Points→finish-rank display table for the board. Built by `build_rank_equiv_reference.py`. |
 
 ## Campaign record (FROZEN — one-shot, never regenerate)
@@ -79,6 +88,32 @@ Frozen hashes recorded 2026-07-12 (SHA256, first 16 hex).
 | `ffc_adp_2008_2013.csv` | REGENERABLE | By `fetch_adp_2008_2013.py`. |
 | `qb_context_features.csv` | REGENERABLE | By `qb_context_features.py` (retired-arc feature). |
 | `ecr_preseason.csv` | REGENERABLE | Expert-consensus-rank cache (external source). |
+
+## Docs and dated records (FROZEN / reference)
+
+| File | Status | Notes |
+|---|---|---|
+| `ARTIFACTS.md` | ACTIVE DOC | This manifest. |
+| `GUIDE.md` | ACTIVE DOC | Plain-language guide to the closed band campaign (the live page is documented in `fantasy/projections/GUIDE.md` + `fantasy/talent/GUIDE.md`). |
+| `README.md` | ACTIVE DOC | Design decisions, results, the honest verdict, and the struck-claim record. |
+| `audit/*.md` (5 files) | FROZEN | Dated design and review ledgers: `repo_review_2026-07-12.md`, `board_refresh_design_2026-07-13.md`, `board_sort_diagnosis_2026-07-13.md`, `site_revamp_design_2026-07-13.md`, `site_revamp_batch2_state.md`. Append-only — record resolutions beneath, never rewrite a finding. |
+| `data_audits/` | FROZEN | 2026-07-11 external-source provenance captures (`ffa/manifest.json` + two projection snapshots, `ffc/ffc_halfppr_12t_snapshot_2026-07-11.json`, `underdog/manifest.json`). Small manifests only — the 17.5 GB of source data stays local and untracked. |
+
+## Daily ADP refresh (ACTIVE — the only thing in this directory that changes day to day)
+
+The board's draft prices are re-pulled from Sleeper on a schedule by
+`.github/workflows/board_refresh.yml`. The refresh pulls **live ADP only** and recomputes the
+price-derived columns against the FROZEN projection side — it never writes `phase4_band_2026.csv`,
+`talent_index_2026.csv`, or any hash-pinned artifact.
+
+| File | Status | Notes |
+|---|---|---|
+| `refresh_board_adp.py` | ACTIVE TOOL | Re-pulls Sleeper ADP and rebuilds the live overlay via a pure `build_overlay()`. Covers all **245** board rows (was ~180 before it was widened). The band-derived `value_gap` was dropped from the overlay when the page stopped rendering the band. |
+| `board_adp_live_2026.csv` | REGENERABLE (daily) | The live ADP overlay the page prefers over the frozen dataset snapshot. **Rewritten by every refresh — never pin or cite a hash for it across sessions**; within-session integrity only. Carries the `refreshed_at` stamp the page's "latest pull" caption reads. |
+| `adp_logs/` | NOT TRACKED | Per-run refresh logs, local only (0 files tracked in git). Nothing reads them programmatically. |
+| `snapshots/` | REGENERABLE | Pinned source snapshots (incl. `players.parquet`, the pff_id→gsis_id crosswalk the talent builds join on). |
+| `models/` | RETIRED | Model-A / rookie-PPG pkls feeding only the retired value-board engine. |
+| `pff/` | NOT TRACKED | Licensed PFF season tables. Never committed; see "Not tracked" below. |
 
 ## Retired arc (RETIRED — kept for history, not shipped)
 

@@ -2,8 +2,10 @@
 
 This is the plain-language tour of the weekly fantasy football projection system — the part of
 the project that predicts how many fantasy points each player will score *next week*. It's
-separate from the pre-season Draft Board (that has its own guide in
-`fantasy/seasonal_projections/`). I built and run this, and my aim here is to explain how it
+separate from the pre-season Draft Board, whose projection engine is documented in
+`fantasy/projections/GUIDE.md`, whose talent columns are in `fantasy/talent/GUIDE.md`, and whose
+closed band-research campaign is in `fantasy/seasonal_projections/GUIDE.md`.
+I built and run this, and my aim here is to explain how it
 works and to be straight about how good it actually is.
 
 ## What I'm trying to do

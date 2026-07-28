@@ -82,8 +82,19 @@ models — a back like Bijan Robinson got projected near zero. So I dropped it. 
 as a formal amendment to the project's pre-registration, made because the data doesn't exist for the
 target season, not because I was fishing for a better number.
 
-**What ships.** The merged projection column (veteran + rookie), shown on the Rookie Board page beside
-Sleeper's projection and the difference between them, replacing an older, weaker per-game surface.
+**What ships.** The merged projection column (veteran + rookie). It appears in two places: the **Rookie
+Board** page shows the rookie slice beside Sleeper's projection and the difference between them, replacing
+an older, weaker per-game surface; and the **Draft Board** page uses the full surface as its **Model Proj**
+column, along with the Model Proj Position Rank and Model Gap derived from it.
+
+**The analyst overlay.** For 44 named 2026 players (QB 12 / WR 11 / RB 11 / TE 10) the Draft Board displays
+an explicit, frozen analyst scenario in place of the raw model projection —
+`results/analyst_projection_adjustments_2026.csv`. These are judgment calls about availability and role, not
+measured improvements to the model and not backtested; the board says so on the page. The raw model output
+is preserved unchanged in `results/*_projection_2026.csv`, the overlay is never fed back into training, and
+the board's position ranks and gaps derive from the adjusted value so that what you see and what the ranks
+say cannot diverge. If you compare the board's Model Proj against the results CSV for a high-profile player
+and they differ, this is why.
 
 ## 3. A map of the key files
 
@@ -97,6 +108,9 @@ Sleeper's projection and the difference between them, replacing an older, weaker
 | `results/rb_projection_2026.csv` | The full 2026 RB projection (veteran + rookie) with Sleeper and the difference. |
 | `results/rb_rookie_board_projection.csv` | The rookie-only slice the Rookie Board page reads. |
 | `results/walkforward_predictions.csv`, `results/sleeper_comparison.csv` | The backtest predictions and the Sleeper comparison, saved for the record. |
+| `build_{wr,te,qb}_projection.py` | The other three positions. Each **imports** the RB engine rather than copying or modifying it, and adds a short per-position feature block. |
+| `results/{wr,te,qb}_projection_2026.csv` + `*_rookie_board_projection.csv` | The same two outputs per position. The QB rookie file is deliberately header-only — see below. |
+| `results/analyst_projection_adjustments_2026.csv` | The 44-row display overlay described above, with the raw value, the adjusted value, the basis and a dated reason per player. |
 
 The raw PFF college tables are licensed and never stored in this repo; the rookie feature matrix that
 uses them is regenerated in a temporary folder each run and never written here.
@@ -136,8 +150,13 @@ on a real season scale instead of collapsing to a flat per-game rate.
 test is the end of the 2026 season. The 2026 inputs are provisional: as of this writing the vacated-share
 features are ~84% populated, prior-team pass rate ~60%, ADP-implied role only ~35%, and "did the team
 change quarterbacks" is undeterminable before the season and reads as zero for everyone. These firm up
-through August, and the 2026 projection should be re-run as they do. Wide receivers, tight ends, and
-quarterbacks have no projection here yet.
+through August, and the 2026 projection should be re-run as they do.
+
+**Position coverage.** All four positions are built: RB, WR, TE and veteran QB. The QB **rookie** arm was
+fitted, judged too thin to ship, and held — a rookie quarterback's season hinges mostly on whether he
+starts, which the features cannot see, and the diagnostic showed the arm was largely re-ranking by draft
+capital and projecting starter seasons for quarterbacks the market expects to sit. So rookie QBs carry no
+projection, and `qb_rookie_board_projection.csv` is deliberately header-only.
 
 ## 5. The rules and fences that govern it
 
@@ -156,7 +175,8 @@ quarterbacks have no projection here yet.
   rank — is a written amendment justified by the data not existing for 2026, and it only *removes* a
   feature; it can't be used to fish for a better result.
 - **Every projection carries its honesty label.** On the board the projection reads as backtested, not
-  live-validated; the position coverage of the moment (RB and WR so far); and explicitly not a claim to
+  live-validated; the position coverage of the moment (RB, WR, TE and veteran QB; QB rookies withheld);
+  and explicitly not a claim to
   beat Sleeper. Those labels stay until a live season earns their removal.
 
 ## What's different for the other positions

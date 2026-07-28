@@ -27,7 +27,12 @@ In `betting/odds_client.py`:
   added `--force` to override); reports `unmatched`/`skipped` counts (no silent drop).
 - `test_odds_client.py` updated for the new sign + min_books (7 tests).
 
-## REMAINING FIXES — do these next, in order
+## FIXES #1–#6 — ALL RESOLVED 2026-06-18 (kept for the reasoning; outcomes in the UPDATE at the bottom)
+
+> **Read this before acting on anything below.** Every item in this section was completed the
+> same day — the opening-line re-measurement was run (`experiments/walkforward_oos_preds_openline.csv`),
+> and the Kelly stakes were re-fit off ATS-vs-open (HIGH 2%/bet, MEDIUM $0). The present-tense
+> "do these next" framing is preserved as the record of the reasoning, **not as an open task list.**
 
 ### 1. (CRITICAL, methodology) Re-measure edge with the OPENING line, not the close
 Add `--line {close,open}` to `experiments/walkforward_oos_preds.py`. For `open`:
@@ -122,4 +127,10 @@ bettable" header; odds_client totals Over/Under-shared-point assumption; sys.pat
 import fragility; fetch_lines annotation; shared `odds_engine` extraction;
 Expansionist opportunities (anytime-TD, totals CLV, middles/arb, multi-sport).
 
-## STATE: clean. All 26 betting tests pass; all modules import. Nothing half-edited.
+## STATE (as of 2026-06-18): clean; all modules import; nothing half-edited.
+
+The test counts in this file are a 2026-06-18 snapshot and are **superseded**: `betting/` now
+carries 77 test functions across 8 files (execution layer — odds 9, props 9, historical CLV 6,
+kelly 4, line shopping 8, weekly CLV 10 — plus features 15 and calibration 16), and the full repo
+suite is 213 passing. The execution-layer suites are now wired into CI (`test.yml`, `pytests` job,
+`working-directory: betting`), which closes the "not in CI" gap recorded below.
