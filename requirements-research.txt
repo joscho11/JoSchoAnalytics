@@ -11,10 +11,21 @@
 #   papermill + ipykernel         -> notebook execution (weekly cron uses
 #                                    requirements-ci.txt's pins)
 #   matplotlib + seaborn          -> research notebooks only
+#   ML stack + joblib/scipy        -> training, artifact generation, diagnostics
+#   pulp                           -> offline DFS optimizer notebooks
+#   python-dotenv                  -> local Odds API helpers
 #
 # Install on top of the deploy set:  pip install -r requirements.txt -r requirements-research.txt
 -r requirements.txt
 
+scipy>=1.10,<2.0
+joblib>=1.3,<2.0
+xgboost>=2.0,<4.0
+scikit-learn>=1.4,<2.0
+lightgbm>=4.0,<5.0
+catboost>=1.2,<2.0
+pulp>=2.7,<4.0
+python-dotenv>=1.0,<2.0
 llama-index==0.11.0
 llama-index-llms-anthropic==0.2.0
 papermill>=2.4,<3.0

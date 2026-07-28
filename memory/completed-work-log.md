@@ -5,6 +5,24 @@ working guidance lean. This is the archive; `CLAUDE.md` links here. Newest first
 Append new dated entries at the top. The live "how to edit the shared features
 module" guidance stays in `CLAUDE.md`, not here.
 
+**2026-07-28 (Streamlit Community Cloud throttle hot paths):**
+- Removed three concrete cold-process costs from the live dashboard. `app.py` now
+  lazy-imports only the selected page instead of initializing all nine page modules.
+  The Help page now reads its 22 model-influence summaries from
+  `model_explanations_snapshot.json` instead of hashing eight artifacts and unpickling
+  fourteen models inside a collapsed expander. The snapshot records all 22 source MD5s;
+  `test_model_explanations.py` fails if any explanation drifts from its artifact.
+- Reduced the cloud deploy file from 16 direct packages to the eight actually needed at
+  runtime. The training/deserialization/DFS/local-helper stack moved to
+  `requirements-research.txt`; `nflreadpy`, Polars, and PyArrow remain in production for
+  weekly-fantasy actual-stat refreshes. Deploy-parity CI now tests the dashboard under
+  the exact minimal runtime while the full-dependency jobs retain model/pipeline coverage.
+- Cold Help model-summary work fell from 7.551s wall / 1.766s CPU to 0.000285s wall /
+  effectively 0 CPU. The default app cold AppTest fell from 4.589s wall / 0.891s CPU to
+  0.633s wall / 0.547s CPU. All 51 runtime tests passed in a clean environment containing
+  only `requirements.txt` plus pytest; every one of the nine pages rendered offline.
+  No prediction tracker, projection result, or model artifact changed.
+
 **2026-07-26 (non-rookie WR PPG target architecture; REJECT):**
 - Pre-registered and fired one fixed comparison on all 1,006 corrected 2021–2025
   non-rookie WR rows: the current direct season-total target versus games-weighted

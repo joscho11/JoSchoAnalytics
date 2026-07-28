@@ -1,21 +1,21 @@
 """Production-model importance data for the Help & Guide page.
 
-Tree SHAP snapshots are pinned to the exact model artifact they explain.  If a
-model is replaced, the snapshot is withheld until it is recomputed.  Native
-XGBoost gain and Ridge coefficient summaries are cheap enough to derive from
-the current artifacts on every cache miss.
+The displayed summaries are stored in a small, artifact-pinned JSON snapshot.
+CI verifies every source hash. Production therefore never imports the training
+stack or unpickles models just to render a collapsed Help-page expander.
 """
 from __future__ import annotations
 
+import copy
 import hashlib
 import html
+import json
+from functools import lru_cache
 from pathlib import Path
-
-import joblib
-import numpy as np
 
 
 HERE = Path(__file__).resolve().parent
+SNAPSHOT_PATH = HERE / "model_explanations_snapshot.json"
 
 
 def _feature(name: str) -> str:
@@ -113,64 +113,36 @@ VETERAN_CALIBRATION_AUDIT = [
 ]
 
 
+@lru_cache(maxsize=1)
+def _snapshot() -> dict:
+    try:
+        data = json.loads(SNAPSHOT_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    if (
+        data.get("schema_version") != 1
+        or not isinstance(data.get("shap_models"), list)
+        or not isinstance(data.get("native_models"), list)
+        or not isinstance(data.get("sources"), dict)
+    ):
+        return {}
+    return data
+
+
 def shap_models():
-    models, stale = [], []
-    for model_id, label, group, rel, expected, n_rows, features in SHAP_SNAPSHOTS:
-        path = HERE / rel
-        if not path.exists() or _md5(path) != expected:
-            stale.append(label)
-            continue
-        models.append({
-            "id": model_id,
-            "label": label,
-            "group": group,
-            "method": "mean absolute Tree SHAP",
-            "n": n_rows,
-            "features": [(_feature(name), share) for name, share in features],
-        })
-    return models, stale
+    models = _snapshot().get("shap_models")
+    if models is None:
+        return [], ["Model explanation snapshot"]
+    return copy.deepcopy(models), []
 
 
 def native_models():
-    models = []
-    for path in sorted((HERE / "fantasy" / "models").glob("*_model.pkl")):
-        bundle = joblib.load(path)
-        values = np.asarray(bundle["model"].feature_importances_, dtype=float)
-        values = 100 * values / values.sum()
-        top = np.argsort(values)[::-1][:5]
-        stem = path.stem.removesuffix("_model")
-        parts = stem.split("_")
-        position = parts[0].upper()
-        target = " ".join(parts[1:]).replace("rec yards", "receiving yards")
-        label = f"{position} · {target.title()}" if target else f"{position} · Fantasy points"
-        models.append({
-            "id": f"weekly_{stem}",
-            "label": label,
-            "group": "Weekly fantasy",
-            "subgroup": position,
-            "method": "XGBoost gain",
-            "features": [(_feature(bundle["feature_cols"][i]), round(float(values[i]), 1)) for i in top],
-        })
+    return copy.deepcopy(_snapshot().get("native_models", []))
 
-    for filename, label in (("totals_xgboost.pkl", "Totals · XGBoost"),
-                            ("totals_ridge.pkl", "Totals · Ridge")):
-        bundle = joblib.load(HERE / "betting" / "models" / filename)
-        if filename.startswith("totals_xgboost"):
-            values = np.asarray(bundle["model"].feature_importances_, dtype=float)
-            method = "XGBoost gain"
-        else:
-            values = np.abs(np.asarray(bundle["model"].coef_, dtype=float))
-            method = "absolute standardized coefficient"
-        values = 100 * values / values.sum()
-        top = np.argsort(values)[::-1][:5]
-        models.append({
-            "id": filename.removesuffix(".pkl"),
-            "label": label,
-            "group": "Betting",
-            "method": method,
-            "features": [(_feature(bundle["feature_cols"][i]), round(float(values[i]), 1)) for i in top],
-        })
-    return models
+
+def snapshot_sources() -> dict[str, str]:
+    """Artifact fingerprints recorded when the checked snapshot was generated."""
+    return dict(_snapshot().get("sources", {}))
 
 
 def calibration_audit_html() -> str:

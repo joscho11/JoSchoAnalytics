@@ -1,0 +1,337 @@
+{
+  "native_models": [
+    {
+      "features": [
+        ["Fantasy points half ppr (last 3)", 7.9],
+        ["Expected expected pts (last 5)", 7.0],
+        ["Fantasy points half ppr (last 5)", 5.8],
+        ["Expected expected pts (last 3)", 5.4],
+        ["Snap % (last 5)", 4.3]
+      ],
+      "group": "Weekly fantasy",
+      "id": "weekly_qb",
+      "label": "QB \u00b7 Fantasy points",
+      "method": "XGBoost gain",
+      "subgroup": "QB"
+    },
+    {
+      "features": [
+        ["Expected expected pts (last 3)", 10.9],
+        ["Fantasy points half ppr (last 3)", 6.0],
+        ["Expected expected pts (last 5)", 5.7],
+        ["Snap % (last 3)", 3.5],
+        ["Snap % (last 5)", 2.9]
+      ],
+      "group": "Weekly fantasy",
+      "id": "weekly_qb_pass_yards",
+      "label": "QB \u00b7 Pass Yards",
+      "method": "XGBoost gain",
+      "subgroup": "QB"
+    },
+    {
+      "features": [
+        ["Carries (last 5)", 15.0],
+        ["Rushing yards (last 5)", 4.3],
+        ["Rushing yards (last 3)", 2.8],
+        ["Starter tackle availability", 2.6],
+        ["Sos rank", 2.2]
+      ],
+      "group": "Weekly fantasy",
+      "id": "weekly_qb_rush_yards",
+      "label": "QB \u00b7 Rush Yards",
+      "method": "XGBoost gain",
+      "subgroup": "QB"
+    },
+    {
+      "features": [
+        ["Expected expected pts (last 5)", 11.4],
+        ["Expected expected pts (last 3)", 9.6],
+        ["Fantasy points half ppr (last 5)", 6.0],
+        ["Rushing yards (last 5)", 5.0],
+        ["Snap % (last 3)", 3.3]
+      ],
+      "group": "Weekly fantasy",
+      "id": "weekly_rb",
+      "label": "RB \u00b7 Fantasy points",
+      "method": "XGBoost gain",
+      "subgroup": "RB"
+    },
+    {
+      "features": [
+        ["Receptions (last 5)", 10.6],
+        ["Targets (last 3)", 7.6],
+        ["Wopr (last 5)", 4.0],
+        ["Target share (last 5)", 3.7],
+        ["Receiving yards after catch (last 5)", 3.6]
+      ],
+      "group": "Weekly fantasy",
+      "id": "weekly_rb_rec_yards",
+      "label": "RB \u00b7 Receiving Yards",
+      "method": "XGBoost gain",
+      "subgroup": "RB"
+    },
+    {
+      "features": [
+        ["Rushing yards (last 5)", 16.4],
+        ["Carries (last 5)", 4.6],
+        ["Carries (last 3)", 3.7],
+        ["Fantasy points half ppr (last 5)", 3.3],
+        ["Depth chart position", 2.6]
+      ],
+      "group": "Weekly fantasy",
+      "id": "weekly_rb_rush_yards",
+      "label": "RB \u00b7 Rush Yards",
+      "method": "XGBoost gain",
+      "subgroup": "RB"
+    },
+    {
+      "features": [
+        ["Expected expected pts (last 5)", 10.7],
+        ["Fantasy points half ppr (last 5)", 5.5],
+        ["Wopr (last 5)", 5.2],
+        ["Target share (last 5)", 3.5],
+        ["Receiving yards (last 5)", 2.6]
+      ],
+      "group": "Weekly fantasy",
+      "id": "weekly_te",
+      "label": "TE \u00b7 Fantasy points",
+      "method": "XGBoost gain",
+      "subgroup": "TE"
+    },
+    {
+      "features": [
+        ["Wopr (last 5)", 10.3],
+        ["Receptions (last 5)", 10.0],
+        ["Target share (last 5)", 7.8],
+        ["Receiving yards (last 5)", 4.3],
+        ["Expected expected pts (last 5)", 2.3]
+      ],
+      "group": "Weekly fantasy",
+      "id": "weekly_te_rec_yards",
+      "label": "TE \u00b7 Receiving Yards",
+      "method": "XGBoost gain",
+      "subgroup": "TE"
+    },
+    {
+      "features": [
+        ["Target share (last 5)", 16.2],
+        ["Receptions (last 5)", 10.1],
+        ["Targets (last 5)", 7.8],
+        ["Wopr (last 5)", 3.8],
+        ["Receptions (last 3)", 2.5]
+      ],
+      "group": "Weekly fantasy",
+      "id": "weekly_te_receptions",
+      "label": "TE \u00b7 Receptions",
+      "method": "XGBoost gain",
+      "subgroup": "TE"
+    },
+    {
+      "features": [
+        ["Expected expected pts (last 5)", 19.8],
+        ["Expected expected pts (last 3)", 12.7],
+        ["Wopr (last 5)", 3.6],
+        ["Receptions (last 5)", 3.1],
+        ["Target share (last 5)", 2.8]
+      ],
+      "group": "Weekly fantasy",
+      "id": "weekly_wr",
+      "label": "WR \u00b7 Fantasy points",
+      "method": "XGBoost gain",
+      "subgroup": "WR"
+    },
+    {
+      "features": [
+        ["Expected expected pts (last 5)", 18.3],
+        ["Wopr (last 5)", 9.0],
+        ["Target share (last 5)", 8.4],
+        ["Receiving yards (last 5)", 4.3],
+        ["Target share (last 3)", 3.3]
+      ],
+      "group": "Weekly fantasy",
+      "id": "weekly_wr_rec_yards",
+      "label": "WR \u00b7 Receiving Yards",
+      "method": "XGBoost gain",
+      "subgroup": "WR"
+    },
+    {
+      "features": [
+        ["Expected expected pts (last 5)", 23.2],
+        ["Receptions (last 5)", 9.4],
+        ["Target share (last 5)", 6.6],
+        ["Target share (last 3)", 4.2],
+        ["Receptions (last 3)", 3.0]
+      ],
+      "group": "Weekly fantasy",
+      "id": "weekly_wr_receptions",
+      "label": "WR \u00b7 Receptions",
+      "method": "XGBoost gain",
+      "subgroup": "WR"
+    },
+    {
+      "features": [
+        ["Is playoff", 2.8],
+        ["Wind mph", 2.4],
+        ["Home rolling allowed avg epa", 2.3],
+        ["Vegas spread", 2.3],
+        ["Combined pts 5g", 2.3]
+      ],
+      "group": "Betting",
+      "id": "totals_xgboost",
+      "label": "Totals \u00b7 XGBoost",
+      "method": "XGBoost gain"
+    },
+    {
+      "features": [
+        ["Away rolling avg yards", 7.5],
+        ["Allpro diff home off away def prev year", 7.5],
+        ["Diff active allpro prev year", 6.2],
+        ["Wind mph", 5.3],
+        ["Away rolling avg epa", 3.8]
+      ],
+      "group": "Betting",
+      "id": "totals_ridge",
+      "label": "Totals \u00b7 Ridge",
+      "method": "absolute standardized coefficient"
+    }
+  ],
+  "schema_version": 1,
+  "shap_models": [
+    {
+      "features": [
+        ["Prior half-PPR", 53.0],
+        ["2-year PPG", 6.2],
+        ["Draft pick", 4.4],
+        ["Prior snap share", 4.3],
+        ["PPG trend", 3.0]
+      ],
+      "group": "Season projections \u00b7 Non-rookie models",
+      "id": "season_qb_vet",
+      "label": "QB",
+      "method": "mean absolute Tree SHAP",
+      "n": 87
+    },
+    {
+      "features": [
+        ["Prior half-PPR", 33.2],
+        ["3-year PPG", 9.4],
+        ["Prior snap share", 7.1],
+        ["Age", 5.5],
+        ["Career-high PPG", 4.1]
+      ],
+      "group": "Season projections \u00b7 Non-rookie models",
+      "id": "season_rb_vet",
+      "label": "RB",
+      "method": "mean absolute Tree SHAP",
+      "n": 144
+    },
+    {
+      "features": [
+        ["Draft pick", 26.4],
+        ["Age", 13.3],
+        ["Draft round", 7.3],
+        ["College career yards", 5.7],
+        ["College receiving YPG", 3.7]
+      ],
+      "group": "Season projections \u00b7 Rookie models",
+      "id": "season_rb_rook",
+      "label": "RB",
+      "method": "mean absolute Tree SHAP",
+      "n": 71
+    },
+    {
+      "features": [
+        ["Prior half-PPR", 34.8],
+        ["3-year PPG", 9.3],
+        ["Age", 8.4],
+        ["2-year PPG", 7.8],
+        ["Prior PPG", 7.2]
+      ],
+      "group": "Season projections \u00b7 Non-rookie models",
+      "id": "season_wr_vet",
+      "label": "WR",
+      "method": "mean absolute Tree SHAP",
+      "n": 240
+    },
+    {
+      "features": [
+        ["Draft pick", 29.8],
+        ["Age", 18.3],
+        ["Vacated target share", 5.8],
+        ["College career yards", 3.8],
+        ["PFF contested-catch rate", 3.0]
+      ],
+      "group": "Season projections \u00b7 Rookie models",
+      "id": "season_wr_rook",
+      "label": "WR",
+      "method": "mean absolute Tree SHAP",
+      "n": 154
+    },
+    {
+      "features": [
+        ["Prior half-PPR", 28.9],
+        ["3-year PPG", 17.3],
+        ["2-year PPG", 7.0],
+        ["Draft pick", 4.6],
+        ["Prior air-yards share", 3.3]
+      ],
+      "group": "Season projections \u00b7 Non-rookie models",
+      "id": "season_te_vet",
+      "label": "TE",
+      "method": "mean absolute Tree SHAP",
+      "n": 129
+    },
+    {
+      "features": [
+        ["Draft pick", 18.2],
+        ["PFF offense grade", 8.7],
+        ["Age", 7.3],
+        ["PFF YPRR", 4.7],
+        ["PFF average depth", 4.5]
+      ],
+      "group": "Season projections \u00b7 Rookie models",
+      "id": "season_te_rook",
+      "label": "TE",
+      "method": "mean absolute Tree SHAP",
+      "n": 66
+    },
+    {
+      "features": [
+        ["Vegas spread", 35.878],
+        ["Sack-rate matchup", 11.783],
+        ["Scoring differential", 6.459],
+        ["Reverse sack matchup", 5.009],
+        ["Home coach recent win rate", 3.617]
+      ],
+      "group": "Betting",
+      "id": "spread_xgb",
+      "label": "Spread \u00b7 XGBoost component",
+      "method": "mean absolute Tree SHAP",
+      "n": 3295
+    }
+  ],
+  "sources": {
+    "betting/models/ensemble_prod_model.pkl": "42a61911f6600852d9dcb094896735f0",
+    "betting/models/totals_ridge.pkl": "023a0f1b30ff800cd6aabcdb7ec6c6ae",
+    "betting/models/totals_xgboost.pkl": "995aebedb0833de9df3bfc3fbe7ec214",
+    "fantasy/models/qb_model.pkl": "9bd2df487697bad07ffb75ef2aea8c66",
+    "fantasy/models/qb_pass_yards_model.pkl": "2c37423c85ff07221ad3c2c09fbf53d2",
+    "fantasy/models/qb_rush_yards_model.pkl": "8a644a524b7b38a329a84644d0a794f1",
+    "fantasy/models/rb_model.pkl": "2fc03bf0e0c4ef913e3d21c335ac2b9f",
+    "fantasy/models/rb_rec_yards_model.pkl": "180438969313d9905f1128f4cd24e51e",
+    "fantasy/models/rb_rush_yards_model.pkl": "a219b5c4a995357e09f2e3cc368983eb",
+    "fantasy/models/te_model.pkl": "b0cd4b594889a803c8e40f27bf1598f0",
+    "fantasy/models/te_rec_yards_model.pkl": "2a9bab8f6bd61e6c99fb448fe02773ea",
+    "fantasy/models/te_receptions_model.pkl": "3b5957b351bf363d9077d2d7e2c500ee",
+    "fantasy/models/wr_model.pkl": "6dd99c3cd329b6236c340890de3138dc",
+    "fantasy/models/wr_rec_yards_model.pkl": "9cb0aade4ad3cf75a61d1b2dc216a1c4",
+    "fantasy/models/wr_receptions_model.pkl": "2387aa83d4d0dc0f22ccf0bf33a71c15",
+    "fantasy/projections/models/qb_veteran_model.pkl": "7632549f95995b9702baefdf016d7271",
+    "fantasy/projections/models/rb_rookie_model.pkl": "da230ee66575ca574f02cbc2139e1a80",
+    "fantasy/projections/models/rb_veteran_model.pkl": "167aca71a8511afcced37c0abc846004",
+    "fantasy/projections/models/te_rookie_model.pkl": "f79dad0ab26af5cb4e06a9f1723328cd",
+    "fantasy/projections/models/te_veteran_model.pkl": "5a2f0b504d4cc6fc9a2e04453fd76a44",
+    "fantasy/projections/models/wr_rookie_model.pkl": "6c9a3f3ed02ce32c53594f383aade882",
+    "fantasy/projections/models/wr_veteran_model.pkl": "17dfbcf01054bdd5ce032f2b55df9ad2"
+  }
+}

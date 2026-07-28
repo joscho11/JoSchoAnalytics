@@ -5,6 +5,7 @@ default was retired 2026-07-14), the sidebar renders EMPTY (nav is top, footer i
 in page flow), the shared footer is present, and the shared modules are import-safe.
 Hermetic: APP_OFFLINE=1 so no network. Run: pytest test_site_nav.py
 """
+import ast
 import os
 import sys
 from pathlib import Path
@@ -16,6 +17,17 @@ from streamlit.testing.v1 import AppTest
 _HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(_HERE))
 ENTRY = str(_HERE / "app.py")   # the multipage entrypoint (post-3e swap)
+PAGE_MODULES = (
+    "page_weekly_predictions",
+    "page_track_record",
+    "page_draft_board",
+    "page_rookie_board",
+    "page_weekly_fantasy",
+    "page_dfs",
+    "page_film_room",
+    "page_league_history",
+    "page_help",
+)
 
 
 def _run():
@@ -95,10 +107,36 @@ def test_shared_modules_import_safe():
         assert hasattr(dashboard_chrome, fn)
 
 
+def test_nonselected_pages_are_lazy_imported():
+    tree = ast.parse(Path(ENTRY).read_text(encoding="utf-8"))
+    eager_imports = {
+        alias.name
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Import)
+        for alias in node.names
+        if alias.name.startswith("page_")
+    }
+    assert eager_imports == set()
+
+
+def test_every_page_renders_offline_clean(tmp_path):
+    for module in PAGE_MODULES:
+        harness = tmp_path / f"h_{module}.py"
+        harness.write_text(
+            f"import sys; sys.path.insert(0, r'{_HERE}')\n"
+            f"import {module} as page\npage.render()\n",
+            encoding="utf-8",
+        )
+        at = AppTest.from_file(str(harness), default_timeout=180).run()
+        assert not at.exception, f"{module}: {at.exception}"
+        assert not at.error, f"{module}: {[error.value for error in at.error]}"
+
+
 if __name__ == "__main__":
     test_default_is_weekly_predictions()
     test_preseason_demo_banner_shows_then_hides()
     test_sidebar_is_empty_and_footer_present()
     test_header_has_brand_and_tip_jar()
     test_shared_modules_import_safe()
+    test_nonselected_pages_are_lazy_imported()
     print("OK  nav skeleton: WP fixed default, empty sidebar, header brand+tip jar, footer repo link")

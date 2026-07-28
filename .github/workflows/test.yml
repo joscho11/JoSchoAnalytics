@@ -81,6 +81,7 @@ jobs:
           test_betting_pages.py
           test_fantasy_league_pages.py
           test_help_page.py
+          test_model_explanations.py
           test_app_talent_columns.py
           fantasy/talent/tests/test_talent_build.py
           fantasy/talent/tests/test_phase2.py
@@ -121,17 +122,17 @@ jobs:
       - name: Install the cloud deploy set
         run: pip install -r requirements.txt pytest
 
-      - name: Run every suite under the deploy environment
+      # These are the app/runtime suites only. Model-training and seasonal
+      # pipeline suites run in the jobs above with requirements-test.txt; keeping
+      # them out of this step lets requirements.txt remain the true cloud closure.
+      - name: Run app suites under the exact deploy environment
         run: >-
           pytest -v
-          betting/test_features.py
-          betting/test_calibration.py
           test_dashboard_utils.py
-          fantasy/seasonal_projections/test_seasonal_projections.py
-          fantasy/seasonal_projections/test_draft_board.py
           test_app_draft_board.py
           test_site_nav.py
           test_board_page.py
           test_betting_pages.py
           test_fantasy_league_pages.py
           test_help_page.py
+          test_model_explanations.py
