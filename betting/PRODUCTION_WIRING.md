@@ -41,8 +41,8 @@ checklist. Nothing here touches `app.py` or `.github/workflows/` until you say g
 - [ ] **3. Pilot Week 1 before trusting it.** Confirm `spread_line` actually moves
       intra-week on live data and that team-name matching is 100% (the alias map is
       current-roster only; watch for any unmatched game in the run log).
-- [ ] **4. Dashboard surfacing (optional).** Add a CLV column in `page_track_record.py`
-      and a HIGH-tier Kelly stake chip on the game cards in `page_weekly_predictions.py`
+- [ ] **4. Dashboard surfacing (optional).** Add a CLV column in `site_pages/page_track_record.py`
+      and a HIGH-tier Kelly stake chip on the game cards in `site_pages/page_weekly_predictions.py`
       (`app.py` is only the `st.navigation` entrypoint now and renders nothing) — **but** the last
       stake chip was removed at user request, so confirm the framing first. Keep it
       behind the same honest-disclosure styling as the totals badge.

@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pandas as pd
 
-_HERE = Path(__file__).resolve().parent
+_HERE = Path(__file__).resolve().parents[1]
 
 
 def test_board_sort_is_numeric_and_sentinels_sink():

@@ -14,7 +14,8 @@ os.environ["APP_OFFLINE"] = "1"   # set before importing streamlit-touching modu
 
 from streamlit.testing.v1 import AppTest
 
-_HERE = Path(__file__).resolve().parent
+_HERE = Path(__file__).resolve().parents[1]
+_SITE_PAGES = _HERE / "site_pages"
 sys.path.insert(0, str(_HERE))
 ENTRY = str(_HERE / "app.py")   # the multipage entrypoint (post-3e swap)
 PAGE_MODULES = (
@@ -123,7 +124,7 @@ def test_every_page_renders_offline_clean(tmp_path):
     for module in PAGE_MODULES:
         harness = tmp_path / f"h_{module}.py"
         harness.write_text(
-            f"import sys; sys.path.insert(0, r'{_HERE}')\n"
+            f"import sys; sys.path[:0] = [r'{_HERE}', r'{_SITE_PAGES}']\n"
             f"import {module} as page\npage.render()\n",
             encoding="utf-8",
         )

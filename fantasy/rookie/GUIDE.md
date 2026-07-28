@@ -97,7 +97,7 @@ whole finding: college and athletic data are informative, and redundant with the
 | `build_rookie_board.py` | The product builder. Rebuilds the panel/features in a scratch folder, fits the shipped scorer, scores 2024–2026, surfaces the projection, joins the talent score, writes the board CSVs. |
 | `models/rookie_hit_model.pkl` | The shipped hit-probability model (same architecture as the research, plus display calibration). |
 | `board_data/rookie_board_{2024,2025,2026}.csv` | The board, one file per class. `oof_predictions.csv` holds out-of-fold scores for a future reliability chart. `DISCLOSURE.md` is the standing label. |
-| `../../page_rookie_board.py` | The dashboard page that renders the board. |
+| `../../site_pages/page_rookie_board.py` | The dashboard page that renders the board. |
 
 ## 4. Honest results
 

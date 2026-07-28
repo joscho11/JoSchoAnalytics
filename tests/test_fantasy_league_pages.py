@@ -13,7 +13,8 @@ os.environ["APP_OFFLINE"] = "1"
 
 from streamlit.testing.v1 import AppTest
 
-_HERE = Path(__file__).resolve().parent
+_HERE = Path(__file__).resolve().parents[1]
+_SITE_PAGES = _HERE / "site_pages"
 sys.path.insert(0, str(_HERE))
 
 import page_league_history
@@ -21,7 +22,7 @@ import page_league_history
 
 def _render_page(tmp_path, module):
     h = tmp_path / f"h_{module}.py"
-    h.write_text(f"import sys; sys.path.insert(0, r'{_HERE}')\n"
+    h.write_text(f"import sys; sys.path[:0] = [r'{_HERE}', r'{_SITE_PAGES}']\n"
                  f"import {module} as p\np.render()\n", encoding="utf-8")
     at = AppTest.from_file(str(h), default_timeout=180).run()
     assert not at.exception, at.exception

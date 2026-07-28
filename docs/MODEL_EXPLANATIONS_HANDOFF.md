@@ -42,11 +42,11 @@ cover every production prediction model surfaced by the website while excluding
 retired, held, experimental research-only, and superseded artifacts.
 
 The implementation already exists. Do not rebuild it from scratch:
-- page_help.py renders the section.
+- site_pages/page_help.py renders the section.
 - model_explanations.py owns labels, importance data, model-artifact
   fingerprints, and HTML chart rendering.
-- test_model_explanations.py protects coverage and fingerprint freshness.
-- test_help_page.py checks the offline Streamlit render.
+- tests/test_model_explanations.py protects coverage and fingerprint freshness.
+- tests/test_help_page.py checks the offline Streamlit render.
 
 == CURRENT IMPLEMENTATION ==
 
@@ -69,7 +69,7 @@ as causal or as evidence of model accuracy.
 
 The seasonal and spread SHAP entries in model_explanations.SHAP_SNAPSHOTS are
 bound to exact MD5 hashes. If a model pickle changes, shap_models() withholds
-that card and page_help.py shows a stale-model warning. This fail-closed behavior
+that card and site_pages/page_help.py shows a stale-model warning. This fail-closed behavior
 is intentional and must remain.
 
 At the time this handoff was written (2026-07-24), the recorded seasonal model
@@ -168,9 +168,9 @@ artifacts that genuinely changed.
 
    Run explicitly from the BettingEdgeContinued root:
    & .\.venv-test\Scripts\python.exe -m pytest `
-     test_model_explanations.py `
-     test_help_page.py `
-     test_app_draft_board.py `
+     tests/test_model_explanations.py `
+     tests/test_help_page.py `
+     tests/test_app_draft_board.py `
      betting\test_features.py -q
 
    Do not run bare pytest at the repo root; research scripts match pytest-like

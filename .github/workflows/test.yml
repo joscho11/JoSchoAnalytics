@@ -72,17 +72,17 @@ jobs:
       - name: Run hermetic Python test suites
         run: >-
           pytest -v
-          test_dashboard_utils.py
+          tests/test_dashboard_utils.py
           fantasy/seasonal_projections/test_seasonal_projections.py
           fantasy/seasonal_projections/test_draft_board.py
-          test_app_draft_board.py
-          test_site_nav.py
-          test_board_page.py
-          test_betting_pages.py
-          test_fantasy_league_pages.py
-          test_help_page.py
-          test_model_explanations.py
-          test_app_talent_columns.py
+          tests/test_app_draft_board.py
+          tests/test_site_nav.py
+          tests/test_board_page.py
+          tests/test_betting_pages.py
+          tests/test_fantasy_league_pages.py
+          tests/test_help_page.py
+          tests/test_model_explanations.py
+          tests/test_app_talent_columns.py
           fantasy/talent/tests/test_talent_build.py
           fantasy/talent/tests/test_phase2.py
 
@@ -128,11 +128,11 @@ jobs:
       - name: Run app suites under the exact deploy environment
         run: >-
           pytest -v
-          test_dashboard_utils.py
-          test_app_draft_board.py
-          test_site_nav.py
-          test_board_page.py
-          test_betting_pages.py
-          test_fantasy_league_pages.py
-          test_help_page.py
-          test_model_explanations.py
+          tests/test_dashboard_utils.py
+          tests/test_app_draft_board.py
+          tests/test_site_nav.py
+          tests/test_board_page.py
+          tests/test_betting_pages.py
+          tests/test_fantasy_league_pages.py
+          tests/test_help_page.py
+          tests/test_model_explanations.py

@@ -20,7 +20,7 @@ import page_common
 from dashboard_utils import metric_card, get_confidence, _md_to_html
 from dashboard_chrome import _OFFLINE
 
-_HERE = Path(__file__).resolve().parent
+_HERE = Path(__file__).resolve().parents[1]
 
 
 @st.cache_data(ttl=3600)

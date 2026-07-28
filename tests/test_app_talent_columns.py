@@ -17,7 +17,7 @@ from pathlib import Path
 
 os.environ["APP_OFFLINE"] = "1"
 
-_HERE = Path(__file__).resolve().parent
+_HERE = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_HERE))
 
 

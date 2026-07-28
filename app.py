@@ -16,6 +16,7 @@ import streamlit as st
 
 _HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(_HERE))
+sys.path.insert(0, str(_HERE / "site_pages"))
 sys.path.insert(0, str(_HERE / "betting"))
 sys.path.insert(0, str(_HERE / "fantasy" / "seasonal_projections"))
 

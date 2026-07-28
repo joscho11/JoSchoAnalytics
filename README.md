@@ -250,17 +250,20 @@ Best week: 9 of 14 (Week 14, 64.3%). These are encouraging but it is a small liv
 
 ```
 app.py                                 # Multipage entry point (st.navigation, 9 pages, top nav)
-page_*.py                              # One module per page (draft_board, rookie_board, weekly_predictions,
-                                       #   weekly_fantasy, dfs, track_record, film_room, league_history, help)
+site_pages/                            # One module per page (draft_board, rookie_board, weekly_predictions,
+  page_*.py                            #   weekly_fantasy, dfs, track_record, film_room, league_history, help)
+  page_common.py                       # Shared page scaffolding
+tests/                                 # Dashboard + board suites; conftest.py puts the repo root on sys.path
 nav_registry.py                        # Cross-link registry, populated before nav.run()
-dashboard_chrome.py / dashboard_data.py / page_common.py   # Shared chrome, loaders, page scaffolding
+dashboard_chrome.py / dashboard_data.py   # Shared chrome and data loaders
 dashboard_utils.py                     # Streamlit-free dashboard helpers (testable; metric_card, loaders, etc.)
-test_dashboard_utils.py                # Unit tests for dashboard_utils.py (run in CI)
 draft_board_2026.py                    # Draft Board renderer (license-frozen copy; reads season_dataset ADP +
                                        #   fantasy/projections/results + fantasy/talent scores)
 film_room.py                           # Film Room renderer (embedded TikToks + breakdown popups)
 video_content.py                       # Registry of published videos (embed ids + breakdown files)
 video_breakdowns/                      # Long-form written breakdowns (markdown), one per video
+docs/                                  # Long-form specs kept out of the root
+archive/                               # Retired material, on no live path (closed code review, design audits)
 betting/
   features.py                          # Shared 85-feature engineering (single source of truth, importable)
   test_features.py                     # Hermetic synthetic-data tests for features.py (run in CI)
@@ -298,13 +301,15 @@ fantasy/
     build_{rb,wr,te,qb}_projection.py  # One per position; each imports the RB engine, never modifies it
     results/                           # {pos}_projection_2026.csv, *_rookie_board_projection.csv, and
                                        #   analyst_projection_adjustments_2026.csv (44-row display overlay)
-    PREREG_*.md, GUIDE.md              # Frozen pre-registrations + the plain-language guide
+    preregs/PREREG_*.md                # Frozen pre-registrations
+    GUIDE.md                           # Plain-language guide
   talent/                              # Descriptive talent scores (SPEC R34-R41, shipped 2026-07-27)
     build_nfl_{qb,rb,wr,te}_score.py   # -> nfl_{pos}_score_2026.csv    (+ .provenance.json)
     build_college_{qb,rb,wr,te}_score.py  # -> college_{pos}_score_2026.csv (+ .provenance.json)
     talent_score_2026.csv              # R29, SUPERSEDED: feeds no rendered column; hash-pinned on disk
     rookie_score_2026.csv              # Fallback only, where a college build has no coverage
     SPEC.md, GUIDE.md, tests/          # Formulas of record, plain-language guide, build tests
+    preregs/PREREG_*.md                # Frozen pre-registrations for the fired talent instruments
   rookie/                              # Rookie Board hit-probability score + its frozen (spent) harness
   seasonal_projections/                # The closed value-signal research campaign
     phase4_band_2026.csv               # FROZEN, RETIRED FROM THE PAGE (2026-07-22): kept for the closed
@@ -320,7 +325,8 @@ fantasy/
     ARTIFACTS.md                       # Every file in this dir: frozen / regenerable / retired
     GUIDE.md                           # Plain-language guide to the board and the campaign
     README.md                          # Design decisions, results, and the honest verdict
-memory/                                # Persistent notes for future work
+memory/                                # Repo-specific engineering notes, the dated changelog
+                                       #   (completed-work-log.md), and dated session logs
 .github/workflows/
   weekly_predictions.yml               # Tue/Thu/Sun automation (spread, totals, agent)
   test.yml                             # Push/PR CI: features + calibration; seasonal/dashboard/talent +

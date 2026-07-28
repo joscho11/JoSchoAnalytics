@@ -31,7 +31,7 @@ Status: RATIFIED (R19, 2026-07-16) with the "k derivation of record" amendment b
 > method-of-moments k vector, the effective (post-shrinkage) weights, the anchor pool, and the
 > md5 of its own CSV. Each is `fantasy/talent/build_{nfl,college}_{pos}_score.py`, and each puts
 > its work behind `if __name__ == "__main__":` so **importing a build must never run it** —
-> pinned by `test_nfl_qb_score.py::test_importing_a_build_never_runs_it`.
+> pinned by `tests/test_nfl_qb_score.py::test_importing_a_build_never_runs_it`.
 >
 > **What changed that sections (a)–(f) get wrong:**
 > - **Artifacts:** eleven now, not three. `talent_score_2026.csv` is **superseded at every
@@ -273,7 +273,7 @@ with a printed collision audit); PERCENTILE NOWHERE in the pipeline (report-rend
 - Display 3c: interval as the primary visual; † / ‡ flags; near-ties sorted by confidence.
 - Advanced view: per-facet z + w exposure behind an expander; report-only percentiles may
   render THERE only (never in the pipeline).
-- Tests retargeted: `test_app_draft_board.py` (AppTest all-tabs), `test_draft_board.py`
+- Tests retargeted: `tests/test_app_draft_board.py` (AppTest all-tabs), `test_draft_board.py`
   (column contract), plus new `tests/test_talent_build.py`. Compliance scan on all new copy.
 
 ## (e) Missing-facet policy
@@ -523,7 +523,7 @@ ratified.
   Reaching a 25-40 band needs a **percentile display map or less shrinkage**, not weights — the
   same conclusion R35 reached.
 
-**Validation:** `test_nfl_qb_score.py` 5/5; full suite 207/207; AppTest 10/10. All 7 pkls, 4 raw
+**Validation:** `tests/test_nfl_qb_score.py` 5/5; full suite 207/207; AppTest 10/10. All 7 pkls, 4 raw
 projection CSVs, `talent_score_2026.csv`, `rookie_score_2026.csv` and `college_qb_score_2026.csv`
 byte-identical.
 
@@ -702,8 +702,8 @@ only; James Madison appears post-2022 reclassification). Cole Payton (North Dako
 Jack Strand (South Dakota State) are the 2 of 26 rookie QBs with no row at all — verified absent
 from every college passing summary 2021-2025, not a join failure. A blank is the honest output.
 
-**Validation:** `test_college_qb_score.py` 7/7; full suite 202/202; AppTest 10/10.
-`test_fantasy_league_pages.py` updated (the rookie board now renders TWO tables; the
+**Validation:** `tests/test_college_qb_score.py` 7/7; full suite 202/202; AppTest 10/10.
+`tests/test_fantasy_league_pages.py` updated (the rookie board now renders TWO tables; the
 direct-PFF-exclusion assertion was EXTENDED to both, not loosened).
 
 ---
@@ -787,7 +787,7 @@ vs PBP 71.1 (4th).
 **Validation:** full suite 207/207; AppTest 10/10. All protected artifacts byte-identical
 (`talent_score_2026.csv` `d7c1a575...`, `rookie_score_2026.csv` `57b5b6c5...`,
 `college_qb_score_2026.csv` `ffa9f0da...`, `nfl_qb_score_2026.csv` `47f8ea81...`, 7 pkls, 4 raw
-projection CSVs). `test_college_qb_score.py` strengthened: the fill test now proves NO existing
+projection CSVs). `tests/test_college_qb_score.py` strengthened: the fill test now proves NO existing
 talent score is ever overwritten, rather than counting non-QB rows.
 
 ### Carried open

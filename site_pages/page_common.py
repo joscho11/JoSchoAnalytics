@@ -11,7 +11,7 @@ from pathlib import Path
 
 import streamlit as st
 
-_HERE = Path(__file__).resolve().parent
+_HERE = Path(__file__).resolve().parents[1]
 
 
 def load_agent_analysis(week: int, season: int) -> dict:

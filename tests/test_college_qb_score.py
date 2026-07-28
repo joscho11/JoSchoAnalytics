@@ -19,7 +19,7 @@ os.environ["APP_OFFLINE"] = "1"
 
 from streamlit.testing.v1 import AppTest
 
-_HERE = Path(__file__).resolve().parent
+_HERE = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_HERE))
 sys.path.insert(0, str(_HERE / "fantasy" / "seasonal_projections"))
 sys.path.insert(0, str(_HERE / "fantasy" / "talent"))

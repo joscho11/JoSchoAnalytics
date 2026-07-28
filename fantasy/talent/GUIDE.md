@@ -211,7 +211,7 @@ in the other.
 | `SPEC.md` | The full ruled architecture, including the frozen-artifact fence |
 | `rho_provenance.json` | The archived college-agreement measurements, all four registered estimators |
 | `research/` | The pre-registration and results of the pressure-facet screen |
-| `tests/` | The build tests plus golden regressions; the repo root adds `test_nfl_qb_score.py` and `test_college_qb_score.py`, which pin the per-position board wiring, the guarded name joins, and the rule that importing a build must never run it |
+| `tests/` | The build tests plus golden regressions; the repo root adds `tests/test_nfl_qb_score.py` and `tests/test_college_qb_score.py`, which pin the per-position board wiring, the guarded name joins, and the rule that importing a build must never run it |
 
 ## 4. Honest results
 

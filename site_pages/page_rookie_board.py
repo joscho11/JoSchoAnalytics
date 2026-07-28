@@ -16,7 +16,7 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-_HERE = Path(__file__).resolve().parent
+_HERE = Path(__file__).resolve().parents[1]
 _BOARD = _HERE / "fantasy" / "rookie" / "board_data"
 _PROJ_DIR = _HERE / "fantasy" / "projections" / "results"
 _PROJ_FILES = ["rb_rookie_board_projection.csv", "wr_rookie_board_projection.csv",

@@ -18,7 +18,7 @@ import page_common
 from dashboard_utils import metric_card, get_confidence, _md_to_html
 from page_common import load_agent_analysis, _MODE_BADGE_COLORS
 
-_HERE = Path(__file__).resolve().parent
+_HERE = Path(__file__).resolve().parents[1]
 
 
 def render():

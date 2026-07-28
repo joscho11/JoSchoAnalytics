@@ -17,7 +17,7 @@ import page_common
 from dashboard_utils import metric_card, get_confidence, _md_to_html
 from dashboard_chrome import _OFFLINE, TABLE_HEIGHT
 
-_HERE = Path(__file__).resolve().parent
+_HERE = Path(__file__).resolve().parents[1]
 
 # Sleeper league IDs in the local history fixture are 18--19 digit snowflakes. This is
 # deliberately a plausibility gate, not a claim that every ID in this range exists.
