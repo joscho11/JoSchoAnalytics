@@ -347,7 +347,15 @@ def test_semantic_gap_colors_and_active_sort_tint():
     model_proj_col = view[board._DISPLAY_COLS].columns.get_loc("model_proj")
 
     active_style = dict(ctx[(0, model_gap_col)])
-    assert active_style["background-color"] == "#1b5e3a"
+    # Assert against the module constant, not a literal, so the tint lives in one place. It must
+    # stay a GREEN surface (Joseph's call 2026-07-27: the old #1b5e3a read as grey on the
+    # deployed dark skin) and stay dark enough that the red/green value encoding rendered on top
+    # of it remains legible.
+    assert active_style["background-color"] == board._SORT_TINT
+    tint = board._SORT_TINT.lstrip("#")
+    r, g, b = (int(tint[i:i + 2], 16) for i in (0, 2, 4))
+    assert g > r and g > b, f"the active-sort tint must read green, got #{tint}"
+    assert max(r, g, b) < 190, f"the sort tint must stay a surface, not a value color: #{tint}"
     assert active_style["font-weight"] == "700"
     assert active_style["font-size"] == "15px"
 
@@ -363,6 +371,34 @@ def test_semantic_gap_colors_and_active_sort_tint():
     assert neg_rgb[0] > neg_rgb[1], "negative gaps must lean red"
     assert pos_rgb[1] > pos_rgb[0], "positive gaps must lean green"
     assert (pos_i, model_proj_col) not in ctx or "color" not in dict(ctx[(pos_i, model_proj_col)])
+
+
+def test_sort_tint_actually_reaches_the_rendered_grid():
+    """The Styler-context assertion above is pandas-side only — it passes even if streamlit
+    never transports the style. Streamlit 1.59 marshals Styler CSS INTO `arrow_data` (there is
+    no top-level `styler` proto field any more), so assert the tint survives all the way into
+    what the front end is actually handed."""
+    import draft_board_2026 as board
+
+    at = _run()
+    proto = None
+    for el in at.dataframe:
+        value = el.value
+        frame = value.data if hasattr(value, "data") else value
+        try:
+            if {"adp_half_ppr", "model_gap"} <= set(frame.columns):
+                proto = el.proto
+                break
+        except Exception:
+            pass
+    assert proto is not None, "board dataframe not found"
+
+    payload = str(proto)
+    tint = board._SORT_TINT.lstrip("#")
+    assert tint in payload, (
+        f"the active-sort tint #{tint} never reached the grid payload — the Styler is being "
+        "computed but not transported, so the board would render with no cell colour at all")
+    assert "background-color" in payload, "no background-color survived into the grid payload"
 
 
 def test_no_forbidden_language_in_rendered_copy():
@@ -414,6 +450,7 @@ if __name__ == "__main__":
     test_overlay_participates_in_the_board_cache_fingerprint()
     test_exact_column_labels_present()
     test_semantic_gap_colors_and_active_sort_tint()
+    test_sort_tint_actually_reaches_the_rendered_grid()
     test_no_forbidden_language_in_rendered_copy()
     test_csv_download_present()
     print("OK  rebuilt board: st.dataframe; guide collapsed; 245 rows; ADP-asc default; "

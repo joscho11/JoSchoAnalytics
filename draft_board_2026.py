@@ -428,6 +428,17 @@ def _sort_board(view, sort_label, ascending):
     return view.sort_values(key, ascending=ascending, na_position="last", kind="stable")
 
 
+# Surface tint marking the ACTIVE SORT column. A green surface rather than a neutral one, so
+# the column you are sorting on reads at a glance. Deliberately darker and less saturated than
+# the value greens in `_rg_color`: the gap and rank numbers render ON TOP of this cell in their
+# own red-to-green scale, so a vivid green here would both wash them out and blur "this column
+# is sorted" (interaction state) into "this number is positive" (meaning).
+# Tuned 2026-07-27: #1b5e3a read as grey on the deployed dark skin, #15803d read a touch bright.
+# This sits almost exactly midway between them in perceived luminance (~89 against 77 and 100 on
+# the 0.2126R + 0.7152G + 0.0722B scale) — clearly green, without pulling the eye off the numbers.
+_SORT_TINT = "#16703a"
+
+
 def _rg_color(ratio: float) -> str:
     """Shared Weekly Fantasy red-to-green semantic ramp.
 
@@ -598,7 +609,7 @@ def _style_board(view: pd.DataFrame, universe: pd.DataFrame, active_sort_key: st
         # A visible green surface tint is deliberately separate from the red/green value
         # encoding. It marks interaction state, not player direction or quality.
         if active_sort_key in df.columns:
-            styles.loc[:, active_sort_key] = "background-color: #1b5e3a"
+            styles.loc[:, active_sort_key] = f"background-color: {_SORT_TINT}"
 
         for key, values in gap_values.items():
             if key not in df.columns:
