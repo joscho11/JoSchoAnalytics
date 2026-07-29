@@ -52,5 +52,59 @@ def test_board_sort_is_numeric_and_sentinels_sink():
           f"no-data rows sink to bottom both ways; default Sleeper-ADP")
 
 
+def test_outside_market_sort_is_numeric_and_blanks_sink():
+    """Same guarantee for the outside-market explorer: every numeric sort orders on the
+    number (never the display string) and blank talent cells stay at the BOTTOM in both
+    directions. The default is Model Proj, and the render pass opens it descending."""
+    sys.path.insert(0, str(_HERE))
+    import draft_board_2026 as board
+
+    outside = board._load_outside_market_players()
+    assert list(board.OUTSIDE_SORT_KEYS)[0] == "Model Proj", \
+        "the default outside-market sort column must be Model Proj"
+    for required in ("Model Proj", "Model Proj Position Rank", "NFL Talent",
+                     "College Talent", "Player"):
+        assert required in board.OUTSIDE_SORT_KEYS, f"missing sort option: {required}"
+    # No price or gap column may be sortable here — none exists for these players.
+    assert not {"adp_half_ppr", "sleeper_proj", "pos_rank", "sleeper_gap", "model_gap"} \
+        & set(board.OUTSIDE_SORT_KEYS.values())
+
+    numeric_keys = {"model_proj", "model_proj_pos_rank_full", "nfl_talent", "college_talent"}
+    blanks_seen = set()
+    for label, key in board.OUTSIDE_SORT_KEYS.items():
+        assert key in outside.columns, f"sort key {key!r} for {label!r} is missing"
+        for asc in (True, False):
+            ordered = board._sort_outside_market(outside, label, ascending=asc)
+            assert len(ordered) == len(outside), f"{label}: rows lost in the sort"
+            if key not in numeric_keys:
+                continue
+            values = pd.to_numeric(ordered[key], errors="coerce").to_numpy()
+            isna = pd.isna(values)
+            n_blank = int(isna.sum())
+            if n_blank:
+                blanks_seen.add(key)
+                assert isna[len(values) - n_blank:].all() \
+                    and not isna[:len(values) - n_blank].any(), \
+                    f"{label} asc={asc}: blank cells not pinned to the bottom"
+            real = values[~isna]
+            if len(real) > 1:
+                if asc:
+                    assert (real[:-1] <= real[1:]).all(), \
+                        f"{label} ascending is not numerically ordered (string sort?)"
+                else:
+                    assert (real[:-1] >= real[1:]).all(), \
+                        f"{label} descending is not numerically ordered (string sort?)"
+
+    # The nulls-last guarantee must actually be exercised, not vacuously true.
+    assert {"nfl_talent", "college_talent"} <= blanks_seen, \
+        f"expected blank talent cells to exercise the sort, saw {blanks_seen}"
+    # Model Proj is complete here by construction, so it has nothing to sink.
+    assert outside["model_proj"].notna().all()
+
+    print(f"OK  outside-market sort: {len(board.OUTSIDE_SORT_KEYS)} options, numeric asc+desc, "
+          f"blank talent cells sink both ways; default Model Proj on {len(outside)} rows")
+
+
 if __name__ == "__main__":
     test_board_sort_is_numeric_and_sentinels_sink()
+    test_outside_market_sort_is_numeric_and_blanks_sink()

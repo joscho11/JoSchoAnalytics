@@ -412,6 +412,239 @@ def test_csv_download_present():
     at = _run()
     dl = at.get("download_button")
     assert any("Download board (CSV)" in b.label for b in dl), "full-board CSV download missing"
+    # The outside-market explorer ships its own, distinctly labelled download.
+    assert any("Download players outside the draft market (CSV)" in b.label for b in dl), \
+        "outside-market CSV download missing"
+    labels = [b.label for b in dl]
+    assert len(set(labels)) == len(labels), f"two downloads share a label: {labels}"
+
+
+# ---------------------------------------------------------------------------------------
+# Players outside the current Sleeper draft market (added 2026-07-28)
+# ---------------------------------------------------------------------------------------
+# The board above is the DRAFT-PRICE universe (245 players with a 2026 Sleeper ADP) and stays
+# exactly that. Everyone else the model projects lives in a collapsed, price-free explorer.
+def _outside_df(at):
+    for el in at.dataframe:
+        v = el.value
+        d = v.data if hasattr(v, "data") else v
+        try:
+            if {"model_proj_pos_rank_full", "nfl_talent"} <= set(d.columns):
+                return d
+        except Exception:
+            pass
+    return None
+
+
+def _outside_entry():
+    """The explorer alone, so its copy can be scanned without the board's captions."""
+    import draft_board_2026 as board
+    board._render_outside_market(len(board._load_board_2026()))
+
+
+def test_outside_market_is_disjoint_from_the_board_and_fully_projected():
+    import draft_board_2026 as board
+
+    df = board._load_board_2026()
+    outside = board._load_outside_market_players()
+
+    assert len(df) == 245, f"the priced board must stay 245 rows, got {len(df)}"
+    assert not set(outside["player_id"]) & set(df["player_id"]), \
+        "outside-market rows must not overlap the 245-player board"
+    assert not outside["player_id"].duplicated().any()
+    assert outside["model_proj"].notna().all(), \
+        "every outside-market row must carry a model projection"
+
+    # Current artifact set: 891 projected players, 245 priced, 648 outside.
+    assert board._projection_pool_size() == 891
+    assert len(outside) == 648, f"expected 648 outside-market rows, got {len(outside)}"
+    assert outside["position"].value_counts().to_dict() == \
+        {"WR": 293, "TE": 160, "RB": 139, "QB": 56}
+
+    # The arithmetic is 891 - 243, not 891 - 245: the two un-projected rookie QBs hold a
+    # board row (they have an ADP) but no projection-artifact row, so they are in neither
+    # the pool nor this list. Deriving the identity from the pool keeps that visible.
+    projected = set(board._load_projections().index)
+    priced_and_projected = int(df["player_id"].isin(projected).sum())
+    assert priced_and_projected == 243
+    assert int(df["model_proj"].isna().sum()) == 245 - priced_and_projected == 2
+    assert len(outside) == board._projection_pool_size() - priced_and_projected
+    # Robust floor in case a future projection refresh moves the exact cardinality.
+    assert len(outside) >= 500
+
+
+def test_dontayvion_wicks_anchor_row():
+    """One fully-verified anchor row, exact in every rendered field.
+
+    Rank note: WR106, not the WR105 the raw projection artifact gives. The explorer starts
+    from `_load_projections()`, so the disclosed analyst overlay is applied before ranking —
+    exactly as it is for the board's own Model Proj Position Rank. Chris Brazzell's overlay
+    (raw 12.8 -> board 55.6) is the single crossing above Wicks' 46.5, and it is the whole
+    difference. Ranking on the raw column instead would contradict
+    test_ranks_gaps_and_download_use_the_adjusted_projection, and would print a rank that
+    disagrees with the Model Proj shown beside it.
+    """
+    import draft_board_2026 as board
+
+    outside = board._load_outside_market_players()
+    rows = outside[outside["player_id"].eq("00-0038393")]
+    assert len(rows) == 1, "Dontayvion Wicks must appear exactly once"
+    wicks = rows.iloc[0]
+    assert wicks["player"] == "Dontayvion Wicks"
+    assert wicks["position"] == "WR"
+    assert wicks["team"] == "PHI"
+    assert float(wicks["model_proj"]) == 46.5
+    assert int(wicks["model_proj_pos_rank_full"]) == 106
+    assert float(wicks["nfl_talent"]) == 67.9
+    assert float(wicks["college_talent"]) == 61.4
+
+    # Pin the cause of 106-vs-105 so a future overlay edit fails loudly here rather than
+    # silently shifting the anchor.
+    projections = board._load_projections()
+    wr = projections[projections["position"].eq("WR")]
+    raw_rank = wr["model_projection_raw"].rank(method="min", ascending=False)
+    assert int(raw_rank.loc["00-0038393"]) == 105
+    crossed = wr[(wr["model_projection_raw"] <= 46.5) & (wr["projection"] > 46.5)]
+    assert crossed["player"].tolist() == ["Chris Brazzell"]
+
+
+def test_outside_market_rank_is_taken_against_the_full_projection_pool():
+    """The rank must be positional across all 891 projected players, never within the 648."""
+    import draft_board_2026 as board
+
+    projections = board._load_projections().reset_index()
+    projections["model_proj"] = pd.to_numeric(projections["projection"], errors="coerce")
+    expected = projections.groupby("position")["model_proj"] \
+                          .rank(method="min", ascending=False)
+    expected.index = projections["player_id"]
+
+    outside = board._load_outside_market_players().set_index("player_id")
+    got = outside["model_proj_pos_rank_full"].astype(float)
+    assert got.equals(expected.loc[got.index].astype(float))
+
+    # A subset-local rank would start at 1 in every position; the full-pool rank does not,
+    # because the highest-projected players at each position are all on the priced board.
+    assert got.groupby(outside["position"]).min().min() > 1
+    assert int(got.max()) <= board._projection_pool_size()
+
+
+def test_outside_market_explorer_renders_collapsed_with_its_own_table():
+    import draft_board_2026 as board
+
+    at = _run()
+    labels = [str(getattr(e, "label", "")) for e in at.expander]
+    matches = [e for e in at.expander
+               if "outside" in str(getattr(e, "label", "")).lower()]
+    assert matches, f"outside-market expander missing: {labels}"
+    assert matches[0].proto.expanded is False, \
+        "the outside-market explorer must ship collapsed"
+    label = str(matches[0].label)
+    outside = board._load_outside_market_players()
+    assert str(len(outside)) in label, f"the count must be derived into the label: {label!r}"
+    assert str(len(board._load_board_2026())) in label
+
+    table = _outside_df(at)
+    assert table is not None, "outside-market dataframe not rendered"
+    assert table.shape[0] == len(outside)
+    assert list(table.columns) == [board._ROW_NO] + board._OUTSIDE_DISPLAY_COLS
+    # Default sort: Model Proj descending.
+    proj = table["model_proj"].to_numpy()
+    assert (proj[:-1] >= proj[1:]).all(), "default sort must be Model Proj descending"
+    assert table[board._ROW_NO].tolist() == list(range(1, len(table) + 1))
+
+    # The priced board is untouched and still the only place price columns appear.
+    board_table = _board_df(at)
+    assert board_table.shape[0] == 245
+    assert not {"adp_half_ppr", "sleeper_proj", "pos_rank", "sleeper_gap",
+                "model_gap"} & set(table.columns), \
+        "the outside-market explorer must show no price or gap columns"
+
+
+def test_outside_market_copy_passes_the_forbidden_language_scan():
+    """Scans the explorer in isolation — its own labels, captions and column tooltips —
+    so the result is not diluted by the board copy rendered above it."""
+    import draft_board_2026 as board
+
+    at = AppTest.from_function(_outside_entry, default_timeout=180).run()
+    assert not at.exception, at.exception
+    assert not at.error, [e.value for e in at.error]
+
+    text = " ".join(
+        [str(m.value) for m in at.markdown]
+        + [str(c.value) for c in at.caption]
+        + [str(getattr(e, "label", "")) for e in at.expander]
+        + [str(b.label) for b in at.get("download_button")]
+        + [m[2] for m in board._OUTSIDE_COLUMN_META]
+        + [m[3] for m in board._OUTSIDE_COLUMN_META]
+        + list(board.OUTSIDE_SORT_KEYS)
+    )
+    hits = _FORBIDDEN.findall(text)
+    assert not hits, f"forbidden language in the outside-market copy: {hits}"
+    # The required disclosures, stated in the explorer itself.
+    assert "no current Sleeper half-PPR ADP" in text
+    assert "same underlying artifacts" in text
+    assert "qualification or coverage rules" in text
+    assert "Different reference pools" in text
+
+
+def test_outside_market_shares_the_board_cache_fingerprint(monkeypatch, tmp_path):
+    """One fingerprint drives both views, so a changed projection or talent artifact can
+    never leave the explorer stale while the board refreshes."""
+    import draft_board_2026 as board
+
+    paths = [p for p, _mtime, _size in board._board_source_fingerprint()]
+    for required in (board.PROJ_RESULTS / "wr_projection_2026.csv",
+                     board.ANALYST_PROJECTION_ADJUSTMENTS,
+                     board.NFL_WR_CSV, board.COLLEGE_WR_CSV,
+                     board.NFL_QB_CSV, board.COLLEGE_QB_CSV,
+                     board.NFL_RB_CSV, board.COLLEGE_RB_CSV,
+                     board.NFL_TE_CSV, board.COLLEGE_TE_CSV):
+        assert str(required) in paths, f"{required.name} is outside the cache fingerprint"
+
+    artifact = tmp_path / "nfl_wr_score_2026.csv"
+    artifact.write_text("gsis_id,score\n00-0038393,67.9\n", encoding="utf-8")
+    monkeypatch.setattr(
+        board, "_board_source_fingerprint",
+        lambda: (("wr_talent", artifact.stat().st_mtime_ns, artifact.stat().st_size),))
+    seen = []
+    monkeypatch.setattr(
+        board, "_load_outside_market_players_cached", lambda fingerprint: seen.append(fingerprint))
+
+    board._load_outside_market_players()
+    # A different SIZE as well as a rewrite: two same-length writes inside one filesystem
+    # mtime tick would leave the fingerprint identical and make this pass vacuously.
+    artifact.write_text("gsis_id,score\n00-0038393,71.25\n00-0000001,50.0\n", encoding="utf-8")
+    board._load_outside_market_players()
+
+    assert len(seen) == 2 and seen[0] != seen[1]
+
+
+def test_outside_market_college_join_is_id_guarded_never_by_name():
+    """The college artifacts carry the NFL id in `gsis_id` for veterans and in
+    `nfl_player_id` for brand-new deploy rows. The join coalesces the two, keeps position in
+    the key, drops ambiguous duplicates, and never falls back to a name match."""
+    import draft_board_2026 as board
+
+    source = board._college_talent_by_join_id
+    for position, path in board._COLLEGE_TALENT_BY_POSITION.items():
+        scores = source(path)
+        assert not scores.index.duplicated().any(), \
+            f"{position}: ambiguous college ids were not dropped"
+        assert scores.notna().all()
+
+    # Wicks' college row carries the NFL id in gsis_id with nfl_player_id blank — the seam
+    # an nfl_player_id-only join would miss entirely.
+    college_wr = pd.read_csv(board.COLLEGE_WR_CSV,
+                             usecols=["gsis_id", "nfl_player_id", "player", "score"],
+                             dtype={"gsis_id": str, "nfl_player_id": str})
+    row = college_wr[college_wr["gsis_id"].eq("00-0038393")]
+    assert len(row) == 1 and pd.isna(row.iloc[0]["nfl_player_id"])
+    assert float(source(board.COLLEGE_WR_CSV).loc["00-0038393"]) == 61.4
+
+    # And no name column is read anywhere in the join path.
+    import inspect
+    join_source = inspect.getsource(source)
+    assert "norm_name" not in join_source and '"player"' not in join_source
 
 
 def test_board_cache_key_tracks_projection_artifact_changes(monkeypatch, tmp_path):
@@ -453,6 +686,13 @@ if __name__ == "__main__":
     test_sort_tint_actually_reaches_the_rendered_grid()
     test_no_forbidden_language_in_rendered_copy()
     test_csv_download_present()
+    test_outside_market_is_disjoint_from_the_board_and_fully_projected()
+    test_dontayvion_wicks_anchor_row()
+    test_outside_market_rank_is_taken_against_the_full_projection_pool()
+    test_outside_market_explorer_renders_collapsed_with_its_own_table()
+    test_outside_market_copy_passes_the_forbidden_language_scan()
+    test_outside_market_college_join_is_id_guarded_never_by_name()
     print("OK  rebuilt board: st.dataframe; guide collapsed; 245 rows; ADP-asc default; "
           "2 rookie QBs kept blank; 35 analyst overlays applied to ranks/gaps/download; "
-          "exact labels; no forbidden language; CSV present")
+          "exact labels; no forbidden language; CSV present; outside-market explorer "
+          "collapsed with 648 disjoint fully-projected rows, full-pool ranks and its own CSV")

@@ -1,0 +1,3 @@
+scope,gate_pct,team_seasons,resolved,row_coverage_pct,game_coverage_pct,attributed_games,total_games,status
+OUTER TEST 2018-2025,95,256,244,95.3,95.4,4058,4254,PASS
+PRIOR-BUILDING 2014-2017,90,128,116,90.6,90.6,1856,2048,PASS

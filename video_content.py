@@ -42,8 +42,8 @@ VIDEOS = [
             "finished. This video makes a call about one player using a model "
             "I've since retired. When testing finished, what held up were "
             "group-level patterns and calibrated ranges — never claims about "
-            "individual players — so I don't make single-player calls anymore, "
-            "and this video doesn't reflect how I work now. It stays up, "
+            "individual players — and this video doesn't reflect how I work now. "
+            "It stays up, "
             "unedited, as part of the record. For what I publish today: the "
             "Draft Board tab."
         ),

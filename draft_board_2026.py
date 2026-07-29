@@ -374,6 +374,128 @@ def _load_board_2026():
 _load_board_2026.clear = _load_board_2026_cached.clear
 
 
+# ---------------------------------------------------------------------------
+# Players outside the current Sleeper draft market (2026-07-28)
+# ---------------------------------------------------------------------------
+# The board above is the DRAFT-PRICE universe: every player carrying a 2026 Sleeper half-PPR
+# ADP. The projection artifacts cover many more players than that. Everyone the model projects
+# who has NO current Sleeper ADP is listed in a separate collapsed explorer instead, with no
+# price columns at all — there is no draft price for them, and none is invented. Sleeper ADP,
+# Sleeper Proj, Position Rank and both gap columns are structurally absent there.
+_NFL_TALENT_BY_POSITION = {
+    "QB": NFL_QB_CSV, "RB": NFL_RB_CSV, "WR": NFL_WR_CSV, "TE": NFL_TE_CSV,
+}
+_COLLEGE_TALENT_BY_POSITION = {
+    "QB": COLLEGE_QB_CSV, "RB": COLLEGE_RB_CSV,
+    "WR": COLLEGE_WR_CSV, "TE": COLLEGE_TE_CSV,
+}
+_OUTSIDE_IDENTITY = ["player_id", "player", "position", "team"]
+_OUTSIDE_COLS = _OUTSIDE_IDENTITY + [
+    "model_proj", "model_proj_pos_rank_full", "nfl_talent", "college_talent",
+]
+
+
+def _nfl_talent_by_gsis(path):
+    """gsis_id -> NFL Talent score from one per-position NFL artifact.
+
+    Same instrument and same artifact the board above reads. An id resolving to more than one
+    row is AMBIGUOUS and dropped, so a bad artifact leaves a blank cell instead of an
+    arbitrary pick.
+    """
+    nfl = pd.read_csv(path, usecols=["gsis_id", "score"], dtype={"gsis_id": str})
+    keep = nfl["gsis_id"].notna() & nfl["score"].notna()
+    nfl = nfl[keep]
+    nfl = nfl[~nfl["gsis_id"].duplicated(keep=False)]
+    return nfl.set_index("gsis_id")["score"]
+
+
+def _college_talent_by_join_id(path):
+    """Coalesced NFL id -> College Talent score from one per-position college artifact.
+
+    ID seam (verified 2026-07-28 against the shipped artifacts): a veteran's college row
+    carries his NFL id in `gsis_id` and leaves `nfl_player_id` blank, while a brand-new
+    deploy row carries it in `nfl_player_id`. Coalescing nfl_player_id OVER gsis_id resolves
+    both without ever falling back to a name join — an unguarded name join across ~2,900
+    college rows would silently collide on common names. Any coalesced id resolving to more
+    than one college row is AMBIGUOUS and dropped outright; that player keeps a blank cell.
+    """
+    college = pd.read_csv(
+        path,
+        usecols=["gsis_id", "nfl_player_id", "score"],
+        dtype={"gsis_id": str, "nfl_player_id": str},
+    )
+    join_id = college["nfl_player_id"].combine_first(college["gsis_id"])
+    keep = join_id.notna() & college["score"].notna()
+    join_id, scores = join_id[keep], college.loc[keep, "score"]
+    ambiguous = join_id.duplicated(keep=False)
+    return pd.Series(
+        scores[~ambiguous].to_numpy(), index=pd.Index(join_id[~ambiguous].to_numpy())
+    )
+
+
+@st.cache_data
+def _load_outside_market_players_cached(source_fingerprint):
+    """Every projected 2026 player who is NOT on the 245-row draft-price board.
+
+    Starts from `_load_projections()`, so the analyst overlay and every other projection rule
+    that governs the board above governs this view too. Identity fields come from the
+    projection artifacts (current 2026 team included).
+    """
+    proj = _load_projections().reset_index()
+    proj["model_proj"] = pd.to_numeric(proj["projection"], errors="coerce")
+    # Positional rank across the COMPLETE projection pool, computed BEFORE the board rows are
+    # removed — so "WR105" here means the same thing it would mean on the board above, not a
+    # rank within this leftover subset.
+    proj["model_proj_pos_rank_full"] = (
+        proj.groupby("position")["model_proj"]
+            .rank(method="min", ascending=False).astype("Int64")
+    )
+    board_ids = set(_load_board_2026_cached(source_fingerprint)["player_id"])
+    out = proj[~proj["player_id"].isin(board_ids)].copy()
+
+    # Talent scores. Unlike the board above — where the two columns are disjoint by artifact
+    # membership — this explorer lets both coexist on one row: a veteran outside the draft
+    # market can have an NFL Talent score AND a college row from his prospect years. They stay
+    # two separate columns on two separate scales and neither feeds anything else.
+    out["nfl_talent"] = pd.NA
+    out["college_talent"] = pd.NA
+    for position, path in _NFL_TALENT_BY_POSITION.items():
+        if not path.exists():
+            continue
+        rows = out["position"].eq(position)
+        out.loc[rows, "nfl_talent"] = out.loc[rows, "player_id"].map(
+            _nfl_talent_by_gsis(path))
+    for position, path in _COLLEGE_TALENT_BY_POSITION.items():
+        if not path.exists():
+            continue
+        rows = out["position"].eq(position)
+        out.loc[rows, "college_talent"] = out.loc[rows, "player_id"].map(
+            _college_talent_by_join_id(path))
+    for column in ("model_proj", "nfl_talent", "college_talent"):
+        out[column] = pd.to_numeric(out[column], errors="coerce")
+    return out[_OUTSIDE_COLS].reset_index(drop=True)
+
+
+@st.cache_data
+def _projection_pool_size_cached(source_fingerprint):
+    """Size of the complete model-projection pool the positional rank is taken against."""
+    return int(len(_load_projections()))
+
+
+def _load_outside_market_players():
+    return _load_outside_market_players_cached(_board_source_fingerprint())
+
+
+def _projection_pool_size():
+    return _projection_pool_size_cached(_board_source_fingerprint())
+
+
+# Same maintenance API as the board loader, keyed on the same fingerprint, so a changed
+# projection or talent artifact invalidates BOTH views together.
+_load_outside_market_players.clear = _load_outside_market_players_cached.clear
+_projection_pool_size.clear = _projection_pool_size_cached.clear
+
+
 @st.cache_data
 def _refresh_date():
     """The ADP snapshot date from the live overlay (ISO string), or None if absent."""
@@ -634,6 +756,145 @@ def _style_board(view: pd.DataFrame, universe: pd.DataFrame, active_sort_key: st
     return _style
 
 
+# --- outside-market explorer: display layer ---------------------------------------------
+# Deliberately its own COLUMN_META. It shares no column with the board's price spine — no
+# Sleeper ADP, no Sleeper Proj, no Position Rank, no gap of either kind — because none of
+# those exist for a player the market has not priced.
+#
+# The point estimates render to one decimal here, where the board above renders whole points.
+# The board compresses three numeric columns plus two gap columns into one wide table and
+# rounds for legibility; this table has three numerics and room to show them exactly.
+_OUTSIDE_COLUMN_META = [
+    ("player", _TXT, "Player", "Player name.", {}),
+    ("position", _TXT, "Pos", "His position.", {"width": "small"}),
+    ("team", _TXT, "Team", "His 2026 team. Blank = not signed / unavailable.",
+     {"width": "small"}),
+    ("model_proj", _NUM, "Model Proj",
+     "Season-total half-PPR points from the same from-scratch model that feeds the board "
+     "above, read from the same projection artifacts. Backtested on 2021–2025 and NOT "
+     "live-validated. There is no Sleeper projection or draft price to compare it against "
+     "for these players, so none is shown.", {"format": "%.1f", "width": "small"}),
+    ("model_proj_pos_rank_full", _NUM, "Model Proj Position Rank",
+     "His rank at his position across the COMPLETE model-projection pool — every projected "
+     "player, including the ones on the draft-price board above — not a rank within this "
+     "list. 1 = highest projected at the position.", {"format": "%d", "width": "small"}),
+    ("nfl_talent", _NUM, "NFL Talent",
+     "The same descriptive per-position NFL Talent instrument the board above uses, scored "
+     "against qualified NFL starters at his position. Descriptive context only; feeds no "
+     "other column. Blank = no NFL history, or below that build's volume floor.",
+     {"format": "%.1f", "width": "small"}),
+    ("college_talent", _NUM, "College Talent",
+     "The same descriptive per-position college charting instrument the board above uses, "
+     "scored against past prospects who reached the NFL and carrying no strength-of-schedule "
+     "adjustment. A different reference pool and a different scale from NFL Talent — the two "
+     "cannot be compared directly or combined. Descriptive context only; feeds no other "
+     "column. Blank = the college build does not cover him (players outside FBS never are).",
+     {"format": "%.1f", "width": "small"}),
+]
+_OUTSIDE_DISPLAY_COLS = [m[0] for m in _OUTSIDE_COLUMN_META]
+_OUTSIDE_EXPORT_NAMES = {m[0]: m[2] for m in _OUTSIDE_COLUMN_META}
+_OUTSIDE_ROW_NO_HELP = ("Row number in this list as currently filtered and sorted — a counter "
+                        "to keep your place, not a ranking.")
+
+# Sortable display column -> underlying field. Insertion order sets the selector order, so
+# "Model Proj" is the default; the render pass defaults its direction to descending.
+OUTSIDE_SORT_KEYS = {
+    "Model Proj": "model_proj",
+    "Model Proj Position Rank": "model_proj_pos_rank_full",
+    "NFL Talent": "nfl_talent",
+    "College Talent": "college_talent",
+    "Player": "player",
+}
+
+
+def _sort_outside_market(view, sort_label, ascending):
+    """Same discipline as the board sort: one explicit numeric path, blanks pinned to the
+    BOTTOM in both directions (na_position='last'), stable so ties keep their order."""
+    key = OUTSIDE_SORT_KEYS.get(sort_label, "model_proj")
+    return view.sort_values(key, ascending=ascending, na_position="last", kind="stable")
+
+
+def _outside_column_config():
+    cfg = {_ROW_NO: st.column_config.NumberColumn("#", help=_OUTSIDE_ROW_NO_HELP, format="%d",
+                                                  width=_ROW_NO_WIDTH, pinned=True)}
+    for key, kind, label, help_, extra in _OUTSIDE_COLUMN_META:
+        col = st.column_config.NumberColumn if kind == _NUM else st.column_config.TextColumn
+        cfg[key] = col(label, help=help_, **extra)
+    return cfg
+
+
+def _render_outside_market(board_size: int):
+    """Collapsed explorer for projected players the draft market has not priced.
+
+    Mirrors the rookie board's collapsed college-player explorer: same instruments, same
+    artifacts, a population that simply does not belong in the table above.
+    """
+    outside = _load_outside_market_players()
+    if outside.empty:
+        return
+    pool = _projection_pool_size()
+    with st.expander(
+        f"Players outside Sleeper's current {board_size}-player draft market ({len(outside)})",
+        expanded=False,
+    ):
+        st.caption(
+            "These players carry no current Sleeper half-PPR ADP, so there is no draft price "
+            "to set a projection beside — which is why they are not on the price-comparison "
+            "board above rather than being ranked below it. No draft price, Sleeper "
+            "projection or rank difference is shown here, because none exists for them.")
+        st.caption(
+            "The projections and talent scores are read from the same underlying artifacts "
+            "the board above reads — the same model and the same per-position talent "
+            "instruments, with nothing recomputed for this list. A blank talent cell means "
+            "the player did not meet that instrument's qualification or coverage rules.")
+        st.caption(
+            "NFL Talent ranks NFL players against NFL players; College Talent ranks college "
+            "players against past prospects who reached the NFL. Different reference pools on "
+            "different scales — read each on its own, and never compare or blend them. Unlike "
+            "the board above, a player here can carry both: a veteran outside the draft market "
+            "can have an NFL score and a college score from his prospect years, and those two "
+            "numbers still say nothing about each other.")
+        st.caption(
+            f"**Model Proj Position Rank** is his rank at his position across all {pool:,} "
+            "projected players — the board's rows included — not a rank within these "
+            f"{len(outside):,}. All of it is descriptive information for your own judgment.")
+
+        fc1, fc2, fc3, fc4 = st.columns([1.4, 1.3, 1.6, 1.15])
+        with fc1:
+            pos = st.multiselect("Position", ["QB", "RB", "WR", "TE"],
+                                 default=["QB", "RB", "WR", "TE"], key="db26_out_pos")
+        with fc2:
+            name = st.text_input("Player search", "", key="db26_out_search")
+        with fc3:
+            sort_label = st.selectbox("Sort by", list(OUTSIDE_SORT_KEYS), index=0,
+                                      key="db26_out_sortby")
+        with fc4:
+            order = st.radio("Order", ["Descending", "Ascending"], index=0,
+                             horizontal=True, key="db26_out_sortdir")
+
+        view = outside[outside.position.isin(pos)]
+        if name.strip():
+            view = view[view.player.str.contains(name.strip(), case=False, na=False)]
+        view = _sort_outside_market(view, sort_label, ascending=order == "Ascending")
+
+        display_view = view.copy()
+        display_view.insert(0, _ROW_NO, range(1, len(display_view) + 1))
+        st.dataframe(
+            display_view[[_ROW_NO] + _OUTSIDE_DISPLAY_COLS],
+            width="stretch", height=TABLE_HEIGHT, hide_index=True,
+            key=(f"db26_outside_grid_{OUTSIDE_SORT_KEYS[sort_label]}_{order}_"
+                 f"{'-'.join(sorted(pos))}_{name.strip().lower()}_{len(view)}"),
+            column_config=_outside_column_config())
+        st.caption(f"Showing {len(view):,} of {len(outside):,} — blank projection or talent "
+                   "cells sort to the bottom in either direction.")
+        st.download_button(
+            "Download players outside the draft market (CSV)",
+            data=view[_OUTSIDE_DISPLAY_COLS].rename(columns=_OUTSIDE_EXPORT_NAMES)
+                     .to_csv(index=False).encode("utf-8"),
+            file_name="draft_board_2026_outside_market.csv", mime="text/csv",
+            key="db26_outside_dl")
+
+
 def render():
     df = _load_board_2026()
 
@@ -748,6 +1009,10 @@ def render():
         key="db26_dl")
     st.caption("The download carries every column, including any the compact view hides, for the "
                "rows currently filtered and in the current sort order.")
+
+    # Everyone the model projects who has no 2026 Sleeper ADP — collapsed, price-free, and
+    # deliberately below the board so the priced universe above stays exactly what it was.
+    _render_outside_market(len(df))
 
     st.markdown("---")
     st.caption(

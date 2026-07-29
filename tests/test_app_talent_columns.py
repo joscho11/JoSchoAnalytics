@@ -36,6 +36,37 @@ def test_talent_columns_present_and_disjoint():
     assert both.empty, f"rows with BOTH talent scores populated: {both.player.tolist()}"
 
 
+def test_outside_market_explorer_may_carry_both_talent_scores():
+    """The disjointness rule above is a property of the PRICED BOARD, where the two columns
+    are populated by artifact membership. The outside-market explorer is a different
+    population and a different join: a veteran the market has not priced can hold an NFL
+    Talent score AND a college score from his prospect years. They stay two columns on two
+    scales — nothing blends them, and neither feeds any other column."""
+    import draft_board_2026 as db
+    db._load_outside_market_players.clear()
+    outside = db._load_outside_market_players()
+
+    for c in ("nfl_talent", "college_talent"):
+        assert c in outside.columns, c
+    both = outside[outside.nfl_talent.notna() & outside.college_talent.notna()]
+    assert not both.empty, \
+        "the explorer must be able to show both talent scores on one player"
+    wicks = both[both.player_id.eq("00-0038393")]
+    assert len(wicks) == 1, "Dontayvion Wicks is the verified both-scores anchor"
+    assert float(wicks.iloc[0]["nfl_talent"]) == 67.9
+    assert float(wicks.iloc[0]["college_talent"]) == 61.4
+
+    # No derived column fuses the two, and neither is a sort key that mixes scales.
+    labels = {m[2] for m in db._OUTSIDE_COLUMN_META}
+    assert "NFL Talent" in labels and "College Talent" in labels
+    assert not any(re.search(r"talent", c, re.I) and re.search(r"(gap|blend|combined)", c, re.I)
+                   for c in outside.columns)
+
+    # The priced board's own disjointness is untouched by any of this.
+    board = _board_df()
+    assert board[board.nfl_talent.notna() & board.college_talent.notna()].empty
+
+
 def test_no_derived_column_fuses_talent_with_gap():
     import draft_board_2026 as db
     df = _board_df()

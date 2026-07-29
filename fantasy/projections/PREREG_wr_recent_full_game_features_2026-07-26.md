@@ -578,3 +578,162 @@ a demanding one.
 29 protected artifacts snapshotted; all 10 pinned hashes verified; **byte-identical before and after
 `--check`**. No challenger metric — no MAE, RMSE, Spearman, bias or bootstrap for any arm — was
 computed or printed by `--check`.
+
+---
+
+## 16. OUTCOMES
+
+*(appended after the fire; nothing above this line is edited)*
+
+**FIRED 2026-07-28, once, wall clock 79 minutes, exit code 0. Harness SHA256
+`0a4c71c3bbd8ac190432490214ca0ab4f475350850b572bbfff25b7b008ea312`, verified unchanged immediately
+before the shot and unchanged after. No harness defect surfaced during execution.**
+
+# VERDICT: REJECT — RECENT FULL-PARTICIPATION FEATURES
+
+**Six of nine gates fail. The block makes the model worse on every primary axis.**
+
+### 16.1 Exact G0–G8 arithmetic
+
+| Gate | Required | Measured | Result |
+|---|---|---|---|
+| **G0** | walk-forward + baseline reproduces the corrected-data baseline | selections match; **n 1,242, MAE 30.06241 vs target 30.062, ρ 0.746405 vs target 0.74640** | **PASS** |
+| **G1** | ΔMAE ≤ **−0.26** | **+0.1338** | **FAIL** — wrong sign; misses by 0.394 |
+| **G2** | bootstrap 95% **upper** bound < 0 | **[−0.3056, +0.5722]** | **FAIL** — upper +0.5722 |
+| **G3** | Δρ ≥ 0 | **−0.00275** | **FAIL** |
+| **G4** | MAE better in ≥ **3 of 5** seasons | **1 of 5** (2023 only) | **FAIL** |
+| **G5** | top-24 ΔMAE ≤ +0.26 **and** Δ\|bias\| ≤ 2.0 | ΔMAE **+0.6140**, Δ\|bias\| +0.4921 | **FAIL** on MAE; bias limb passes |
+| **G6** | ΔRMSE ≤ +1.0% | +0.0827 (**+0.19%**) | **PASS** |
+| **G7** | deploy L4 ≥ .60, L8 ≥ .40, drops ≤ 10pp | **L4 0.5469, L8 0.3878**; drops +0.0654 / +0.0725 | **FAIL** on both floors |
+| **G8** | slate within ±10%; >25-pt movers explained | **−0.27%**, 2 movers | **PASS** |
+
+**G7 was already failing at `--check`, before any challenger model was fitted** (§15.1). No gate was
+re-cut, and the shot was taken as pre-registered to put the full arithmetic on the record.
+
+### 16.2 Arm metrics — primary panel, n = 1,006, 363 player clusters
+
+| Arm | MAE | RMSE | ρ | bias | median bias | pred SD (actual 69.89) |
+|---|---:|---:|---:|---:|---:|---:|
+| **BASE** | **30.9757** | 43.5112 | **0.75615** | +1.315 | −3.929 | 58.32 |
+| **FIXED-FEATURE** | 31.1095 | 43.5939 | 0.75339 | +1.151 | −4.018 | 58.76 |
+| **RESELECTED-FEATURE** | 31.0851 | 43.7286 | 0.74854 | +0.761 | −4.506 | 58.91 |
+
+RESELECTED−BASE ΔMAE **+0.1094**, bootstrap [−0.4971, +0.7144], ρ **0.74854 vs 0.75615**.
+**The report-only arm is also worse, and worse on rank than FIXED-FEATURE**, so re-running selection
+rescues nothing. Season-clustered t(4) on ΔMAE: **p = 0.2499**.
+
+Note on comparability: BASE here is the **nested-selected** corrected baseline (30.9757). It is not
+the 31.071 fixed-config LightGBM figure recorded in
+`memory/seasonal-wr-negative-gap-experiments-2026-07.md`; different selection procedure, same panel.
+
+### 16.3 Per-season
+
+| Season | n | MAE BASE | MAE FIXED | ΔMAE | ρ BASE | ρ FIXED |
+|---|---:|---:|---:|---:|---:|---:|
+| 2021 | 210 | 36.0768 | 36.4515 | **+0.3747** | 0.67331 | 0.67100 |
+| 2022 | 212 | 29.8402 | 30.0149 | **+0.1747** | 0.70337 | 0.69851 |
+| 2023 | 193 | 27.9230 | 27.7432 | **−0.1798** | 0.81364 | 0.81299 |
+| 2024 | 199 | 31.9855 | 32.0070 | **+0.0215** | 0.77024 | 0.77862 |
+| 2025 | 192 | 28.6724 | 28.9291 | **+0.2567** | 0.81991 | 0.80775 |
+
+The single improving season, 2023, improves by less than the noise floor, and its ρ still falls.
+
+### 16.4 Frozen top-24 cohort (BASE rank, byte-identical rows in all arms), n = 120
+
+| Arm | MAE | ρ | bias |
+|---|---:|---:|---:|
+| BASE | 51.6880 | **0.27799** | −5.696 |
+| FIXED-FEATURE | 52.3020 | **0.22003** | −6.188 |
+| RESELECTED-FEATURE | 52.7062 | 0.23219 | −5.631 |
+
+**The draftable cohort is where the block does most damage**: ΔMAE +0.6140, and within-cohort rank
+correlation falls **0.278 → 0.220**. The established WR deficiency is within-cohort discrimination;
+this block moves it the wrong way.
+
+### 16.5 The mechanism did not do what the hypothesis said
+
+**The exclusion proxy is not principally catching injury exits.** On the 12,154 excluded active WR
+weeks:
+
+- median `offense_pct` **0.180**, median `offense_snaps` **12** — these are low-usage rotational
+  weeks, not "played most of the game and left";
+- **72.5%** fail both floors, 24.4% fail the share floor alone, only **2.5%** fail the 20-snap floor
+  alone;
+- **ρ(excluded active games, `prior_games_missed`) = −0.0857** over n = 2,427 — essentially zero and
+  slightly *negative*. Players with more excluded games are **not** the players who missed more games;
+- classification splits **57.5% ISOLATED / 42.5% TERMINAL_RUN** (all positions: 53.7% / 46.3%).
+
+So the second of the two elements that justified this second look — *filtering probable partial-game
+injury exits* — is in practice **removing genuine low-role games**, which is the failure mode §5's
+caveat anticipated. `prior_active_games_excluded` was carried precisely to preserve that negative role
+information, and it lands at gain rank **36 of 48**.
+
+**The block is used and is still useless.** It takes **15.52%** of total gain in the FIXED deploy
+LightGBM, spread thinly: best block column is `last4_half_ppr_pg` at rank **16 of 48** (1.96% gain),
+and both flags `has_last4_full` / `has_last8_full` take **zero splits**. This is not the
+`talent_score` pattern of a feature the model ignores — the trees spend real capacity on it and
+predict slightly worse.
+
+### 16.6 Coverage and 2026 deploy
+
+Coverage rises monotonically through the panel (L4 .586→.641, L8 .405→.500 across 2021–2025) and then
+**falls at deploy to .547 / .388** — the 2026 non-rookie WR slate simply contains more players without
+four or eight qualifying 2025 games. Slate mean **47.04 → 46.92 (−0.27%)**; only **2** movers beyond
+±25 points, both with fully populated windows and a generic cause visible in the block columns:
+Puka Nacua −33.5 (12 qualifying games, 4 excluded) and Jaylen Waddle +26.9 (15 qualifying, 1
+excluded). **Neither is evidence of anything** and no named-player movement was used in any gate.
+
+### 16.7 Team-allocation movement — report-only, and it moves the wrong way
+
+On the non-rookie-only panel (160 admissible team-seasons; **not** comparable in level to the audit's
+1,242-row panel — only the movement is meaningful): allocation error **+0.026639 → +0.028478**
+(+0.001838), rank 1–2 share residual **−0.013320 → −0.014239**, rank 7+ **+0.003998 → +0.007531**.
+Every one of the three moves **away** from zero. Consistent with the audit's finding that there is no
+allocation defect to fix, and this block does not improve the statistics anyway.
+
+### 16.8 Cohort by prior-season games played (report-only)
+
+`0` games n=65 −0.048 · `1–8` n=218 −0.001 · `9–12` n=168 **+0.417** · `13–16` n=363 +0.043 ·
+`17+` n=176 **+0.340**. The block is worst on the 9–12-game cohort — exactly the interrupted-season
+players it was designed to describe.
+
+### 16.9 Pre-committed reading, applied
+
+**REJECT is final.** No threshold change, no window change, no last-four-only or last-eight-only or
+flag-only ablation, no alternate cohort, no season removal, no redefinition of full participation, no
+alternate percentile, no player-specific rescue. Per §10.2 this closes the block whole.
+
+Read honestly against §15.5: this design was **underpowered** to certify a −0.26 effect
+(power ≈ 0.05–0.13 at plausible SDs). That caveat protects a *small negative*; it does not apply
+here. The point estimate is **+0.1338 — the wrong side of zero** — rank correlation falls, 4 of 5
+seasons worsen, the draftable cohort worsens by more than twice the noise floor with ρ dropping
+0.278 → 0.220, the report-only reselected arm is also worse, and G7 failed on coverage before a model
+was fitted. Low power does not rescue a result that is negative on every axis at once.
+
+**Within-season recent-role information for non-rookie WRs is now closed across two independent
+families**: the rejected trajectory family (slopes, ramps, halves) and this levels-plus-exclusion
+family. Combined with the rejected cross-season role state, role *timing* has been tested three ways
+and has produced nothing.
+
+**No production change is implemented or recommended.** No model, projection, board file, overlay or
+dataset was touched.
+
+### 16.10 Integrity
+
+**29 protected artifacts byte-identical before and after both `--check` and `--fire`; drift 0.** All
+10 pins verified, including `wr_veteran_model.pkl 17dfbcf01054bdd5ce032f2b55df9ad2`,
+`wr_rookie_model.pkl 6c9a3f3ed02ce32c53594f383aade882`,
+`rookie_ppg_model.pkl 872467b2295fce27761f9e04da01b6e8` and both `season_dataset` CSVs. Every
+generated file is outside the repo, in `C:\tmp\wr_recent_full_game_features_2026-07-26`
+(`summary.json`, `per_season.csv`, `coverage.csv`, `feature_usage.csv`, `deploy_move_WR.csv`,
+`full_game_exclusion_audit.csv`, `fire.log`). The retrain scratch was read read-only for the rookie
+panel and nothing there was edited. The two repo files created are this prereg and the harness.
+
+**Concurrent-modification disclosure.** The working tree was clean at session start; `.git/index` was
+rewritten at **12:03:50 ET on 2026-07-28 by a process other than this task**, staging a large
+repository reorganization (preregs → `fantasy/projections/preregs/`, pages → `site_pages/`, tests →
+`tests/`, plus modified `app.py`, `CLAUDE.md`, `README.md`). None of the fire's inputs were among the
+changed paths and every protected artifact survived byte-identical. Nothing was staged, committed,
+reverted, cleaned or absorbed by this task. **Note for the record:** this prereg and its harness were
+written to the paths named in the task specification, which is one directory above where that
+reorganization has since moved the other preregs.
