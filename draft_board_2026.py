@@ -555,10 +555,15 @@ def _sort_board(view, sort_label, ascending):
 # the value greens in `_rg_color`: the gap and rank numbers render ON TOP of this cell in their
 # own red-to-green scale, so a vivid green here would both wash them out and blur "this column
 # is sorted" (interaction state) into "this number is positive" (meaning).
-# Tuned 2026-07-27: #1b5e3a read as grey on the deployed dark skin, #15803d read a touch bright.
-# This sits almost exactly midway between them in perceived luminance (~89 against 77 and 100 on
-# the 0.2126R + 0.7152G + 0.0722B scale) — clearly green, without pulling the eye off the numbers.
-_SORT_TINT = "#16703a"
+# Tuning history — BOTH earlier values were rejected by Joseph for reading GREY on the deployed
+# dark skin: #1b5e3a (2026-07-27) and then #16703a (2026-07-29). Both were green by hex but too
+# dark (HSL lightness 24% and 26%) to read as green against the near-black table surface. This
+# one lifts lightness to 33% and keeps the hue, so it reads green at a glance while staying well
+# below the value greens rendered on top of it (rgb(0,200,82) at full ratio).
+# DO NOT darken it back below the floor pinned in tests/test_board_page.py
+# (`test_semantic_gap_colors_and_active_sort_tint`): green channel >= 120 and green dominant over
+# red/blue by >= 60. A change that trips those is the grey regression coming back.
+_SORT_TINT = "#1a8f45"
 
 
 def _rg_color(ratio: float) -> str:

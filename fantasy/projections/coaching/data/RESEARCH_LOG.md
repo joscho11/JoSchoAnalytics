@@ -1,6 +1,6 @@
 # Actual-play-caller research log
 
-Table checksum (md5): `ac9883e98cdb1bd04a1c0978746cc023`
+Table checksum (md5): `391be44c4e4205ceea6456ea935794c0`
 
 ## Coverage vs pre-registered gates (T0)
 

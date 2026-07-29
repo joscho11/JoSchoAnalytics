@@ -356,6 +356,12 @@ def test_semantic_gap_colors_and_active_sort_tint():
     r, g, b = (int(tint[i:i + 2], 16) for i in (0, 2, 4))
     assert g > r and g > b, f"the active-sort tint must read green, got #{tint}"
     assert max(r, g, b) < 190, f"the sort tint must stay a surface, not a value color: #{tint}"
+    # Grey-regression floor. Joseph rejected #1b5e3a and #16703a for reading grey on the deployed
+    # dark skin: both were green by hex but too dark to read as green. A tint that trips either
+    # bound below is that regression returning, so fail here rather than on the live site.
+    assert g >= 120, f"the sort tint is too dark to read as green — it will look grey: #{tint}"
+    assert g - max(r, b) >= 60, (
+        f"the sort tint's green is not dominant enough over red/blue — it will look grey: #{tint}")
     assert active_style["font-weight"] == "700"
     assert active_style["font-size"] == "15px"
 

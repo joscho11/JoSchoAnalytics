@@ -1,11 +1,19 @@
 # PRE-REGISTRATION — Coach-Quality Quantification for Season-Total Projections
 
 **Date frozen:** 2026-07-28
-**Revision:** **v3** — supersedes v1 and v2 in full.
+**Revision:** **v3.2** — supersedes v1, v2, v3 and v3.1 in full.
 **Statistical design:** **RATIFIED by Joseph 2026-07-28**, subject to the v3 amendments below.
 **Execution status:** **RATIFIED AND T0 PASSED — 2026-07-28.**
-**Frozen source table:** `coaching/data/actual_play_caller.csv`, md5 `ac9883e98cdb1bd04a1c0978746cc023`
-**No model has been fit under any version of this design.**
+**Frozen source table:** `coaching/data/actual_play_caller.csv`, md5 `391be44c4e4205ceea6456ea935794c0` (v3.2; supersedes `ac9883e98cdb1bd04a1c0978746cc023`)
+**FITTING STATUS (corrected 2026-07-28, end of session):** No player-projection arm (0-5) has been
+fit and no outer projection result has been examined. **Preliminary Arm 3 nuisance and coach-effect
+models WERE fit** — `RidgeCV` expectation models (one per season) and `RidgeCV`+`Ridge`
+cross-classified coach-effect models — and their alpha choices and effect magnitudes were observed
+before audit. An earlier claim that "nothing has been fit" was inaccurate and is withdrawn.
+Five confirmed defects gate the next step; see `coaching/AUDIT_TODO.md`. **The observed effect
+magnitudes must not be interpreted** — Stage-2 tuning did not resolve (9 of 10 target-season
+fits selected the grid-maximum alpha; 1,194/1,292 rows = 92.4% row-weighted) and defects 1-4
+remain. The corrected values could increase, decrease, change sign, or converge to zero.
 **Subproject:** `fantasy/projections/coaching/`
 
 > **T0 FINAL 2026-07-28 — BOTH GATES PASS.**
@@ -14,7 +22,103 @@
 > 410 resolved rows, all `high` confidence, 108 distinct persons, **18 dated midseason splits,
 > 0 overlapping week ranges, 0 duplicate attributions**. The outer window was NOT narrowed and
 > nominal OC was NOT substituted at any point.
-> Table frozen at md5 `ac9883e98cdb1bd04a1c0978746cc023`.
+> Table frozen at md5 `391be44c4e4205ceea6456ea935794c0` (v3.2; the T0 numbers above were RECOMPUTED from the corrected table and are unchanged).
+
+### Amendment record (v3.1 -> v3.2, Joseph 2026-07-28, PREFIT)
+
+**`n_games_attributed` corrected in the canonical table; table re-frozen under a new md5.**
+
+- **Superseded md5:** `ac9883e98cdb1bd04a1c0978746cc023`
+- **New canonical md5:** `391be44c4e4205ceea6456ea935794c0`
+- Superseded copy retained on disk as `actual_play_caller.SUPERSEDED_ac9883e9.csv`.
+
+**Reason.** The column was originally derived by WEEK ARITHMETIC
+(`min(week_end, team_games) - week_start + 1`), which over-counts any segment spanning a bye week.
+GB 2015 weeks 1-14 span 14 WEEKS but only 13 GAMES (bye in wk 7). The column feeds exposure weights
+and the frozen `g/(g+32)` reliability directly, so a known-wrong canonical value is not worth
+preserving to retain a checksum. **The checksum is an integrity tripwire, not the scientific object.**
+
+**Exact diff — 14 rows, 7 team-seasons, 2015-2017 only, every one a clean +1/-1 pair:**
+
+| season | team | person_id | weeks | old | new |
+|---|---|---|---|---|---|
+| 2015 | GB | tom_clements | 1-14 | 14 | **13** |
+| 2015 | GB | mike_mccarthy | 15-99 | 2 | **3** |
+| 2015 | LA | frank_cignetti | 1-13 | 13 | **12** |
+| 2015 | LA | rob_boras | 14-99 | 3 | **4** |
+| 2015 | MIA | bill_lazor | 1-12 | 12 | **11** |
+| 2015 | MIA | zac_taylor | 13-99 | 4 | **5** |
+| 2015 | TEN | ken_whisenhunt | 1-8 | 8 | **7** |
+| 2015 | TEN | jason_michael | 9-99 | 8 | **9** |
+| 2016 | JAX | greg_olson | 1-8 | 8 | **7** |
+| 2016 | JAX | nathaniel_hackett | 9-99 | 8 | **9** |
+| 2016 | MIN | norv_turner | 1-8 | 8 | **7** |
+| 2016 | MIN | pat_shurmur | 9-99 | 8 | **9** |
+| 2017 | KC | andy_reid | 1-12 | 12 | **11** |
+| 2017 | KC | matt_nagy | 13-99 | 4 | **5** |
+
+**Sourced evidence did NOT change.** A strict diff allowlist asserts that `n_games_attributed` is the
+ONLY column with any changed cell, and that row count and row order are identical. Unchanged:
+season, team, person_id, actual_play_caller, play_caller_role, week_start, week_end, nominal_oc,
+head_coach, source_url, source_date, source_publisher, confidence, ambiguity_status,
+pc_is_head_coach, pc_is_nominal_oc, note.
+
+**Counting rules.**
+- *Historical (season <= 2025):* distinct actual REG games inside `[week_start, week_end]`, from the
+  PBP-derived weekly components using the same normalised team identifiers as
+  `build_segment_offense.py`. Weeks spanning a bye are not games.
+- *Prospective (2026):* games have not occurred, so the count is REG games **scheduled** for that team
+  in the week range, from the nflverse schedule. Explicitly a scheduled count, **not** set to zero
+  because PBP is unavailable. Zero 2026 rows changed (already 17).
+
+**Reconciliation tests now enforced** (`fix_games_attributed.py`, re-checked in
+`build_segment_offense.py`): canonical count == independently computed `pbp_games` on every
+historical segment (0 of 378 disagree); every counted game inside the sourced week range; segment
+sums == team distinct REG games for all 360 resolved historical team-seasons; no overlapping ranges;
+no played game inside a resolved range left unassigned.
+
+**T0 RECOMPUTED, not assumed.** Outer 2018-2025 **244/256 rows, 4,058/4,254 games**; prior-building
+2014-2017 **116/128 rows, 1,856/2,048 games**. Identical to the pre-correction values, as expected
+from paired +1/-1 corrections that leave every team-season total unchanged. Both gates still PASS.
+
+**No player-projection arm was fit and no outer projection outcome was examined** at any point in
+this correction.
+
+### Amendment record (v3 → v3.1, Joseph 2026-07-28, PREFIT)
+
+**Phase 1 audit required before any player-projection arm is fit.** Five defects confirmed against
+the preliminary Arm 3 implementation, all recorded with their pre-audit observations in
+`coaching/AUDIT_TODO.md` so no later choice can be justified by which option yields larger effects:
+
+1. **Segment attribution** — play-caller segments currently inherit FULL team-season offense values;
+   both callers in a split receive identical metrics. Must be rebuilt from PBP inside each sourced
+   `week_start:week_end`, placed against the frozen within-season league distribution.
+2. **Arm 3 exposure** — only the primary caller enters the design matrix, discarding all 18 splits'
+   secondary callers. Replace with game-share exposure weights (HC changes too), preserving the
+   HC==PC collapse without duplication.
+3. **Reliability** — coded as `n_seasons/(n_seasons + 32/16)`; the frozen formula is
+   `prior_games/(prior_games + 32)` on attributed games, emitted separately for HC and PC.
+4. **Expectation controls** — `prior_qb_id` absent; no season indicators despite a code comment
+   claiming them. Add the categorical with unknown handling and implement training-season effects,
+   or file a prefit amendment for an identifiable alternative for an unseen season.
+5. **Regularisation** — `RidgeCV` uses row-level CV, not season-blocked. Stage-2 tuning did NOT
+   resolve: **9 of 10 target-season fits selected the grid-maximum alpha of 1000** (primary
+   diagnostic), emitting **1,194 of 1,292 effect rows = 92.4% row-weighted**. Stage-1 alpha was
+   never persisted, so 92.4% describes **Stage 2 only**.
+   **Interpretation (corrected).** Ridge minimises `||y-Xb||^2 + alpha*||b||^2`, so an optimum at
+   the grid maximum means the validation wanted **at least** that much shrinkage — widening the
+   grid can only select a LARGER alpha and shrink coefficients FURTHER. A ceiling on alpha is a
+   floor on effect size, not a cause of over-shrinkage. An earlier claim that the boundary
+   'mechanically crushed' the effects was backwards and is withdrawn. **A persistent preference
+   for very large alpha may itself be a genuine finding** that coach identities add little after
+   controls; that possibility is NOT ruled out.
+   **Fix + frozen boundary protocol:** season-blocked inner validation in both stages, with
+   preprocessing fit inside each inner-training split; a preregistered broad log-spaced grid; on a
+   boundary optimum, expand in that direction by a preregistered number of decades for a
+   preregistered maximum number of iterations; if the upper boundary is still preferred at the
+   frozen maximum, RECORD IT as evidence favouring effective complete pooling rather than forcing
+   an interior solution; persist and report Stage-1 and Stage-2 diagnostics separately, at both
+   fit level and row level. Never enlarge the grid until a coach effect becomes non-zero.
 
 ### Amendment record (v2 → v3, Joseph 2026-07-28)
 
