@@ -1084,30 +1084,10 @@ AUDIT_ALLOWED_CALLEES = frozenset({"RuntimeError", "_production_engine", "arm0_d
 
 # Executable forms that could write the environment lock. Enumerated, not inferred.
 ENV_NAMES = frozenset({"environ"})
-ENV_MODULE = "os"
-# `match` statements are 3.10+; the AST classes are absent on older interpreters.
-_MatchAs = getattr(ast, "MatchAs", None)
-_MatchStar = getattr(ast, "MatchStar", None)
-_MatchMapping = getattr(ast, "MatchMapping", None)
 ENV_WRITE_METHODS = frozenset({"update", "setdefault", "pop", "clear", "popitem", "__setitem__",
                                "__delitem__"})
 ENV_WRITE_FUNCTIONS = frozenset({"putenv", "unsetenv"})
 LOCK_NAME = "REAL_FIT_AUTHORIZED"
-ENTRY_POINT_NAME = "assemble_real_panel"
-
-# The ONE wording for a satisfied boundary. The prereg, requirement matrix, stop report, the
-# `no_real_outcome_access` docstring and the C10 preflight row all quote this same phrase, so the
-# contract cannot be described one way in a document and a different way in the result it produces.
-#
-# The canonical spelling uses an ASCII hyphen, never an en dash: v3.9d claimed "one wording everywhere"
-# while the runtime printed `C1-C7` and every document wrote `C1–C7` — visually identical, never equal.
-# The detail below is a PLAIN LITERAL, not an f-string, so these exact bytes appear in this source file
-# and `test_the_exact_success_detail_appears_verbatim_in_every_document` can check the module too.
-NO_OUTCOME_CONTRACT_NAME = "C1-C7 + C4b"
-NO_OUTCOME_OK_DETAIL = (
-    "both v3.9 modules satisfy the frozen structural no-outcome contract C1-C7 + C4b (scope, "
-    "executable-only, no banned callee, no banned token in any executable string, no reading through "
-    "an exemption, sealed entry point, single False lock, no environment write)")
 
 
 def _executable_tree(src):
@@ -1192,212 +1172,57 @@ def _exemption_laundering(tree):
 
 
 def _lock_assignments(tree):
-    """Every executable binding of the lock constant, as (kind, node, value, direct).
-
-    Uses the shared binding walker, so destructuring (`(REAL_FIT_AUTHORIZED,) = (True,)`) and loop
-    targets (`for REAL_FIT_AUTHORIZED in [True]:`) are bindings too — both previously invisible here.
-    A destructured binding has no single inspectable value, so `direct` is False and it can never be
-    the canonical one.
-    """
+    """Every executable assignment form that targets the lock constant, as (kind, node, value)."""
     out = []
-    for kind, node, _ln, direct in name_bindings(tree, LOCK_NAME):
-        value = getattr(node, "value", None) if direct else None
-        out.append((kind, node, value, direct))
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign):
+            for t in node.targets:
+                if isinstance(t, ast.Name) and t.id == LOCK_NAME:
+                    out.append(("Assign", node, node.value))
+        elif isinstance(node, ast.AnnAssign):
+            if isinstance(node.target, ast.Name) and node.target.id == LOCK_NAME:
+                out.append(("AnnAssign", node, node.value))
+        elif isinstance(node, ast.AugAssign):
+            if isinstance(node.target, ast.Name) and node.target.id == LOCK_NAME:
+                out.append(("AugAssign", node, node.value))
+        elif isinstance(node, ast.NamedExpr):
+            if isinstance(node.target, ast.Name) and node.target.id == LOCK_NAME:
+                out.append(("NamedExpr", node, node.value))
     return out
 
 
-def _is_env_ref(node):
-    """True only for the PROCESS environment: `os.environ`, or a bare `environ`.
-
-    v3.9d follow-up: this used to accept ANY attribute named `environ`, so an unrelated
-    `config.environ = {}` was reported as opening the environment lock. The base must be the name `os`.
-    The bare-`environ` case is retained deliberately — `from os import environ` is a real import form and
-    the contract prefers a conservative false positive on a local of that exact name to a miss.
-    """
-    if isinstance(node, ast.Attribute):
-        return (node.attr in ENV_NAMES
-                and isinstance(node.value, ast.Name) and node.value.id == ENV_MODULE)
-    if isinstance(node, ast.Name):
-        return node.id in ENV_NAMES
-    return False
-
-
-# --- the ONE binding walker, shared by C5, C6 and C7 -------------------------------------------
-# v3.9d follow-up: C5/C6/C7 each carried their own ad-hoc list of "assignment forms", and all three
-# lists were incomplete in the same way — they knew about Assign/AnnAssign/AugAssign/NamedExpr/Delete
-# and nothing else. Python binds names in many more places, and twelve injections walked straight
-# through: tuple/list/starred destructuring, `for` targets, `with ... as`, `except ... as`, and `match`
-# captures. One recursive walker now answers "what does this node bind?" for all three checks.
-def _binding_target_exprs(node):
-    """Yield each target EXPRESSION bound (or unbound) by this node, before destructuring."""
-    if isinstance(node, ast.Assign):
-        yield from node.targets
-    elif isinstance(node, (ast.AnnAssign, ast.AugAssign, ast.NamedExpr)):
-        yield node.target
-    elif isinstance(node, ast.Delete):
-        yield from node.targets
-    elif isinstance(node, (ast.For, ast.AsyncFor)):
-        yield node.target
-    elif isinstance(node, (ast.With, ast.AsyncWith)):
-        for item in node.items:
-            if item.optional_vars is not None:
-                yield item.optional_vars
-    elif isinstance(node, ast.comprehension):
-        yield node.target
-
-
-def _flatten_target(expr):
-    """Recursively yield the LEAF targets of a (possibly destructured) assignment target."""
-    if isinstance(expr, (ast.Tuple, ast.List)):
-        for e in expr.elts:
-            yield from _flatten_target(e)
-    elif isinstance(expr, ast.Starred):
-        yield from _flatten_target(expr.value)
-    else:
-        yield expr
-
-
-def _bare_name_bindings(node):
-    """Yield names bound by constructs whose target is a plain identifier, not an expression."""
-    if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
-        yield node.name
-    elif isinstance(node, ast.ExceptHandler):
-        if node.name:
-            yield node.name
-    elif isinstance(node, (ast.Import, ast.ImportFrom)):
-        for a in node.names:
-            yield a.asname or a.name.split(".")[0]
-    elif _MatchAs is not None:
-        if isinstance(node, (_MatchAs, _MatchStar)) and getattr(node, "name", None):
-            yield node.name
-        elif isinstance(node, _MatchMapping) and getattr(node, "rest", None):
-            yield node.rest
-
-
-def name_bindings(tree, name):
-    """Every executable construct in `tree` that binds or unbinds the identifier `name`.
-
-    Returns [(kind, node, lineno, is_direct_name_target)]. `is_direct_name_target` is False when the
-    name was reached through destructuring, because a destructured binding has no single value to
-    inspect.
-    """
-    found = []
-    for node in ast.walk(tree):
-        for target in _binding_target_exprs(node):
-            direct = isinstance(target, ast.Name)
-            for leaf in _flatten_target(target):
-                if isinstance(leaf, ast.Name) and leaf.id == name:
-                    found.append((type(node).__name__, node, getattr(node, "lineno", -1), direct))
-        for bound in _bare_name_bindings(node):
-            if bound == name:
-                found.append((type(node).__name__, node, getattr(node, "lineno", -1), True))
-    return found
-
-
-def _is_env_write_function(call):
-    """True only for `os.putenv`/`os.unsetenv`, or the bare names, which stay conservatively banned.
-
-    v3.9d follow-up 3: this used `_callee_name()`, which returns only the terminal attribute, so an
-    unrelated `config.putenv(...)` was rejected as an environment write. C7 promises `os.putenv` and
-    `os.unsetenv` specifically. The bare `putenv(...)` form remains banned for the same reason bare
-    `environ` does — `from os import putenv` is a real import — and that choice is pinned by test.
-    """
-    f = call.func
-    if isinstance(f, ast.Attribute):
-        return (f.attr in ENV_WRITE_FUNCTIONS
-                and isinstance(f.value, ast.Name) and f.value.id == ENV_MODULE)
-    if isinstance(f, ast.Name):
-        return f.id in ENV_WRITE_FUNCTIONS
-    return False
-
-
-def env_bindings(tree):
-    """Every executable construct that binds, rebinds, deletes or mutates the process environment.
-
-    v3.9d follow-up 3: this consumed `_binding_target_exprs()` but NOT `_bare_name_bindings()`, unlike
-    `name_bindings()`. So `except Exception as environ`, `case environ`, `def environ`, `class environ`
-    and `import pathlib as environ` all passed — contradicting both the documented binder list and the
-    pinned decision that a bare `environ` counts. The identifier `environ` is reserved: bind it any way
-    at all and C7 fires. Use `os.environ` if you need the real thing.
-    """
+def _env_writes(tree):
+    """Executable writes to the process environment, by enumerated form."""
     hits = []
     for node in ast.walk(tree):
-        kind = type(node).__name__
-        for target in _binding_target_exprs(node):
-            for leaf in _flatten_target(target):
-                if isinstance(leaf, ast.Subscript) and _is_env_ref(leaf.value):
+        # os.environ[...] = ... / del os.environ[...]
+        targets = []
+        if isinstance(node, ast.Assign):
+            targets = node.targets
+        elif isinstance(node, (ast.AnnAssign, ast.AugAssign)):
+            targets = [node.target]
+        elif isinstance(node, ast.Delete):
+            targets = node.targets
+        for t in targets:
+            if isinstance(t, ast.Subscript):
+                base = t.value
+                nm = base.attr if isinstance(base, ast.Attribute) else getattr(base, "id", None)
+                if nm in ENV_NAMES:
                     hits.append((getattr(node, "lineno", -1), "os.environ[...] assignment"))
-                elif _is_env_ref(leaf):
-                    verb = "deletion" if isinstance(node, ast.Delete) else f"{kind} rebinding"
-                    hits.append((getattr(node, "lineno", -1), f"os.environ {verb}"))
-        for bound in _bare_name_bindings(node):
-            if bound in ENV_NAMES:
-                hits.append((getattr(node, "lineno", -1), f"os.environ {kind} rebinding"))
         if isinstance(node, ast.Call):
             f = node.func
-            if isinstance(f, ast.Attribute) and f.attr in ENV_WRITE_METHODS and _is_env_ref(f.value):
-                hits.append((node.lineno, f"os.environ.{f.attr}()"))
-            if _is_env_write_function(node):
+            if isinstance(f, ast.Attribute) and f.attr in ENV_WRITE_METHODS:
+                base = f.value
+                nm = base.attr if isinstance(base, ast.Attribute) else getattr(base, "id", None)
+                if nm in ENV_NAMES:
+                    hits.append((node.lineno, f"os.environ.{f.attr}()"))
+            if _callee_name(node) in ENV_WRITE_FUNCTIONS:
                 hits.append((node.lineno, f"{_callee_name(node)}()"))
     return hits
 
 
-def _entry_point_is_sealed(tree):
-    """C5: exactly one module-level, undecorated `def`, whose executable body is exactly two
-    statements — a zero-argument `require_real_fit_authorization()` then an unconditional raise."""
-    problems = []
-    bindings = [(kind, node) for kind, node, _ln, _direct in name_bindings(tree, ENTRY_POINT_NAME)]
-    if not bindings:
-        return [f"{ENTRY_POINT_NAME} is missing"]
-    if len(bindings) > 1:
-        kinds = ", ".join(f"{k}@L{getattr(n, 'lineno', -1)}" for k, n in bindings)
-        problems.append(f"{ENTRY_POINT_NAME} is bound {len(bindings)} times ({kinds}) — exactly one "
-                        f"module-level def is allowed; a rebinding replaces the sealed door")
-
-    module_level = {id(n) for n in tree.body}
-    fns = [n for k, n in bindings if k == "FunctionDef"]
-    if len(fns) != 1:
-        problems.append(f"expected exactly one plain `def {ENTRY_POINT_NAME}`, found {len(fns)}")
-        return problems
-    fn = fns[0]
-    if id(fn) not in module_level:
-        problems.append(f"{ENTRY_POINT_NAME} is not defined at module level")
-    if fn.decorator_list:
-        problems.append(f"{ENTRY_POINT_NAME} is decorated — a decorator can replace the callable")
-
-    body = fn.body                                  # docstrings already stripped by _executable_tree
-    if len(body) != 2:
-        kinds = ", ".join(type(s).__name__ for s in body) or "<empty>"
-        problems.append(f"{ENTRY_POINT_NAME} body must be exactly 2 statements "
-                        f"(authorization, raise); found {len(body)}: {kinds}")
-        return problems
-
-    first, second = body
-    ok_auth = (isinstance(first, ast.Expr) and isinstance(first.value, ast.Call)
-               and isinstance(first.value.func, ast.Name)
-               and first.value.func.id == "require_real_fit_authorization"
-               and not first.value.args and not first.value.keywords)
-    if not ok_auth:
-        problems.append(f"{ENTRY_POINT_NAME} statement 1 must be a zero-argument "
-                        f"require_real_fit_authorization() call")
-    if not isinstance(second, ast.Raise):
-        problems.append(f"{ENTRY_POINT_NAME} statement 2 must be an unconditional raise, not "
-                        f"{type(second).__name__} — an early return leaves the raise unreachable")
-    else:
-        exc = second.exc
-        name = getattr(getattr(exc, "func", exc), "id", None)
-        if name != "NotImplementedError":
-            problems.append(f"{ENTRY_POINT_NAME} must raise NotImplementedError, not {name}")
-    return problems
-
-
 def no_real_outcome_access(source_dir=None, sources=None):
-    """Enforce the frozen structural no-real-outcome contract `C1-C7 + C4b` on both v3.9 modules.
-
-    On success this returns exactly `NO_OUTCOME_OK_DETAIL`, whose clause list is
-    "scope, executable-only, no banned callee, no banned token in any executable string,
-    no reading through an exemption, sealed entry point, single False lock, no environment write".
-    The contract name uses an ASCII hyphen; an en dash is a different string.
+    """Enforce the frozen structural no-real-outcome contract on both v3.9 modules.
 
     This is NOT a theorem about arbitrary Python. It is a decidable structural contract over the
     executable AST of exactly two named modules, and it is worth stating exactly because v3.9c
@@ -1421,25 +1246,14 @@ def no_real_outcome_access(source_dir=None, sources=None):
           composition or a reader argument whose subtree references `BANNED_OUTCOME_TOKENS` or calls a
           documentation-only function is a violation, since indexing a token back out would otherwise
           launder it past C4.
-      C5  ENTRY POINT SEALED. `assemble_real_panel` is bound EXACTLY ONCE across the whole module, by
-          one undecorated module-level `def` — no second definition, assignment, lambda, import alias,
-          deletion, augmented assignment or named-expression may rebind it. With its docstring
-          stripped, its executable body is EXACTLY two statements: a zero-argument
-          `require_real_fit_authorization()`, then an unconditional `raise NotImplementedError(...)`.
-          An early `return` above an unreachable raise fails, as does a raise made dormant by a
-          conditional, because the body must be those two statements and nothing else.
+      C5  ENTRY POINT SEALED. `assemble_real_panel` calls `require_real_fit_authorization()` as its
+          FIRST statement and still raises `NotImplementedError`.
       C6  LOCK INVARIANTS. Across `Assign`, `AnnAssign`, `AugAssign` and `NamedExpr`: exactly one
           assignment to `REAL_FIT_AUTHORIZED` exists across both modules, it is module-level, it is in
           the harness, and its value is the constant `False`. Any other form or value fails.
-      C7  NO ENVIRONMENT WRITE. Nothing may write, rebind or delete the process environment:
-          no `os.environ[...]` assignment or deletion; no `os.environ` bound by ANY of the binding
-          contexts C5 uses (assignment in every form, destructuring, `for`, `with ... as`,
-          `except ... as`, `match` capture, `def`/`class`, import alias);
-          no `os.environ.{update,setdefault,pop,clear,popitem,__setitem__,__delitem__}()`; and no
-          `os.putenv`/`os.unsetenv`. The receiver matters: `config.environ` and `config.putenv()` are
-          NOT the process environment and are allowed. The bare identifiers `environ`, `putenv` and
-          `unsetenv` ARE banned, conservatively and deliberately, because `from os import environ` is a
-          real import form; use `os.environ` if you need the real object.
+      C7  NO ENVIRONMENT WRITE. No `os.environ[...]` assignment or deletion, no
+          `os.environ.{update,setdefault,pop,clear,popitem,__setitem__,__delitem__}()`, and no
+          `os.putenv`/`os.unsetenv`.
 
     What it deliberately does NOT claim: it does not resolve aliases, dynamic attribute access,
     `getattr`/`eval`/`exec`, imports of third-party code, or a token assembled at runtime from
@@ -1481,9 +1295,9 @@ def no_real_outcome_access(source_dir=None, sources=None):
         problems.extend(f"{mod}: {p}" for p in exempt_problems)
 
         module_level = {id(n) for n in tree.body}
-        for kind, node, value, direct in _lock_assignments(tree):          # C6
+        for kind, node, value in _lock_assignments(tree):                  # C6
             lock_assigns.append((mod, kind, getattr(node, "lineno", -1), value,
-                                 id(node) in module_level, direct))
+                                 id(node) in module_level))
 
         for node in ast.walk(tree):
             if isinstance(node, ast.Call):                                 # C3
@@ -1503,36 +1317,56 @@ def no_real_outcome_access(source_dir=None, sources=None):
             problems.append(f"{mod}:{lineno}: path/reader argument reads through the exempt "
                             f"{src_name} — exemptions may not be used as a data source")
 
-        for lineno, form in env_bindings(tree):                            # C7
+        for lineno, form in _env_writes(tree):                             # C7
             problems.append(f"{mod}:{lineno}: {form} could open the environment lock")
 
     # C6 — exactly one canonical module-level `REAL_FIT_AUTHORIZED = False`, in the harness.
     harness_name = "run_coach_projection_experiment_v39.py"
-
-    def _is_canonical_lock(mod, kind, value, at_module_level, direct):
-        return (mod == harness_name and kind in ("Assign", "AnnAssign") and at_module_level
-                and direct and isinstance(value, ast.Constant) and value.value is False)
-
-    canonical = [a for a in lock_assigns if _is_canonical_lock(a[0], a[1], a[3], a[4], a[5])]
-    for mod, kind, lineno, value, at_module_level, direct in lock_assigns:
-        if _is_canonical_lock(mod, kind, value, at_module_level, direct):
-            continue
-        shown = "<destructured>" if not direct else getattr(value, "value", "<expression>")
-        problems.append(f"{mod}:{lineno}: {LOCK_NAME} bound by {kind} "
-                        f"{'at module level' if at_module_level else 'inside a scope'} "
-                        f"with value {shown!r} — only one module-level `= False` is allowed")
+    canonical = [a for a in lock_assigns
+                 if a[0] == harness_name and a[1] in ("Assign", "AnnAssign") and a[4]
+                 and isinstance(a[3], ast.Constant) and a[3].value is False]
+    for mod, kind, lineno, value, at_module_level in lock_assigns:
+        is_canonical = (mod == harness_name and kind in ("Assign", "AnnAssign") and at_module_level
+                        and isinstance(value, ast.Constant) and value.value is False)
+        if not is_canonical:
+            shown = getattr(value, "value", "<expression>")
+            problems.append(f"{mod}:{lineno}: {LOCK_NAME} written by {kind} "
+                            f"{'at module level' if at_module_level else 'inside a scope'} "
+                            f"with value {shown!r} — only one module-level `= False` is allowed")
     if len(canonical) != 1:
         problems.append(f"expected exactly one canonical module-level {LOCK_NAME} = False in the "
                         f"harness, found {len(canonical)}")
 
-    # C5 — the real-panel entry point stays sealed, in ONE binding with an exact body.
+    # C5 — the real-panel entry point stays sealed.
     harness = sources.get(harness_name)
     if harness is None:
-        problems.append(f"harness source unavailable; cannot validate {ENTRY_POINT_NAME}")
+        problems.append("harness source unavailable; cannot validate assemble_real_panel")
     else:
-        problems.extend(_entry_point_is_sealed(_executable_tree(harness)))
+        fn = None
+        for node in ast.walk(_executable_tree(harness)):
+            if isinstance(node, ast.FunctionDef) and node.name == "assemble_real_panel":
+                fn = node
+        if fn is None:
+            problems.append("assemble_real_panel is missing")
+        else:
+            first = fn.body[0] if fn.body else None
+            calls_auth = (isinstance(first, ast.Expr) and isinstance(first.value, ast.Call)
+                          and getattr(first.value.func, "id", None)
+                          == "require_real_fit_authorization")
+            if not calls_auth:
+                problems.append("assemble_real_panel does not call "
+                                "require_real_fit_authorization() FIRST")
+            raises_ni = any(isinstance(n, ast.Raise)
+                            and getattr(getattr(n.exc, "func", n.exc), "id", None)
+                            == "NotImplementedError"
+                            for n in ast.walk(fn))
+            if not raises_ni:
+                problems.append("assemble_real_panel no longer raises NotImplementedError")
 
-    return (not problems), ("; ".join(problems[:4]) if problems else NO_OUTCOME_OK_DETAIL)
+    ok_detail = ("both v3.9 modules satisfy the frozen structural no-outcome contract C1-C7 "
+                 "(scope, executable-only, no banned callee, no banned token in any executable "
+                 "string, sealed entry point, single False lock, no environment write)")
+    return (not problems), ("; ".join(problems[:4]) if problems else ok_detail)
 
 
 # =====================================================================================================

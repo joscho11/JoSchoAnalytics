@@ -1522,7 +1522,7 @@ def _swap_assemble(src, replacement):
 
 
 def test_assemble_real_panel_must_stay_authorization_first_and_unimplemented():
-    good = {m: (COACH / m).read_text(encoding="utf-8") for m in EX.V39_SOURCE_MODULES}
+    good = _pure_sources()
     key = "run_coach_projection_experiment_v39.py"
 
     # authorization no longer FIRST
@@ -1533,7 +1533,7 @@ def test_assemble_real_panel_must_stay_authorization_first_and_unimplemented():
                                     "    require_real_fit_authorization()\n"
                                     "    raise NotImplementedError('x')\n")
     ok, detail = EX.no_real_outcome_access(sources=reordered)
-    assert ok is False and "authorization" in detail, detail
+    assert ok is False and "2 statements" in detail, detail
 
     # no longer unimplemented
     implemented = dict(good)
@@ -1542,11 +1542,203 @@ def test_assemble_real_panel_must_stay_authorization_first_and_unimplemented():
                                       "    require_real_fit_authorization()\n"
                                       "    return None\n")
     ok2, detail2 = EX.no_real_outcome_access(sources=implemented)
-    assert ok2 is False and "NotImplementedError" in detail2, detail2
+    assert ok2 is False and "unconditional raise" in detail2, detail2
 
     # the real source satisfies both
     ok3, _ = EX.no_real_outcome_access(sources=good)
     assert ok3 is True
+
+
+# =====================================================================================================
+# v3.9d follow-up — C5 seals the entry point against REBINDING and against a DORMANT raise
+# =====================================================================================================
+# The v3.9d check found a `def` of that name and asked whether a NotImplementedError was raised
+# anywhere inside it. Both halves were too weak, and both of these returned ok=True:
+#   assemble_real_panel = lambda *_a, **_k: None          <- the sealed door silently replaced
+#   ... require_real_fit_authorization(); return None; raise NotImplementedError(...)  <- unreachable
+@pytest.mark.parametrize("label,snippet,fragment", [
+    ("lambda rebinding after the def",
+     "assemble_real_panel = lambda *_a, **_k: None", "bound 2 times"),
+    ("a second def of the same name",
+     'def assemble_real_panel(*_a, **_k):\n'
+     '    require_real_fit_authorization()\n'
+     '    raise NotImplementedError("second")', "bound 2 times"),
+    ("import alias rebinding",
+     "from os import path as assemble_real_panel", "bound 2 times"),
+    ("deletion of the entry point", "del assemble_real_panel", "bound 2 times"),
+    ("named-expression rebinding",
+     "def _r():\n    return (assemble_real_panel := None)", "bound 2 times"),
+    ("augmented assignment rebinding",
+     "assemble_real_panel = None\nassemble_real_panel += 1", "bound"),
+])
+def test_c5_rejects_every_rebinding_of_the_entry_point(label, snippet, fragment):
+    bad = _pure_sources()
+    bad["run_coach_projection_experiment_v39.py"] += "\n\n" + snippet + "\n"
+    ok, detail = EX.no_real_outcome_access(sources=bad)
+    assert ok is False, f"{label}: NOT detected"
+    assert fragment in detail, f"{label}: {detail}"
+
+
+@pytest.mark.parametrize("label,replacement,fragment", [
+    ("early return above an UNREACHABLE raise",
+     'def assemble_real_panel(*_a, **_k):\n'
+     '    require_real_fit_authorization()\n'
+     '    return None\n'
+     '    raise NotImplementedError("unreachable")\n',
+     "exactly 2 statements"),
+    ("raise made dormant by a conditional",
+     'def assemble_real_panel(*_a, **_k):\n'
+     '    require_real_fit_authorization()\n'
+     '    if False:\n'
+     '        raise NotImplementedError("dormant")\n'
+     '    return 1\n',
+     "exactly 2 statements"),
+    ("authorization called WITH arguments",
+     'def assemble_real_panel(*_a, **_k):\n'
+     '    require_real_fit_authorization(True)\n'
+     '    raise NotImplementedError("x")\n',
+     "zero-argument"),
+    ("a decorator that could replace the callable",
+     '@staticmethod\n'
+     'def assemble_real_panel(*_a, **_k):\n'
+     '    require_real_fit_authorization()\n'
+     '    raise NotImplementedError("x")\n',
+     "decorated"),
+    ("raises the wrong exception",
+     'def assemble_real_panel(*_a, **_k):\n'
+     '    require_real_fit_authorization()\n'
+     '    raise RuntimeError("x")\n',
+     "NotImplementedError"),
+])
+def test_c5_rejects_an_implemented_or_dormant_entry_point(label, replacement, fragment):
+    bad = _pure_sources()
+    key = "run_coach_projection_experiment_v39.py"
+    bad[key] = _swap_assemble(bad[key], replacement)
+    ok, detail = EX.no_real_outcome_access(sources=bad)
+    assert ok is False, f"{label}: NOT detected"
+    assert fragment in detail, f"{label}: {detail}"
+
+
+def test_c5_accepts_the_canonical_two_statement_body():
+    """The canonical definition must satisfy the tightened rule, or the rule is wrong."""
+    ok, detail = EX.no_real_outcome_access()
+    assert ok is True, detail
+
+
+# =====================================================================================================
+# v3.9d follow-up — C7 covers REPLACING the environment, not only writing a key in it
+# =====================================================================================================
+@pytest.mark.parametrize("label,snippet,fragment", [
+    ("os.environ = {...}",
+     "def _e():\n    os.environ = {REAL_FIT_ENV_SWITCH: REAL_FIT_ENV_TOKEN}", "rebinding"),
+    ("os.environ |= {...}",
+     "def _e():\n    os.environ |= {REAL_FIT_ENV_SWITCH: REAL_FIT_ENV_TOKEN}", "rebinding"),
+    ("os.environ: dict = {...}",
+     "def _e():\n    os.environ: dict = {REAL_FIT_ENV_SWITCH: REAL_FIT_ENV_TOKEN}", "rebinding"),
+    ("del os.environ", "def _e():\n    del os.environ", "deletion"),
+    ("bare environ rebinding",
+     "def _e():\n    environ = {REAL_FIT_ENV_SWITCH: REAL_FIT_ENV_TOKEN}\n    return environ",
+     "rebinding"),
+    ("os.environ[k] = v still caught",
+     "def _e():\n    os.environ[REAL_FIT_ENV_SWITCH] = REAL_FIT_ENV_TOKEN", "assignment"),
+])
+def test_c7_rejects_every_environment_write_form(label, snippet, fragment):
+    bad = _pure_sources()
+    bad["run_coach_projection_experiment_v39.py"] += "\n\n" + snippet + "\n"
+    ok, detail = EX.no_real_outcome_access(sources=bad)
+    assert ok is False, f"{label}: NOT detected"
+    assert "environment lock" in detail and fragment in detail, f"{label}: {detail}"
+
+
+# =====================================================================================================
+# v3.9d follow-up 2 — EVERY Python binding context, through one shared walker
+# =====================================================================================================
+# C5/C6/C7 each carried their own list of "assignment forms" and all three were incomplete the same way:
+# they knew Assign/AnnAssign/AugAssign/NamedExpr/Delete and nothing else. Twelve injections walked
+# through — destructuring, `for`, `with ... as`, `except ... as`, `match` capture. One recursive
+# binding-target walker (`name_bindings` / `env_bindings`) now answers all three.
+_BINDING_CONTEXTS = [
+    ("tuple destructuring", "({name},) = (None,)"),
+    ("list destructuring", "[{name}] = [None]"),
+    ("starred destructuring", "*{name}, _tail = (1, 2)"),
+    ("for-target", "for {name} in [None]:\n    pass"),
+    ("with-target", "with open(__file__) as {name}:\n    pass"),
+    ("except-as", "try:\n    raise Exception()\nexcept Exception as {name}:\n    pass"),
+    ("match capture", "match None:\n    case {name}:\n        pass"),
+    ("comprehension target", "_c = [0 for {name} in [None]]"),
+    ("augmented assignment (isolated)", "{name} += 1"),
+]
+
+
+@pytest.mark.parametrize("label,template", _BINDING_CONTEXTS)
+def test_c5_rejects_the_entry_point_bound_in_any_python_binding_context(label, template):
+    bad = _pure_sources()
+    snippet = template.format(name=EX.ENTRY_POINT_NAME)
+    bad["run_coach_projection_experiment_v39.py"] += "\n\n" + snippet + "\n"
+    ok, detail = EX.no_real_outcome_access(sources=bad)
+    assert ok is False, f"C5 missed {label}: {snippet!r}"
+    assert EX.ENTRY_POINT_NAME in detail and "bound" in detail, detail
+
+
+@pytest.mark.parametrize("label,template", _BINDING_CONTEXTS)
+def test_c6_rejects_the_lock_bound_in_any_python_binding_context(label, template):
+    """`(REAL_FIT_AUTHORIZED,) = (True,)` is an Assign whose target is a Tuple — previously invisible."""
+    bad = _pure_sources()
+    snippet = template.format(name=EX.LOCK_NAME)
+    bad["run_coach_projection_experiment_v39.py"] += "\n\n" + snippet + "\n"
+    ok, detail = EX.no_real_outcome_access(sources=bad)
+    assert ok is False, f"C6 missed {label}: {snippet!r}"
+    assert EX.LOCK_NAME in detail, detail
+
+
+@pytest.mark.parametrize("label,snippet", [
+    ("tuple destructuring", "def _e():\n    (os.environ,) = ({'A': 'B'},)"),
+    ("list destructuring", "def _e():\n    [os.environ] = [{'A': 'B'}]"),
+    ("for-target", "def _e():\n    for os.environ in [{'A': 'B'}]:\n        pass"),
+    ("with-target", "def _e():\n    with open(__file__) as os.environ:\n        pass"),
+])
+def test_c7_rejects_the_environment_bound_in_any_python_binding_context(label, snippet):
+    bad = _pure_sources()
+    bad["run_coach_projection_experiment_v39.py"] += "\n\n" + snippet + "\n"
+    ok, detail = EX.no_real_outcome_access(sources=bad)
+    assert ok is False, f"C7 missed {label}"
+    assert "environment lock" in detail, detail
+
+
+@pytest.mark.parametrize("snippet", [
+    "class _Cfg:\n    pass\n\n\ndef _ok():\n    config = _Cfg()\n    config.environ = {}\n    return config",
+    "class _Cfg2:\n    pass\n\n\ndef _ok2():\n    config = _Cfg2()\n    config.environ = dict()\n"
+    "    config.environ.update({})\n    return config",
+    "class _Cfg3:\n    pass\n\n\ndef _ok3():\n    settings = _Cfg3()\n    settings.environ = None\n"
+    "    del settings.environ\n    return settings",
+])
+def test_c7_does_not_flag_an_unrelated_attribute_named_environ(snippet):
+    """POSITIVE CONTROL: `_is_env_ref` accepted ANY `.environ`, so `config.environ = {}` failed C7.
+
+    Only `os.environ` (and a bare `environ`, kept deliberately) is the process environment.
+    """
+    ok_src = _pure_sources()
+    ok_src["run_coach_projection_experiment_v39.py"] += "\n\n" + snippet + "\n"
+    ok, detail = EX.no_real_outcome_access(sources=ok_src)
+    assert ok is True, f"unrelated attribute wrongly rejected: {detail}"
+
+
+def test_the_bare_environ_conservatism_is_deliberate_and_pinned():
+    """A bare `environ` IS treated as the process environment; that conservative choice is contractual."""
+    bad = _pure_sources()
+    bad["run_coach_projection_experiment_v39.py"] += (
+        "\n\ndef _e():\n    environ = {'A': 'B'}\n    return environ\n")
+    ok, detail = EX.no_real_outcome_access(sources=bad)
+    assert ok is False and "environment lock" in detail, detail
+    assert EX.ENV_MODULE == "os"
+
+
+def test_c7_still_permits_READING_the_environment():
+    """`os.environ.get(...)` is how the lock is read; banning reads would break the lock itself."""
+    ok, detail = EX.no_real_outcome_access()
+    assert ok is True, detail
+    src = (COACH / "run_coach_projection_experiment_v39.py").read_text(encoding="utf-8")
+    assert "os.environ.get(" in src, "the lock must still READ the environment"
 
 
 def test_an_attempt_to_open_the_lock_in_source_is_detected():
@@ -1641,6 +1833,115 @@ def test_every_boundary_evasion_form_is_rejected(label, snippet, module, fragmen
     assert fragment in detail, f"{label}: detail did not name {fragment!r} — {detail}"
 
 
+# =====================================================================================================
+# v3.9d follow-up — the frozen boundary VOCABULARY is pinned by value
+# =====================================================================================================
+# The tests must not reimplement the AST walker (that was the v3.9c parallel-definition defect), but
+# they must pin what the walker is looking FOR. Without this, deleting a banned token that no other
+# test happens to exercise silently narrows the production contract and every test still passes.
+FROZEN_BOUNDARY_VOCABULARY = {
+    "V39_SOURCE_MODULES": ("build_arm_features_v39.py", "run_coach_projection_experiment_v39.py"),
+    "BANNED_OUTCOME_CALLEES": frozenset({
+        "load_player_stats", "season_total_target", "load_pbp", "assemble", "do_assemble",
+        "walk_forward", "fit_final_model", "fit_full_and_score", "_score_bundle"}),
+    "BANNED_OUTCOME_TOKENS": (
+        "season_dataset_2014_2026.csv", "season_dataset_2014_2025.csv",
+        "season_dataset_2002_2025.csv", "sleeper_pts_half_ppr", "target_ppg",
+        "target_games", "half_ppr"),
+    "READER_CALLEES": frozenset({"read_csv", "read_parquet", "read_json", "open"}),
+    "TOKEN_LIST_NAMES": frozenset({"BANNED_OUTCOME_TOKENS"}),
+    "DOCUMENTATION_ONLY_FUNCTIONS": ("audit_production",),
+    "AUDIT_ALLOWED_CALLEES": frozenset({
+        "RuntimeError", "_production_engine", "arm0_definition", "items", "list", "str"}),
+    "ENV_NAMES": frozenset({"environ"}),
+    "ENV_WRITE_METHODS": frozenset({
+        "update", "setdefault", "pop", "clear", "popitem", "__setitem__", "__delitem__"}),
+    "ENV_WRITE_FUNCTIONS": frozenset({"putenv", "unsetenv"}),
+    "LOCK_NAME": "REAL_FIT_AUTHORIZED",
+    "ENTRY_POINT_NAME": "assemble_real_panel",
+    "ENV_MODULE": "os",
+    # ONE canonical spelling. ASCII hyphen, never an en dash: the runtime printed `C1-C7` while the
+    # documents wrote `C1–C7`, so "one wording everywhere" was false by a character nobody can see.
+    "NO_OUTCOME_CONTRACT_NAME": "C1-C7 + C4b",
+    "NO_OUTCOME_OK_DETAIL": (
+        "both v3.9 modules satisfy the frozen structural no-outcome contract C1-C7 + C4b "
+        "(scope, executable-only, no banned callee, no banned token in any executable string, "
+        "no reading through an exemption, sealed entry point, single False lock, "
+        "no environment write)"),
+}
+
+# The DOCUMENTS that must carry the success detail verbatim, byte for byte. Paths relative to
+# `coaching/`. The module that DEFINES the constant is checked separately — its source holds the string
+# as an implicitly-concatenated literal, so a raw substring search there would be checking formatting,
+# not meaning; the module is pinned by value plus a docstring check instead.
+_CONTRACT_WORDING_TARGETS = (
+    "V39_PREFIT_STOP_REPORT.md",
+    "REQUIREMENT_MATRIX.md",
+    "../preregs/PREREG_coach_quality_2026-07-28.md",
+)
+
+
+@pytest.mark.parametrize("name", sorted(FROZEN_BOUNDARY_VOCABULARY))
+def test_the_frozen_boundary_vocabulary_is_pinned_by_value(name):
+    """Widening is a prereg amendment; NARROWING is a silent weakening of the contract."""
+    expected = FROZEN_BOUNDARY_VOCABULARY[name]
+    actual = getattr(EX, name)
+    assert actual == expected, (
+        f"{name} changed.\n  expected: {expected!r}\n  actual:   {actual!r}\n"
+        "Narrowing this set weakens the no-outcome contract without failing any other test.")
+
+
+@pytest.mark.parametrize("rel", _CONTRACT_WORDING_TARGETS)
+def test_the_exact_success_detail_appears_verbatim_in_every_document(rel):
+    """Not "similar concepts" — the literal string, character for character.
+
+    v3.9d claimed "one wording everywhere" while the runtime printed an ASCII `C1-C7` and the documents
+    wrote a Unicode `C1–C7`, and no document contained the success detail at all. A test that checks for
+    the same IDEA would have passed. This checks for the same BYTES.
+    """
+    p = (COACH / rel).resolve()
+    assert p.exists(), rel
+    text = p.read_text(encoding="utf-8")
+    detail = EX.NO_OUTCOME_OK_DETAIL
+    assert detail in text, (
+        f"{p.name} does not contain the exact NO_OUTCOME_OK_DETAIL.\n"
+        f"expected verbatim:\n  {detail}")
+
+
+def test_the_defining_module_states_the_contract_in_its_docstring():
+    """The module is pinned by VALUE (above) plus its own docstring naming the contract."""
+    fn_doc = EX.no_real_outcome_access.__doc__ or ""
+    assert EX.NO_OUTCOME_CONTRACT_NAME in fn_doc, "the docstring must name the contract exactly"
+    assert "no reading through an exemption" in fn_doc, "C4b must be named in the docstring"
+    for clause in ("C1  SCOPE", "C4b NO READING THROUGH AN EXEMPTION", "C5  ENTRY POINT SEALED",
+                   "C7  NO ENVIRONMENT WRITE"):
+        assert clause in fn_doc, f"docstring lost the {clause!r} clause"
+
+
+def test_the_c10_success_row_prints_the_exact_pinned_detail():
+    """The preflight row and the constant must be the same string, not merely consistent in spirit."""
+    ok, detail = EX.no_real_outcome_access()
+    assert ok is True, detail
+    assert detail == EX.NO_OUTCOME_OK_DETAIL
+    pf = EX.preflight(require_pipeline_assertions=False)
+    assert pf["checks"]["no_real_outcome_access"]["detail"] == EX.NO_OUTCOME_OK_DETAIL
+
+
+def test_the_contract_name_uses_one_canonical_ascii_spelling():
+    """An en dash and a hyphen look identical in a terminal and are not the same string."""
+    assert EX.NO_OUTCOME_CONTRACT_NAME == "C1-C7 + C4b"
+    assert "–" not in EX.NO_OUTCOME_CONTRACT_NAME, "en dash in the canonical contract name"
+    assert "–" not in EX.NO_OUTCOME_OK_DETAIL, "en dash in the canonical success detail"
+    assert EX.NO_OUTCOME_CONTRACT_NAME in EX.NO_OUTCOME_OK_DETAIL
+
+
+def test_removing_a_banned_token_is_caught_by_the_vocabulary_pin():
+    """Demonstrate the failure mode this pin exists to stop, without touching the module."""
+    narrowed = tuple(t for t in EX.BANNED_OUTCOME_TOKENS if t != "half_ppr")
+    assert narrowed != FROZEN_BOUNDARY_VOCABULARY["BANNED_OUTCOME_TOKENS"], \
+        "a token silently dropped from the banned list must not compare equal to the pin"
+
+
 def test_the_documentation_exemption_is_void_once_the_function_gains_a_call():
     """E2 is not "trust audit_production" — it dies the moment a new callee appears inside it."""
     good = _pure_sources()
@@ -1700,6 +2001,115 @@ def test_documenting_the_new_contract_is_still_not_crossing_it():
     comment["build_arm_features_v39.py"] += (
         "\n\n# season_dataset_2014_2026.csv and target_ppg are named here in a COMMENT\n")
     assert EX.no_real_outcome_access(sources=comment)[0] is True
+
+
+# v3.9d §3 — retired identifiers and superseded counts may appear ONLY with a same-line qualifier.
+# A scratchpad scan is not a control; this runs in CI with the rest of the suite.
+_LIVE_DOCS = (
+    "V39_PREFIT_STOP_REPORT.md",
+    "AUDIT_TODO.md",
+    "REQUIREMENT_MATRIX.md",
+    "data/RESEARCH_LOG.md",
+    "../preregs/PREREG_coach_quality_2026-07-28.md",
+)
+_QUALIFIER = re.compile(r"RETIRED|SUPERSEDED|WITHDRAWN|RETRACTED|REFUTED|HISTORICAL|no longer",
+                        re.IGNORECASE)
+_RETIRED_CLAIMS = (
+    # not `\b254\b`: that matches inside "4,254 games", the T0 game denominator
+    ("suite total 254", r"(?<![\d,])254(?![\d,])"),
+    ("113 new tests", r"\b113\b\s*(?:new|added)|added\s*\*{0,2}113"),
+    ("52 harness tests", r"harness_v39\.py`?\s*(?:—|-)\s*\*{0,2}52\b"),
+    ("144 passed", r"\b144 passed\b"),
+    ("HC ledger cached outside the repo", r"COACH_V39_SCRATCH|ledger is a SCRATCH cache"),
+    ("harness writes two repo artifacts", r"only two outcome-free repo artifacts"),
+    ("retired ledger test id", r"test_the_head_coach_win_ledger_is_cached_outside_the_repo"),
+    ("retired lineage test id",
+     r"test_lineage_records_the_design_a_gate_and_the_design_b_absence_of_one"),
+    # v3.9d follow-up — four more forms that were still live in the tree
+    ("stale 290-pass total", r"(?<![\d,])290 passed"),
+    ("doc scan unregistered", r"doc scan is a scratch|not a registered test|does not run in CI"),
+    ("tests tree untracked", r"`?tests/`? tree is untracked|whole\s+`?tests/`?\s+tree is untracked"),
+    ("HC ledger belongs in SCRATCH",
+     r"derived cache and belongs in SCRATCH|belongs in SCRATCH"),
+)
+# Documents scanned for the four v3.9d forms above; the source files are scanned too, because two of
+# these claims lived in COMMENTS inside test/source files rather than in the markdown.
+_LIVE_SOURCES = (
+    "tests/test_artifact_ownership.py",
+    "tests/test_coach_projection_harness_v39.py",
+    "run_coach_projection_experiment_v39.py",
+    "build_arm_features_v39.py",
+)
+
+
+def _scan_retired_claims(text):
+    """Every line asserting a retired claim WITHOUT a same-line qualifier."""
+    hits = []
+    for i, line in enumerate(text.splitlines(), 1):
+        for label, pat in _RETIRED_CLAIMS:
+            if re.search(pat, line) and not _QUALIFIER.search(line):
+                hits.append((i, label, line.strip()[:110]))
+    return hits
+
+
+def test_no_live_document_asserts_a_retired_identifier_unqualified():
+    problems = []
+    for rel in _LIVE_DOCS + _LIVE_SOURCES:
+        p = (COACH / rel).resolve()
+        assert p.exists(), f"live target missing: {rel}"
+        if p.name == pathlib.Path(__file__).name:
+            continue          # this file DEFINES the patterns; scanning it would self-match
+        for lineno, label, line in _scan_retired_claims(p.read_text(encoding="utf-8")):
+            problems.append(f"{p.name}:{lineno} [{label}] {line}")
+    assert not problems, "retired claims asserted without a same-line qualifier:\n  " + \
+                         "\n  ".join(problems)
+
+
+def test_the_retired_claim_scanner_actually_catches_each_claim():
+    """Self-test: a scanner that matches nothing would pass the test above vacuously."""
+    samples = {
+        "suite total 254": "the suite now contains 254 tests",
+        "113 new tests": "this pass added 113 new tests",
+        "52 harness tests": "Tests: `tests/test_coach_projection_harness_v39.py` — 52.",
+        "144 passed": "the run returned 144 passed, 3 deselected",
+        "HC ledger cached outside the repo": "the ledger is cached in COACH_V39_SCRATCH",
+        "harness writes two repo artifacts":
+            "the harness writes only two outcome-free repo artifacts",
+        "retired ledger test id": "covered by test_the_head_coach_win_ledger_is_cached_outside_the_repo",
+        "retired lineage test id":
+            "covered by test_lineage_records_the_design_a_gate_and_the_design_b_absence_of_one",
+        "stale 290-pass total": "full coaching suite   290 passed",
+        "doc scan unregistered": "the doc scan is a scratch script and does not run in CI",
+        "tests tree untracked": "the whole `tests/` tree is untracked, so it cannot be diffed",
+        "HC ledger belongs in SCRATCH":
+            "the win ledger is a derived cache and belongs in SCRATCH",
+    }
+    assert set(samples) == {lbl for lbl, _ in _RETIRED_CLAIMS}, "sample set drifted from the patterns"
+    for label, line in samples.items():
+        caught = {lbl for _, lbl, _ in _scan_retired_claims(line)}
+        assert label in caught, f"scanner MISSED an unqualified {label!r}"
+        # and the same line WITH a qualifier must pass
+        assert not _scan_retired_claims(line + "  (RETIRED)"), \
+            f"scanner ignores the same-line qualifier for {label!r}"
+
+
+def test_every_test_named_in_the_requirement_matrix_actually_exists():
+    """A matrix row that names a nonexistent test is a PASS with no evidence behind it.
+
+    v3.9d found seven such rows (F-29, F-32, H-19, H-20, R-12 and two Phase-1 rows) still marked PASS
+    while naming tests that had been renamed or never existed. Renames are cheap; silently orphaned
+    evidence is not. This pins the whole matrix, not the seven that happened to be noticed.
+    """
+    matrix = (COACH / "REQUIREMENT_MATRIX.md").read_text(encoding="utf-8")
+    defined = set()
+    for p in sorted((COACH / "tests").glob("test_*.py")):
+        defined |= set(re.findall(r"(?m)^def (test_\w+)", p.read_text(encoding="utf-8")))
+    test_files = {p.stem for p in (COACH / "tests").glob("test_*.py")}
+
+    named = set(re.findall(r"`(test_\w+)`", matrix))
+    dangling = sorted(n for n in named if n not in defined and n not in test_files)
+    assert not dangling, ("REQUIREMENT_MATRIX.md names tests that do not exist:\n  "
+                          + "\n  ".join(dangling))
 
 
 def test_the_tests_and_c10_share_one_definition():

@@ -103,17 +103,41 @@ scanner is self-tested against all five reintroductions.
 
 C10 claimed the no-real-outcome/access-boundary assertions but implemented them only as tests, so the
 runtime guarantee did not exist and test and C10 could drift apart. `no_real_outcome_access()` now lives
-in the harness module and is a preflight check. On the AST with docstrings stripped it proves: no call
-to a banned outcome-producing callee; no reader call whose literal argument names a real player panel;
-no outcome column used as a subscript or reader argument; `assemble_real_panel()` calls
-`require_real_fit_authorization()` as its FIRST statement and still raises `NotImplementedError`; and
-neither module assigns True to the lock constant or writes the env token. It accepts injected pure
-source so regression tests exercise the SAME function without touching canonical files.
+in the harness module and is a preflight check.
+
+It enforces the frozen structural contract `C1-C7 + C4b` (ASCII hyphen — the canonical spelling), over
+the executable AST of exactly the two v3.9 modules with docstrings stripped. On success it returns this
+exact string, which also appears verbatim in the requirement matrix (H-24) and the stop report, and is
+pinned as the module constant `NO_OUTCOME_OK_DETAIL`:
+
+```
+both v3.9 modules satisfy the frozen structural no-outcome contract C1-C7 + C4b (scope, executable-only, no banned callee, no banned token in any executable string, no reading through an exemption, sealed entry point, single False lock, no environment write)
+```
+
+Markdown cannot include a Python constant, so each of these is a copy; the guarantee is a test
+(`test_the_exact_success_detail_appears_verbatim_in_every_document`) that fails unless every copy matches
+the constant byte for byte. The clauses:
+
+> **C1** scope — `sources` must be exactly the two modules, omission *and* addition rejected ·
+> **C2** executable-only · **C3** no banned outcome-producing callee ·
+> **C4** no banned outcome token in ANY executable string constant, in any position ·
+> **C4b** **no reading through an exemption** ·
+> **C5** `assemble_real_panel` bound exactly once by one undecorated module-level `def` whose
+> executable body is exactly two statements — zero-argument `require_real_fit_authorization()` then an
+> unconditional `raise NotImplementedError(...)` ·
+> **C6** exactly one module-level `REAL_FIT_AUTHORIZED = False` across
+> `Assign`/`AnnAssign`/`AugAssign`/`NamedExpr` ·
+> **C7** no environment write, rebinding or deletion by any enumerated form.
+
+It is a decidable structural contract, **not** a claim about arbitrary Python behaviour: it does not
+resolve aliasing, dynamic attribute access, `getattr`/`eval`/`exec`, third-party imports, or a token
+assembled at runtime from fragments, and the docstring says so. It accepts injected pure source so
+regression tests exercise the SAME function without touching canonical files.
 
 **Preflight is now 20 checks** (was 17): added `v39_artifacts_readable`,
 `lineage_states_the_primary_policy`, `no_real_outcome_access`.
 
-**Status:** **390 registered tests pass** offline with an empty temp directory (141 inherited + 249
+**Status:** **627 registered tests pass** offline with an empty temp directory (141 inherited + 486
 new). Locks not opened; the real outcome join remains unimplemented.
 
 ### Amendment record (v3.9a -> v3.9b, 2026-07-29, PREFIT — final correctness patch)
@@ -236,7 +260,8 @@ fit; the real-fit gate stayed shut; all 18 protected artifacts are byte-identica
 `build_preseason_snapshot.projection_cutoffs()` and the old `hc_game_results()` both called
 `nflreadpy.load_schedules()`, and the win ledger was cached in an untracked scratch directory. A clean
 checkout with an empty temp directory and no connectivity therefore **failed five v3.9 feature tests**,
-and the 254-pass result depended on mutable state that is not in the repo.
+and the then-current 254-pass result (SUPERSEDED — the suite is now 627) depended on mutable state that
+is not in the repo.
 
 Both now read the repository-owned frozen snapshot
 `fantasy/seasonal_projections/snapshots/schedules_1999_2025.parquet` (provenance in
@@ -467,8 +492,10 @@ and by nothing else:
 `team_coach_features_design_a_v39.csv`, `team_coach_features_design_b_oracle_v39.csv`,
 `arm_feature_manifest_v39.json`, `arm_feature_coverage_v39.csv`, `arm_feature_lineage_v39.csv`.
 
-The head-coach win ledger derived from nflverse schedules is a CACHE, not a pre-registered artifact,
-and is written to a scratch directory (`COACH_V39_SCRATCH`), never to `coaching/data/`.
+The head-coach win ledger is **derived in memory** on every build from the repo-owned frozen snapshot
+`fantasy/seasonal_projections/snapshots/schedules_1999_2025.parquet`, and is written **nowhere at all** —
+not to `coaching/data/` and not to a scratch directory. (RETIRED: the `COACH_V39_SCRATCH` cache used
+through v3.9a — WITHDRAWN, because a cache outside the repo made the build non-hermetic.)
 `run_coach_projection_experiment_v39.py` writes **nothing at all**; the production audit and the
 frozen harness spec are returned as structures and recorded in `coaching/V39_PREFIT_STOP_REPORT.md`.
 `audit_production(write=True)` and `experiment_spec(write=True)` RAISE, so the artifact set cannot
@@ -609,9 +636,11 @@ The HC-context block is numerically zero in **six of nine** target seasons (2020
 context only** and does not answer whether general HC win history, tenure or change improves
 projections — that question is what ARM_HC exists to test.
 
-**Status at freeze:** **254 registered tests pass** — the **141** inherited baseline reproduces
-exactly (verified by deselecting the three new ownership tests and ignoring the two new v3.9
-modules), plus **113** new v3.9 tests. The five v3.9 artifacts rebuild **byte-identically** across
+**Status at the v3.9a freeze (HISTORICAL — SUPERSEDED, see the v3.9d status above for current):**
+**254 registered tests passed at that point (SUPERSEDED; now 627)** — the **141** inherited baseline
+reproduced exactly, plus **113 new v3.9 tests at that point (SUPERSEDED; now 486)**. The deselect list
+quoted in that freeze was three IDs and is also SUPERSEDED: six exact IDs are required, and they are
+listed in `coaching/AUDIT_TODO.md` item 26. The five v3.9 artifacts rebuild **byte-identically** across
 two consecutive builds. All 18 protected artifacts (8 v3.8 + 2 preliminary + 8 production) are
 byte-identical. No player-projection arm fit; no fantasy outcome loaded or inspected; no production
 artifact written. Full record: `coaching/V39_PREFIT_STOP_REPORT.md`.

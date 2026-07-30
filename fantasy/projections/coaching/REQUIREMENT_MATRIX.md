@@ -143,7 +143,7 @@ Zero test files existed in `coaching/` when this matrix was first written. That 
 | Rams 2026 caller-only, exposure 1.0 | **PASS** | `test_rams_2026_routing` |
 | Snapshot carries no realized outcome | **PASS** | `test_preseason_snapshot_carries_no_realized_outcome` |
 | Unknown identity emits NA, not 0 | **PASS** | `test_unavailable_identity_is_na_not_zero` |
-| Post-cutoff source confers no eligibility | **PASS** | `test_post_cutoff_source_cannot_confer_eligibility` |
+| Post-cutoff source confers no eligibility | **PASS** | `test_post_cutoff_attributing_source_never_clears_a_cutoff` |
 
 ### Still FAILING / not migrated (unchanged from the original matrix)
 
@@ -238,7 +238,7 @@ The Phase 1D report's "437 = 192 called + 245 delegated" was **false**. Correcte
 | Reid's 5 route to Nagy 2017 | **PASS** | `test_reid_delegated_games_route_to_nagy_in_2017` |
 | McDaniel 68/68/0/0, McVay 181/149/0/0 | **PASS** | `test_mcvay_and_mcdaniel_have_zero_context_and_zero_unknown` |
 | Target-season unknown assumes neither | **PASS** | `test_target_season_unknown_caller_assumes_neither_delegation_nor_self_call` |
-| Confirmatory feature policy enforced | **PASS** | `test_confirmatory_feature_policy_lists_are_disjoint_and_exclude_raw_counts` |
+| Confirmatory feature policy enforced | **PASS** | `test_feature_policy_lists_are_disjoint` (`test_reliability_phase1d.py`) |
 
 **Scale of the contamination.** Mean unknown-caller share across 893 team-seasons is **0.561** —
 most historical games have no attributed caller, because the caller table starts in 2014 while
@@ -386,9 +386,12 @@ Artifacts — **exactly five, and no more**: `team_coach_features_design_a_v39.c
 `team_coach_features_design_b_oracle_v39.csv` (416), `arm_feature_manifest_v39.json`,
 `arm_feature_coverage_v39.csv` (728 rows, (design, arm, season, identity_state) grain),
 `arm_feature_lineage_v39.csv` (51 feature-definition + 832 identity-routing rows).
-The head-coach win ledger is a SCRATCH cache, not a repo artifact.
+The head-coach win ledger is **derived in memory** on every build from the repo-owned frozen snapshot
+`fantasy/seasonal_projections/snapshots/schedules_1999_2025.parquet`, and is **never cached** — not in
+the repo and not in a scratch directory. (RETIRED: v3.9a's `COACH_V39_SCRATCH` cache — WITHDRAWN,
+because a cache outside the repo made the build non-hermetic.)
 Representation names are `ARM_0`, `ARM_HC`, `ARM_1`…`ARM_5`.
-Tests: `tests/test_arm_features_v39.py` — **55**.
+Tests: `tests/test_arm_features_v39.py` — **88**.
 
 | # | requirement | generating function | input artifact / columns | timing rule | aggregation grain | missing-value rule | covering test | status |
 |---|---|---|---|---|---|---|---|---|
@@ -423,14 +426,14 @@ Tests: `tests/test_arm_features_v39.py` — **55**.
 | F-26 | inherited Phase-1 artifacts untouched | — | — | — | — | — | `test_upstream_phase1_artifacts_are_unchanged` | PASS |
 | F-27 | no split caller inherits full-season offense | `_window_aggregate` | `segment_offense.csv` | week range | segment | — | `test_no_split_caller_inherits_full_team_season_offense` (>=15 splits checked) | PASS |
 | F-28 | segment game membership reconciles with the canonical ledger | `caller_segments` | `pbp_games` vs `n_games_attributed` | — | segment + team-season total | raises | `test_segment_game_membership_reconciles_with_the_canonical_ledger` | PASS |
-| F-29 | row-level routing lineage proves timing, membership and fallback | `routing_lineage` | feature frames | strict `<` asserted per row | (design, season, team) | reason recorded | `test_routing_lineage_proves_strict_timing_and_membership`, `test_lineage_records_the_design_a_gate_and_the_design_b_absence_of_one` | PASS |
+| F-29 | row-level routing lineage proves timing, membership and fallback | `routing_lineage` | feature frames | strict `<` asserted per row | (design, season, team) | reason recorded | `test_routing_lineage_proves_strict_timing_and_membership`, `test_lineage_records_the_target_identity_gate_and_the_shared_history_rule` | PASS |
 | F-30 | retired drive names rejected in features, manifests AND lineage | `assert_no_retired_drive_names` | `DD.RETIRED_NAMES` minus canonical | — | column / text | raises | covered by every manifest assertion + `lineage()` guard | PASS |
 | F-31 | identity states decompose the aggregate; rates emitted | `coverage`, `identity_state` | — | — | (design, arm, season, state) | — | `test_identity_states_decompose_the_aggregate_exactly`, `test_coverage_reports_rates_as_well_as_counts` | PASS |
-| F-32 | exactly five v3.9 artifacts; HC ledger outside the repo | `OWNED_ARTIFACTS`, `SCRATCH` | — | — | — | — | `test_no_unauthorized_v39_artifact_exists_on_disk`, `test_the_head_coach_win_ledger_is_cached_outside_the_repo`, `test_build_arm_features_v39_writes_only_the_five_authorized_artifacts` | PASS |
+| F-32 | exactly five v3.9 artifacts; HC ledger derived in memory and never cached | `OWNED_ARTIFACTS`, `hc_game_results` | — | — | — | — | `test_no_unauthorized_v39_artifact_exists_on_disk`, `test_the_head_coach_win_ledger_is_derived_in_memory_not_cached`, `test_build_arm_features_v39_writes_only_the_five_authorized_artifacts` | PASS |
 
 ## PHASE 2B — EVALUATION HARNESS (v3.9): REQUIREMENT TO CODE
 
-`run_coach_projection_experiment_v39.py`. Tests: `tests/test_coach_projection_harness_v39.py` — **52**.
+`run_coach_projection_experiment_v39.py`. Tests: `tests/test_coach_projection_harness_v39.py` — **246**.
 **SYNTHETIC TARGETS ONLY.** The real-fit gate is default-closed and DOUBLE-LOCKED: both
 `REAL_FIT_AUTHORIZED = True` and
 `COACH_V39_REAL_FIT_AUTHORIZED_BY_JOSEPH=I-HAVE-WRITTEN-THE-PREFIT-AMENDMENT` are required. Both are
@@ -456,12 +459,12 @@ shut. **The module writes nothing at all.**
 | H-16 | Holm across the six fixed arms | `holm` | `test_holm_is_monotone_and_never_reduces_a_p_value` | PASS |
 | H-17 | within-season TEAM-LEVEL permutation of complete bundles | `permute_team_bundles` | `test_permutation_moves_COMPLETE_team_bundles`, `test_permutation_stays_strictly_within_season`, `test_permutation_actually_reassigns_something`, `test_permutation_never_touches_player_rows`, `test_frozen_placebo_constants`, `test_placebo_distribution_runs_and_is_seeded` | PASS |
 | H-18 | position-specific manifests reach the design matrix, appended AFTER the baseline | `attach_coach_features` | `test_position_specific_arm4_columns_reach_the_design_matrix`, `test_selected_arm_features_are_appended_after_the_baseline` | PASS |
-| H-19 | real fantasy fitting is BLOCKED | `REAL_FIT_AUTHORIZED`, `assemble_real_panel` | `test_real_fit_is_blocked` | PASS |
-| H-20 | no production write; only two outcome-free repo artifacts | `assert_no_production_writes` | `test_no_production_artifact_changes`, `test_the_harness_writes_only_two_outcome_free_repo_artifacts` | PASS |
+| H-19 | real fantasy fitting is BLOCKED | `REAL_FIT_AUTHORIZED`, `assemble_real_panel` | `test_real_fit_is_blocked_by_a_default_closed_double_lock`, `test_the_wrong_env_token_does_not_unlock` | PASS |
+| H-20 | no production write, and the harness writes **NOTHING** — not two artifacts, not one (the "two outcome-free repo artifacts" contract is **RETIRED**; v3.9 authorises five artifacts and the BUILDER owns all five) | `assert_no_production_writes` | `test_no_production_artifact_changes`, `test_the_harness_writes_nothing_at_all`, `test_the_harness_writes_no_repo_artifact_at_all` | PASS |
 | H-21 | deterministic artifacts and results | `audit_production`, `experiment_spec`, `run_experiment` | `test_audit_and_spec_artifacts_are_deterministic`, `test_experiment_is_deterministic_on_identical_inputs`, `test_spec_pins_every_frozen_constant` | PASS |
 | H-22 | Arm 3 unavailable in the outer-2018 inner folds, stated | — | `test_arm3_is_structurally_unavailable_in_the_outer_2018_inner_folds` | PASS |
 | H-23 | real fit blocked by a DEFAULT-CLOSED double lock; neither lock alone opens it | `real_fit_is_unlocked`, `require_real_fit_authorization` | `test_real_fit_is_blocked_by_a_default_closed_double_lock`, `test_the_wrong_env_token_does_not_unlock` | PASS |
-| H-24 | no v3.9 module CALLS a real-outcome source (AST, docstrings stripped) | — | `test_no_v39_module_ever_CALLS_a_real_outcome_source`, `test_no_real_outcome_token_is_used_as_a_FILE_READ_OR_COLUMN_ACCESS`, `test_the_boundary_IS_documented_in_both_modules` | PASS |
+| H-24 | neither v3.9 module has an executable path to a real fantasy outcome. The success detail is pinned verbatim: `both v3.9 modules satisfy the frozen structural no-outcome contract C1-C7 + C4b (scope, executable-only, no banned callee, no banned token in any executable string, no reading through an exemption, sealed entry point, single False lock, no environment write)`. C5/C6/C7 share ONE recursive binding-target walker covering Name, tuple/list/starred destructuring, Assign/AnnAssign/AugAssign/NamedExpr/Delete, For/AsyncFor, With/AsyncWith, ExceptHandler, match captures, comprehensions, def/class and import aliases. The contract is PRODUCTION logic in `no_real_outcome_access()`; the tests call it and no longer own a parallel AST walk. | `no_real_outcome_access` | `test_no_real_outcome_access_passes_on_the_real_modules`, `test_THE_EXACT_CODEX_CASE_composed_path_read_is_now_detected`, `test_every_boundary_evasion_form_is_rejected` (15 forms), `test_the_sources_mapping_must_be_exactly_the_two_modules`, `test_exactly_one_module_level_false_lock_exists`, `test_the_documentation_exemption_is_void_once_the_function_gains_a_call`, `test_the_module_owns_the_banned_sets_and_the_tests_do_not_copy_them`, `test_no_v39_module_ever_CALLS_a_real_outcome_source`, `test_no_real_outcome_token_is_used_as_a_FILE_READ_OR_COLUMN_ACCESS`, `test_documenting_the_new_contract_is_still_not_crossing_it`, `test_the_boundary_IS_documented_in_both_modules` | PASS |
 | H-25 | the audit scopes its no-categorical/no-weight claims to the Arm 0 family | `audit_production` | `test_audit_scopes_its_no_categorical_no_weight_claims_to_the_arm0_family` | PASS |
 | H-26 | the clipping asymmetry is recorded and verified against production source | `audit_production` | `test_audit_records_the_clipping_asymmetry` | PASS |
 | H-27 | the cosmetic bundle-note mismatch is recorded, not "fixed" | `audit_production` | `test_audit_flags_the_cosmetic_bundle_note_mismatch` | PASS |
@@ -473,8 +476,8 @@ shut. **The module writes nothing at all.**
 | scope | count |
 |---|---|
 | inherited baseline (reproduced by ignoring the 2 new v3.9 modules and deselecting **all six** new ownership tests) | **141** |
-| new v3.9 + v3.9a + v3.9b + v3.9c tests | **249** |
-| **full coaching suite** (offline, empty temp dir) | **390** |
+| new v3.9 + v3.9a + v3.9b + v3.9c + v3.9d tests | **486** |
+| **full coaching suite** (offline, empty temp dir) | **627** |
 
 ## v3.9c — REVIEW REPAIRS (2026-07-29)
 
@@ -510,7 +513,7 @@ shut. **The module writes nothing at all.**
 | R-9 | the placebo reruns nested selection per draw AND per outer fold | `nested_selected_outer_frame`, `placebo_distribution` | `test_placebo_reruns_nested_selection_and_returns_fold_specific_picks`, `test_placebo_can_select_different_arms_in_different_folds`, `test_placebo_distribution_runs_and_is_seeded` | PASS |
 | R-10 | ARM_0 and therefore the cohort are invariant under permutation | — | `test_arm0_and_therefore_the_cohort_are_invariant_under_permutation` | PASS |
 | R-11 | lineage carries segment-level contribution records that RECONCILE with the feature table | `contribution_lineage` | `test_contribution_rows_reconcile_with_the_feature_table_game_counts` (416 rows × 2 designs), `test_contribution_rows_identify_the_segment_and_trace_the_games`, `test_every_contribution_row_is_strictly_prior` | PASS |
-| R-12 | gate exclusions are recorded WITH a reason from a closed set | `contribution_lineage` | `test_contribution_rows_record_why_a_segment_was_excluded`, `test_a_gate_excluded_segment_appears_but_contributes_zero` | PASS |
+| R-12 | gate exclusions are recorded WITH a reason from a closed set | `contribution_lineage` | `test_contribution_rows_exclude_nothing_by_source_date_under_the_primary_policy`, `test_a_gate_excluded_segment_appears_but_contributes_zero` | PASS |
 | R-13 | the A/B test name no longer overclaims | — | `test_design_a_and_b_share_rows_schema_and_the_entire_hc_block` | PASS |
 
 ## v3.9b — FINAL PREFIT CORRECTNESS PATCH (2026-07-29)

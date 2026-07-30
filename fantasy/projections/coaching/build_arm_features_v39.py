@@ -113,7 +113,8 @@ DATA = HERE / "data"
 #
 # It replaces two live `nflreadpy.load_schedules()` calls (one in
 # `build_preseason_snapshot.projection_cutoffs`, one in the previous `hc_game_results`). Those made a
-# clean checkout fail five tests and made the 254-pass result depend on mutable external state that is
+# clean checkout fail five tests, and made the then-current total (254 passes, SUPERSEDED) depend on
+# mutable external state that is
 # not in the repo. Provenance is recorded in `snapshots/manifest.json`:
 # loader `load_schedules`, nflreadpy 0.1.5, 7,276 rows x 46 cols, fetched 2026-07-10T01:17:13Z,
 # sha256 78ff21f9...
@@ -178,7 +179,8 @@ PRIMARY_TIMING_RULE = ("source seasons < Y from the FULL retrospective caller-at
                        "NOT gated by the attributing source's publication date")
 # Features that compare two TARGET-season identities and aggregate no history.
 TARGET_SEASON_ONLY_RULE = "target-season identities only"
-# RETIRED wording that may never again appear as a PRIMARY timing rule or note. These strings are the`r`n# BANNED list itself; each is superseded by PRIMARY_TIMING_RULE above.
+# RETIRED wording that may never again appear as a PRIMARY timing rule or note. These strings are the
+# BANNED list itself; each is superseded by PRIMARY_TIMING_RULE above.
 RETIRED_HISTORY_GATE_PHRASES = (
     "source upper bound <= Y cutoff",                      # RETIRED v3.9b
     "Design A additionally requires source upper bound",   # RETIRED v3.9b

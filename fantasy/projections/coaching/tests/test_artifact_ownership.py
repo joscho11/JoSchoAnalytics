@@ -46,7 +46,10 @@ TEXT_OWNER = {
 }
 
 # v3.9 authorises EXACTLY these five new data artifacts under coaching/data/. Anything else the
-# v3.9 code needs (the head-coach win ledger) is a derived cache and belongs in SCRATCH.
+# v3.9 code needs (the head-coach win ledger) is derived IN MEMORY from the repo-owned frozen schedule
+# snapshot on every build and is cached nowhere — not in the repo, not in a scratch directory. (The
+# earlier "derived cache, belongs in SCRATCH" contract is RETIRED: a cache outside the repo made the
+# build non-hermetic, and `test_the_head_coach_win_ledger_is_derived_in_memory_not_cached` now pins it.)
 V39_AUTHORIZED_ARTIFACTS = {
     "team_coach_features_design_a_v39.csv",
     "team_coach_features_design_b_oracle_v39.csv",

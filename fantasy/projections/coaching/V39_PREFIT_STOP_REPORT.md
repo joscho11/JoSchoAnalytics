@@ -17,7 +17,7 @@ tests — and then found seven defects. All seven are repaired.
 
 | # | finding | status |
 |---|---|---|
-| 1 | The build was **not hermetic**: `projection_cutoffs()` and `hc_game_results()` both downloaded nflverse schedules, and the win ledger sat in an untracked scratch cache. A clean offline checkout failed **five** feature tests, so the 254-pass claim depended on state outside the repo. | **FIXED** — both read the repo-owned frozen snapshot; the ledger is computed in memory; suite and build now pass with egress blocked and an empty temp dir (§1.4) |
+| 1 | The build was **not hermetic**: `projection_cutoffs()` and `hc_game_results()` both downloaded nflverse schedules, and the win ledger sat in an untracked scratch cache. A clean offline checkout failed **five** feature tests, so the then-current 254-pass claim (SUPERSEDED; the suite is now 627) depended on state outside the repo. | **FIXED** — both read the repo-owned frozen snapshot; the ledger is computed in memory; suite and build now pass with egress blocked and an empty temp dir (§1.4) |
 | 2 | The live canonical prereg sections still asserted the superseded policy **underneath** the correction banner, and this report claimed they had been corrected when only a banner covered them. | **FIXED** — §0, §2, §3.2, §4, §5, §6, §7, §8-T5, §8.1 rewritten to v3.9 truth; the false claim in this report is withdrawn (§2.1) |
 | 3 | The manifest pinned only appended coaching columns; `ARM_0` was empty and the veteran/rookie baseline difference was inexpressible. | **FIXED** — full ordered X per (position, bucket, arm) (§4.1) |
 | 4 | The ten-condition §7 primary verdict was **never computed**, its thresholds were not pinned, and no test covered it. | **FIXED** — `primary_verdict()` + 14 tests (§8.5) |
@@ -93,28 +93,46 @@ anywhere that gains history).
 
 ### 1.1 Inherited test baseline: **141**, reproduced exactly
 
-The suite now contains 254 tests because this pass added 113. The **141** baseline was reproduced by
-ignoring the two new v3.9 modules and deselecting the three new ownership tests:
+This is the ONE canonical baseline command and the ONE canonical result. Ignore the two v3.9 test
+modules, deselect the six v3.9 additions to `test_artifact_ownership.py`, and the inherited suite
+reproduces:
+
+Run from the repository root
+(`C:\Users\josep\Desktop\random_stuff\cowork_OS\BettingEdgeContinued`), using the **repo-local**
+interpreter `.\.venv-test\Scripts\python.exe` (Python 3.11.9). This is one line, fully expanded — no
+`...` placeholders, no abbreviations:
 
 ```
-pytest fantasy/projections/coaching/tests -q
-  --ignore=.../tests/test_arm_features_v39.py
-  --ignore=.../tests/test_coach_projection_harness_v39.py
-  --deselect (all SIX new tests in test_artifact_ownership.py:
-      test_each_protected_text_artifact_has_exactly_one_writer,
-      test_build_arm_features_v39_writes_only_the_five_authorized_artifacts,
-      test_the_harness_writes_no_repo_artifact_at_all,
-      test_no_unauthorized_v39_artifact_exists_on_disk,
-      test_the_head_coach_win_ledger_is_cached_outside_the_repo,
-      test_the_v39_modules_never_write_outside_the_coaching_data_dir)
--> 141 passed, 6 deselected
+.\.venv-test\Scripts\python.exe -m pytest fantasy/projections/coaching/tests -q -p no:warnings --ignore=fantasy/projections/coaching/tests/test_arm_features_v39.py --ignore=fantasy/projections/coaching/tests/test_coach_projection_harness_v39.py --ignore=fantasy/projections/coaching/tests/test_boundary_corpus.py --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_each_protected_text_artifact_has_exactly_one_writer --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_build_arm_features_v39_writes_only_the_five_authorized_artifacts --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_the_harness_writes_no_repo_artifact_at_all --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_no_unauthorized_v39_artifact_exists_on_disk --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_the_head_coach_win_ledger_is_derived_in_memory_not_cached --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_the_v39_modules_never_write_outside_the_coaching_data_dir
 ```
 
-(An earlier run of this check deselected only three and returned **144 passed, 3 deselected**. The
-count was recomputed rather than assumed; six of the nine ownership tests are v3.9 additions.)
+Literal output of that exact command:
 
-Interpreter: `AI_hedge_fund/.venv` (the repo's documented working interpreter; bare `python` resolves
-to it via `VIRTUAL_ENV`).
+```
+........................................................................ [ 51%]
+.....................................................................    [100%]
+141 passed, 6 deselected in 14.74s
+```
+
+**Interpreter note, corrected.** An earlier revision of this section printed
+`..\AI_hedge_fund\.venv\Scripts\python.exe` and claimed bare `python` resolves to it through
+`VIRTUAL_ENV`. That is **WITHDRAWN**: that venv's `pyvenv.cfg` points at a Microsoft-Store
+`WindowsApps` Python, which is not reliably executable, so the command was not reproducible outside one
+particular shell. The repo-local `.venv-test` is the interpreter used for every number in this report,
+and no claim is made here about what bare `python` resolves to.
+
+Every ID above is real and was executed. `pytest --deselect` silently ignores an ID that does not
+exist, so a mistyped path deselects nothing and returns 147 with no error — copy these verbatim.
+
+**Current totals, and the only ones stated anywhere in this document:** **627** tests in
+`coaching/tests/` — **141** inherited plus **486** added by this pass. The 486 is
+88 (`test_arm_features_v39.py`) + 246 (`test_coach_projection_harness_v39.py`) + 146 (`test_boundary_corpus.py`) + 6 (the v3.9 additions
+to `test_artifact_ownership.py`). The per-module table in §10 carries the full split and reconciles to
+the same 627. Earlier drafts of this section quoted 254 total / 113 added; both are **WITHDRAWN** and
+were never current at the time this document was closed.
+
+Interpreter for every number in this report: the repo-local `.\.venv-test\Scripts\python.exe`
+(Python 3.11.9).
 
 ### 1.2 Protected artifacts: **18/18 byte-identical**, opening AND closing
 
@@ -166,7 +184,7 @@ Verified with egress blocked (`socket.create_connection`, `getaddrinfo`, `socket
 a freshly created empty directory:
 
 ```
-full coaching suite   290 passed
+full coaching suite   627 passed
 inherited baseline    141 passed, 6 deselected
 full v3.9 build       completed; all five artifact hashes reproduced
 ```
@@ -872,8 +890,8 @@ generating function, input columns, timing rule, missing-value rule, and coverin
 | scope | count |
 |---|---|
 | inherited baseline (reproduced, offline) | **141** |
-| new v3.9 + v3.9a + v3.9b + v3.9c tests | **249** |
-| **full coaching suite** | **390 passed, offline, egress blocked, fresh empty temp dir** |
+| new v3.9 + v3.9a + v3.9b + v3.9c + v3.9d tests | **486** |
+| **full coaching suite** | **627 passed, offline, egress blocked, fresh empty temp dir** |
 
 ### 10.1 THE TWO CODEX REPRODUCTIONS NOW FAIL SEMANTICALLY
 
@@ -930,13 +948,14 @@ Per-module counts, collected rather than estimated:
 | `test_drive_definitions.py` | 7 | inherited |
 | `test_artifact_ownership.py` | 9 | 3 inherited + **6 new** |
 | `test_arm_features_v39.py` | **88** | new |
-| `test_coach_projection_harness_v39.py` | **155** | new |
+| `test_coach_projection_harness_v39.py` | **246** | new (155 at v3.9c; +91 from the v3.9d boundary, C5/C6/C7 binding-context and wording work) |
 
-22+33+34+27+15+7+3 = **141** inherited; 88+155+6 = **249** new; total **390**.
+22+33+34+27+15+7+3 = **141** inherited; 88+246+146+6 = **486** new; total **627**.
 
-To reproduce the 141 exactly, ignore the two v3.9 test modules and deselect these six — the whole
-`tests/` tree is untracked, so the six cannot be recovered by diffing against `HEAD`, and a mistyped
-`--deselect` is silently ignored by pytest and yields 147:
+To reproduce the 141 exactly, ignore the three v3.9 test modules and deselect these six. (The `tests/`
+tree **is now tracked** — Joseph committed it on 2026-07-30, so new-vs-inherited *can* be diffed against
+`HEAD` today; the earlier statement that it was untracked is **SUPERSEDED**. The six IDs are still
+listed verbatim because a mistyped `--deselect` is silently ignored by pytest and yields 147.)
 
 ```
 test_artifact_ownership.py::test_each_protected_text_artifact_has_exactly_one_writer
@@ -1011,6 +1030,320 @@ on every routing and contribution row.
 
 ---
 
+## 10.3 v3.9d — THE BOUNDARY CHECK WAS STILL A FALSE NEGATIVE, AND LIVE DOCS STILL CARRIED RETIRED CONTRACTS
+
+### 10.3.1 `no_real_outcome_access()` missed the ordinary repository path form
+
+v3.9c added the check as production logic, which was the right move, but it inspected only two
+positions: a string constant passed **directly** as a reader argument, and a **literal** subscript. The
+normal way this repository names a file is neither — `DATA / "season_dataset_2014_2026.csv"` is a
+`BinOp`, so the string never appears where the check was looking. Codex injected exactly that into pure
+source and the check returned `ok=True`.
+
+Measured before the repair, on pure in-memory source (canonical files never modified): **nine** distinct
+injections passed, not one.
+
+| injection | v3.9c | v3.9d |
+|---|---|---|
+| `pd.read_csv(DATA / "season_dataset_2014_2026.csv")` — the exact Codex case | **passed** | caught |
+| `p = DATA / "season_dataset_2014_2026.csv"` then `pd.read_csv(p)` | **passed** | caught |
+| `p = pathlib.Path("season_dataset_2014_2026.csv")` then `pd.read_parquet(p)` | **passed** | caught |
+| token parked in a dict, read back via subscript | **passed** | caught |
+| token in an f-string component | **passed** | caught |
+| outcome columns parked in a list | **passed** | caught |
+| `REAL_FIT_AUTHORIZED: bool = True` (AnnAssign) | **passed** | caught |
+| `os.environ.update({SWITCH: TOKEN})` | **passed** | caught |
+| `os.putenv(SWITCH, TOKEN)` / `os.environ.setdefault(...)` | **passed** | caught |
+| an EXTRA module in the `sources` mapping | **passed** | caught |
+| `os.environ[SWITCH] = TOKEN` | caught | caught |
+| a module OMITTED from `sources` | caught | caught |
+| gutted `assemble_real_panel` | caught | caught |
+
+**The contract is now stated exactly, and it is not a theorem about Python.** Its canonical name is
+`C1-C7 + C4b` — **ASCII hyphen, never an en dash.** That distinction is not pedantry: v3.9d claimed "one
+wording everywhere" while the runtime printed `C1-C7` and every document wrote `C1–C7`, two strings that
+are visually identical and never equal.
+
+The single success string is the module constant `NO_OUTCOME_OK_DETAIL`, and here it is verbatim — this
+document, `REQUIREMENT_MATRIX.md` H-24, the prereg and the module all contain these exact bytes:
+
+```
+both v3.9 modules satisfy the frozen structural no-outcome contract C1-C7 + C4b (scope, executable-only, no banned callee, no banned token in any executable string, no reading through an exemption, sealed entry point, single False lock, no environment write)
+```
+
+This is a **copy** in static Markdown, not a generated include — Markdown cannot quote a Python constant.
+What makes it safe is enforcement, not hope: `test_the_exact_success_detail_appears_verbatim_in_every_document`
+reads all four files and fails unless the literal string is present, and
+`test_the_c10_success_row_prints_the_exact_pinned_detail` asserts the preflight row equals the same
+constant. Change the constant without updating the documents and the suite goes red.
+
+It is a decidable structural contract over the executable AST of two named modules:
+
+- **C1 scope** — the `sources` mapping must be exactly the two modules; omission *and* addition fail.
+- **C2 executable-only** — docstrings stripped, comments never parsed.
+- **C3** — no call to a banned outcome-producing callee.
+- **C4** — **no banned outcome token in ANY executable string constant, in any position**.
+- **C4b** — **no reading through an exemption**: neither exempt structure may act as a data source.
+- **C5 sealed entry point** — `assemble_real_panel` is bound exactly once, by one undecorated
+  module-level `def`, whose executable body is exactly two statements: a zero-argument
+  `require_real_fit_authorization()` then an unconditional `raise NotImplementedError(...)`.
+- **C6** — exactly one module-level `REAL_FIT_AUTHORIZED = False` across
+  `Assign`/`AnnAssign`/`AugAssign`/`NamedExpr`.
+- **C7** — no environment write, rebinding or deletion by any enumerated form.
+
+The docstring on `no_real_outcome_access()` is the authoritative statement and names what it does
+**not** cover: aliasing, dynamic attribute access, `getattr`/`eval`/`exec`, third-party imports, and
+tokens assembled at runtime from fragments.
+
+C4 is a blanket rule, which is only adoptable because canonical source was **measured** first: all 17
+executable strings containing a banned token sit in exactly two places, and both are enumerated rather
+than pattern-matched. **E1** is the module-level `BANNED_OUTCOME_TOKENS` tuple itself. **E2** is
+`audit_production()`, a read-only descriptive record of the production pipeline that necessarily names
+the real panel files. E2 is not "trust this function": it is **void** unless the function's callee set
+stays inside the frozen `AUDIT_ALLOWED_CALLEES` (measured: `RuntimeError`, `_production_engine`,
+`arm0_definition`, `items`, `list`, `str`), so smuggling a reader into it revokes the exemption and
+reports every token inside. C4b then closes the last route — indexing a token back out of an exempt
+structure, which would otherwise launder it past C4.
+
+**The tests no longer own a parallel definition.** `test_no_v39_module_ever_CALLS_a_real_outcome_source`
+and `test_no_real_outcome_token_is_used_as_a_FILE_READ_OR_COLUMN_ACCESS` carried their own docstring
+stripper and their own copies of the banned sets, and had drifted to exactly the same blind spot — the
+Codex injection passed the module check **and** its test. Both now delegate to the runtime contract, and
+`test_the_module_owns_the_banned_sets_and_the_tests_do_not_copy_them` fails if the copies return.
+
+Two adjacent tests were substring scans that broke once the module *enumerated* the forms it bans —
+`"putenv" not in src` cannot tell a ban from a use. They now delegate to the AST contract, which is the
+same "documenting is not crossing" distinction the walk exists to make.
+
+### 10.3.1b C5, C6 and C7 were still evadable — two further review rounds
+
+The first v3.9d pass tightened C4 but left the entry point, the lock and the environment enforced by the
+older, weaker logic. Two review rounds followed, and the honest arithmetic is worse than either round's
+headline.
+
+**The red proof is now a permanent, executable corpus — not prose.** Earlier revisions of this section
+quoted "nine", then "fourteen", then "fifteen", then "27 of 46". **Every one of those is SUPERSEDED and
+none was supported**: no test materialised the historical validator, and the "46" was produced by
+counting `test_c5*`/`test_c6*`/`test_c7*` collected nodes, which sweeps in positive controls and unrelated
+statistical tests that merely share a prefix. A count of evasions is meaningless without an enumerated
+list.
+
+The list is now enumerated once, in `tests/boundary_corpus.py`, with a stable id, category, payload and
+recorded historical result per case. `tests/test_boundary_corpus.py` runs both validators over the corpus
+and **asserts the arithmetic**; `test_the_reported_arithmetic_appears_in_the_stop_report` then fails
+unless this document states the same numbers. The corpus is 65 injections plus 7 positive controls held
+in a separate table, so a control can never be miscounted as an evasion.
+
+**The historical proof fails closed.** The first version of this test called `git show` and
+`pytest.skip`-ped when git was missing or the revision unreachable — meaning a fully green suite was
+possible with the red proof never executed. A proof that can silently not run is not a proof. The
+historical validator is therefore **vendored into the repo** and every failure path is an assertion:
+
+| provenance | value |
+|---|---|
+| fixture | `tests/fixtures/historical_validator_a5b4af7.pysrc` |
+| commit | `a5b4af7c71b8cf5663757488770181de13e32664` |
+| blob | `85c438f7d908e9df7da8d5e44ad8e30d3bbeeffe` |
+| path at that commit | `fantasy/projections/coaching/run_coach_projection_experiment_v39.py` |
+| sha256 of the fixture | `17909c28b95bbc9394d0d1c208802fb02aeb542210ccfc42c37598eed2c46c27` |
+
+The red proof loads those bytes with **no git, no network and no reachable history**, and fails — never
+skips — if the fixture is absent or its sha256 moves. A separate cross-check compares the fixture against
+`git cat-file -p <blob>` when git happens to be available; only that *cross-check* may skip, and the
+proof itself is unaffected by its absence.
+
+Measured, and asserted by that corpus:
+
+| category | undetected at `a5b4af7` | undetected now |
+|---|---|---|
+| C1 scope | C1 0/2 | 0 |
+| C3 banned callee | C3 0/1 | 0 |
+| C4 banned tokens | C4 0/8 | 0 |
+| C4b reading through an exemption | C4b 0/2 | 0 |
+| **C5 sealed entry point** | **C5 19/21** | 0 |
+| **C6 lock invariant** | **C6 8/12** | 0 |
+| **C7 process environment** | **C7 14/19** | 0 |
+| **total** | **41 of 65 injections passed undetected** | **0 of 65** |
+
+Every figure in that table is generated from the corpus and asserted by
+`test_the_reported_arithmetic_appears_in_the_stop_report`, which builds the expected strings from
+`totals()` — including both totals and **all seven** category rows, not a subset. Change the corpus and
+this document fails the suite until it is updated.
+
+C1/C3/C4/C4b are 0 at `a5b4af7` because that commit already contained the C4/C4b rewrite — Joseph's
+`cleanup` commit swept it in mid-pass (§10.3.3). The failures at `a5b4af7` are exactly the three checks
+that had not yet been repaired.
+
+**A ledger correction.** `c3-banned-callee` was previously filed under C4. It calls
+`season_total_target()` and is caught by the banned-**callee** clause C3, which is a different check from
+the banned-**token** clause C4 — it would fire with no banned string present anywhere. C3 is now a
+declared category, the split is C3 0/1 and C4 0/8, and the totals are unchanged at 41/65 and 0/65.
+`test_every_declared_category_is_exercised_by_the_corpus` fails if a declared category has no cases, and
+`test_the_banned_callee_case_is_categorised_as_c3_not_c4` pins the classification.
+
+**The isolated augmented-assignment case matters**: the earlier regression wrote
+`assemble_real_panel = None` before `assemble_real_panel += 1`, so the plain assignment did the catching
+and the `AugAssign` form was never actually isolated. The corpus case
+`c5-rebind-augassign-standalone` is the bare statement, and `test_the_corpus_contains_the_standalone_augmented_assignment_case`
+pins that it stays bare.
+
+All injections run on pure in-memory source; canonical files were never modified.
+
+**The root cause was structural, not a missing case.** C5, C6 and C7 each carried their own ad-hoc list
+of "assignment forms", and all three lists were incomplete in the same way — they knew
+`Assign`/`AnnAssign`/`AugAssign`/`NamedExpr`/`Delete` and nothing else. Python binds names in many more
+places. Twelve injections walked straight through all three checks: tuple, list and starred
+destructuring, `for` targets, `with ... as`, `except ... as`, `match` captures and comprehension targets.
+
+There is now **one recursive binding-target walker** (`name_bindings` for an identifier, `env_bindings`
+for the process environment) used by all three checks. It handles: `Name`; `Tuple`/`List`/`Starred`
+destructuring, recursively; `Assign`/`AnnAssign`/`AugAssign`/`NamedExpr`/`Delete`; `For`/`AsyncFor`
+targets; `With`/`AsyncWith` `optional_vars`; `ExceptHandler` names; `MatchAs`/`MatchStar`/`MatchMapping`
+captures; comprehension targets; `FunctionDef`/`AsyncFunctionDef`/`ClassDef`; and import aliases. C6
+additionally records whether a binding was reached through destructuring, because a destructured binding
+has no single inspectable value and therefore can never be the canonical `= False`.
+
+**C5** searched for *a* `def assemble_real_panel` and then asked whether a `NotImplementedError` was
+raised *anywhere* inside it. Both halves were too weak:
+
+| C5 evasion | before | after |
+|---|---|---|
+| `assemble_real_panel = lambda *_a, **_k: None` after the def | **passed** | caught (`bound 2 times`) |
+| `require_real_fit_authorization(); return None; raise NotImplementedError(...)` | **passed** | caught (body must be exactly 2 statements) |
+| a second `def` of the same name | **passed** | caught |
+| `from os import path as assemble_real_panel` | **passed** | caught |
+| `del assemble_real_panel` | **passed** | caught |
+| `(assemble_real_panel := None)` | **passed** | caught |
+| raise made dormant by `if False:` | **passed** | caught |
+| `require_real_fit_authorization(True)` (arguments) | **passed** | caught (must be zero-argument) |
+| a decorated definition | **passed** | caught |
+
+C5 now requires **exactly one binding** of the name across the module — no second definition,
+assignment, lambda, import alias, deletion, augmented assignment or named expression — by one
+**undecorated module-level `def`**, whose docstring-stripped body is **exactly two statements**: a
+zero-argument `require_real_fit_authorization()`, then an unconditional
+`raise NotImplementedError(...)`. "Exactly two statements, the second a `Raise`" is what makes an early
+return and a dormant raise both impossible; there is no separate reachability analysis, and none is
+claimed.
+
+**C7** inspected only subscript targets and selected method calls, so replacing the mapping wholesale
+passed while the result asserted "no environment write":
+
+| C7 evasion | before | after |
+|---|---|---|
+| `os.environ = {SWITCH: TOKEN}` | **passed** | caught (`os.environ Assign rebinding`) |
+| `os.environ \|= {SWITCH: TOKEN}` | **passed** | caught (`AugAssign rebinding`) |
+| `os.environ: dict = {...}` | **passed** | caught (`AnnAssign rebinding`) |
+| `del os.environ` | **passed** | caught (`deletion`) |
+| bare `environ = {...}` | **passed** | caught |
+| `os.environ[SWITCH] = TOKEN` | caught | caught |
+
+Reading the environment is deliberately still permitted — `os.environ.get(...)` is how the lock reads
+itself, and `test_c7_still_permits_READING_the_environment` pins that so the repair cannot be
+over-tightened into breaking the lock.
+
+**C7 also had false positives, in the opposite direction — two rounds of them.** `_is_env_ref()` accepted
+*any* attribute named `environ`, so an unrelated `config.environ = {}` or `config.environ.update({})` was
+reported as opening the environment lock. Then `_callee_name()` discarded the receiver, so
+`config.putenv(...)` and `config.unsetenv(...)` were rejected too, although C7 promises `os.putenv` and
+`os.unsetenv` specifically. A check that fires on innocent code teaches people to ignore it. Both now
+require the receiver to be the name `os`, and four positive controls in the corpus
+(`ctl-config-environ-assign`, `ctl-config-environ-update`, `ctl-config-putenv`, `ctl-config-unsetenv`)
+assert unrelated attributes and methods stay allowed.
+
+**And C7 was applying only half of the shared walker.** `env_bindings()` consumed
+`_binding_target_exprs()` but never `_bare_name_bindings()`, unlike `name_bindings()` — so
+`except Exception as environ`, `case environ`, `def environ`, `class environ` and
+`import pathlib as environ` all passed, contradicting both the binder list printed in this report and the
+pinned decision that a bare `environ` counts. It now consumes both halves.
+
+The bare identifiers `environ`, `putenv` and `unsetenv` remain banned **deliberately and
+conservatively** — `from os import environ` is a real import form — and that is a stated contract in the
+C7 docstring, not an accident: bind the name `environ` in any way at all and C7 fires; use `os.environ`
+if you need the real object.
+
+**The frozen vocabulary is now pinned by value.** The eleven constants the walker consults
+(`V39_SOURCE_MODULES`, `BANNED_OUTCOME_CALLEES`, `BANNED_OUTCOME_TOKENS`, `READER_CALLEES`,
+`TOKEN_LIST_NAMES`, `DOCUMENTATION_ONLY_FUNCTIONS`, `AUDIT_ALLOWED_CALLEES`, `ENV_NAMES`,
+`ENV_WRITE_METHODS`, `ENV_WRITE_FUNCTIONS`, `LOCK_NAME`, plus `ENTRY_POINT_NAME`) are asserted
+element-by-element by `test_the_frozen_boundary_vocabulary_is_pinned_by_value`. Before this, deleting a
+banned token that no other test happened to exercise narrowed the production contract with the whole
+suite still green. The tests still do **not** reimplement the walker — they pin what it looks for.
+
+### 10.3.2 Live documents still asserted retired contracts
+
+The §1.1 opening block was live verification text, not a historical record, and it contradicted the
+verified §10 closing section. It asserted a suite total of 254 (SUPERSEDED) and a count of
+113 added tests (SUPERSEDED), and it told the reader to deselect a RETIRED ownership-test ID —
+`test_the_head_coach_win_ledger_is_cached_outside_the_repo` (WITHDRAWN; no such test exists). All three
+are corrected; §1.1 now carries one canonical command, the six real IDs, and one result.
+
+An audit of every test name in `REQUIREMENT_MATRIX.md` found the problem was wider than the rows
+reported: the matrix names **268** distinct tests and **7** of them did not exist while their rows were
+marked **PASS** — F-29, F-32, H-19, H-20, R-12 and two Phase-1 rows. A matrix row naming a nonexistent
+test is a PASS with no evidence behind it, so this is now pinned by
+`test_every_test_named_in_the_requirement_matrix_actually_exists`, which checks the whole matrix rather
+than the rows that happened to be noticed.
+
+Retired contracts corrected in place: the head-coach win ledger is **derived in memory** from the frozen
+snapshot and cached nowhere (the `COACH_V39_SCRATCH` contract is RETIRED); the harness writes
+**nothing** (the "two outcome-free repo artifacts" contract is RETIRED); H-24 now names the production
+`no_real_outcome_access()` contract and its regression tests; the Phase-2B header reads **246**, not 52;
+`test_arm_features_v39.py` reads **88**, not 55.
+
+The retired-identifier sweep is no longer a scratchpad script. It is
+`test_no_live_document_asserts_a_retired_identifier_unqualified` over five live documents, with
+`test_the_retired_claim_scanner_actually_catches_each_claim` proving each pattern still fires on an
+unqualified sample and still respects a same-line qualifier.
+
+### 10.3.3 PART OF THIS PASS WAS COMMITTED MID-FLIGHT BY A CONCURRENT SESSION — READ THIS BEFORE REVIEWING
+
+**I made zero commits.** But the v3.9c work was committed by Joseph during this pass
+(`3e6344b`, `dedd55e`, `fa80c2e`, `26ebef4`, `0b7e7dd`, `a5b4af7`, 12:07–12:29 on 2026-07-30), and the
+last of those — **`a5b4af7 "cleanup"`, committed 12:29:35** — swept in
+`run_coach_projection_experiment_v39.py` **as it stood at 12:21:56**, which already contained the
+rewritten `no_real_outcome_access()`. `git log -S _exemption_laundering` confirms `a5b4af7` introduced
+it.
+
+So the FIRST v3.9d validator rewrite (the C4/C4b work) went into `HEAD` **unreviewed**. The second
+review round then reopened that same file to repair C5 and C7, so it is modified again and the whole
+pass is once more uncommitted — but a reviewer diffing only the working tree will not see the C4/C4b
+change, because part of it is already the baseline.
+
+**Current scope — 8 modified files plus 3 new untracked test files differ from `HEAD` (`a5b4af7`),
+and nothing else.** The new files are `tests/boundary_corpus.py`, `tests/test_boundary_corpus.py` and
+`tests/fixtures/historical_validator_a5b4af7.pysrc`; because they are untracked, `git diff --shortstat`
+does **not** count them, which is why the diffstat covers 8 files rather than 11:
+
+| file | contents |
+|---|---|
+| `run_coach_projection_experiment_v39.py` | C5/C7 repair, `NO_OUTCOME_OK_DETAIL`, contract docstring (the earlier C4/C4b half is already in `HEAD`) |
+| `tests/test_coach_projection_harness_v39.py` | C5/C7 regressions, frozen-vocabulary pin, matrix and retired-claim scanners |
+| `tests/test_artifact_ownership.py` | the RETIRED "belongs in SCRATCH" comment |
+| `build_arm_features_v39.py` | escape debris + a comment quoting a SUPERSEDED suite total |
+| `V39_PREFIT_STOP_REPORT.md` | §1.1, §1.4, §10.3, unresolved items 17 and 18 |
+| `REQUIREMENT_MATRIX.md` | F-29, F-32, H-19, H-20, H-24, R-12, test counts |
+| `AUDIT_TODO.md` | items 24, 26, 27 |
+| `preregs/PREREG_coach_quality_2026-07-28.md` | §E contract wording, status counts |
+| `tests/boundary_corpus.py` *(new, untracked)* | the enumerated 65-injection + 7-control corpus |
+| `tests/test_boundary_corpus.py` *(new, untracked)* | runs the frozen `a5b4af7` validator, asserts the red/green arithmetic |
+| `tests/fixtures/historical_validator_a5b4af7.pysrc` *(new, untracked)* | the frozen historical validator, sha256-pinned |
+
+No insertion/deletion totals are quoted here on purpose: this document is itself one of the eight files,
+so any edit to this paragraph changes the number the paragraph states. Run
+`git diff --shortstat` for the live value. The **file list** is the stable, checkable claim.
+
+The five data artifacts are tracked and byte-identical to `HEAD`; **no artifact changed in this pass**,
+which is the expected result for repairs that are validation and documentation only.
+
+### 10.3.4 Source corruption removed
+
+`build_arm_features_v39.py:181` carried the literal characters `` `r`n `` inside a comment — PowerShell
+escape debris from an earlier edit, not a data change, but not something to commit. Replaced with two
+normal comment lines.
+
+---
+
 ## 11. UNRESOLVED ISSUES
 
 0. **RESOLVED (v3.9b) — the historical source-date gate is retired**, primary history is strictly-prior
@@ -1062,32 +1395,31 @@ on every routing and contribution row.
     v3.9c showed why that is not merely bookkeeping: before the full-frame coverage check existed, the
     pin was the *only* thing standing between a corrupted artifact and a green C10. The semantic checks
     now carry that weight, but `test_pinned_v39_hashes_match_disk` still fails loudly if a pin goes stale.
-17. **The doc scan is a scratch script, not a registered test.** It is self-tested and was run to
-    completion for this report, but it does not run in CI. If superseded wording matters long-term it
-    should become a registered test; it is not one today.
-18. **Another session wrote into this repo concurrently with this pass, and none of it is mine.**
-    `scripts/bench_pages.py` and `scripts/bench_server.py` (20:55/21:00), then `app.py`,
-    `dashboard_chrome.py`, `memory/streamlit-throttle.md` and `memory/MEMORY.md` (21:35). All are
-    untouched by me. **`git status --short` is therefore a moving number** — it read 59 at the start of
-    this pass, 61, then 65, then 67 within two minutes as that session kept working, so it is not a
-    useful scope check here and no single value for it is quoted as one.
+17. **RESOLVED (v3.9d follow-up) — the doc scan is now a registered test.** The earlier statement that
+    it "is a scratch script, not a registered test" and "does not run in CI" is **SUPERSEDED**. It runs
+    with the suite as `test_no_live_document_asserts_a_retired_identifier_unqualified` over the five
+    live documents, and `test_the_retired_claim_scanner_actually_catches_each_claim` proves every
+    pattern still fires on an unqualified sample and still honours a same-line qualifier — so a
+    scanner that silently stopped matching cannot pass vacuously. The companion
+    `test_every_test_named_in_the_requirement_matrix_actually_exists` pins the whole matrix.
+18. **Concurrent writes by other sessions — the v3.9c footprint text below is HISTORICAL and no longer
+    describes the tree.** On 2026-07-29 another session wrote `scripts/bench_*.py`, `app.py`,
+    `dashboard_chrome.py` and two memory files while v3.9c was closing, and `git status --short` moved
+    59 → 61 → 65 → 67 within two minutes. Everything the v3.9c report said about a "15-file untracked
+    footprint" is **SUPERSEDED**: Joseph committed the coaching work on 2026-07-30, so those files are
+    tracked and the current scope is a diff, not an inventory. The live scope statement is §10.3.3.
 
-    My own footprint is instead **enumerated exactly — 15 files, all under
-    `fantasy/projections/coaching/` plus the one prereg**: 2 new modules (`build_arm_features_v39.py`,
-    `run_coach_projection_experiment_v39.py`), 3 test files (2 new, plus 6 tests added to
-    `test_artifact_ownership.py`), the 5 authorized data artifacts, and 5 documents
-    (this report, `REQUIREMENT_MATRIX.md`, `AUDIT_TODO.md`, `data/RESEARCH_LOG.md`,
-    `preregs/PREREG_coach_quality_2026-07-28.md`). Nothing outside that list is mine.
+    The one durable point from that episode, which still applies: **`git status --short` is a moving
+    number while another session is active, so it is not a scope check.** Scope is stated here as an
+    explicit diff against `HEAD` plus per-file hashes, and every number in this report was re-read from
+    the tree immediately before it was written down.
 
-    That session also **rewrote two files inside `coaching/data/` at 21:35:24** — `actual_play_caller.csv`
-    and `source_ledger.csv`. Both were rewritten **byte-identically**: `actual_play_caller.csv` still
-    hashes to the pinned `98f1c66b7387c16bba6a5463f4e0fa06` (the same value the RESEARCH_LOG header
-    carries), so only the mtime moved. Because those writes landed *after* my earlier protected-artifact
-    check, the whole 18/18 comparison, the preflight and all five v3.9 hashes were **re-run at 21:37:26**
-    and are the numbers reported in this document. The v3.9 modules only ever *read*
-    `actual_play_caller.csv` (one `read_csv` at `build_arm_features_v39.py:497`, plus the pin and two
-    lineage strings) — they never write it. A reviewer seeing a fresh mtime on those two files should
-    compare bytes, not timestamps.
+    Also still true and worth keeping: `actual_play_caller.csv` and `source_ledger.csv` acquire a fresh
+    mtime during ordinary test runs and were once rewritten **byte-identically** by a concurrent
+    session — `actual_play_caller.csv` still hashes to the pinned `98f1c66b7387c16bba6a5463f4e0fa06`,
+    the value the RESEARCH_LOG header carries. The v3.9 modules only ever *read* it (one `read_csv` in
+    `build_arm_features_v39.py`, plus the pin and two lineage strings); they never write it. **A
+    reviewer seeing a fresh mtime on those two files should compare bytes, not timestamps.**
 
 ---
 

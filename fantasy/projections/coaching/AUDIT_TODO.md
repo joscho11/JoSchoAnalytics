@@ -318,8 +318,9 @@ other; both are fixed.**
 v3.9 authorises **exactly five** new repo data artifacts. I had additionally written
 `hc_game_results_v39.csv`, `production_pipeline_audit_v39.json` and
 `coach_projection_experiment_spec_v39.json`. All three were untracked and created in the same session;
-all three are removed. The head-coach win ledger is now cached in `COACH_V39_SCRATCH` (outside the
-repo) and the audit/spec live in `V39_PREFIT_STOP_REPORT.md`.
+all three are removed. The audit/spec live in `V39_PREFIT_STOP_REPORT.md`. The head-coach win ledger was
+cached in `COACH_V39_SCRATCH` at this point — a contract **RETIRED one item later** (see item 27): it is
+now derived in memory from the frozen schedule snapshot on every build and cached nowhere at all.
 `audit_production(write=True)` / `experiment_spec(write=True)` now RAISE, and
 `test_no_unauthorized_v39_artifact_exists_on_disk` fails if a sixth `*_v39.*` file appears.
 
@@ -426,9 +427,9 @@ Design A/B contrast — not for power. Both the 200/256 and the ~76 claims are r
 
 `build_preseason_snapshot.projection_cutoffs()` and the old `hc_game_results()` both called
 `nflreadpy.load_schedules()`, and the win ledger was cached in an untracked scratch directory. So a
-clean offline checkout **failed five v3.9 feature tests**, and the reported 254-pass result depended on
-mutable state that is not in the repo. That is a reproducibility defect, not a cosmetic one: nobody else
-could have reproduced the number.
+clean offline checkout **failed five v3.9 feature tests**, and the then-reported result of
+254 passes (SUPERSEDED; the suite is now 627) depended on mutable state that is not in the repo.
+That is a reproducibility defect, not a cosmetic one: nobody else could have reproduced the number.
 
 Both now read `fantasy/seasonal_projections/snapshots/schedules_1999_2025.parquet` (repo-owned, frozen,
 provenance in `snapshots/manifest.json`). The win ledger is computed in memory — no sixth artifact, no
@@ -513,9 +514,28 @@ Related test renames: `test_design_a_and_b_differ_only_on_identity_supply` →
 `test_design_b_history_is_ungated_and_therefore_larger` →
 `..._holds_more_history_because_it_KNOWS_more_identities`.
 
-## 26. The 141 baseline is only reproducible with an explicit deselect list
+## 26. The 141 baseline is only reproducible with an explicit deselect list — CURRENT (updated v3.9d)
 
-The suite is now 254. Reproducing the inherited **141** requires ignoring the two new v3.9 modules
-**and deselecting all six** new tests in `test_artifact_ownership.py`. A first attempt deselected only
-three and returned **144 passed, 3 deselected**; the count was recomputed rather than assumed.
-Inherited per module: 22 + 33 + 34 + 27 + 15 + 7 + 3 = 141.
+**Current status: the full suite is 627; the inherited baseline is 141, reproduced as `141 passed,
+6 deselected`.** Reproducing it requires ignoring the three v3.9 test modules (`test_arm_features_v39.py`,
+`test_coach_projection_harness_v39.py`, `test_boundary_corpus.py`) **and deselecting all six**
+v3.9 additions to `test_artifact_ownership.py`, by their exact IDs:
+
+```
+test_each_protected_text_artifact_has_exactly_one_writer
+test_build_arm_features_v39_writes_only_the_five_authorized_artifacts
+test_the_harness_writes_no_repo_artifact_at_all
+test_no_unauthorized_v39_artifact_exists_on_disk
+test_the_head_coach_win_ledger_is_derived_in_memory_not_cached
+test_the_v39_modules_never_write_outside_the_coaching_data_dir
+```
+
+Inherited per module: 22 + 33 + 34 + 27 + 15 + 7 + 3 = **141**. Full suite: 141 + 88 + 246 + 146 + 6 = **627**.
+
+`pytest --deselect` **silently ignores an ID that does not exist**, so a mistyped path deselects
+nothing and the run reports 147 with no error at all. Copy the six IDs verbatim; do not retype them.
+
+*Historical, superseded, recorded only so the numbers in older drafts can be placed:* at v3.9a the
+suite was 254 (SUPERSEDED); an early attempt deselected only three IDs and returned 144 passed,
+3 deselected (SUPERSEDED); a later attempt used six IDs that were mistyped and returned 147
+(SUPERSEDED). None of those three figures is current.
