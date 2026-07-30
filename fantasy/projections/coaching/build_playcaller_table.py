@@ -160,12 +160,30 @@ def build():
     tbl["pc_is_nominal_oc"] = np.where(
         tbl["person_id"].isna(), pd.NA, (tbl["person_id"] == tbl["nominal_oc_person_id"]))
 
-    # games attributed to each play-caller stint
+    # Games attributed to each play-caller stint — COUNTED, never week arithmetic (v3.2).
+    #
+    # The original implementation was `min(week_end, team_games) - week_start + 1`, which counts
+    # WEEKS. A segment spanning a bye then over-counts: GB 2015 weeks 1-14 span 14 weeks but only
+    # 13 GAMES. That was corrected once by a patch script, and a later rebuild of this file SILENTLY
+    # REVERTED it — so the correct counting now lives here, making the builder idempotent.
+    #
+    # Historical seasons: every scheduled REG game was played, so distinct game_id in the week range
+    # is the actual game count. Deploy season: the same count is the SCHEDULED-game count, which is
+    # the documented prospective rule. `build_segment_offense.py` independently recounts from PBP and
+    # asserts agreement, so a divergence between schedule and PBP cannot pass silently.
     tbl["week_end"] = tbl["week_end"].fillna(99)
-    tbl["n_games_attributed"] = np.where(
-        tbl["person_id"].isna(), 0,
-        np.minimum(tbl["week_end"], tbl["team_games"].fillna(0))
-        - tbl["week_start"].fillna(1) + 1).clip(min=0)
+    tbl["week_start"] = tbl["week_start"].fillna(1)
+    gsrc = pd.read_csv(DATA / "head_coach_games.csv")[["season", "team", "week", "game_id"]].dropna()
+    gsrc["week"] = pd.to_numeric(gsrc["week"], errors="coerce")
+    counts = []
+    for _, r in tbl.iterrows():
+        if pd.isna(r["person_id"]):
+            counts.append(0)
+            continue
+        m = ((gsrc.season == r["season"]) & (gsrc.team == r["team"])
+             & (gsrc.week >= r["week_start"]) & (gsrc.week <= r["week_end"]))
+        counts.append(int(gsrc.loc[m, "game_id"].nunique()))
+    tbl["n_games_attributed"] = counts
 
     out_cols = ["season", "team", "person_id", "actual_play_caller", "play_caller_role",
                 "week_start", "week_end", "n_games_attributed", "nominal_oc", "head_coach",
@@ -242,7 +260,55 @@ def build():
         print(named[["season", "team", "ambiguity_status", "note"]].to_string(index=False))
 
     print(f"\nwrote {DATA/'actual_play_caller.csv'}  ({len(tbl)} rows)")
+
+    write_source_ledger()
     return tbl
+
+
+def write_source_ledger():
+    """Emit source_ledger.csv WITH date provenance.
+
+    This lives in the canonical builder, not in report_coverage.py, because the ledger and the
+    play-caller table are mutually dependent artifacts read from the SAME source definitions. When
+    the ledger was written by a separate reporting script, correcting a date in playcaller_sources
+    updated actual_play_caller.csv while source_ledger.csv silently kept the stale value -- the
+    repository held 2021-10-18 in one file and the fabricated 2021-01-01 in the other. Generating
+    both from one call makes that divergence impossible.
+    """
+    import date_provenance as DP
+
+    span = {}
+    for season, (_table, key) in SRC.SEASON_TABLES.items():
+        span.setdefault(key, []).append(season)
+
+    # BOTH source dicts. PARTIAL_SOURCES carries the per-row 2014-2016/2019 research that makes up
+    # the entire prior window -- omitting it from the ledger would leave the majority of sources
+    # unaudited while the ledger looked complete.
+    all_sources = {**SRC.SOURCES, **SRC.PARTIAL_SOURCES}
+
+    rows = []
+    for key, meta in all_sources.items():
+        prov = DP.classify(key, meta.get("date"))
+        lo, hi = DP.bounds(prov["source_date"], prov["source_date_precision"])
+        rows.append(dict(
+            source_key=key, source_kind=("season_table" if key in SRC.SOURCES else "per_row"),
+            publisher=meta.get("publisher"),
+            source_date=prov["source_date"],
+            source_date_raw=prov["source_date_raw"],
+            source_date_precision=prov["source_date_precision"],
+            source_date_lower_bound=lo, source_date_upper_bound=hi,
+            source_date_provenance=prov["source_date_provenance"],
+            source_date_note=prov["source_date_note"],
+            seasons=",".join(str(s) for s in sorted(span.get(key, []))) or "event",
+            url=meta.get("url"), note=meta.get("note")))
+
+    led = pd.DataFrame(rows).sort_values("source_key").reset_index(drop=True)
+    led.to_csv(DATA / "source_ledger.csv", index=False)
+
+    n_bad = int((led.source_date_precision.isin(["inferred", "missing"])).sum())
+    print(f"wrote {DATA/'source_ledger.csv'}  ({len(led)} sources, "
+          f"{n_bad} with inferred/missing dates -> never preseason-eligible)")
+    return led
 
 
 if __name__ == "__main__":

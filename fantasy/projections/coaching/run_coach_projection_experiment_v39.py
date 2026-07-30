@@ -1,0 +1,1759 @@
+"""PHASE 2B (prereg v3.9 PREFIT) — NESTED COACH-REPRESENTATION EVALUATION HARNESS.
+
+=====================================================================================================
+STOP CONDITION — READ FIRST
+=====================================================================================================
+**NO REAL FANTASY OUTCOME MAY BE FIT THROUGH THIS MODULE.** `REAL_FIT_AUTHORIZED` is False and every
+entry point that would assemble the production player panel raises. The harness is exercised end to
+end on SYNTHETIC targets only, so the machinery is verified before any outcome is visible. Turning it
+on requires a written PREFIT amendment recording what was known at the time, plus Joseph's approval.
+
+**THIS MODULE WRITES NO REPO ARTIFACT AT ALL.** v3.9 authorises exactly five new data files, all of
+them owned by `build_arm_features_v39.py`. The production audit and the frozen harness spec are
+returned as structures and recorded in `V39_PREFIT_STOP_REPORT.md`.
+
+=====================================================================================================
+ARM 0 IS READ OUT OF PRODUCTION, NOT RE-DECLARED
+=====================================================================================================
+Arm 0 is the exact ordered `feature_cols` stored in each shipped bundle, cross-checked against the
+module-level feature pool in the builder that produced it. The model family, hyperparameters,
+missing-value policy and prediction target all come from the same bundle. `_make_model` and `_prep`
+are IMPORTED from `build_rb_projection` — the position-agnostic production engine — so the arms are
+compared using production's own fitting code rather than a look-alike.
+
+Audited and pinned (2026-07-29):
+
+  family / params      LightGBM, objective="mae", random_state=42, verbose=-1, n_jobs=-1.
+                       Per-bundle: qb_vet 31/0.03/400 · rb_vet 15/0.03/400 · rb_rook 15/0.06/400 ·
+                       wr_vet 15/0.03/400 · wr_rook 31/0.06/400 · te_vet 15/0.03/400 ·
+                       te_rook 15/0.03/400  (num_leaves / learning_rate / n_estimators)
+  ordered baselines    veteran = the same 32 season_dataset columns for all four positions
+                       (INCLUDING the existing `coach_changed` and `qb_changed`); rookie = RB 41,
+                       WR 44, TE 44. `depth_rank` is excluded (RB prereg Amendment 1).
+  categorical handling NONE. Every matrix is `df[feats].to_numpy(float)`; no categorical dtype, no
+                       one-hot, no label encoding anywhere in the four builders.
+  sample weights       NONE. `model.fit(Xtr, ytr)` is called without `sample_weight`. `season_dataset`
+                       does carry `sample_weight = games`, but the projection builders never read it.
+  missing values       native NaN routed by LightGBM (`median_impute` is None in all seven bundles).
+                       The median+flag path exists only for the ElasticNet family, which no shipped
+                       bundle selected.
+  target               observed season-total half-PPR, summed from weekly REG stats as
+                       `fantasy_points + 0.5*receptions` (`build_rb_projection.season_total_target`).
+                       NOT `target_ppg`, which `build_season_dataset` NaNs below MIN_GAMES_TARGET = 3
+                       games and which would drop partial seasons. Seasons <= 2025 fill a missing
+                       total with 0.0 (rostered, never played); 2026 stays NaN.
+  QB ROOKIE PATH       **DOES NOT EXIST.** There is no `qb_rookie_model.pkl` — the QB rookie arm was
+                       HELD. QB is therefore evaluated on the veteran path only and the QB top-12
+                       cohort is defined over veterans. Recorded, not silently absorbed.
+
+=====================================================================================================
+FROZEN EVALUATION DESIGN
+=====================================================================================================
+outer test seasons          2018-2025; 2021-2025 additionally reported as the recent panel
+inner validation            EXPANDING, `inner training < validation < outer target`. Outer 2018 =
+                            [train 2014-2015 -> validate 2016], [train 2014-2016 -> validate 2017].
+                            Frozen minimums 2 training and 2 validation seasons; a target that
+                            cannot meet them is SKIPPED, never fitted on relaxed folds.
+arms compared               ARM_0, ARM_HC, ARM_1, ARM_2, ARM_3, ARM_4, ARM_5 (7)
+identical rows              every arm predicts the SAME player rows in every fold; asserted
+cohorts                     defined by the ARM 0 prediction: QB 12, RB 24, WR 24, TE 12
+eligibility                 an arm is eligible only if inner FULL-PANEL MAE worsens by <= 0.25
+selection                   best eligible arm by mean inner TOP-COHORT MAE; if the best coaching arm
+                            improves top-cohort MAE by < 1% vs ARM0 -> select ARM0; arms within 0.25
+                            top-cohort MAE points of the best -> select the one with FEWER added
+                            features (ties then broken by the frozen arm order)
+identity design             Design A is PRIMARY. Design B is ORACLE and can never enter selection.
+diagnostics                 ARM_HC and ARMS 1-5 as FIXED arms, plus the Design B oracle variants
+metrics                     full-panel and top-cohort MAE and RMSE, mean and median bias, mean
+                            within-season Spearman
+uncertainty                 player-clustered AND team-season-clustered bootstrap, 20,000 draws,
+                            seed 20260728; Holm correction across the SIX fixed arms (ARM_HC and
+                            ARMS 1-5) within each position
+placebo                     within-season TEAM-LEVEL permutation: complete team coaching bundles are
+                            permuted among the teams of that season, so every player on a team
+                            receives another team's whole bundle. Individual player rows are never
+                            shuffled and each season's bundle composition is preserved, which is what
+                            makes the placebo a control for season-level structure. 200 draws.
+
+WHY THE PLACEBO IS THE CONTROL THAT MATTERS HERE. Under Design A the caller-unknown neutral encoding
+is season-correlated (0% coverage in 2017/2020/2021/2022 and ~100% in 2018/2023/2024), so a coaching
+arm could in principle gain by acting as a partial season indicator rather than by carrying coaching
+information. Permuting complete bundles WITHIN a season leaves that season structure intact under the
+null, so a season-proxy gain reproduces in the placebo and fails the 95th-percentile bar.
+
+Run:  python run_coach_projection_experiment_v39.py --audit
+      python run_coach_projection_experiment_v39.py --synthetic
+"""
+import argparse
+import hashlib
+import json
+import os
+import pathlib
+import sys
+
+import numpy as np
+import pandas as pd
+
+import build_arm_features_v39 as AF
+
+HERE = pathlib.Path(__file__).resolve().parent
+DATA = HERE / "data"
+PROJ = HERE.parent                                   # fantasy/projections
+MODELS = PROJ / "models"
+SEAS = HERE.parent.parent / "seasonal_projections"
+
+# =====================================================================================================
+# THE STOP CONDITION — a DEFAULT-CLOSED gate, not a comment
+# =====================================================================================================
+# Two independent locks must BOTH be opened before any real outcome can be loaded:
+#   1. this module-level constant, and
+#   2. the environment variable named below, set to the exact literal token.
+# A plain `python run_coach_projection_experiment_v39.py --synthetic` (or any import, or any test)
+# therefore cannot reach a real label even by accident. Neither lock is opened in this pass.
+REAL_FIT_AUTHORIZED = False
+REAL_FIT_ENV_SWITCH = "COACH_V39_REAL_FIT_AUTHORIZED_BY_JOSEPH"
+REAL_FIT_ENV_TOKEN = "I-HAVE-WRITTEN-THE-PREFIT-AMENDMENT"
+REAL_FIT_MESSAGE = (
+    "REAL FANTASY FITTING IS NOT AUTHORIZED under prereg v3.9. The harness is verified on synthetic "
+    "targets only. Enabling it requires (a) a written PREFIT amendment recording what was known at "
+    "the time, (b) Joseph's explicit approval, (c) REAL_FIT_AUTHORIZED = True, and (d) "
+    f"{REAL_FIT_ENV_SWITCH}={REAL_FIT_ENV_TOKEN} in the environment. Flipping either lock without "
+    "the amendment defeats the entire pre-registration.")
+
+
+def real_fit_lock_state():
+    """(constant_open, env_open) at the moment of use. Never cached."""
+    return (bool(REAL_FIT_AUTHORIZED),
+            os.environ.get(REAL_FIT_ENV_SWITCH) == REAL_FIT_ENV_TOKEN)
+
+
+def real_fit_is_unlocked():
+    """BOTH locks, checked at the moment of use."""
+    c, e = real_fit_lock_state()
+    return c and e
+
+
+def require_real_fit_authorization():
+    if not real_fit_is_unlocked():
+        raise RuntimeError(REAL_FIT_MESSAGE)
+    return True
+
+
+# ---------------------------------------------------------------- run modes (v3.9b §3)
+# The v3.9a integrity check treated an UNLOCKED gate as a failure. Correct during prefit, but it made
+# `DEVELOPMENTAL CANDIDATE` unreachable for any authorized real run, because such a run must open both
+# locks. The lock expectation is therefore a property of the RUN MODE, not a universal invariant.
+RUN_MODE_SYNTHETIC_PREFIT = "synthetic_prefit"
+RUN_MODE_AUTHORIZED_REAL = "authorized_real"
+RUN_MODES = (RUN_MODE_SYNTHETIC_PREFIT, RUN_MODE_AUTHORIZED_REAL)
+DEFAULT_RUN_MODE = RUN_MODE_SYNTHETIC_PREFIT
+
+
+def validate_run_mode(run_mode, lock_state=None):
+    """Fail-closed run-mode contract. Returns (ok, detail).
+
+      synthetic_prefit : BOTH locks MUST be closed
+      authorized_real  : BOTH locks MUST be open (constant + env token)
+
+    A partially authorized state is invalid in BOTH modes, so it can never be read as "close enough".
+    An unknown mode is invalid. **No mode ever relaxes an artifact, timing, leakage, coverage or
+    feature-policy check** — the mode governs only the lock expectation.
+    """
+    c, e = real_fit_lock_state() if lock_state is None else lock_state
+    if run_mode not in RUN_MODES:
+        return False, f"unknown run_mode {run_mode!r}; expected one of {RUN_MODES}"
+    if run_mode == RUN_MODE_SYNTHETIC_PREFIT:
+        if c or e:
+            return False, ("synthetic_prefit requires BOTH real-fit locks CLOSED "
+                           f"(constant={c}, env={e})")
+        return True, "synthetic_prefit: both locks closed, as required"
+    if not (c and e):
+        return False, ("authorized_real requires BOTH real-fit locks OPEN "
+                       f"(constant={c}, env={e}) — a partially authorized state fails closed")
+    return True, "authorized_real: both locks open and the written-amendment token is present"
+
+
+# Tally of the timing / leakage / row-identity assertions the pipeline actually executed. C10 requires
+# each to be non-zero, so "the assertions passed" means they RAN, not merely that nothing raised.
+_PIPELINE_ASSERTIONS = {"inner_fold_timing": 0, "outer_no_self_train": 0,
+                        "identical_rows_across_arms": 0, "coach_join_preserved_rows": 0}
+
+
+def reset_pipeline_assertions():
+    for k in _PIPELINE_ASSERTIONS:
+        _PIPELINE_ASSERTIONS[k] = 0
+
+
+def _note_assertion(name):
+    _PIPELINE_ASSERTIONS[name] = _PIPELINE_ASSERTIONS.get(name, 0) + 1
+
+# ---------------------------------------------------------------- frozen constants
+OUTER_SEASONS = list(range(2018, 2026))
+RECENT_SEASONS = list(range(2021, 2026))
+PANEL_FIRST_SEASON = 2014
+INNER_MIN_TRAIN_SEASONS = 2
+INNER_MIN_VALIDATION_SEASONS = 2
+COHORT_N = {"QB": 12, "RB": 24, "WR": 24, "TE": 12}
+FULL_PANEL_TOLERANCE = 0.25          # inner full-panel MAE may worsen by at most this
+MIN_RELATIVE_IMPROVEMENT = 0.01      # below 1% top-cohort improvement -> ARM0
+TIE_BAND = 0.25                      # within this many top-cohort MAE points -> fewer features wins
+BOOTSTRAP_DRAWS = 20_000
+BOOTSTRAP_SEED = 20260728
+PLACEBO_DRAWS = 200
+PLACEBO_SEED = 20260728
+ARMS = AF.ARMS                        # ARM0, ARM_HC, ARM1..ARM5 — frozen order breaks final ties
+FIXED_DIAGNOSTIC_ARMS = [a for a in ARMS if a != "ARM_0"]
+POSITIONS = AF.POSITIONS
+BUCKETS = ["veteran", "rookie"]
+CLUSTER_UNITS = {"player": ["player_id"], "team_season": ["season", "team"]}
+
+BUNDLE_FILE = {("QB", "veteran"): "qb_veteran_model.pkl",
+               ("RB", "veteran"): "rb_veteran_model.pkl",
+               ("RB", "rookie"): "rb_rookie_model.pkl",
+               ("WR", "veteran"): "wr_veteran_model.pkl",
+               ("WR", "rookie"): "wr_rookie_model.pkl",
+               ("TE", "veteran"): "te_veteran_model.pkl",
+               ("TE", "rookie"): "te_rookie_model.pkl"}
+# ("QB", "rookie") is absent BY FACT: the QB rookie arm was held and no bundle was ever shipped.
+MISSING_BUNDLES = [("QB", "rookie")]
+
+PRODUCTION_HASHES = {
+    "qb_veteran_model.pkl": "7632549f95995b9702baefdf016d7271",
+    "rb_rookie_model.pkl": "da230ee66575ca574f02cbc2139e1a80",
+    "rb_veteran_model.pkl": "167aca71a8511afcced37c0abc846004",
+    "te_rookie_model.pkl": "f79dad0ab26af5cb4e06a9f1723328cd",
+    "te_veteran_model.pkl": "5a2f0b504d4cc6fc9a2e04453fd76a44",
+    "wr_rookie_model.pkl": "6c9a3f3ed02ce32c53594f383aade882",
+    "wr_veteran_model.pkl": "17dfbcf01054bdd5ce032f2b55df9ad2",
+}
+ROOKIE_PPG_MD5 = "872467b2295fce27761f9e04da01b6e8"
+
+
+def md5(p):
+    return hashlib.md5(pathlib.Path(p).read_bytes()).hexdigest()
+
+
+# =====================================================================================================
+# PRODUCTION AUDIT — Arm 0 is READ, never re-declared
+# =====================================================================================================
+def _production_engine():
+    """Import the production engine and the four position builders.
+
+    Importing rather than re-implementing is the whole point: `_make_model` / `_prep` below ARE the
+    functions that fit the shipped models.
+    """
+    if str(PROJ) not in sys.path:
+        sys.path.insert(0, str(PROJ))
+    import build_qb_projection as QB
+    import build_rb_projection as RB
+    import build_te_projection as TE
+    import build_wr_projection as WR
+    return RB, dict(QB=QB, RB=RB, WR=WR, TE=TE)
+
+
+def builder_pools():
+    """(position, bucket) -> the builder's module-level ordered feature pool."""
+    _RB, mods = _production_engine()
+    return {
+        ("QB", "veteran"): list(mods["QB"].QB_VET_ALL),
+        ("QB", "rookie"): list(mods["QB"].QB_ROOK_ALL),
+        ("RB", "veteran"): list(mods["RB"].VET_ALL),
+        ("RB", "rookie"): list(mods["RB"].ROOK_ALL),
+        ("WR", "veteran"): list(mods["WR"].WR_VET_ALL),
+        ("WR", "rookie"): list(mods["WR"].WR_ROOK_ALL),
+        ("TE", "veteran"): list(mods["TE"].TE_VET_ALL),
+        ("TE", "rookie"): list(mods["TE"].TE_ROOK_ALL),
+    }
+
+
+def arm0_definition():
+    """Arm 0 from stored bundle metadata, cross-checked against builder code."""
+    import joblib
+    pools = builder_pools()
+    out, mismatches = {}, []
+    for (pos, bucket), fname in BUNDLE_FILE.items():
+        p = MODELS / fname
+        b = joblib.load(p)
+        feats = list(b["feature_cols"])
+        if feats != pools[(pos, bucket)]:
+            mismatches.append(f"{pos}/{bucket}: bundle order != builder pool")
+        out[(pos, bucket)] = dict(
+            bundle=fname, md5=md5(p), family=b["family"], params=dict(b["params"]),
+            feature_cols=feats, n_features=len(feats), target=b["target"], seed=b["seed"],
+            inner_cv_mae=b["inner_cv_mae"],
+            median_impute=(None if b["median_impute"] is None else sorted(b["median_impute"])),
+            model_class=type(b["model"]).__module__ + "." + type(b["model"]).__name__,
+            note=b.get("note"))
+    assert not mismatches, "Arm 0 drift between bundle and builder:\n  " + "\n  ".join(mismatches)
+    return out
+
+
+def audit_production(write=False):
+    """Structured production audit, read out of executable code and stored bundle metadata.
+
+    `write` exists only for symmetry; v3.9 authorises exactly five new repo data artifacts and this
+    audit is NOT one of them, so the record lives in `V39_PREFIT_STOP_REPORT.md` and in this function.
+    Nothing is written unless a caller explicitly opts in, and no test does.
+    """
+    a0 = arm0_definition()
+    RB, _mods = _production_engine()
+    audit = {
+        "audited": "2026-07-29 (prereg v3.9 PREFIT)",
+        "TWO_ARCHITECTURES_EXIST_IN_THIS_REPO": {
+            "arm0_family_USED": {
+                "location": "fantasy/projections/models/ (7 bundles)",
+                "target": "season_total_half_ppr — a DIRECT season total",
+                "bundle_keys": ["model", "feature_cols", "family", "params", "inner_cv_mae",
+                                "target", "seed", "median_impute", "note"],
+                "why": "prereg §3.3/§4 define Arm 0 as each position's SHIPPED bundle for the "
+                       "season-total build; that is this family",
+            },
+            "legacy_family_NOT_USED": {
+                "location": "fantasy/seasonal_projections/models/",
+                "architecture": "Model A x Model B: season total = PPG * games",
+                "members": {
+                    "{qb,rb,wr,te}_ppg_model.pkl": "target target_ppg, LightGBM, 31 features, "
+                                                   "bundle keys algo/position/train_seasons",
+                    "availability_model.pkl": "target target_games, CatBoost, 13 features, "
+                                              "CARRIES cat_features",
+                    "rookie_ppg_model.pkl": "target target_ppg, CatBoost, 18 features, "
+                                            "CARRIES cat_features",
+                },
+                "IMPORTANT": "this family DOES use categorical features and DOES fit with "
+                             "sample_weight=games (train_model_a.py: "
+                             "model.fit(train[feats], train.target_ppg, "
+                             "sample_weight=train.sample_weight)). The 'no categoricals / no sample "
+                             "weights' statements below are scoped to the Arm 0 family ONLY and must "
+                             "not be generalised to the repo.",
+            },
+        },
+        "veteran_path": {
+            "router": "build_season_dataset.py season_dataset_2014_2026.csv -> is_rookie == 0",
+            "builders": ["build_qb_projection.py", "build_rb_projection.py",
+                         "build_wr_projection.py", "build_te_projection.py"],
+            "engine": "build_rb_projection.py — the position-agnostic engine the other three IMPORT "
+                      "(season_total_target, nested_select, walk_forward, fit_final_model, _prep, "
+                      "_grid, _make_model, _score_bundle, metrics). Never modified by them.",
+            "ordered_features_identical_across_positions": True,
+        },
+        "rookie_path": {
+            "router": "season_dataset -> is_rookie == 1, joined to the FROZEN hit-model rookie "
+                      "matrix regenerated in a TEMP scratch dir (no PFF parquet in the repo), then "
+                      "coalesced by (norm_name, position) for the 2026 placeholder-gsis seam",
+            "qb_rookie_bundle": "ABSENT — the QB rookie arm was HELD; QB is evaluated on the "
+                                "veteran path only and the QB top-12 cohort covers veterans",
+        },
+        "prediction_target": {
+            "name": "season_total_half_ppr",
+            "construction": "sum over REG weeks of (fantasy_points + 0.5*receptions), per "
+                            "(player_id, season); build_rb_projection.season_total_target()",
+            "not_used_by_arm0": {
+                "target_ppg": "half_ppr/games, NaN below MIN_GAMES_TARGET=3 — would drop partial "
+                              "seasons; this IS the legacy Model-A target",
+                "target_games": "legacy Model-B availability target",
+                "sample_weight": "games; present in season_dataset and USED BY THE LEGACY Model A, "
+                                 "never passed to fit() in the season-total family"},
+            "ppg_games_total_composition": "NOT used by Arm 0. The season total is predicted "
+                                           "DIRECTLY. PPG*games composition belongs to the legacy "
+                                           "family only.",
+            "missing_target_rule": "seasons <= 2025 fill missing with 0.0 (rostered, never played); "
+                                   "the 2026 deploy season stays NaN",
+        },
+        "model_families": {f"{p}/{b}": {"family": v["family"], "params": v["params"],
+                                        "model_class": v["model_class"]}
+                           for (p, b), v in a0.items()},
+        "family_slate_available_but_not_selected": list(RB.FAMILIES),
+        "categorical_handling_arm0": "NONE — every design matrix is df[feats].to_numpy(float); no "
+                                     "categorical dtype, no one-hot, no label encoding, and no "
+                                     "cat_features key in any of the 7 bundles",
+        "sample_weights_arm0": "NONE — model.fit(X, y) is called without sample_weight",
+        "missing_value_handling_arm0": "native NaN (LightGBM); median_impute is None in all 7 "
+                                       "bundles. The median+missing-flag path exists only for the "
+                                       "ElasticNet family, which no shipped bundle selected. "
+                                       "Medians would be TRAIN-ONLY (_prep_median_flag computes "
+                                       "them from tr).",
+        "transforms_and_clipping": {
+            "log_pick": "log(draft_pick.clip(lower=1)) — a rookie FEATURE transform",
+            "prediction_clipping": "np.clip(pred, 0, None) is applied by _score_bundle and by the "
+                                   "2026 face-validity path, but NOT by walk_forward(). The "
+                                   "EVALUATION path is therefore UNCLIPPED, and this harness mirrors "
+                                   "walk_forward, so it does not clip either.",
+        },
+        "ordered_baseline_features": {f"{p}/{b}": v["feature_cols"] for (p, b), v in a0.items()},
+        "bundle_metadata": {f"{p}/{b}": {k: v[k] for k in
+                                         ("bundle", "md5", "target", "seed", "n_features",
+                                          "inner_cv_mae", "median_impute", "note")}
+                            for (p, b), v in a0.items()},
+        "code_vs_bundle_disagreements": {
+            "bundle_note_text": "every bundle's `note` says 'RB season-total half-PPR projection' "
+                                "even in the QB/WR/TE bundles, because the WR/TE/QB builders reuse "
+                                "build_rb_projection.fit_final_model verbatim. COSMETIC: the "
+                                "feature_cols, family and params are position-correct and match each "
+                                "builder's own pool exactly (asserted by arm0_definition).",
+            "feature_order": "bundle feature_cols == builder module pool for all 7 bundles",
+        },
+        "existing_baseline_coaching_features": ["coach_changed", "qb_changed"],
+        "coach_changed_definition": "week-1 head coach of season Y vs week-1 head coach of Y-1 "
+                                    "(build_season_dataset.py); NaN preserved, never a hard 0",
+        "depth_rank": "EXCLUDED from every pool (RB prereg Amendment 1); disclosure-only",
+        "production_write_paths_this_harness_must_never_touch": [
+            str(MODELS), str(PROJ / "results"), str(SEAS)],
+    }
+    if write:
+        raise RuntimeError(
+            "v3.9 authorises exactly five new repo data artifacts and the production audit is not "
+            "one of them. The record belongs in V39_PREFIT_STOP_REPORT.md.")
+    return audit
+
+
+def experiment_spec(write=False):
+    spec = {
+        "prereg": "preregs/PREREG_coach_quality_2026-07-28.md (v3.9 PREFIT)",
+        "real_fit_authorized": REAL_FIT_AUTHORIZED,
+        "outer_seasons": OUTER_SEASONS, "recent_panel": RECENT_SEASONS,
+        "panel_first_season": PANEL_FIRST_SEASON,
+        "inner_validation": "expanding: inner training < validation < outer target",
+        "inner_min_train_seasons": INNER_MIN_TRAIN_SEASONS,
+        "inner_min_validation_seasons": INNER_MIN_VALIDATION_SEASONS,
+        "worked_example_outer_2018": [{"train": [2014, 2015], "validate": 2016},
+                                      {"train": [2014, 2015, 2016], "validate": 2017}],
+        "arms": ARMS, "fixed_diagnostic_arms": FIXED_DIAGNOSTIC_ARMS,
+        "cohort_sizes": COHORT_N,
+        "cohort_rule": "top-N by the ARM 0 prediction within (season, position)",
+        "full_panel_tolerance_mae": FULL_PANEL_TOLERANCE,
+        "min_relative_top_cohort_improvement": MIN_RELATIVE_IMPROVEMENT,
+        "tie_band_mae": TIE_BAND,
+        "tie_rule": "fewer added features; then the frozen arm order",
+        "primary_design": AF.DESIGN_A,
+        "oracle_design": AF.DESIGN_B,
+        "oracle_rule": "Design B can never enter nested selection and is labelled nondeployable",
+        "design_labels": AF.DESIGN_LABEL,
+        "bootstrap_draws": BOOTSTRAP_DRAWS, "bootstrap_seed": BOOTSTRAP_SEED,
+        "bootstrap_cluster_units": CLUSTER_UNITS,
+        "multiplicity": "Holm across the six fixed arms (ARM_HC, ARM_1-ARM_5) within each position",
+        "placebo": {"kind": "within-season TEAM-LEVEL permutation of complete coaching bundles",
+                    "draws": PLACEBO_DRAWS, "seed": PLACEBO_SEED,
+                    "bar": "observed improvement must beat the 95th percentile",
+                    "never": "individual player rows are not shuffled"},
+        "arm3_structurally_unavailable_before_target_season": 2018,
+        "repo_writes": "NONE — this module writes no repo artifact at all",
+        "improvement_statistic": {
+            "name": IMPROVEMENT_STATISTIC,
+            "definition": "MAE(ARM_0) - MAE(challenger) over ALL outer top-cohort rows POOLED; "
+                          "positive = challenger better",
+            "frozen_because": "prereg §7(1) says 'top-cohort MAE' without choosing pooled vs "
+                              "mean-per-season; frozen POOLED before any real outcome was visible "
+                              "because it matches the plain reading, matches what the clustered "
+                              "bootstrap in condition (2) resamples, and leaves conditions (3)/(4) "
+                              "to carry the per-season evidence instead of duplicating it",
+            "used_identically_for": ["the §7(1) 3% rule", "the §7(9) permutation placebo"],
+        },
+        "primary_pass_rule_ten_conditions": {
+            "c1_top_cohort_improves_3pct": PASS_MIN_RELATIVE_TOP_COHORT_IMPROVEMENT,
+            "c2_both_clustered_ci_upper_below_zero": "ci_hi < 0 for BOTH cluster units",
+            "c3_improves_6_of_8_outer_seasons": PASS_MIN_OUTER_SEASONS_IMPROVED,
+            "c4_improves_4_of_5_recent_seasons": PASS_MIN_RECENT_SEASONS_IMPROVED,
+            "c5_top_cohort_spearman_gain": PASS_MIN_SPEARMAN_GAIN,
+            "c6_full_panel_mae_worsens_at_most": PASS_MAX_FULL_PANEL_MAE_WORSENING,
+            "c7_full_panel_rmse_worsens_at_most_relative": PASS_MAX_FULL_PANEL_RMSE_WORSENING,
+            "c8_nonbaseline_arm_in_at_least_folds": PASS_MIN_NONBASELINE_FOLDS,
+            "c9_beats_placebo_percentile": PASS_PLACEBO_PERCENTILE,
+            "c10_all_assertions_pass": "timing, leakage, coverage, artifact integrity, "
+                                       "no-real-outcome",
+            "scope": "the NESTED-SELECTED Design A pipeline ONLY; no fixed arm and no Design B "
+                     "result can rescue a failed primary result",
+        },
+    }
+    if write:
+        raise RuntimeError(
+            "v3.9 authorises exactly five new repo data artifacts and the harness spec is not one of "
+            "them. The record belongs in V39_PREFIT_STOP_REPORT.md.")
+    return spec
+
+
+# =====================================================================================================
+# FOLDS
+# =====================================================================================================
+def expanding_inner_folds(seasons, outer_season,
+                          min_train_seasons=INNER_MIN_TRAIN_SEASONS,
+                          min_validation_seasons=INNER_MIN_VALIDATION_SEASONS):
+    """inner training < validation < outer target. Returns [] when the frozen minimums are unmet.
+
+    Same shape as `stage_models.expanding_folds`, restated here with the Stage-independent minimums
+    so the player-arm harness cannot silently inherit a Stage 1/2 relaxation.
+    """
+    hist = sorted(s for s in set(int(x) for x in seasons) if s < outer_season)
+    folds = [(tuple(hist[:i]), hist[i]) for i in range(len(hist)) if i >= min_train_seasons]
+    if len(folds) < min_validation_seasons:
+        return []
+    return folds
+
+
+# =====================================================================================================
+# FITTING — production engine, production hyperparameters
+# =====================================================================================================
+def fit_predict(spec, train, test, features):
+    """Fit with the bundle's FIXED family and hyperparameters. The player model is never retuned."""
+    RB, _ = _production_engine()
+    Xtr, Xte = RB._prep(spec["family"], train, test, features)
+    m = RB._make_model(spec["family"], spec["params"])
+    m.fit(Xtr, train["y"].to_numpy(float))
+    return np.asarray(m.predict(Xte), float)
+
+
+def _mae(y, p):
+    return float(np.mean(np.abs(np.asarray(y, float) - np.asarray(p, float))))
+
+
+def _rmse(y, p):
+    return float(np.sqrt(np.mean((np.asarray(y, float) - np.asarray(p, float)) ** 2)))
+
+
+def _spearman(y, p):
+    from scipy.stats import spearmanr
+    y, p = np.asarray(y, float), np.asarray(p, float)
+    if len(y) < 3 or np.nanstd(p) == 0:
+        return np.nan
+    return float(spearmanr(y, p, nan_policy="omit").correlation)
+
+
+# =====================================================================================================
+# PANEL ASSEMBLY
+# =====================================================================================================
+def attach_coach_features(panel, coach, arm, position):
+    """Left-join the arm's coaching features onto identical player rows.
+
+    ARM 0 returns the panel untouched, so every arm predicts the SAME rows in the SAME order.
+    A player row whose (season, team) has no coaching row would silently receive NaN, so it raises.
+    """
+    feats = AF.arm_features(arm, position)
+    if not feats:
+        return panel.copy(), []
+    c = coach[["season", "team"] + feats].drop_duplicates(["season", "team"])
+    n0 = len(panel)
+    out = panel.merge(c, on=["season", "team"], how="left")
+    assert len(out) == n0, "coaching join changed the player row count"
+    miss = out[feats].isna().all(axis=1).sum()
+    assert miss == 0, f"{miss} player rows have no coaching bundle for (season, team)"
+    _note_assertion("coach_join_preserved_rows")
+    return out, feats
+
+
+def assemble_real_panel(*_a, **_k):
+    """The ONLY door to a real fantasy outcome. Default-closed behind both locks.
+
+    No caller in this module, and no test, opens it. It exists so that the real run has one obvious
+    place to be authorised rather than a diffuse set of edits.
+    """
+    require_real_fit_authorization()
+    raise NotImplementedError(
+        "authorization passed, but the real panel assembly is deliberately NOT implemented in the "
+        "v3.9 prefit pass — implement it in the authorised follow-up amendment")
+
+
+def synthetic_panel(seasons=range(PANEL_FIRST_SEASON, 2026), seed=7, players_per_team=3,
+                    teams=None, positions=None):
+    """SYNTHETIC player panel with a SYNTHETIC target.
+
+    Carries the production baseline feature NAMES so the harness exercises the real column contract,
+    but every value and the target are generated. Nothing here is a fantasy outcome.
+    """
+    rng = np.random.default_rng(seed)
+    all_teams = sorted(pd.read_csv(DATA / "team_coach_features_design_a_v39.csv").team.unique())
+    teams = all_teams if teams is None else list(teams)
+    pools = builder_pools()
+    rows = []
+    for pos in (positions or POSITIONS):
+        for bucket in BUCKETS:
+            if (pos, bucket) in MISSING_BUNDLES:
+                continue
+            feats = pools[(pos, bucket)]
+            for s in seasons:
+                for t in teams:
+                    for k in range(players_per_team):
+                        r = dict(player_id=f"{pos}_{bucket}_{t}_{k}", player=f"{pos} {t} {k}",
+                                 season=int(s), team=t, position=pos,
+                                 is_rookie=int(bucket == "rookie"), bucket=bucket)
+                        for c in feats:
+                            r[c] = float(rng.normal())
+                        r["y"] = float(60 + 8 * r[feats[0]] + 4 * r[feats[1]] + rng.normal(0, 12))
+                        rows.append(r)
+    return pd.DataFrame(rows)
+
+
+# =====================================================================================================
+# COHORTS AND METRICS
+# =====================================================================================================
+def baseline_cohort_mask(frame, arm0_pred_col="pred_ARM_0"):
+    """Top-N by the ARM 0 prediction within (season, position). Cohorts are BASELINE-DEFINED, so an
+    arm can never reshape the cohort it is scored on."""
+    mask = np.zeros(len(frame), dtype=bool)
+    for (s, pos), g in frame.groupby(["season", "position"]):
+        n = COHORT_N[pos]
+        idx = g[arm0_pred_col].astype(float).nlargest(min(n, len(g)),
+                                                      keep="first").index
+        mask[frame.index.get_indexer(idx)] = True
+    return mask
+
+
+# =====================================================================================================
+# THE FROZEN IMPROVEMENT STATISTIC (v3.9 §9a — frozen here because the prereg was ambiguous)
+# =====================================================================================================
+# §7 condition 1 says "improves top-cohort MAE by >= 3%" without stating whether that is POOLED over
+# all outer rows or the MEAN of per-season top-cohort MAEs. Frozen now, before any real outcome is
+# visible, as **POOLED over all outer rows**, because:
+#   - it is the plain reading of "top-cohort MAE";
+#   - it is the same quantity the clustered bootstrap resamples (condition 2), so conditions 1 and 2
+#     cannot disagree about what is being estimated;
+#   - per-season behaviour is already covered separately by conditions 3 and 4, so a per-season mean
+#     headline would duplicate them and leave the pooled effect unmeasured.
+# The SAME function computes the observed statistic and every placebo draw.
+IMPROVEMENT_STATISTIC = "pooled_top_cohort_mae_reduction"
+
+# Frozen §7 primary pass thresholds.
+PASS_MIN_RELATIVE_TOP_COHORT_IMPROVEMENT = 0.03      # (1)
+PASS_MIN_OUTER_SEASONS_IMPROVED = 6                  # (3) of 8
+PASS_MIN_RECENT_SEASONS_IMPROVED = 4                 # (4) of 5
+PASS_MIN_SPEARMAN_GAIN = 0.005                       # (5)
+PASS_MAX_FULL_PANEL_MAE_WORSENING = 0.25             # (6)
+PASS_MAX_FULL_PANEL_RMSE_WORSENING = 0.01            # (7)
+PASS_MIN_NONBASELINE_FOLDS = 4                       # (8) of 8
+PASS_PLACEBO_PERCENTILE = 95                         # (9)
+
+
+def top_cohort_improvement(frame, challenger_col="pred_selected", base_col="pred_ARM_0",
+                           cohort_col="in_cohort"):
+    """POOLED top-cohort MAE reduction: ARM_0 MAE minus challenger MAE. Positive = challenger better.
+
+    Cohort membership comes from ARM_0, which carries no coaching feature, so it is invariant under the
+    permutation placebo — the observed statistic and every placebo draw are scored on the SAME rows.
+    """
+    sub = frame[frame[cohort_col].astype(bool)]
+    if not len(sub):
+        return np.nan
+    return _mae(sub["y"], sub[base_col]) - _mae(sub["y"], sub[challenger_col])
+
+
+def relative_top_cohort_improvement(frame, challenger_col="pred_selected",
+                                    base_col="pred_ARM_0", cohort_col="in_cohort"):
+    sub = frame[frame[cohort_col].astype(bool)]
+    if not len(sub):
+        return np.nan
+    base = _mae(sub["y"], sub[base_col])
+    return np.nan if base == 0 else top_cohort_improvement(
+        frame, challenger_col, base_col, cohort_col) / base
+
+
+def metric_block(frame, pred_col, label):
+    y = frame["y"].to_numpy(float)
+    p = frame[pred_col].to_numpy(float)
+    rho = [ _spearman(g["y"], g[pred_col]) for _s, g in frame.groupby("season") ]
+    return dict(label=label, n=len(frame), MAE=_mae(y, p), RMSE=_rmse(y, p),
+                mean_bias=float(np.mean(p - y)), median_bias=float(np.median(p - y)),
+                mean_within_season_spearman=float(np.nanmean(rho)) if rho else np.nan)
+
+
+# =====================================================================================================
+# NESTED SELECTION
+# =====================================================================================================
+def inner_scores(panel, coach, position, outer_season, arm0, verbose=False):
+    """Per arm: mean inner-validation full-panel MAE and top-cohort MAE, over expanding folds."""
+    folds = expanding_inner_folds(panel.season.unique(), outer_season)
+    if not folds:
+        return None, folds
+    acc = {a: dict(full=[], top=[]) for a in ARMS}
+    for train_seasons, val_season in folds:
+        assert max(train_seasons) < val_season < outer_season, "inner fold timing violated"
+        _note_assertion("inner_fold_timing")
+        preds = {}
+        row_key = None
+        for arm in ARMS:
+            parts = []
+            for bucket in BUCKETS:
+                if (position, bucket) in MISSING_BUNDLES:
+                    continue
+                spec = arm0[(position, bucket)]
+                sub = panel[(panel.position == position) & (panel.bucket == bucket)]
+                joined, cf = attach_coach_features(sub, coach, arm, position)
+                feats = spec["feature_cols"] + cf
+                tr = joined[joined.season.isin(train_seasons)].dropna(subset=["y"])
+                va = joined[joined.season == val_season].dropna(subset=["y"])
+                if not len(tr) or not len(va):
+                    continue
+                p = fit_predict(spec, tr, va, feats)
+                parts.append(va[["player_id", "season", "team", "position", "y"]].assign(pred=p))
+            if not parts:
+                continue
+            f = pd.concat(parts, ignore_index=True).sort_values(
+                ["player_id"], kind="mergesort").reset_index(drop=True)
+            key = tuple(zip(f.player_id, f.season))
+            if row_key is None:
+                row_key = key
+            assert key == row_key, f"arm {arm} predicted a different row set in fold {val_season}"
+            _note_assertion("identical_rows_across_arms")
+            preds[arm] = f
+        if not preds:
+            continue
+        base = preds["ARM_0"].rename(columns={"pred": "pred_ARM_0"})
+        cmask = baseline_cohort_mask(base)
+        for arm, f in preds.items():
+            acc[arm]["full"].append(_mae(f.y, f.pred))
+            acc[arm]["top"].append(_mae(f.y[cmask], f.pred[cmask]))
+    out = {}
+    for arm in ARMS:
+        if acc[arm]["full"]:
+            out[arm] = dict(inner_full_mae=float(np.mean(acc[arm]["full"])),
+                            inner_top_mae=float(np.mean(acc[arm]["top"])),
+                            n_added_features=len(AF.arm_features(arm, position)))
+    if verbose:
+        for a in ARMS:
+            if a in out:
+                print(f"      {a:7s} full {out[a]['inner_full_mae']:7.3f} "
+                      f"top {out[a]['inner_top_mae']:7.3f} (+{out[a]['n_added_features']} feats)")
+    return out, folds
+
+
+def select_arm(scores):
+    """Frozen selection rule. Returns (arm, reason, table)."""
+    base = scores["ARM_0"]
+    eligible = []
+    for arm, s in scores.items():
+        if arm == "ARM_0":
+            continue
+        ok = (s["inner_full_mae"] - base["inner_full_mae"]) <= FULL_PANEL_TOLERANCE
+        s["eligible"] = bool(ok)
+        s["full_panel_delta"] = s["inner_full_mae"] - base["inner_full_mae"]
+        s["top_cohort_delta"] = s["inner_top_mae"] - base["inner_top_mae"]
+        s["relative_improvement"] = (base["inner_top_mae"] - s["inner_top_mae"]) / base["inner_top_mae"]
+        if ok:
+            eligible.append(arm)
+    if not eligible:
+        return "ARM_0", "no coaching arm cleared the 0.25 full-panel MAE tolerance", scores
+    best = min(eligible, key=lambda a: (scores[a]["inner_top_mae"], ARMS.index(a)))
+    if scores[best]["relative_improvement"] < MIN_RELATIVE_IMPROVEMENT:
+        return "ARM_0", (f"best eligible arm {best} improved top-cohort MAE by "
+                        f"{100*scores[best]['relative_improvement']:.2f}% < 1%"), scores
+    band = [a for a in eligible
+            if scores[a]["inner_top_mae"] - scores[best]["inner_top_mae"] <= TIE_BAND]
+    pick = min(band, key=lambda a: (scores[a]["n_added_features"], ARMS.index(a)))
+    reason = (f"{pick} selected: top-cohort MAE within {TIE_BAND} of the best ({best}) with the "
+              f"fewest added features" if pick != best
+              else f"{pick} selected: best eligible top-cohort MAE")
+    return pick, reason, scores
+
+
+# =====================================================================================================
+# OUTER EVALUATION
+# =====================================================================================================
+def outer_predictions(panel, coach, position, outer_season, arm0, arms=ARMS):
+    """Fit on ALL seasons < outer_season, predict outer_season. Identical rows across arms."""
+    frames, row_key = {}, None
+    for arm in arms:
+        parts = []
+        for bucket in BUCKETS:
+            if (position, bucket) in MISSING_BUNDLES:
+                continue
+            spec = arm0[(position, bucket)]
+            sub = panel[(panel.position == position) & (panel.bucket == bucket)]
+            joined, cf = attach_coach_features(sub, coach, arm, position)
+            feats = spec["feature_cols"] + cf
+            tr = joined[joined.season < outer_season].dropna(subset=["y"])
+            te = joined[joined.season == outer_season].dropna(subset=["y"])
+            if not len(tr) or not len(te):
+                continue
+            assert (tr.season < outer_season).all(), "outer fit touched its own test season"
+            _note_assertion("outer_no_self_train")
+            p = fit_predict(spec, tr, te, feats)
+            parts.append(te[["player_id", "season", "team", "position", "y"]].assign(pred=p))
+        if not parts:
+            continue
+        f = pd.concat(parts, ignore_index=True).sort_values(
+            ["player_id"], kind="mergesort").reset_index(drop=True)
+        key = tuple(zip(f.player_id, f.season))
+        if row_key is None:
+            row_key = key
+        assert key == row_key, f"arm {arm} predicted a different outer row set ({outer_season})"
+        frames[arm] = f
+    return frames
+
+
+def clustered_bootstrap(frame, sel_col, base_col, unit, draws=BOOTSTRAP_DRAWS,
+                        seed=BOOTSTRAP_SEED):
+    """Cluster bootstrap of the paired top-cohort MAE difference (selected - ARM 0).
+
+    Resampling units are whole clusters -- all rows of a player, or all rows of a team-season --
+    never individual rows, because coaching features are shared within a team-season and player rows
+    repeat across seasons.
+    """
+    keys = frame[unit].astype(str).agg("|".join, axis=1).to_numpy()
+    uniq, inv = np.unique(keys, return_inverse=True)
+    e_sel = np.abs(frame[sel_col].to_numpy(float) - frame["y"].to_numpy(float))
+    e_base = np.abs(frame[base_col].to_numpy(float) - frame["y"].to_numpy(float))
+    # Per-cluster sums make a resampled MAE exact without materialising row indices:
+    # mean(|e| over resampled rows) = sum(cluster sums of the drawn clusters) / sum(their counts).
+    # Concatenating row indices for every draw was correct but O(rows) per draw and far too slow
+    # at the frozen 20,000 draws across every arm, cluster unit and position.
+    n = len(uniq)
+    sel_sum = np.bincount(inv, weights=e_sel, minlength=n)
+    base_sum = np.bincount(inv, weights=e_base, minlength=n)
+    cnt = np.bincount(inv, minlength=n).astype(float)
+    rng = np.random.default_rng(seed)
+    obs = float(e_sel.mean() - e_base.mean())
+    diffs = np.empty(draws)
+    for b in range(draws):
+        pick = rng.integers(0, n, n)
+        diffs[b] = (sel_sum[pick].sum() - base_sum[pick].sum()) / cnt[pick].sum()
+    lo, hi = np.percentile(diffs, [2.5, 97.5])
+    p = 2.0 * min((diffs >= 0).mean(), (diffs <= 0).mean())
+    return dict(unit="+".join(unit), observed_diff=obs, ci_lo=float(lo), ci_hi=float(hi),
+                p_value=float(min(1.0, max(p, 1.0 / draws))), draws=draws, n_clusters=n)
+
+
+def holm(pvals):
+    """Holm-Bonferroni across the six fixed arms within a position."""
+    items = sorted(pvals.items(), key=lambda kv: kv[1])
+    m, out, running = len(items), {}, 0.0
+    for i, (k, p) in enumerate(items):
+        running = max(running, min(1.0, (m - i) * p))
+        out[k] = running
+    return out
+
+
+def permute_team_bundles(coach, seed):
+    """Within EACH season, permute complete team coaching bundles among that season's teams.
+
+    Whole bundles move together and player rows are never touched, so the null preserves both the
+    joint structure of the features and each season's composition.
+    """
+    rng = np.random.default_rng(seed)
+    parts = []
+    for s, g in coach.groupby("season"):
+        g = g.sort_values("team").reset_index(drop=True)
+        perm = rng.permutation(len(g))
+        moved = g.iloc[perm].reset_index(drop=True)
+        moved["season"] = s
+        moved["team"] = g["team"].values          # bundle rows reassigned to different teams
+        parts.append(moved)
+    return pd.concat(parts, ignore_index=True)
+
+
+def nested_selected_outer_frame(panel, coach, position, outer_seasons, arm0, verbose=False):
+    """Run the FULL nested pipeline; return (outer frame, {outer_season: selected arm}).
+
+    One call = expanding inner representation selection per outer fold, a fit on all prior seasons with
+    that fold's selected representation, and a prediction on the outer season. The §7 verdict and the
+    placebo both score this object, so the observed statistic and the null come from one code path.
+    """
+    merged, picks = [], {}
+    for Y in outer_seasons:
+        scores, _folds = inner_scores(panel, coach, position, Y, arm0, verbose=False)
+        if scores is None:
+            if verbose:
+                print(f"  {position} {Y}: SKIPPED (frozen inner minimums not met)")
+            continue
+        pick, _reason, _table = select_arm(scores)
+        need = ["ARM_0"] if pick == "ARM_0" else ["ARM_0", pick]
+        fr = outer_predictions(panel, coach, position, Y, arm0, arms=need)
+        if "ARM_0" not in fr:
+            continue
+        row = fr["ARM_0"].rename(columns={"pred": "pred_ARM_0"}).copy()
+        row["pred_selected"] = (row["pred_ARM_0"].to_numpy(float) if pick == "ARM_0"
+                                else fr[pick]["pred"].to_numpy(float))
+        row["selected_arm"] = pick
+        merged.append(row)
+        picks[Y] = pick
+    if not merged:
+        return None, {}
+    m = pd.concat(merged, ignore_index=True)
+    m["in_cohort"] = baseline_cohort_mask(m)
+    return m, picks
+
+
+def placebo_distribution(panel, coach, position, outer_seasons, arm0, draws=PLACEBO_DRAWS,
+                         seed=PLACEBO_SEED, verbose=False):
+    """The frozen §7(9) null: the NESTED-SELECTED pipeline under permuted team bundles.
+
+    The earlier implementation permuted bundles and then scored ONE fixed arm — the modal selection.
+    That is not the pre-registered condition, which is about the nested-selected pipeline. Every draw
+    now reruns representation selection independently for every outer fold on the permuted features and
+    may select a DIFFERENT arm in each fold, exactly as the observed pipeline does.
+
+    ARM_0 carries no coaching feature, so its predictions — and therefore cohort membership — are
+    INVARIANT under permutation. The observed statistic and every draw are scored on identical rows,
+    with an identical cohort definition and the identical pooled MAE-difference definition.
+
+    COMPUTE COST, stated plainly: one draw is a full nested run over every outer fold, so at the frozen
+    200 draws this is by far the most expensive step in the experiment. `draws` is the test-only lever.
+    """
+    vals, fold_picks = [], []
+    for d in range(draws):
+        pc = permute_team_bundles(coach, seed + d)
+        m, picks = nested_selected_outer_frame(panel, pc, position, outer_seasons, arm0)
+        if m is None:
+            continue
+        vals.append(float(top_cohort_improvement(m)))
+        fold_picks.append(picks)
+        if verbose and (d + 1) % 25 == 0:
+            print(f"      placebo {d + 1}/{draws}")
+    return np.array(vals), fold_picks
+
+
+# =====================================================================================================
+# DRIVER
+# =====================================================================================================
+def run_experiment(panel, coach_a, coach_b=None, outer_seasons=OUTER_SEASONS, positions=POSITIONS,
+                   bootstrap_draws=BOOTSTRAP_DRAWS, placebo_draws=PLACEBO_DRAWS,
+                   run_placebo=True, verbose=True, run_mode=DEFAULT_RUN_MODE):
+    """Full nested pipeline. Target-agnostic: it never inspects where `panel['y']` came from.
+
+    `run_mode` governs ONLY the real-fit lock expectation (§3). It never relaxes an artifact, timing,
+    leakage, coverage or feature-policy check.
+    """
+    ok, detail = validate_run_mode(run_mode)
+    assert ok, f"invalid run mode: {detail}"
+    reset_pipeline_assertions()
+    arm0 = arm0_definition()
+    sel_rows, metric_rows, boot_rows = [], [], []
+    placebo_rows, oracle_rows, verdict_rows, preflight_rows = [], [], [], []
+
+    for pos in positions:
+        outer_frames, fold_picks = {}, {}
+        for Y in outer_seasons:
+            scores, folds = inner_scores(panel, coach_a, pos, Y, arm0, verbose=verbose)
+            if scores is None:
+                if verbose:
+                    print(f"  {pos} {Y}: SKIPPED (frozen inner minimums not met)")
+                continue
+            pick, reason, table = select_arm(scores)
+            sel_rows.append(dict(position=pos, outer_season=Y, selected_arm=pick, reason=reason,
+                                 n_inner_folds=len(folds),
+                                 inner_folds=";".join(f"{list(t)}->{v}" for t, v in folds),
+                                 **{f"inner_top_{a}": table[a]["inner_top_mae"]
+                                    for a in table},
+                                 **{f"inner_full_{a}": table[a]["inner_full_mae"]
+                                    for a in table}))
+            fr = outer_predictions(panel, coach_a, pos, Y, arm0)
+            outer_frames[Y] = (fr, pick)
+            fold_picks[Y] = pick
+            if verbose:
+                print(f"  {pos} {Y}: selected {pick} — {reason}")
+
+        if not outer_frames:
+            continue
+        merged = []
+        for Y, (fr, pick) in outer_frames.items():
+            base = fr["ARM_0"].rename(columns={"pred": "pred_ARM_0"})
+            row = base.copy()
+            for arm, f in fr.items():
+                row[f"pred_{arm}"] = f["pred"].to_numpy(float)
+            row["pred_selected"] = row[f"pred_{pick}"]
+            row["selected_arm"] = pick
+            merged.append(row)
+        m = pd.concat(merged, ignore_index=True)
+        m["in_cohort"] = baseline_cohort_mask(m)
+
+        for scope, sub in (("full_2018_2025", m),
+                           ("top_cohort_2018_2025", m[m.in_cohort]),
+                           ("full_recent_2021_2025", m[m.season.isin(RECENT_SEASONS)]),
+                           ("top_cohort_recent_2021_2025",
+                            m[m.in_cohort & m.season.isin(RECENT_SEASONS)])):
+            if not len(sub):
+                continue
+            for arm in ["ARM_0", "selected"] + FIXED_DIAGNOSTIC_ARMS:
+                col = f"pred_{arm}"
+                if col not in sub.columns:
+                    continue
+                metric_rows.append(dict(position=pos, scope=scope, arm=arm, design=AF.DESIGN_A,
+                                        **metric_block(sub, col, arm)))
+
+        cohort = m[m.in_cohort].reset_index(drop=True)
+        for unit_name, unit in CLUSTER_UNITS.items():
+            boot_rows.append(dict(position=pos, arm="selected", design=AF.DESIGN_A,
+                                  cluster=unit_name,
+                                  **clustered_bootstrap(cohort, "pred_selected", "pred_ARM_0",
+                                                        unit, draws=bootstrap_draws)))
+        raw_p = {}
+        for arm in FIXED_DIAGNOSTIC_ARMS:
+            col = f"pred_{arm}"
+            if col not in cohort.columns:
+                continue
+            per_unit = {}
+            for unit_name, unit in CLUSTER_UNITS.items():
+                r = clustered_bootstrap(cohort, col, "pred_ARM_0", unit, draws=bootstrap_draws)
+                per_unit[unit_name] = r
+                boot_rows.append(dict(position=pos, arm=arm, design=AF.DESIGN_A,
+                                      cluster=unit_name, **r))
+            raw_p[arm] = max(v["p_value"] for v in per_unit.values())
+        adj = holm(raw_p)
+        for arm, p in raw_p.items():
+            boot_rows.append(dict(position=pos, arm=arm, design=AF.DESIGN_A, cluster="holm",
+                                  unit="holm", observed_diff=np.nan, ci_lo=np.nan, ci_hi=np.nan,
+                                  p_value=p, draws=bootstrap_draws, n_clusters=np.nan,
+                                  holm_adjusted_p=adj[arm]))
+
+        # ---- placebo: the NESTED-SELECTED pipeline under permuted bundles, not a modal fixed arm ----
+        obs_stat = float(top_cohort_improvement(m))
+        placebo = dict(observed=obs_stat, p95=np.nan, draws=0)
+        if run_placebo:
+            dist, draw_picks = placebo_distribution(panel, coach_a, pos, outer_seasons, arm0,
+                                                    draws=placebo_draws, verbose=verbose)
+            if len(dist):
+                placebo = dict(observed=obs_stat, p95=float(np.percentile(dist, 95)),
+                               draws=int(len(dist)))
+            n_multi = sum(1 for p in draw_picks if len(set(p.values())) > 1)
+            placebo_rows.append(dict(
+                position=pos, design=AF.DESIGN_A, challenger="nested_selected_design_a",
+                improvement_statistic=IMPROVEMENT_STATISTIC,
+                observed_improvement=obs_stat, draws=int(len(dist)),
+                p95=placebo["p95"],
+                beats_p95=bool(len(dist) and obs_stat > np.percentile(dist, 95)),
+                draws_with_fold_specific_selection=n_multi,
+                observed_fold_selections=";".join(f"{k}:{v}" for k, v in sorted(fold_picks.items()))))
+
+        # ---- the frozen ten-condition §7 verdict, on the nested-selected Design A pipeline only ----
+        sel_boot = {u: clustered_bootstrap(cohort, "pred_selected", "pred_ARM_0", unit,
+                                           draws=bootstrap_draws)
+                    for u, unit in CLUSTER_UNITS.items()}
+        integrity_ok, integrity_detail, pf = _integrity_check(run_mode=run_mode)
+        preflight_rows.append(dict(position=pos, run_mode=run_mode, all_ok=pf["all_ok"],
+                                   n_checks=pf["n_checks"], n_failed=pf["n_failed"],
+                                   **{f"chk_{k}": v["ok"] for k, v in pf["checks"].items()},
+                                   **{f"why_{k}": v["detail"]
+                                      for k, v in pf["checks"].items() if not v["ok"]}))
+        verdict_rows.append(primary_verdict(
+            pos, m, sel_boot, placebo, fold_picks,
+            integrity_ok=integrity_ok, integrity_detail=integrity_detail,
+            outer_seasons=outer_seasons))
+
+        if coach_b is not None:
+            for Y in outer_seasons:
+                fr = outer_predictions(panel, coach_b, pos, Y, arm0)
+                if "ARM_0" not in fr:
+                    continue
+                base = fr["ARM_0"].rename(columns={"pred": "pred_ARM_0"})
+                cm = baseline_cohort_mask(base)
+                for arm, f in fr.items():
+                    oracle_rows.append(dict(
+                        position=pos, outer_season=Y, arm=arm, design=AF.DESIGN_B,
+                        label=AF.DESIGN_LABEL[AF.DESIGN_B],
+                        top_cohort_mae=_mae(f.y[cm], f.pred[cm]),
+                        full_panel_mae=_mae(f.y, f.pred)))
+
+    return dict(selection=pd.DataFrame(sel_rows), metrics=pd.DataFrame(metric_rows),
+                bootstrap=pd.DataFrame(boot_rows), placebo=pd.DataFrame(placebo_rows),
+                oracle=pd.DataFrame(oracle_rows), verdict=pd.DataFrame(verdict_rows),
+                preflight=pd.DataFrame(preflight_rows))
+
+
+# =====================================================================================================
+# THE NO-REAL-OUTCOME BOUNDARY, AS PRODUCTION LOGIC (v3.9c §5)
+# =====================================================================================================
+# C10 claims to include the no-real-outcome/access-boundary assertions, but v3.9b implemented them only
+# as tests — so the runtime guarantee did not exist and the test could drift into a parallel definition.
+# The validation now lives HERE and the tests call it, so there is one definition.
+V39_SOURCE_MODULES = ("build_arm_features_v39.py", "run_coach_projection_experiment_v39.py")
+BANNED_OUTCOME_CALLEES = frozenset({"load_player_stats", "season_total_target", "load_pbp",
+                                    "assemble", "do_assemble", "walk_forward", "fit_final_model",
+                                    "fit_full_and_score", "_score_bundle"})
+BANNED_OUTCOME_TOKENS = ("season_dataset_2014_2026.csv", "season_dataset_2014_2025.csv",
+                         "season_dataset_2002_2025.csv", "sleeper_pts_half_ppr", "target_ppg",
+                         "target_games", "half_ppr")
+READER_CALLEES = frozenset({"read_csv", "read_parquet", "read_json", "open"})
+
+
+def _executable_tree(src):
+    """Parse and strip every docstring, so DOCUMENTING the boundary is not mistaken for crossing it."""
+    import ast
+    tree = ast.parse(src)
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+            body = node.body
+            if (body and isinstance(body[0], ast.Expr) and isinstance(body[0].value, ast.Constant)
+                    and isinstance(body[0].value.value, str)):
+                node.body = body[1:]
+    return tree
+
+
+def no_real_outcome_access(source_dir=None, sources=None):
+    """Prove neither v3.9 module has an executable path to a real fantasy outcome.
+
+    Checks, on the AST with docstrings stripped:
+      1. no call to a banned outcome-producing callee;
+      2. no reader call (`read_csv`/`read_parquet`/`read_json`/`open`) whose literal argument names a
+         real player panel;
+      3. no outcome column name used as a subscript or handed to a reader;
+      4. `assemble_real_panel` is authorization-FIRST — `require_real_fit_authorization()` is its first
+         statement — and remains deliberately unimplemented (raises `NotImplementedError`);
+      5. neither module assigns True to the lock constant or writes the env token.
+
+    `source_dir`/`sources` allow a regression test to inject a banned call without touching canonical
+    source. Returns (ok, detail).
+    """
+    import ast
+    if sources is None:
+        base = HERE if source_dir is None else pathlib.Path(source_dir)
+        sources = {}
+        for m in V39_SOURCE_MODULES:
+            p = base / m
+            if not p.exists():
+                return False, f"{m} not found under {base}"
+            sources[m] = p.read_text(encoding="utf-8")
+
+    problems = []
+    for mod, src in sources.items():
+        try:
+            tree = _executable_tree(src)
+        except SyntaxError as e:
+            problems.append(f"{mod}: unparseable ({e})")
+            continue
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Call):
+                f = node.func
+                name = f.attr if isinstance(f, ast.Attribute) else getattr(f, "id", None)
+                if name in BANNED_OUTCOME_CALLEES:
+                    problems.append(f"{mod}: calls {name}() — a real-outcome path")
+                if name in READER_CALLEES:
+                    for arg in node.args:
+                        if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
+                            for tok in BANNED_OUTCOME_TOKENS:
+                                if tok in arg.value:
+                                    problems.append(f"{mod}: {name}() reads {tok!r}")
+            if isinstance(node, ast.Subscript):
+                sl = node.slice
+                lits = []
+                if isinstance(sl, ast.Constant) and isinstance(sl.value, str):
+                    lits = [sl.value]
+                elif isinstance(sl, (ast.List, ast.Tuple)):
+                    lits = [e.value for e in sl.elts
+                            if isinstance(e, ast.Constant) and isinstance(e.value, str)]
+                for lit in lits:
+                    for tok in BANNED_OUTCOME_TOKENS:
+                        if tok in lit:
+                            problems.append(f"{mod}: column access {lit!r} is a real outcome")
+            if isinstance(node, ast.Assign):
+                for t in node.targets:
+                    if (isinstance(t, ast.Name) and t.id == "REAL_FIT_AUTHORIZED"
+                            and not (isinstance(node.value, ast.Constant)
+                                     and node.value.value is False)):
+                        problems.append(f"{mod}: REAL_FIT_AUTHORIZED is not assigned False")
+                    if (isinstance(t, ast.Subscript)
+                            and isinstance(t.value, ast.Attribute) and t.value.attr == "environ"):
+                        problems.append(f"{mod}: writes os.environ (could open the env lock)")
+
+    # `assemble_real_panel` must be authorization-first and unimplemented.
+    harness = sources.get("run_coach_projection_experiment_v39.py")
+    if harness is None:
+        problems.append("harness source unavailable; cannot validate assemble_real_panel")
+    else:
+        fn = None
+        for node in ast.walk(_executable_tree(harness)):
+            if isinstance(node, ast.FunctionDef) and node.name == "assemble_real_panel":
+                fn = node
+        if fn is None:
+            problems.append("assemble_real_panel is missing")
+        else:
+            first = fn.body[0] if fn.body else None
+            calls_auth = (isinstance(first, ast.Expr) and isinstance(first.value, ast.Call)
+                          and getattr(first.value.func, "id", None)
+                          == "require_real_fit_authorization")
+            if not calls_auth:
+                problems.append("assemble_real_panel does not call "
+                                "require_real_fit_authorization() FIRST")
+            raises_ni = any(isinstance(n, ast.Raise)
+                            and getattr(getattr(n.exc, "func", n.exc), "id", None)
+                            == "NotImplementedError"
+                            for n in ast.walk(fn))
+            if not raises_ni:
+                problems.append("assemble_real_panel no longer raises NotImplementedError")
+    return (not problems), ("; ".join(problems[:4]) if problems
+                            else "no executable path to a real fantasy outcome; "
+                                 "assemble_real_panel is authorization-first and unimplemented")
+
+
+# =====================================================================================================
+# CONDITION 10 — A REAL RUNTIME PREFLIGHT (v3.9b §2, extended v3.9c)
+# =====================================================================================================
+# v3.9a's `_integrity_check()` checked only production hashes, the ten upstream coaching hashes, and the
+# lock state, while C10 was DOCUMENTED as "every timing, leakage, coverage, artifact-integrity and
+# no-real-outcome assertion". This is the preflight that makes the claim true. Every check is
+# deterministic and reads NO outcome.
+V39_ARTIFACT_HASHES = {
+    # Filled at the end of the v3.9b pass; `test_pinned_v39_hashes_match_disk` fails if it goes stale.
+    "team_coach_features_design_a_v39.csv": "b3e5aa463fff10161cf3abb78e0854f2",
+    "team_coach_features_design_b_oracle_v39.csv": "5f8cf19b9aa4310b7eebbfb2406092c1",
+    "arm_feature_manifest_v39.json": "65b596906eec757018e5b37b367835c2",
+    "arm_feature_coverage_v39.csv": "807e38813cdd51800905e2b3c1a6d507",
+    # v3.9c: changed because the false primary-policy metadata was corrected (§3).
+    "arm_feature_lineage_v39.csv": "fcf8692bedab4e23652486cdcfe8f0b0",
+}
+PREFLIGHT_CHECKS = (
+    "protected_hashes", "v39_artifacts_pinned", "v39_artifacts_readable",
+    "no_unauthorized_v39_artifact",
+    "no_coaching_parquet", "feature_table_keys_and_rows", "design_a_outer_identity_coverage",
+    "unknown_and_no_history_routing", "forbidden_feature_policy", "manifest_full_x_matches_bundles",
+    "manifest_qb_rookie_null", "coverage_reconciles", "lineage_strict_timing",
+    "lineage_states_the_primary_policy",
+    "contribution_lineage_reconciles", "design_b_oracle_and_unselectable",
+    "production_models_identical", "no_real_outcome_access",
+    "pipeline_timing_assertions_ran", "run_mode_locks",
+)
+
+
+def preflight(run_mode=DEFAULT_RUN_MODE, pipeline_assertions=None, data_dir=None,
+              require_pipeline_assertions=True):
+    """Deterministic runtime validation backing condition (10). Reads no outcome.
+
+    Returns `{check: {"ok": bool, "detail": str}}` plus `all_ok`. C10 passes only when EVERY required
+    check is true. `data_dir` lets a test point the artifact checks at a temporary copy so a corrupted
+    contract can be proven to fail **without mutating a canonical artifact**.
+    """
+    D = DATA if data_dir is None else pathlib.Path(data_dir)
+    res, fails = {}, {}
+
+    def check(name, fn):
+        try:
+            ok, detail = fn()
+        except Exception as e:                                   # noqa: BLE001
+            ok, detail = False, f"{type(e).__name__}: {e}"
+        res[name] = dict(ok=bool(ok), detail=detail)
+        if not ok:
+            fails[name] = detail
+
+    # ---- FAIL-CLOSED input loading (v3.9c §2) ---------------------------------------------------
+    # v3.9b read the feature tables, manifest, coverage and lineage OUTSIDE the guarded `check()`
+    # wrapper, so a missing or malformed artifact raised FileNotFoundError / ParserError and the
+    # promised structured record was never returned. Every input is now loaded defensively up front;
+    # a load failure is recorded and every dependent semantic check reports `blocked by <load>`
+    # instead of crashing the preflight.
+    loaded, load_err = {}, {}
+
+    def _load(name, fn):
+        try:
+            obj = fn()
+            if obj is None:
+                raise ValueError("loader returned None")
+            loaded[name] = obj
+        except Exception as e:                                   # noqa: BLE001
+            load_err[name] = f"{type(e).__name__}: {e}"
+
+    def _csv(fname, required_cols=()):
+        def go():
+            p = D / fname
+            if not p.exists():
+                raise FileNotFoundError(f"{fname} is missing")
+            df = pd.read_csv(p)
+            missing = [c for c in required_cols if c not in df.columns]
+            if missing:
+                raise ValueError(f"{fname} schema invalid: missing {missing}")
+            if not len(df):
+                raise ValueError(f"{fname} is empty")
+            return df
+        return go
+
+    def _json(fname, required_keys=()):
+        def go():
+            p = D / fname
+            if not p.exists():
+                raise FileNotFoundError(f"{fname} is missing")
+            obj = json.loads(p.read_text(encoding="utf-8"))
+            missing = [k for k in required_keys if k not in obj]
+            if missing:
+                raise ValueError(f"{fname} schema invalid: missing keys {missing}")
+            return obj
+        return go
+
+    FEATURE_COLS = ("season", "team", "caller_identity_known", "caller_history_games_career")
+    _load("design_a", _csv("team_coach_features_design_a_v39.csv", FEATURE_COLS))
+    _load("design_b", _csv("team_coach_features_design_b_oracle_v39.csv", FEATURE_COLS))
+    _load("coverage", _csv("arm_feature_coverage_v39.csv",
+                           ("design", "arm", "season", "identity_state")))
+    _load("lineage", _csv("arm_feature_lineage_v39.csv", ("record_kind",)))
+    _load("manifest", _json("arm_feature_manifest_v39.json", ("by_position", "full_model_x")))
+
+    def _need(*names):
+        """Return (ok, blocked_detail). `blocked_detail` is None when every input is available."""
+        bad = [n for n in names if n not in loaded]
+        if not bad:
+            return True, None
+        return False, "; ".join(f"blocked by {n} load failure ({load_err[n]})" for n in bad)
+
+    def _artifacts_readable():
+        if load_err:
+            return False, "; ".join(f"{k}: {v}" for k, v in load_err.items())
+        return True, "all five v3.9 artifacts load with a valid schema"
+    check("v39_artifacts_readable", _artifacts_readable)
+
+    # ---- artifact integrity -------------------------------------------------------------------
+    def _protected():
+        bad = [f for f, h in AF.UPSTREAM_PROTECTED.items()
+               if not (D / f).exists() or md5(D / f) != h]
+        bad += [f for f, h in PRODUCTION_HASHES.items()
+                if not (MODELS / f).exists() or md5(MODELS / f) != h]
+        r = SEAS / "models" / "rookie_ppg_model.pkl"
+        if not r.exists() or md5(r) != ROOKIE_PPG_MD5:
+            bad.append("rookie_ppg_model.pkl")
+        return (not bad), (f"changed/missing: {bad}" if bad
+                           else "18/18 protected artifacts byte-identical")
+    check("protected_hashes", _protected)
+
+    def _pinned():
+        bad = [f for f, h in V39_ARTIFACT_HASHES.items()
+               if not (D / f).exists() or md5(D / f) != h]
+        return (not bad), (f"changed/missing: {bad}" if bad else "5/5 v3.9 artifacts match their pins")
+    check("v39_artifacts_pinned", _pinned)
+
+    def _no_extra():
+        found = {p.name for p in D.glob("*_v39.*")}
+        extra = sorted(found - set(V39_ARTIFACT_HASHES))
+        return (not extra), (f"unauthorized v3.9 artifacts: {extra}" if extra
+                             else "exactly the five authorized artifacts")
+    check("no_unauthorized_v39_artifact", _no_extra)
+
+    def _no_parquet():
+        pq = [str(p) for p in (D.parent).rglob("*.parquet")]
+        return (not pq), (f"parquet under coaching/: {pq[:3]}" if pq else "no coaching parquet")
+    check("no_coaching_parquet", _no_parquet)
+
+    # ---- feature tables ------------------------------------------------------------------------
+    def _keys():
+        ok, blocked = _need("design_a", "design_b")
+        if not ok:
+            return False, blocked
+        a, b = loaded["design_a"], loaded["design_b"]
+        bad = []
+        for name, df in (("design_a", a), ("design_b_oracle", b)):
+            if len(df) != 416:
+                bad.append(f"{name}: {len(df)} rows, expected 416")
+            if df.duplicated(["season", "team"]).any():
+                bad.append(f"{name}: duplicate (season, team)")
+            if sorted(df.season.unique()) != AF.TARGET_SEASONS:
+                bad.append(f"{name}: unexpected season set")
+        return (not bad), ("; ".join(bad) if bad else "both tables 416 rows, unique keys, 2014-2026")
+    check("feature_table_keys_and_rows", _keys)
+
+    def _cov_a():
+        ok, blocked = _need("design_a")
+        if not ok:
+            return False, blocked
+        a = loaded["design_a"]
+        o = a[a.season.between(2018, 2025)]
+        n = int((o.caller_identity_known == 1).sum())
+        return n == 152, f"Design A outer known target identities = {n}/256 (required 152)"
+    check("design_a_outer_identity_coverage", _cov_a)
+
+    def _routing():
+        ok, blocked = _need("design_a", "design_b")
+        if not ok:
+            return False, blocked
+        a, b = loaded["design_a"], loaded["design_b"]
+        bad = []
+        u = a[a.caller_identity_known == 0]
+        if not len(u):
+            bad.append("no unknown-caller rows to validate")
+        checks = [(u.pc_career_off_rank_pct, AF.PRIOR_RANKPCT, "rank pct"),
+                  (u.caller_adjusted_offense_effect, AF.NEUTRAL_EFFECT, "arm3 caller"),
+                  (u.noncalling_hc_context_effect, AF.NEUTRAL_EFFECT, "arm3 context"),
+                  (u.pc_tenure_current_team, AF.NEUTRAL_TENURE, "tenure"),
+                  (u.pc_changed_entering, AF.NEUTRAL_CHANGED, "changed"),
+                  (u.caller_is_head_coach, AF.NEUTRAL_IS_HC, "is_hc")]
+        for series, want, label in checks:
+            if not (series == want).all():
+                bad.append(f"unknown-caller {label} != {want}")
+        for c in AF.ARM2_QUALITY:
+            if not (u[c] == AF.PRIOR_Z).all():
+                bad.append(f"unknown-caller {c} != 0")
+        nh = a[(a.caller_identity_known == 1) & (a.caller_history_games_career == 0)]
+        if len(nh) and not (nh.pc_career_off_rank_pct == AF.PRIOR_RANKPCT).all():
+            bad.append("known-no-history rank pct != league prior")
+        if len(nh) and (nh.caller_is_head_coach == AF.NEUTRAL_IS_HC).any():
+            bad.append("known-no-history row carries the UNKNOWN neutral is_hc value")
+        cols = [c for c in AF.ALL_FEATURE_COLUMNS if c != "hc_changed_entering"]
+        if a[cols].isna().any().any() or b[cols].isna().any().any():
+            bad.append("a model feature is NaN; unknown must carry the neutral VALUE")
+        return (not bad), ("; ".join(bad) if bad
+                           else "unknown and known-no-history route to the frozen priors")
+    check("unknown_and_no_history_routing", _routing)
+
+    def _forbidden():
+        ok, blocked = _need("manifest")
+        if not ok:
+            return False, blocked
+        AF.assert_no_forbidden_features(AF.ALL_FEATURE_COLUMNS, "preflight")
+        for pos, arms in loaded["manifest"]["by_position"].items():
+            for arm, feats in arms.items():
+                AF.assert_no_forbidden_features(feats, f"{pos}/{arm}")
+        return True, "no forbidden metadata and no retired drive name in any arm"
+    check("forbidden_feature_policy", _forbidden)
+
+    # ---- manifest ------------------------------------------------------------------------------
+    def _full_x():
+        ok, blocked = _need("manifest")
+        if not ok:
+            return False, blocked
+        man = loaded["manifest"]
+        a0 = arm0_definition()
+        bad = []
+        for (pos, bucket), spec in a0.items():
+            key = f"{pos}/{bucket}"
+            got = man["full_model_x"].get(key)
+            if got is None:
+                bad.append(f"{key}: missing from full_model_x")
+                continue
+            for arm in ARMS:
+                want = list(spec["feature_cols"]) + AF.arm_features(arm, pos)
+                if got.get(arm) != want:
+                    bad.append(f"{key}/{arm}: full X != bundle + ordered additions")
+        return (not bad), ("; ".join(bad[:4]) if bad
+                           else "full X == bundle feature_cols + ordered arm additions everywhere")
+    check("manifest_full_x_matches_bundles", _full_x)
+
+    def _qb_rookie():
+        ok, blocked = _need("manifest")
+        if not ok:
+            return False, blocked
+        man = loaded["manifest"]
+        ok2 = man["full_model_x"].get("QB/rookie", "missing") is None
+        return ok2, ("QB/rookie is explicitly null" if ok2
+                     else "QB/rookie must be explicitly null in full_model_x")
+    check("manifest_qb_rookie_null", _qb_rookie)
+
+    # ---- coverage / lineage --------------------------------------------------------------------
+    def _cov_rec():
+        """FULL-FRAME reconciliation against a fresh canonical derivation (v3.9c §1).
+
+        The v3.9b version compared only `ARM_1 / identity_state == "all"` and only two columns, so a
+        corrupted `ARM_2 / known_with_history` cell reported reconciliation as TRUE. `AF.compare_coverage`
+        regenerates the entire frame with the same function the builder writes from and compares
+        schema, key set, uniqueness and every cell.
+        """
+        ok, blocked = _need("coverage", "design_a", "design_b")
+        if not ok:
+            return False, blocked
+        return AF.compare_coverage(loaded["coverage"], loaded["design_a"], loaded["design_b"])
+    check("coverage_reconciles", _cov_rec)
+
+    def _lin_timing():
+        ok, blocked = _need("lineage")
+        if not ok:
+            return False, blocked
+        lin = loaded["lineage"]
+        r = lin[lin.record_kind.isin(["identity_routing", "caller_contribution"])]
+        bad = int((~r.strict_timing_ok.astype(str).str.lower().eq("true")).sum())
+        c = lin[lin.record_kind == "caller_contribution"]
+        late = int((c.source_season.astype(int) >= c.season.astype(int)).sum())
+        return (bad == 0 and late == 0), (
+            f"{bad} rows with strict_timing_ok false, {late} contributions not strictly prior")
+    check("lineage_strict_timing", _lin_timing)
+
+    def _lin_policy():
+        """The lineage artifact must STATE the adopted policy, not the retired one (v3.9c §3)."""
+        ok, blocked = _need("lineage")
+        if not ok:
+            return False, blocked
+        return AF.validate_lineage_policy(loaded["lineage"])
+    check("lineage_states_the_primary_policy", _lin_policy)
+
+    def _contrib_rec():
+        ok, blocked = _need("lineage", "design_a", "design_b")
+        if not ok:
+            return False, blocked
+        lin, a, b = loaded["lineage"], loaded["design_a"], loaded["design_b"]
+        c = lin[lin.record_kind == "caller_contribution"]
+        bad = []
+        for design, feat in ((AF.DESIGN_A, a), (AF.DESIGN_B, b)):
+            sub = c[c.design == design]
+            car = (sub[sub.included_in_career == 1].groupby(["season", "team"])
+                   .agg(games=("pbp_games", "sum"), segs=("segment_key", "nunique")))
+            r3 = sub[sub.included_in_roll3 == 1].groupby(["season", "team"])["pbp_games"].sum()
+            for row in feat.itertuples():
+                k = (row.season, row.team)
+                if float(car.games.get(k, 0.0)) != float(row.caller_history_games_career):
+                    bad.append(f"{design} {k}: career games")
+                if int(car.segs.get(k, 0)) != int(row.caller_history_segments_career):
+                    bad.append(f"{design} {k}: career segments")
+                if float(r3.get(k, 0.0)) != float(row.caller_history_games_roll3):
+                    bad.append(f"{design} {k}: roll3 games")
+        return (not bad), ("; ".join(bad[:4]) if bad
+                           else "contribution lineage reconciles on all 832 feature rows")
+    check("contribution_lineage_reconciles", _contrib_rec)
+
+    def _oracle():
+        bad = []
+        if "ORACLE" not in AF.DESIGN_LABEL[AF.DESIGN_B].upper():
+            bad.append("Design B label is not marked ORACLE")
+        if "NOT achievable in deployment" not in AF.DESIGN_LABEL[AF.DESIGN_B]:
+            bad.append("Design B label is not marked nondeployable")
+        src = (HERE / "run_coach_projection_experiment_v39.py").read_text(encoding="utf-8")
+        body = src.split("def run_experiment", 1)[1].split("\ndef ", 1)[0]
+        # drop the signature (which necessarily names coach_b), then require that nothing between the
+        # signature and the oracle-diagnostic block touches it — selection cannot see Design B
+        after_sig = body.split("):", 1)[1]
+        sel = after_sig.split("if coach_b is not None", 1)[0]
+        if "coach_b" in sel:
+            bad.append("coach_b is referenced before the oracle-diagnostic block")
+        return (not bad), ("; ".join(bad) if bad
+                           else "Design B is labelled oracle/nondeployable and never enters selection")
+    check("design_b_oracle_and_unselectable", _oracle)
+
+    def _prod():
+        try:
+            assert_no_production_writes()
+            return True, "production models byte-identical"
+        except AssertionError as e:
+            return False, str(e)
+    check("production_models_identical", _prod)
+
+    check("no_real_outcome_access", no_real_outcome_access)
+
+    def _assertions():
+        tally = _PIPELINE_ASSERTIONS if pipeline_assertions is None else pipeline_assertions
+        if not require_pipeline_assertions:
+            return True, f"not required in this context; tally {dict(tally)}"
+        zero = [k for k, v in tally.items() if not v]
+        return (not zero), (f"assertions never executed: {zero}" if zero
+                            else f"all pipeline assertions ran: {dict(tally)}")
+    check("pipeline_timing_assertions_ran", _assertions)
+
+    def _mode():
+        return validate_run_mode(run_mode)
+    check("run_mode_locks", _mode)
+
+    all_ok = all(v["ok"] for v in res.values())
+    return dict(run_mode=run_mode, all_ok=all_ok, checks=res, failures=fails,
+                n_checks=len(res), n_failed=len(fails),
+                detail=("; ".join(f"{k}: {v}" for k, v in fails.items()) if fails
+                        else "all preflight checks passed"))
+
+
+def _integrity_check(run_mode=DEFAULT_RUN_MODE, pipeline_assertions=None):
+    """C10 gate. Returns (ok, detail, structured record)."""
+    pf = preflight(run_mode=run_mode, pipeline_assertions=pipeline_assertions)
+    return pf["all_ok"], pf["detail"], pf
+
+
+# =====================================================================================================
+# THE FROZEN TEN-CONDITION PRIMARY VERDICT (prereg §7)
+# =====================================================================================================
+# The FROZEN denominators. v3.9a checked only the improvement COUNTS, so a truncated six-season run
+# could satisfy "6 of 8" and four available recent seasons could satisfy "4 of 5". The required season
+# SETS are now part of the conditions.
+REQUIRED_OUTER_SEASONS = tuple(range(2018, 2026))     # 8
+REQUIRED_RECENT_SEASONS = tuple(range(2021, 2026))    # 5
+
+
+def _panel_completeness(cohort, fold_selections):
+    """Exact-denominator audit of what was actually supplied."""
+    seasons = [int(s) for s in cohort.season.tolist()]
+    present = set(seasons)
+    req_out, req_rec = set(REQUIRED_OUTER_SEASONS), set(REQUIRED_RECENT_SEASONS)
+    dup_rows = int(cohort.duplicated(["player_id", "season"]).sum()) if \
+        "player_id" in cohort.columns else 0
+    folds = set(int(k) for k in fold_selections)
+    return dict(
+        outer_seasons_present=sorted(present),
+        outer_seasons_missing=sorted(req_out - present),
+        outer_seasons_unexpected=sorted(present - req_out),
+        recent_seasons_missing=sorted(req_rec - present),
+        duplicate_player_season_rows=dup_rows,
+        fold_seasons_missing=sorted(req_out - folds),
+        fold_seasons_unexpected=sorted(folds - req_out),
+        outer_panel_complete=bool(present == req_out and dup_rows == 0),
+        recent_panel_complete=bool(req_rec <= present and dup_rows == 0),
+        fold_set_complete=bool(folds == req_out),
+    )
+
+
+def primary_verdict(position, outer_frame, boot_results, placebo, fold_selections,
+                    integrity_ok=True, integrity_detail="", outer_seasons=None,
+                    recent_seasons=None):
+    """Evaluate the §7 developmental-candidate rule for the NESTED-SELECTED Design A pipeline only.
+
+    Target-agnostic: it reads a frame of predictions and never asks where `y` came from, so the
+    synthetic fixtures exercise exactly the code the real run would.
+
+    **No fixed arm and no Design B result can appear here.** The only challenger column consulted is
+    `pred_selected`, which is the nested-selected Design A pipeline. A fixed arm cannot rescue a
+    failed primary result because it is never read.
+
+    `outer_frame` columns: season, y, pred_ARM_0, pred_selected, in_cohort.
+    `boot_results`: {cluster_unit: {"ci_hi": float, ...}} for the SELECTED pipeline.
+    `placebo`: {"observed": float, "p95": float, "draws": int}.
+    `fold_selections`: {outer_season: selected_arm}.
+    """
+    outer_seasons = OUTER_SEASONS if outer_seasons is None else list(outer_seasons)
+    recent_seasons = RECENT_SEASONS if recent_seasons is None else list(recent_seasons)
+    f = outer_frame
+    cohort = f[f["in_cohort"].astype(bool)]
+
+    abs_gain = top_cohort_improvement(f)
+    rel_gain = relative_top_cohort_improvement(f)
+
+    def season_improved(seasons):
+        out = []
+        for Y in seasons:
+            s = cohort[cohort.season == Y]
+            if not len(s):
+                continue
+            out.append(_mae(s.y, s.pred_ARM_0) - _mae(s.y, s.pred_selected) > 0)
+        return int(sum(out)), len(out)
+
+    n_out_imp, n_out = season_improved(outer_seasons)
+    n_rec_imp, n_rec = season_improved(recent_seasons)
+
+    def mean_rho(col):
+        vals = [_spearman(g.y, g[col]) for _s, g in cohort.groupby("season")]
+        return float(np.nanmean(vals)) if vals else np.nan
+
+    rho_gain = mean_rho("pred_selected") - mean_rho("pred_ARM_0")
+    full_mae_delta = _mae(f.y, f.pred_selected) - _mae(f.y, f.pred_ARM_0)
+    base_rmse = _rmse(f.y, f.pred_ARM_0)
+    full_rmse_rel = ((_rmse(f.y, f.pred_selected) - base_rmse) / base_rmse
+                     if base_rmse else np.nan)
+    n_nonbaseline = sum(1 for a in fold_selections.values() if a != "ARM_0")
+    ci_his = {u: r["ci_hi"] for u, r in boot_results.items()}
+
+    panel = _panel_completeness(cohort, fold_selections)
+
+    conds = {
+        "c1_top_cohort_improves_3pct": bool(rel_gain >= PASS_MIN_RELATIVE_TOP_COHORT_IMPROVEMENT),
+        "c2_both_clustered_ci_upper_below_zero": bool(
+            len(ci_his) == len(CLUSTER_UNITS) and all(v < 0 for v in ci_his.values())),
+        # EXACT denominators: the required season SET must be present, not merely enough improvements.
+        "c3_improves_6_of_8_outer_seasons": bool(
+            panel["outer_panel_complete"] and n_out_imp >= PASS_MIN_OUTER_SEASONS_IMPROVED),
+        "c4_improves_4_of_5_recent_seasons": bool(
+            panel["recent_panel_complete"] and n_rec_imp >= PASS_MIN_RECENT_SEASONS_IMPROVED),
+        "c5_top_cohort_spearman_gain_0p005": bool(rho_gain >= PASS_MIN_SPEARMAN_GAIN),
+        "c6_full_panel_mae_worsens_le_0p25": bool(
+            full_mae_delta <= PASS_MAX_FULL_PANEL_MAE_WORSENING),
+        "c7_full_panel_rmse_worsens_le_1pct": bool(
+            full_rmse_rel <= PASS_MAX_FULL_PANEL_RMSE_WORSENING),
+        "c8_nonbaseline_arm_in_4_of_8_folds": bool(
+            panel["fold_set_complete"] and n_nonbaseline >= PASS_MIN_NONBASELINE_FOLDS),
+        "c9_beats_placebo_p95": bool(
+            placebo.get("draws", 0) > 0
+            and np.isfinite(placebo.get("p95", np.nan))
+            and placebo.get("observed", -np.inf) > placebo["p95"]),
+        "c10_all_assertions_pass": bool(integrity_ok),
+    }
+    failures = [k for k, v in conds.items() if not v]
+    denom_notes = []
+    if panel["outer_seasons_missing"]:
+        denom_notes.append(f"outer seasons MISSING {panel['outer_seasons_missing']}")
+    if panel["outer_seasons_unexpected"]:
+        denom_notes.append(f"outer seasons UNEXPECTED {panel['outer_seasons_unexpected']}")
+    if panel["recent_seasons_missing"]:
+        denom_notes.append(f"recent seasons MISSING {panel['recent_seasons_missing']}")
+    if panel["duplicate_player_season_rows"]:
+        denom_notes.append(
+            f"{panel['duplicate_player_season_rows']} DUPLICATE (player_id, season) cohort rows")
+    if panel["fold_seasons_missing"]:
+        denom_notes.append(f"fold selections MISSING {panel['fold_seasons_missing']}")
+    if panel["fold_seasons_unexpected"]:
+        denom_notes.append(f"fold selections UNEXPECTED {panel['fold_seasons_unexpected']}")
+    return dict(
+        position=position, design=AF.DESIGN_A, challenger="nested_selected_design_a",
+        improvement_statistic=IMPROVEMENT_STATISTIC,
+        required_outer_seasons=len(REQUIRED_OUTER_SEASONS),
+        required_recent_seasons=len(REQUIRED_RECENT_SEASONS),
+        outer_panel_complete=panel["outer_panel_complete"],
+        recent_panel_complete=panel["recent_panel_complete"],
+        fold_set_complete=panel["fold_set_complete"],
+        denominator_problems="; ".join(denom_notes),
+        outer_seasons_missing=str(panel["outer_seasons_missing"]),
+        outer_seasons_unexpected=str(panel["outer_seasons_unexpected"]),
+        recent_seasons_missing=str(panel["recent_seasons_missing"]),
+        duplicate_player_season_rows=panel["duplicate_player_season_rows"],
+        fold_seasons_missing=str(panel["fold_seasons_missing"]),
+        fold_seasons_unexpected=str(panel["fold_seasons_unexpected"]),
+        top_cohort_mae_arm0=_mae(cohort.y, cohort.pred_ARM_0) if len(cohort) else np.nan,
+        top_cohort_mae_selected=_mae(cohort.y, cohort.pred_selected) if len(cohort) else np.nan,
+        top_cohort_abs_improvement=abs_gain, top_cohort_rel_improvement=rel_gain,
+        ci_hi_player=ci_his.get("player", np.nan),
+        ci_hi_team_season=ci_his.get("team_season", np.nan),
+        n_outer_seasons_improved=n_out_imp, n_outer_seasons=n_out,
+        n_recent_seasons_improved=n_rec_imp, n_recent_seasons=n_rec,
+        mean_within_season_spearman_gain=rho_gain,
+        full_panel_mae_delta=full_mae_delta, full_panel_rmse_relative_delta=full_rmse_rel,
+        n_nonbaseline_folds=n_nonbaseline, n_folds=len(fold_selections),
+        placebo_observed=placebo.get("observed", np.nan), placebo_p95=placebo.get("p95", np.nan),
+        placebo_draws=placebo.get("draws", 0),
+        integrity_ok=bool(integrity_ok), integrity_detail=integrity_detail,
+        **conds,
+        n_conditions_passed=int(sum(conds.values())), n_conditions=len(conds),
+        failure_reasons="; ".join(failures),
+        verdict=("DEVELOPMENTAL CANDIDATE" if not failures else "NO — primary pass rule not met"),
+    )
+
+
+def assert_no_production_writes(before=None):
+    """Every production artifact must be byte-identical after a harness run."""
+    now = {f: md5(MODELS / f) for f in PRODUCTION_HASHES}
+    bad = [f for f, h in PRODUCTION_HASHES.items() if now[f] != h]
+    assert not bad, f"production model pkl CHANGED: {bad}"
+    r = md5(SEAS / "models" / "rookie_ppg_model.pkl")
+    assert r == ROOKIE_PPG_MD5, f"rookie_ppg_model.pkl CHANGED: {r}"
+    if before is not None:
+        assert before == now, "a production pkl changed during this run"
+    return now
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--audit", action="store_true", help="print the production audit (writes nothing)")
+    ap.add_argument("--synthetic", action="store_true", help="SYNTHETIC-target smoke run")
+    ap.add_argument("--real", action="store_true", help="BLOCKED under prereg v3.9")
+    ap.add_argument("--outer", type=int, nargs="*", default=None)
+    ap.add_argument("--bootstrap-draws", type=int, default=2000)
+    ap.add_argument("--placebo-draws", type=int, default=10)
+    a = ap.parse_args()
+
+    if a.real:
+        raise SystemExit("BLOCKED: " + REAL_FIT_MESSAGE)
+
+    print("=" * 96)
+    print("PHASE 2B v3.9 — COACH-REPRESENTATION EVALUATION HARNESS")
+    print(f"REAL_FIT_AUTHORIZED = {REAL_FIT_AUTHORIZED} | env switch set = "
+          f"{os.environ.get(REAL_FIT_ENV_SWITCH) == REAL_FIT_ENV_TOKEN} | "
+          f"real fit unlocked = {real_fit_is_unlocked()}   (synthetic targets only)")
+    print("=" * 96)
+    before = assert_no_production_writes()
+    audit = audit_production()
+    spec = experiment_spec()
+    print("\n--- PRODUCTION AUDIT ---")
+    for k, v in audit["model_families"].items():
+        print(f"  {k:12s} {v['family']:9s} {v['params']}")
+    print(f"  QB rookie bundle: {audit['rookie_path']['qb_rookie_bundle']}")
+    print(f"  target          : {audit['prediction_target']['name']} — "
+          f"{audit['prediction_target']['construction']}")
+    print(f"  categorical     : {audit['categorical_handling_arm0']}")
+    print(f"  sample weights  : {audit['sample_weights_arm0']}")
+    print(f"  missing values  : {audit['missing_value_handling_arm0']}")
+    print(f"  clipping        : {audit['transforms_and_clipping']['prediction_clipping']}")
+    print("  LEGACY family   : "
+          + audit["TWO_ARCHITECTURES_EXIST_IN_THIS_REPO"]["legacy_family_NOT_USED"]["IMPORTANT"])
+    print("\n--- FROZEN INNER FOLDS ---")
+    for Y in OUTER_SEASONS:
+        f = expanding_inner_folds(range(PANEL_FIRST_SEASON, 2026), Y)
+        print(f"  outer {Y}: " + " | ".join(f"train {list(t)} -> validate {v}" for t, v in f))
+
+    if a.synthetic:
+        print("\n--- SYNTHETIC SMOKE RUN (targets are generated; no fantasy outcome is read) ---")
+        panel = synthetic_panel()
+        ca = pd.read_csv(DATA / "team_coach_features_design_a_v39.csv")
+        cb = pd.read_csv(DATA / "team_coach_features_design_b_oracle_v39.csv")
+        outer = a.outer or [2024, 2025]
+        res = run_experiment(panel, ca, cb, outer_seasons=outer,
+                             bootstrap_draws=a.bootstrap_draws, placebo_draws=a.placebo_draws)
+        for k, df in res.items():
+            print(f"\n[{k}] {df.shape}")
+            if len(df):
+                print(df.head(12).to_string(index=False))
+    assert_no_production_writes(before)
+    print("\nThis module wrote NOTHING. NO real fantasy outcome loaded, inspected or fit. "
+          "NO production artifact touched.")
+    return spec
+
+
+if __name__ == "__main__":
+    main()

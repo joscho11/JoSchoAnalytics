@@ -6,6 +6,7 @@ st.* call at import time. The APP_OFFLINE guard lives here so every page imports
 one consistent value.
 """
 import os
+import threading
 import time
 import uuid
 from pathlib import Path
@@ -46,7 +47,16 @@ def _utm_params():
 
 
 def send_ga_event(name, extra_params=None):
-    """Fire one GA4 measurement-protocol event. No-op when offline or creds absent."""
+    """Fire one GA4 measurement-protocol event. No-op when offline or creds absent.
+
+    The POST is dispatched on a short-lived daemon thread rather than awaited inline.
+    Measured 2026-07-29: the round trip to google-analytics.com/mp/collect is ~224 ms
+    typical and the timeout allows 3 s, and it sat on the critical path of the FIRST
+    render of every session (site_pageview_once runs before st.navigation). GA is a
+    fire-and-forget beacon — nothing on the page depends on its response — so the wait
+    bought nothing. Payload, endpoint, params and timeout are unchanged; only the wait
+    is gone. This is not a persistent worker: the thread exists for one request.
+    """
     if _OFFLINE:
         return
     mid, sec = _ga_creds()
@@ -65,16 +75,23 @@ def send_ga_event(name, extra_params=None):
     params.update(_utm_params())
     if extra_params:
         params.update(extra_params)
+    # Snapshot every session_state read on THIS thread; the worker touches no Streamlit
+    # state (a background thread has no ScriptRunContext).
+    payload = {"client_id": st.session_state.ga_client_id,
+               "events": [{"name": name, "params": params}]}
+    query = {"measurement_id": mid, "api_secret": sec}
+
+    def _post():
+        try:
+            req.post("https://www.google-analytics.com/mp/collect",
+                     params=query, json=payload, timeout=3)
+        except Exception:
+            pass
+
     try:
-        req.post(
-            "https://www.google-analytics.com/mp/collect",
-            params={"measurement_id": mid, "api_secret": sec},
-            json={"client_id": st.session_state.ga_client_id,
-                  "events": [{"name": name, "params": params}]},
-            timeout=3,
-        )
+        threading.Thread(target=_post, name="ga-beacon", daemon=True).start()
     except Exception:
-        pass
+        _post()   # thread creation refused: fall back to the old inline behavior
 
 
 def site_pageview_once():

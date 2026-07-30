@@ -33,6 +33,8 @@ import sys
 from pathlib import Path
 
 import numpy as np
+
+import drive_definitions as DD
 import pandas as pd
 
 if hasattr(sys.stdout, "reconfigure"):
@@ -49,6 +51,33 @@ PBP_COLS = ["season", "week", "game_id", "posteam", "season_type", "play_type", 
             "yardline_100", "fixed_drive", "fixed_drive_result", "game_seconds_remaining",
             "air_yards", "pass_oe", "rusher_player_id", "receiver_player_id", "play_id",
             "rush_attempt", "pass_attempt", "wp", "qtr", "half_seconds_remaining"]
+
+
+# ---------------------------------------------------------------------------------------------
+# EXACT drive-result mapping. Substring matching is FORBIDDEN here: `str.contains("Touchdown")`
+# also matches **'Opp touchdown'** (611 drives in a 4-season sample), which is a defensive or
+# return score by the OPPONENT. The previous implementation awarded the offense +7 for those and
+# counted them as red-zone touchdowns. Any category absent from this dict raises rather than being
+# silently classified.
+#
+# PROXY DEFINITION (drive_scoring_points_*_proxy). Touchdown is credited a flat 7 — it ASSUMES the
+# extra point and ignores 2-point attempts and missed XPs. Field goal 3, safety -2 charged to the
+# offense. Excludes all defensive and special-teams scoring. It is therefore NOT literal offensive
+# points; the columns are named `_proxy` accordingly.
+DRIVE_POINTS = DD.DRIVE_POINTS   # shared; local copy retired
+_RETIRED_LOCAL_DRIVE_POINTS = {
+    "Touchdown": 7.0,          # offensive touchdown
+    "Field goal": 3.0,
+    "Safety": -2.0,
+    "Opp touchdown": 0.0,      # opponent scored — offense credited NOTHING
+    "Punt": 0.0,
+    "Turnover": 0.0,
+    "Turnover on downs": 0.0,
+    "Missed field goal": 0.0,
+    "End of half": 0.0,
+    "End of game": 0.0,
+}
+OFFENSIVE_TD = DD.OFFENSIVE_TD     # the ONLY category counting as an offensive touchdown
 
 
 def _n(d, c, default=0.0):
@@ -123,21 +152,22 @@ def weekly_components(seasons):
         comp = comp.merge(v.groupby(k)["gap"].agg(gap_sum="sum", gap_n="count").reset_index(),
                           on=k, how="left")
 
-        # drives (points + red-zone TD rate) — from the scrimmage set, pre kneel/spike filter
+        # drives — EXACT category mapping, never substring matching (see DRIVE_POINTS)
         dr = scrim.dropna(subset=["fixed_drive"]).groupby(
             ["season", "posteam", "week", "game_id", "fixed_drive"]).agg(
             result=("fixed_drive_result", "first"), min_yl=("yardline_100", "min")).reset_index()
-        res = dr["result"].astype(str)
-        dr["pts"] = np.select([res.str.contains("Touchdown", case=False, na=False),
-                               res.str.contains("Field goal", case=False, na=False),
-                               res.str.contains("Safety", case=False, na=False)],
-                              [7.0, 3.0, -2.0], default=0.0)
+        dr = dr[dr["result"].notna()].copy()
+        res = dr["result"].astype(str).str.strip()
+        unmapped = sorted(set(res) - set(DRIVE_POINTS))
+        assert not unmapped, f"UNMAPPED fixed_drive_result category in {s}: {unmapped}"
+        dr["pts"] = res.map(DRIVE_POINTS).astype(float)
+        dr["off_td"] = (res == OFFENSIVE_TD).astype(float)
         comp = comp.merge(dr.groupby(k).agg(drive_pts=("pts", "sum"),
                                             drives=("pts", "size")).reset_index(), on=k, how="left")
-        rzd = dr[dr["min_yl"] <= 20].copy()
-        rzd["td"] = rzd["result"].astype(str).str.contains("Touchdown", case=False, na=False).astype(float)
-        comp = comp.merge(rzd.groupby(k).agg(rz_td=("td", "sum"),
-                                             rz_drives=("td", "size")).reset_index(), on=k, how="left")
+        rzd = dr[dr["min_yl"] <= 20]
+        comp = comp.merge(rzd.groupby(k).agg(rz_td=("off_td", "sum"),
+                                             rz_drives=("off_td", "size")).reset_index(),
+                          on=k, how="left")
 
         # positional allocation
         ru = rp[_n(rp, "rush_attempt") == 1].merge(
@@ -184,9 +214,9 @@ def metrics_from_components(c):
     m["proe"] = r("proe_sum", "proe_n")
     m["team_adot"] = r("adot_sum", "adot_n")
     m["seconds_per_play"] = r("gap_sum", "gap_n")
-    m["points_per_drive"] = r("drive_pts", "drives")
+    m["drive_scoring_points_per_drive_proxy"] = r("drive_pts", "drives")
     m["redzone_td_rate"] = r("rz_td", "rz_drives")
-    m["off_points_per_game"] = np.where(c["games"] > 0, c["drive_pts"] / c["games"], np.nan)
+    m["drive_scoring_points_per_game_proxy"] = np.where(c["games"] > 0, c["drive_pts"] / c["games"], np.nan)
     m["plays_per_game"] = np.where(c["games"] > 0, c["plays"] / c["games"], np.nan)
     m["rb_carry_share"] = r("car_RB", "car_tot")
     m["qb_carry_share"] = r("car_QB", "car_tot")
@@ -199,13 +229,16 @@ def metrics_from_components(c):
     return m
 
 
-METRIC_COLS = ["epa_play", "success_rate", "yards_play", "explosive_rate", "points_per_drive",
-               "redzone_td_rate", "off_points_per_game", "plays_per_game", "neutral_pass_rate",
+METRIC_COLS = ["epa_play", "success_rate", "yards_play", "explosive_rate",
+               "drive_scoring_points_per_drive_proxy", "redzone_td_rate",
+               "drive_scoring_points_per_game_proxy", "plays_per_game", "neutral_pass_rate",
                "early_down_pass_rate", "redzone_pass_rate", "proe", "team_adot",
                "seconds_per_play", "rb_carry_share", "qb_carry_share", "rb_target_share",
                "wr_target_share", "te_target_share", "rz_rb_share", "rz_wr_share",
                "rz_te_share", "rz_qb_share"]
-RANK_METRICS = ["off_points_per_game", "yards_play", "epa_play", "success_rate", "points_per_drive"]
+# Arm-1 composite components. Two are PROXIES (see DRIVE_POINTS) and are named as such.
+RANK_METRICS = ["drive_scoring_points_per_game_proxy", "yards_play", "epa_play",
+                "success_rate", "drive_scoring_points_per_drive_proxy"]
 
 
 def build(seasons=None):
@@ -299,9 +332,13 @@ def build(seasons=None):
     n_tot_mismatch = int((tot["led"] != tot["pbp"]).sum())
     assert n_tot_mismatch == 0, f"team-season game totals do not reconcile: {n_tot_mismatch}"
     print(f"  team-season total reconciliation: PASS (0 of {len(tot)} team-seasons differ)")
-    print(f"  per-segment week-vs-game gap    : {n_seg_mismatch} segments, ALL inside splits, "
-          f"all bye-week artifacts of the ledger's week arithmetic")
-    print("    -> `pbp_games` is authoritative downstream; frozen table untouched")
+    assert n_seg_mismatch == 0, (
+        f"{n_seg_mismatch} historical segments disagree with the canonical "
+        f"n_games_attributed; the v3.2 correction should have made these zero")
+    print(f"  canonical vs audit count        : PASS (0 of {len(played)} historical "
+          f"segments disagree)")
+    print("    -> canonical `n_games_attributed` is AUTHORITATIVE; `pbp_games` is an "
+          "independent agreement check")
     if n_seg_mismatch:
         print(played[diff > 0][["season", "team", "person_id", "week_start", "week_end",
                                 "ledger_games", "pbp_games"]].head(6).to_string(index=False))

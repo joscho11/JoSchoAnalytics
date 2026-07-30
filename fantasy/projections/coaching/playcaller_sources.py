@@ -54,7 +54,10 @@ SOURCES = {
     "yardbarker2021": dict(
         url="https://www.yardbarker.com/nfl/articles/"
             "ranking_the_offensive_play_caller_for_each_nfl_team/s1__35857394",
-        date="2021-01-01", publisher="Yardbarker", note="All 32 teams, 2021 season."),
+        date="2021-10-18", publisher="Yardbarker",
+        note="All 32 teams, 2021 season. Date CORRECTED 2026-07-28 from a placeholder 2021-01-01 "
+             "to the article byline \"Updated October 18, 2021\" — the placeholder falsely made this "
+             "source look preseason-eligible."),
     "yardbarker2022": dict(
         url="https://www.yardbarker.com/nfl/articles/"
             "ranking_the_offensive_play_caller_for_each_nfl_team/s1__37978942",
@@ -62,15 +65,20 @@ SOURCES = {
     "espn2023": dict(
         url="https://www.espn.com/nfl/story/_/id/38108724/"
             "key-intel-all-32-nfl-playcallers-including-mike-mccarthy",
-        date="2023-08-01", publisher="ESPN", note="All 32 playcallers, 2023 season."),
+        date="2023-08-23", publisher="ESPN", note="All 32 playcallers, 2023 season. Date AUDITED "
+        "2026-07-28 from the byline 'Aug 23, 2023, 06:32 AM ET'; replaces an inferred 2023-08-01."),
     "espn2024": dict(
         url="https://www.espn.com/nfl/story/_/id/41018846/"
             "nfl-playcallers-32-teams-mike-mcdaniel-sean-mcvay-nathaniel-hackett",
-        date="2024-08-01", publisher="ESPN", note="All 32 playcallers, 2024 season."),
+        date="2024-08-30", publisher="ESPN", note="All 32 playcallers, 2024 season. Date AUDITED "
+        "2026-07-28 from the byline 'Aug 30, 2024, 06:00 AM ET'; replaces an inferred 2024-08-01."),
     "espn2025": dict(
         url="https://www.espn.com/nfl/story/_/id/46137832/"
             "nfl-playcallers-32-teams-mike-mcdaniel-sean-mcvay-brian-schottenheimer",
-        date="2025-08-01", publisher="ESPN", note="All 32 playcallers, 2025 season."),
+        date="2025-09-09", publisher="ESPN", note="All 32 playcallers, 2025 season. Date AUDITED "
+        "2026-07-28 from the byline 'NFL Nation Sep 9, 2025, 06:00 AM ET'; replaces an inferred "
+        "2025-08-01. This is AFTER the 2025 projection cutoff (2025-09-03) -- the inferred value "
+        "had granted this source FALSE preseason eligibility for all 32 teams."),
     "fantasyindex2026": dict(
         url="https://fantasyindex.com/2026/02/20/around-the-nfl/ranking-the-offensive-play-callers",
         date="2026-02-20", publisher="Fantasy Index",

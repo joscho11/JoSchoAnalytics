@@ -1,4 +1,4 @@
-season,team,week,game_id,head_coach,hc_person_id,pc_person_id
+season,team,week,game_id,head_coach,hc_person_id,caller_person_id
 1999,ARI,1,1999_01_ARI_PHI,Vince Tobin,vince_tobin,
 1999,ATL,1,1999_01_MIN_ATL,Dan Reeves,dan_reeves,
 1999,BAL,1,1999_01_BAL_STL,Brian Billick,brian_billick,

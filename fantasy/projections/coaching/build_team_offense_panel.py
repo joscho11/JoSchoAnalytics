@@ -23,6 +23,8 @@ import sys
 from pathlib import Path
 
 import numpy as np
+
+import drive_definitions as DD
 import pandas as pd
 
 if hasattr(sys.stdout, "reconfigure"):
@@ -145,18 +147,16 @@ def build_panel(seasons=None):
         dr = drives.groupby(dcols[:4]).agg(
             result=("fixed_drive_result", "first"),
             min_yl=("yardline_100", "min")).reset_index()
+        # EXACT mapping from the shared module. Substring matching credited 'Opp touchdown'
+        # -- an OPPONENT defensive/return score -- to the offense as +7.
         res = dr["result"].astype(str)
-        dr["pts"] = np.select(
-            [res.str.contains("Touchdown", case=False, na=False),
-             res.str.contains("Field goal", case=False, na=False),
-             res.str.contains("Safety", case=False, na=False)],
-            [7.0, 3.0, -2.0], default=0.0)
+        dr["pts"] = DD.drive_points(res)
         pd_ = dr.groupby(["season", "posteam"]).agg(
-            points_per_drive=("pts", "mean"), n_drives=("pts", "size")).reset_index()
+            **{DD.PPD_PROXY: ("pts", "mean")}, n_drives=("pts", "size")).reset_index()
         panel = panel.merge(pd_.rename(columns={"posteam": "team"}), on=["season", "team"], how="left")
 
         rzd = dr[dr["min_yl"] <= 20].copy()
-        rzd["is_td"] = rzd["result"].astype(str).str.contains("Touchdown", case=False, na=False).astype(float)
+        rzd["is_td"] = DD.is_offensive_td(rzd["result"].astype(str)).astype(float)
         panel = panel.merge(
             rzd.groupby(["season", "posteam"])["is_td"].mean().reset_index()
             .rename(columns={"posteam": "team", "is_td": "redzone_td_rate"}),
@@ -166,12 +166,16 @@ def build_panel(seasons=None):
     panel["seconds_per_play"] = np.nan   # filled below if game clock fields present
 
     panel = panel.sort_values(["season", "team"]).reset_index(drop=True)
-    panel.to_csv(DATA / "team_offense_panel.csv", index=False)
+    # OWNERSHIP (v3.8): this builder writes the EFFICIENCY BASE only. It previously wrote
+    # team_offense_panel.csv, which build_allocation_panel.py also wrote -- so running this builder
+    # after the allocation builder silently ERASED the allocation and OL fields. The allocation
+    # builder is now the sole writer of the canonical panel.
+    panel.to_csv(DATA / "team_offense_base.csv", index=False)
 
     print(f"\npanel: {len(panel)} team-seasons, {panel.season.min()}-{panel.season.max()}")
     print("\ncoverage (non-null %):")
-    for c in ["epa_play", "success_rate", "yards_play", "explosive_rate", "points_per_drive",
-              "redzone_td_rate", "proe", "neutral_pass_rate", "early_down_pass_rate",
+    for c in ["epa_play", "success_rate", "yards_play", "explosive_rate",
+              DD.PPD_PROXY, "redzone_td_rate", "proe", "neutral_pass_rate", "early_down_pass_rate",
               "redzone_pass_rate"]:
         if c in panel.columns:
             print(f"  {c:22s} {100*panel[c].notna().mean():5.1f}%   "
@@ -179,11 +183,12 @@ def build_panel(seasons=None):
 
     print("\nSANITY — 2024 top 6 offenses by EPA/play:")
     s24 = panel[panel.season == 2024].nlargest(6, "epa_play")
-    print(s24[["team", "epa_play", "success_rate", "points_per_drive", "proe"]].to_string(index=False))
+    print(s24[["team", "epa_play", "success_rate", DD.PPD_PROXY, "proe"]].to_string(index=False))
     print("\nSANITY — 2024 bottom 3:")
     print(panel[panel.season == 2024].nsmallest(3, "epa_play")[
-        ["team", "epa_play", "success_rate", "points_per_drive"]].to_string(index=False))
-    print(f"\nwrote {DATA/'team_offense_panel.csv'}")
+        ["team", "epa_play", "success_rate", DD.PPD_PROXY]].to_string(index=False))
+    print(f"\nwrote {DATA/'team_offense_base.csv'} (efficiency base; the canonical "
+          f"team_offense_panel.csv is written by build_allocation_panel.py)")
     return panel
 
 

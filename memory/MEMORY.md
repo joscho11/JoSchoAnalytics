@@ -6,5 +6,6 @@
 - [Completed work log](completed-work-log.md) — dated implementation history, including the 2026-07-24 Draft Board visual restoration and its validation boundary.
 - [Daily 2026-07-24](daily/2026-07-24.md) — board/UI and data fixes, projection diagnostics, 22-model explanations, and the position-by-position continuation queue.
 - [Daily 2026-07-26](daily/2026-07-26.md) — WR negative-gap experiments all rejected; full production-path code review (19 confirmed bugs); 14 fixed and left unstaged; models NOT retrained and the board unchanged.
+- [Streamlit throttle diagnosis](streamlit-throttle.md) — 2026-07-29 measured verdict: the app is NOT the cause (whole site 2.53 CPU-s / 218 MB vs a 0.078-core floor); deployment churn measured and cleared as a CPU driver; telemetry added (off by default) to settle platform-vs-uncounted-traffic. Read before attempting a fourth "throttle fix".
 - [Never mention commits](never-mention-commits.md) — user handles all git operations; don't prompt, propose messages, or frame work as commit-ready.
 - [Communication preferences](communication-preferences.md) — start every message with `Joseph,`; use dense one-page, project-grounded notes for definitions; Joseph runs interactive localhost reviews after automated validation.

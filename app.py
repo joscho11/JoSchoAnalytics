@@ -23,6 +23,9 @@ sys.path.insert(0, str(_HERE / "fantasy" / "seasonal_projections"))
 import dashboard_chrome as chrome
 import theme_redesign  # redesign preview skin (revertible) — delete this import + the call below to revert
 import nav_registry
+import runtime_telemetry  # OFF unless APP_TELEMETRY=1; remove this import + begin/end to strip
+
+runtime_telemetry.begin()
 
 
 def _lazy_render(module_name: str):
@@ -78,3 +81,6 @@ nav = st.navigation(
 )
 nav.run()
 chrome.render_footer()
+# Selected page title only (a public label, no visitor data). Title rather than url_path:
+# the default page's url_path is "", which would log inconsistently against the others.
+runtime_telemetry.end(getattr(nav, "title", None))

@@ -26,6 +26,8 @@ import sys
 from pathlib import Path
 
 import numpy as np
+
+import drive_definitions as DD
 import pandas as pd
 
 if hasattr(sys.stdout, "reconfigure"):
@@ -109,14 +111,12 @@ def build(seasons=None):
     dr = scrim.dropna(subset=["fixed_drive"]).groupby(
         ["season", "posteam", "game_id", "fixed_drive"]).agg(
         result=("fixed_drive_result", "first")).reset_index()
+    # EXACT mapping from the shared module (see drive_definitions).
     res = dr["result"].astype(str)
-    dr["pts"] = np.select(
-        [res.str.contains("Touchdown", case=False, na=False),
-         res.str.contains("Field goal", case=False, na=False),
-         res.str.contains("Safety", case=False, na=False)], [7.0, 3.0, -2.0], default=0.0)
-    ppg = dr.groupby(key)["pts"].sum().reset_index(name="off_points")
+    dr["pts"] = DD.drive_points(res)
+    ppg = dr.groupby(key)["pts"].sum().reset_index(name="drive_scoring_points")
     ppg = ppg.merge(g, on=key, how="left")
-    ppg["off_points_per_game"] = ppg["off_points"] / ppg["games"]
+    ppg[DD.PPG_PROXY] = ppg["drive_scoring_points"] / ppg["games"]
 
     # ---------------------------------------------------------------- allocation shares
     rush = rp[_num(rp, "rush_attempt") == 1].merge(
@@ -169,7 +169,7 @@ def build(seasons=None):
 
     out = g
     for frame, cols in ((pace, ["seconds_per_play"]),
-                        (ppg, ["off_points_per_game"]),
+                        (ppg, [DD.PPG_PROXY]),
                         (carry, ["rb_carry_share", "qb_carry_share", "team_carries"]),
                         (tsh, ["rb_target_share", "wr_target_share", "te_target_share",
                                "team_targets"]),
@@ -180,15 +180,16 @@ def build(seasons=None):
     out = out.rename(columns={"posteam": "team"}).sort_values(["season", "team"])
 
     # merge into the efficiency panel
-    base = pd.read_csv(DATA / "team_offense_panel.csv")
+    # v3.8: read the EFFICIENCY BASE and become the sole writer of the canonical panel.
+    base = pd.read_csv(DATA / "team_offense_base.csv")
     base = base.drop(columns=[c for c in base.columns
                               if c in out.columns and c not in ("season", "team")])
     full = base.merge(out, on=["season", "team"], how="left")
-    full.to_csv(DATA / "team_offense_panel.csv", index=False)
+    full.to_csv(DATA / "team_offense_panel.csv", index=False)   # SOLE writer (v3.8)
 
     print(f"\npanel now {full.shape[0]} team-seasons x {full.shape[1]} columns")
     print("\ncoverage (non-null %) of the NEW columns:")
-    for c in ["seconds_per_play", "off_points_per_game", "rb_carry_share", "qb_carry_share",
+    for c in ["seconds_per_play", DD.PPG_PROXY, "rb_carry_share", "qb_carry_share",
               "rb_target_share", "wr_target_share", "te_target_share", "rz_rb_share",
               "rz_wr_share", "rz_te_share", "rz_qb_share", "team_adot", "ol_sack_rate"]:
         if c in full.columns:

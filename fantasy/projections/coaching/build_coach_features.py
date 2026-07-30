@@ -1,7 +1,19 @@
 """COACH FEATURE ENGINE — the shrunk, strictly-prior histories that Arms 1, 2 and 4 consume.
 
 Governing prereg: PREREG_coach_quality_2026-07-28.md (v3, RATIFIED AND T0 PASSED).
-Source table frozen at md5 ac9883e98cdb1bd04a1c0978746cc023.
+Source table frozen at md5 98f1c66b7387c16bba6a5463f4e0fa06 (v3.4 PREFIT).
+
+HASH CHAIN (all superseded values are historical, not active):
+  ac9883e98cdb1bd04a1c0978746cc023  T0-ratified table
+  391be44c4e4205ceea6456ea935794c0  v3.2 -- n_games_attributed counted, not week arithmetic
+  3752405a4f499223aac08841dabc5f74  PROVISIONAL/INTERMEDIATE -- never a canonical freeze
+  98f1c66b7387c16bba6a5463f4e0fa06  v3.4 -- audited source dates + provenance
+
+NOTE ON METRIC NAMES BELOW: `off_points_per_game` and `points_per_drive` are the PRE-v3.3 names.
+Phase 1B renamed them to `drive_scoring_points_per_game_proxy` and
+`drive_scoring_points_per_drive_proxy` because a flat TD=7 assumes the extra point, ignores 2-point
+attempts and missed XPs, and excludes all defensive and special-teams scoring. This module has NOT
+yet been migrated to the segment-level, caller-first inputs -- see REQUIREMENT_MATRIX.md.
 
 Produces one row per (season, team) carrying, for BOTH coach entities:
   hc_*   head coach          (nflverse schedules, game-by-game, 100% coverage)

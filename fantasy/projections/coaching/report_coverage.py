@@ -100,15 +100,10 @@ def main():
         DATA / "unresolved_cases.csv", index=False)
 
     # ---- source ledger
-    span = {}
-    for season, (table, key) in SRC.SEASON_TABLES.items():
-        span.setdefault(key, []).append(season)
-    led = []
-    for key, meta in SRC.SOURCES.items():
-        led.append(dict(source_key=key, publisher=meta.get("publisher"), date=meta.get("date"),
-                        seasons=",".join(str(s) for s in sorted(span.get(key, []))) or "event",
-                        url=meta.get("url"), note=meta.get("note")))
-    pd.DataFrame(led).to_csv(DATA / "source_ledger.csv", index=False)
+    # NOT written here. The ledger is a mutually dependent artifact of the canonical build and is
+    # emitted by build_playcaller_table.write_source_ledger(), so a date correction can never land
+    # in actual_play_caller.csv while source_ledger.csv keeps the stale value. Reporting reads it.
+    from build_playcaller_table import write_source_ledger  # noqa: F401  (documents the owner)
 
     # ---- research log
     lines = ["# Actual-play-caller research log", "",
