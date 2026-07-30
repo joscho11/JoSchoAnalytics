@@ -83,6 +83,7 @@ jobs:
           tests/test_help_page.py
           tests/test_model_explanations.py
           tests/test_app_talent_columns.py
+          tests/test_runtime_telemetry.py
           fantasy/talent/tests/test_talent_build.py
           fantasy/talent/tests/test_phase2.py
 
@@ -136,3 +137,4 @@ jobs:
           tests/test_fantasy_league_pages.py
           tests/test_help_page.py
           tests/test_model_explanations.py
+          tests/test_runtime_telemetry.py

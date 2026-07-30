@@ -1,17 +1,34 @@
 # Streamlit Community Cloud throttling — measured diagnosis (2026-07-29)
 
+> **Corrected 2026-07-30.** Three fixes to this note, all recorded in place rather than
+> appended: the verdict was overstated ("the app cannot cause this" → "no measured sustained
+> application-side resource problem was found"), the 0.078-core minimum was wrongly
+> multiplied into a "281 CPU-s/hour budget" when Streamlit documents no accounting window at
+> all, and the telemetry module shipped with process-global run state that would have
+> misattributed overlapping sessions. **Every benchmark number below is unchanged and was
+> re-verified, not re-run.**
+
 Third pass at recurring CPU throttling on <https://joschoanalytics.streamlit.app> (branch
 `main`), after `74d1ad7` (2026-07-24) and `c5a10ec` (2026-07-28) both reduced real app cost
 and throttling still recurred.
 
-**Conclusion up front: the deployed application's CPU cannot cause this.** A complete
-production visit to all nine pages costs **2.53 CPU-seconds** and peaks at **218 MB RSS**;
-the idle server burns **~10 CPU-seconds per hour**. Community Cloud's documented floor is
-0.078 cores — 281 CPU-seconds per hour — so the whole site is under 1% of the *minimum*
-guaranteed allocation. Every app-side hypothesis I could test came back negative. What
-remains is either platform-side scheduling/accounting on shared Community Cloud capacity,
-or live traffic that Streamlit's public analytics does not count. Telemetry to separate
-those two is now in the app, off by default.
+**Conclusion up front: no measured sustained application-side resource problem was found.**
+A complete production visit to all nine pages costs **2.53 CPU-seconds** and peaks at
+**218 MB RSS**; the idle server burns **~10 CPU-seconds per hour**. Streamlit documents
+approximate limits of 0.078–2 cores and 690 MB–2.7 GB, so those figures sit near the low
+end of the documented range — but **Streamlit does not document its throttle accounting
+window**, so no honest quota arithmetic is available and none is attempted below. Every
+app-side hypothesis I could test came back negative. What remains — platform-side
+scheduling or accounting on shared Community Cloud capacity, or live traffic that
+Streamlit's public analytics does not count — is **inference, not measurement**. Telemetry
+to separate those two is now in the app, off by default.
+
+**Read the measurement/inference split carefully.** Everything in §2–§4 is measured and
+reproducible. The claim that the platform is responsible is *not* measured; what is
+measured is only that the application does not exhibit a sustained CPU or memory problem.
+Absence of a measured problem is not proof of absence — a burst, a pathology under
+concurrency I did not reproduce, or an accounting rule I cannot see would all look like
+this.
 
 ---
 
@@ -87,9 +104,19 @@ Storage ≤ 50 GB. "If your app meets or exceeds its limits, it may slow down fr
 throttling or become nonfunctional." Apps with no traffic for 12 hours hibernate.
 Limits are shared by all Community Cloud users and "may change at any time without notice."
 
-**Against the floor:** the whole nine-page site is 2.53 CPU-s. One CPU-hour at the 0.078-core
-floor is 281 CPU-s. The site is **0.9% of the minimum hourly allocation**, and peak RSS is
-**32% of the 690 MB memory floor**. Idle 24 h ≈ 240 CPU-s ≈ **3.6% of a floor-rate day.**
+**What these numbers are and are not.** They are documented as approximate minimum and
+maximum *allocations*. Streamlit publishes **no throttle accounting window** — no averaging
+period, no per-hour or per-day CPU budget, and no statement of whether 0.078 cores is a
+guaranteed floor, a scheduling minimum under contention, or a burst-credit baseline.
+**So 0.078 cores must not be multiplied out into an hourly CPU budget** (an earlier draft
+of this note did exactly that, quoting "281 CPU-s/hour"; that figure was my arithmetic, not
+Streamlit's, and it is withdrawn).
+
+**Scale comparison, stated as a comparison and nothing more:** the measured idle draw of
+~10 CPU-s/hour is roughly **0.3% of one core**, i.e. well below even the low end of the
+documented allocation range; a complete nine-page visit is 2.53 CPU-s of one-off work; and
+peak RSS of 218 MB is **~32% of the documented 690 MB memory minimum**. Whether any of that
+interacts with an undisclosed accounting rule is unknown.
 
 ---
 
@@ -174,7 +201,8 @@ after `c5a10ec`, with what each actually shipped:
 **Measured, not assumed: deployment churn is not a CPU driver.** The git side of the
 heaviest push is 9.85 MB and 0.9 s; six of the eight pushes are under 1 MB packed. Charging
 every restart the full boot cost plus a complete cache re-warm gives
-8 × (0.63 + 1.95) ≈ **21 CPU-seconds per day — 0.3% of a floor-rate day.** The
+8 × (0.63 + 1.95) ≈ **21 CPU-seconds per day**, against 86,400 seconds of wall clock — an
+average draw of ~0.02% of one core. The
 `787486c` outlier is `fantasy/projections/coaching/data/wikipedia_team_season_cache.json`
 (39.65 MB tracked), a research artifact the live app never opens.
 
@@ -193,7 +221,7 @@ spot check. **The telemetry in §6 is what makes this correlation computable nex
 
 | Option | Measured effect | Verdict |
 |---|---|---|
-| **`streamlit-prod` branch** | Restarts fall from ~8/day to ~1–2/week: 6 of the last 8 pushes touched only `fantasy/projections/coaching/**`, which the app never imports. CPU saved ≈ 21 CPU-s/day = **0.3% of a floor-rate day — not a CPU fix.** The real gain is measured latency exposure: a visitor landing on a cold process pays **1.03–1.36 s** first render vs **0.06–0.14 s** warm, a 10–20× difference, and ~85% fewer restarts cuts that exposure proportionally. Plus blast radius: `main` took 41.75 MB of unrelated research blobs on 2026-07-29. | **Recommended**, on availability and blast-radius grounds only. Cost: one Cloud setting + merge discipline, zero code. |
+| **`streamlit-prod` branch** | Restarts fall from ~8/day to ~1–2/week: 6 of the last 8 pushes touched only `fantasy/projections/coaching/**`, which the app never imports. CPU saved ≈ 21 CPU-s/day, an average of ~0.02% of one core — **not a CPU fix.** The real gain is measured latency exposure: a visitor landing on a cold process pays **1.03–1.36 s** first render vs **0.06–0.14 s** warm, a 10–20× difference, and ~85% fewer restarts cuts that exposure proportionally. Plus blast radius: `main` took 41.75 MB of unrelated research blobs on 2026-07-29. | **Recommended**, on availability and blast-radius grounds only. Cost: one Cloud setting + merge discipline, zero code. |
 | Separate lightweight repo | Would cut the checkout from 266–293 MB to under 10 MB (the app reads 4.7 MB). But storage caps at 50 GB, so **288 MB of disk buys nothing measurable**, and it costs a sync job, duplicated shipped artifacts, and contradicts the footer's public-repo promise. | **Reject** — not supported. |
 | External ADP overlay fetch | The bot commit is the **smallest** of the eight pushes (0.01 MB packed, 5 objects, 0.03 s) and 1 of 8, while research pushes are 6 of 8. Trades a 7.6 KB local read for a live network dependency on the board's critical path, and does not touch the actual churn. | **Reject** — not supported. |
 
@@ -227,10 +255,25 @@ forbidden field names never appear. Measured overhead: **6.7 µs per script run 
 which cut it from 922 µs (swallowed exceptions on non-Linux dominated the cost).
 Removal is this file plus the `begin()`/`end()` pair.
 
-*This is the instrument that settles the open question.* If a throttle recurs and the log
-shows a handful of runs, the cause is platform-side. If it shows thousands — crawlers,
+**Concurrency correction, 2026-07-30.** The first version held each run's start time, CPU
+baseline and sequence number in module globals. Streamlit runs every session's script on its
+own ScriptRunner thread, so overlapping sessions shared that state: a second session's
+`begin()` overwrote the first's baselines, and the first session's `end()` then reported the
+*other* run's elapsed time under the *other* run's `run_seq` — a duplicated sequence number
+on a misattributed measurement, in the one instrument whose entire job is counting runs
+correctly. Per-run state now lives in `threading.local()`; the process-wide run counter,
+session ordinal and once-only boot flag are mutated under a lock; `end()` clears its
+thread-local baseline so a stray second `end()` cannot re-emit. Two deterministic tests
+cover it — an Event-choreographed pair of overlapping runs, and N threads held inside
+`begin()` by a barrier — and **both were confirmed to fail against the pre-fix
+implementation** (`duplicate run_seq 2`, and eight identical `run_seq` values) before being
+accepted. Overhead is unchanged at 6.7 µs; the lock is uncontended in the normal case.
+
+*This is the instrument intended to settle the open question.* If a throttle recurs and the
+log shows a handful of runs, that points to the platform. If it shows thousands — crawlers,
 health probes, reconnect storms — the cause is uncounted traffic, and Streamlit's "2 views"
-was never measuring the right thing.
+was never measuring the right thing. Either reading is evidence toward a hypothesis, not a
+proof of one.
 
 **GA beacon off the first-render critical path** (`dashboard_chrome.send_ga_event`). It was a
 synchronous `requests.post` with `timeout=3` running inside `site_pageview_once()` *before*
@@ -251,53 +294,78 @@ justification), `_load_actual_stats_season`'s TTL (that one is genuinely live da
 
 ## 7. Validation
 
-- Exact deploy-parity list under a **requirements.txt-only venv**: `tests/test_dashboard_utils.py`,
+All runs under a **requirements.txt-only venv** (the cloud closure), `APP_OFFLINE=1`.
+
+- `tests/test_runtime_telemetry.py` → **11 passed** (7 original + 4 concurrency).
+- Exact minimal-runtime dashboard suite = the deploy-parity list: `test_dashboard_utils.py`,
   `test_app_draft_board.py`, `test_site_nav.py`, `test_board_page.py`, `test_betting_pages.py`,
-  `test_fantasy_league_pages.py`, `test_help_page.py`, `test_model_explanations.py` → **59 passed.**
-  (The prior entry's "51" is the same list before tests were added since 2026-07-28; the
-  suite grew, nothing was skipped.)
-- Same list plus the runtime suites CI omits (`test_app_talent_columns.py`,
-  `test_page_rookie_board.py`) plus the new `test_runtime_telemetry.py` → **74 passed.**
+  `test_fantasy_league_pages.py`, `test_help_page.py`, `test_model_explanations.py`,
+  `test_runtime_telemetry.py` → **70 passed** (59 before the telemetry suite was added to the
+  list). The "51" in the 2026-07-28 log is the same list before suites grew since; nothing
+  was skipped.
 - All nine pages: `test_site_nav.py::test_every_page_renders_offline_clean` → **pass**;
-  and the harness renders all nine with **0 exceptions / 0 errors** in every run above.
-- Before/after, parity env: total walk CPU **1.906 s → 1.953 s**, peak RSS
-  **157.8 MB → 157.5 MB** — no regression (expected: telemetry is off, the GA change is
-  online-only).
-- Working tree preserved: only `app.py` and `dashboard_chrome.py` modified, only
-  `runtime_telemetry.py`, `scripts/bench_pages.py`, `scripts/bench_server.py`,
-  `tests/test_runtime_telemetry.py` added. `fantasy/projections/coaching` + `preregs` still
-  show exactly the 22 modified / 37 untracked paths they had at session start. Nothing
-  staged, nothing committed.
+  the harness also renders all nine with **0 exceptions / 0 errors**.
+- `test_app_talent_columns.py` + `test_page_rookie_board.py` → **8 passed.**
+- **CI wiring:** `tests/test_runtime_telemetry.py` is now in **both** explicit lists in
+  `.github/workflows/test.yml` — the `pytests` job (14 files) and `deploy-parity` (9 files).
+  YAML re-parsed to confirm both lists resolve.
+- **Concurrency tests proven to bite:** both new tests were re-run against a shim that
+  re-attaches the pre-fix module-global `begin`/`end` to the live module. They fail there —
+  `duplicate run_seq 2` and `duplicate run_seq values: [10]*8` — so they are a real guard,
+  not a tautology.
+- **Benchmarks not re-run** (the telemetry change is inert when disabled). Regression check
+  only, entrypoint, parity env: cold CPU 0.547 → 0.625 s, cold wall 1.034 → 1.110 s, warm
+  CPU 0.042 → 0.042 s, peak RSS 137.7 → 138.9 MB — inside the ±0.08 s spread seen between
+  the earlier before/after pairs on this box, and warm is identical. No regression.
+- Working-tree scope. The 2026-07-29 pass left `app.py` + `dashboard_chrome.py` modified and
+  four files added; Joseph committed those (`3e6344b`, `fa80c2e`) along with his own coaching
+  work, so `fantasy/projections/coaching` no longer shows the 22 modified / 37 untracked
+  paths it had at that session's start — it was committed, not touched by me. The 2026-07-30
+  correction pass leaves exactly: modified `runtime_telemetry.py`,
+  `tests/test_runtime_telemetry.py`, `.github/workflows/test.yml`, `memory/MEMORY.md`,
+  `memory/streamlit-throttle.md`; added `memory/daily/2026-07-29.md`. Nothing staged, nothing
+  committed by me.
 
 ---
 
 ## 8. Remaining uncertainty — stated plainly
 
-1. **The cause is not established.** I ruled the application out with numbers; I did not
-   prove what the platform is doing. Two live hypotheses remain: (a) shared-tenancy
-   scheduling near the 0.078-core floor, which would make "throttling" a platform condition
-   the app cannot influence; (b) uncounted traffic (crawlers, probes, reconnects) driving
-   script runs that Streamlit's viewer analytics never reports. **§6's telemetry
-   discriminates between them.** Do not ship another "throttle fix" before reading it.
+1. **The cause is not established.** What I established by measurement is narrower than it
+   first reads: **no sustained application-side CPU or memory problem was found** under the
+   scenarios I could reproduce. That is not the same as ruling the application out. A burst
+   I did not trigger, a pathology that only appears under real concurrent sessions, or an
+   accounting rule I cannot see would each be consistent with everything measured here.
+   Two hypotheses remain, both **inference**: (a) platform-side scheduling or accounting on
+   shared Community Cloud capacity, which would make "throttling" a condition the app cannot
+   influence; (b) uncounted traffic (crawlers, probes, reconnects) driving script runs that
+   Streamlit's viewer analytics never reports. **§6's telemetry discriminates between them.**
+   Do not ship another "throttle fix" before reading it.
 2. **No throttle-window timestamps exist**, so §4's correlation is one-sided by necessity.
    Next occurrence: capture the Cloud log window and the banner time, then join on the
    `JSA_TELEMETRY` `boot`/`run` lines.
-3. **Platform-vs-app is my read, not a proof.** The docs say limits "may change at any time
-   without notice" and are shared across all Community Cloud users; nothing exposes per-app
-   CPU accounting.
-4. **Local measurement is Windows / Python 3.11**; Cloud is Linux / 3.12. Absolute CPU will
-   differ. The ratios (cold vs warm, idle vs active, app vs quota floor) are what carry, and
-   they carry by three orders of magnitude.
-5. **The 12-hour hibernation is a confound I could not separate.** With two lifetime views
+3. **No accounting window is documented.** Streamlit publishes approximate min/max
+   allocations, says limits are shared across all Community Cloud users and "may change at
+   any time without notice", and exposes nothing about how throttling is measured — no
+   averaging period, no quota, no per-app usage history. Any statement of the form "the app
+   uses X% of its budget" is therefore unsupportable, including ones I made in the first
+   draft of this note.
+4. **Concurrency was measured only in the telemetry path.** The benchmark harness drives one
+   script run at a time; it never puts two sessions in flight simultaneously. Shared-state
+   behaviour under concurrent sessions is therefore untested for the *pages* — a real gap,
+   and the one place a defect could hide from every number above. (It did hide one: the
+   telemetry module's own run state was process-global and would have cross-attributed
+   overlapping sessions; fixed 2026-07-30, `tests/test_runtime_telemetry.py`.)
+5. **Local measurement is Windows / Python 3.11**; Cloud is Linux / 3.12. Absolute CPU will
+   differ. The ratios (cold vs warm, idle vs active) are what carry.
+6. **The 12-hour hibernation is a confound I could not separate.** With two lifetime views
    this app is asleep most of the time, and a wake-from-hibernation cold start is slow in a
    way that is indistinguishable from throttling to a visitor. Push-driven restarts may be
    the only thing keeping it awake — which would mean isolating production *increases*
    hibernation exposure. Worth watching after any branch switch.
-6. **If it recurs with telemetry showing near-zero runs, the honest move is to stop
-   optimizing.** Three passes have now cut real cost, and the remaining app cost is 0.9% of
-   the minimum hourly allocation. There is nothing left to win app-side; the answer would be
-   a host with reserved capacity — the same conclusion `74d1ad7`'s note reached, now with
-   numbers behind it.
+7. **If it recurs with telemetry showing near-zero runs, the honest move is to stop
+   optimizing.** Three passes have now cut real cost, and no further app-side target is
+   visible in the measurements. The next step would be a host with reserved capacity — the
+   same conclusion `74d1ad7`'s note reached, now with numbers behind it.
 
 ## Re-running any of this
 

@@ -7,10 +7,10 @@
 
 Hermetic: no real network, no real GA credentials.
 """
-import importlib
 import json
 import os
 import sys
+import threading
 import time
 from pathlib import Path
 
@@ -18,6 +18,28 @@ _ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_ROOT))
 
 import runtime_telemetry as tel
+
+
+class _Collector:
+    """Thread-safe stderr stand-in — the concurrency tests write from several threads."""
+
+    def __init__(self):
+        self._lock = threading.Lock()
+        self.raw = []
+
+    def write(self, text):
+        with self._lock:
+            self.raw.append(text)
+
+    def flush(self):
+        pass
+
+    def events(self, kind=None):
+        with self._lock:
+            lines = list(self.raw)
+        out = [json.loads(t.split(" ", 1)[1])
+               for t in lines if t.startswith("JSA_TELEMETRY")]
+        return [e for e in out if kind is None or e["ev"] == kind]
 
 # Field names that would make this telemetry a privacy problem. None may ever appear.
 FORBIDDEN_FIELDS = {"ip", "remote_ip", "client_ip", "user_agent", "ua", "referer",
@@ -28,10 +50,8 @@ REQUIRED_RUN_FIELDS = {"run_seq", "page", "cpu_s", "wall_s", "rss_mb", "proc_upt
 
 def _capture(monkeypatch, enabled: bool):
     """Run one begin/end pair and return the JSON objects written to stderr."""
-    lines = []
-    monkeypatch.setattr(tel.sys, "stderr",
-                        type("S", (), {"write": lambda _s, t: lines.append(t),
-                                       "flush": lambda _s: None})())
+    sink = _Collector()
+    monkeypatch.setattr(tel.sys, "stderr", sink)
     if enabled:
         monkeypatch.setenv("APP_TELEMETRY", "1")
     else:
@@ -39,7 +59,7 @@ def _capture(monkeypatch, enabled: bool):
     monkeypatch.setattr(tel, "_booted", False)
     tel.begin()
     tel.end("weekly-predictions")
-    return [json.loads(t.split(" ", 1)[1]) for t in lines if t.startswith("JSA_TELEMETRY")]
+    return sink.events()
 
 
 def test_off_by_default_emits_nothing(monkeypatch):
@@ -80,12 +100,155 @@ def test_run_seq_increments_per_run(monkeypatch):
     assert tel.snapshot()["run_seq"] == before + 3
 
 
-def test_overhead_is_negligible(monkeypatch):
-    """A telemetry call per script run must be far below the ~60 ms warm render itself."""
+def _run_threads(targets, timeout=30):
+    """Start every target, join them, and re-raise the first failure from any thread."""
+    errors = []
+
+    def wrap(fn):
+        def inner():
+            try:
+                fn()
+            except BaseException as exc:          # noqa: BLE001 - surfaced below
+                errors.append(exc)
+        return inner
+
+    threads = [threading.Thread(target=wrap(t), daemon=True) for t in targets]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join(timeout)
+        assert not t.is_alive(), "telemetry thread deadlocked"
+    if errors:
+        raise errors[0]
+
+
+def test_overlapping_runs_keep_their_own_baseline_and_sequence(monkeypatch):
+    """Two interleaved script threads, choreographed with Events so the result is fixed.
+
+        A.begin() ───────────────────────────────────────────► A.end()
+                        B waits HOLD ─► B.begin() ─► B.end()
+
+    Streamlit gives every session its own ScriptRunner thread, so this interleaving is
+    the normal case on a container serving more than one visitor.
+
+    Guaranteed to FAIL against module-global run state, twice over:
+      • B.begin() overwrote the shared start/CPU baselines, so A.end() measured B's
+        window (~0 s) instead of A's (>= HOLD).
+      • A.end() read the shared counter, so BOTH lines carried B's run_seq — a duplicate
+        sequence number attributed to the wrong run.
+    """
+    HOLD = 0.25
+    sink = _Collector()
+    monkeypatch.setattr(tel.sys, "stderr", sink)
     monkeypatch.setenv("APP_TELEMETRY", "1")
-    monkeypatch.setattr(tel.sys, "stderr",
-                        type("S", (), {"write": lambda *_a: None,
-                                       "flush": lambda *_a: None})())
+    monkeypatch.setattr(tel, "_booted", True)     # boot line already out; runs only
+
+    a_began, b_began = threading.Event(), threading.Event()
+
+    def long_run():
+        tel.begin()
+        a_began.set()
+        assert b_began.wait(20), "B never started"
+        tel.end("A")                              # fires immediately after B.begin()
+
+    def short_run():
+        assert a_began.wait(20), "A never started"
+        time.sleep(HOLD)                          # sits INSIDE A's open window
+        tel.begin()
+        b_began.set()
+        tel.end("B")
+
+    _run_threads([long_run, short_run])
+
+    runs = sink.events("run")
+    assert len(runs) == 2, runs
+    by_page = {e["page"]: e for e in runs}
+    assert set(by_page) == {"A", "B"}, runs
+    a, b = by_page["A"], by_page["B"]
+
+    # sequence numbers: distinct, and ordered by which run STARTED first
+    assert a["run_seq"] != b["run_seq"], f"duplicate run_seq {a['run_seq']}"
+    assert a["run_seq"] < b["run_seq"], (a["run_seq"], b["run_seq"])
+
+    # baselines: A measured its own window, not B's
+    assert a["wall_s"] >= HOLD * 0.9, f"A.wall_s={a['wall_s']} lost its own baseline"
+    assert b["wall_s"] < HOLD * 0.5, f"B.wall_s={b['wall_s']} picked up A's baseline"
+
+
+def test_concurrent_begins_get_distinct_sequence_numbers(monkeypatch):
+    """N threads all inside `begin()` before any calls `end()`.
+
+    The barrier makes this deterministic: with a shared counter every `end()` would read
+    the same post-increment value and emit N identical run_seq values. Each run must
+    carry the number it was handed at its own begin().
+    """
+    N = 8
+    sink = _Collector()
+    monkeypatch.setattr(tel.sys, "stderr", sink)
+    monkeypatch.setenv("APP_TELEMETRY", "1")
+    monkeypatch.setattr(tel, "_booted", True)
+    base = tel.snapshot()["run_seq"]
+    barrier = threading.Barrier(N)
+
+    def one(i):
+        def inner():
+            tel.begin()
+            barrier.wait(20)                      # every run is open at this instant
+            tel.end(f"T{i}")
+        return inner
+
+    _run_threads([one(i) for i in range(N)])
+
+    seqs = sorted(e["run_seq"] for e in sink.events("run"))
+    assert len(seqs) == N, seqs
+    assert len(set(seqs)) == N, f"duplicate run_seq values: {seqs}"
+    assert seqs == list(range(base + 1, base + 1 + N)), seqs
+    assert tel.snapshot()["run_seq"] == base + N
+
+
+def test_boot_is_emitted_once_under_concurrency(monkeypatch):
+    """Only one thread may claim the boot line, however many start together."""
+    N = 8
+    sink = _Collector()
+    monkeypatch.setattr(tel.sys, "stderr", sink)
+    monkeypatch.setenv("APP_TELEMETRY", "1")
+    monkeypatch.setattr(tel, "_booted", False)
+    barrier = threading.Barrier(N)
+
+    def one():
+        barrier.wait(20)
+        tel.begin()
+        tel.end("x")
+
+    _run_threads([one] * N)
+    assert len(sink.events("boot")) == 1, sink.events("boot")
+
+
+def test_end_without_begin_emits_nothing(monkeypatch):
+    """A stray `end()` on a thread with no run in flight must stay silent — and a second
+    `end()` must not re-emit the first run under a stale sequence number."""
+    sink = _Collector()
+    monkeypatch.setattr(tel.sys, "stderr", sink)
+    monkeypatch.setenv("APP_TELEMETRY", "1")
+    monkeypatch.setattr(tel, "_booted", True)
+
+    def stray():
+        tel.end("never-began")                    # fresh thread: no thread-local state
+        assert sink.events("run") == []
+        tel.begin()
+        tel.end("real")
+        tel.end("duplicate")                      # baseline was cleared by the first end
+
+    _run_threads([stray])
+    runs = sink.events("run")
+    assert [e["page"] for e in runs] == ["real"], runs
+
+
+def test_overhead_is_negligible(monkeypatch):
+    """A telemetry call per script run must be far below the ~60 ms warm render itself.
+    The counter lock is uncontended in the common case, so it must not change this."""
+    monkeypatch.setenv("APP_TELEMETRY", "1")
+    monkeypatch.setattr(tel.sys, "stderr", _Collector())
     n = 200
     t0 = time.perf_counter()
     for _ in range(n):

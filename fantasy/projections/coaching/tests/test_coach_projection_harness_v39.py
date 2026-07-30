@@ -438,75 +438,59 @@ def test_the_wrong_env_token_does_not_unlock(monkeypatch):
 
 
 V39_MODULES = ("build_arm_features_v39.py", "run_coach_projection_experiment_v39.py")
-# Callees that would read a real fantasy outcome.
-BANNED_CALLEES = {"load_player_stats", "season_total_target", "load_pbp_stats"}
-# Real-outcome payload tokens that could only appear in code as a column/file access.
-BANNED_CODE_TOKENS = {"season_dataset_2014_2026.csv", "season_dataset_2014_2025.csv",
-                      "sleeper_pts_half_ppr", "target_ppg", "target_games", "half_ppr"}
 
 
-def _executable_ast(path):
-    """Parse, then strip every docstring so DOCUMENTING the boundary is not mistaken for crossing it.
+def _pure_sources():
+    """Both canonical modules as in-memory strings. Injections mutate the COPY, never the files."""
+    return {m: (COACH / m).read_text(encoding="utf-8") for m in EX.V39_SOURCE_MODULES}
 
-    The audit RECORD must name `season_total_target()` and `season_dataset_*.csv` -- that is its whole
-    job. What must not exist is a CALL or a data access. Only executable nodes are scanned.
-    """
-    import ast
-    tree = ast.parse(path.read_text(encoding="utf-8"))
-    for node in ast.walk(tree):
-        if isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
-            body = node.body
-            if (body and isinstance(body[0], ast.Expr)
-                    and isinstance(body[0].value, ast.Constant)
-                    and isinstance(body[0].value.value, str)):
-                node.body = body[1:]
-    return tree
+
+# v3.9d §1: these two tests used to carry their OWN docstring-stripping AST walk and their own copies
+# of the banned callee/token sets. That is the parallel definition H-24 warned about, and it drifted
+# exactly as predicted — the test copy inspected only literal reader arguments and literal subscripts,
+# so `pd.read_csv(DATA / "season_dataset_2014_2026.csv")` passed both the module check AND its test.
+# The sets and the walk now come from the runtime module; there is one definition of the boundary.
+def test_the_module_owns_the_banned_sets_and_the_tests_do_not_copy_them():
+    assert set(EX.V39_SOURCE_MODULES) == set(V39_MODULES)
+    for name in ("BANNED_OUTCOME_CALLEES", "BANNED_OUTCOME_TOKENS", "READER_CALLEES",
+                 "AUDIT_ALLOWED_CALLEES", "DOCUMENTATION_ONLY_FUNCTIONS", "TOKEN_LIST_NAMES"):
+        assert hasattr(EX, name), f"{name} must live in the runtime module"
+    this = pathlib.Path(__file__).read_text(encoding="utf-8")
+    # the needles are assembled at runtime so this guard cannot match its own source
+    for stem in ("BANNED_CALLEES", "BANNED_CODE_TOKENS"):
+        assert (stem + " = {") not in this, f"the test file re-declares {stem} — parallel definition"
+    assert ("def " + "_executable_ast(") not in this, \
+        "the test file re-implements the docstring-stripping walk — parallel definition"
 
 
 def test_no_v39_module_ever_CALLS_a_real_outcome_source():
-    import ast
-    for mod in V39_MODULES:
-        tree = _executable_ast(COACH / mod)
-        for node in ast.walk(tree):
-            if not isinstance(node, ast.Call):
-                continue
-            f = node.func
-            name = f.attr if isinstance(f, ast.Attribute) else getattr(f, "id", None)
-            assert name not in BANNED_CALLEES, f"{mod} calls {name}() — a real-outcome source"
-            if name in ("read_csv", "read_parquet"):
-                blob = ast.dump(node)
-                assert "season_dataset" not in blob, f"{mod} reads the real player panel"
+    """Delegates to the runtime contract (C3): no call to a banned outcome-producing callee."""
+    good = _pure_sources()
+    ok, detail = EX.no_real_outcome_access(sources=good)
+    assert ok is True, detail
+    for callee in sorted(EX.BANNED_OUTCOME_CALLEES):
+        bad = dict(good)
+        bad["build_arm_features_v39.py"] += f"\n\ndef _injected():\n    return {callee}()\n"
+        ok2, detail2 = EX.no_real_outcome_access(sources=bad)
+        assert ok2 is False, f"a call to {callee}() was not detected"
+        assert callee in detail2
 
 
 def test_no_real_outcome_token_is_used_as_a_FILE_READ_OR_COLUMN_ACCESS():
-    """Prose naming the outcome inside the audit RECORD is required; a data ACCESS is forbidden.
+    """Delegates to the runtime contract (C4): no banned token in ANY executable string constant.
 
-    Only two positions can actually read an outcome: a string handed to a reader call, and a string
-    used as a subscript (`df["target_ppg"]`). Descriptive dict values are neither.
+    v3.9c scoped this to "a string handed to a reader call, and a string used as a subscript".
+    That scoping was the defect: it is not where a path is actually built.
     """
-    import ast
-    readers = {"read_csv", "read_parquet", "open", "read_json", "load_player_stats"}
-    for mod in V39_MODULES:
-        tree = _executable_ast(COACH / mod)
-        for node in ast.walk(tree):
-            probes = []
-            if isinstance(node, ast.Call):
-                f = node.func
-                name = f.attr if isinstance(f, ast.Attribute) else getattr(f, "id", None)
-                if name in readers:
-                    probes = [a.value for a in node.args
-                              if isinstance(a, ast.Constant) and isinstance(a.value, str)]
-            elif isinstance(node, ast.Subscript):
-                sl = node.slice
-                if isinstance(sl, ast.Constant) and isinstance(sl.value, str):
-                    probes = [sl.value]
-                elif isinstance(sl, (ast.List, ast.Tuple)):
-                    probes = [e.value for e in sl.elts
-                              if isinstance(e, ast.Constant) and isinstance(e.value, str)]
-            for p in probes:
-                for tok in BANNED_CODE_TOKENS:
-                    assert tok not in p, (
-                        f"{mod} accesses the real-outcome token {tok!r} (position: {p!r})")
+    good = _pure_sources()
+    ok, detail = EX.no_real_outcome_access(sources=good)
+    assert ok is True, detail
+    for tok in sorted(EX.BANNED_OUTCOME_TOKENS):
+        bad = dict(good)
+        bad["build_arm_features_v39.py"] += f'\n\ndef _injected():\n    p = DATA / "{tok}"\n'
+        ok2, detail2 = EX.no_real_outcome_access(sources=bad)
+        assert ok2 is False, f"{tok!r} in a composed path was not detected"
+        assert tok in detail2
 
 
 def test_the_boundary_IS_documented_in_both_modules():
@@ -1248,26 +1232,19 @@ def test_no_run_mode_relaxes_a_non_lock_check(temp_data):
 
 
 def test_the_locks_are_not_opened_anywhere_in_this_pass():
-    """AST-level: no executable statement assigns True to the lock constant.
+    """The lock state is closed at runtime, and C6/C7 prove no executable statement opens it.
 
-    A plain substring scan is wrong here — the module docstring and the refusal message legitimately
-    quote `REAL_FIT_AUTHORIZED = True` when documenting what a FUTURE authorized run must do.
+    v3.9d: this used to end with `"environ[" not in src and "putenv" not in src` — a substring scan.
+    It broke the moment the module ENUMERATED those forms in order to ban them, which is the same
+    "documenting is not crossing" confusion the AST walk exists to avoid. Delegated to the runtime
+    contract, which distinguishes a write from a mention.
     """
-    import ast
     assert EX.REAL_FIT_AUTHORIZED is False
     assert os.environ.get(EX.REAL_FIT_ENV_SWITCH) != EX.REAL_FIT_ENV_TOKEN
-    src = (COACH / "run_coach_projection_experiment_v39.py").read_text(encoding="utf-8")
-    tree = ast.parse(src)
-    assigns = []
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Assign):
-            for t in node.targets:
-                if isinstance(t, ast.Name) and t.id == "REAL_FIT_AUTHORIZED":
-                    assigns.append(node.value)
-    assert len(assigns) == 1, f"expected exactly one assignment, found {len(assigns)}"
-    assert isinstance(assigns[0], ast.Constant) and assigns[0].value is False
-    # and nothing sets the env token either
-    assert "environ[" not in src and "setenv" not in src and "putenv" not in src
+    ok, detail = EX.no_real_outcome_access()
+    assert ok is True, detail
+    constant_open, env_open = EX.real_fit_lock_state()
+    assert constant_open is False and env_open is False
 
 
 # =====================================================================================================
@@ -1495,7 +1472,7 @@ def test_a_reintroduced_gated_openers_note_fails_the_semantic_check(temp_data):
 def test_no_real_outcome_access_passes_on_the_real_modules():
     ok, detail = EX.no_real_outcome_access()
     assert ok is True, detail
-    assert "authorization-first" in detail
+    assert "C1-C7" in detail, "the pass message must name the frozen contract it enforced"
 
 
 def test_c10_includes_the_no_real_outcome_check():
@@ -1584,6 +1561,145 @@ def test_an_attempt_to_open_the_lock_in_source_is_detected():
         "\ndef _sneak():\n    os.environ[REAL_FIT_ENV_SWITCH] = REAL_FIT_ENV_TOKEN\n")
     ok2, detail2 = EX.no_real_outcome_access(sources=env)
     assert ok2 is False and "environ" in detail2
+
+
+# =====================================================================================================
+# v3.9d §1 — the boundary check inspects the WHOLE executable AST, not just literal reader arguments
+# =====================================================================================================
+# v3.9c's check looked only at (a) a string constant passed directly to a reader and (b) a literal
+# subscript. The ordinary repository form is neither: `DATA / "file.csv"` is a BinOp. Codex injected
+# exactly that and the check stayed green. Nine injections passed, not one.
+def test_THE_EXACT_CODEX_CASE_composed_path_read_is_now_detected():
+    """`pd.read_csv(DATA / "season_dataset_2014_2026.csv")` — verbatim, in pure source."""
+    good = _pure_sources()
+    assert EX.no_real_outcome_access(sources=good)[0] is True
+
+    bad = dict(good)
+    bad["build_arm_features_v39.py"] += (
+        '\n\ndef _injected():\n    return pd.read_csv(DATA / "season_dataset_2014_2026.csv")\n')
+    ok, detail = EX.no_real_outcome_access(sources=bad)
+    assert ok is False, "the composed-path read is STILL a false negative"
+    assert "season_dataset_2014_2026.csv" in detail, detail
+    # and canonical source is untouched by the injection
+    assert EX.no_real_outcome_access()[0] is True
+
+
+@pytest.mark.parametrize("label,snippet,module,fragment", [
+    ("composed path in the reader call",
+     'def _i():\n    return pd.read_csv(DATA / "season_dataset_2014_2026.csv")',
+     "build_arm_features_v39.py", "season_dataset_2014_2026.csv"),
+    ("composed path assigned, read later",
+     'def _i():\n    p = DATA / "season_dataset_2014_2026.csv"\n    return pd.read_csv(p)',
+     "build_arm_features_v39.py", "season_dataset_2014_2026.csv"),
+    ("pathlib.Path literal, read later",
+     'def _i():\n    p = pathlib.Path("season_dataset_2014_2026.csv")\n'
+     '    return pd.read_parquet(p)',
+     "build_arm_features_v39.py", "season_dataset_2014_2026.csv"),
+    ("token parked in a dict",
+     'PATHS = {"panel": "season_dataset_2014_2026.csv"}',
+     "build_arm_features_v39.py", "season_dataset_2014_2026.csv"),
+    ("token parked in a list",
+     'COLS = ["sleeper_pts_half_ppr", "target_ppg"]',
+     "build_arm_features_v39.py", "sleeper_pts_half_ppr"),
+    ("token as a keyword argument",
+     'def _i():\n    return pd.read_csv(SOMEWHERE, usecols=["target_ppg"])',
+     "build_arm_features_v39.py", "target_ppg"),
+    ("token in an f-string component",
+     'def _i():\n    return f"prefix-{1}-sleeper_pts_half_ppr"',
+     "build_arm_features_v39.py", "sleeper_pts_half_ppr"),
+    ("lock opened by AnnAssign",
+     'REAL_FIT_AUTHORIZED: bool = True',
+     "run_coach_projection_experiment_v39.py", "REAL_FIT_AUTHORIZED"),
+    ("lock opened by AugAssign",
+     'REAL_FIT_AUTHORIZED |= True',
+     "run_coach_projection_experiment_v39.py", "REAL_FIT_AUTHORIZED"),
+    ("lock opened by walrus inside a scope",
+     'def _i():\n    return (REAL_FIT_AUTHORIZED := True)',
+     "run_coach_projection_experiment_v39.py", "REAL_FIT_AUTHORIZED"),
+    ("env token written by os.environ.update",
+     'def _i():\n    os.environ.update({REAL_FIT_ENV_SWITCH: REAL_FIT_ENV_TOKEN})',
+     "run_coach_projection_experiment_v39.py", "environ"),
+    ("env token written by setdefault",
+     'def _i():\n    os.environ.setdefault(REAL_FIT_ENV_SWITCH, REAL_FIT_ENV_TOKEN)',
+     "run_coach_projection_experiment_v39.py", "environ"),
+    ("env token written by os.putenv",
+     'def _i():\n    os.putenv(REAL_FIT_ENV_SWITCH, REAL_FIT_ENV_TOKEN)',
+     "run_coach_projection_experiment_v39.py", "putenv"),
+    ("read THROUGH the exempt token tuple",
+     'def _i():\n    return pd.read_csv(DATA / BANNED_OUTCOME_TOKENS[0])',
+     "run_coach_projection_experiment_v39.py", "exempt"),
+    ("read THROUGH the exempt audit record",
+     'def _i():\n    return pd.read_csv(audit_production()["prediction_target"]["name"])',
+     "run_coach_projection_experiment_v39.py", "exempt"),
+])
+def test_every_boundary_evasion_form_is_rejected(label, snippet, module, fragment):
+    good = _pure_sources()
+    bad = dict(good)
+    bad[module] = bad[module] + "\n\n" + snippet + "\n"
+    ok, detail = EX.no_real_outcome_access(sources=bad)
+    assert ok is False, f"{label}: NOT detected"
+    assert fragment in detail, f"{label}: detail did not name {fragment!r} — {detail}"
+
+
+def test_the_documentation_exemption_is_void_once_the_function_gains_a_call():
+    """E2 is not "trust audit_production" — it dies the moment a new callee appears inside it."""
+    good = _pure_sources()
+    key = "run_coach_projection_experiment_v39.py"
+    smuggled = dict(good)
+    smuggled[key] = smuggled[key].replace(
+        "    a0 = arm0_definition()",
+        '    a0 = arm0_definition()\n'
+        '    _leak = pd.read_csv(DATA / "season_dataset_2014_2026.csv")', 1)
+    assert smuggled[key] != good[key], "the injection did not apply"
+    ok, detail = EX.no_real_outcome_access(sources=smuggled)
+    assert ok is False
+    assert "exemption VOID" in detail or "season_dataset_2014_2026.csv" in detail, detail
+
+
+def test_the_sources_mapping_must_be_exactly_the_two_modules():
+    """A module omitted from the mapping must not silently escape inspection (C1)."""
+    good = _pure_sources()
+    for partial in ({k: v for k, v in good.items() if k != "build_arm_features_v39.py"},
+                    {k: v for k, v in good.items()
+                     if k != "run_coach_projection_experiment_v39.py"},
+                    {}):
+        ok, detail = EX.no_real_outcome_access(sources=partial)
+        assert ok is False and "exactly the two v3.9 modules" in detail, detail
+    extra = dict(good)
+    extra["somewhere_else.py"] = "x = 1\n"
+    ok, detail = EX.no_real_outcome_access(sources=extra)
+    assert ok is False and "unexpected" in detail, detail
+
+
+def test_exactly_one_module_level_false_lock_exists():
+    """C6: a SECOND `= False` is as much a contract break as a `= True`."""
+    good = _pure_sources()
+    key = "run_coach_projection_experiment_v39.py"
+    doubled = dict(good)
+    doubled[key] += "\nREAL_FIT_AUTHORIZED = False\n"
+    ok, detail = EX.no_real_outcome_access(sources=doubled)
+    assert ok is False and "exactly one" in detail, detail
+
+    moved = dict(good)
+    moved[key] += "\ndef _i():\n    REAL_FIT_AUTHORIZED = False\n    return REAL_FIT_AUTHORIZED\n"
+    ok2, detail2 = EX.no_real_outcome_access(sources=moved)
+    assert ok2 is False and "inside a scope" in detail2, detail2
+
+
+def test_documenting_the_new_contract_is_still_not_crossing_it():
+    """The C1-C7 docstring itself names every banned token; that must not trip C4."""
+    good = _pure_sources()
+    doc = dict(good)
+    doc["build_arm_features_v39.py"] += (
+        '\n\ndef _documented():\n'
+        '    """Never reads season_dataset_2014_2026.csv, target_ppg or sleeper_pts_half_ppr."""\n'
+        "    return None\n")
+    ok, detail = EX.no_real_outcome_access(sources=doc)
+    assert ok is True, detail
+    comment = dict(good)
+    comment["build_arm_features_v39.py"] += (
+        "\n\n# season_dataset_2014_2026.csv and target_ppg are named here in a COMMENT\n")
+    assert EX.no_real_outcome_access(sources=comment)[0] is True
 
 
 def test_the_tests_and_c10_share_one_definition():

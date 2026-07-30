@@ -29,21 +29,34 @@ from __future__ import annotations
 import json
 import os
 import sys
+import threading
 import time
 
 _PREFIX = "JSA_TELEMETRY"
 
-# Process-wide counters. A Streamlit container is one process, so these describe exactly
-# the thing a CPU quota is charged for.
+# ── Concurrency model ────────────────────────────────────────────────────────────────
+# Streamlit runs each session's script on its own ScriptRunner thread, and a container
+# serves many sessions at once, so `begin()`/`end()` pairs INTERLEAVE. Two kinds of state
+# live here and they must be kept apart:
+#
+#   per-RUN state (start wall clock, CPU baseline, the run's own sequence number) is
+#   thread-local — one in-flight run per script thread. Holding it in module globals let
+#   a second session's `begin()` overwrite the first session's baselines, so the first
+#   session's `end()` reported the *other* run's elapsed time and re-emitted the *other*
+#   run's `run_seq`: a duplicate sequence number and a misattributed measurement.
+#
+#   process-wide counters (run total, session ordinal, the once-only boot flag) are shared
+#   by definition and are mutated only under `_counter_lock`, so no two threads can be
+#   handed the same ordinal or both emit the boot line.
 _PROC_START_WALL = time.time()
 _PROC_START_MONO = time.perf_counter()
-_run_seq = 0
-_session_seq = 0
-_run_t0 = 0.0
-_run_cpu0 = 0.0
-_booted = False
+_counter_lock = threading.Lock()
+_local = threading.local()
+_run_seq = 0          # guarded by _counter_lock
+_session_seq = 0      # guarded by _counter_lock
+_booted = False       # guarded by _counter_lock
 
-
+_switch_lock = threading.Lock()
 _secret_switch: bool | None = None   # resolved once per process
 
 
@@ -54,16 +67,21 @@ def _enabled() -> bool:
     The secrets answer is memoized because it cannot change without a restart, so a
     per-run render never pays for it twice. Any failure reading secrets means OFF —
     telemetry must never be the reason a page breaks.
+
+    Its own lock, not `_counter_lock`: `begin()` calls this and then takes the counter
+    lock, so sharing one lock would put a nested acquire one refactor away.
     """
     global _secret_switch
     if os.environ.get("APP_TELEMETRY") == "1":
         return True
     if _secret_switch is None:
-        try:
-            import streamlit as st
-            _secret_switch = str(st.secrets.get("APP_TELEMETRY", "")) == "1"
-        except Exception:
-            _secret_switch = False
+        with _switch_lock:
+            if _secret_switch is None:
+                try:
+                    import streamlit as st
+                    _secret_switch = str(st.secrets.get("APP_TELEMETRY", "")) == "1"
+                except Exception:
+                    _secret_switch = False
     return _secret_switch
 
 
@@ -155,38 +173,63 @@ def _session_index() -> int | None:
     try:
         import streamlit as st
         if "_tel_session_idx" not in st.session_state:
-            _session_seq += 1
-            st.session_state["_tel_session_idx"] = _session_seq
+            # session_state is per-session, but the ordinal it stores comes from a
+            # process-wide counter — so the increment is the shared part and is locked.
+            with _counter_lock:
+                _session_seq += 1
+                assigned = _session_seq
+            st.session_state["_tel_session_idx"] = assigned
         return st.session_state["_tel_session_idx"]
     except Exception:
         return None
 
 
 def begin() -> None:
-    """Call at the very top of app.py. Cheap: two clock reads plus one getrusage."""
-    global _run_seq, _run_t0, _run_cpu0, _booted
+    """Call at the very top of app.py. Cheap: two clock reads plus one getrusage.
+
+    Safe to call from concurrent script threads: this run's sequence number is claimed
+    under the lock and then parked in thread-local storage together with its own
+    baselines, so a concurrent `begin()` cannot disturb it.
+    """
+    global _run_seq, _booted
     if not _enabled():
         return
-    if not _booted:
+    with _counter_lock:
+        first = not _booted
         _booted = True
-        _emit("boot", wall_start=round(_PROC_START_WALL, 3), pid=os.getpid(),
-              python=sys.version.split()[0], rss_mb=_rss_mb(),
-              cpu_s=round(_cpu_seconds(), 4))
-    _run_seq += 1
-    _run_t0 = time.perf_counter()
-    _run_cpu0 = _cpu_seconds()
+        _run_seq += 1
+        assigned = _run_seq
+        if first:
+            # Emitted while holding the lock so the boot line cannot appear after a run
+            # line. It happens exactly once per process, so the contention is irrelevant.
+            _emit("boot", wall_start=round(_PROC_START_WALL, 3), pid=os.getpid(),
+                  python=sys.version.split()[0], rss_mb=_rss_mb(),
+                  cpu_s=round(_cpu_seconds(), 4))
+    _local.run_seq = assigned
+    _local.t0 = time.perf_counter()
+    _local.cpu0 = _cpu_seconds()
 
 
 def end(page: str | None = None) -> None:
-    """Call at the very bottom of app.py, after the page has rendered."""
-    if not _enabled() or not _run_t0:
+    """Call at the very bottom of app.py, after the page has rendered.
+
+    Reads only this thread's own baselines, and clears them, so a stray second `end()`
+    without a matching `begin()` cannot re-emit a run line under a stale sequence number.
+    """
+    if not _enabled():
         return
+    t0 = getattr(_local, "t0", None)
+    if t0 is None:                      # no run in flight on this thread
+        return
+    cpu0 = _local.cpu0
+    run_seq = _local.run_seq
+    _local.t0 = _local.cpu0 = _local.run_seq = None
     _emit("run",
-          run_seq=_run_seq,
+          run_seq=run_seq,
           session_idx=_session_index(),
           page=page,
-          wall_s=round(time.perf_counter() - _run_t0, 4),
-          cpu_s=round(_cpu_seconds() - _run_cpu0, 4),
+          wall_s=round(time.perf_counter() - t0, 4),
+          cpu_s=round(_cpu_seconds() - cpu0, 4),
           proc_cpu_s=round(_cpu_seconds(), 3),
           proc_uptime_s=round(time.perf_counter() - _PROC_START_MONO, 1),
           rss_mb=_rss_mb(),
@@ -195,6 +238,8 @@ def end(page: str | None = None) -> None:
 
 def snapshot() -> dict:
     """Current counters — for tests and for ad-hoc inspection, never for the log."""
-    return {"enabled": _enabled(), "run_seq": _run_seq, "session_seq": _session_seq,
+    with _counter_lock:
+        runs, sessions = _run_seq, _session_seq
+    return {"enabled": _enabled(), "run_seq": runs, "session_seq": sessions,
             "proc_cpu_s": round(_cpu_seconds(), 3), "rss_mb": _rss_mb(),
             "proc_uptime_s": round(time.perf_counter() - _PROC_START_MONO, 1)}

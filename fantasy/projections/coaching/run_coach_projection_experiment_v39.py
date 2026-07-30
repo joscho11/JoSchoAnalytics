@@ -85,6 +85,7 @@ Run:  python run_coach_projection_experiment_v39.py --audit
       python run_coach_projection_experiment_v39.py --synthetic
 """
 import argparse
+import ast
 import hashlib
 import json
 import os
@@ -1060,10 +1061,37 @@ BANNED_OUTCOME_TOKENS = ("season_dataset_2014_2026.csv", "season_dataset_2014_20
                          "target_games", "half_ppr")
 READER_CALLEES = frozenset({"read_csv", "read_parquet", "read_json", "open"})
 
+# --- v3.9d §1: the two FROZEN exemptions to the blanket string rule -----------------------------
+# v3.9c inspected only direct literal reader arguments and literal subscripts, so the ordinary
+# repository form `pd.read_csv(DATA / "season_dataset_2014_2026.csv")` — a BinOp, not a Constant
+# argument — passed. Nine injections passed, not one. The rule is now: a banned token in ANY
+# executable string constant is a violation, wherever it sits. That is only adoptable because
+# canonical source has exactly two places where such tokens legitimately appear, and both are
+# enumerated here rather than pattern-matched.
+#
+# E1 — the validator's own token list. Exempt ONLY a module-level assignment whose single target is
+#      literally this name; nothing else in the module gets the exemption.
+TOKEN_LIST_NAMES = frozenset({"BANNED_OUTCOME_TOKENS"})
+# E2 — `audit_production()` is a read-only descriptive record of the PRODUCTION training pipeline;
+#      it necessarily names the real panel files and legacy targets. It is documentation that happens
+#      to be a dict rather than a docstring. The exemption is NOT "trust this function": it is void
+#      unless the function's callee set is a subset of the frozen allowlist below, so introducing ANY
+#      new call into it — a reader, a loader, anything — revokes the exemption and every token inside
+#      is reported. Measured 2026-07-29: audit_production calls exactly these six.
+DOCUMENTATION_ONLY_FUNCTIONS = ("audit_production",)
+AUDIT_ALLOWED_CALLEES = frozenset({"RuntimeError", "_production_engine", "arm0_definition",
+                                   "items", "list", "str"})
+
+# Executable forms that could write the environment lock. Enumerated, not inferred.
+ENV_NAMES = frozenset({"environ"})
+ENV_WRITE_METHODS = frozenset({"update", "setdefault", "pop", "clear", "popitem", "__setitem__",
+                               "__delitem__"})
+ENV_WRITE_FUNCTIONS = frozenset({"putenv", "unsetenv"})
+LOCK_NAME = "REAL_FIT_AUTHORIZED"
+
 
 def _executable_tree(src):
     """Parse and strip every docstring, so DOCUMENTING the boundary is not mistaken for crossing it."""
-    import ast
     tree = ast.parse(src)
     for node in ast.walk(tree):
         if isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
@@ -1074,22 +1102,165 @@ def _executable_tree(src):
     return tree
 
 
-def no_real_outcome_access(source_dir=None, sources=None):
-    """Prove neither v3.9 module has an executable path to a real fantasy outcome.
+def _callee_name(call):
+    f = call.func
+    return f.attr if isinstance(f, ast.Attribute) else getattr(f, "id", None)
 
-    Checks, on the AST with docstrings stripped:
-      1. no call to a banned outcome-producing callee;
-      2. no reader call (`read_csv`/`read_parquet`/`read_json`/`open`) whose literal argument names a
-         real player panel;
-      3. no outcome column name used as a subscript or handed to a reader;
-      4. `assemble_real_panel` is authorization-FIRST — `require_real_fit_authorization()` is its first
-         statement — and remains deliberately unimplemented (raises `NotImplementedError`);
-      5. neither module assigns True to the lock constant or writes the env token.
 
-    `source_dir`/`sources` allow a regression test to inject a banned call without touching canonical
-    source. Returns (ok, detail).
+def _exempt_string_nodes(tree):
+    """Ids of the string Constants covered by the two frozen exemptions E1/E2.
+
+    Returns (exempt_ids, problems). E2 is void — and contributes a problem — when the documentation
+    function's callee set escapes `AUDIT_ALLOWED_CALLEES`, so the exemption cannot be used as a
+    hiding place. Everything not in the returned set is subject to the blanket rule.
     """
-    import ast
+    exempt, problems = set(), []
+
+    # E1: the module-level `BANNED_OUTCOME_TOKENS = (...)` assignment, and nothing else.
+    for node in tree.body:
+        if (isinstance(node, ast.Assign) and len(node.targets) == 1
+                and isinstance(node.targets[0], ast.Name)
+                and node.targets[0].id in TOKEN_LIST_NAMES):
+            for sub in ast.walk(node.value):
+                if isinstance(sub, ast.Constant) and isinstance(sub.value, str):
+                    exempt.add(id(sub))
+
+    # E2: documentation-only functions, but only while their callee set stays inside the allowlist.
+    for node in ast.walk(tree):
+        if (isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+                and node.name in DOCUMENTATION_ONLY_FUNCTIONS):
+            callees = {_callee_name(c) for c in ast.walk(node) if isinstance(c, ast.Call)}
+            escaped = {c for c in callees if c not in AUDIT_ALLOWED_CALLEES}
+            if escaped:
+                problems.append(f"{node.name}() is documentation-exempt but now calls "
+                                f"{sorted(escaped)} — exemption VOID, tokens inside are live")
+                continue
+            for sub in ast.walk(node):
+                if isinstance(sub, ast.Constant) and isinstance(sub.value, str):
+                    exempt.add(id(sub))
+    return exempt, problems
+
+
+def _exemption_laundering(tree):
+    """Reject reading THROUGH an exempt structure, which the exemptions would otherwise permit.
+
+    E1/E2 exempt the string constants inside the token tuple and inside `audit_production()`. Nothing
+    exempts *indexing* them back out: `pd.read_csv(DATA / BANNED_OUTCOME_TOKENS[0])` and
+    `open(audit_production()["veteran_path"]["router"])` contain no banned string of their own. So any
+    `/` composition or reader argument whose subtree touches an exempt source is a violation.
+    """
+    def touches_exempt_source(node):
+        for sub in ast.walk(node):
+            if isinstance(sub, ast.Name) and sub.id in TOKEN_LIST_NAMES:
+                return sub.id
+            if isinstance(sub, ast.Call) and _callee_name(sub) in DOCUMENTATION_ONLY_FUNCTIONS:
+                return _callee_name(sub) + "()"
+        return None
+
+    hits = []
+    for node in ast.walk(tree):
+        suspects = []
+        if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
+            suspects = [node.left, node.right]
+        elif isinstance(node, ast.Call) and _callee_name(node) in READER_CALLEES:
+            suspects = list(node.args) + [k.value for k in node.keywords]
+        for s in suspects:
+            src = touches_exempt_source(s)
+            if src:
+                hits.append((getattr(node, "lineno", -1), src))
+    return hits
+
+
+def _lock_assignments(tree):
+    """Every executable assignment form that targets the lock constant, as (kind, node, value)."""
+    out = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign):
+            for t in node.targets:
+                if isinstance(t, ast.Name) and t.id == LOCK_NAME:
+                    out.append(("Assign", node, node.value))
+        elif isinstance(node, ast.AnnAssign):
+            if isinstance(node.target, ast.Name) and node.target.id == LOCK_NAME:
+                out.append(("AnnAssign", node, node.value))
+        elif isinstance(node, ast.AugAssign):
+            if isinstance(node.target, ast.Name) and node.target.id == LOCK_NAME:
+                out.append(("AugAssign", node, node.value))
+        elif isinstance(node, ast.NamedExpr):
+            if isinstance(node.target, ast.Name) and node.target.id == LOCK_NAME:
+                out.append(("NamedExpr", node, node.value))
+    return out
+
+
+def _env_writes(tree):
+    """Executable writes to the process environment, by enumerated form."""
+    hits = []
+    for node in ast.walk(tree):
+        # os.environ[...] = ... / del os.environ[...]
+        targets = []
+        if isinstance(node, ast.Assign):
+            targets = node.targets
+        elif isinstance(node, (ast.AnnAssign, ast.AugAssign)):
+            targets = [node.target]
+        elif isinstance(node, ast.Delete):
+            targets = node.targets
+        for t in targets:
+            if isinstance(t, ast.Subscript):
+                base = t.value
+                nm = base.attr if isinstance(base, ast.Attribute) else getattr(base, "id", None)
+                if nm in ENV_NAMES:
+                    hits.append((getattr(node, "lineno", -1), "os.environ[...] assignment"))
+        if isinstance(node, ast.Call):
+            f = node.func
+            if isinstance(f, ast.Attribute) and f.attr in ENV_WRITE_METHODS:
+                base = f.value
+                nm = base.attr if isinstance(base, ast.Attribute) else getattr(base, "id", None)
+                if nm in ENV_NAMES:
+                    hits.append((node.lineno, f"os.environ.{f.attr}()"))
+            if _callee_name(node) in ENV_WRITE_FUNCTIONS:
+                hits.append((node.lineno, f"{_callee_name(node)}()"))
+    return hits
+
+
+def no_real_outcome_access(source_dir=None, sources=None):
+    """Enforce the frozen structural no-real-outcome contract on both v3.9 modules.
+
+    This is NOT a theorem about arbitrary Python. It is a decidable structural contract over the
+    executable AST of exactly two named modules, and it is worth stating exactly because v3.9c
+    claimed more than it checked:
+
+      C1  SCOPE. `sources` must map exactly `V39_SOURCE_MODULES` — both modules, no more, no fewer.
+          A module omitted from the mapping cannot silently escape inspection, and an extra module is
+          rejected rather than scanned under a contract not written for it.
+      C2  EXECUTABLE ONLY. Every check runs on `ast.parse` output with module/class/function
+          docstrings removed. Comments never reach the AST. Describing the boundary is not crossing
+          it.
+      C3  NO BANNED CALLEE. No call anywhere to a name in `BANNED_OUTCOME_CALLEES`.
+      C4  NO BANNED TOKEN IN ANY EXECUTABLE STRING. A `BANNED_OUTCOME_TOKENS` substring inside ANY
+          executable string constant is a violation regardless of position — reader argument,
+          `Path(...)` argument, `/` path composition, a variable later handed to a reader, a member of
+          a list/tuple/dict/set, a keyword argument, an f-string component, or a subscript. Exactly
+          two frozen exemptions apply (E1 the validator's own token tuple, E2 documentation-only
+          functions whose callee set stays inside `AUDIT_ALLOWED_CALLEES`); E2 voids itself the moment
+          a new call appears inside it.
+      C4b NO READING THROUGH AN EXEMPTION. Neither exempt structure may act as a data source: a `/`
+          composition or a reader argument whose subtree references `BANNED_OUTCOME_TOKENS` or calls a
+          documentation-only function is a violation, since indexing a token back out would otherwise
+          launder it past C4.
+      C5  ENTRY POINT SEALED. `assemble_real_panel` calls `require_real_fit_authorization()` as its
+          FIRST statement and still raises `NotImplementedError`.
+      C6  LOCK INVARIANTS. Across `Assign`, `AnnAssign`, `AugAssign` and `NamedExpr`: exactly one
+          assignment to `REAL_FIT_AUTHORIZED` exists across both modules, it is module-level, it is in
+          the harness, and its value is the constant `False`. Any other form or value fails.
+      C7  NO ENVIRONMENT WRITE. No `os.environ[...]` assignment or deletion, no
+          `os.environ.{update,setdefault,pop,clear,popitem,__setitem__,__delitem__}()`, and no
+          `os.putenv`/`os.unsetenv`.
+
+    What it deliberately does NOT claim: it does not resolve aliases, dynamic attribute access,
+    `getattr`/`eval`/`exec`, imports of third-party code, or a token assembled at runtime from
+    fragments. It is a structural gate against the realistic accident and the realistic edit, not a
+    proof of runtime behaviour. `source_dir`/`sources` let a regression test inject source without
+    touching canonical files. Returns (ok, detail).
+    """
     if sources is None:
         base = HERE if source_dir is None else pathlib.Path(source_dir)
         sources = {}
@@ -1100,48 +1271,74 @@ def no_real_outcome_access(source_dir=None, sources=None):
             sources[m] = p.read_text(encoding="utf-8")
 
     problems = []
-    for mod, src in sources.items():
+
+    # C1 — scope. Exact set equality, so neither omission nor addition passes unnoticed.
+    supplied, required = set(sources), set(V39_SOURCE_MODULES)
+    if supplied != required:
+        missing, extra = sorted(required - supplied), sorted(supplied - required)
+        bits = []
+        if missing:
+            bits.append(f"missing {missing}")
+        if extra:
+            bits.append(f"unexpected {extra}")
+        return False, ("sources must be exactly the two v3.9 modules: " + "; ".join(bits))
+
+    lock_assigns = []
+    for mod, src in sorted(sources.items()):
         try:
-            tree = _executable_tree(src)
+            tree = _executable_tree(src)                                   # C2
         except SyntaxError as e:
             problems.append(f"{mod}: unparseable ({e})")
             continue
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Call):
-                f = node.func
-                name = f.attr if isinstance(f, ast.Attribute) else getattr(f, "id", None)
-                if name in BANNED_OUTCOME_CALLEES:
-                    problems.append(f"{mod}: calls {name}() — a real-outcome path")
-                if name in READER_CALLEES:
-                    for arg in node.args:
-                        if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
-                            for tok in BANNED_OUTCOME_TOKENS:
-                                if tok in arg.value:
-                                    problems.append(f"{mod}: {name}() reads {tok!r}")
-            if isinstance(node, ast.Subscript):
-                sl = node.slice
-                lits = []
-                if isinstance(sl, ast.Constant) and isinstance(sl.value, str):
-                    lits = [sl.value]
-                elif isinstance(sl, (ast.List, ast.Tuple)):
-                    lits = [e.value for e in sl.elts
-                            if isinstance(e, ast.Constant) and isinstance(e.value, str)]
-                for lit in lits:
-                    for tok in BANNED_OUTCOME_TOKENS:
-                        if tok in lit:
-                            problems.append(f"{mod}: column access {lit!r} is a real outcome")
-            if isinstance(node, ast.Assign):
-                for t in node.targets:
-                    if (isinstance(t, ast.Name) and t.id == "REAL_FIT_AUTHORIZED"
-                            and not (isinstance(node.value, ast.Constant)
-                                     and node.value.value is False)):
-                        problems.append(f"{mod}: REAL_FIT_AUTHORIZED is not assigned False")
-                    if (isinstance(t, ast.Subscript)
-                            and isinstance(t.value, ast.Attribute) and t.value.attr == "environ"):
-                        problems.append(f"{mod}: writes os.environ (could open the env lock)")
 
-    # `assemble_real_panel` must be authorization-first and unimplemented.
-    harness = sources.get("run_coach_projection_experiment_v39.py")
+        exempt, exempt_problems = _exempt_string_nodes(tree)
+        problems.extend(f"{mod}: {p}" for p in exempt_problems)
+
+        module_level = {id(n) for n in tree.body}
+        for kind, node, value in _lock_assignments(tree):                  # C6
+            lock_assigns.append((mod, kind, getattr(node, "lineno", -1), value,
+                                 id(node) in module_level))
+
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Call):                                 # C3
+                name = _callee_name(node)
+                if name in BANNED_OUTCOME_CALLEES:
+                    problems.append(f"{mod}:{node.lineno}: calls {name}() — a real-outcome path")
+            if isinstance(node, ast.Constant) and isinstance(node.value, str):   # C4
+                if id(node) in exempt:
+                    continue
+                for tok in BANNED_OUTCOME_TOKENS:
+                    if tok in node.value:
+                        problems.append(f"{mod}:{node.lineno}: executable string contains the "
+                                        f"banned outcome token {tok!r}")
+                        break
+
+        for lineno, src_name in _exemption_laundering(tree):               # C4b
+            problems.append(f"{mod}:{lineno}: path/reader argument reads through the exempt "
+                            f"{src_name} — exemptions may not be used as a data source")
+
+        for lineno, form in _env_writes(tree):                             # C7
+            problems.append(f"{mod}:{lineno}: {form} could open the environment lock")
+
+    # C6 — exactly one canonical module-level `REAL_FIT_AUTHORIZED = False`, in the harness.
+    harness_name = "run_coach_projection_experiment_v39.py"
+    canonical = [a for a in lock_assigns
+                 if a[0] == harness_name and a[1] in ("Assign", "AnnAssign") and a[4]
+                 and isinstance(a[3], ast.Constant) and a[3].value is False]
+    for mod, kind, lineno, value, at_module_level in lock_assigns:
+        is_canonical = (mod == harness_name and kind in ("Assign", "AnnAssign") and at_module_level
+                        and isinstance(value, ast.Constant) and value.value is False)
+        if not is_canonical:
+            shown = getattr(value, "value", "<expression>")
+            problems.append(f"{mod}:{lineno}: {LOCK_NAME} written by {kind} "
+                            f"{'at module level' if at_module_level else 'inside a scope'} "
+                            f"with value {shown!r} — only one module-level `= False` is allowed")
+    if len(canonical) != 1:
+        problems.append(f"expected exactly one canonical module-level {LOCK_NAME} = False in the "
+                        f"harness, found {len(canonical)}")
+
+    # C5 — the real-panel entry point stays sealed.
+    harness = sources.get(harness_name)
     if harness is None:
         problems.append("harness source unavailable; cannot validate assemble_real_panel")
     else:
@@ -1165,9 +1362,11 @@ def no_real_outcome_access(source_dir=None, sources=None):
                             for n in ast.walk(fn))
             if not raises_ni:
                 problems.append("assemble_real_panel no longer raises NotImplementedError")
-    return (not problems), ("; ".join(problems[:4]) if problems
-                            else "no executable path to a real fantasy outcome; "
-                                 "assemble_real_panel is authorization-first and unimplemented")
+
+    ok_detail = ("both v3.9 modules satisfy the frozen structural no-outcome contract C1-C7 "
+                 "(scope, executable-only, no banned callee, no banned token in any executable "
+                 "string, sealed entry point, single False lock, no environment write)")
+    return (not problems), ("; ".join(problems[:4]) if problems else ok_detail)
 
 
 # =====================================================================================================
