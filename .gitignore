@@ -8,6 +8,10 @@ __pycache__/
 .streamlit/secrets.toml
 .claude/
 
+# Codex/pytest verification scratch directories
+.codex-audit-temp-*/
+.codex-baseline-temp-*/
+
 # Retired notebooks — live in betting/archive/, ignore if they drift back to root
 betting/BettingEdgeContinued.ipynb
 betting/BettingEdge_v2.ipynb
