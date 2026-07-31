@@ -1560,6 +1560,7 @@ PREFLIGHT_CHECKS = (
     "lineage_states_the_primary_policy",
     "contribution_lineage_reconciles", "design_b_oracle_and_unselectable",
     "production_models_identical", "no_real_outcome_access",
+    "assembly_module_contract",
     "pipeline_timing_assertions_ran", "run_mode_locks",
 )
 
@@ -1869,6 +1870,12 @@ def preflight(run_mode=DEFAULT_RUN_MODE, pipeline_assertions=None, data_dir=None
     check("production_models_identical", _prod)
 
     check("no_real_outcome_access", no_real_outcome_access)
+
+    def _assembly():
+        # Imported lazily and by NAME only: this module names no outcome column, so C4 stays clean.
+        import assemble_real_panel_v39 as _arp
+        return _arp.assembly_module_contract()
+    check("assembly_module_contract", _assembly)
 
     def _assertions():
         tally = _PIPELINE_ASSERTIONS if pipeline_assertions is None else pipeline_assertions

@@ -134,10 +134,10 @@ resolve aliasing, dynamic attribute access, `getattr`/`eval`/`exec`, third-party
 assembled at runtime from fragments, and the docstring says so. It accepts injected pure source so
 regression tests exercise the SAME function without touching canonical files.
 
-**Preflight is now 20 checks** (was 17): added `v39_artifacts_readable`,
+**Preflight is now 21 checks** (17 → 20 at v3.9c, → 21 at v3.9e): added `v39_artifacts_readable`,
 `lineage_states_the_primary_policy`, `no_real_outcome_access`.
 
-**Status:** **627 registered tests pass** offline with an empty temp directory (141 inherited + 486
+**Status:** **708 registered tests pass** offline with an empty temp directory (141 inherited + 567
 new). Locks not opened; the real outcome join remains unimplemented.
 
 ### Amendment record (v3.9a -> v3.9b, 2026-07-29, PREFIT — final correctness patch)
@@ -169,7 +169,8 @@ explicitly in `denominator_problems`, `outer_seasons_missing`, `outer_seasons_un
 
 v3.9a's `_integrity_check()` checked production hashes, the ten upstream coaching hashes and the lock
 state — while C10 was documented as "every timing, leakage, coverage, artifact-integrity and
-no-real-outcome assertion". `preflight()` now runs **17** deterministic checks, reading no outcome:
+no-real-outcome assertion". `preflight()` ran **17** deterministic checks at that point (SUPERSEDED; it
+is 21 now), reading no outcome:
 
 protected hashes (18) · the five v3.9 artifacts against their pins · no unauthorized `*_v39.*` and no
 coaching parquet · feature-table key uniqueness and 416 rows per design · Design A outer identity
@@ -260,7 +261,7 @@ fit; the real-fit gate stayed shut; all 18 protected artifacts are byte-identica
 `build_preseason_snapshot.projection_cutoffs()` and the old `hc_game_results()` both called
 `nflreadpy.load_schedules()`, and the win ledger was cached in an untracked scratch directory. A clean
 checkout with an empty temp directory and no connectivity therefore **failed five v3.9 feature tests**,
-and the then-current 254-pass result (SUPERSEDED — the suite is now 627) depended on mutable state that
+and the then-current 254-pass result (SUPERSEDED — the suite is now 708) depended on mutable state that
 is not in the repo.
 
 Both now read the repository-owned frozen snapshot
@@ -637,8 +638,8 @@ context only** and does not answer whether general HC win history, tenure or cha
 projections — that question is what ARM_HC exists to test.
 
 **Status at the v3.9a freeze (HISTORICAL — SUPERSEDED, see the v3.9d status above for current):**
-**254 registered tests passed at that point (SUPERSEDED; now 627)** — the **141** inherited baseline
-reproduced exactly, plus **113 new v3.9 tests at that point (SUPERSEDED; now 486)**. The deselect list
+**254 registered tests passed at that point (SUPERSEDED; now 708)** — the **141** inherited baseline
+reproduced exactly, plus **113 new v3.9 tests at that point (SUPERSEDED; now 567)**. The deselect list
 quoted in that freeze was three IDs and is also SUPERSEDED: six exact IDs are required, and they are
 listed in `coaching/AUDIT_TODO.md` item 26. The five v3.9 artifacts rebuild **byte-identically** across
 two consecutive builds. All 18 protected artifacts (8 v3.8 + 2 preliminary + 8 production) are
@@ -1872,7 +1873,8 @@ A missing, duplicated or unexpected season or fold key fails the relevant condit
 
 ### §7.2 What condition 10 actually checks (v3.9c)
 
-`preflight()` runs **20** deterministic checks, reading no outcome:
+`preflight()` runs **21** deterministic checks, reading no outcome (20 at v3.9c; `assembly_module_contract`
+added at v3.9e):
 
 18 protected hashes · the five v3.9 artifacts against their pins · **all five artifacts load with a
 valid schema** (`v39_artifacts_readable`) · no unauthorized `*_v39.*` and no coaching parquet ·

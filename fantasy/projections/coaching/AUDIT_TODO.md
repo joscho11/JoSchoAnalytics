@@ -428,7 +428,7 @@ Design A/B contrast — not for power. Both the 200/256 and the ~76 claims are r
 `build_preseason_snapshot.projection_cutoffs()` and the old `hc_game_results()` both called
 `nflreadpy.load_schedules()`, and the win ledger was cached in an untracked scratch directory. So a
 clean offline checkout **failed five v3.9 feature tests**, and the then-reported result of
-254 passes (SUPERSEDED; the suite is now 627) depended on mutable state that is not in the repo.
+254 passes (SUPERSEDED; the suite is now 708) depended on mutable state that is not in the repo.
 That is a reproducibility defect, not a cosmetic one: nobody else could have reproduced the number.
 
 Both now read `fantasy/seasonal_projections/snapshots/schedules_1999_2025.parquet` (repo-owned, frozen,
@@ -516,9 +516,9 @@ Related test renames: `test_design_a_and_b_differ_only_on_identity_supply` →
 
 ## 26. The 141 baseline is only reproducible with an explicit deselect list — CURRENT (updated v3.9d)
 
-**Current status: the full suite is 627; the inherited baseline is 141, reproduced as `141 passed,
-6 deselected`.** Reproducing it requires ignoring the three v3.9 test modules (`test_arm_features_v39.py`,
-`test_coach_projection_harness_v39.py`, `test_boundary_corpus.py`) **and deselecting all six**
+**Current status: the full suite is 708; the inherited baseline is 141, reproduced as `141 passed,
+6 deselected`.** Reproducing it requires ignoring the four v3.9 test modules (`test_arm_features_v39.py`,
+`test_coach_projection_harness_v39.py`, `test_boundary_corpus.py`, `test_assemble_real_panel_v39.py`) **and deselecting all six**
 v3.9 additions to `test_artifact_ownership.py`, by their exact IDs:
 
 ```
@@ -530,7 +530,7 @@ test_the_head_coach_win_ledger_is_derived_in_memory_not_cached
 test_the_v39_modules_never_write_outside_the_coaching_data_dir
 ```
 
-Inherited per module: 22 + 33 + 34 + 27 + 15 + 7 + 3 = **141**. Full suite: 141 + 88 + 246 + 146 + 6 = **627**.
+Inherited per module: 22 + 33 + 34 + 27 + 15 + 7 + 3 = **141**. Full suite: 141 + 88 + 246 + 146 + 81 + 6 = **708**.
 
 `pytest --deselect` **silently ignores an ID that does not exist**, so a mistyped path deselects
 nothing and the run reports 147 with no error at all. Copy the six IDs verbatim; do not retype them.
@@ -539,3 +539,38 @@ nothing and the run reports 147 with no error at all. Copy the six IDs verbatim;
 suite was 254 (SUPERSEDED); an early attempt deselected only three IDs and returned 144 passed,
 3 deselected (SUPERSEDED); a later attempt used six IDs that were mistyped and returned 147
 (SUPERSEDED). None of those three figures is current.
+
+## 41. THE REAL-OUTCOME TRANSITION — a false blocker, then a false all-clear (v3.9e/f)
+
+**41a. I claimed the Arm 0 outcome was not repo-owned. WRONG, WITHDRAWN.** I traced
+`season_total_target()` to `nfl.load_player_stats(...)` and asserted the outcome was unreachable offline
+without checking whether the repo already owned a snapshot of that same loader. It does:
+`snapshots/player_stats_2011_2025.parquet`, tracked, pinned (sha256 `e8dad7e4...`, 269,594x115,
+2011-2025), and `wr_recent_full_game_features_harness.build_panel()` already reproduces the target from
+it. *A blocker is a claim and needs the same evidence as a result.*
+
+**41b. Then I overcorrected: "the first run is already hermetic" was an unqualified ALL-CLEAR and is
+also WITHDRAWN.** True of the outcome path and the four VETERAN buckets; false of the full seven-bundle
+feature path. Arm 0 ships SEVEN bundles; I defined the contract as "identity + 32 veteran features",
+called it the Arm 0 contract, and pinned exactly ONE bundle in a test, so the gap was invisible.
+Measured: RB rookie 32/41 features missing, WR 35/44, TE 35/44 — combine, college-box and PFF-derived.
+Production rebuilds them via `fantasy/rookie/harness` (live `nflreadpy` loaders + a read of
+`fantasy/seasonal_projections/pff/`, which holds 418 local files and **0 tracked** files,
+`.gitignore:37`). A clean checkout cannot assemble those buckets. `activation_readiness()` now returns
+False and names them; `preflight()` stays 21/21 so the committed prefit checkpoint stays green.
+**OPEN — Joseph's decision (manifest §0b): freeze a feature-only pinned artifact (recommended,
+conditional on PFF licensing) / external pinned artifact / amend the population.** No artifact written,
+no PFF file touched, no rookie matrix regenerated.
+
+**41c. Three implementation defects behind it, all fixed:** the authorized feature reader returned 2026
+and the forbidden legacy target columns while its own validator rejects both (663 tests passed over a
+reader that could not work, because nothing ran its OUTPUT through the validator); the assembler refused
+rows that production LEFT-joins and zero-fills, changing the target and denominator; and the accounting
+states double-counted a null `player_id`.
+
+**41d. A2 was evadable four ways** — `import requests as r`, `from requests import get`,
+`requests.Session().get(...)`, and a client variable — all returned ok=True under receiver-name
+matching. A2 now rejects the network IMPORT itself; positive controls keep `dict.get`/`config.get`/an
+injected `client.get` legal, and the deliberate limits (`importlib`/`eval`/`exec`/injected client) are
+stated rather than glossed.
+

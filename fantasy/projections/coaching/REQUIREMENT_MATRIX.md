@@ -476,8 +476,8 @@ shut. **The module writes nothing at all.**
 | scope | count |
 |---|---|
 | inherited baseline (reproduced by ignoring the 2 new v3.9 modules and deselecting **all six** new ownership tests) | **141** |
-| new v3.9 + v3.9a + v3.9b + v3.9c + v3.9d tests | **486** |
-| **full coaching suite** (offline, empty temp dir) | **627** |
+| new v3.9 + v3.9a + v3.9b + v3.9c + v3.9d + v3.9e + v3.9f tests | **567** |
+| **full coaching suite** (offline, empty temp dir) | **708** |
 
 ## v3.9c — REVIEW REPAIRS (2026-07-29)
 
@@ -497,6 +497,24 @@ shut. **The module writes nothing at all.**
 | C-12 | an injected real-outcome path is detected, in PURE SOURCE (canon untouched) | `no_real_outcome_access(sources=)` | `test_an_injected_real_outcome_path_is_detected` (5 params) | PASS |
 | C-13 | documenting the boundary is not mistaken for crossing it | `_executable_tree` (docstrings stripped) | `test_documenting_the_boundary_is_not_mistaken_for_crossing_it` | PASS |
 | C-14 | `assemble_real_panel` stays authorization-FIRST and unimplemented; source-level lock-opening is detected | `no_real_outcome_access` | `test_assemble_real_panel_must_stay_authorization_first_and_unimplemented`, `test_an_attempt_to_open_the_lock_in_source_is_detected` | PASS |
+
+## v3.9e/v3.9f — REAL-OUTCOME TRANSITION (prepared; activation BLOCKED)
+
+`assemble_real_panel_v39.py`, contract **A1–A6**, enforced as the 21st preflight check. Tests:
+`tests/test_assemble_real_panel_v39.py` — **81**.
+
+| # | requirement | generating function | covering test | status |
+|---|---|---|---|---|
+| R-1 | the outcome path is hermetic: the target comes from the repo-owned pinned weekly snapshot, never a live loader | `authorized_outcome_reader`, `grouped_season_totals` | `test_the_weekly_snapshot_is_repo_owned_and_matches_its_pin`, `test_the_weekly_snapshot_provenance_matches_the_manifest` | PASS |
+| R-2 | the target reproduces production exactly: REG-only, 2014–2025, `fantasy_points + 0.5*receptions` summed per (player_id, season) | `grouped_season_totals` | `test_the_target_formula_is_the_production_one`, `test_postseason_never_enters_the_target`, `test_grouped_totals_are_REG_only_and_windowed` | PASS |
+| R-3 | production zero-fill semantics: an eligible player-season with no weekly row is RETAINED with y = 0.0 | `assemble_panel_core` | `test_PRODUCTION_EQUIVALENCE_a_rostered_player_with_no_stat_row_is_kept_with_zero`, `test_no_feature_row_is_ever_silently_dropped` | PASS |
+| R-4 | the veteran feature reader loads only the frozen contract, filters to 2014–2025, and its OUTPUT passes its own validator | `authorized_feature_reader` | `test_GREEN_the_authorized_feature_reader_returns_only_2014_2025_and_no_forbidden_column`, `test_the_feature_reader_output_passes_its_own_validator`, `test_RED_a_naive_full_read_of_the_fixture_violates_the_validator` | PASS |
+| R-5 | accounting states are a mutually exclusive, exhaustive partition summing to the feature-row count | `assemble_panel_core` | `test_the_accounting_states_partition_the_feature_rows`, `test_the_states_cannot_overlap`, `test_a_null_player_id_is_missing_identity_only` | PASS |
+| R-6 | **all SEVEN** shipped Arm 0 bundles are audited — ordered `feature_cols`, declared input, supply status | `arm0_bucket_table`, `SHIPPED_ARM0_BUCKETS` | `test_all_seven_shipped_buckets_are_declared`, `test_every_bundle_feature_count_matches_the_declared_table`, `test_a_bucket_frame_must_carry_every_bundle_feature_in_order` | PASS |
+| R-7 | **the three ROOKIE buckets have NO repo-owned feature source** (RB 32/41, WR 35/44, TE 35/44 missing) | `arm0_bucket_table`, `ROOKIE_MISSING_COUNTS` | `test_the_rookie_buckets_have_no_repo_owned_feature_source` (3 params) | **BLOCKED — Joseph's decision, manifest §0b** |
+| R-8 | activation readiness FAILS CLOSED and is a layer SEPARATE from prefit integrity | `activation_readiness` | `test_activation_readiness_is_currently_FALSE_and_names_the_blocked_buckets`, `test_prefit_integrity_and_activation_readiness_are_DIFFERENT_layers` | PASS (returns False, by design) |
+| R-9 | A2 rejects network capability at the IMPORT, under any alias or from-form | `assembly_module_contract` | `test_every_network_evasion_is_rejected_by_banning_the_import` (8 params), `test_the_network_check_does_not_false_positive` (4 params), `test_the_a2_limits_are_stated_not_hidden` | PASS |
+| R-10 | both locks stay closed and the harness door stays sealed through this pass | `real_fit_lock_state`, `_entry_point_is_sealed` | `test_the_entry_point_is_still_sealed_and_this_pass_did_not_weaken_it`, `test_every_partial_or_closed_lock_state_refuses` (3 params) | PASS |
 
 ## v3.9a — REVIEW-REPAIR REQUIREMENTS (2026-07-29)
 

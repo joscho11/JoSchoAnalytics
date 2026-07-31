@@ -17,7 +17,7 @@ tests — and then found seven defects. All seven are repaired.
 
 | # | finding | status |
 |---|---|---|
-| 1 | The build was **not hermetic**: `projection_cutoffs()` and `hc_game_results()` both downloaded nflverse schedules, and the win ledger sat in an untracked scratch cache. A clean offline checkout failed **five** feature tests, so the then-current 254-pass claim (SUPERSEDED; the suite is now 627) depended on state outside the repo. | **FIXED** — both read the repo-owned frozen snapshot; the ledger is computed in memory; suite and build now pass with egress blocked and an empty temp dir (§1.4) |
+| 1 | The build was **not hermetic**: `projection_cutoffs()` and `hc_game_results()` both downloaded nflverse schedules, and the win ledger sat in an untracked scratch cache. A clean offline checkout failed **five** feature tests, so the then-current 254-pass claim (SUPERSEDED; the suite is now 708) depended on state outside the repo. | **FIXED** — both read the repo-owned frozen snapshot; the ledger is computed in memory; suite and build now pass with egress blocked and an empty temp dir (§1.4) |
 | 2 | The live canonical prereg sections still asserted the superseded policy **underneath** the correction banner, and this report claimed they had been corrected when only a banner covered them. | **FIXED** — §0, §2, §3.2, §4, §5, §6, §7, §8-T5, §8.1 rewritten to v3.9 truth; the false claim in this report is withdrawn (§2.1) |
 | 3 | The manifest pinned only appended coaching columns; `ARM_0` was empty and the veteran/rookie baseline difference was inexpressible. | **FIXED** — full ordered X per (position, bucket, arm) (§4.1) |
 | 4 | The ten-condition §7 primary verdict was **never computed**, its thresholds were not pinned, and no test covered it. | **FIXED** — `primary_verdict()` + 14 tests (§8.5) |
@@ -84,7 +84,7 @@ anywhere that gains history).
 | 4 | Live requirement-matrix F-14 and audit item 32 still asserted the superseded policy, `~76`, `200/256` and the two-axis contrast. | F-14 withdrawn → F-14a/b/c; item 32 re-headed RESOLVED; a mechanical scan over 9 live targets reports **CLEAN** |
 | 5 | C10 claimed the no-real-outcome assertions but implemented them only as tests. | `no_real_outcome_access()` is now module logic AND a preflight check; tests call it |
 
-**Preflight: 17 → 20 checks** (`v39_artifacts_readable`, `lineage_states_the_primary_policy`,
+**Preflight: 17 → 20 → 21 checks** (v3.9c added `v39_artifacts_readable`, `lineage_states_the_primary_policy`,
 `no_real_outcome_access`).
 
 ---
@@ -103,7 +103,7 @@ interpreter `.\.venv-test\Scripts\python.exe` (Python 3.11.9). This is one line,
 `...` placeholders, no abbreviations:
 
 ```
-.\.venv-test\Scripts\python.exe -m pytest fantasy/projections/coaching/tests -q -p no:warnings --ignore=fantasy/projections/coaching/tests/test_arm_features_v39.py --ignore=fantasy/projections/coaching/tests/test_coach_projection_harness_v39.py --ignore=fantasy/projections/coaching/tests/test_boundary_corpus.py --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_each_protected_text_artifact_has_exactly_one_writer --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_build_arm_features_v39_writes_only_the_five_authorized_artifacts --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_the_harness_writes_no_repo_artifact_at_all --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_no_unauthorized_v39_artifact_exists_on_disk --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_the_head_coach_win_ledger_is_derived_in_memory_not_cached --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_the_v39_modules_never_write_outside_the_coaching_data_dir
+.\.venv-test\Scripts\python.exe -m pytest fantasy/projections/coaching/tests -q -p no:warnings --ignore=fantasy/projections/coaching/tests/test_arm_features_v39.py --ignore=fantasy/projections/coaching/tests/test_coach_projection_harness_v39.py --ignore=fantasy/projections/coaching/tests/test_boundary_corpus.py --ignore=fantasy/projections/coaching/tests/test_assemble_real_panel_v39.py --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_each_protected_text_artifact_has_exactly_one_writer --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_build_arm_features_v39_writes_only_the_five_authorized_artifacts --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_the_harness_writes_no_repo_artifact_at_all --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_no_unauthorized_v39_artifact_exists_on_disk --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_the_head_coach_win_ledger_is_derived_in_memory_not_cached --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_the_v39_modules_never_write_outside_the_coaching_data_dir
 ```
 
 Literal output of that exact command:
@@ -124,11 +124,11 @@ and no claim is made here about what bare `python` resolves to.
 Every ID above is real and was executed. `pytest --deselect` silently ignores an ID that does not
 exist, so a mistyped path deselects nothing and returns 147 with no error — copy these verbatim.
 
-**Current totals, and the only ones stated anywhere in this document:** **627** tests in
-`coaching/tests/` — **141** inherited plus **486** added by this pass. The 486 is
-88 (`test_arm_features_v39.py`) + 246 (`test_coach_projection_harness_v39.py`) + 146 (`test_boundary_corpus.py`) + 6 (the v3.9 additions
+**Current totals, and the only ones stated anywhere in this document:** **708** tests in
+`coaching/tests/` — **141** inherited plus **567** added by this pass. The 567 is
+88 (`test_arm_features_v39.py`) + 246 (`test_coach_projection_harness_v39.py`) + 146 (`test_boundary_corpus.py`) + 81 (`test_assemble_real_panel_v39.py`) + 6 (the v3.9 additions
 to `test_artifact_ownership.py`). The per-module table in §10 carries the full split and reconciles to
-the same 627. Earlier drafts of this section quoted 254 total / 113 added; both are **WITHDRAWN** and
+the same 708. Earlier drafts of this section quoted 254 total / 113 added; both are **WITHDRAWN** and
 were never current at the time this document was closed.
 
 Interpreter for every number in this report: the repo-local `.\.venv-test\Scripts\python.exe`
@@ -184,7 +184,7 @@ Verified with egress blocked (`socket.create_connection`, `getaddrinfo`, `socket
 a freshly created empty directory:
 
 ```
-full coaching suite   627 passed
+full coaching suite   708 passed
 inherited baseline    141 passed, 6 deselected
 full v3.9 build       completed; all five artifact hashes reproduced
 ```
@@ -890,8 +890,8 @@ generating function, input columns, timing rule, missing-value rule, and coverin
 | scope | count |
 |---|---|
 | inherited baseline (reproduced, offline) | **141** |
-| new v3.9 + v3.9a + v3.9b + v3.9c + v3.9d tests | **486** |
-| **full coaching suite** | **627 passed, offline, egress blocked, fresh empty temp dir** |
+| new v3.9 + v3.9a + v3.9b + v3.9c + v3.9d + v3.9e + v3.9f tests | **567** |
+| **full coaching suite** | **708 passed, offline, egress blocked, fresh empty temp dir** |
 
 ### 10.1 THE TWO CODEX REPRODUCTIONS NOW FAIL SEMANTICALLY
 
@@ -950,7 +950,7 @@ Per-module counts, collected rather than estimated:
 | `test_arm_features_v39.py` | **88** | new |
 | `test_coach_projection_harness_v39.py` | **246** | new (155 at v3.9c; +91 from the v3.9d boundary, C5/C6/C7 binding-context and wording work) |
 
-22+33+34+27+15+7+3 = **141** inherited; 88+246+146+6 = **486** new; total **627**.
+22+33+34+27+15+7+3 = **141** inherited; 88+246+146+81+6 = **567** new; total **708**.
 
 To reproduce the 141 exactly, ignore the three v3.9 test modules and deselect these six. (The `tests/`
 tree **is now tracked** — Joseph committed it on 2026-07-30, so new-vs-inherited *can* be diffed against
@@ -1341,6 +1341,153 @@ which is the expected result for repairs that are validation and documentation o
 `build_arm_features_v39.py:181` carried the literal characters `` `r`n `` inside a comment — PowerShell
 escape debris from an earlier edit, not a data change, but not something to commit. Replaced with two
 normal comment lines.
+
+---
+
+## 10.4 v3.9e — REAL-OUTCOME TRANSITION PREPARED, NOT ACTIVATED
+
+**Opening state, reproduced against `0fd34b9 "prefit system verification"` with a clean worktree:**
+627 tests · baseline 141 passed / 6 deselected · boundary corpus 146 · preflight 20/20 · 18/18 protected ·
+five artifact pins unchanged · both locks closed.
+
+### 10.4.1 WITHDRAWN — the "outcome is not repo-owned" blocker was FALSE
+
+An earlier revision of this section claimed the Arm 0 outcome was not repo-owned, that the first run
+could not be hermetic, and that an authorized network fetch was needed to freeze a new snapshot.
+**All of that is WRONG and is withdrawn.** I traced `season_total_target()` to
+`nfl.load_player_stats(...)`, concluded the outcome was unreachable offline, and never checked whether
+the repository already owned a snapshot of that same loader. It does, and it is pinned:
+
+```
+fantasy/seasonal_projections/snapshots/player_stats_2011_2025.parquet
+sha256  e8dad7e48fd202d414d66f5a14fb23f72d4bdb5a1b60a09c5d71556444203344   (VERIFIED on disk)
+loader  nflreadpy.load_player_stats · 269,594 rows x 115 cols · seasons 2011-2025
+```
+
+`wr_recent_full_game_features_harness.build_panel()` (lines 185-191) already reproduces the production
+target from it. **The first authorized run is therefore already hermetic and requires no fetch and no
+new input artifact.** `OUTCOME_SNAPSHOT`, `OUTCOME_SNAPSHOT_MD5` and the "snapshot does not exist" tests
+are removed, and `test_no_outcome_snapshot_constant_survives` fails if any of them come back.
+
+The lesson is the one this project keeps relearning: *I asserted an absence without searching for the
+thing I claimed was absent.* A blocker is a claim, and a claim needs the same evidence as a result.
+
+### 10.4.1a THE REAL BLOCKER — three of seven Arm 0 bundles have no feature source
+
+Having withdrawn a false blocker, I then **overcorrected into a false all-clear**: "the first authorized
+run is already hermetic" is true of the outcome path and the four veteran buckets, and false of the
+full seven-bundle feature path. Arm 0 ships **seven** bundles. I defined the contract as "identity + 32
+veteran features", called it the Arm 0 contract, and pinned exactly one bundle
+(`rb_veteran_model.pkl`) in a test — so the gap was invisible to the suite.
+
+Measured against `season_dataset_2014_2026.csv` (47 columns):
+
+| bundle | features | present | **missing** |
+|---|---|---|---|
+| QB/RB/WR/TE veteran (×4) | 32 each | 32 | **0** ✅ |
+| `rb_rookie_model.pkl` | 41 | 9 | **32** ❌ |
+| `wr_rookie_model.pkl` | 44 | 9 | **35** ❌ |
+| `te_rookie_model.pkl` | 44 | 9 | **35** ❌ |
+
+The missing fields are combine, college-box (`cfb_*`) and PFF-derived. Production rebuilds them via
+`fantasy/rookie/harness`, which imports `nflreadpy` and calls `load_player_stats`, `load_draft_picks`
+and `load_combine` **live**, and reads `fantasy/seasonal_projections/pff/` — **418 local files, 0
+tracked** (`.gitignore:37`). A clean checkout cannot assemble those three buckets at all.
+
+**This is now fail-closed and layered.** `activation_readiness()` returns `False`, naming each blocked
+bucket and the counts; `preflight()` stays at 21/21 so the committed v3.9d prefit checkpoint remains
+green, and `test_prefit_integrity_and_activation_readiness_are_DIFFERENT_layers` fails if anyone folds
+activation readiness into the prefit preflight. The contract is renamed `VETERAN_FEATURE_COLUMNS`,
+`SHIPPED_ARM0_BUCKETS` declares all seven with their required input, and every bundle's ordered
+`feature_cols` is now pinned — not just one.
+
+**The rookie-source decision is Joseph's and is deliberately UNRESOLVED** (manifest §0b): freeze a
+feature-only pinned artifact (my recommendation, conditional on PFF licensing), use an external pinned
+artifact, or amend the population to exclude rookies. I wrote no artifact, touched no PFF file, and did
+not regenerate the rookie matrix.
+
+### 10.4.1c A2 was still evadable four ways
+
+Receiver-name matching missed `import requests as r; r.get(...)`, `from requests import get; get(...)`,
+`requests.Session().get(...)` and `client = requests.Session(); client.get(...)` — all returned
+`ok=True`. Chasing call shapes means chasing aliasing, and aliasing wins. Since this module needs no
+network-capable package, A2 now rejects the **import**: any `Import`/`ImportFrom` whose root is
+`requests`, `httpx`, `urllib`, `urllib3`, `aiohttp`, `nflreadpy`, `socket`, `http`, `ftplib`,
+`telnetlib` or `webbrowser`. A module that cannot import `requests` cannot call it under any name.
+Positive controls keep `dict.get`, `config.get`, an injected `client.get` and non-network imports
+legal, and the docstring states the remaining deliberate limits — `importlib`/`__import__` with a
+computed name, `eval`/`exec`, an injected network client, and third-party packages that fetch
+internally. No theorem over arbitrary Python is claimed.
+
+### 10.4.1b Two further defects in what I built, both found by review
+
+**The authorized feature reader contradicted its own validator.** It returned the whole
+`season_dataset_2014_2026.csv` — including the 2026 deploy season and `target_ppg`, `target_games`,
+`sample_weight` — while `validate_feature_frame` requires 2014-2025 and rejects exactly those columns.
+Nothing caught it because no test ever ran the reader's OUTPUT through the validator; 663 tests passed
+over a reader that could not have worked. There is now a frozen feature-column contract (the 8 identity/
+routing columns plus the 32 ordered Arm 0 veteran features, read from the production bundles and pinned
+by `test_the_frozen_feature_contract_matches_the_production_bundles`), an explicit `usecols` so a
+forbidden column is never loaded at all, a 2014-2025 filter applied before returning, and an
+end-to-end integration test that drives both authorized readers into `assemble_panel_core`.
+
+**The assembler changed the production target and denominator.** `build_rb_projection.assemble()`
+LEFT-joins the weekly target and fills a missing pre-2026 `y` with **0.0** — a rostered player with no
+weekly stat row scored zero, which is an observation, not a gap. My assembler *refused* those rows.
+It now matches production: every eligible feature row is retained, zero-filled, and labelled
+`zero_filled_no_stat_row`, pinned by a production-equivalence test.
+
+**The accounting states were not a partition.** A null `player_id` incremented both `missing_identity`
+and `missing_outcome`. The four states are now mutually exclusive by construction —
+`missing_identity` → `zero_filled_no_stat_row` → `matched_stat_target` over feature rows, with
+`unmatched_outcome_key` counted over the *outcome* denominator — and the sum is asserted to equal the
+feature-row count.
+
+**One more over-broad matcher, caught by my own positive control.** Adding `get` to the banned callees
+to catch `requests.get` also rejected `dict.get` in this very module — the same defect as
+`config.putenv()` failing C7. Network methods are now receiver-aware, with a positive control proving
+`d.get('k')` stays legal.
+
+### 10.4.2 The door is UNCHANGED, deliberately
+
+`assemble_real_panel()` is still one undecorated module-level `def` whose body is exactly
+`require_real_fit_authorization()` then `raise NotImplementedError(...)`. C5 is untouched, all 15
+`c5-rebind-*` and 5 `c5-body-*` corpus cases are untouched, and the 41/65 → 0/65 red/green arithmetic is
+unchanged. The assembly logic was built as a **separate, fully tested module** rather than by opening the
+door, so this pass adds capability without spending the seal. Activation remains a single documented
+change, specified in the manifest §1–§2 including the mode-aware C5-S/C5-A replacement and a row-by-row
+list of every protection that changes and what replaces it. **Nothing was retired or weakened.**
+
+### 10.4.3 What was built
+
+`coaching/assemble_real_panel_v39.py` — the join, validation and accounting, under its own contract
+**A1–A6** (no import-time I/O; no live loader; every reader injected and default-closed; no fitting; the
+outcome column is in the forbidden-in-features set; the default readers refuse). It lives outside
+`V39_SOURCE_MODULES` because assembly code must name outcome columns, which C4 forbids in the harness —
+so C4 stays absolute for the module it protects instead of being weakened. A1–A6 is enforced at runtime
+as the **21st preflight check**, `assembly_module_contract`.
+
+Design choices worth stating: features and outcomes are returned as **separate objects**, so no object
+exists that a model could be handed carrying both X and y; a missing outcome **refuses** rather than
+silently inner-joining, because a silent inner join is denominator drift; and the three unmatched
+reasons — `missing_outcome`, `missing_identity`, `unmatched_player` — are counted separately rather than
+collapsed into one number.
+
+**36 new tests** cover both locks closed, each partial lock state, `authorized_real` with both open,
+unknown modes, import-time reads, authorization-before-reader, duplicate keys, missing/extra seasons,
+unmatched accounting, every legacy target rejected from the feature frame, schema drift, denominator
+drift, Design B unselectable, and a mocked reader proven not to run in `synthetic_prefit`. Two are
+red-before-green: `test_no_module_level_reader_call_exists` proves the A1 check fires on a module-level
+read before showing canon clean, and `test_the_outcome_reader_refuses_until_the_snapshot_is_pinned`
+proves the outcome path is closed.
+
+### 10.4.4 What was NOT done
+
+No lock opened · no real fantasy outcome read, inspected, printed, aggregated or compared · no model fit ·
+no result artifact written · no production file touched · no new input artifact created, because none is
+needed. The two authorized readers are exercised only against temporary synthetic files written by the
+tests themselves; the real weekly snapshot and feature source are verified by **hash and manifest
+metadata only**, never by reading a value.
 
 ---
 
