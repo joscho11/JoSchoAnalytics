@@ -48,4 +48,13 @@ VIDEOS = [
             "Draft Board tab."
         ),
     },
+    {
+        "slug": "makai-lemon",
+        "title": "Makai Lemon — Rookie Receiver Profile",
+        "subtitle": "2026 · WR, Philadelphia Eagles",
+        "date": "2026-07-30",
+        "tiktok_url": "https://www.tiktok.com/@joschoanalytics/video/7668110810039717151",
+        "video_id": "7668110810039717151",
+        "breakdown_file": "makai_lemon.md",
+    },
 ]
