@@ -204,7 +204,8 @@ blocked by the v3.6 feature-use policy and its test.
 # PHASE 2 AUDIT (v3.9, 2026-07-29)
 
 Status: point-in-time coaching representations and the nested evaluation harness are BUILT.
-**No player-projection arm fit; no fantasy outcome read.** 236 registered tests pass.
+**No player-projection arm fit; no fantasy outcome read.** 236 registered tests passed at that point
+(HISTORICAL, SUPERSEDED — the canonical current total is in item 26).
 
 ## 13. Historical caller evidence was NOT point-in-time gated — FIXED in v3.9
 
@@ -428,7 +429,7 @@ Design A/B contrast — not for power. Both the 200/256 and the ~76 claims are r
 `build_preseason_snapshot.projection_cutoffs()` and the old `hc_game_results()` both called
 `nflreadpy.load_schedules()`, and the win ledger was cached in an untracked scratch directory. So a
 clean offline checkout **failed five v3.9 feature tests**, and the then-reported result of
-254 passes (SUPERSEDED; the suite is now 708) depended on mutable state that is not in the repo.
+254 passes (SUPERSEDED; the suite is now 827 collected) depended on mutable state that is not in the repo.
 That is a reproducibility defect, not a cosmetic one: nobody else could have reproduced the number.
 
 Both now read `fantasy/seasonal_projections/snapshots/schedules_1999_2025.parquet` (repo-owned, frozen,
@@ -516,7 +517,9 @@ Related test renames: `test_design_a_and_b_differ_only_on_identity_supply` →
 
 ## 26. The 141 baseline is only reproducible with an explicit deselect list — CURRENT (updated v3.9d)
 
-**Current status: the full suite is 708; the inherited baseline is 141, reproduced as `141 passed,
+**Current status: the full suite is 827 collected — 826 mandatory passed, plus 1 optional git
+cross-check that passes when the pinned historical blob is reachable and otherwise skips (the vendored
+red proof runs in both states); the inherited baseline is 141, reproduced as `141 passed,
 6 deselected`.** Reproducing it requires ignoring the four v3.9 test modules (`test_arm_features_v39.py`,
 `test_coach_projection_harness_v39.py`, `test_boundary_corpus.py`, `test_assemble_real_panel_v39.py`) **and deselecting all six**
 v3.9 additions to `test_artifact_ownership.py`, by their exact IDs:
@@ -530,7 +533,7 @@ test_the_head_coach_win_ledger_is_derived_in_memory_not_cached
 test_the_v39_modules_never_write_outside_the_coaching_data_dir
 ```
 
-Inherited per module: 22 + 33 + 34 + 27 + 15 + 7 + 3 = **141**. Full suite: 141 + 88 + 246 + 146 + 81 + 6 = **708**.
+Inherited per module: 22 + 33 + 34 + 27 + 15 + 7 + 3 = **141**. Full suite: 141 + 88 + 246 + 146 + 200 + 6 = **827**.
 
 `pytest --deselect` **silently ignores an ID that does not exist**, so a mistyped path deselects
 nothing and the run reports 147 with no error at all. Copy the six IDs verbatim; do not retype them.

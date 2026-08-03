@@ -209,7 +209,7 @@ sightings were PowerShell display decoding, not file corruption).
 | catboost | 1.2.10 | >=1.2,<2.0 | 1.2.10 (test) | floats (unused by app) |
 | pytest | 9.1.1 | — | 9.0.2 (test) | — |
 
-Local-only state a remote reviewer can't see: `BettingEdgeContinued/.venv`
+Local-only state a remote reviewer can't see: `JoSchoAnalytics/.venv`
 has no interpreter (site-packages only — unusable; the AI_hedge_fund venv is
 the working interpreter); `.env` present and properly gitignored
 (.gitignore:2); `.streamlit/secrets.toml` present locally and untracked
@@ -239,7 +239,7 @@ AppTest + suite pass, and not this session.
 **(ii) Misplaced / orphaned / public-presence-wrong.** The F3 verdict
 artifacts (public-presence question). `season_dataset_2002_2025.csv`
 (orphaned by the A4 gate — config stays 2014+). `betting/archive/
-BettingEdgeContinued.ipynb` (10.6MB archived notebook blob). ~100MB of
+JoSchoAnalytics.ipynb` (10.6MB archived notebook blob). ~100MB of
 tracked data overall (features_dataset.csv 31MB, raw_dataset.csv 24.5MB,
 snapshots/ ~35MB) — defensible for reproducibility, but the repo is heavier
 than its product needs; `data_audits/` tracks only 7 small manifest files

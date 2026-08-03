@@ -17,7 +17,7 @@ tests — and then found seven defects. All seven are repaired.
 
 | # | finding | status |
 |---|---|---|
-| 1 | The build was **not hermetic**: `projection_cutoffs()` and `hc_game_results()` both downloaded nflverse schedules, and the win ledger sat in an untracked scratch cache. A clean offline checkout failed **five** feature tests, so the then-current 254-pass claim (SUPERSEDED; the suite is now 708) depended on state outside the repo. | **FIXED** — both read the repo-owned frozen snapshot; the ledger is computed in memory; suite and build now pass with egress blocked and an empty temp dir (§1.4) |
+| 1 | The build was **not hermetic**: `projection_cutoffs()` and `hc_game_results()` both downloaded nflverse schedules, and the win ledger sat in an untracked scratch cache. A clean offline checkout failed **five** feature tests, so the then-current 254-pass claim (SUPERSEDED; the suite is now 827 collected) depended on state outside the repo. | **FIXED** — both read the repo-owned frozen snapshot; the ledger is computed in memory; suite and build now pass with egress blocked and an empty temp dir (§1.4) |
 | 2 | The live canonical prereg sections still asserted the superseded policy **underneath** the correction banner, and this report claimed they had been corrected when only a banner covered them. | **FIXED** — §0, §2, §3.2, §4, §5, §6, §7, §8-T5, §8.1 rewritten to v3.9 truth; the false claim in this report is withdrawn (§2.1) |
 | 3 | The manifest pinned only appended coaching columns; `ARM_0` was empty and the veteran/rookie baseline difference was inexpressible. | **FIXED** — full ordered X per (position, bucket, arm) (§4.1) |
 | 4 | The ten-condition §7 primary verdict was **never computed**, its thresholds were not pinned, and no test covered it. | **FIXED** — `primary_verdict()` + 14 tests (§8.5) |
@@ -98,7 +98,7 @@ modules, deselect the six v3.9 additions to `test_artifact_ownership.py`, and th
 reproduces:
 
 Run from the repository root
-(`C:\Users\josep\Desktop\random_stuff\cowork_OS\BettingEdgeContinued`), using the **repo-local**
+(`C:\Users\josep\Desktop\random_stuff\cowork_OS\JoSchoAnalytics`), using the **repo-local**
 interpreter `.\.venv-test\Scripts\python.exe` (Python 3.11.9). This is one line, fully expanded — no
 `...` placeholders, no abbreviations:
 
@@ -124,11 +124,11 @@ and no claim is made here about what bare `python` resolves to.
 Every ID above is real and was executed. `pytest --deselect` silently ignores an ID that does not
 exist, so a mistyped path deselects nothing and returns 147 with no error — copy these verbatim.
 
-**Current totals, and the only ones stated anywhere in this document:** **708** tests in
-`coaching/tests/` — **141** inherited plus **567** added by this pass. The 567 is
-88 (`test_arm_features_v39.py`) + 246 (`test_coach_projection_harness_v39.py`) + 146 (`test_boundary_corpus.py`) + 81 (`test_assemble_real_panel_v39.py`) + 6 (the v3.9 additions
+**Current totals, and the only ones stated anywhere in this document:** **827** tests in
+`coaching/tests/` — **141** inherited plus **686** added by this pass. The 686 is
+88 (`test_arm_features_v39.py`) + 246 (`test_coach_projection_harness_v39.py`) + 146 (`test_boundary_corpus.py`) + 200 (`test_assemble_real_panel_v39.py`) + 6 (the v3.9 additions
 to `test_artifact_ownership.py`). The per-module table in §10 carries the full split and reconciles to
-the same 708. Earlier drafts of this section quoted 254 total / 113 added; both are **WITHDRAWN** and
+the same 827. Earlier drafts of this section quoted 254 total / 113 added; both are **WITHDRAWN** and
 were never current at the time this document was closed.
 
 Interpreter for every number in this report: the repo-local `.\.venv-test\Scripts\python.exe`
@@ -184,10 +184,32 @@ Verified with egress blocked (`socket.create_connection`, `getaddrinfo`, `socket
 a freshly created empty directory:
 
 ```
-full coaching suite   708 passed
+full coaching suite   827 collected; 826 mandatory tests passed
+                      + 1 optional git cross-check (passes or skips; see below)
 inherited baseline    141 passed, 6 deselected
 full v3.9 build       completed; all five artifact hashes reproduced
 ```
+
+**THE CANONICAL COUNT STATEMENT.** One environment-dependent test makes a bare "N passed" line
+ambiguous, so this is the only form this document uses:
+
+| | |
+|---|---|
+| canonical collection total | **827** |
+| mandatory tests | **826 passed** |
+| optional git cross-check | **passes when the historical blob `85c438f7d908e9df7da8d5e44ad8e30d3bbeeffe` is reachable, otherwise skips** |
+| the vendored historical red proof | **runs in BOTH states — it is never skipped** |
+
+So a green run legitimately reports either `827 passed` or `826 passed, 1 skipped`, and the two are the
+same result. The variation is only whether `git cat-file -p <blob>` can reach the pinned blob: after the
+`BettingEdgeContinued` → `JoSchoAnalytics` rename the repository is owned by another account, so git
+refuses without `-c safe.directory=...` and the cross-check skips; in a review environment where the
+blob is reachable it passes. **Neither state affects the red proof**, which loads the sha256-pinned
+vendored fixture `tests/fixtures/historical_validator_a5b4af7.pysrc` and needs no git at all — that was
+the whole point of vendoring it (§10.3, "the historical proof fails closed").
+
+`test_no_document_states_an_incompatible_unconditional_suite_count` fails if any live document goes back
+to an unconditional bare pass count.
 
 Covering tests: `test_cutoffs_and_hc_history_build_with_NETWORK_BLOCKED`,
 `test_a_full_feature_build_runs_with_NETWORK_BLOCKED`,
@@ -890,8 +912,8 @@ generating function, input columns, timing rule, missing-value rule, and coverin
 | scope | count |
 |---|---|
 | inherited baseline (reproduced, offline) | **141** |
-| new v3.9 + v3.9a + v3.9b + v3.9c + v3.9d + v3.9e + v3.9f tests | **567** |
-| **full coaching suite** | **708 passed, offline, egress blocked, fresh empty temp dir** |
+| new v3.9 + v3.9a + v3.9b + v3.9c + v3.9d + v3.9e + v3.9f + v3.9g + v3.9i + v3.9j + v3.9k tests | **686** |
+| **full coaching suite** | **827 collected · 826 mandatory passed · 1 optional git cross-check (passes when the pinned blob is reachable, otherwise skips) — offline, egress blocked, fresh empty temp dir** |
 
 ### 10.1 THE TWO CODEX REPRODUCTIONS NOW FAIL SEMANTICALLY
 
@@ -950,7 +972,7 @@ Per-module counts, collected rather than estimated:
 | `test_arm_features_v39.py` | **88** | new |
 | `test_coach_projection_harness_v39.py` | **246** | new (155 at v3.9c; +91 from the v3.9d boundary, C5/C6/C7 binding-context and wording work) |
 
-22+33+34+27+15+7+3 = **141** inherited; 88+246+146+81+6 = **567** new; total **708**.
+22+33+34+27+15+7+3 = **141** inherited; 88+246+146+200+6 = **686** new; total **827**.
 
 To reproduce the 141 exactly, ignore the three v3.9 test modules and deselect these six. (The `tests/`
 tree **is now tracked** — Joseph committed it on 2026-07-30, so new-vs-inherited *can* be diffed against
@@ -1347,8 +1369,9 @@ normal comment lines.
 ## 10.4 v3.9e — REAL-OUTCOME TRANSITION PREPARED, NOT ACTIVATED
 
 **Opening state, reproduced against `0fd34b9 "prefit system verification"` with a clean worktree:**
-627 tests · baseline 141 passed / 6 deselected · boundary corpus 146 · preflight 20/20 · 18/18 protected ·
-five artifact pins unchanged · both locks closed.
+(HISTORICAL opening snapshot, SUPERSEDED by the canonical statement in §1.4) 627 tests · baseline
+141 passed / 6 deselected · boundary corpus 146 · preflight 20/20 · 18/18 protected · five artifact pins
+unchanged · both locks closed.
 
 ### 10.4.1 WITHDRAWN — the "outcome is not repo-owned" blocker was FALSE
 
@@ -1365,8 +1388,9 @@ loader  nflreadpy.load_player_stats · 269,594 rows x 115 cols · seasons 2011-2
 ```
 
 `wr_recent_full_game_features_harness.build_panel()` (lines 185-191) already reproduces the production
-target from it. **The first authorized run is therefore already hermetic and requires no fetch and no
-new input artifact.** `OUTCOME_SNAPSHOT`, `OUTCOME_SNAPSHOT_MD5` and the "snapshot does not exist" tests
+target from it, **so the OUTCOME path is hermetic and needs no fetch.** That scope is the whole claim:
+the four veteran feature buckets are also hermetic, and the three rookie buckets are NOT
+activation-ready (§10.4.1a). `OUTCOME_SNAPSHOT`, `OUTCOME_SNAPSHOT_MD5` and the "snapshot does not exist" tests
 are removed, and `test_no_outcome_snapshot_constant_survives` fails if any of them come back.
 
 The lesson is the one this project keeps relearning: *I asserted an absence without searching for the
@@ -1405,6 +1429,91 @@ activation readiness into the prefit preflight. The contract is renamed `VETERAN
 feature-only pinned artifact (my recommendation, conditional on PFF licensing), use an external pinned
 artifact, or amend the population to exclude rookies. I wrote no artifact, touched no PFF file, and did
 not regenerate the rookie matrix.
+
+### 10.4.1d TWO FALSE CLAIMS ABOUT THE AUTHORIZATION GATE — both WITHDRAWN
+
+**Claim 1, WITHDRAWN: "readiness is a mandatory authorized-real gate ... in the manifest's required
+gates and stop conditions."** The manifest contained no such section. It listed 21 preflight checks and
+a stop-condition list that never mentioned `activation_readiness()` or `authorized_real_gate()`. The
+requirement now exists as manifest §6 (both gates, gate order, and the explicit rule that a
+`synthetic_prefit` result can never authorize a real run) and appears in the §7 stop conditions, pinned
+by `test_the_manifest_states_the_required_activation_gates` and
+`test_the_manifest_lists_readiness_failure_as_a_stop_condition`.
+
+**Claim 2, WITHDRAWN: "fails closed on a malformed preflight."** It did not. Measured before repair,
+five inputs FAIL-OPENED — and the second is the serious one:
+
+| input | before | after |
+|---|---|---|
+| `{"all_ok": True}` — no `run_mode`, `n_checks`, `n_failed`, `checks` | **True** | refused |
+| **the REAL `synthetic_prefit` 21/21 result, both locks CLOSED** | **True** | refused |
+| `n_checks` absent | **True** | refused |
+| one check `ok=False` while `all_ok=True` | **True** | refused |
+| `n_failed=0` while `failures` is non-empty | **True** | refused |
+
+The mechanism was truthiness on absent keys: `.get("n_failed")` on a missing key is `None`, which is
+falsy, which read as "no failures". The second row is worse than a shape bug — a `synthetic_prefit`
+result's entire meaning is that **both locks are shut**, so accepting it as authorization inverted the
+lock contract.
+
+`validate_authorized_preflight()` now requires, by identity or equality and never by truthiness: a real
+dict · `all_ok is True` · `run_mode == "authorized_real"` · `n_checks` exactly the frozen count ·
+`n_failed` exactly integer `0` (with `bool` excluded, since `True` is an `int`) · a `checks` dict with
+exactly the expected names, each explicitly `ok` · no non-empty `failures`. The lock contract is carried
+*through* that result: only both-locks-open produces `run_mode == "authorized_real"`, and a partial
+state is refused by `validate_run_mode` in both directions. Red-before-green tests cover all of it, with
+a constructed authorized-shaped preflight plus injected readiness as the positive control — no lock is
+opened and the real tree stays blocked.
+
+### 10.4.1e THE GATE'S OWN VOCABULARY WAS CALLER-CONTROLLED, AND MALFORMED INPUT CRASHED IT
+
+Two further defects in the gate that §10.4.1d had just repaired. Measured before this repair:
+
+**1 — the frozen vocabulary was a parameter.** `authorized_real_gate` accepted `expected_checks`, so:
+
+```
+authorized_real_gate(
+    {"all_ok": True, "run_mode": "authorized_real",
+     "n_checks": 0, "n_failed": 0, "failures": 0, "checks": {}},
+    expected_checks=())            ->  True   ("0/0 checks and 0 failures")
+```
+
+A checker that lets the caller supply the thing being checked against is not a checker. The parameter
+is **removed from both the gate and the validator**; validation is against the module literal
+`FROZEN_AUTHORIZED_PREFLIGHT_CHECKS` only, pinned by value and in order against the harness's canonical
+`PREFLIGHT_CHECKS` by `test_the_frozen_authorization_vocabulary_matches_the_harness`, and
+`test_the_gate_exposes_no_parameter_that_can_change_the_vocabulary` inspects the signature so the
+parameter cannot come back. Empty / subset / subset-claiming-21 / replaced / extended vocabularies all
+refuse.
+
+**2 — malformed nested values raised instead of refusing.** `(checks[c] or {}).get("ok")` calls `.get`
+on whatever the caller put there:
+
+| `checks["protected_hashes"]` | before | after |
+|---|---|---|
+| `True` | **AttributeError** | refused |
+| `"ok"` | **AttributeError** | refused |
+| `["ok"]` | **AttributeError** | refused |
+| `None` | refused | refused |
+| `{}` | refused | refused |
+
+A crash is not a refusal — a caller with a broad `except` could read it as neither. Every check entry
+must now itself be a dict whose `ok` **is** `True`, and `test_no_adversarial_input_ever_raises_out_of_
+the_gate` sweeps a corpus proving nothing propagates.
+
+**3 — `failures` was unvalidated, and the spec I was given did not match the emitter.** Missing,
+`None`, `[]` and `False` all passed. The instruction was to require `failures` to be *"exactly integer
+0, matching the real preflight output"* — but the real `preflight()` emits
+**`failures = {}`, an empty dict**, not an integer. Requiring integer 0 would have rejected the genuine
+authorized result. The frozen schema therefore pins what the emitter actually produces: `failures` must
+be **present and an empty dict**. `test_the_frozen_failures_schema_matches_what_preflight_actually_
+emits` measures it from `preflight()` rather than asserting it, and the positive-control fixture is
+type-checked against the real result so a GREEN test cannot pass on a shape the system never produces.
+
+The full frozen schema: `all_ok is True` · `run_mode == "authorized_real"` · `n_checks` exactly integer
+21 (bool excluded) · `n_failed` exactly integer 0 (bool excluded) · `failures` present and an empty
+dict · `checks` a dict with exactly the 21 frozen names, each value a dict whose `ok` is exactly `True`.
+Any missing field refuses.
 
 ### 10.4.1c A2 was still evadable four ways
 
@@ -1484,10 +1593,11 @@ proves the outcome path is closed.
 ### 10.4.4 What was NOT done
 
 No lock opened · no real fantasy outcome read, inspected, printed, aggregated or compared · no model fit ·
-no result artifact written · no production file touched · no new input artifact created, because none is
-needed. The two authorized readers are exercised only against temporary synthetic files written by the
-tests themselves; the real weekly snapshot and feature source are verified by **hash and manifest
-metadata only**, never by reading a value.
+no result artifact written · no production file touched · **no rookie matrix generated and no PFF file
+touched — that decision is Joseph's and is unresolved (§10.4.1a)**. The two authorized readers are
+exercised only against temporary synthetic files written by the tests themselves; the real weekly
+snapshot and feature source are verified by **hash and manifest metadata only**, never by reading a
+value.
 
 ---
 

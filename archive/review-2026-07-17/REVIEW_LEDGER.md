@@ -45,7 +45,7 @@ The screen caught 7 would-be findings. Nonzero = the screen worked.
 | LOW | 0 | 3 (L-9, L-10, L-13) | 4 (L-8, L-11, L-12, L-14) |
 
 ## SAFE-FIX log
-- L-4 (partial): CLAUDE.md:11 dead URL "joschobetting.streamlit.app" →
+- L-4 (partial): CLAUDE.md:11 dead URL "joschoanalytics.streamlit.app" →
   "joschoanalytics.streamlit.app" (dead-claim correction per cowork-docs-and-writing).
   Test: none applicable (docs). Proof: full-suite + hash sweep below.
 

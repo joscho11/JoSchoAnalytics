@@ -15,7 +15,7 @@ MODES
            Computes NO challenger metric of any kind.
   --fire   The one shot.
 
-Interpreter: BettingEdgeContinued/.venv-test/Scripts/python.exe
+Interpreter: JoSchoAnalytics/.venv-test/Scripts/python.exe
 """
 from __future__ import annotations
 

@@ -1,0 +1,7 @@
+{
+  "stored_matches_recon_within_model_population": 917,
+  "model_population_rows": 1883,
+  "stored_matches_recon_within_full_dataset": 981,
+  "full_dataset_adp_rows": 1915,
+  "reason": "adp_pos_rank is merged verbatim from an external ADP source CSV in build_season_dataset.py, ranked over that source's universe \u2014 a superset of both the season dataset and the model's scored population. Not reproducible from a subset; NOT used."
+}

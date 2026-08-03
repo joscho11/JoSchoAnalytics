@@ -11,7 +11,7 @@ without that decision, Joseph's explicit written authorization, and a committed 
 
 ---
 
-## 0. THE RUN IS ALREADY HERMETIC — no fetch, no new input artifact
+## 0. THE OUTCOME PATH IS HERMETIC — the seven-bundle FEATURE path is not activation-ready
 
 **A previous revision of this manifest claimed the Arm 0 outcome was not repo-owned and that a network
 fetch plus a new `season_total_half_ppr` snapshot were required. That claim was WRONG and is
@@ -202,7 +202,28 @@ Nothing on this list exists today.
 
 ---
 
-## 6. Preflight checks that must all pass (21)
+## 6. REQUIRED ACTIVATION GATES — both, before any outcome reader
+
+**A previous revision of this report claimed these gates were already mandatory here. They were not —
+this section did not exist. That claim is WITHDRAWN and the requirement is written below.**
+
+Two gates, both mandatory, evaluated by `assemble_real_panel_v39.authorized_real_gate()`:
+
+1. **`preflight()` returns 21/21 IN `authorized_real` MODE** — `all_ok is True`,
+   `run_mode == "authorized_real"`, `n_checks == 21`, `n_failed` exactly integer `0`, a `checks` dict
+   carrying exactly the 21 expected names each explicitly `ok`, and no non-empty `failures`.
+   A `synthetic_prefit` result **can never** authorize a real run: its meaning is that both locks are
+   CLOSED.
+2. **`activation_readiness() == True`** — every shipped Arm 0 bucket has a complete pinned feature
+   source. **It is currently `False`** (RB/WR/TE rookie, §0b).
+
+**`authorized_real_gate()` MUST execute and return `True` BEFORE any outcome reader is called.** No
+outcome may be read, and `assemble_panel_core` may not be invoked on real data, until it has passed.
+Anything missing, malformed, synthetic-mode, partially locked or self-contradictory refuses.
+
+These requirements are pinned by `test_the_manifest_states_the_required_activation_gates`.
+
+## 6b. Preflight checks that must all pass (21)
 
 `protected_hashes` · `v39_artifacts_pinned` · `v39_artifacts_readable` · `no_unauthorized_v39_artifact` ·
 `no_coaching_parquet` · `feature_table_keys_and_rows` · `design_a_outer_identity_coverage` ·
@@ -219,6 +240,9 @@ before any outcome is touched.
 
 ## 7. Stop conditions — abort the run and touch nothing further
 
+- **`activation_readiness()` returns False** — currently the case, and on its own it stops the run;
+- **`authorized_real_gate()` returns False** for any reason, including a preflight result that is
+  missing, malformed, in `synthetic_prefit` mode, or self-contradictory;
 - any preflight check fails;
 - either lock is found closed at the moment of use;
 - feature md5 or weekly-snapshot sha256 drift, or manifest provenance mismatch;

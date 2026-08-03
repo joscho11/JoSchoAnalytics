@@ -22,6 +22,7 @@ sys.path.insert(0, str(_HERE / "fantasy" / "seasonal_projections"))
 
 import dashboard_chrome as chrome
 import theme_redesign  # redesign preview skin (revertible) — delete this import + the call below to revert
+import mobile  # phone/tablet layer (revertible) — delete this import + the call below to revert
 import nav_registry
 import runtime_telemetry  # OFF unless APP_TELEMETRY=1; remove this import + begin/end to strip
 
@@ -72,6 +73,13 @@ nav_registry.PAGES = {
 # Persistent branded header ABOVE the top nav — rendered before st.navigation so the
 # brand + tip jar strip sits on top of the page links, on every page.
 chrome.render_header()
+
+# The phone/tablet layer goes HERE, immediately after render_header, and this order is
+# load-bearing: render_header emits its own <style>, so injecting the mobile layer earlier
+# (as it was) left it losing the cascade and needing !important on every header rule to
+# claw it back. Last writer wins, so mobile.py can now override with plain specificity.
+# Revertible: delete this line and the `import mobile` above. No-op above 640px.
+mobile.inject()
 
 nav = st.navigation(
     {"Betting": [wp_pg, tr_pg],

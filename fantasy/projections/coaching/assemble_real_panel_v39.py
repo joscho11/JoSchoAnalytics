@@ -5,18 +5,25 @@ a real fantasy outcome beside the frozen coaching features. It reads nothing by 
 injected or explicitly constructed, and the whole path is exercised in the test suite against synthetic
 and temporary fixtures only.
 
-THE RUN IS ALREADY HERMETIC — a correction
-------------------------------------------
-An earlier revision of this module claimed the Arm 0 outcome was not repo-owned and that a network fetch
-plus a new `season_total_half_ppr` snapshot were required before the first run. **That claim was WRONG
-and is WITHDRAWN.** The repository already owns and pins the weekly player stats:
+WHAT IS HERMETIC, AND WHAT IS NOT — the exact scope
+---------------------------------------------------
+**The OUTCOME path and the four VETERAN feature buckets are hermetic. The full seven-bundle run is NOT
+activation-ready.** Two earlier claims are withdrawn: that the Arm 0 outcome was not repo-owned (false),
+and then that "the first authorized run is already hermetic" (an unqualified all-clear that was true only
+of the outcome and veteran paths).
+
+HERMETIC — the outcome. The repository owns and pins the weekly player stats:
 
     fantasy/seasonal_projections/snapshots/player_stats_2011_2025.parquet
     sha256 e8dad7e48fd202d414d66f5a14fb23f72d4bdb5a1b60a09c5d71556444203344
     loader nflreadpy.load_player_stats, 269,594 rows x 115 cols, seasons 2011-2025
 
 and `wr_recent_full_game_features_harness.build_panel()` already reproduces
-`build_rb_projection.season_total_target()` from it. No fetch, no new artifact, no extra input is needed.
+`build_rb_projection.season_total_target()` from it, so the outcome needs no fetch and no new artifact.
+
+NOT READY — the features. Arm 0 ships SEVEN bundles. The four veteran buckets are fully supplied by the
+pinned season dataset; the three ROOKIE buckets (RB/WR/TE) have no repo-owned source at all. See
+`ROOKIE_INPUT_BLOCKER` and `activation_readiness()`, which returns False until Joseph resolves it.
 
 WHY THIS IS A SEPARATE MODULE
 -----------------------------
@@ -118,12 +125,28 @@ SHIPPED_ARM0_BUCKETS = {
 # on the veteran path only.
 MODELS_DIR = HERE.parent / "models"
 
-# Measured 2026-07-30 against season_dataset_2014_2026.csv (47 columns).
-ROOKIE_MISSING_COUNTS = {("RB", "rookie"): (32, 41), ("WR", "rookie"): (35, 44),
-                         ("TE", "rookie"): (35, 44)}
+# --- TWO DIFFERENT MISSINGNESS CONCEPTS, kept apart ---------------------------------------------
+# They were previously conflated, which produced an internally inconsistent readiness message: the
+# headline said "RB 32/41" while the per-bucket line said "41/41 missing from rookie_matrix". Both were
+# true of DIFFERENT denominators, and printing them together made the report contradict itself.
+#
+#   n_missing_from_season_dataset : how many of a bundle's features the SEASON DATASET lacks. This is
+#                                   the substantive fact about what a rookie matrix would have to
+#                                   supply. Measured, not asserted (see `arm0_bucket_table`).
+#   n_missing_from_declared_source: how many the bucket's OWN declared source lacks. For a veteran
+#                                   bucket the declared source IS the season dataset, so the two
+#                                   coincide at 0. For a rookie bucket the declared source does not
+#                                   exist, so this is trivially the whole pool — a statement about
+#                                   the source being absent, NOT about the feature overlap.
+#
+# Measured 2026-07-30 against season_dataset_2014_2026.csv (47 columns); recomputed and asserted by
+# `test_the_rookie_missing_counts_are_derived_not_asserted`.
+ROOKIE_MISSING_FROM_SEASON_DATASET = {("RB", "rookie"): (32, 41), ("WR", "rookie"): (35, 44),
+                                      ("TE", "rookie"): (35, 44)}
 ROOKIE_INPUT_BLOCKER = (
-    "the three rookie buckets have NO repo-owned feature source: RB 32/41, WR 35/44 and TE 35/44 bundle "
-    "features are absent from the season dataset (combine, college-box and PFF-derived). Production "
+    "the three rookie buckets have NO repo-owned feature source. Of their bundle features, the season "
+    "dataset lacks RB 32 of 41, WR 35 of 44 and TE 35 of 44 (combine, college-box and PFF-derived); the "
+    "declared rookie_matrix source does not exist at all, so it supplies none of them. Production "
     "regenerates them via fantasy/rookie/harness, which calls live nflreadpy loaders and reads "
     "fantasy/seasonal_projections/pff/ — a directory holding 418 local files and ZERO tracked files "
     "(.gitignore:37). A clean checkout therefore cannot assemble these buckets. Joseph's decision is "
@@ -235,8 +258,9 @@ def authorized_feature_reader(path=None, verify_hash=True):
 def authorized_outcome_reader(path=None, verify_hash=True, verify_manifest=True):
     """Build the REAL outcome reader: grouped REG-season totals from the PINNED weekly snapshot.
 
-    This reproduces `build_rb_projection.season_total_target()` exactly, hermetically, with no network
-    and no new artifact.
+    This reproduces `build_rb_projection.season_total_target()` exactly. The OUTCOME path specifically is
+    hermetic — no network, no artifact to create. That says nothing about the rookie FEATURE buckets,
+    which remain blocked; see `activation_readiness()`.
     """
     src = WEEKLY_SNAPSHOT if path is None else pathlib.Path(path)
 
@@ -412,13 +436,19 @@ def arm0_bucket_table(models_dir=None, feature_columns=None):
             continue
         b = pickle.loads(path.read_bytes())
         fc = tuple(b.get("feature_cols") or ())
+        # The two denominators, computed separately and never merged (see the note above).
+        missing_sd = [c for c in fc if c not in available[SOURCE_SEASON_DATASET]]
         supplied = available.get(source, set())
-        missing = [c for c in fc if c not in supplied]
+        missing_src = [c for c in fc if c not in supplied]
         rows.append({
             "position": pos, "bucket": bucket, "bundle": fname, "source": source,
             "target": b.get("target"), "n_features": len(fc), "expected_n": expected_n,
-            "n_missing": len(missing), "missing": missing,
-            "complete": bool(fc) and not missing, "feature_cols": fc, "error": None,
+            "n_missing_from_season_dataset": len(missing_sd),
+            "missing_from_season_dataset": missing_sd,
+            "n_missing_from_declared_source": len(missing_src),
+            "missing_from_declared_source": missing_src,
+            "source_exists": source is not None and bool(supplied),
+            "complete": bool(fc) and not missing_src, "feature_cols": fc, "error": None,
         })
     return rows
 
@@ -458,11 +488,179 @@ def activation_readiness(models_dir=None, feature_columns=None):
     for r in blocked:
         if r.get("error"):
             parts.append(f"{r['position']}/{r['bucket']}: {r['error']}")
+            continue
+        src = r["source"] or "NO DECLARED SOURCE"
+        if not r["source_exists"]:
+            # Say the source is absent; do NOT dress that up as a feature-overlap statistic.
+            parts.append(f"{r['position']}/{r['bucket']} ({r['bundle']}, {r['n_features']} features): "
+                         f"declared source {src!r} DOES NOT EXIST, so it supplies none of them; the "
+                         f"season dataset separately lacks {r['n_missing_from_season_dataset']} of "
+                         f"{r['n_features']}")
         else:
             parts.append(f"{r['position']}/{r['bucket']} ({r['bundle']}): "
-                         f"{r['n_missing']}/{r['n_features']} features missing from "
-                         f"{r['source'] or 'NO DECLARED SOURCE'}")
+                         f"{r['n_missing_from_declared_source']} of {r['n_features']} features missing "
+                         f"from {src}")
     return False, ("ACTIVATION NOT READY — " + "; ".join(parts) + ". " + ROOKIE_INPUT_BLOCKER)
+
+
+# The mode a preflight result must carry to authorize a REAL run. A `synthetic_prefit` result is a
+# statement that both locks are CLOSED; treating it as authorization inverts its meaning.
+AUTHORIZED_RUN_MODE = "authorized_real"
+SYNTHETIC_RUN_MODE = "synthetic_prefit"
+
+# --- the FROZEN authorization vocabulary ------------------------------------------------------------
+# An earlier revision let the caller pass `expected_checks`, so `expected_checks=()` with an empty
+# `checks` dict authorised a real run on "0/0 checks" — the frozen vocabulary was caller-controlled,
+# which is the same class of defect as a checker that trusts its input. The tuple below is a LITERAL
+# held here, the gate uses only it, and NO parameter can replace, shorten or extend it.
+# `test_the_frozen_authorization_vocabulary_matches_the_harness` pins it by value against the harness's
+# canonical `PREFLIGHT_CHECKS`.
+FROZEN_AUTHORIZED_PREFLIGHT_CHECKS = (
+    "protected_hashes",
+    "v39_artifacts_pinned",
+    "v39_artifacts_readable",
+    "no_unauthorized_v39_artifact",
+    "no_coaching_parquet",
+    "feature_table_keys_and_rows",
+    "design_a_outer_identity_coverage",
+    "unknown_and_no_history_routing",
+    "forbidden_feature_policy",
+    "manifest_full_x_matches_bundles",
+    "manifest_qb_rookie_null",
+    "coverage_reconciles",
+    "lineage_strict_timing",
+    "lineage_states_the_primary_policy",
+    "contribution_lineage_reconciles",
+    "design_b_oracle_and_unselectable",
+    "production_models_identical",
+    "no_real_outcome_access",
+    "assembly_module_contract",
+    "pipeline_timing_assertions_ran",
+    "run_mode_locks",
+)
+
+
+def _is_exact_int(value, expected):
+    """int equality that refuses bool. `True == 1` in Python, so `isinstance(x, bool)` must be excluded."""
+    return isinstance(value, int) and not isinstance(value, bool) and value == expected
+
+
+def validate_authorized_preflight(preflight_result):
+    """Gate 1, FAIL-CLOSED. Returns a list of problems; empty means the result authorizes a real run.
+
+    Takes NO vocabulary parameter: it validates against `FROZEN_AUTHORIZED_PREFLIGHT_CHECKS` only.
+
+    The frozen schema, matching what `preflight()` actually emits:
+      all_ok    exactly True
+      run_mode  exactly "authorized_real"
+      n_checks  exactly 21, an int and not a bool
+      n_failed  exactly integer 0, not a bool
+      failures  PRESENT and an EMPTY DICT — measured: the real preflight emits `failures = {}`,
+                a dict, not an integer. Missing / None / non-empty / wrong type all refuse.
+      checks    a dict whose keys are exactly the frozen names, each value itself a dict whose
+                "ok" is exactly True.
+
+    This function never raises on a malformed input: every shape is reported as a problem. An earlier
+    version crashed with `AttributeError` on `checks={"protected_hashes": True}` because it called
+    `.get()` on a non-dict — a crash is not a refusal, and a caller that catches broadly could read it
+    as neither.
+    """
+    p = []
+    if not isinstance(preflight_result, dict):
+        return [f"preflight result is {type(preflight_result).__name__}, not a dict"]
+
+    _MISSING = object()
+
+    if preflight_result.get("all_ok") is not True:
+        p.append(f"all_ok is {preflight_result.get('all_ok', _MISSING)!r}, must be exactly True")
+
+    mode = preflight_result.get("run_mode", _MISSING)
+    if mode != AUTHORIZED_RUN_MODE:
+        shown = "MISSING" if mode is _MISSING else repr(mode)
+        p.append(f"run_mode is {shown}, must be exactly {AUTHORIZED_RUN_MODE!r}"
+                 + (" — a synthetic_prefit result asserts BOTH LOCKS CLOSED and can never authorize a "
+                    "real run" if mode == SYNTHETIC_RUN_MODE else ""))
+
+    expected = FROZEN_AUTHORIZED_PREFLIGHT_CHECKS
+    n_checks = preflight_result.get("n_checks", _MISSING)
+    if not _is_exact_int(n_checks, len(expected)):
+        shown = "MISSING" if n_checks is _MISSING else repr(n_checks)
+        p.append(f"n_checks is {shown}, must be exactly integer {len(expected)}")
+
+    n_failed = preflight_result.get("n_failed", _MISSING)
+    if not _is_exact_int(n_failed, 0):
+        shown = "MISSING" if n_failed is _MISSING else repr(n_failed)
+        p.append(f"n_failed is {shown}, must be exactly integer 0")
+
+    if "failures" not in preflight_result:
+        p.append("failures is MISSING; it must be present and empty")
+    else:
+        failures = preflight_result["failures"]
+        if not isinstance(failures, dict):
+            p.append(f"failures is {type(failures).__name__}, must be a dict (the real preflight "
+                     f"emits an empty dict)")
+        elif failures:
+            p.append(f"failures is non-empty ({len(failures)}) while n_failed claims 0 — contradictory")
+
+    if "checks" not in preflight_result:
+        p.append("checks is MISSING")
+    else:
+        checks = preflight_result["checks"]
+        if not isinstance(checks, dict):
+            p.append(f"checks is {type(checks).__name__}, must be a dict")
+        else:
+            missing = [c for c in expected if c not in checks]
+            extra = [c for c in checks if c not in expected]
+            if missing:
+                p.append(f"checks is missing {missing}")
+            if extra:
+                p.append(f"checks has unexpected entries {extra}")
+            malformed, not_ok = [], []
+            for c in expected:
+                if c not in checks:
+                    continue
+                entry = checks[c]
+                if not isinstance(entry, dict):
+                    malformed.append(f"{c}={type(entry).__name__}")
+                elif entry.get("ok") is not True:
+                    not_ok.append(c)
+            if malformed:
+                p.append(f"check entr(ies) are not dicts: {malformed}")
+            if not_ok:
+                p.append(f"check(s) not explicitly ok: {sorted(not_ok)}")
+
+    return p
+
+
+def authorized_real_gate(preflight_result, models_dir=None, feature_columns=None):
+    """BOTH gates an authorized real run must clear BEFORE any outcome reader is called.
+
+    Gate 1 — a preflight result that is *itself* an authorized-real result, validated against the
+             module-frozen `FROZEN_AUTHORIZED_PREFLIGHT_CHECKS`. **There is deliberately no parameter
+             for the expected vocabulary**: an earlier signature accepted `expected_checks`, and
+             `expected_checks=()` with an empty `checks` dict authorised a real run on "0/0 checks".
+    Gate 2 — activation readiness: every shipped Arm 0 bucket has a complete pinned feature source.
+
+    Both are mandatory. The function is fail-closed AND never raises: anything missing, malformed,
+    synthetic-mode, partially locked or self-contradictory returns `(False, detail)`.
+    """
+    problems = [f"gate 1 (authorized preflight): {msg}"
+                for msg in validate_authorized_preflight(preflight_result)]
+
+    try:
+        ready, ready_detail = activation_readiness(models_dir=models_dir,
+                                                   feature_columns=feature_columns)
+    except Exception as exc:                      # noqa: BLE001 - a crash must refuse, not propagate
+        ready, ready_detail = False, f"readiness check raised {type(exc).__name__}: {exc}"
+    if not ready:
+        problems.append(f"gate 2 (activation readiness): {ready_detail}")
+
+    if problems:
+        return False, ("AUTHORIZED REAL RUN REFUSED — " + " || ".join(problems))
+    n = len(FROZEN_AUTHORIZED_PREFLIGHT_CHECKS)
+    return True, (f"both gates clear: preflight all_ok in {AUTHORIZED_RUN_MODE} mode with "
+                  f"{n}/{n} frozen checks and 0 failures, and every shipped Arm 0 bucket has a "
+                  f"complete pinned feature source")
 
 
 def assert_no_outcome_in_matrix(matrix_columns, label="feature matrix"):

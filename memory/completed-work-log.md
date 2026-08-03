@@ -1,4 +1,4 @@
-﻿# Completed Work log (BettingEdge)
+﻿# Completed Work log (JoSchoAnalytics)
 
 Dated implementation history moved out of `CLAUDE.md` on 2026-07-12 to keep the
 working guidance lean. This is the archive; `CLAUDE.md` links here. Newest first.
@@ -200,11 +200,11 @@ Tested whether (a) time-decay sample weighting and/or (b) extending TRAIN_SEASON
 2. **Always audit data-source coverage BEFORE running an "extra data" experiment.** Pass 2/3 initially looked borderline because pre-2009 training rows had 100% zero injury features (nflreadpy hard floor) and pre-2006 had 100% zero AllPro (hardcoded code floor). The model was being fed mechanical zeros disguised as extra training rows. The `verify_coverage()` gate in `tune_time_decay.py` catches this automatically by comparing early-vs-late zero-rates per feature.
 3. **Extending the data load also extends the manual passer-rating fallback,** which can change feature values for years that weren't strictly added (e.g. 2013 gets a real PR instead of median-fill, which then shifts 2014's prev-year-PR feature). This makes "extend the data" not a clean A/B knob — it shifts the baseline too.
 4. **Decay weighting consistently hurts on the cleaned data** at every (train_start, α > 0) cell. No synergy. The hypothesis "decay unlocks the value of more data" was wrong here.
-5. The MLP responds positively to both decay (+1.4pp Pass 1) and more data (+0.7pp clean Pass 3), but it isn't in production and adding it to the ensemble was tested in May 2026 (`[[bettingedge-model-experiments-2026-05]]`) without ship-worthy results.
+5. The MLP responds positively to both decay (+1.4pp Pass 1) and more data (+0.7pp clean Pass 3), but it isn't in production and adding it to the ensemble was tested in May 2026 (`[[joschoanalytics-model-experiments-2026-05]]`) without ship-worthy results.
 6. **Stability matters more than the mean in real-money applications.** A model that's 57.1% with 2.6% std could swing 54-60% in any given year, vs 56.5% with 1.6% std that swings 55-58%. The wider band is a worse business outcome even though the mean is higher. The std-worsening cap exists for this reason and is the right call to enforce.
 7. Per the rejection-criteria memory: when the cleanest possible test still fails the ship criteria, the prior on "this lever helps" is now strong enough that re-running is wasted effort. Memory updated.
 
-Memory note: see `[[bettingedge-model-experiments-2026-05]]` for the running list of model-tuning experiments that have been tried and rejected.
+Memory note: see `[[joschoanalytics-model-experiments-2026-05]]` for the running list of model-tuning experiments that have been tried and rejected.
 
 **2026-05-23 (feature-engineering dedup, Phase 1):**
 - Created `betting/features.ipynb` (initially 51 cells; now 53 after same-day code-review fixes added a cleanup cell pair, see entry below) with markdown → code → inline-test pattern as the **single source of truth** for the 85-feature engineering pipeline. Public surface: `build_features`, `build_numeric_features`, all 10 `_build_*` per-group helpers, `FEATURE_COLS_85`, `PROD_FEATURES_35`, `TEAM_MAP`, `norm_name`, `canonicalize_ngs_team`. Each per-group helper has its own test cell exercising synthetic schedule + PBP + AllPro fixtures (Andy Reid wins 4/4 → roll3 = 1.0, KC offense AllPro 2024 → weight 4 in 2025, etc.). All 14 test cells pass.
@@ -230,7 +230,7 @@ Memory note: see `[[bettingedge-model-experiments-2026-05]]` for the running lis
 
 **2026-05-24 (model-improvement experiments — REJECTED; production unchanged):**
 
-Ran a series of model-improvement experiments. **None were shipped.** Saved as memory note `[[bettingedge-model-experiments-2026-05]]` to avoid re-running.
+Ran a series of model-improvement experiments. **None were shipped.** Saved as memory note `[[joschoanalytics-model-experiments-2026-05]]` to avoid re-running.
 
 1. **Ensemble weight sweep** — tested XGB+Ridge weights 0.50→0.90, XGB+LGBM variants, three-way blends, Ridge meta-learner stack on 855-game test set. **All variants within statistical noise** of current 0.75 XGB + 0.25 Ridge (SE ~2.8pp on n=238 HIGH-tier). LightGBM in the BLEND hurts (it belongs in the consensus tier, not the predicted margin). **Conclusion: 0.75 weight is essentially optimal. Don't retune.**
 
@@ -251,7 +251,7 @@ Ran a series of model-improvement experiments. **None were shipped.** Saved as m
 - **Totals model** — independent edge stream; weather data is already built for this
 - **Player props model** — lower-efficiency market, higher edge potential
 
-These items (none of them model-tuning) are what would actually grow the project from "interesting analysis" to "revenue generator." See memory `[[bettingedge-model-experiments-2026-05]]` for full context.
+These items (none of them model-tuning) are what would actually grow the project from "interesting analysis" to "revenue generator." See memory `[[joschoanalytics-model-experiments-2026-05]]` for full context.
 
 **2026-05-24 (weather-features experiment — NEGATIVE RESULT, reverted):**
 - Question: does kickoff-hour weather (temp_f + wind_mph) improve ATS when added to PROD_FEATURES_35? Originally we'd dropped weather because nflreadpy's `temp`/`wind` columns had 48.7% missing in 2022 and 21.5% in 2023.

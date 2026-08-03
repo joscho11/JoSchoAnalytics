@@ -46,7 +46,7 @@ OUT_CSV     = HERE / "sleeper_adp_2020_2026.csv"
 # 2026 is the live upcoming season -- its ADP already exists (early best-ball drafts) and
 # keeps growing toward the late-August consensus. Refresh this cache to pull current 2026 ADP.
 SEASONS     = list(range(2020, 2027))
-HEADERS     = {"User-Agent": "Mozilla/5.0 (BettingEdge seasonal_projections cache)"}
+HEADERS     = {"User-Agent": "Mozilla/5.0 (JoSchoAnalytics seasonal_projections cache)"}
 BASE        = "https://api.sleeper.app/v1"
 SKILL       = set(SKILL_POSITIONS)
 

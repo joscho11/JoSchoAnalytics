@@ -67,13 +67,18 @@ def get_confidence(home, away, game_analysis, game_confidence=None):
 
 
 def metric_card(label, value, sub=None, color="blue"):
+    # The jsa-mcard* classes are inert on desktop; mobile.py keys on them to lay these
+    # tiles out two-up instead of stacking four deep on a phone. Markup and copy are
+    # otherwise unchanged.
     border = {"green": "#00c853", "red": "#ff5252", "blue": "#3D95CE"}.get(color, "#3D95CE")
-    sub_html = f"<div style='font-size:13px;color:#aaa;margin-top:3px'>{sub}</div>" if sub else ""
+    sub_html = (f"<div class='jsa-mcard-sub' style='font-size:13px;color:#aaa;margin-top:3px'>"
+                f"{sub}</div>") if sub else ""
     return (
-        f"<div style='background:#1e2a3a;border-left:4px solid {border};border-radius:6px;"
-        f"padding:14px 16px;margin-bottom:4px;'>"
-        f"<div style='font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px;"
-        f"margin-bottom:6px'>{label}</div>"
-        f"<div style='font-size:22px;font-weight:700;color:white;line-height:1.1'>{value}</div>"
+        f"<div class='jsa-mcard' style='background:#1e2a3a;border-left:4px solid {border};"
+        f"border-radius:6px;padding:14px 16px;margin-bottom:4px;'>"
+        f"<div class='jsa-mcard-label' style='font-size:11px;color:#666;text-transform:uppercase;"
+        f"letter-spacing:1px;margin-bottom:6px'>{label}</div>"
+        f"<div class='jsa-mcard-value' style='font-size:22px;font-weight:700;color:white;"
+        f"line-height:1.1'>{value}</div>"
         f"{sub_html}</div>"
     )

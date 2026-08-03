@@ -29,7 +29,7 @@ if hasattr(sys.stdout, "reconfigure"):
 
 # ------------------------------------------------------------------------------------ CONSTANTS
 HERE = Path(__file__).resolve().parent                    # fantasy/projections
-REPO = HERE.parent.parent                                 # BettingEdgeContinued
+REPO = HERE.parent.parent                                 # JoSchoAnalytics
 SEAS = REPO / "fantasy" / "seasonal_projections"
 RESULTS = HERE / "results"
 MODELS = HERE / "models"

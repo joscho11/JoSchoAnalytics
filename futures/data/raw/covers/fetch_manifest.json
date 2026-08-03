@@ -1,0 +1,100 @@
+{
+  "2012": {
+    "bytes": 597571,
+    "http_status": 200,
+    "retrieved_at": "2026-08-03T02:32:21.392533+00:00",
+    "sha256": "7f56327bb81bc78bed5fd51d76cc34193cbdcaff83a3f3e322e3c81f1e2aa756",
+    "url": "https://www.covers.com/sportsoddshistory/nfl-win/?sa=nfl&t=win&y=2012"
+  },
+  "2013": {
+    "bytes": 597585,
+    "http_status": 200,
+    "retrieved_at": "2026-08-03T02:32:25.115882+00:00",
+    "sha256": "61041061209f5f3545f820b2fa40e59ac355fceb3cc7c6c55861e2b11451b97d",
+    "url": "https://www.covers.com/sportsoddshistory/nfl-win/?sa=nfl&t=win&y=2013"
+  },
+  "2014": {
+    "bytes": 597599,
+    "http_status": 200,
+    "retrieved_at": "2026-08-03T02:32:28.828585+00:00",
+    "sha256": "f99b378f11dd976172cc9a7f49d2e0b76ac0df3ecd946c14596fd0adbb976523",
+    "url": "https://www.covers.com/sportsoddshistory/nfl-win/?sa=nfl&t=win&y=2014"
+  },
+  "2015": {
+    "bytes": 597616,
+    "http_status": 200,
+    "retrieved_at": "2026-08-03T02:32:32.624209+00:00",
+    "sha256": "cdc5d6d076700d8252471224c729b9f136234684457aeaeff85cfb28d89d214f",
+    "url": "https://www.covers.com/sportsoddshistory/nfl-win/?sa=nfl&t=win&y=2015"
+  },
+  "2016": {
+    "bytes": 597616,
+    "http_status": 200,
+    "retrieved_at": "2026-08-03T02:32:36.497679+00:00",
+    "sha256": "d88c88b8721d49686981f517ae26ff045b602d0e790ec307b90fe276187fedaf",
+    "url": "https://www.covers.com/sportsoddshistory/nfl-win/?sa=nfl&t=win&y=2016"
+  },
+  "2017": {
+    "bytes": 597615,
+    "http_status": 200,
+    "retrieved_at": "2026-08-03T02:32:40.219515+00:00",
+    "sha256": "a96cc5d85ea3a6b2f43571d86f603f3362abd20c22974643b01d1ea57439a88c",
+    "url": "https://www.covers.com/sportsoddshistory/nfl-win/?sa=nfl&t=win&y=2017"
+  },
+  "2018": {
+    "bytes": 597615,
+    "http_status": 200,
+    "retrieved_at": "2026-08-03T02:32:44.229906+00:00",
+    "sha256": "b38414a1b454fdbe769750a9c563f5a55e3bb1934d2a191e71a3ad6bc4b3ebb8",
+    "url": "https://www.covers.com/sportsoddshistory/nfl-win/?sa=nfl&t=win&y=2018"
+  },
+  "2019": {
+    "bytes": 597602,
+    "http_status": 200,
+    "retrieved_at": "2026-08-03T02:32:48.004207+00:00",
+    "sha256": "4d2c4835f5ee7e832657314f6834c7c705a74d135cf7a6953cf98136834f7dba",
+    "url": "https://www.covers.com/sportsoddshistory/nfl-win/?sa=nfl&t=win&y=2019"
+  },
+  "2020": {
+    "bytes": 597621,
+    "http_status": 200,
+    "retrieved_at": "2026-08-03T02:32:51.714255+00:00",
+    "sha256": "26c456676e5e3bed5a6d00e38e453b3f8df486f6cd92812dc419bb12c81de019",
+    "url": "https://www.covers.com/sportsoddshistory/nfl-win/?sa=nfl&t=win&y=2020"
+  },
+  "2021": {
+    "bytes": 597808,
+    "http_status": 200,
+    "retrieved_at": "2026-08-03T02:32:55.415823+00:00",
+    "sha256": "31e68a104b3e30dba341dcdbc195f7b03bd0bfd5d24bd66d9c6220cd175cdd65",
+    "url": "https://www.covers.com/sportsoddshistory/nfl-win/?sa=nfl&t=win&y=2021"
+  },
+  "2022": {
+    "bytes": 597865,
+    "http_status": 200,
+    "retrieved_at": "2026-08-03T02:32:59.128062+00:00",
+    "sha256": "7218225c7ba2138ec87c3c2c23ce9f08e97c0d7e1e0781179e479ecc31979830",
+    "url": "https://www.covers.com/sportsoddshistory/nfl-win/?sa=nfl&t=win&y=2022"
+  },
+  "2023": {
+    "bytes": 597643,
+    "http_status": 200,
+    "retrieved_at": "2026-08-03T02:33:03.171390+00:00",
+    "sha256": "ecd99373a3881f7d8dff874e561dc315b38aad96f91cfa6ae7001123d5159fd3",
+    "url": "https://www.covers.com/sportsoddshistory/nfl-win/?sa=nfl&t=win&y=2023"
+  },
+  "2024": {
+    "bytes": 597627,
+    "http_status": 200,
+    "retrieved_at": "2026-08-03T02:33:06.861785+00:00",
+    "sha256": "804cc729f4ae6f98037339dfb539e301b10634112a6c14d0198faad9ed2e0a19",
+    "url": "https://www.covers.com/sportsoddshistory/nfl-win/?sa=nfl&t=win&y=2024"
+  },
+  "2025": {
+    "bytes": 597821,
+    "http_status": 200,
+    "retrieved_at": "2026-08-03T02:33:10.587698+00:00",
+    "sha256": "d8155b8c301d712feb7a05583df05954fd7d030f80bdd2b4c12976e9379dfd11",
+    "url": "https://www.covers.com/sportsoddshistory/nfl-win/?sa=nfl&t=win&y=2025"
+  }
+}

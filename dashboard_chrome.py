@@ -189,21 +189,78 @@ def render_header():
     st.markdown(
         f'''<style>
 :root{{--jsa-h:3.25rem;}}
-[data-testid="stHeader"]{{padding-left:11rem;padding-right:13rem;}}
+/* Right inset reserves the tip jar's own width (~194px) plus a gap, so neither the nav
+   links nor Streamlit's `⋮` main menu — both laid out inside this padding box — can end
+   up underneath it. It was 13rem, which is NARROWER than the pill, and the `⋮` sat 24px
+   under the pill at every width from 641px up (hit-tested: elementFromPoint at the menu
+   centre returned the Venmo anchor). Keep this >= the .jsa-tip width + 1rem. */
+[data-testid="stHeader"]{{padding-left:11rem;padding-right:14rem;}}
+/* z-index MUST be 999990 — the same layer as stHeader, NOT above it.
+     stHeader/stToolbar 999990  <  stSidebar 999991
+   At 999992 this bar painted above BOTH, so while the mobile nav drawer was open the
+   fixed overlay swallowed taps meant for the drawer's close control. At 999990 the bar
+   still paints over the header band (equal z-index resolves by document order and this
+   div comes later), while the drawer at 999991 correctly paints over the bar. */
 #jsa-topbar{{position:fixed;top:0;left:0;right:0;height:var(--jsa-h);
 display:flex;align-items:center;justify-content:space-between;
-padding:0 1rem 0 1.1rem;pointer-events:none;z-index:999992;}}
+padding:0 1rem 0 1.1rem;pointer-events:none;z-index:999990;}}
 #jsa-topbar>*{{pointer-events:auto;}}
-@media (max-width:640px){{[data-testid="stHeader"]{{padding-left:.5rem;padding-right:.5rem;}}
- #jsa-topbar .jsa-brand{{font-size:15px;}} #jsa-topbar a{{margin-right:2.6rem;}}}}
+/* Presentation lives in classes, not style="" attributes, so the narrow-width blocks
+   below can override it with ordinary specificity instead of !important. Markup and
+   copy unchanged. */
+.jsa-brand{{font-size:19px;font-weight:800;letter-spacing:.3px;
+color:#fafafa;text-shadow:0 1px 3px #0e1117;}}
+.jsa-tip{{background:#3D95CE;color:#fff;font-weight:600;font-size:13px;
+padding:6px 13px;border-radius:8px;text-decoration:none;white-space:nowrap;}}
+/* Belt and braces with the z-index fix: while the drawer is open the branded overlay is
+   both irrelevant and in the way, so it stands down entirely. A browser without :has()
+   still gets the correct hit-testing from the z-index above. */
+body:has(section[data-testid="stSidebar"][aria-expanded="true"]) #jsa-topbar{{
+visibility:hidden;pointer-events:none;}}
+/* Streamlit hides the drawer's own collapse control (visibility:hidden) above its 576px
+   `sm` breakpoint and reveals it only on sidebar HOVER. A touch device has no hover, so
+   from 577px to 767px — large phones and small tablets, exactly the band where the nav
+   is drawer-only — the drawer could be opened and then not closed from its own control.
+   Hover-only is not an acceptable affordance on touch, so force it visible for as long
+   as the drawer is open. Above 767px the nav is inline and no drawer exists. */
+@media (max-width:767px){{
+ section[data-testid="stSidebar"][aria-expanded="true"] [data-testid="stSidebarCollapseButton"],
+ section[data-testid="stSidebar"][aria-expanded="true"] [data-testid="stSidebarCollapseButton"] button{{
+ visibility:visible;}}}}
+/* ── Phone header, owned HERE and complete on its own ──────────────────────────────
+   This block is the whole phone header contract, not a partial one: mobile.py is the
+   page-CONTENT layer and deliberately carries no header rules, so deleting it leaves
+   this correct rather than half-applied. Verified standalone down to 320px.
+   Below 640px Streamlit collapses the top nav into a drawer whose `»` trigger renders
+   at the header's left inset (x=22..58) and its `⋮` in the rightmost ~50px, so the bar
+   reserves both and brand + tip jar share only the middle. */
+@media (max-width:640px){{
+ [data-testid="stHeader"]{{padding-left:.25rem;padding-right:.25rem;}}
+ #jsa-topbar{{padding-left:3.9rem;padding-right:3.4rem;gap:.4rem;}}
+ .jsa-brand{{font-size:13px;letter-spacing:.2px;white-space:nowrap;flex:0 0 auto;}}
+ .jsa-tip{{font-size:10.5px;font-weight:700;padding:5px 8px;flex:0 1 auto;min-width:0;
+  min-height:2rem;display:flex;align-items:center;justify-content:center;}}
+ /* The drawer trigger is the only way to change page here — give it a real tap target
+    and a surface so it reads as a menu rather than a stray glyph. */
+ [data-testid="stExpandSidebarButton"]{{min-width:2.25rem;min-height:2.25rem;
+  border:1px solid var(--jsa-border, #232D3B);border-radius:var(--jsa-r-sm, 8px);
+  background:var(--jsa-surface, #121821);}}
+ [data-testid="stExpandSidebarButton"] span{{font-size:22px;}}
+ [data-testid="stSidebarNavLink"]{{min-height:2.6rem;align-items:center;}}
+ [data-testid="stSidebarNav"] a span{{font-size:15px;}}}}
+/* Narrow phones. Fixed overhead is ~117px (62px reserving the `»`, 55px reserving the
+   `⋮`), leaving ~200px at 320px — too little for brand AND a one-line pill at legible
+   sizes. The pill's label wraps inside itself instead of shrinking to unreadable; every
+   word is still there and it still fits the 52px bar. Without this the brand wrapped to
+   two lines and the pill sat 28px under the `⋮` at 320px. */
+@media (max-width:400px){{
+ .jsa-brand{{font-size:12px;}}
+ .jsa-tip{{white-space:normal;line-height:1.2;text-align:center;padding:4px 7px;}}}}
 </style>
 <div id="jsa-topbar">
-<span class="jsa-brand" style="font-size:19px;font-weight:800;letter-spacing:.3px;
-color:#fafafa;text-shadow:0 1px 3px #0e1117;">JoScho Analytics</span>
-<a href="{_VENMO}" target="_blank" rel="noopener noreferrer"
-title="If you find this useful, buy me a coffee ☕"
-style="margin-right:2.5rem;background:#3D95CE;color:#fff;font-weight:600;font-size:13px;
-padding:6px 13px;border-radius:8px;text-decoration:none;white-space:nowrap;">💙 Tip Jar — Venmo @JoScho</a>
+<span class="jsa-brand">JoScho Analytics</span>
+<a class="jsa-tip" href="{_VENMO}" target="_blank" rel="noopener noreferrer"
+title="If you find this useful, buy me a coffee ☕">💙 Tip Jar — Venmo @JoScho</a>
 </div>''',
         unsafe_allow_html=True)
 

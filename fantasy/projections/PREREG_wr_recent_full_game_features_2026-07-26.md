@@ -55,7 +55,7 @@ McLaurin or any other — is tuned for, scored in isolation, or admissible as ev
 
 The task requires locating the generating code and persisted output of that experiment rather than
 declaring it unrecoverable from result CSVs. **It was searched for and it is not on this machine.**
-Searched, all negative: the whole `BettingEdgeContinued` tree; `git log --all` including
+Searched, all negative: the whole `JoSchoAnalytics` tree; `git log --all` including
 `--diff-filter=D`, the reflog and the stash (no `PREREG_ppg_vs_total_2026-07-25.md`,
 `PREREG_prorate_totals_2026-07-25.md` or any trajectory harness was ever committed); all 44 local
 Claude session transcripts under
@@ -63,9 +63,9 @@ Claude session transcripts under
 (`share_ramp`, `last4_*`, `second_half_share`, `tail(4)`), by result value (`0.178`) and by phrase
 ("within-season role trajectory") — every hit resolves to the memory node being *read*, never to the
 code; every session scratchpad under that project root and under both alternate scratch roots
-(`C--Users-josep-Desktop-random-stuff-BettingEdgeContinued`,
-`C--Users-josep-iCloudDrive-Projects-BettingEdgeContinued`, which contain `tasks/` only); `C:\tmp\*`;
-and the alternate checkout `C:\Users\josep\iCloudDrive\Projects\BettingEdgeContinued` (an empty
+(`C--Users-josep-Desktop-random-stuff-JoSchoAnalytics`,
+`C--Users-josep-iCloudDrive-Projects-JoSchoAnalytics`, which contain `tasks/` only); `C:\tmp\*`;
+and the alternate checkout `C:\Users\josep\iCloudDrive\Projects\JoSchoAnalytics` (an empty
 placeholder).
 
 **What survives is the recorded summary**, which is the disclosure in §1 above plus
@@ -127,7 +127,7 @@ sixteen prior-season role levels is a plausible but not obviously sufficient ans
   `_fit_predict`; CatBoost 16 / LightGBM 8 / XGBoost 16 / ElasticNet 9; inner leave-one-season-out CV
   on training seasons, MAE primary; seed 42). **No new learner, objective, grid, loss function or
   target architecture is introduced.**
-- **Interpreter:** `BettingEdgeContinued/.venv-test/Scripts/python.exe` — the interpreter that
+- **Interpreter:** `JoSchoAnalytics/.venv-test/Scripts/python.exe` — the interpreter that
   produced the completed corrected-data retrain, so the G0 reproduction is like-for-like.
 
 **RESEARCH-ONLY LABEL (required).** The corrected-data retrain

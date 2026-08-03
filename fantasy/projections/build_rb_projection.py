@@ -36,7 +36,7 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
 HERE = Path(__file__).resolve().parent                       # fantasy/projections
-REPO = HERE.parent.parent                                    # BettingEdgeContinued
+REPO = HERE.parent.parent                                    # JoSchoAnalytics
 SEAS = HERE.parent / "seasonal_projections"
 ROOK = HERE.parent / "rookie"
 HARNESS = ROOK / "harness"

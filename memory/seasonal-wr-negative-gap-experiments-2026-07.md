@@ -145,7 +145,7 @@ told about Pearsall and Odunze — **the model already out-ranks Sleeper** (rho 
   `season_dataset_2014_2026.csv` was written mid-run, and two verifiers then "refuted"
   postseason findings that were real and already fixed.
 
-Related: [[bettingedge-model-experiments-2026-05]], [[experiment-rejection-criteria]],
+Related: [[joschoanalytics-model-experiments-2026-05]], [[experiment-rejection-criteria]],
 [[daily/2026-07-26]].
 
 ## 2026-07-26 correction — the third-year effect is a tail, not a point lift

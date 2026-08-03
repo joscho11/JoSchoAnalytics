@@ -1,0 +1,304 @@
+{
+  "verdict": "GO-TIER-B",
+  "tier_available": "A+B",
+  "tier_c_open": false,
+  "underpowered": false,
+  "gates": [
+    {
+      "name": "G1 >= 8 seasons with usable preseason lines",
+      "threshold": 8,
+      "observed": 11,
+      "passed": true
+    },
+    {
+      "name": "G2 >= 28/32 teams covered in every counted season",
+      "threshold": 28,
+      "observed": 32,
+      "passed": true
+    },
+    {
+      "name": "G3-B every counted row is point-in-time with a named market_source (Amendment 1; Tier B only, book may be null)",
+      "threshold": "all rows",
+      "observed": "352 valid of 352 rows",
+      "passed": true
+    },
+    {
+      "name": "G3-C every counted row is strictly pre-kickoff with a NAMED BOOK (frozen \u00a75; required for \u00a77 gate C)",
+      "threshold": "all rows",
+      "observed": "0 valid of 352 rows",
+      "passed": false
+    },
+    {
+      "name": "G4 outcome-table integrity (32 teams/season, wins conserved, GP matches schedule)",
+      "threshold": "all seasons",
+      "observed": "24 complete seasons verified",
+      "passed": true
+    }
+  ],
+  "amendment_1": {
+    "active": true,
+    "reference": "futures/PREREGISTRATION.md \u00a710 Amendment 1 (accepted 2026-08-03)",
+    "admits": "archived market consensus with a null `book`, for \u00a77 gates A and B only",
+    "market_source_is_not_a_sportsbook": true,
+    "exact_closing_timestamps_available": false,
+    "kickoff_day_clause_used": true,
+    "locked": [
+      "\u00a77 gate C",
+      "sides",
+      "probability against a posted line",
+      "confidence tiers",
+      "EV",
+      "profitability",
+      "bet/edge/lock/value/play language"
+    ]
+  },
+  "folds": {
+    "test_seasons": [
+      2015,
+      2016,
+      2017,
+      2018,
+      2019,
+      2020,
+      2021,
+      2022,
+      2024,
+      2025
+    ],
+    "n_folds": 10,
+    "eval_rows": 320,
+    "min_folds": 5,
+    "min_eval_rows": 160,
+    "rule": "expanding-season: train on all seasons < T with line+outcome, test on T"
+  },
+  "folds_strict_sensitivity": {
+    "test_seasons": [
+      2015,
+      2016,
+      2017,
+      2018
+    ],
+    "n_folds": 4,
+    "eval_rows": 128,
+    "underpowered": true,
+    "rule": "A1.4 \u2014 strictly-dated seasons only; MANDATORY second reporting of every headline; sensitivity only, never the headline (below \u00a73's five-fold minimum)"
+  },
+  "target": {
+    "column": "wins_half_ties",
+    "settlement_assumption": "tie = half a win (book convention, PREREGISTRATION \u00a72.1)",
+    "strict_wins_carried": true
+  },
+  "outcomes": {
+    "season_min": 2002,
+    "season_max": 2025,
+    "complete_seasons": [
+      2002,
+      2003,
+      2004,
+      2005,
+      2006,
+      2007,
+      2008,
+      2009,
+      2010,
+      2011,
+      2012,
+      2013,
+      2014,
+      2015,
+      2016,
+      2017,
+      2018,
+      2019,
+      2020,
+      2021,
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "team_seasons": 768,
+    "hash": "b60d2ccd466215bf9ff7657ea18c5f14c8b1b664ef94dd2de27ed6cde68f7019"
+  },
+  "predict_season": {
+    "season": 2026,
+    "schedule_published": true,
+    "results_present": 0
+  },
+  "lines": {
+    "file": "futures/data/win_totals.csv",
+    "file_sha256": "dd6753f654dec864b7fbeb7e3e23b7a3fa2cfc41c86e1de48c66bb86742eecbe",
+    "required_schema": [
+      "season",
+      "team",
+      "win_total_line",
+      "price_over",
+      "price_under",
+      "book",
+      "as_of_date",
+      "source",
+      "market_source"
+    ],
+    "frozen_schema": [
+      "season",
+      "team",
+      "win_total_line",
+      "price_over",
+      "price_under",
+      "book",
+      "as_of_date",
+      "source"
+    ],
+    "schema_errors": [],
+    "rows_loaded": 352,
+    "rows_valid": 352,
+    "rows_valid_book_path": 0,
+    "usable_seasons": [
+      2014,
+      2015,
+      2016,
+      2017,
+      2018,
+      2019,
+      2020,
+      2021,
+      2022,
+      2024,
+      2025
+    ],
+    "usable_seasons_strict": [
+      2014,
+      2015,
+      2016,
+      2017,
+      2018
+    ],
+    "searched": [
+      {
+        "candidate": "futures/data/win_totals.csv",
+        "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\JoSchoAnalytics\\futures\\data\\win_totals.csv",
+        "exists": true
+      }
+    ],
+    "sweep_hits": [
+      "futures/01_acquire_win_totals.ipynb",
+      "futures/data/win_totals.csv"
+    ],
+    "pct_integer_lines": 34.09090909090909,
+    "books": [],
+    "market_sources": [
+      "Covers Sports Odds History"
+    ]
+  },
+  "baselines": {
+    "b1_persistence_rows": 736,
+    "b1_in_sample_mae": 2.895445372442455,
+    "b2_in_sample_mae": 2.5572916666666665,
+    "note": "in-sample descriptive only; no fold structure, not a result"
+  },
+  "feature_availability": [
+    {
+      "feature_family": "prior_season_record",
+      "source": "load_schedules (season S-1)",
+      "verdict": "AVAILABLE",
+      "note": "settled before S; wins/losses/ties/point differential"
+    },
+    {
+      "feature_family": "prior_season_pythag",
+      "source": "load_schedules (season S-1)",
+      "verdict": "AVAILABLE",
+      "note": "points for/against of S-1 only"
+    },
+    {
+      "feature_family": "multi_year_record",
+      "source": "load_schedules (S-3..S-1)",
+      "verdict": "AVAILABLE",
+      "note": "decayed multi-season form; all settled"
+    },
+    {
+      "feature_family": "prior_season_pbp_epa",
+      "source": "load_pbp (season S-1)",
+      "verdict": "AVAILABLE",
+      "note": "off/def EPA per play from S-1; final and unrevised at kickoff of S"
+    },
+    {
+      "feature_family": "schedule_strength_S",
+      "source": "load_schedules (season S)",
+      "verdict": "AVAILABLE",
+      "note": "opponents are published before Week 1 \u2014 the schedule itself is preseason information; opponent STRENGTH must be measured from S-1, never from S results"
+    },
+    {
+      "feature_family": "coach_identity",
+      "source": "load_schedules (season S)",
+      "verdict": "AVAILABLE",
+      "note": "coach of record per game; preseason coach = coach of week 1"
+    },
+    {
+      "feature_family": "coach_prior_winpct",
+      "source": "load_schedules (< S)",
+      "verdict": "AVAILABLE",
+      "note": "career win% through S-1 only"
+    },
+    {
+      "feature_family": "qb_identity_week1",
+      "source": "load_schedules (season S)",
+      "verdict": "CONDITIONAL",
+      "note": "week-1 starter is known preseason in reality, but the nflverse field is populated after the game is played \u2014 a preseason snapshot is required to use it honestly"
+    },
+    {
+      "feature_family": "roster_continuity",
+      "source": "load_rosters (season S)",
+      "verdict": "CONDITIONAL",
+      "note": "the roster table is revised in place through the season; needs a dated preseason snapshot"
+    },
+    {
+      "feature_family": "depth_chart_rank",
+      "source": "load_depth_charts",
+      "verdict": "UNAVAILABLE",
+      "note": "coverage ends at 2024 in this stack (the documented train-present/deploy-absent trap that forced Amendment 1 in fantasy/projections) \u2014 excluded by construction"
+    },
+    {
+      "feature_family": "free_agency_transactions",
+      "source": "external",
+      "verdict": "CONDITIONAL",
+      "note": "no dated transaction feed is owned by this repo"
+    },
+    {
+      "feature_family": "preseason_injuries",
+      "source": "load_injuries (season S)",
+      "verdict": "CONDITIONAL",
+      "note": "the injury report is a weekly in-season feed; week-1 report exists but is published in game week, and prior weeks are not preseason state"
+    },
+    {
+      "feature_family": "season_S_results",
+      "source": "load_schedules (season S)",
+      "verdict": "UNAVAILABLE",
+      "note": "the target \u2014 any use is the leak this audit exists to prevent"
+    },
+    {
+      "feature_family": "season_S_pbp",
+      "source": "load_pbp (season S)",
+      "verdict": "UNAVAILABLE",
+      "note": "same-season play-by-play is post-kickoff by definition"
+    }
+  ],
+  "schedule": {
+    "source": "snapshot:futures/data/schedules_snapshot.parquet",
+    "library_version": null,
+    "snapshot": "futures/data/schedules_snapshot.parquet",
+    "hash": "6d97ff5b662015b16c579c31f90faa1e0b98368bb30d905ec173f6df58d7bf87",
+    "reg_games": 6495
+  },
+  "provenance": {
+    "notebook": "futures/season_team_totals/00_data_audit.ipynb",
+    "run_at_utc": "2026-08-03T02:50:41.514030+00:00",
+    "as_of_date": "2026-08-03",
+    "python": "3.11.9",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "pandas": "2.3.3",
+    "numpy": "1.26.4",
+    "seed": 20260802,
+    "offline": false,
+    "repo_root": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\JoSchoAnalytics"
+  }
+}

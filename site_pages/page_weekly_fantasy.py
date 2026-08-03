@@ -385,16 +385,20 @@ def render():
                     st.markdown("#### 🤖 Agent Analysis")
 
                     # Headers row
+                    # jsa-ff-head / jsa-ff-pair are inert on desktop. The card rows below are
+                    # a raw CSS grid that does NOT stack on a phone, so mobile.py keeps these
+                    # two headers side by side with it rather than letting st.columns stack
+                    # them away from the cards they label.
                     h1, h2 = st.columns(2)
                     h1.markdown(
-                        "<div style='background:#0d2b0d;border:1px solid #00c853;"
+                        "<div class='jsa-ff-head' style='background:#0d2b0d;border:1px solid #00c853;"
                         "border-radius:8px;padding:10px 16px'>"
                         "<span style='color:#00c853;font-weight:700;font-size:13px;"
                         "letter-spacing:1px'>📈 LIKELY TO OUTPERFORM</span></div>",
                         unsafe_allow_html=True
                     )
                     h2.markdown(
-                        "<div style='background:#2b0d0d;border:1px solid #ff5252;"
+                        "<div class='jsa-ff-head' style='background:#2b0d0d;border:1px solid #ff5252;"
                         "border-radius:8px;padding:10px 16px'>"
                         "<span style='color:#ff5252;font-weight:700;font-size:13px;"
                         "letter-spacing:1px'>📉 LIKELY TO UNDERPERFORM</span></div>",
@@ -422,7 +426,8 @@ def render():
                             f"</div>"
                         ) if dn else "<div></div>"
                         row_html = (
-                            "<div style='display:grid;grid-template-columns:1fr 1fr;"
+                            "<div class='jsa-ff-pair' style='display:grid;"
+                            "grid-template-columns:1fr 1fr;"
                             "gap:8px;align-items:stretch;margin-top:8px'>"
                             + up_html + dn_html +
                             "</div>"

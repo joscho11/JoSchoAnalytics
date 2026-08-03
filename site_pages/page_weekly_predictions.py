@@ -146,7 +146,7 @@ def render():
     game_confidence = cached.get('game_confidence', {}) if cached else {}
 
     st.markdown("""
-        <div style='display:flex;gap:16px;align-items:center;margin-bottom:12px;flex-wrap:wrap;'>
+        <div class='jsa-legend' style='display:flex;gap:16px;align-items:center;margin-bottom:12px;flex-wrap:wrap;'>
             <span style='font-size:11px;color:#888;letter-spacing:1px;text-transform:uppercase;'>Agent Confidence:</span>
             <span style='font-size:12px;background:#1a3a1a;border:1px solid #00c853;
                         border-radius:4px;padding:2px 8px;color:#00c853;'>🟢 High</span>
@@ -160,7 +160,7 @@ def render():
     _has_consensus_col = 'consensus_tier' in week_df.columns and week_df['consensus_tier'].notna().any()
     if _has_consensus_col:
         st.markdown("""
-            <div style='display:flex;gap:16px;align-items:center;margin-bottom:12px;flex-wrap:wrap;'>
+            <div class='jsa-legend' style='display:flex;gap:16px;align-items:center;margin-bottom:12px;flex-wrap:wrap;'>
                 <span style='font-size:11px;color:#888;letter-spacing:1px;text-transform:uppercase;'>Model Consensus:</span>
                 <span style='font-size:12px;background:#1a3a1a;border:1px solid #00c853;
                             border-radius:4px;padding:2px 8px;color:#00c853;'>HIGH</span>
@@ -186,7 +186,7 @@ def render():
                     )
             if _parts:
                 st.markdown(
-                    f"<div style='font-size:11px;color:#8a93a0;margin:-4px 0 12px 0;'>"
+                    f"<div class='jsa-calib' style='font-size:11px;color:#8a93a0;margin:-4px 0 12px 0;'>"
                     f"📊 Historical cover rate ({_calib['n_graded']} graded bets): "
                     + " &nbsp;·&nbsp; ".join(_parts)
                     + " &nbsp;·&nbsp; <span style='color:#667'>break-even 52.4%</span></div>",
@@ -220,18 +220,22 @@ def render():
             color  = "white" if is_rec else "#aaa"
             return weight, color
 
+        # The jsa-gc-* classes are inert on desktop. mobile.py keys on them to keep each
+        # game card as a real row on a phone — st.columns stacks below 640px, which
+        # otherwise orphaned the SPREAD / PREDICTED / SCORE headers from their values.
         def stat_box(val, is_rec=False, is_result=False):
             bg    = "#1a3a2a" if is_rec else "#1e2a3a"
             color = "#00c853" if is_rec else "white"
             return (
-                f"<div style='text-align:center;background:{bg};border-radius:6px;"
+                f"<div class='jsa-gc-stat' style='text-align:center;background:{bg};"
+                f"border-radius:6px;"
                 f"padding:6px 0;font-size:14px;font-weight:600;color:{color};"
                 f"height:32px;line-height:20px'>{val}</div>"
             )
 
         def bet_box(team, color="#3D95CE"):
             return (
-                f"<div style='background:{color}22;border:1.5px solid {color};"
+                f"<div class='jsa-gc-bet' style='background:{color}22;border:1.5px solid {color};"
                 f"border-radius:6px;padding:0 10px;font-size:13px;font-weight:800;"
                 f"color:{color};text-align:center;height:32px;line-height:32px;"
                 f"letter-spacing:0.5px'>▶ {team}</div>"
@@ -303,7 +307,7 @@ def render():
 
             with st.container():
                 st.markdown(
-                    f"<div style='font-size:13px;color:#888;margin-bottom:6px'>"
+                    f"<div class='jsa-gc-meta' style='font-size:13px;color:#888;margin-bottom:6px'>"
                     f"<b style='color:#ccc'>{_html.escape(str(away))} @ {_html.escape(str(home))}</b>"
                     f"&nbsp;&nbsp;·&nbsp;&nbsp;{_html.escape(str(row['gameday']))}"
                     f"{tier_html}"
@@ -314,12 +318,12 @@ def render():
 
                 if results_available:
                     h0, h1, h2, h3, h4 = st.columns([2.2, 1.2, 1.2, 1.2, 1.8])
-                    h3.markdown("<div style='text-align:center;font-size:11px;color:#aaa;letter-spacing:1px'>SCORE</div>", unsafe_allow_html=True)
+                    h3.markdown("<div class='jsa-gc-hdr' style='text-align:center;font-size:11px;color:#aaa;letter-spacing:1px'>SCORE</div>", unsafe_allow_html=True)
                 else:
                     h0, h1, h2, h4 = st.columns([2.2, 1.2, 1.2, 1.8])
 
-                h1.markdown("<div style='text-align:center;font-size:11px;color:#aaa;letter-spacing:1px'>SPREAD</div>",    unsafe_allow_html=True)
-                h2.markdown("<div style='text-align:center;font-size:11px;color:#aaa;letter-spacing:1px'>PREDICTED</div>", unsafe_allow_html=True)
+                h1.markdown("<div class='jsa-gc-hdr' style='text-align:center;font-size:11px;color:#aaa;letter-spacing:1px'>SPREAD</div>",    unsafe_allow_html=True)
+                h2.markdown("<div class='jsa-gc-hdr' style='text-align:center;font-size:11px;color:#aaa;letter-spacing:1px'>PREDICTED</div>", unsafe_allow_html=True)
 
                 if results_available:
                     a0, a1, a2, a3, a4 = st.columns([2.2, 1.2, 1.2, 1.2, 1.8])
@@ -329,7 +333,7 @@ def render():
 
                 top_w, top_c = name_style(top_is_rec)
                 a0.markdown(
-                    f"<div style='font-weight:{top_w};font-size:15px;color:{top_c};"
+                    f"<div class='jsa-gc-team' style='font-weight:{top_w};font-size:15px;color:{top_c};"
                     f"padding-top:6px;height:32px'>{top_team}</div>",
                     unsafe_allow_html=True
                 )
@@ -347,7 +351,7 @@ def render():
 
                 bot_w, bot_c = name_style(bot_is_rec)
                 b0.markdown(
-                    f"<div style='font-weight:{bot_w};font-size:15px;color:{bot_c};"
+                    f"<div class='jsa-gc-team' style='font-weight:{bot_w};font-size:15px;color:{bot_c};"
                     f"padding-top:6px;height:32px'>{bot_team}</div>",
                     unsafe_allow_html=True
                 )
@@ -413,7 +417,8 @@ def render():
                     else:
                         _tot_result = ""
                     st.markdown(
-                        f"<div style='background:#1f1a0e;border:1px dashed #b88a1c;border-radius:6px;"
+                        f"<div class='jsa-tot-badge' style='background:#1f1a0e;border:1px dashed #b88a1c;"
+                        f"border-radius:6px;"
                         f"padding:6px 12px;margin:14px 0 4px 0;font-size:13px;"
                         f"display:flex;align-items:center;gap:10px'>"
                         f"<span style='background:#b88a1c22;border:1px solid #b88a1c;border-radius:4px;"

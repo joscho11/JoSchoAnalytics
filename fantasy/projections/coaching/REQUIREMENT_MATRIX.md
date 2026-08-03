@@ -476,8 +476,8 @@ shut. **The module writes nothing at all.**
 | scope | count |
 |---|---|
 | inherited baseline (reproduced by ignoring the 2 new v3.9 modules and deselecting **all six** new ownership tests) | **141** |
-| new v3.9 + v3.9a + v3.9b + v3.9c + v3.9d + v3.9e + v3.9f tests | **567** |
-| **full coaching suite** (offline, empty temp dir) | **708** |
+| new v3.9 + v3.9a + v3.9b + v3.9c + v3.9d + v3.9e + v3.9f + v3.9g + v3.9i + v3.9j + v3.9k tests | **686** |
+| **full coaching suite** (offline, empty temp dir) | **827 collected / 826 mandatory** |
 
 ## v3.9c — REVIEW REPAIRS (2026-07-29)
 
@@ -501,7 +501,7 @@ shut. **The module writes nothing at all.**
 ## v3.9e/v3.9f — REAL-OUTCOME TRANSITION (prepared; activation BLOCKED)
 
 `assemble_real_panel_v39.py`, contract **A1–A6**, enforced as the 21st preflight check. Tests:
-`tests/test_assemble_real_panel_v39.py` — **81**.
+`tests/test_assemble_real_panel_v39.py` — **200**.
 
 | # | requirement | generating function | covering test | status |
 |---|---|---|---|---|
@@ -510,9 +510,13 @@ shut. **The module writes nothing at all.**
 | R-3 | production zero-fill semantics: an eligible player-season with no weekly row is RETAINED with y = 0.0 | `assemble_panel_core` | `test_PRODUCTION_EQUIVALENCE_a_rostered_player_with_no_stat_row_is_kept_with_zero`, `test_no_feature_row_is_ever_silently_dropped` | PASS |
 | R-4 | the veteran feature reader loads only the frozen contract, filters to 2014–2025, and its OUTPUT passes its own validator | `authorized_feature_reader` | `test_GREEN_the_authorized_feature_reader_returns_only_2014_2025_and_no_forbidden_column`, `test_the_feature_reader_output_passes_its_own_validator`, `test_RED_a_naive_full_read_of_the_fixture_violates_the_validator` | PASS |
 | R-5 | accounting states are a mutually exclusive, exhaustive partition summing to the feature-row count | `assemble_panel_core` | `test_the_accounting_states_partition_the_feature_rows`, `test_the_states_cannot_overlap`, `test_a_null_player_id_is_missing_identity_only` | PASS |
-| R-6 | **all SEVEN** shipped Arm 0 bundles are audited — ordered `feature_cols`, declared input, supply status | `arm0_bucket_table`, `SHIPPED_ARM0_BUCKETS` | `test_all_seven_shipped_buckets_are_declared`, `test_every_bundle_feature_count_matches_the_declared_table`, `test_a_bucket_frame_must_carry_every_bundle_feature_in_order` | PASS |
-| R-7 | **the three ROOKIE buckets have NO repo-owned feature source** (RB 32/41, WR 35/44, TE 35/44 missing) | `arm0_bucket_table`, `ROOKIE_MISSING_COUNTS` | `test_the_rookie_buckets_have_no_repo_owned_feature_source` (3 params) | **BLOCKED — Joseph's decision, manifest §0b** |
-| R-8 | activation readiness FAILS CLOSED and is a layer SEPARATE from prefit integrity | `activation_readiness` | `test_activation_readiness_is_currently_FALSE_and_names_the_blocked_buckets`, `test_prefit_integrity_and_activation_readiness_are_DIFFERENT_layers` | PASS (returns False, by design) |
+| R-6 | **all SEVEN** shipped Arm 0 bundles pinned INDEPENDENTLY — ordered `feature_cols`, target, count, pool sha256 — with the pin never derived from the bundle under test | `arm0_bucket_table`, `tests/arm0_bundle_pins.py` | `test_every_shipped_bundle_matches_its_independent_pin` (7 params), `test_mutating_any_bundle_pool_fails_the_pin` (28 params: reorder/replace/add/delete × 7), `test_the_pins_cover_exactly_the_seven_shipped_buckets`, `test_a_bucket_frame_must_carry_every_bundle_feature_in_order` | PASS |
+| R-7 | **the three ROOKIE buckets have NO repo-owned feature source** — missing-from-season-dataset counts DERIVED from the real CSV header and the bundles' own `feature_cols`, then asserted (RB 32/41, WR 35/44, TE 35/44) | `arm0_bucket_table`, `ROOKIE_MISSING_FROM_SEASON_DATASET` | `test_the_rookie_missing_counts_are_derived_not_asserted` (3 params) | **BLOCKED — Joseph's decision, manifest §0b** |
+| R-7b | the two missingness concepts stay SEPARATE and the readiness message is internally consistent | `arm0_bucket_table`, `activation_readiness` | `test_the_two_missingness_concepts_are_separate_fields`, `test_the_readiness_message_is_internally_consistent` | PASS |
+| R-8 | activation readiness FAILS CLOSED, is a layer SEPARATE from prefit integrity, and is a MANDATORY authorized-real gate alongside preflight | `activation_readiness`, `authorized_real_gate` | `test_activation_readiness_is_currently_FALSE_and_names_the_blocked_buckets`, `test_prefit_integrity_and_activation_readiness_are_DIFFERENT_layers`, `test_the_authorized_real_gate_needs_BOTH_and_currently_REFUSES`, `test_the_gate_refuses_when_only_gate_1_is_clear`, `test_the_gate_refuses_when_only_gate_2_is_clear` | PASS (gate returns False, by design) |
+| R-8b | **gate 1 fails closed**: a preflight result must be a dict with `all_ok is True`, `run_mode == "authorized_real"`, the exact frozen check count, `n_failed` exactly integer 0, a `checks` dict with exactly the expected names each explicitly ok, and no contradictory `failures`. A `synthetic_prefit` result can NEVER authorize a real run. | `validate_authorized_preflight` | `test_RED_a_preflight_with_only_all_ok_is_refused`, `test_RED_a_synthetic_prefit_result_can_never_authorize_a_real_run`, `test_RED_every_malformed_or_contradictory_preflight_is_refused` (12 params), `test_RED_one_check_false_while_all_ok_is_true_is_refused`, `test_RED_a_non_dict_or_empty_preflight_is_refused` (7 params), `test_RED_a_partial_or_closed_lock_state_cannot_produce_an_authorizing_preflight` (3 params), `test_GREEN_an_authorized_shaped_preflight_plus_readiness_passes` | PASS |
+| R-8c | the ACTIVATION MANIFEST states both required gates, the gate-before-reader order, and readiness failure as a §7 stop condition | `V39_ACTIVATION_MANIFEST.md` §6/§7 | `test_the_manifest_states_the_required_activation_gates`, `test_the_manifest_lists_readiness_failure_as_a_stop_condition`, `test_the_manifest_still_records_the_run_as_not_ready` | PASS |
+| R-8d | a permanent hermeticity scanner over the 8 stated targets, with self-probes proving each retired form is detected | `_scan_hermetic` | `test_no_live_document_makes_an_unqualified_hermeticity_claim`, `test_the_hermeticity_scanner_detects_each_retired_form` (6 params), `test_the_scanner_covers_the_eight_stated_targets` | PASS |
 | R-9 | A2 rejects network capability at the IMPORT, under any alias or from-form | `assembly_module_contract` | `test_every_network_evasion_is_rejected_by_banning_the_import` (8 params), `test_the_network_check_does_not_false_positive` (4 params), `test_the_a2_limits_are_stated_not_hidden` | PASS |
 | R-10 | both locks stay closed and the harness door stays sealed through this pass | `real_fit_lock_state`, `_entry_point_is_sealed` | `test_the_entry_point_is_still_sealed_and_this_pass_did_not_weaken_it`, `test_every_partial_or_closed_lock_state_refuses` (3 params) | PASS |
 

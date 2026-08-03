@@ -1,0 +1,9 @@
+{
+  "adp_consensus_pipeline.ipynb": {
+    "sha256_before": "80ff71bb0d475cfbc131a39d497f0923dc6f43604f74d3875fe9b33d731168d5",
+    "sha256_after": "80ff71bb0d475cfbc131a39d497f0923dc6f43604f74d3875fe9b33d731168d5",
+    "bytes": 274918,
+    "identical": true,
+    "note": "the single-notebook pipeline this eight-notebook layout replaces; executed, outputs retained"
+  }
+}

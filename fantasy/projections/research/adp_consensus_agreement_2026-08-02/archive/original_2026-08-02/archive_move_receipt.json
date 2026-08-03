@@ -1,0 +1,50 @@
+{
+  "adp_consensus_experiment.ipynb": {
+    "sha256_before": "ac938f1466f190fbaf1ac00b5cff6a4cb73fdd0bbfbddc40402ab2fa93c0e7c7",
+    "sha256_after": "ac938f1466f190fbaf1ac00b5cff6a4cb73fdd0bbfbddc40402ab2fa93c0e7c7",
+    "bytes": 40814,
+    "identical": true
+  },
+  "REPORT.md": {
+    "sha256_before": "72e1beea03a10717a8c3e519a4d91ce2a88142249dbb10ff0f563b0e07e17625",
+    "sha256_after": "72e1beea03a10717a8c3e519a4d91ce2a88142249dbb10ff0f563b0e07e17625",
+    "bytes": 16050,
+    "identical": true
+  },
+  "threshold_summary.csv": {
+    "sha256_before": "6a6c81b0fdf44ef913c8a96f9354d8f3e5fd898a1f4b1a2da8ba86e37f84d8a4",
+    "sha256_after": "6a6c81b0fdf44ef913c8a96f9354d8f3e5fd898a1f4b1a2da8ba86e37f84d8a4",
+    "bytes": 256701,
+    "identical": true
+  },
+  "player_season_results.csv": {
+    "sha256_before": "fa0cd95bbe7cd0ecc38946e36ae6a7e004cc66c1b42f4425306030629d2ba186",
+    "sha256_after": "fa0cd95bbe7cd0ecc38946e36ae6a7e004cc66c1b42f4425306030629d2ba186",
+    "bytes": 983763,
+    "identical": true
+  },
+  "incremental_comparisons.csv": {
+    "sha256_before": "b551ed94cd0fe1b2970ecfffec53ad3b6063a281f06bfbe27ba4ebeee55b3071",
+    "sha256_after": "b551ed94cd0fe1b2970ecfffec53ad3b6063a281f06bfbe27ba4ebeee55b3071",
+    "bytes": 16424,
+    "identical": true
+  },
+  "manifest.json": {
+    "sha256_before": "5ffd48d83d36ff41101906de3112d8042dd1bf26723fe3cf76bd217a7cf15dce",
+    "sha256_after": "5ffd48d83d36ff41101906de3112d8042dd1bf26723fe3cf76bd217a7cf15dce",
+    "bytes": 7502,
+    "identical": true
+  },
+  "original_experiment_handoff.md": {
+    "sha256_before": "d7a19ff40b51c6b1c54b34cab052bc73c900f06eb6dc149945529bb59bd6c8d0",
+    "sha256_after": "d7a19ff40b51c6b1c54b34cab052bc73c900f06eb6dc149945529bb59bd6c8d0",
+    "bytes": 9499,
+    "identical": true
+  },
+  "notebook_revamp_handoff.md": {
+    "sha256_before": "2c50697966d39fbb69de7dc5b3f75a7c2aafab1663ab34292e3323ebdc5659b5",
+    "sha256_after": "2c50697966d39fbb69de7dc5b3f75a7c2aafab1663ab34292e3323ebdc5659b5",
+    "bytes": 11562,
+    "identical": true
+  }
+}

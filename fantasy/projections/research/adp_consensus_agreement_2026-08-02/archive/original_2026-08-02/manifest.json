@@ -1,0 +1,223 @@
+{
+  "study": "current-model + Sleeper agreement against ADP (descriptive, post-hoc)",
+  "requested": "2026-08-02",
+  "run_timestamp_utc": "2026-08-02T23:02:33.349037+00:00",
+  "status": "DESCRIPTIVE POST-HOC RESEARCH \u2014 not pre-registered, not live-validated",
+  "python": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "numpy": "2.4.6",
+  "pandas": "3.0.3",
+  "seed": 20260802,
+  "n_permutations": 10000,
+  "n_bootstrap": 10000,
+  "inputs": {
+    "fantasy\\projections\\results\\walkforward_predictions.csv": {
+      "sha256": "c8c0e1584a18452adcb2c3510b1ff91104b8f44e150a0a89b46e21f6a9f04411",
+      "bytes": 49283
+    },
+    "fantasy\\projections\\results\\wr_walkforward_predictions.csv": {
+      "sha256": "49f6b0d69f796d90c1fe5b3bd9a1fdd0414f36d023a0debe056308ca0d3957db",
+      "bytes": 75912
+    },
+    "fantasy\\projections\\results\\te_walkforward_predictions.csv": {
+      "sha256": "ab663974a8888334ee7fd7cf69c893aa5b60cd08e30df31642677e8dee2c8160",
+      "bytes": 39995
+    },
+    "fantasy\\projections\\results\\qb_walkforward_predictions.csv": {
+      "sha256": "b2545b0c55ab3dfbd0ff378b60d60a4ab0e6e16eee283ef30a7e690b2fb33acc",
+      "bytes": 26699
+    },
+    "fantasy\\seasonal_projections\\season_dataset_2014_2025.csv": {
+      "sha256": "dfdf38d9372c830b9fdfffe914024000409e08f01f21536f81876c199e0e2319",
+      "bytes": 2758268
+    }
+  },
+  "definitions": {
+    "model_gap": "adp_rank - model_rank",
+    "sleeper_gap": "adp_rank - sleeper_rank",
+    "actual_gap": "adp_rank - actual_rank",
+    "consensus_score": "sign(model_gap) * min(|model_gap|, |sleeper_gap|)",
+    "eligibility": "sign(model_gap)==sign(sleeper_gap) AND |model_gap|>t AND |sleeper_gap|>t",
+    "thresholds": [
+      0.0,
+      5.0,
+      7.5,
+      10.0
+    ],
+    "threshold_note": "strict >; ranks are integers, so >7.5 means at least 8 spots",
+    "hit": "sign(actual_gap)==sign(consensus_score) and actual_gap != 0; an actual tie counts as a miss",
+    "universe_A": "board analogue \u2014 rank over the ADP-bearing model population; Sleeper rank NaN where Sleeper is missing",
+    "universe_B": "common universe \u2014 restrict to complete rows first, then rank all four",
+    "population_all_adp": "every walk-forward row with an ADP, a prediction and an actual",
+    "population_drafted_top180": "adp_overall_rank <= 180 (repo phase0 draftable-universe convention)",
+    "outcome": "half-PPR observed season total; no injury or games-played filter"
+  },
+  "exclusions": {
+    "qb_rookie_rows_dropped": 50,
+    "reason": "the QB rookie arm was held from the shipped surface",
+    "season_2020": "excluded \u2014 the stored Sleeper artifact is provenance-contaminated (near-actual)"
+  },
+  "diagnostics": {
+    "walkforward_rows": {
+      "RB": 802,
+      "WR": 1242,
+      "TE": 677,
+      "QB": 430
+    },
+    "join": {
+      "wf_rows": 3151,
+      "joined": 3151,
+      "unjoined": 0,
+      "position_mismatch": 0,
+      "sleeper_in_wf_not_in_dataset": 0,
+      "sleeper_in_dataset_not_in_wf": 19,
+      "sleeper_value_max_abs_diff": 0.0
+    },
+    "qb_rookie_rows_dropped": 50,
+    "eligible_rows_all_adp": 1883,
+    "adp_pos_rank_check": {
+      "stored_equals_recon_within_model_population": 917,
+      "of": 1883,
+      "stored_equals_recon_within_full_dataset_adp_universe": 981,
+      "full_universe_rows": 1915,
+      "explanation": "adp_pos_rank is joined verbatim from the external ADP source CSV in build_season_dataset.py and is ranked over THAT source's universe, which is a superset of both the season dataset and the model's walk-forward population. It is therefore not reconstructible here and is NOT used; every rank in this study is rebuilt inside the stated population."
+    }
+  },
+  "row_counts": {
+    "row_level_rows": 5315,
+    "player_season_results_rows": 5315,
+    "threshold_summary_rows": 1346,
+    "comparison_rows": 48
+  },
+  "logistic": {
+    "all_adp": {
+      "names": [
+        "intercept",
+        "agree",
+        "abs_model_gap",
+        "abs_sleeper_gap",
+        "pos[RB]",
+        "pos[TE]",
+        "pos[WR]",
+        "season[2025]"
+      ],
+      "coef": [
+        -0.4875455591570776,
+        1.4323331086882967,
+        0.025073218018804726,
+        0.006575960437489948,
+        -0.2734800147449799,
+        -0.20305442367520657,
+        -0.5009772723800106,
+        0.11846037388501264
+      ],
+      "se": [
+        0.27421729861702726,
+        0.17082100956107052,
+        0.006891561356045931,
+        0.007025206762734536,
+        0.2865107799418097,
+        0.3076670968756947,
+        0.28461485507557305,
+        0.16567808752759972
+      ],
+      "z": [
+        -1.7779533297714571,
+        8.384993815273178,
+        3.6382492621658407,
+        0.9360522272984717,
+        -0.9545191102426361,
+        -0.6599809525854033,
+        -1.7601936913903786,
+        0.7150032671959637
+      ],
+      "p": [
+        0.07541152027184661,
+        0.0,
+        0.00027449769176612904,
+        0.3492462980613369,
+        0.33982094065337676,
+        0.5092660526713018,
+        0.07837497126962867,
+        0.4746070244316114
+      ],
+      "n": 783,
+      "pseudo_r2": 0.1343378531845706,
+      "iterations": 6,
+      "unstable_or_separated": false,
+      "note": "outcome = the MODEL's directional call is correct; 'agree' = Sleeper points the same way. Descriptive only."
+    },
+    "drafted_top180": {
+      "names": [
+        "intercept",
+        "agree",
+        "abs_model_gap",
+        "abs_sleeper_gap",
+        "pos[RB]",
+        "pos[TE]",
+        "pos[WR]",
+        "season[2025]"
+      ],
+      "coef": [
+        -0.2662432613218781,
+        1.1281503323299533,
+        0.040201021301961314,
+        -0.01403228552805015,
+        -0.14290070290773393,
+        -0.4935728671755527,
+        -0.5861324912142815,
+        0.02121800116424274
+      ],
+      "se": [
+        0.4768003238178629,
+        0.25250264510216985,
+        0.019642137297508657,
+        0.02652773858082551,
+        0.4703921136957303,
+        0.5358982706559594,
+        0.47029739614815863,
+        0.2597903321189213
+      ],
+      "z": [
+        -0.5583957225322327,
+        4.4678753043298665,
+        2.046672451834469,
+        -0.5289665187741563,
+        -0.3037906009626858,
+        -0.9210197050484995,
+        -1.2463017997012917,
+        0.08167355956314039
+      ],
+      "p": [
+        0.5765741930648665,
+        7.900033126118089e-06,
+        0.040690255834946676,
+        0.5968286761043218,
+        0.7612874278855537,
+        0.3570401392721734,
+        0.21265361740765432,
+        0.9349063045093626
+      ],
+      "n": 289,
+      "pseudo_r2": 0.07361623423569208,
+      "iterations": 5,
+      "unstable_or_separated": false,
+      "note": "outcome = the MODEL's directional call is correct; 'agree' = Sleeper points the same way. Descriptive only."
+    }
+  },
+  "underdog_secondary": {
+    "matched_rows": 1461,
+    "match_rate_all": 0.7758895379713223,
+    "match_rate_drafted_top180": 0.9954853273137697,
+    "matched_rows_drafted_top180": 882,
+    "drafted_top180_rows": 886,
+    "final_window": {
+      "2021": "W10",
+      "2022": "W10",
+      "2023": "W10",
+      "2024": "W9",
+      "2025": "W10"
+    },
+    "status": "reconstructed"
+  }
+}

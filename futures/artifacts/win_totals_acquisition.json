@@ -1,0 +1,1384 @@
+{
+  "notebook": "futures/01_acquire_win_totals.ipynb",
+  "retrieved_at_utc": "2026-08-03T02:53:46.225760+00:00",
+  "market_source": "Covers Sports Odds History",
+  "source_id": "covers_sportsoddshistory_nfl_win",
+  "source_urls": {
+    "2012": "https://www.covers.com/sportsoddshistory/nfl-win/?sa=nfl&t=win&y=2012",
+    "2013": "https://www.covers.com/sportsoddshistory/nfl-win/?sa=nfl&t=win&y=2013",
+    "2014": "https://www.covers.com/sportsoddshistory/nfl-win/?sa=nfl&t=win&y=2014",
+    "2015": "https://www.covers.com/sportsoddshistory/nfl-win/?sa=nfl&t=win&y=2015",
+    "2016": "https://www.covers.com/sportsoddshistory/nfl-win/?sa=nfl&t=win&y=2016",
+    "2017": "https://www.covers.com/sportsoddshistory/nfl-win/?sa=nfl&t=win&y=2017",
+    "2018": "https://www.covers.com/sportsoddshistory/nfl-win/?sa=nfl&t=win&y=2018",
+    "2019": "https://www.covers.com/sportsoddshistory/nfl-win/?sa=nfl&t=win&y=2019",
+    "2020": "https://www.covers.com/sportsoddshistory/nfl-win/?sa=nfl&t=win&y=2020",
+    "2021": "https://www.covers.com/sportsoddshistory/nfl-win/?sa=nfl&t=win&y=2021",
+    "2022": "https://www.covers.com/sportsoddshistory/nfl-win/?sa=nfl&t=win&y=2022",
+    "2023": "https://www.covers.com/sportsoddshistory/nfl-win/?sa=nfl&t=win&y=2023",
+    "2024": "https://www.covers.com/sportsoddshistory/nfl-win/?sa=nfl&t=win&y=2024",
+    "2025": "https://www.covers.com/sportsoddshistory/nfl-win/?sa=nfl&t=win&y=2025"
+  },
+  "robots": {
+    "url": "https://www.covers.com/robots.txt",
+    "cached": "futures/data/raw/covers/robots.txt",
+    "allows_target_path": true,
+    "target_path": "/sportsoddshistory/nfl-win/",
+    "matching_disallow_rules": [],
+    "wildcard_rule_count": 42
+  },
+  "seasons": {
+    "requested": [
+      2012,
+      2013,
+      2014,
+      2015,
+      2016,
+      2017,
+      2018,
+      2019,
+      2020,
+      2021,
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "parsed": [
+      2012,
+      2013,
+      2014,
+      2015,
+      2016,
+      2017,
+      2018,
+      2019,
+      2020,
+      2021,
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "missing": [],
+    "written": [
+      2014,
+      2015,
+      2016,
+      2017,
+      2018,
+      2019,
+      2020,
+      2021,
+      2022,
+      2024,
+      2025
+    ],
+    "rejected_whole_season": [
+      2012,
+      2013,
+      2023
+    ]
+  },
+  "point_in_time": {
+    "2012": {
+      "as_of": null,
+      "status": "no_date_at_source",
+      "week1": "2012-09-05",
+      "note": null
+    },
+    "2013": {
+      "as_of": null,
+      "status": "no_date_at_source",
+      "week1": "2013-09-05",
+      "note": null
+    },
+    "2014": {
+      "as_of": "2014-09-01",
+      "status": "strictly_before_week1",
+      "week1": "2014-09-04",
+      "days_before_week1": 3
+    },
+    "2015": {
+      "as_of": "2015-09-07",
+      "status": "strictly_before_week1",
+      "week1": "2015-09-10",
+      "days_before_week1": 3
+    },
+    "2016": {
+      "as_of": "2016-09-05",
+      "status": "strictly_before_week1",
+      "week1": "2016-09-08",
+      "days_before_week1": 3
+    },
+    "2017": {
+      "as_of": "2017-09-04",
+      "status": "strictly_before_week1",
+      "week1": "2017-09-07",
+      "days_before_week1": 3
+    },
+    "2018": {
+      "as_of": "2018-09-03",
+      "status": "strictly_before_week1",
+      "week1": "2018-09-06",
+      "days_before_week1": 3
+    },
+    "2019": {
+      "as_of": "2019-09-05",
+      "status": "same_day_as_week1_kickoff",
+      "week1": "2019-09-05",
+      "days_before_week1": 0
+    },
+    "2020": {
+      "as_of": "2020-09-10",
+      "status": "same_day_as_week1_kickoff",
+      "week1": "2020-09-10",
+      "days_before_week1": 0
+    },
+    "2021": {
+      "as_of": "2021-09-09",
+      "status": "same_day_as_week1_kickoff",
+      "week1": "2021-09-09",
+      "days_before_week1": 0
+    },
+    "2022": {
+      "as_of": "2022-09-08",
+      "status": "same_day_as_week1_kickoff",
+      "week1": "2022-09-08",
+      "days_before_week1": 0
+    },
+    "2023": {
+      "as_of": null,
+      "status": "no_date_at_source",
+      "week1": "2023-09-07",
+      "note": "Closing odds prior to each teams' first game"
+    },
+    "2024": {
+      "as_of": "2024-09-05",
+      "status": "same_day_as_week1_kickoff",
+      "week1": "2024-09-05",
+      "days_before_week1": 0
+    },
+    "2025": {
+      "as_of": "2025-09-04",
+      "status": "same_day_as_week1_kickoff",
+      "week1": "2025-09-04",
+      "days_before_week1": 0
+    }
+  },
+  "row_counts_by_season": {
+    "2014": 32,
+    "2015": 32,
+    "2016": 32,
+    "2017": 32,
+    "2018": 32,
+    "2019": 32,
+    "2020": 32,
+    "2021": 32,
+    "2022": 32,
+    "2024": 32,
+    "2025": 32
+  },
+  "rows": {
+    "parsed": 448,
+    "written": 352,
+    "rejected": 96
+  },
+  "rejections": [
+    {
+      "season": 2012,
+      "team": "ARI",
+      "raw_team_name": "Arizona Cardinals",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2012,
+      "team": "ATL",
+      "raw_team_name": "Atlanta Falcons",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2012,
+      "team": "BAL",
+      "raw_team_name": "Baltimore Ravens",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2012,
+      "team": "BUF",
+      "raw_team_name": "Buffalo Bills",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2012,
+      "team": "CAR",
+      "raw_team_name": "Carolina Panthers",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2012,
+      "team": "CHI",
+      "raw_team_name": "Chicago Bears",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2012,
+      "team": "CIN",
+      "raw_team_name": "Cincinnati Bengals",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2012,
+      "team": "CLE",
+      "raw_team_name": "Cleveland Browns",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2012,
+      "team": "DAL",
+      "raw_team_name": "Dallas Cowboys",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2012,
+      "team": "DEN",
+      "raw_team_name": "Denver Broncos",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2012,
+      "team": "DET",
+      "raw_team_name": "Detroit Lions",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2012,
+      "team": "GB",
+      "raw_team_name": "Green Bay Packers",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2012,
+      "team": "HOU",
+      "raw_team_name": "Houston Texans",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2012,
+      "team": "IND",
+      "raw_team_name": "Indianapolis Colts",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2012,
+      "team": "JAX",
+      "raw_team_name": "Jacksonville Jaguars",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2012,
+      "team": "KC",
+      "raw_team_name": "Kansas City Chiefs",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2012,
+      "team": "MIA",
+      "raw_team_name": "Miami Dolphins",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2012,
+      "team": "MIN",
+      "raw_team_name": "Minnesota Vikings",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2012,
+      "team": "NE",
+      "raw_team_name": "New England Patriots",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2012,
+      "team": "NO",
+      "raw_team_name": "New Orleans Saints",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2012,
+      "team": "NYG",
+      "raw_team_name": "New York Giants",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2012,
+      "team": "NYJ",
+      "raw_team_name": "New York Jets",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2012,
+      "team": "LV",
+      "raw_team_name": "Oakland Raiders",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2012,
+      "team": "PHI",
+      "raw_team_name": "Philadelphia Eagles",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2012,
+      "team": "PIT",
+      "raw_team_name": "Pittsburgh Steelers",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2012,
+      "team": "LAC",
+      "raw_team_name": "San Diego Chargers",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2012,
+      "team": "SF",
+      "raw_team_name": "San Francisco 49ers",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2012,
+      "team": "SEA",
+      "raw_team_name": "Seattle Seahawks",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2012,
+      "team": "LA",
+      "raw_team_name": "St Louis Rams",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2012,
+      "team": "TB",
+      "raw_team_name": "Tampa Bay Buccaneers",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2012,
+      "team": "TEN",
+      "raw_team_name": "Tennessee Titans",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2012,
+      "team": "WAS",
+      "raw_team_name": "Washington Redskins",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2013,
+      "team": "ARI",
+      "raw_team_name": "Arizona Cardinals",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2013,
+      "team": "ATL",
+      "raw_team_name": "Atlanta Falcons",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2013,
+      "team": "BAL",
+      "raw_team_name": "Baltimore Ravens",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2013,
+      "team": "BUF",
+      "raw_team_name": "Buffalo Bills",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2013,
+      "team": "CAR",
+      "raw_team_name": "Carolina Panthers",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2013,
+      "team": "CHI",
+      "raw_team_name": "Chicago Bears",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2013,
+      "team": "CIN",
+      "raw_team_name": "Cincinnati Bengals",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2013,
+      "team": "CLE",
+      "raw_team_name": "Cleveland Browns",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2013,
+      "team": "DAL",
+      "raw_team_name": "Dallas Cowboys",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2013,
+      "team": "DEN",
+      "raw_team_name": "Denver Broncos",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2013,
+      "team": "DET",
+      "raw_team_name": "Detroit Lions",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2013,
+      "team": "GB",
+      "raw_team_name": "Green Bay Packers",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2013,
+      "team": "HOU",
+      "raw_team_name": "Houston Texans",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2013,
+      "team": "IND",
+      "raw_team_name": "Indianapolis Colts",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2013,
+      "team": "JAX",
+      "raw_team_name": "Jacksonville Jaguars",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2013,
+      "team": "KC",
+      "raw_team_name": "Kansas City Chiefs",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2013,
+      "team": "MIA",
+      "raw_team_name": "Miami Dolphins",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2013,
+      "team": "MIN",
+      "raw_team_name": "Minnesota Vikings",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2013,
+      "team": "NE",
+      "raw_team_name": "New England Patriots",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2013,
+      "team": "NO",
+      "raw_team_name": "New Orleans Saints",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2013,
+      "team": "NYG",
+      "raw_team_name": "New York Giants",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2013,
+      "team": "NYJ",
+      "raw_team_name": "New York Jets",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2013,
+      "team": "LV",
+      "raw_team_name": "Oakland Raiders",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2013,
+      "team": "PHI",
+      "raw_team_name": "Philadelphia Eagles",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2013,
+      "team": "PIT",
+      "raw_team_name": "Pittsburgh Steelers",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2013,
+      "team": "LAC",
+      "raw_team_name": "San Diego Chargers",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2013,
+      "team": "SF",
+      "raw_team_name": "San Francisco 49ers",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2013,
+      "team": "SEA",
+      "raw_team_name": "Seattle Seahawks",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2013,
+      "team": "LA",
+      "raw_team_name": "St Louis Rams",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2013,
+      "team": "TB",
+      "raw_team_name": "Tampa Bay Buccaneers",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2013,
+      "team": "TEN",
+      "raw_team_name": "Tennessee Titans",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2013,
+      "team": "WAS",
+      "raw_team_name": "Washington Redskins",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": null
+      }
+    },
+    {
+      "season": 2023,
+      "team": "ARI",
+      "raw_team_name": "Arizona Cardinals",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": "Closing odds prior to each teams' first game"
+      }
+    },
+    {
+      "season": 2023,
+      "team": "ATL",
+      "raw_team_name": "Atlanta Falcons",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": "Closing odds prior to each teams' first game"
+      }
+    },
+    {
+      "season": 2023,
+      "team": "BAL",
+      "raw_team_name": "Baltimore Ravens",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": "Closing odds prior to each teams' first game"
+      }
+    },
+    {
+      "season": 2023,
+      "team": "BUF",
+      "raw_team_name": "Buffalo Bills",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": "Closing odds prior to each teams' first game"
+      }
+    },
+    {
+      "season": 2023,
+      "team": "CAR",
+      "raw_team_name": "Carolina Panthers",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": "Closing odds prior to each teams' first game"
+      }
+    },
+    {
+      "season": 2023,
+      "team": "CHI",
+      "raw_team_name": "Chicago Bears",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": "Closing odds prior to each teams' first game"
+      }
+    },
+    {
+      "season": 2023,
+      "team": "CIN",
+      "raw_team_name": "Cincinnati Bengals",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": "Closing odds prior to each teams' first game"
+      }
+    },
+    {
+      "season": 2023,
+      "team": "CLE",
+      "raw_team_name": "Cleveland Browns",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": "Closing odds prior to each teams' first game"
+      }
+    },
+    {
+      "season": 2023,
+      "team": "DAL",
+      "raw_team_name": "Dallas Cowboys",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": "Closing odds prior to each teams' first game"
+      }
+    },
+    {
+      "season": 2023,
+      "team": "DEN",
+      "raw_team_name": "Denver Broncos",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": "Closing odds prior to each teams' first game"
+      }
+    },
+    {
+      "season": 2023,
+      "team": "DET",
+      "raw_team_name": "Detroit Lions",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": "Closing odds prior to each teams' first game"
+      }
+    },
+    {
+      "season": 2023,
+      "team": "GB",
+      "raw_team_name": "Green Bay Packers",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": "Closing odds prior to each teams' first game"
+      }
+    },
+    {
+      "season": 2023,
+      "team": "HOU",
+      "raw_team_name": "Houston Texans",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": "Closing odds prior to each teams' first game"
+      }
+    },
+    {
+      "season": 2023,
+      "team": "IND",
+      "raw_team_name": "Indianapolis Colts",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": "Closing odds prior to each teams' first game"
+      }
+    },
+    {
+      "season": 2023,
+      "team": "JAX",
+      "raw_team_name": "Jacksonville Jaguars",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": "Closing odds prior to each teams' first game"
+      }
+    },
+    {
+      "season": 2023,
+      "team": "KC",
+      "raw_team_name": "Kansas City Chiefs",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": "Closing odds prior to each teams' first game"
+      }
+    },
+    {
+      "season": 2023,
+      "team": "LV",
+      "raw_team_name": "Las Vegas Raiders",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": "Closing odds prior to each teams' first game"
+      }
+    },
+    {
+      "season": 2023,
+      "team": "LAC",
+      "raw_team_name": "Los Angeles Chargers",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": "Closing odds prior to each teams' first game"
+      }
+    },
+    {
+      "season": 2023,
+      "team": "LA",
+      "raw_team_name": "Los Angeles Rams",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": "Closing odds prior to each teams' first game"
+      }
+    },
+    {
+      "season": 2023,
+      "team": "MIA",
+      "raw_team_name": "Miami Dolphins",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": "Closing odds prior to each teams' first game"
+      }
+    },
+    {
+      "season": 2023,
+      "team": "MIN",
+      "raw_team_name": "Minnesota Vikings",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": "Closing odds prior to each teams' first game"
+      }
+    },
+    {
+      "season": 2023,
+      "team": "NE",
+      "raw_team_name": "New England Patriots",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": "Closing odds prior to each teams' first game"
+      }
+    },
+    {
+      "season": 2023,
+      "team": "NO",
+      "raw_team_name": "New Orleans Saints",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": "Closing odds prior to each teams' first game"
+      }
+    },
+    {
+      "season": 2023,
+      "team": "NYG",
+      "raw_team_name": "New York Giants",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": "Closing odds prior to each teams' first game"
+      }
+    },
+    {
+      "season": 2023,
+      "team": "NYJ",
+      "raw_team_name": "New York Jets",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": "Closing odds prior to each teams' first game"
+      }
+    },
+    {
+      "season": 2023,
+      "team": "PHI",
+      "raw_team_name": "Philadelphia Eagles",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": "Closing odds prior to each teams' first game"
+      }
+    },
+    {
+      "season": 2023,
+      "team": "PIT",
+      "raw_team_name": "Pittsburgh Steelers",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": "Closing odds prior to each teams' first game"
+      }
+    },
+    {
+      "season": 2023,
+      "team": "SF",
+      "raw_team_name": "San Francisco 49ers",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": "Closing odds prior to each teams' first game"
+      }
+    },
+    {
+      "season": 2023,
+      "team": "SEA",
+      "raw_team_name": "Seattle Seahawks",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": "Closing odds prior to each teams' first game"
+      }
+    },
+    {
+      "season": 2023,
+      "team": "TB",
+      "raw_team_name": "Tampa Bay Buccaneers",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": "Closing odds prior to each teams' first game"
+      }
+    },
+    {
+      "season": 2023,
+      "team": "TEN",
+      "raw_team_name": "Tennessee Titans",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": "Closing odds prior to each teams' first game"
+      }
+    },
+    {
+      "season": 2023,
+      "team": "WAS",
+      "raw_team_name": "Washington Commanders",
+      "reason": "no_date_at_source",
+      "raw": {
+        "as_of_text": null,
+        "page_note": "Closing odds prior to each teams' first game"
+      }
+    }
+  ],
+  "team_mapping": {
+    "distinct_source_names": 37,
+    "mapped": 37,
+    "unmapped": [],
+    "distinct_canonical_teams": 32,
+    "multi_name_franchises": {
+      "LA": [
+        "Los Angeles Rams",
+        "St Louis Rams"
+      ],
+      "LAC": [
+        "Los Angeles Chargers",
+        "San Diego Chargers"
+      ],
+      "LV": [
+        "Las Vegas Raiders",
+        "Oakland Raiders"
+      ],
+      "WAS": [
+        "Washington Commanders",
+        "Washington Football Team",
+        "Washington Redskins"
+      ]
+    }
+  },
+  "sportsbook_identity": {
+    "available": false,
+    "book_values_written": [
+      null
+    ],
+    "why": "the source page names no sportsbook anywhere in the win-totals table"
+  },
+  "prices": {
+    "captured": true,
+    "over_range": [
+      -200,
+      230
+    ],
+    "under_range": [
+      -270,
+      180
+    ],
+    "integer_line_share_pct": 34.09
+  },
+  "outputs": {
+    "csv": "futures/data/win_totals.csv",
+    "csv_sha256": "dd6753f654dec864b7fbeb7e3e23b7a3fa2cfc41c86e1de48c66bb86742eecbe",
+    "rows": 352,
+    "columns": [
+      "season",
+      "team",
+      "win_total_line",
+      "price_over",
+      "price_under",
+      "book",
+      "market_source",
+      "as_of_date",
+      "source",
+      "source_url",
+      "retrieved_at",
+      "raw_team_name",
+      "point_in_time_status"
+    ]
+  },
+  "raw_cache": {
+    "dir": "futures/data/raw/covers",
+    "manifest": "futures/data/raw/covers/fetch_manifest.json",
+    "files": {
+      "2012": {
+        "sha256": "7f56327bb81bc78bed5fd51d76cc34193cbdcaff83a3f3e322e3c81f1e2aa756",
+        "bytes": 597571,
+        "http_status": 200,
+        "retrieved_at": "2026-08-03T02:32:21.392533+00:00"
+      },
+      "2013": {
+        "sha256": "61041061209f5f3545f820b2fa40e59ac355fceb3cc7c6c55861e2b11451b97d",
+        "bytes": 597585,
+        "http_status": 200,
+        "retrieved_at": "2026-08-03T02:32:25.115882+00:00"
+      },
+      "2014": {
+        "sha256": "f99b378f11dd976172cc9a7f49d2e0b76ac0df3ecd946c14596fd0adbb976523",
+        "bytes": 597599,
+        "http_status": 200,
+        "retrieved_at": "2026-08-03T02:32:28.828585+00:00"
+      },
+      "2015": {
+        "sha256": "cdc5d6d076700d8252471224c729b9f136234684457aeaeff85cfb28d89d214f",
+        "bytes": 597616,
+        "http_status": 200,
+        "retrieved_at": "2026-08-03T02:32:32.624209+00:00"
+      },
+      "2016": {
+        "sha256": "d88c88b8721d49686981f517ae26ff045b602d0e790ec307b90fe276187fedaf",
+        "bytes": 597616,
+        "http_status": 200,
+        "retrieved_at": "2026-08-03T02:32:36.497679+00:00"
+      },
+      "2017": {
+        "sha256": "a96cc5d85ea3a6b2f43571d86f603f3362abd20c22974643b01d1ea57439a88c",
+        "bytes": 597615,
+        "http_status": 200,
+        "retrieved_at": "2026-08-03T02:32:40.219515+00:00"
+      },
+      "2018": {
+        "sha256": "b38414a1b454fdbe769750a9c563f5a55e3bb1934d2a191e71a3ad6bc4b3ebb8",
+        "bytes": 597615,
+        "http_status": 200,
+        "retrieved_at": "2026-08-03T02:32:44.229906+00:00"
+      },
+      "2019": {
+        "sha256": "4d2c4835f5ee7e832657314f6834c7c705a74d135cf7a6953cf98136834f7dba",
+        "bytes": 597602,
+        "http_status": 200,
+        "retrieved_at": "2026-08-03T02:32:48.004207+00:00"
+      },
+      "2020": {
+        "sha256": "26c456676e5e3bed5a6d00e38e453b3f8df486f6cd92812dc419bb12c81de019",
+        "bytes": 597621,
+        "http_status": 200,
+        "retrieved_at": "2026-08-03T02:32:51.714255+00:00"
+      },
+      "2021": {
+        "sha256": "31e68a104b3e30dba341dcdbc195f7b03bd0bfd5d24bd66d9c6220cd175cdd65",
+        "bytes": 597808,
+        "http_status": 200,
+        "retrieved_at": "2026-08-03T02:32:55.415823+00:00"
+      },
+      "2022": {
+        "sha256": "7218225c7ba2138ec87c3c2c23ce9f08e97c0d7e1e0781179e479ecc31979830",
+        "bytes": 597865,
+        "http_status": 200,
+        "retrieved_at": "2026-08-03T02:32:59.128062+00:00"
+      },
+      "2023": {
+        "sha256": "ecd99373a3881f7d8dff874e561dc315b38aad96f91cfa6ae7001123d5159fd3",
+        "bytes": 597643,
+        "http_status": 200,
+        "retrieved_at": "2026-08-03T02:33:03.171390+00:00"
+      },
+      "2024": {
+        "sha256": "804cc729f4ae6f98037339dfb539e301b10634112a6c14d0198faad9ed2e0a19",
+        "bytes": 597627,
+        "http_status": 200,
+        "retrieved_at": "2026-08-03T02:33:06.861785+00:00"
+      },
+      "2025": {
+        "sha256": "d8155b8c301d712feb7a05583df05954fd7d030f80bdd2b4c12976e9379dfd11",
+        "bytes": 597821,
+        "http_status": 200,
+        "retrieved_at": "2026-08-03T02:33:10.587698+00:00"
+      }
+    }
+  },
+  "leakage_controls": {
+    "realized_outcome_columns_discarded": [
+      "Actual Wins",
+      "Result"
+    ],
+    "lines_reconstructed_from_spreads": false,
+    "values_inferred_from_realized_wins": false,
+    "current_season_used_for_history": false
+  },
+  "audit_gate_status": {
+    "state": "read_from_data_audit_json",
+    "verdict": "GO-TIER-B",
+    "gates": [
+      {
+        "name": "G1 >= 8 seasons with usable preseason lines",
+        "passed": true,
+        "observed": 11
+      },
+      {
+        "name": "G2 >= 28/32 teams covered in every counted season",
+        "passed": true,
+        "observed": 32
+      },
+      {
+        "name": "G3-B every counted row is point-in-time with a named market_source (Amendment 1; Tier B only, book may be null)",
+        "passed": true,
+        "observed": "352 valid of 352 rows"
+      },
+      {
+        "name": "G3-C every counted row is strictly pre-kickoff with a NAMED BOOK (frozen \u00a75; required for \u00a77 gate C)",
+        "passed": false,
+        "observed": "0 valid of 352 rows"
+      },
+      {
+        "name": "G4 outcome-table integrity (32 teams/season, wins conserved, GP matches schedule)",
+        "passed": true,
+        "observed": "24 complete seasons verified"
+      }
+    ],
+    "audited_file_sha256": "dd6753f654dec864b7fbeb7e3e23b7a3fa2cfc41c86e1de48c66bb86742eecbe",
+    "rows_loaded": 352,
+    "rows_valid": 352,
+    "usable_seasons": [
+      2014,
+      2015,
+      2016,
+      2017,
+      2018,
+      2019,
+      2020,
+      2021,
+      2022,
+      2024,
+      2025
+    ]
+  },
+  "remaining_blockers": [
+    {
+      "gate": "G3",
+      "blocker": "no sportsbook identity at source",
+      "detail": "Covers Sports Odds History publishes the number and both prices but never names the book that posted them. PREREGISTRATION \u00a72.2 requires a named book, so every row fails G3. `book` is left null rather than filled with 'Covers', which is an archive, not a sportsbook.",
+      "resolution": "RESOLVED FOR TIER B ONLY by PREREGISTRATION \u00a710 Amendment 1 (accepted 2026-08-03): G3 split into G3-B (archive path) and G3-C (named book, still required for \u00a77 gate C and still failing). A book-attributed source remains the only route to gate C."
+    },
+    {
+      "gate": "G1",
+      "blocker": "too few seasons with a demonstrably pre-Week-1 as_of date",
+      "detail": "only 5 seasons ([2014, 2015, 2016, 2017, 2018]) carry an As-of date strictly before Week 1; 6 more are dated ON the Week 1 date ([2019, 2020, 2021, 2022, 2024, 2025]) and 3 carry no date ([2012, 2013, 2023]). G1 needs 8.",
+      "resolution": "RESOLVED FOR TIER B ONLY by Amendment 1 kickoff-day clause A1.3, which admits same-day rows on the source own closing statement and records that exact closing timestamps are UNAVAILABLE; strictly-dated seasons are carried as the mandatory A1.4 sensitivity. A timestamped source would resolve it fully."
+    }
+  ],
+  "environment": {
+    "notebook": "futures/01_acquire_win_totals.ipynb",
+    "run_at_utc": "2026-08-03T02:53:46.225760+00:00",
+    "python": "3.11.9",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "pandas": "2.3.3",
+    "refresh_raw": false,
+    "network_blocked": true,
+    "user_agent": "JoSchoAnalytics-research/1.0 (personal NFL research; contact joseph.schoenbaum@gmail.com)",
+    "repo_root": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\JoSchoAnalytics"
+  }
+}

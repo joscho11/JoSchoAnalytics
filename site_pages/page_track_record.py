@@ -162,7 +162,8 @@ def render():
         ))
         fig_bar.add_hline(
             y=52.4, line_dash="dash", line_color="#888",
-            annotation_text="Break even (52.4%)", annotation_position="right"
+            annotation_text="Break even (52.4%)", annotation_position="right",
+            annotation_font=dict(size=11, color="#9aa4b2")
         )
         fig_bar.update_layout(
             plot_bgcolor='rgba(0,0,0,0)',
@@ -172,7 +173,7 @@ def render():
             xaxis=dict(gridcolor='#2d3748'),
             showlegend=False,
             height=350,
-            margin=dict(t=20, b=20)
+            margin=dict(t=20, b=20, r=112)
         )
         st.plotly_chart(fig_bar, width="stretch")
 
@@ -192,7 +193,8 @@ def render():
         ))
         fig_line.add_hline(
             y=52.4, line_dash="dash", line_color="#888",
-            annotation_text="Break even (52.4%)", annotation_position="right"
+            annotation_text="Break even (52.4%)", annotation_position="right",
+            annotation_font=dict(size=11, color="#9aa4b2")
         )
         fig_line.update_layout(
             plot_bgcolor='rgba(0,0,0,0)',
@@ -202,7 +204,7 @@ def render():
             xaxis=dict(gridcolor='#2d3748'),
             showlegend=False,
             height=350,
-            margin=dict(t=20, b=20)
+            margin=dict(t=20, b=20, r=112)
         )
         st.plotly_chart(fig_line, width="stretch")
 
@@ -228,7 +230,8 @@ def render():
         ))
         fig_edge.add_hline(
             y=52.4, line_dash="dash", line_color="#888",
-            annotation_text="Break even (52.4%)", annotation_position="right"
+            annotation_text="Break even (52.4%)", annotation_position="right",
+            annotation_font=dict(size=11, color="#9aa4b2")
         )
         fig_edge.update_layout(
             plot_bgcolor='rgba(0,0,0,0)',
@@ -238,7 +241,7 @@ def render():
             xaxis=dict(gridcolor='#2d3748'),
             showlegend=False,
             height=350,
-            margin=dict(t=20, b=20)
+            margin=dict(t=20, b=20, r=112)
         )
         st.plotly_chart(fig_edge, width="stretch")
 
@@ -283,7 +286,8 @@ def render():
             ))
             fig_ct.add_hline(
                 y=52.4, line_dash="dash", line_color="#888",
-                annotation_text="Break even (52.4%)", annotation_position="right"
+                annotation_text="Break even (52.4%)", annotation_position="right",
+                annotation_font=dict(size=11, color="#9aa4b2")
             )
             fig_ct.update_layout(
                 plot_bgcolor='rgba(0,0,0,0)',
@@ -293,7 +297,7 @@ def render():
                 xaxis=dict(gridcolor='#2d3748'),
                 showlegend=False,
                 height=350,
-                margin=dict(t=20, b=20)
+                margin=dict(t=20, b=20, r=112)
             )
             st.plotly_chart(fig_ct, width="stretch")
 

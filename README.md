@@ -1,4 +1,4 @@
-# BettingEdge: NFL Prediction System
+# JoSchoAnalytics: NFL Prediction System
 
 Live dashboard: [joschoanalytics.streamlit.app](https://joschoanalytics.streamlit.app) - May need to be woken up
 

@@ -17,7 +17,7 @@ import numpy as np
 import pandas as pd
 import nflreadpy as nfl
 
-sys.path.insert(0, r"c:/Users/josep/Desktop/random_stuff/cowork_OS/BettingEdgeContinued/fantasy/seasonal_projections")
+sys.path.insert(0, r"c:/Users/josep/Desktop/random_stuff/cowork_OS/JoSchoAnalytics/fantasy/seasonal_projections")
 from _utils import norm_name  # repo-consistent normalization
 
 if hasattr(sys.stdout, "reconfigure"):
@@ -25,7 +25,7 @@ if hasattr(sys.stdout, "reconfigure"):
 pd.set_option("display.width", 200)
 
 HERE = Path(__file__).resolve().parent
-REPO = Path(r"c:/Users/josep/Desktop/random_stuff/cowork_OS/BettingEdgeContinued/fantasy/seasonal_projections")
+REPO = Path(r"c:/Users/josep/Desktop/random_stuff/cowork_OS/JoSchoAnalytics/fantasy/seasonal_projections")
 PFF = REPO / "pff"
 SKILL = ["QB", "RB", "WR", "TE"]
 PFF_SEASONS = list(range(2014, 2026))

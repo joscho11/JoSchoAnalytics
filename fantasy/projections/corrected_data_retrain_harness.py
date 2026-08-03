@@ -16,7 +16,7 @@ MODES
   --fire   The one shot.
 
 Writes nothing into the repo. Scratch goes to $RETRAIN_SCRATCH.
-Interpreter: BettingEdgeContinued/.venv-test/Scripts/python.exe
+Interpreter: JoSchoAnalytics/.venv-test/Scripts/python.exe
 """
 from __future__ import annotations
 

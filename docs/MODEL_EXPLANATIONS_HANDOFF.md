@@ -20,7 +20,7 @@ model updates are complete. Read this entire handoff before acting.
 == YOUR ROLE ==
 
 You are the coding agent working directly in:
-C:\Users\josep\Desktop\random_stuff\cowork_OS\BettingEdgeContinued
+C:\Users\josep\Desktop\random_stuff\cowork_OS\JoSchoAnalytics
 
 Inspect the repo before changing anything. If the repo disagrees with this
 handoff, the repo wins; report the discrepancy before acting. Preserve unrelated
@@ -28,7 +28,7 @@ dirty-worktree changes. Joseph performs all git operations: never commit, never
 suggest a commit message, and do not describe anything as commit-ready.
 
 Use the applicable workspace skills before work:
-- bettingedge-architecture-and-operations
+- joschoanalytics-architecture-and-operations
 - cowork-change-control
 - cowork-validation-and-qa
 - cowork-docs-and-writing
@@ -166,7 +166,7 @@ artifacts that genuinely changed.
    Use the project’s working isolated interpreter if present:
    .\.venv-test\Scripts\python.exe
 
-   Run explicitly from the BettingEdgeContinued root:
+   Run explicitly from the JoSchoAnalytics root:
    & .\.venv-test\Scripts\python.exe -m pytest `
      tests/test_model_explanations.py `
      tests/test_help_page.py `

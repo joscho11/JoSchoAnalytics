@@ -92,7 +92,14 @@ def render_film_room() -> None:
                 # embeds line up. EVERYTHING above the embed lives inside this fixed region
                 # (title, one short caption, and — for archived cards — the pop-out trigger),
                 # so an archived card is exactly as tall as its neighbours.
-                with st.container(height=_HEADER_HEIGHT, border=False):
+                #
+                # The key is inert here (Streamlit only turns it into an `st-key-…` CSS class)
+                # and exists so mobile.py can release THIS container's fixed height on a phone
+                # — where the cards stack one per row and the height aligns nothing — without
+                # a blanket rule that would release every explicitly sized container on the
+                # site. Keys must be unique per element, hence the slug/id suffix.
+                _card_key = f"jsa-filmroom-card-{item.get('slug') or item['video_id']}"
+                with st.container(height=_HEADER_HEIGHT, border=False, key=_card_key):
                     st.markdown(f"**{item['title']}**")
                     caption = item.get("subtitle") or item.get("short_caption")
                     if caption:

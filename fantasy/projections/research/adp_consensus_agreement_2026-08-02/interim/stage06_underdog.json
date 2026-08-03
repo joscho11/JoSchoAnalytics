@@ -1,0 +1,19 @@
+{
+  "status": "reconstructed",
+  "final_window": {
+    "2021": "W10",
+    "2022": "W10",
+    "2023": "W10",
+    "2024": "W9",
+    "2025": "W10"
+  },
+  "match_rate_all_adp": 0.7758895379713223,
+  "match_rate_drafted_top180": 0.9954853273137697,
+  "matched_rows": 1461,
+  "matched_rows_drafted_top180": 882,
+  "drafted_top180_rows": 886,
+  "manifest_files_verified": 16,
+  "network_used": false,
+  "comparisons": 24,
+  "all_attenuate": true
+}

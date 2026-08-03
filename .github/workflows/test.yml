@@ -69,6 +69,11 @@ jobs:
 
       # Explicit file list (not auto-discovery) so the network/training research
       # scripts named *_test.py in seasonal_projections/ are never collected here.
+      #
+      # test_responsive_layout.py is listed deliberately even though CI installs no
+      # browser: its nine viewport cases SKIP without playwright/Chromium, while its
+      # browser-free logic test — which pins the header hit-test assertions — runs.
+      # Nothing here installs playwright; adding it would turn CI into a browser job.
       - name: Run hermetic Python test suites
         run: >-
           pytest -v
@@ -84,6 +89,7 @@ jobs:
           tests/test_model_explanations.py
           tests/test_app_talent_columns.py
           tests/test_runtime_telemetry.py
+          tests/test_responsive_layout.py
           fantasy/talent/tests/test_talent_build.py
           fantasy/talent/tests/test_phase2.py
 
@@ -126,6 +132,10 @@ jobs:
       # These are the app/runtime suites only. Model-training and seasonal
       # pipeline suites run in the jobs above with requirements-test.txt; keeping
       # them out of this step lets requirements.txt remain the true cloud closure.
+      #
+      # test_responsive_layout.py imports only the stdlib at module level (playwright is
+      # an optional import), so it collects cleanly against the bare cloud closure: the
+      # nine viewport cases skip, the logic test runs. It does NOT add a dependency.
       - name: Run app suites under the exact deploy environment
         run: >-
           pytest -v
@@ -138,3 +148,4 @@ jobs:
           tests/test_help_page.py
           tests/test_model_explanations.py
           tests/test_runtime_telemetry.py
+          tests/test_responsive_layout.py

@@ -4,13 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-BettingEdge is an NFL sports betting prediction system with two independent models:
+JoSchoAnalytics is an NFL sports betting prediction system with two independent models:
 - **Spread model**: Ensemble fixed75 as primary edge-setter (0.75 XGBoost + 0.25 Ridge), with XGBoost, Ridge, and LightGBM as three direction voters. HIGH/MEDIUM/PASS tiers.
 - **Totals model**: XGBoost + Ridge predicting whether games go over/under the Vegas total. UNDER-only strategy (books shade totals high due to recreational OVER-bias). HIGH = both models predict UNDER.
 - A Claude-powered LLM agent (via LlamaIndex) for qualitative game reasoning
 - A Streamlit **multipage site** for visualization (deployed at joschoanalytics.streamlit.app) — 9 pages behind `st.navigation`, not tabs
 - GitHub Actions for weekly automated predictions (Tue/Thu/Sun)
-- A pre-season fantasy **2026 Draft Board** page (`draft_board_2026.py`) — **rebuilt 2026-07-22** into a **season-projection comparison table** over all **245** players with a 2026 Sleeper ADP: the market's draft price + positional rank beside Sleeper's and a from-scratch model's season projections, with the rank gap for each, plus two descriptive talent columns (**NFL Talent Score**, **College Talent Score**) fed by the eight per-position builds in `fantasy/talent/` (SPEC R34–R41, shipped 2026-07-27). Talent scores: `fantasy/talent/`. It **retired the licensed Phase-4 band** as the tab's spine (the frozen band + `talent_index_2026.csv` stay on disk, read-only, for the closed campaign + the ADP refresh). Band research campaign: `fantasy/seasonal_projections/` (`GUIDE.md` / `ARTIFACTS.md` / `PREREGISTRATION.md` + the `bettingedge-seasonal-h5-campaign` skill). Projection models: `fantasy/projections/`.
+- A pre-season fantasy **2026 Draft Board** page (`draft_board_2026.py`) — **rebuilt 2026-07-22** into a **season-projection comparison table** over all **245** players with a 2026 Sleeper ADP: the market's draft price + positional rank beside Sleeper's and a from-scratch model's season projections, with the rank gap for each, plus two descriptive talent columns (**NFL Talent Score**, **College Talent Score**) fed by the eight per-position builds in `fantasy/talent/` (SPEC R34–R41, shipped 2026-07-27). Talent scores: `fantasy/talent/`. It **retired the licensed Phase-4 band** as the tab's spine (the frozen band + `talent_index_2026.csv` stay on disk, read-only, for the closed campaign + the ADP refresh). Band research campaign: `fantasy/seasonal_projections/` (`GUIDE.md` / `ARTIFACTS.md` / `PREREGISTRATION.md` + the `joschoanalytics-seasonal-h5-campaign` skill). Projection models: `fantasy/projections/`.
 
 ## Common Commands
 
@@ -81,7 +81,7 @@ pip install -r requirements.txt
   - (Ridge for spreads is extracted from `ensemble_prod_model.pkl["ridge_model"]` at runtime — no separate pkl needed.)
   - `totals_xgboost.pkl` — **Totals model XGBoost.** Saved as `{'model': XGBRegressor, 'feature_cols': list[49], 'target': 'total_diff', 'train_seasons': list}`.
   - `totals_ridge.pkl` — **Totals model Ridge.** Saved as `{'model': Ridge, 'scaler': StandardScaler, 'feature_cols': list[49], 'target': 'total_diff', 'train_seasons': list}`.
-- **`betting/archive/`** — Old model files and retired notebooks: `betting_model.pkl` (original XGBoost pkl), `BettingEdge_v2.ipynb`, `BettingEdgeContinued.ipynb`.
+- **`betting/archive/`** — Old model files and retired notebooks: `betting_model.pkl` (original XGBoost pkl), `JoSchoAnalytics_v2.ipynb`, `JoSchoAnalytics.ipynb`.
 - **`betting/predictions_tracker.csv`** — Master log of spread predictions and outcomes. Auto-committed by GitHub Actions. Includes `pick_line` / `closing_line` / `clv` columns (added 2026-05-28, currently empty) reserved for forward-collected Closing Line Value once the 2026 season pipeline runs.
 - **`betting/totals_tracker.csv`** — Master log of totals (over/under) predictions and outcomes. Same structure as predictions_tracker but for the totals model. Columns: `game_id`, `home_team`, `away_team`, `gameday`, `season`, `week`, `total_line`, `xgb_predicted_total`, `ridge_predicted_total`, `xgb_diff`, `ridge_diff`, `consensus_tier` (HIGH/PASS), `recommendation` (UNDER/PASS), `mode`, `logged_at`, `actual_total`, `went_over`, `model_correct`.
 - **`betting/totals_features.ipynb`** — **Single source of truth** for the 14 totals-specific features. 15 cells, markdown→code→test pattern. Public surface: `build_totals_features`, `TOTALS_FEATURE_COLS`, `totals_acc`. Loaded by consumer notebooks via json+exec with `RUN_TESTS=False`. **Key constraint:** `is_dome` re-merges the raw roof string from sched (not the ordinal-encoded int in `g`) — this is intentional and must be preserved.
@@ -369,7 +369,7 @@ the **2026 Draft Board**.
 - `PREREGISTRATION.md` — the campaign constitution and the OUTCOMES ledger (every fired test).
 - `GUIDE.md` — plain-language tour of the board and the campaign.
 - `ARTIFACTS.md` — every file in this directory tagged frozen / regenerable / retired.
-- The `bettingedge-seasonal-h5-campaign` skill — the executable runbook and the one-shot-test rules.
+- The `joschoanalytics-seasonal-h5-campaign` skill — the executable runbook and the one-shot-test rules.
 
 ### What ships today: the 2026 Draft Board
 
@@ -587,7 +587,7 @@ checked and is genuine — clipped, not inflated); the college QB clip floor of 
 The pre-registered "beat ADP" campaign in `fantasy/seasonal_projections/` is complete: H6/H11/H12
 PASS (Sleeper-vs-ADP disagreement carries aggregate, freshness-controlled information), H4/H7/H8v
 FAIL. The 2026 Draft Board shipped from the validated band. Full ledger in that directory's
-`PREREGISTRATION.md`; runbook in the `bettingedge-seasonal-h5-campaign` skill. Do not re-fire any
+`PREREGISTRATION.md`; runbook in the `joschoanalytics-seasonal-h5-campaign` skill. Do not re-fire any
 H-series test — they are one-shot and their results are frozen in `*_results.json`.
 
 ### Totals model (over/under) — SHIPPED, EXPERIMENTAL on the dashboard

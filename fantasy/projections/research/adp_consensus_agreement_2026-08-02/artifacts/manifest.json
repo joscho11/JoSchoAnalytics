@@ -1,0 +1,421 @@
+{
+  "study": "Do the current model and Sleeper, agreeing against ADP, pick the right side?",
+  "status": "DESCRIPTIVE POST-HOC RESEARCH - not pre-registered, not live-validated",
+  "requested": "2026-08-02",
+  "run_timestamp_utc": "2026-08-03T03:06:27+00:00",
+  "pipeline": {
+    "notebooks": [
+      "00_shared_pipeline.ipynb",
+      "01_data_and_provenance.ipynb",
+      "02_ranks_and_signals.ipynb",
+      "03_main_results.ipynb",
+      "04_stability.ipynb",
+      "05_inference.ipynb",
+      "06_freshness_and_player_audit.ipynb",
+      "07_synthesis_and_reproducibility.ipynb"
+    ],
+    "shared_library_sha256": "d3e28a60fab75caf19c5387de293057de842c21c3c088edbc204acd89972b469",
+    "structural_audit": {
+      "00_shared_pipeline.ipynb": {
+        "cells": 26,
+        "markdown": 18,
+        "code": 8,
+        "interpretation_cells": 8,
+        "executed": true,
+        "checks": {
+          "first cell '# Introduction'": "pass",
+          "last cell '# Conclusion and Next Steps'": "pass",
+          "'### Explain' above every code cell": "pass",
+          "'### Interpretation' below every code cell": "pass",
+          "no adjacent code cells": "pass",
+          "no error output / traceback": "pass",
+          "no prospective placeholder language": "pass",
+          "every code cell has an execution count": "pass",
+          "execution counts sequential 1..N": "pass",
+          "every code cell has stored output": "pass"
+        }
+      },
+      "01_data_and_provenance.ipynb": {
+        "cells": 20,
+        "markdown": 14,
+        "code": 6,
+        "interpretation_cells": 6,
+        "executed": true,
+        "checks": {
+          "first cell '# Introduction'": "pass",
+          "last cell '# Conclusion and Next Steps'": "pass",
+          "'### Explain' above every code cell": "pass",
+          "'### Interpretation' below every code cell": "pass",
+          "no adjacent code cells": "pass",
+          "no error output / traceback": "pass",
+          "no prospective placeholder language": "pass",
+          "every code cell has an execution count": "pass",
+          "execution counts sequential 1..N": "pass",
+          "every code cell has stored output": "pass"
+        }
+      },
+      "02_ranks_and_signals.ipynb": {
+        "cells": 14,
+        "markdown": 10,
+        "code": 4,
+        "interpretation_cells": 4,
+        "executed": true,
+        "checks": {
+          "first cell '# Introduction'": "pass",
+          "last cell '# Conclusion and Next Steps'": "pass",
+          "'### Explain' above every code cell": "pass",
+          "'### Interpretation' below every code cell": "pass",
+          "no adjacent code cells": "pass",
+          "no error output / traceback": "pass",
+          "no prospective placeholder language": "pass",
+          "every code cell has an execution count": "pass",
+          "execution counts sequential 1..N": "pass",
+          "every code cell has stored output": "pass"
+        }
+      },
+      "03_main_results.ipynb": {
+        "cells": 11,
+        "markdown": 8,
+        "code": 3,
+        "interpretation_cells": 3,
+        "executed": true,
+        "checks": {
+          "first cell '# Introduction'": "pass",
+          "last cell '# Conclusion and Next Steps'": "pass",
+          "'### Explain' above every code cell": "pass",
+          "'### Interpretation' below every code cell": "pass",
+          "no adjacent code cells": "pass",
+          "no error output / traceback": "pass",
+          "no prospective placeholder language": "pass",
+          "every code cell has an execution count": "pass",
+          "execution counts sequential 1..N": "pass",
+          "every code cell has stored output": "pass"
+        }
+      },
+      "04_stability.ipynb": {
+        "cells": 11,
+        "markdown": 8,
+        "code": 3,
+        "interpretation_cells": 3,
+        "executed": true,
+        "checks": {
+          "first cell '# Introduction'": "pass",
+          "last cell '# Conclusion and Next Steps'": "pass",
+          "'### Explain' above every code cell": "pass",
+          "'### Interpretation' below every code cell": "pass",
+          "no adjacent code cells": "pass",
+          "no error output / traceback": "pass",
+          "no prospective placeholder language": "pass",
+          "every code cell has an execution count": "pass",
+          "execution counts sequential 1..N": "pass",
+          "every code cell has stored output": "pass"
+        }
+      },
+      "05_inference.ipynb": {
+        "cells": 14,
+        "markdown": 10,
+        "code": 4,
+        "interpretation_cells": 4,
+        "executed": true,
+        "checks": {
+          "first cell '# Introduction'": "pass",
+          "last cell '# Conclusion and Next Steps'": "pass",
+          "'### Explain' above every code cell": "pass",
+          "'### Interpretation' below every code cell": "pass",
+          "no adjacent code cells": "pass",
+          "no error output / traceback": "pass",
+          "no prospective placeholder language": "pass",
+          "every code cell has an execution count": "pass",
+          "execution counts sequential 1..N": "pass",
+          "every code cell has stored output": "pass"
+        }
+      },
+      "06_freshness_and_player_audit.ipynb": {
+        "cells": 11,
+        "markdown": 8,
+        "code": 3,
+        "interpretation_cells": 3,
+        "executed": true,
+        "checks": {
+          "first cell '# Introduction'": "pass",
+          "last cell '# Conclusion and Next Steps'": "pass",
+          "'### Explain' above every code cell": "pass",
+          "'### Interpretation' below every code cell": "pass",
+          "no adjacent code cells": "pass",
+          "no error output / traceback": "pass",
+          "no prospective placeholder language": "pass",
+          "every code cell has an execution count": "pass",
+          "execution counts sequential 1..N": "pass",
+          "every code cell has stored output": "pass"
+        }
+      },
+      "07_synthesis_and_reproducibility.ipynb": {
+        "cells": 17,
+        "markdown": 12,
+        "code": 5,
+        "interpretation_cells": 5,
+        "executed": true,
+        "checks": {
+          "first cell '# Introduction'": "pass",
+          "last cell '# Conclusion and Next Steps'": "pass",
+          "'### Explain' above every code cell": "pass",
+          "'### Interpretation' below every code cell": "pass",
+          "no adjacent code cells": "pass",
+          "no error output / traceback": "pass",
+          "no prospective placeholder language": "pass",
+          "every code cell has an execution count": "pass",
+          "execution counts sequential 1..N": "pass",
+          "every code cell has stored output": "pass",
+          "this audit cell did not fail on the previous pass": "pass"
+        }
+      }
+    }
+  },
+  "environment": {
+    "python": "3.11.9",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "numpy": "2.4.6",
+    "pandas": "3.0.3"
+  },
+  "reproducibility": {
+    "seed": 20260802,
+    "n_permutations": 10000,
+    "n_bootstrap": 10000
+  },
+  "inputs": {
+    "walkforward_RB": {
+      "path": "fantasy/projections/results/walkforward_predictions.csv",
+      "sha256": "c8c0e1584a18452adcb2c3510b1ff91104b8f44e150a0a89b46e21f6a9f04411",
+      "bytes": 49283
+    },
+    "walkforward_WR": {
+      "path": "fantasy/projections/results/wr_walkforward_predictions.csv",
+      "sha256": "49f6b0d69f796d90c1fe5b3bd9a1fdd0414f36d023a0debe056308ca0d3957db",
+      "bytes": 75912
+    },
+    "walkforward_TE": {
+      "path": "fantasy/projections/results/te_walkforward_predictions.csv",
+      "sha256": "ab663974a8888334ee7fd7cf69c893aa5b60cd08e30df31642677e8dee2c8160",
+      "bytes": 39995
+    },
+    "walkforward_QB": {
+      "path": "fantasy/projections/results/qb_walkforward_predictions.csv",
+      "sha256": "b2545b0c55ab3dfbd0ff378b60d60a4ab0e6e16eee283ef30a7e690b2fb33acc",
+      "bytes": 26699
+    },
+    "season_dataset": {
+      "path": "fantasy/seasonal_projections/season_dataset_2014_2025.csv",
+      "sha256": "dfdf38d9372c830b9fdfffe914024000409e08f01f21536f81876c199e0e2319",
+      "bytes": 2758268
+    },
+    "builder_RB": {
+      "path": "fantasy/projections/build_rb_projection.py",
+      "sha256": "7ffb77d4db746f3ebbc6c2ecb475481b05ef59a46a5306332855af4825de76a3",
+      "bytes": 42802
+    },
+    "builder_WR": {
+      "path": "fantasy/projections/build_wr_projection.py",
+      "sha256": "bd29dc1856be12d135d0e19594d9d8afb16c68206c445e7154040aea63c50cc6",
+      "bytes": 20659
+    },
+    "builder_TE": {
+      "path": "fantasy/projections/build_te_projection.py",
+      "sha256": "71f8278e9014de52b2d410da85b4aa97dde7cd1876396391ed2fc00b2d3ecb20",
+      "bytes": 20554
+    },
+    "builder_QB": {
+      "path": "fantasy/projections/build_qb_projection.py",
+      "sha256": "fae87aa98030558f15441deb1a7482d31891327a1bd3cbf0cc2d77a34df746f7",
+      "bytes": 19680
+    }
+  },
+  "definitions": {
+    "model_gap": "adp_rank - model_rank",
+    "sleeper_gap": "adp_rank - sleeper_rank",
+    "actual_gap": "adp_rank - actual_rank",
+    "consensus_score": "sign(model_gap) * min(|model_gap|, |sleeper_gap|)",
+    "agreement": "sign(model_gap)==sign(sleeper_gap) AND |model_gap|>t AND |sleeper_gap|>t",
+    "thresholds": [
+      0.0,
+      5.0,
+      7.5,
+      10.0
+    ],
+    "threshold_note": "strict >; ranks are integers so >7.5 means at least 8 spots",
+    "hit": "sign(actual_gap)==sign(consensus_score) and actual_gap != 0; an exact tie counts as a MISS",
+    "ranks": "all four ranks computed within (season, position), method='min'",
+    "universe_A": "board analogue: rank over the ADP-bearing population; missing Sleeper -> missing rank",
+    "universe_B": "common universe: restrict to complete rows first, then re-rank all four",
+    "population_all_adp": "every eligible walk-forward row carrying an ADP",
+    "population_drafted_top180": "adp_overall_rank <= 180 (phase0_benchmark.POOL_SIZE)",
+    "outcome": "observed season-total half-PPR; no injury or games-played filter"
+  },
+  "exclusions": {
+    "qb_rookie_rows_dropped": 50,
+    "qb_rookie_reason": "the QB rookie arm was fitted then held back from the shipped surface",
+    "season_2020": "excluded: stored Sleeper artifact is provenance-contaminated"
+  },
+  "join_diagnostics": {
+    "season_dataset_rows": 7350,
+    "walkforward_rows": 3151,
+    "joined": 3151,
+    "unjoined": 0,
+    "position_mismatch": 0,
+    "adp_present": 1915,
+    "sleeper_in_walkforward_only": 0,
+    "sleeper_in_dataset_only": 19,
+    "sleeper_value_max_abs_diff": 0.0
+  },
+  "adp_pos_rank_diagnostic": {
+    "stored_matches_recon_within_model_population": 917,
+    "model_population_rows": 1883,
+    "stored_matches_recon_within_full_dataset": 981,
+    "full_dataset_adp_rows": 1915,
+    "reason": "adp_pos_rank is merged verbatim from an external ADP source CSV in build_season_dataset.py, ranked over that source's universe \u2014 a superset of both the season dataset and the model's scored population. Not reproducible from a subset; NOT used."
+  },
+  "row_counts": {
+    "eligible_rows": 1883,
+    "player_season_results": 5315,
+    "threshold_summary": 1346,
+    "incremental_comparisons": 48
+  },
+  "logistic": {
+    "all_adp": {
+      "names": [
+        "intercept",
+        "agree",
+        "abs_model_gap",
+        "abs_sleeper_gap",
+        "pos[RB]",
+        "pos[TE]",
+        "pos[WR]",
+        "season[2025]"
+      ],
+      "coef": [
+        -0.4875455591570773,
+        1.4323331086882967,
+        0.025073218018804733,
+        0.006575960437489945,
+        -0.2734800147449802,
+        -0.2030544236752069,
+        -0.5009772723800109,
+        0.11846037388501263
+      ],
+      "se": [
+        0.27421729861703287,
+        0.1708210095610702,
+        0.006891561356045935,
+        0.0070252067627345465,
+        0.2865107799418129,
+        0.30766709687569777,
+        0.2846148550755759,
+        0.16567808752760033
+      ],
+      "z": [
+        -1.7779533297714196,
+        8.384993815273194,
+        3.6382492621658393,
+        0.9360522272984698,
+        -0.9545191102426264,
+        -0.6599809525853979,
+        -1.7601936913903622,
+        0.715003267195961
+      ],
+      "p": [
+        0.07541152027185283,
+        0.0,
+        0.00027449769176612904,
+        0.3492462980613382,
+        0.33982094065338186,
+        0.5092660526713053,
+        0.07837497126963155,
+        0.4746070244316132
+      ],
+      "n": 783,
+      "converged": true,
+      "iterations": 6,
+      "pseudo_r2": 0.1343378531845707,
+      "unstable_or_separated": false,
+      "baseline_correct_rate": 0.6500638569604087,
+      "agree_share": 0.6424010217113666
+    },
+    "drafted_top180": {
+      "names": [
+        "intercept",
+        "agree",
+        "abs_model_gap",
+        "abs_sleeper_gap",
+        "pos[RB]",
+        "pos[TE]",
+        "pos[WR]",
+        "season[2025]"
+      ],
+      "coef": [
+        -0.26624326132187826,
+        1.1281503323299533,
+        0.04020102130196131,
+        -0.014032285528050144,
+        -0.14290070290773382,
+        -0.4935728671755526,
+        -0.5861324912142812,
+        0.021218001164242738
+      ],
+      "se": [
+        0.47680032381785414,
+        0.2525026451021691,
+        0.01964213729750864,
+        0.02652773858082544,
+        0.47039211369572687,
+        0.5358982706559552,
+        0.4702973961481551,
+        0.2597903321189207
+      ],
+      "z": [
+        -0.5583957225322433,
+        4.46787530432988,
+        2.0466724518344703,
+        -0.5289665187741576,
+        -0.3037906009626878,
+        -0.9210197050485066,
+        -1.2463017997013006,
+        0.08167355956314055
+      ],
+      "p": [
+        0.5765741930648591,
+        7.900033126118089e-06,
+        0.040690255834946454,
+        0.5968286761043209,
+        0.7612874278855521,
+        0.3570401392721698,
+        0.21265361740765076,
+        0.9349063045093624
+      ],
+      "n": 289,
+      "converged": true,
+      "iterations": 5,
+      "pseudo_r2": 0.07361623423569208,
+      "unstable_or_separated": false,
+      "baseline_correct_rate": 0.5570934256055363,
+      "agree_share": 0.5363321799307958
+    }
+  },
+  "underdog_secondary": {
+    "status": "reconstructed",
+    "final_window": {
+      "2021": "W10",
+      "2022": "W10",
+      "2023": "W10",
+      "2024": "W9",
+      "2025": "W10"
+    },
+    "match_rate_all_adp": 0.7758895379713223,
+    "match_rate_drafted_top180": 0.9954853273137697,
+    "matched_rows": 1461,
+    "matched_rows_drafted_top180": 882,
+    "drafted_top180_rows": 886,
+    "manifest_files_verified": 16,
+    "network_used": false,
+    "comparisons": 24,
+    "all_attenuate": true
+  }
+}

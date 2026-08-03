@@ -3,7 +3,7 @@
 - U5B-1 - CLAUDE.md vs reality - the app is now an st.Page MULTIPAGE app (app.py 70
   lines; page_*.py files; test_site_nav/test_board_page/test_betting_pages/
   test_fantasy_league_pages/test_help_page in CI) while CLAUDE.md still describes a
-  monolithic ~167KB 8-tab app.py and the old joschobetting.streamlit.app URL - MED -
+  monolithic ~167KB 8-tab app.py and the old joschoanalytics.streamlit.app URL - MED -
   DOCS-DRIFT - screened vs the architecture skill's own staleness ledger - action:
   dead-claim URL correction is safe-fix-eligible; the full dashboard-section rewrite
   is owner scope (GATED-docs).

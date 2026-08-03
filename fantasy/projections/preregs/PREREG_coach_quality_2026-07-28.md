@@ -137,7 +137,7 @@ regression tests exercise the SAME function without touching canonical files.
 **Preflight is now 21 checks** (17 → 20 at v3.9c, → 21 at v3.9e): added `v39_artifacts_readable`,
 `lineage_states_the_primary_policy`, `no_real_outcome_access`.
 
-**Status:** **708 registered tests pass** offline with an empty temp directory (141 inherited + 567
+**Status:** **827 collected** offline with an empty temp directory — **826 mandatory tests pass**, plus 1 optional git cross-check that passes when the pinned historical blob is reachable and otherwise skips (the vendored red proof runs in both states). (141 inherited + 686
 new). Locks not opened; the real outcome join remains unimplemented.
 
 ### Amendment record (v3.9a -> v3.9b, 2026-07-29, PREFIT — final correctness patch)
@@ -247,7 +247,7 @@ rescue or alter the primary result, never a sixth repo artifact. It also remains
 `arm_feature_lineage_v39.csv` via `strict_source_date_gate_would_exclude` and
 `strict_gate_exclusion_reason`.
 
-**Status:** **343 registered tests pass** offline with an empty temp directory (141 inherited + 202
+**Status at that amendment (HISTORICAL, SUPERSEDED):** **343 registered tests passed** offline with an empty temp directory (141 inherited + 202
 new). Five v3.9 artifacts; three hashes changed for identified value-level reasons recorded in the stop
 report. No player-projection arm fit; no fantasy outcome loaded or inspected.
 
@@ -261,7 +261,7 @@ fit; the real-fit gate stayed shut; all 18 protected artifacts are byte-identica
 `build_preseason_snapshot.projection_cutoffs()` and the old `hc_game_results()` both called
 `nflreadpy.load_schedules()`, and the win ledger was cached in an untracked scratch directory. A clean
 checkout with an empty temp directory and no connectivity therefore **failed five v3.9 feature tests**,
-and the then-current 254-pass result (SUPERSEDED — the suite is now 708) depended on mutable state that
+and the then-current 254-pass result (SUPERSEDED — the suite is now 827 collected) depended on mutable state that
 is not in the repo.
 
 Both now read the repository-owned frozen snapshot
@@ -346,7 +346,7 @@ Design B a single-axis contrast. Under the rule as implemented the two designs d
 (current identity supply AND historical attribution availability), and the test that formerly claimed
 otherwise has been renamed.
 
-**Status:** **290 registered tests pass** (141 inherited + 149 new), offline, with an empty temp
+**Status at that amendment (HISTORICAL, SUPERSEDED):** **290 registered tests passed** (141 inherited + 149 new), offline, with an empty temp
 directory. Five v3.9 artifacts; three hashes changed for identified value-level reasons (§10 of the
 stop report). No player-projection arm fit; no fantasy outcome loaded or inspected.
 
@@ -638,8 +638,8 @@ context only** and does not answer whether general HC win history, tenure or cha
 projections — that question is what ARM_HC exists to test.
 
 **Status at the v3.9a freeze (HISTORICAL — SUPERSEDED, see the v3.9d status above for current):**
-**254 registered tests passed at that point (SUPERSEDED; now 708)** — the **141** inherited baseline
-reproduced exactly, plus **113 new v3.9 tests at that point (SUPERSEDED; now 567)**. The deselect list
+**254 registered tests passed at that point (SUPERSEDED; now 827 collected)** — the **141** inherited baseline
+reproduced exactly, plus **113 new v3.9 tests at that point (SUPERSEDED; now 686)**. The deselect list
 quoted in that freeze was three IDs and is also SUPERSEDED: six exact IDs are required, and they are
 listed in `coaching/AUDIT_TODO.md` item 26. The five v3.9 artifacts rebuild **byte-identically** across
 two consecutive builds. All 18 protected artifacts (8 v3.8 + 2 preliminary + 8 production) are
@@ -756,7 +756,7 @@ Versioned artifacts only: `arm3_stage1_{residuals,tuning,fold_losses}_v38.csv`,
 `observed_exposure` and `n_observed_team_seasons` are persisted as DIAGNOSTICS only: they cannot
 enter X and cannot post-shrink a fitted coefficient.
 
-**Status at freeze:** 141 registered tests pass. No player-projection arm fit; no fantasy outcome
+**Status at that freeze (HISTORICAL, SUPERSEDED):** 141 registered tests passed. No player-projection arm fit; no fantasy outcome
 inspected.
 
 ### Amendment record (v3.6 -> v3.7, Joseph 2026-07-29, PREFIT)

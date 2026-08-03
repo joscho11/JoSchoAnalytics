@@ -1,0 +1,64 @@
+{
+  "input_hashes": {
+    "walkforward_RB": {
+      "path": "fantasy/projections/results/walkforward_predictions.csv",
+      "sha256": "c8c0e1584a18452adcb2c3510b1ff91104b8f44e150a0a89b46e21f6a9f04411",
+      "bytes": 49283
+    },
+    "walkforward_WR": {
+      "path": "fantasy/projections/results/wr_walkforward_predictions.csv",
+      "sha256": "49f6b0d69f796d90c1fe5b3bd9a1fdd0414f36d023a0debe056308ca0d3957db",
+      "bytes": 75912
+    },
+    "walkforward_TE": {
+      "path": "fantasy/projections/results/te_walkforward_predictions.csv",
+      "sha256": "ab663974a8888334ee7fd7cf69c893aa5b60cd08e30df31642677e8dee2c8160",
+      "bytes": 39995
+    },
+    "walkforward_QB": {
+      "path": "fantasy/projections/results/qb_walkforward_predictions.csv",
+      "sha256": "b2545b0c55ab3dfbd0ff378b60d60a4ab0e6e16eee283ef30a7e690b2fb33acc",
+      "bytes": 26699
+    },
+    "season_dataset": {
+      "path": "fantasy/seasonal_projections/season_dataset_2014_2025.csv",
+      "sha256": "dfdf38d9372c830b9fdfffe914024000409e08f01f21536f81876c199e0e2319",
+      "bytes": 2758268
+    },
+    "builder_RB": {
+      "path": "fantasy/projections/build_rb_projection.py",
+      "sha256": "7ffb77d4db746f3ebbc6c2ecb475481b05ef59a46a5306332855af4825de76a3",
+      "bytes": 42802
+    },
+    "builder_WR": {
+      "path": "fantasy/projections/build_wr_projection.py",
+      "sha256": "bd29dc1856be12d135d0e19594d9d8afb16c68206c445e7154040aea63c50cc6",
+      "bytes": 20659
+    },
+    "builder_TE": {
+      "path": "fantasy/projections/build_te_projection.py",
+      "sha256": "71f8278e9014de52b2d410da85b4aa97dde7cd1876396391ed2fc00b2d3ecb20",
+      "bytes": 20554
+    },
+    "builder_QB": {
+      "path": "fantasy/projections/build_qb_projection.py",
+      "sha256": "fae87aa98030558f15441deb1a7482d31891327a1bd3cbf0cc2d77a34df746f7",
+      "bytes": 19680
+    }
+  },
+  "join_diagnostics": {
+    "season_dataset_rows": 7350,
+    "walkforward_rows": 3151,
+    "joined": 3151,
+    "unjoined": 0,
+    "position_mismatch": 0,
+    "adp_present": 1915,
+    "sleeper_in_walkforward_only": 0,
+    "sleeper_in_dataset_only": 19,
+    "sleeper_value_max_abs_diff": 0.0
+  },
+  "qb_rookie_rows_dropped": 50,
+  "eligible_rows": 1883,
+  "sleeper_covered": 1679,
+  "drafted_top180_rows": 886
+}

@@ -48,7 +48,7 @@ DATA = HERE / "data"
 DATA.mkdir(parents=True, exist_ok=True)
 CACHE = DATA / "wikipedia_team_season_cache.json"
 
-UA = {"User-Agent": "BettingEdge-research/1.0 (joseph.schoenbaum@gmail.com)"}
+UA = {"User-Agent": "JoSchoAnalytics-research/1.0 (joseph.schoenbaum@gmail.com)"}
 FIRST_SEASON = 2013          # one season before the 2014 panel start, so 2014 has a prior year
 DEPLOY = 2026
 
