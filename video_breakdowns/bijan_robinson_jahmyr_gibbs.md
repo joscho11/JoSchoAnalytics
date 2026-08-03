@@ -90,17 +90,20 @@ Neither back operated alone, and the two offenses were not the same size.
 
 These are descriptive facts about circumstance. They are not a causal account of either player's production, and nothing here establishes what either back would have done in the other's offense.
 
-## 8. What this comparison does not settle
+## 8. Reading the numbers honestly
 
-- **The per-touch rates are role-sensitive.** They describe outcomes, not isolated ability.
+Four things worth holding onto while you weigh them:
+
+- **The per-touch rates are role-sensitive.** They describe outcomes, not isolated ability — touch types, defensive fronts and team scoring environments all differ.
 - **The carry distribution describes outcomes only.** It supports no claim about intent, effort or running style; a distribution cannot show what a runner was trying to do.
-- **The first-down rates are tied.** Do not read 23.9% against 23.3% as an advantage.
-- **Touchdown totals are among the least stable season-to-season measurements in football**, which is worth remembering before treating an 18-to-11 gap as a fixed property of either player.
-- **No forecast is made or implied.** Everything above describes the 2025 season.
+- **The first-down rates are tied.** 23.9% against 23.3% on roughly 250 carries apiece is noise, not an advantage.
+- **Touchdown totals are among the least stable season-to-season measurements in football** — worth remembering before treating an 18-to-11 gap as a fixed property of either player.
+
+Everything above describes the 2025 season as it happened. None of it is a forecast.
 
 ## 9. About the video
 
-The short walks the same measurements in the same order and closes without declaring a winner — the categories genuinely split, and the roles and scoring environments differ enough that picking one would assert more than the measurements carry. That is the video's position and it is this write-up's position too.
+The short walks the same measurements in the same order and ends by putting the question to you: two different jobs, measured two different ways — which season was better? The full comparison is laid out here so you can answer it with the same numbers I used.
 
 ---
 
