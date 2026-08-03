@@ -863,39 +863,89 @@ _COUNT_DOCS = (
 _COUNT_RECONCILERS = re.compile(
     r"collected|mandatory|optional|skip|either|HISTORICAL|SUPERSEDED|WITHDRAWN|at that point|"
     r"at that amendment|at that freeze|cross-check", re.I)
-# a bare suite-level pass count: the full-suite totals, not the 141/6 baseline or per-module counts
-_SUITE_COUNT = re.compile(r"\b(817|818)\s+passed\b", re.I)
 
 
-def _scan_unconditional_counts(text):
+def _canonical_counts():
+    """(total, mandatory) READ FROM the canonical stop-report table.
+
+    Derived, never hard-coded: an earlier revision pinned the literals `817|818` into the scanner and
+    it silently stopped detecting the very forms it existed to ban the moment the suite grew. The two
+    values this returns are independently checked elsewhere — against a live `--collect-only` and
+    against `mandatory == total - 1` — by
+    `test_the_stop_report_carries_the_canonical_four_part_count_statement`.
+    """
+    text = (COACH / "V39_PREFIT_STOP_REPORT.md").read_text(encoding="utf-8")
+    total = re.search(r"\|\s*canonical collection total\s*\|\s*\*\*(\d+)\*\*\s*\|", text)
+    mandatory = re.search(r"\|\s*mandatory tests\s*\|\s*\*\*(\d+) passed\*\*\s*\|", text)
+    assert total and mandatory, "the canonical count table is missing or malformed"
+    return int(total.group(1)), int(mandatory.group(1))
+
+
+def _suite_count_pattern(total, mandatory):
+    return re.compile(rf"\b({total}|{mandatory})\s+passed\b", re.I)
+
+
+def _scan_unconditional_counts(text, total=None, mandatory=None):
+    """Lines asserting a bare suite-level pass count without a same-line reconciler.
+
+    `total`/`mandatory` default to the canonical table, so the scanner tracks the current numbers
+    instead of a frozen generation of them.
+    """
+    if total is None or mandatory is None:
+        total, mandatory = _canonical_counts()
+    pat = _suite_count_pattern(total, mandatory)
     return [(i, line.strip()[:110]) for i, line in enumerate(text.splitlines(), 1)
-            if _SUITE_COUNT.search(line) and not _COUNT_RECONCILERS.search(line)]
+            if pat.search(line) and not _COUNT_RECONCILERS.search(line)]
 
 
 def test_no_document_states_an_incompatible_unconditional_suite_count():
+    total, mandatory = _canonical_counts()
+
+    # The stale-literal defect itself: the pattern must be BUILT from the canonical values, never
+    # frozen into the module. The needle is assembled at runtime so this guard cannot match itself.
+    src = pathlib.Path(__file__).read_text(encoding="utf-8")
+    frozen_marker = "_SUITE" + "_COUNT = re.compile"
+    assert frozen_marker not in src, "a module-level frozen count pattern is back"
+    pat = _suite_count_pattern(total, mandatory)
+    assert pat.search(f"{total} passed") and pat.search(f"{mandatory} passed")
+    for stale in (817, 818, 785, 753):
+        if stale not in (total, mandatory):
+            assert not pat.search(f"{stale} passed"), f"the pattern still matches a stale {stale}"
+
     problems = []
     for rel in _COUNT_DOCS:
         p = (COACH / rel).resolve()
         assert p.exists(), rel
-        for lineno, line in _scan_unconditional_counts(p.read_text(encoding="utf-8")):
+        for lineno, line in _scan_unconditional_counts(p.read_text(encoding="utf-8"),
+                                                       total, mandatory):
             problems.append(f"{p.name}:{lineno}  {line}")
     assert not problems, (
-        "unconditional suite-count line(s) — state 818 collected / 817 mandatory / 1 optional "
-        "cross-check instead:\n  " + "\n  ".join(problems))
+        f"unconditional suite-count line(s) — state {total} collected / {mandatory} mandatory / "
+        f"1 optional cross-check instead:\n  " + "\n  ".join(problems))
 
 
-@pytest.mark.parametrize("probe,should_flag", [
-    ("full coaching suite   818 passed", True),
-    ("the suite reports 817 passed", True),
-    ("818 collected; 817 mandatory tests passed", False),
-    ("817 passed, 1 optional cross-check skipped", False),
-    ("either `818 passed` or `817 passed, 1 skipped` — the same result", False),
-    ("141 passed, 6 deselected", False),          # the baseline is unambiguous
-])
+def _count_probes():
+    """Six probes built from the CURRENT canonical numbers, not from any literal."""
+    total, mandatory = _canonical_counts()
+    return [
+        (f"full coaching suite   {total} passed", True),
+        (f"the suite reports {mandatory} passed", True),
+        (f"{total} collected; {mandatory} mandatory passed; 1 optional cross-check", False),
+        (f"{mandatory} passed, 1 optional cross-check skipped", False),
+        (f"either `{total} passed` or `{mandatory} passed, 1 skipped` — the same result", False),
+        ("141 passed, 6 deselected", False),          # the baseline is unambiguous, and stays allowed
+    ]
+
+
+@pytest.mark.parametrize("probe,should_flag", _count_probes())
 def test_the_count_scanner_flags_only_the_unconditional_forms(probe, should_flag):
-    """Self-probe: a scanner that matched nothing would pass the test above vacuously."""
+    """Self-probes, generated from the canonical table: bare `{total} passed` and `{mandatory} passed`
+    must be rejected, the reconciled forms and the 141/6 baseline must be allowed. A scanner pinned to
+    a stale generation of numbers would pass the test above while detecting nothing."""
     flagged = bool(_scan_unconditional_counts(probe))
     assert flagged is should_flag, f"{probe!r}: flagged={flagged}, expected {should_flag}"
+
+
 
 
 def test_the_stop_report_carries_the_canonical_four_part_count_statement():
