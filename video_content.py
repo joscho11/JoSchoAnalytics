@@ -57,4 +57,13 @@ VIDEOS = [
         "video_id": "7668110810039717151",
         "breakdown_file": "makai_lemon.md",
     },
+    {
+        "slug": "bijan-robinson-jahmyr-gibbs",
+        "title": "Bijan Robinson vs. Jahmyr Gibbs",
+        "subtitle": "2025 season review · RB, Atlanta / Detroit",
+        "date": "2026-08-02",
+        "tiktok_url": "https://www.tiktok.com/@joschoanalytics/video/7669558168984309022",
+        "video_id": "7669558168984309022",
+        "breakdown_file": "bijan_robinson_jahmyr_gibbs.md",
+    },
 ]
