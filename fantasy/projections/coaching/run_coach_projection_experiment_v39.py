@@ -117,25 +117,89 @@ REAL_FIT_ENV_TOKEN = "I-HAVE-WRITTEN-THE-PREFIT-AMENDMENT"
 REAL_FIT_MESSAGE = (
     "REAL FANTASY FITTING IS NOT AUTHORIZED under prereg v3.9. The harness is verified on synthetic "
     "targets only. Enabling it requires (a) a written PREFIT amendment recording what was known at "
-    "the time, (b) Joseph's explicit approval, (c) REAL_FIT_AUTHORIZED = True, and (d) "
+    "the time, (b) Joseph's explicit approval, (c) the exact --authorization-token, and (d) "
     f"{REAL_FIT_ENV_SWITCH}={REAL_FIT_ENV_TOKEN} in the environment. Flipping either lock without "
     "the amendment defeats the entire pre-registration.")
 
 
-def real_fit_lock_state():
-    """(constant_open, env_open) at the moment of use. Never cached."""
-    return (bool(REAL_FIT_AUTHORIZED),
-            os.environ.get(REAL_FIT_ENV_SWITCH) == REAL_FIT_ENV_TOKEN)
+# --- THE INVOCATION-SCOPED AUTHORIZATION CAPABILITY -------------------------------------------------
+# A contradiction was found by reading the committed source at 8ca2efc: C6 statically requires exactly
+# one module-level `REAL_FIT_AUTHORIZED = False`, while `authorized_real` required that constant to be
+# True at runtime. Editing the source to True made C6 — and therefore the 21-check preflight — FAIL, so
+# the documented command could not open both locks by any route. The tests only reached the authorized
+# path by monkeypatching the global, which the CLI has no equivalent of.
+#
+# The fix is a CAPABILITY, not a mutable flag. `REAL_FIT_AUTHORIZED = False` stays in the committed
+# source forever as the default-closed invariant; it is never reassigned, and nothing about a real run
+# is stored in a module global. Authorization exists only as an immutable object created per
+# invocation, from two exact tokens, and threaded explicitly through every gate. It cannot persist
+# after the call that made it.
+REAL_FIT_CLI_TOKEN = "JOSEPH-AUTHORIZED-V39-FIRST-REAL-RUN"
 
 
-def real_fit_is_unlocked():
-    """BOTH locks, checked at the moment of use."""
-    c, e = real_fit_lock_state()
+class RealFitAuthorization:
+    """Proof that BOTH runtime locks were presented in one invocation. Immutable; never global.
+
+    Constructed only by `grant_real_fit_authorization`, only when the CLI token and the environment
+    token both match their frozen literals exactly. Holding one authorizes exactly one call chain.
+    """
+
+    __slots__ = ("_cli_ok", "_env_ok")
+
+    def __init__(self, cli_token, env_token):
+        if cli_token != REAL_FIT_CLI_TOKEN:
+            raise RuntimeError("authorization refused: the CLI authorization token is absent or wrong")
+        if env_token != REAL_FIT_ENV_TOKEN:
+            raise RuntimeError(f"authorization refused: {REAL_FIT_ENV_SWITCH} is absent or wrong")
+        object.__setattr__(self, "_cli_ok", True)
+        object.__setattr__(self, "_env_ok", True)
+
+    def __setattr__(self, *_a):
+        raise AttributeError("RealFitAuthorization is immutable")
+
+    def __delattr__(self, *_a):
+        raise AttributeError("RealFitAuthorization is immutable")
+
+    @property
+    def lock_state(self):
+        return (self._cli_ok, self._env_ok)
+
+    def is_valid(self):
+        return self._cli_ok is True and self._env_ok is True
+
+
+def grant_real_fit_authorization(cli_token=None, env=None):
+    """Mint the capability, or raise. BOTH tokens, exact, in this one invocation."""
+    env_token = (os.environ.get(REAL_FIT_ENV_SWITCH) if env is None else env.get(REAL_FIT_ENV_SWITCH))
+    return RealFitAuthorization(cli_token, env_token)
+
+
+def authorization_is_valid(authorization):
+    """A forged, partial, malformed or absent capability is not authorization."""
+    return isinstance(authorization, RealFitAuthorization) and authorization.is_valid()
+
+
+def real_fit_lock_state(authorization=None):
+    """(cli_ok, env_ok) at the moment of use. Never cached, never read from a mutable global.
+
+    With no capability the state is CLOSED — `REAL_FIT_AUTHORIZED` is the default-closed invariant and
+    is never consulted as an opener, so mutating it at runtime authorizes nothing.
+    """
+    if authorization is None:
+        return (False, os.environ.get(REAL_FIT_ENV_SWITCH) == REAL_FIT_ENV_TOKEN)
+    if not authorization_is_valid(authorization):
+        return (False, False)
+    return authorization.lock_state
+
+
+def real_fit_is_unlocked(authorization=None):
+    """BOTH locks, checked at the moment of use, from the capability alone."""
+    c, e = real_fit_lock_state(authorization)
     return c and e
 
 
-def require_real_fit_authorization():
-    if not real_fit_is_unlocked():
+def require_real_fit_authorization(authorization=None):
+    if not real_fit_is_unlocked(authorization):
         raise RuntimeError(REAL_FIT_MESSAGE)
     return True
 
@@ -159,6 +223,9 @@ ENTRY_POINT_CONTRACT_MODE = RUN_MODE_AUTHORIZED_REAL
 
 # Names C5-A pins by value, so a rename cannot quietly satisfy the contract against a different callee.
 PREFLIGHT_CLEARANCE_NAME = "require_preflight_clearance"
+# The door's authorization parameter. C5-A pins statement 1 to consume exactly this name, so a
+# future edit cannot swap the capability for a literal, a global or a freshly minted grant.
+AUTHORIZATION_PARAM = "authorization"
 PANEL_CORE_NAME = "assemble_panel_core"
 # C5-A clause 3: the door may not read. Readers arrive as parameters and are called on its behalf.
 ENTRY_POINT_BANNED_READER_CALLEES = frozenset({"read_csv", "read_parquet", "read_json", "open",
@@ -168,7 +235,7 @@ BANNED_OUTCOME_CALLEES = frozenset({"load_player_stats", "load_pbp", "load_pbp_s
                                     "season_total_target", "load_schedules", "load_rosters"})
 
 
-def validate_run_mode(run_mode, lock_state=None):
+def validate_run_mode(run_mode, lock_state=None, authorization=None):
     """Fail-closed run-mode contract. Returns (ok, detail).
 
       synthetic_prefit : BOTH locks MUST be closed
@@ -178,7 +245,7 @@ def validate_run_mode(run_mode, lock_state=None):
     An unknown mode is invalid. **No mode ever relaxes an artifact, timing, leakage, coverage or
     feature-policy check** — the mode governs only the lock expectation.
     """
-    c, e = real_fit_lock_state() if lock_state is None else lock_state
+    c, e = real_fit_lock_state(authorization) if lock_state is None else lock_state
     if run_mode not in RUN_MODES:
         return False, f"unknown run_mode {run_mode!r}; expected one of {RUN_MODES}"
     if run_mode == RUN_MODE_SYNTHETIC_PREFIT:
@@ -566,7 +633,8 @@ from assemble_real_panel_v39 import assemble_panel_core              # noqa: E40
 
 
 def require_preflight_clearance(run_mode=RUN_MODE_AUTHORIZED_REAL, preflight_result=None,
-                                models_dir=None, feature_columns=None, verify_inputs=True):
+                                models_dir=None, feature_columns=None, verify_inputs=True,
+                                authorization=None):
     """EVERY activation gate, evaluated BEFORE any reader runs. Raises on the first failure.
 
     This is statement 2 of the implemented door (C5-A clause 2). It exists so the ordering
@@ -590,11 +658,11 @@ def require_preflight_clearance(run_mode=RUN_MODE_AUTHORIZED_REAL, preflight_res
     if run_mode != RUN_MODE_AUTHORIZED_REAL:
         raise RuntimeError(f"clearance refused: run mode is {run_mode!r}; a real panel may be "
                            f"assembled only in {RUN_MODE_AUTHORIZED_REAL!r}")
-    if not real_fit_is_unlocked():
+    if not real_fit_is_unlocked(authorization):
         raise RuntimeError(REAL_FIT_MESSAGE)
 
-    pf = preflight(run_mode=RUN_MODE_AUTHORIZED_REAL) if preflight_result is None \
-        else preflight_result
+    pf = preflight(run_mode=RUN_MODE_AUTHORIZED_REAL, authorization=authorization) \
+        if preflight_result is None else preflight_result
     ready, ready_detail = _arp.activation_readiness(models_dir=models_dir,
                                                     feature_columns=feature_columns)
     if not ready:
@@ -610,8 +678,8 @@ def require_preflight_clearance(run_mode=RUN_MODE_AUTHORIZED_REAL, preflight_res
     return pf
 
 
-def assemble_real_panel(feature_reader, outcome_reader, run_mode=RUN_MODE_AUTHORIZED_REAL,
-                        models_dir=None, feature_columns=None):
+def assemble_real_panel(feature_reader, outcome_reader, authorization=None,
+                        run_mode=RUN_MODE_AUTHORIZED_REAL, models_dir=None, feature_columns=None):
     """The ONLY door to a real fantasy outcome. Implemented, and default-closed behind both locks.
 
     Readers are INJECTED (C5-A clause 3): this function contains no reader callee, so the module
@@ -622,8 +690,8 @@ def assemble_real_panel(feature_reader, outcome_reader, run_mode=RUN_MODE_AUTHOR
     Build the real readers with `assemble_real_panel_v39.authorized_feature_reader()` and
     `.authorized_outcome_reader()`; both verify their own pins before returning a row.
     """
-    require_real_fit_authorization()
-    require_preflight_clearance(run_mode, None, models_dir, feature_columns)
+    require_real_fit_authorization(authorization)
+    require_preflight_clearance(run_mode, None, models_dir, feature_columns, True, authorization)
     return assemble_panel_core(feature_reader(), outcome_reader())
 
 
@@ -1000,13 +1068,13 @@ def assert_no_implicit_row_loss(panel):
 
 def run_experiment(panel, coach_a, coach_b=None, outer_seasons=OUTER_SEASONS, positions=POSITIONS,
                    bootstrap_draws=BOOTSTRAP_DRAWS, placebo_draws=PLACEBO_DRAWS,
-                   run_placebo=True, verbose=True, run_mode=DEFAULT_RUN_MODE):
+                   run_placebo=True, verbose=True, run_mode=DEFAULT_RUN_MODE, authorization=None):
     """Full nested pipeline. Target-agnostic: it never inspects where `panel['y']` came from.
 
     `run_mode` governs ONLY the real-fit lock expectation (§3). It never relaxes an artifact, timing,
     leakage, coverage or feature-policy check.
     """
-    ok, detail = validate_run_mode(run_mode)
+    ok, detail = validate_run_mode(run_mode, authorization=authorization)
     assert ok, f"invalid run mode: {detail}"
     assert_no_implicit_row_loss(panel)
     reset_pipeline_assertions()
@@ -1439,6 +1507,21 @@ def env_bindings(tree):
     return hits
 
 
+def _lock_mutations(tree):
+    """Runtime writes to the lock that are not plain assignments: `globals()[...] = ` and `setattr`."""
+    out = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign):
+            for tgt in node.targets:
+                if (isinstance(tgt, ast.Subscript) and isinstance(tgt.value, ast.Call)
+                        and getattr(tgt.value.func, "id", None) in ("globals", "vars")):
+                    out.append((node.lineno, "globals()[...] assignment"))
+        if isinstance(node, ast.Call) and getattr(node.func, "id", None) == "setattr":
+            if len(node.args) >= 2 and isinstance(node.args[1], ast.Constant)                     and node.args[1].value == LOCK_NAME:
+                out.append((node.lineno, f"setattr(..., {LOCK_NAME!r}, ...)"))
+    return out
+
+
 def _entry_point_is_sealed(tree, contract_mode=None):
     """C5, MODE-AWARE. Which shape `assemble_real_panel` must have, per the prereg.
 
@@ -1492,10 +1575,24 @@ def _entry_point_is_sealed(tree, contract_mode=None):
     body = fn.body                                  # docstrings already stripped by _executable_tree
 
     def _is_zero_arg_auth(stmt):
+        """C5-S: the sealed door authorizes with no argument at all."""
         return (isinstance(stmt, ast.Expr) and isinstance(stmt.value, ast.Call)
                 and isinstance(stmt.value.func, ast.Name)
                 and stmt.value.func.id == "require_real_fit_authorization"
                 and not stmt.value.args and not stmt.value.keywords)
+
+    def _is_capability_auth(stmt, fn_node):
+        """C5-A: the implemented door authorizes with its OWN authorization parameter and nothing
+        else — not a literal, not a global, not a call. The capability must arrive from the caller."""
+        if not (isinstance(stmt, ast.Expr) and isinstance(stmt.value, ast.Call)
+                and isinstance(stmt.value.func, ast.Name)
+                and stmt.value.func.id == "require_real_fit_authorization"):
+            return False
+        args = stmt.value.args
+        params = {a.arg for a in fn_node.args.args}
+        return (len(args) == 1 and not stmt.value.keywords
+                and isinstance(args[0], ast.Name) and args[0].id == AUTHORIZATION_PARAM
+                and AUTHORIZATION_PARAM in params)
 
     if mode == RUN_MODE_SYNTHETIC_PREFIT:
         # ---- C5-S: the door does not exist yet ------------------------------------------------
@@ -1526,11 +1623,13 @@ def _entry_point_is_sealed(tree, contract_mode=None):
         return problems
     first, second, third = body
 
-    # clause 1 + clause 6 — the authorization is statement 1, so nothing precedes it
-    if not _is_zero_arg_auth(first):
-        problems.append(f"C5-A clause 1/6: {ENTRY_POINT_NAME} statement 1 must be a zero-argument "
-                        f"require_real_fit_authorization() call; found "
-                        f"{type(first).__name__} — any statement before it runs unauthorized")
+    # clause 1 + clause 6 — the authorization is statement 1, so nothing precedes it, and it must
+    # consume the INVOCATION-SCOPED capability rather than any ambient state
+    if not _is_capability_auth(first, fn):
+        problems.append(f"C5-A clause 1/6: {ENTRY_POINT_NAME} statement 1 must be "
+                        f"require_real_fit_authorization({AUTHORIZATION_PARAM}) using its own "
+                        f"parameter; found {type(first).__name__} — any statement before it runs "
+                        f"unauthorized, and any other argument is not the caller's capability")
 
     # clause 2 — the clearance is statement 2
     ok_clear = (isinstance(second, ast.Expr) and isinstance(second.value, ast.Call)
@@ -1680,7 +1779,10 @@ def no_real_outcome_access(source_dir=None, sources=None, contract_mode=None):
         for lineno, form in env_bindings(tree):                            # C7
             problems.append(f"{mod}:{lineno}: {form} could open the environment lock")
 
-    # C6 — exactly one canonical module-level `REAL_FIT_AUTHORIZED = False`, in the harness.
+    # C6 — the DEFAULT-CLOSED invariant, restated precisely (v3.9v). The constant is never edited to
+    # authorize a run: exactly one canonical module-level binding exists, it is False, production
+    # source contains no reassignment or mutation of it, and real authorization is invocation-scoped
+    # (a `RealFitAuthorization` threaded through the call) so it cannot persist after the call.
     harness_name = "run_coach_projection_experiment_v39.py"
 
     def _is_canonical_lock(mod, kind, value, at_module_level, direct):
@@ -1698,6 +1800,12 @@ def no_real_outcome_access(source_dir=None, sources=None, contract_mode=None):
     if len(canonical) != 1:
         problems.append(f"expected exactly one canonical module-level {LOCK_NAME} = False in the "
                         f"harness, found {len(canonical)}")
+
+    # C6 (cont.) — no RUNTIME mutation of the lock either: a `globals()` write or a `setattr` on the
+    # module would be a reassignment the binding walker cannot see as an Assign target.
+    for mod, src_text in sorted(sources.items()):
+        for lineno, form in _lock_mutations(_executable_tree(src_text)):
+            problems.append(f"{mod}:{lineno}: {form} could mutate {LOCK_NAME} at runtime")
 
     # C5 — the real-panel entry point stays sealed, in ONE binding with an exact body.
     harness = sources.get(harness_name)
@@ -1741,7 +1849,7 @@ PREFLIGHT_CHECKS = (
 
 
 def preflight(run_mode=DEFAULT_RUN_MODE, pipeline_assertions=None, data_dir=None,
-              require_pipeline_assertions=True):
+              require_pipeline_assertions=True, authorization=None):
     """Deterministic runtime validation backing condition (10). Reads no outcome.
 
     Returns `{check: {"ok": bool, "detail": str}}` plus `all_ok`. C10 passes only when EVERY required
@@ -2062,7 +2170,7 @@ def preflight(run_mode=DEFAULT_RUN_MODE, pipeline_assertions=None, data_dir=None
     check("pipeline_timing_assertions_ran", _assertions)
 
     def _mode():
-        return validate_run_mode(run_mode)
+        return validate_run_mode(run_mode, authorization=authorization)
     check("run_mode_locks", _mode)
 
     all_ok = all(v["ok"] for v in res.values())
@@ -2263,7 +2371,7 @@ def parse_outer_seasons(spec):
 
 
 def run_authorized_real(outer_seasons, bootstrap_draws, placebo_draws, out_dir=None,
-                        overwrite=False, verbose=True):
+                        overwrite=False, verbose=True, authorization=None):
     """THE authorized-real path. Unreachable unless BOTH locks are open.
 
     Order is fixed and each step gates the next:
@@ -2277,10 +2385,10 @@ def run_authorized_real(outer_seasons, bootstrap_draws, placebo_draws, out_dir=N
     import assemble_real_panel_v39 as _arp
     import write_v39_results as _wr
 
-    require_real_fit_authorization()
+    require_real_fit_authorization(authorization)
 
-    pf = preflight(run_mode=RUN_MODE_AUTHORIZED_REAL)
-    require_preflight_clearance(RUN_MODE_AUTHORIZED_REAL, pf)
+    pf = preflight(run_mode=RUN_MODE_AUTHORIZED_REAL, authorization=authorization)
+    require_preflight_clearance(RUN_MODE_AUTHORIZED_REAL, pf, authorization=authorization)
 
     # the COMPOSED reader: veteran snapshot + rookie matrix under the frozen
     # SHIPPED_ARM0_BUCKETS routing, so all seven buckets are feedable
@@ -2302,7 +2410,7 @@ def run_authorized_real(outer_seasons, bootstrap_draws, placebo_draws, out_dir=N
         return eligible
 
     outcome_reader = _arp.authorized_outcome_reader()
-    assembled = assemble_real_panel(feature_reader, outcome_reader,
+    assembled = assemble_real_panel(feature_reader, outcome_reader, authorization,
                                     run_mode=RUN_MODE_AUTHORIZED_REAL)
     panel, report = _arp.panel_for_experiment(assembled)
     assert len(panel) == eligibility["eligible_evaluation_population"], (
@@ -2316,7 +2424,8 @@ def run_authorized_real(outer_seasons, bootstrap_draws, placebo_draws, out_dir=N
     coach_b = pd.read_csv(DATA / "team_coach_features_design_b_oracle_v39.csv")
     frames = run_experiment(panel, coach_a, coach_b, outer_seasons=outer_seasons,
                             bootstrap_draws=bootstrap_draws, placebo_draws=placebo_draws,
-                            verbose=verbose, run_mode=RUN_MODE_AUTHORIZED_REAL)
+                            verbose=verbose, run_mode=RUN_MODE_AUTHORIZED_REAL,
+                            authorization=authorization)
 
     problems = _wr.validate_outputs(_wr.compose(frames, eligibility=eligibility))
     if problems:
@@ -2332,6 +2441,9 @@ def main():
     ap.add_argument("--run-mode", choices=list(RUN_MODES), default=None,
                     help="authorized_real performs the real run; requires BOTH locks open")
     ap.add_argument("--outer-seasons", default=None, help="e.g. 2018-2025")
+    ap.add_argument("--authorization-token", default=None,
+                    help="the exact authorized-real CLI token; required with --run-mode "
+                         "authorized_real and checked against a frozen literal")
     ap.add_argument("--overwrite-results", action="store_true",
                     help="replace existing result files (refused by default)")
     ap.add_argument("--outer", type=int, nargs="*", default=None)
@@ -2340,7 +2452,12 @@ def main():
     a = ap.parse_args()
 
     if a.run_mode == RUN_MODE_AUTHORIZED_REAL:
-        ok, detail = validate_run_mode(RUN_MODE_AUTHORIZED_REAL)
+        # BOTH runtime locks, presented together, in this one invocation. Nothing is mutated.
+        try:
+            authorization = grant_real_fit_authorization(a.authorization_token)
+        except RuntimeError as exc:
+            raise SystemExit("BLOCKED: " + str(exc))
+        ok, detail = validate_run_mode(RUN_MODE_AUTHORIZED_REAL, authorization=authorization)
         if not ok:
             raise SystemExit("BLOCKED: " + detail)
         seasons = parse_outer_seasons(a.outer_seasons)
@@ -2348,7 +2465,8 @@ def main():
         print(f"AUTHORIZED REAL RUN — outer seasons {list(seasons)}")
         print("=" * 96)
         _frames, hashes = run_authorized_real(seasons, a.bootstrap_draws, a.placebo_draws,
-                                              overwrite=a.overwrite_results)
+                                              overwrite=a.overwrite_results,
+                                              authorization=authorization)
         print("\n--- RESULT HASHES ---")
         for name, h in sorted(hashes.items()):
             print(f"  {name:26s} {h}")

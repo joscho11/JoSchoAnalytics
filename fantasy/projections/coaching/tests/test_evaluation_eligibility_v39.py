@@ -282,8 +282,8 @@ def test_every_ARM_sees_the_SAME_eligible_keys_and_order(partition):
 # =====================================================================================================
 def test_a_malformed_eligibility_partition_reaches_ZERO_outcome_reader_calls(monkeypatch):
     """The decisive ordering property."""
-    monkeypatch.setattr(EX, "REAL_FIT_AUTHORIZED", True, raising=False)
-    monkeypatch.setenv(EX.REAL_FIT_ENV_SWITCH, EX.REAL_FIT_ENV_TOKEN)
+    auth = EX.grant_real_fit_authorization(
+        EX.REAL_FIT_CLI_TOKEN, env={EX.REAL_FIT_ENV_SWITCH: EX.REAL_FIT_ENV_TOKEN})
     monkeypatch.setattr(EX, "require_preflight_clearance", lambda *a, **k: None)
 
     outcome_calls = []
@@ -298,7 +298,7 @@ def test_a_malformed_eligibility_partition_reaches_ZERO_outcome_reader_calls(mon
     monkeypatch.setattr(ARP, "evaluation_eligibility",
                         lambda *a, **k: (_ for _ in ()).throw(ARP.AssemblyError("injected")))
     with pytest.raises(ARP.AssemblyError):
-        EX.run_authorized_real((2024,), 10, 2, verbose=False)
+        EX.run_authorized_real((2024,), 10, 2, verbose=False, authorization=auth)
     assert outcome_calls == []
 
 

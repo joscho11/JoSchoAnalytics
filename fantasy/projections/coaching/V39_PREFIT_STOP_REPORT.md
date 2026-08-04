@@ -17,7 +17,7 @@ tests — and then found seven defects. All seven are repaired.
 
 | # | finding | status |
 |---|---|---|
-| 1 | The build was **not hermetic**: `projection_cutoffs()` and `hc_game_results()` both downloaded nflverse schedules, and the win ledger sat in an untracked scratch cache. A clean offline checkout failed **five** feature tests, so the then-current 254-pass claim (SUPERSEDED; the suite is now 1,227 collected) depended on state outside the repo. | **FIXED** — both read the repo-owned frozen snapshot; the ledger is computed in memory; suite and build now pass with egress blocked and an empty temp dir (§1.4) |
+| 1 | The build was **not hermetic**: `projection_cutoffs()` and `hc_game_results()` both downloaded nflverse schedules, and the win ledger sat in an untracked scratch cache. A clean offline checkout failed **five** feature tests, so the then-current 254-pass claim (SUPERSEDED; the suite is now 1,275 collected) depended on state outside the repo. | **FIXED** — both read the repo-owned frozen snapshot; the ledger is computed in memory; suite and build now pass with egress blocked and an empty temp dir (§1.4) |
 | 2 | The live canonical prereg sections still asserted the superseded policy **underneath** the correction banner, and this report claimed they had been corrected when only a banner covered them. | **FIXED** — §0, §2, §3.2, §4, §5, §6, §7, §8-T5, §8.1 rewritten to v3.9 truth; the false claim in this report is withdrawn (§2.1) |
 | 3 | The manifest pinned only appended coaching columns; `ARM_0` was empty and the veteran/rookie baseline difference was inexpressible. | **FIXED** — full ordered X per (position, bucket, arm) (§4.1) |
 | 4 | The ten-condition §7 primary verdict was **never computed**, its thresholds were not pinned, and no test covered it. | **FIXED** — `primary_verdict()` + 14 tests (§8.5) |
@@ -103,7 +103,7 @@ interpreter `.\.venv-test\Scripts\python.exe` (Python 3.11.9). This is one line,
 `...` placeholders, no abbreviations:
 
 ```
-.\.venv-test\Scripts\python.exe -m pytest fantasy/projections/coaching/tests -q -p no:warnings --ignore=fantasy/projections/coaching/tests/test_arm_features_v39.py --ignore=fantasy/projections/coaching/tests/test_coach_projection_harness_v39.py --ignore=fantasy/projections/coaching/tests/test_boundary_corpus.py --ignore=fantasy/projections/coaching/tests/test_assemble_real_panel_v39.py --ignore=fantasy/projections/coaching/tests/test_combine_snapshot_provenance.py --ignore=fantasy/projections/coaching/tests/test_rookie_matrix_v39.py --ignore=fantasy/projections/coaching/tests/test_pff_point_in_time_v39.py --ignore=fantasy/projections/coaching/tests/test_arm0_refits_from_scratch_v39.py --ignore=fantasy/projections/coaching/tests/test_activation_wiring_v39.py --ignore=fantasy/projections/coaching/tests/test_veteran_snapshot_v39.py --ignore=fantasy/projections/coaching/tests/test_authorized_runner_v39.py --ignore=fantasy/projections/coaching/tests/test_composed_feature_reader_v39.py --ignore=fantasy/projections/coaching/tests/test_evaluation_eligibility_v39.py --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_each_protected_text_artifact_has_exactly_one_writer --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_build_arm_features_v39_writes_only_the_five_authorized_artifacts --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_the_harness_writes_no_repo_artifact_at_all --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_no_unauthorized_v39_artifact_exists_on_disk --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_the_head_coach_win_ledger_is_derived_in_memory_not_cached --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_the_v39_modules_never_write_outside_the_coaching_data_dir
+.\.venv-test\Scripts\python.exe -m pytest fantasy/projections/coaching/tests -q -p no:warnings --ignore=fantasy/projections/coaching/tests/test_arm_features_v39.py --ignore=fantasy/projections/coaching/tests/test_coach_projection_harness_v39.py --ignore=fantasy/projections/coaching/tests/test_boundary_corpus.py --ignore=fantasy/projections/coaching/tests/test_assemble_real_panel_v39.py --ignore=fantasy/projections/coaching/tests/test_combine_snapshot_provenance.py --ignore=fantasy/projections/coaching/tests/test_rookie_matrix_v39.py --ignore=fantasy/projections/coaching/tests/test_pff_point_in_time_v39.py --ignore=fantasy/projections/coaching/tests/test_arm0_refits_from_scratch_v39.py --ignore=fantasy/projections/coaching/tests/test_activation_wiring_v39.py --ignore=fantasy/projections/coaching/tests/test_veteran_snapshot_v39.py --ignore=fantasy/projections/coaching/tests/test_authorized_runner_v39.py --ignore=fantasy/projections/coaching/tests/test_composed_feature_reader_v39.py --ignore=fantasy/projections/coaching/tests/test_evaluation_eligibility_v39.py --ignore=fantasy/projections/coaching/tests/test_authorization_capability_v39.py --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_each_protected_text_artifact_has_exactly_one_writer --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_build_arm_features_v39_writes_only_the_five_authorized_artifacts --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_the_harness_writes_no_repo_artifact_at_all --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_no_unauthorized_v39_artifact_exists_on_disk --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_the_head_coach_win_ledger_is_derived_in_memory_not_cached --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_the_v39_modules_never_write_outside_the_coaching_data_dir
 ```
 
 Literal output of that exact command:
@@ -124,11 +124,11 @@ and no claim is made here about what bare `python` resolves to.
 Every ID above is real and was executed. `pytest --deselect` silently ignores an ID that does not
 exist, so a mistyped path deselects nothing and returns 147 with no error — copy these verbatim.
 
-**Current totals, and the only ones stated anywhere in this document:** **1,227** tests in
-`coaching/tests/` — **141** inherited plus **1,086** added by this pass. The 1,086 is
-88 (`test_arm_features_v39.py`) + 246 (`test_coach_projection_harness_v39.py`) + 166 (`test_boundary_corpus.py`) + 205 (`test_assemble_real_panel_v39.py`) + 9 (`test_combine_snapshot_provenance.py`) + 91 (`test_rookie_matrix_v39.py`) + 37 (`test_pff_point_in_time_v39.py`) + 38 (`test_arm0_refits_from_scratch_v39.py`) + 31 (`test_activation_wiring_v39.py`) + 45 (`test_veteran_snapshot_v39.py`) + 49 (`test_authorized_runner_v39.py`) + 47 (`test_composed_feature_reader_v39.py`) + 28 (`test_evaluation_eligibility_v39.py`) + 6 (the v3.9 additions
+**Current totals, and the only ones stated anywhere in this document:** **1,275** tests in
+`coaching/tests/` — **141** inherited plus **1,134** added by this pass. The 1,134 is
+88 (`test_arm_features_v39.py`) + 246 (`test_coach_projection_harness_v39.py`) + 166 (`test_boundary_corpus.py`) + 205 (`test_assemble_real_panel_v39.py`) + 9 (`test_combine_snapshot_provenance.py`) + 91 (`test_rookie_matrix_v39.py`) + 37 (`test_pff_point_in_time_v39.py`) + 38 (`test_arm0_refits_from_scratch_v39.py`) + 31 (`test_activation_wiring_v39.py`) + 45 (`test_veteran_snapshot_v39.py`) + 49 (`test_authorized_runner_v39.py`) + 47 (`test_composed_feature_reader_v39.py`) + 28 (`test_evaluation_eligibility_v39.py`) + 48 (`test_authorization_capability_v39.py`) + 6 (the v3.9 additions
 to `test_artifact_ownership.py`). The per-module table in §10 carries the full split and reconciles to
-the same 1,227. **SUPERSEDED:** an earlier draft quoted a suite total 254 and 113 new tests (both
+the same 1,275. **SUPERSEDED:** an earlier draft quoted a suite total 254 and 113 new tests (both
 **SUPERSEDED**); a later one quoted 836 total / 695 added (also **SUPERSEDED**). Only the counts above
 are current, and they were collected, not estimated.
 
@@ -185,7 +185,7 @@ Verified with egress blocked (`socket.create_connection`, `getaddrinfo`, `socket
 a freshly created empty directory:
 
 ```
-full coaching suite   1,227 collected; 1,227 passed.
+full coaching suite   1,275 collected; 1,275 passed.
                       + 1 optional git cross-check (passes or skips; see below)
 inherited baseline    141 passed, 6 deselected
 full v3.9 build       completed; all five artifact hashes reproduced
@@ -196,13 +196,13 @@ ambiguous, so this is the only form this document uses:
 
 | | |
 |---|---|
-| canonical collection total | **1227** |
-| mandatory tests | **1226 passed** |
-| **measured on 2026-08-03, after §10.13** | **1,227 passed · 0 failed** |
+| canonical collection total | **1275** |
+| mandatory tests | **1274 passed** |
+| **measured on 2026-08-03, after §10.14** | **1,275 passed · 0 failed** |
 | optional git cross-check | **passes when the historical blob `85c438f7d908e9df7da8d5e44ad8e30d3bbeeffe` is reachable, otherwise skips** |
 | the vendored historical red proof | **runs in BOTH states — it is never skipped** |
 
-So a green run legitimately reports either `1227 passed` or `1226 passed, 1 skipped`, and the two are the
+So a green run legitimately reports either `1275 passed` or `1274 passed, 1 skipped`, and the two are the
 same result. The variation is only whether `git cat-file -p <blob>` can reach the pinned blob: after the
 `BettingEdgeContinued` → `JoSchoAnalytics` rename the repository is owned by another account, so git
 refuses without `-c safe.directory=...` and the cross-check skips; in a review environment where the
@@ -729,13 +729,19 @@ synthetic targets only.
 
 Both must be open before any real outcome can be reached:
 
-1. `REAL_FIT_AUTHORIZED = True` (module constant), **and**
+1. `REAL_FIT_AUTHORIZED = True` (module constant) — **SUPERSEDED by §10.14**, and
 2. `COACH_V39_REAL_FIT_AUTHORIZED_BY_JOSEPH=I-HAVE-WRITTEN-THE-PREFIT-AMENDMENT` in the environment.
 
-Either lock alone leaves the gate shut (`test_real_fit_is_blocked_by_a_default_closed_double_lock`
-proves all four combinations). `assemble_real_panel()` is the single door and is deliberately
-unimplemented past the authorization check. `--real` exits with the block message. **Both locks are
-shut and neither was opened in this pass.**
+**Item 1 is WITHDRAWN as contradictory.** C6 statically requires exactly one module-level
+`REAL_FIT_AUTHORIZED = False`, so editing the constant to True made C6 — and therefore the 21-check
+preflight — fail, and the run could not clear gate 1. The constant stays `False` in committed source
+as the default-closed invariant and is never edited. The two runtime locks are now an exact CLI
+authorization token and the exact environment token, which together mint an immutable,
+invocation-scoped capability; see §10.14.
+
+Either lock alone leaves the gate shut. `assemble_real_panel()` is the single door; it is now
+IMPLEMENTED under C5-A (§10.9) and its statement 1 consumes the caller's capability. The `--real`
+dead end is removed (§10.11). **Both locks are shut and neither was opened in this pass.**
 
 ### 8.2 Frozen design
 
@@ -914,8 +920,8 @@ generating function, input columns, timing rule, missing-value rule, and coverin
 | scope | count |
 |---|---|
 | inherited baseline (reproduced, offline) | **141** |
-| new v3.9 + v3.9a + v3.9b + v3.9c + v3.9d + v3.9e + v3.9f + v3.9g + v3.9i + v3.9j + v3.9k + v3.9m + v3.9n + v3.9o + v3.9p + v3.9q + v3.9r + v3.9s + v3.9t + v3.9u tests | **1,086** |
-| **full coaching suite** | **1,227 collected · 1,226 mandatory passed · 1 optional git cross-check (passes when the pinned blob is reachable, otherwise skips) — offline, egress blocked, fresh empty temp dir** |
+| new v3.9 + v3.9a + v3.9b + v3.9c + v3.9d + v3.9e + v3.9f + v3.9g + v3.9i + v3.9j + v3.9k + v3.9m + v3.9n + v3.9o + v3.9p + v3.9q + v3.9r + v3.9s + v3.9t + v3.9u + v3.9v tests | **1,134** |
+| **full coaching suite** | **1,275 collected · 1,274 mandatory passed · 1 optional git cross-check (passes when the pinned blob is reachable, otherwise skips) — offline, egress blocked, fresh empty temp dir** |
 
 ### 10.1 THE TWO CODEX REPRODUCTIONS NOW FAIL SEMANTICALLY
 
@@ -984,11 +990,12 @@ Per-module counts, collected rather than estimated:
 | `test_authorized_runner_v39.py` | **49** | new at v3.9s — result ownership, the panel adapter, the CLI and the 5-file mapping |
 | `test_composed_feature_reader_v39.py` | **47** | new at v3.9t — the frozen veteran+rookie routing, implemented |
 | `test_evaluation_eligibility_v39.py` | **28** | new at v3.9u — the pre-outcome eligibility partition |
+| `test_authorization_capability_v39.py` | **48** | new at v3.9v — the invocation-scoped authorization capability |
 | `test_boundary_corpus.py` | **166** | 146 at v3.9o; +20 at v3.9q for the 10 C5-A injections |
 
-22+33+34+27+15+7+3 = **141** inherited; 88+246+166+205+9+91+37+38+31+45+49+47+28+6 = **1,086** new; total **1,227**.
+22+33+34+27+15+7+3 = **141** inherited; 88+246+166+205+9+91+37+38+31+45+49+47+28+48+6 = **1,134** new; total **1,275**.
 
-To reproduce the 141 exactly, ignore the thirteen v3.9 test modules and deselect these six tests. (The `tests/`
+To reproduce the 141 exactly, ignore the fourteen v3.9 test modules and deselect these six tests. (The `tests/`
 tree **is now tracked** — Joseph committed it on 2026-07-30, so new-vs-inherited *can* be diffed against
 `HEAD` today; the earlier statement that it was untracked is **SUPERSEDED**. The six IDs are still
 listed verbatim because a mistyped `--deselect` is silently ignored by pytest and yields 147.)
@@ -2607,6 +2614,79 @@ file, and the preflight and verdict round-trips are unaffected. **Still exactly 
 No lock opened · no outcome read · no fit · no real result written · no imputed or proxied coaching
 exposure · no change to any feature, arm, hyperparameter, threshold, cohort, selection rule or verdict
 criterion · no commit.
+
+
+---
+
+## 10.14 v3.9v — THE ACTIVATION CONTRADICTION: the two-lock system could not be opened
+
+Found by reading the committed source at `8ca2efc`, reproduced before any edit.
+
+### 10.14.1 The contradiction
+
+```
+C6                          statically requires exactly one module-level REAL_FIT_AUTHORIZED = False
+validate_run_mode           authorized_real required that constant to be True at runtime
+manifest §3                 instructed editing and committing it as True
+```
+
+Measured, both horns:
+
+```
+source edited to True   -> C6 FAILS: "only one module-level `= False` is allowed"
+                           -> no_real_outcome_access False -> preflight 20/21 -> gate 1 refuses
+source left as False    -> validate_run_mode(authorized_real) False:
+                           "requires BOTH real-fit locks OPEN (constant=False, env=False)"
+```
+
+So the published command could not open both locks by any route. The tests only reached the authorized
+path by monkeypatching the module global, and **the documented CLI had no equivalent mechanism** — the
+two-lock system was openable only by bypassing its own interface.
+
+### 10.14.2 The repair — a capability, not a flag
+
+`REAL_FIT_AUTHORIZED = False` stays in committed source as the default-closed invariant and is never
+reassigned. Authorization exists only as `RealFitAuthorization`: immutable (`__slots__`, `__setattr__`
+and `__delattr__` raise), minted per invocation by `grant_real_fit_authorization()` **only** when the
+CLI token and the environment token both match their frozen literals exactly, and threaded explicitly
+through `validate_run_mode` → `preflight` → `require_real_fit_authorization` →
+`require_preflight_clearance` → `assemble_real_panel` → `run_authorized_real`.
+
+It is never stored in a module global — a test enumerates `vars()` and asserts none holds one — so it
+cannot persist after the call that made it. **Mutating `REAL_FIT_AUTHORIZED` at runtime now authorizes
+nothing**: `real_fit_lock_state()` never consults it as an opener, and a test proves the old monkeypatch
+route is dead.
+
+### 10.14.3 C5-A and C6, tightened
+
+**C5-A clause 1** now requires statement 1 to be `require_real_fit_authorization(authorization)` using
+the door's **own parameter** — not a literal, not a global, not a freshly minted grant. Four injections
+(`()`, `(True)`, `(grant_real_fit_authorization('x'))`, `(REAL_FIT_AUTHORIZED)`) are all rejected.
+
+**C6** is restated precisely: exactly one canonical module-level binding, it is `False`, production
+source contains no reassignment **or mutation** — a new `_lock_mutations` walker rejects
+`globals()['REAL_FIT_AUTHORIZED'] = True` and `setattr(m, 'REAL_FIT_AUTHORIZED', True)`, which the
+Assign-target walker could not see — and real authorization is invocation-scoped. The existing
+binding-target/evasion corpus stays live (75 injections, categories C1/C3/C4/C4b/C5/C5A/C6/C7).
+
+### 10.14.4 The exact command
+
+```
+set COACH_V39_REAL_FIT_AUTHORIZED_BY_JOSEPH=I-HAVE-WRITTEN-THE-PREFIT-AMENDMENT
+.\.venv-test\Scripts\python.exe fantasy\projections\coaching\run_coach_projection_experiment_v39.py ^
+    --run-mode authorized_real ^
+    --authorization-token JOSEPH-AUTHORIZED-V39-FIRST-REAL-RUN ^
+    --outer-seasons 2018-2025
+```
+
+The previously published command — the same line without `--authorization-token` — is tested and
+**refuses before any reader is constructed**.
+
+### 10.14.5 What was NOT done
+
+No real outcome read · nothing fit · no result written · the real token pair presented only in-process
+against injected/stubbed readers · `REAL_FIT_AUTHORIZED` still `False` in source after every test ·
+no commit.
 
 ---
 

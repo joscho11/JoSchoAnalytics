@@ -46,12 +46,21 @@ class ReaderTripwire:
         return self.payload
 
 
+def _capability():
+    """Mint the invocation-scoped capability from the two exact tokens.
+
+    SUPERSEDED ROUTE: this used to monkeypatch `REAL_FIT_AUTHORIZED = True`. That no longer authorizes
+    anything — the constant is the default-closed invariant and is never consulted as an opener
+    (v3.9v). Holding a capability opens nothing by itself; every reader below is still injected.
+    """
+    return EX.grant_real_fit_authorization(EX.REAL_FIT_CLI_TOKEN,
+                                           env={EX.REAL_FIT_ENV_SWITCH: EX.REAL_FIT_ENV_TOKEN})
+
+
 @contextlib.contextmanager
 def _locks_open(monkeypatch_obj):
-    """Open BOTH locks in memory only. No file is edited and no environment escapes the test."""
-    monkeypatch_obj.setattr(EX, "REAL_FIT_AUTHORIZED", True, raising=False)
-    monkeypatch_obj.setenv(EX.REAL_FIT_ENV_SWITCH, EX.REAL_FIT_ENV_TOKEN)
-    yield
+    """Kept for call-shape compatibility; yields the capability."""
+    yield _capability()
 
 
 # =====================================================================================================
@@ -155,23 +164,23 @@ def test_every_PARTIAL_lock_state_refuses_before_any_reader(monkeypatch, constan
 
 
 def test_a_synthetic_prefit_run_mode_refuses_even_with_BOTH_locks_open(monkeypatch):
-    """The run mode is a separate gate from the locks, and it is checked before any reader."""
-    with _locks_open(monkeypatch):
-        f, o = ReaderTripwire("feature"), ReaderTripwire("outcome")
-        with pytest.raises(RuntimeError) as e:
-            EX.assemble_real_panel(f, o, run_mode=EX.RUN_MODE_SYNTHETIC_PREFIT)
-        assert "run mode" in str(e.value)
-        assert f.calls == [] and o.calls == []
+    """The run mode is a separate gate from the capability, and it is checked before any reader."""
+    auth = _capability()
+    f, o = ReaderTripwire("feature"), ReaderTripwire("outcome")
+    with pytest.raises(RuntimeError) as e:
+        EX.assemble_real_panel(f, o, auth, run_mode=EX.RUN_MODE_SYNTHETIC_PREFIT)
+    assert "run mode" in str(e.value)
+    assert f.calls == [] and o.calls == []
 
 
 def test_clearance_refuses_when_readiness_is_blocked(monkeypatch):
-    with _locks_open(monkeypatch):
-        monkeypatch.setattr(ARP, "ROOKIE_MATRIX", COACH / "no_such_matrix.parquet")
-        f, o = ReaderTripwire("feature"), ReaderTripwire("outcome")
-        with pytest.raises(RuntimeError) as e:
-            EX.assemble_real_panel(f, o)
-        assert "readiness" in str(e.value) or "rookie matrix missing" in str(e.value)
-        assert f.calls == [] and o.calls == []
+    auth = _capability()
+    monkeypatch.setattr(ARP, "ROOKIE_MATRIX", COACH / "no_such_matrix.parquet")
+    f, o = ReaderTripwire("feature"), ReaderTripwire("outcome")
+    with pytest.raises(RuntimeError) as e:
+        EX.assemble_real_panel(f, o, auth)
+    assert "readiness" in str(e.value) or "rookie matrix missing" in str(e.value)
+    assert f.calls == [] and o.calls == []
 
 
 def _authorized_shaped_preflight():
@@ -190,28 +199,30 @@ def _authorized_shaped_preflight():
 
 def test_clearance_reaches_and_ENFORCES_the_input_pins(monkeypatch):
     """With every earlier gate injected clear, a drifted input pin is what refuses."""
-    with _locks_open(monkeypatch):
-        EX.require_preflight_clearance(preflight_result=_authorized_shaped_preflight())
-        monkeypatch.setattr(ARP, "WEEKLY_SNAPSHOT_SHA256", "0" * 64)
-        with pytest.raises(ARP.AssemblyError) as e:
-            EX.require_preflight_clearance(preflight_result=_authorized_shaped_preflight())
-        assert "sha256" in str(e.value)
+    auth = _capability()
+    EX.require_preflight_clearance(preflight_result=_authorized_shaped_preflight(),
+                                   authorization=auth)
+    monkeypatch.setattr(ARP, "WEEKLY_SNAPSHOT_SHA256", "0" * 64)
+    with pytest.raises(ARP.AssemblyError) as e:
+        EX.require_preflight_clearance(preflight_result=_authorized_shaped_preflight(),
+                                       authorization=auth)
+    assert "sha256" in str(e.value)
 
 
 def test_a_drifted_input_stops_the_door_before_any_reader(monkeypatch):
-    with _locks_open(monkeypatch):
-        monkeypatch.setattr(ARP, "WEEKLY_SNAPSHOT_SHA256", "0" * 64)
-        f, o = ReaderTripwire("feature"), ReaderTripwire("outcome")
-        with pytest.raises((RuntimeError, ARP.AssemblyError)):
-            EX.assemble_real_panel(f, o)
-        assert f.calls == [] and o.calls == []
+    auth = _capability()
+    monkeypatch.setattr(ARP, "WEEKLY_SNAPSHOT_SHA256", "0" * 64)
+    f, o = ReaderTripwire("feature"), ReaderTripwire("outcome")
+    with pytest.raises((RuntimeError, ARP.AssemblyError)):
+        EX.assemble_real_panel(f, o, auth)
+    assert f.calls == [] and o.calls == []
 
 
 def test_clearance_refuses_a_gate_that_is_not_authorized_shaped(monkeypatch):
-    with _locks_open(monkeypatch):
-        with pytest.raises(RuntimeError) as e:
-            EX.require_preflight_clearance(preflight_result={"all_ok": True})
-        assert "REFUSED" in str(e.value)
+    with pytest.raises(RuntimeError) as e:
+        EX.require_preflight_clearance(preflight_result={"all_ok": True},
+                                       authorization=_capability())
+    assert "REFUSED" in str(e.value)
 
 
 def test_clearance_ORDER_gates_before_inputs(monkeypatch):
@@ -256,12 +267,12 @@ def test_GREEN_the_door_opens_and_assembles_when_every_gate_clears(monkeypatch):
     """Proves the wiring is not hard-wired shut. Synthetic frames; no canonical file is read."""
     feats = _synthetic_features()
     outs = _synthetic_outcomes(feats)
-    with _locks_open(monkeypatch):
-        monkeypatch.setattr(EX, "require_preflight_clearance",
-                            lambda *a, **k: {"all_ok": True, "injected": True})
-        f = ReaderTripwire("feature", payload=feats)
-        o = ReaderTripwire("outcome", payload=outs)
-        result = EX.assemble_real_panel(f, o)
+    auth = _capability()
+    monkeypatch.setattr(EX, "require_preflight_clearance",
+                        lambda *a, **k: {"all_ok": True, "injected": True})
+    f = ReaderTripwire("feature", payload=feats)
+    o = ReaderTripwire("outcome", payload=outs)
+    result = EX.assemble_real_panel(f, o, auth)
     assert f.calls == ["feature"] and o.calls == ["outcome"]
     assert set(result) == {"features", "outcomes", "accounting", "seasons"}
     assert len(result["outcomes"]) == len(feats)
@@ -272,9 +283,9 @@ def test_GREEN_production_zero_fill_and_accounting_survive_the_door(monkeypatch)
     """The door must not change `assemble_panel_core`'s production semantics."""
     feats = _synthetic_features()
     outs = _synthetic_outcomes(feats).iloc[:-3]          # 3 rows with no stat row -> zero-filled
-    with _locks_open(monkeypatch):
-        monkeypatch.setattr(EX, "require_preflight_clearance", lambda *a, **k: None)
-        result = EX.assemble_real_panel(ReaderTripwire("f", feats), ReaderTripwire("o", outs))
+    auth = _capability()
+    monkeypatch.setattr(EX, "require_preflight_clearance", lambda *a, **k: None)
+    result = EX.assemble_real_panel(ReaderTripwire("f", feats), ReaderTripwire("o", outs), auth)
     acc = result["accounting"]
     assert acc[ARP.STATE_ZERO_FILLED] == 3
     assert sum(acc[s] for s in ARP.FEATURE_ROW_STATES) == len(feats)
@@ -288,9 +299,9 @@ def test_GREEN_production_zero_fill_and_accounting_survive_the_door(monkeypatch)
 def test_the_door_returns_exactly_what_assemble_panel_core_returns(monkeypatch):
     feats = _synthetic_features()
     outs = _synthetic_outcomes(feats)
-    with _locks_open(monkeypatch):
-        monkeypatch.setattr(EX, "require_preflight_clearance", lambda *a, **k: None)
-        via_door = EX.assemble_real_panel(ReaderTripwire("f", feats), ReaderTripwire("o", outs))
+    auth = _capability()
+    monkeypatch.setattr(EX, "require_preflight_clearance", lambda *a, **k: None)
+    via_door = EX.assemble_real_panel(ReaderTripwire("f", feats), ReaderTripwire("o", outs), auth)
     direct = ARP.assemble_panel_core(feats, outs)
     pd.testing.assert_frame_equal(via_door["features"], direct["features"])
     pd.testing.assert_frame_equal(via_door["outcomes"], direct["outcomes"])

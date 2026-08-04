@@ -453,7 +453,7 @@ def test_the_authorized_path_order_is_authorization_then_clearance_then_readers(
     # strip the docstring: it NARRATES the same order, so a raw index() matches prose, not code
     body = src.split('"""')
     src = body[0] + ("".join(body[2:]) if len(body) > 2 else "")
-    i_auth = src.index("require_real_fit_authorization()")
+    i_auth = src.index("require_real_fit_authorization(authorization)")
     i_clear = src.index("require_preflight_clearance(")
     i_read = src.index("authorized_composed_feature_reader")
     i_panel = src.index("assemble_real_panel(")

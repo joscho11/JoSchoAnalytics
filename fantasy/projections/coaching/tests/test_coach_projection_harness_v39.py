@@ -437,12 +437,16 @@ def test_real_fit_is_blocked_by_a_default_closed_double_lock(monkeypatch):
     assert EX.real_fit_is_unlocked() is False
     with pytest.raises(RuntimeError, match="NOT AUTHORIZED"):
         _door()
-    # both locks open -> statement 1 PASSES and control reaches statement 2. Asserted with a sentinel
+    # BOTH locks open -> statement 1 PASSES and control reaches statement 2. As of v3.9v the locks are
+    # the two exact TOKENS, which mint an invocation-scoped capability; mutating the module constant
+    # authorizes nothing. Asserted with a sentinel
     # rather than by expecting a raise: whether clearance then refuses depends on the preflight
     # counters, which are process state, so a bare `raises` here was order-dependent (it passed alone
     # and failed in a full run where an earlier test had already exercised the pipeline).
     monkeypatch.setenv(EX.REAL_FIT_ENV_SWITCH, EX.REAL_FIT_ENV_TOKEN)
-    assert EX.real_fit_is_unlocked() is True
+    auth = EX.grant_real_fit_authorization(
+        EX.REAL_FIT_CLI_TOKEN, env={EX.REAL_FIT_ENV_SWITCH: EX.REAL_FIT_ENV_TOKEN})
+    assert EX.real_fit_is_unlocked(auth) is True
 
     class _Reached(Exception):
         pass
@@ -452,7 +456,7 @@ def test_real_fit_is_blocked_by_a_default_closed_double_lock(monkeypatch):
 
     monkeypatch.setattr(EX, "require_preflight_clearance", _sentinel)
     with pytest.raises(_Reached):
-        _door()
+        EX.assemble_real_panel(_tripwire("feature"), _tripwire("outcome"), auth)
     assert calls == [], "a reader was reached before clearance returned"
 
 

@@ -696,7 +696,17 @@ seasons remain represented, and every retained bucket keeps complete ordered fea
 accessed when this rule or these counts were chosen**, and no feature, arm, hyperparameter, threshold,
 cohort, selection rule or verdict criterion is changed.
 
-**The real-fit gate is DEFAULT-CLOSED and double-locked.** Both `REAL_FIT_AUTHORIZED = True` and
+**CORRECTION, PREFIT, 2026-08-03 (v3.9v).** The sentence below required `REAL_FIT_AUTHORIZED = True`, which is **WITHDRAWN as contradictory**: C6 statically requires exactly one module-level
+`REAL_FIT_AUTHORIZED = False`, so editing it to True made C6 — and the 21-check preflight — fail, and
+no authorized run could clear gate 1. The constant stays `False` in committed source as the
+default-closed invariant. The two runtime locks are now an exact CLI authorization token
+(`--authorization-token JOSEPH-AUTHORIZED-V39-FIRST-REAL-RUN`) and the exact environment token, which
+together mint an immutable, invocation-scoped capability threaded through every gate. Either alone,
+or a wrong/empty/partial pair, refuses before any reader. This changes only HOW authorization is
+presented; it changes no population, feature, arm, hyperparameter, threshold, cohort, selection rule
+or verdict criterion.
+
+**The real-fit gate is DEFAULT-CLOSED and double-locked.** *(This paragraph's `REAL_FIT_AUTHORIZED = True` requirement is **SUPERSEDED** by the correction above; the constant stays False and the CLI token replaces it.)* Both `REAL_FIT_AUTHORIZED = True` and
 `COACH_V39_REAL_FIT_AUTHORIZED_BY_JOSEPH=I-HAVE-WRITTEN-THE-PREFIT-AMENDMENT` are required; either
 alone leaves the gate shut. `assemble_real_panel` is the single door and is deliberately
 unimplemented beyond the authorization check. Both locks are shut in this pass.

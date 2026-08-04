@@ -397,15 +397,30 @@ that in every closed or partial lock state, and in `synthetic_prefit` mode with 
 
 ```
 set COACH_V39_REAL_FIT_AUTHORIZED_BY_JOSEPH=I-HAVE-WRITTEN-THE-PREFIT-AMENDMENT
-.\.venv-test\Scripts\python.exe fantasy\projections\coaching\run_coach_projection_experiment_v39.py --run-mode authorized_real --outer-seasons 2018-2025
+.\.venv-test\Scripts\python.exe fantasy\projections\coaching\run_coach_projection_experiment_v39.py --run-mode authorized_real --authorization-token JOSEPH-AUTHORIZED-V39-FIRST-REAL-RUN --outer-seasons 2018-2025
 ```
 
 Required simultaneously:
 
+**CORRECTED 2026-08-03 (v3.9v).** The row below used to read "`REAL_FIT_AUTHORIZED` (module constant)
+= `True` — edited in source, committed, reviewed". That instruction was **CONTRADICTORY and is
+WITHDRAWN**: C6 statically requires exactly one module-level `REAL_FIT_AUTHORIZED = False`, so editing
+it to True made C6 — and therefore the 21-check preflight — FAIL, and the run could not clear gate 1.
+The constant stays `False` in committed source forever as the default-closed invariant and is **never**
+edited to authorize a run.
+
+The two runtime locks are now presented together in ONE invocation and mint an immutable,
+invocation-scoped capability. Nothing is mutated and nothing persists after the call.
+
 | lock | required value |
 |---|---|
-| `REAL_FIT_AUTHORIZED` (module constant) | `True` — edited in source, committed, reviewed |
+| CLI authorization token | exactly `--authorization-token JOSEPH-AUTHORIZED-V39-FIRST-REAL-RUN` |
 | `COACH_V39_REAL_FIT_AUTHORIZED_BY_JOSEPH` | exactly `I-HAVE-WRITTEN-THE-PREFIT-AMENDMENT` |
+
+Either alone is refused, as is a wrong, empty or partial pair — before any reader is constructed. The
+capability is threaded explicitly through `validate_run_mode`, `preflight`,
+`require_real_fit_authorization`, `require_preflight_clearance`, `assemble_real_panel` and
+`run_authorized_real`; a mutated module global authorizes nothing.
 
 Either alone is refused. A partial state is refused in **both** modes.
 

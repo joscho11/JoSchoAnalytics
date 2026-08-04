@@ -138,11 +138,20 @@ def test_every_partial_or_closed_lock_state_refuses(monkeypatch, constant_open, 
 
 
 def test_authorized_real_requires_BOTH_locks_open(monkeypatch):
+    """SUPERSEDED ROUTE (v3.9v): this used to monkeypatch `REAL_FIT_AUTHORIZED = True`, which no
+    longer authorizes anything. Both locks are now the two exact tokens, presented together, which
+    mint an invocation-scoped capability."""
+    auth = EX.grant_real_fit_authorization(
+        EX.REAL_FIT_CLI_TOKEN, env={EX.REAL_FIT_ENV_SWITCH: EX.REAL_FIT_ENV_TOKEN})
+    assert EX.real_fit_is_unlocked(auth) is True
+    assert EX.validate_run_mode(EX.RUN_MODE_AUTHORIZED_REAL, authorization=auth)[0] is True
+    assert EX.validate_run_mode(EX.RUN_MODE_SYNTHETIC_PREFIT, authorization=auth)[0] is False
+
+    # and the retired route is genuinely dead
     monkeypatch.setattr(EX, "REAL_FIT_AUTHORIZED", True, raising=False)
     monkeypatch.setenv(EX.REAL_FIT_ENV_SWITCH, EX.REAL_FIT_ENV_TOKEN)
-    assert EX.real_fit_is_unlocked() is True
-    assert EX.validate_run_mode(EX.RUN_MODE_AUTHORIZED_REAL)[0] is True
-    assert EX.validate_run_mode(EX.RUN_MODE_SYNTHETIC_PREFIT)[0] is False
+    assert EX.real_fit_is_unlocked() is False
+    assert EX.validate_run_mode(EX.RUN_MODE_AUTHORIZED_REAL)[0] is False
 
 
 def test_an_unknown_run_mode_fails_closed():
