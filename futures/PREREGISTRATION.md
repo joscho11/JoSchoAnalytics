@@ -554,3 +554,89 @@ is added alongside it as the separable factual count. **`FEATURE_COLS` goes 24 �
 `explicit_neutral` **or** `international_game`. It **may not** automatically assign zero home
 advantage to every domestic alternate venue; doing so requires its own preregistered rule declared
 before M4 is fitted.
+
+---
+
+### Amendment 3 — calibrating M4's win distribution
+
+**Accepted by Joseph on 2026-08-03**, after `03` measured M4's calibration and **before any
+corrected model was fitted**. This amendment declares the correction, its estimation rule and its
+acceptance test in advance, precisely so the fix cannot be tuned to the evaluation folds.
+
+#### A3.1 — The measured defect
+
+`03` reported, on the frozen headline folds (320 rows):
+
+| | observed | nominal |
+|---|---|---|
+| 50% central interval coverage | **0.450** | 0.500 |
+| 80% central interval coverage | **0.650** | 0.800 (§7 band 0.72–0.88) |
+| PIT mean | 0.495 | 0.500 |
+
+PIT deciles `[20.3, 9.4, 7.5, 5.0, 7.8, 6.9, 9.4, 6.2, 5.9, 21.6]` — a bathtub. Realized win totals
+fall in the tails more than twice as often as the simulation allows. **PIT mean ≈ 0.5, so this is a
+width defect, not a location bias.** M4's point estimate is not in question here.
+
+#### A3.2 — The correction: a per-team-season strength shock (M4-c)
+
+M4 treats each team's rating as **known exactly** and each game as an **independent** draw. Neither
+holds: the rating is estimated, and a team's true strength drifts within a season in ways that are
+correlated across all of that team's games (injury, form, an in-season quarterback change).
+
+**M4-c** adds one term. In each simulation, each team draws a strength shock
+
+```
+epsilon_team ~ Normal(0, tau^2)      in margin points, drawn once per team per simulated season
+```
+
+applied to every game that team plays in that simulation. Everything else — the rating, the
+home-field constant, the residual spread, the tie rule, the venue rule (A2.5.6) — is **unchanged**.
+
+*Why this lever and not inflating the per-game residual:* the under-coverage is at the **season
+total**, which is a sum over ~17 games. Independent per-game noise grows the season-total spread
+only as √n and would have to be inflated implausibly to close the gap, distorting game-level
+margins in the process. A team-level shock is common to all of a team's games and so moves the
+season total directly — which is both the correct mechanism and the efficient one.
+
+#### A3.3 — Estimating `tau` (training windows only)
+
+* Frozen grid: **`tau ∈ (0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 4.0, 5.0)`** margin points.
+* For outer test season *T*, `tau` is selected by **inner expanding-season validation inside the
+  training window only** — the same loop that selects Ridge alphas. For each candidate, simulate the
+  inner validation season and measure its 80% interval coverage.
+* Criterion: **minimise `|inner coverage80 − 0.80|`**; ties broken toward the **smaller** `tau`
+  (prefer the least correction that works).
+* Deterministic fallback **`tau = 1.5`** when an outer fold has fewer than two usable inner
+  validation seasons.
+* **`tau` is never fitted on, or selected using, a test season.** Choosing it to hit coverage on the
+  evaluation folds would be fitting to the test set and is forbidden.
+
+#### A3.4 — Acceptance
+
+Judged on the **existing** §7 condition — no new threshold is introduced:
+
+* **PASS** if M4-c's 80% interval coverage on the headline folds falls within **0.72–0.88**.
+* Reported alongside: 50% coverage, CRPS, PIT deciles, and the same figures on the A1.4 strict
+  subset.
+* A **FAIL** is reported as a fail. It is not retried with a wider grid, a different criterion or a
+  different shock structure — that would be searching until the answer is agreeable.
+
+#### A3.5 — Reporting both models
+
+`03` must report **M4 and M4-c side by side**. The original M4 numbers are not overwritten.
+
+**Declared tolerance:** the correction is a *width* fix, so the point estimate must barely move.
+`|MAE(M4-c) − MAE(M4)| ≤ 0.05` wins on the headline folds. Exceeding it means the shock is doing
+something other than widening, and the result must be reported as such rather than accepted.
+
+#### A3.6 — What this amendment does not change
+
+Gate B is **already decided and stays decided** — all five models are further from the realized win
+count than the archived consensus, and A3 does not reopen it. No feature is added. Tier C remains
+shut. §7's gate A verdict from `02` stands. M4-c is a calibration variant of M4, not a sixth family.
+
+#### A3.7 — One-shot
+
+The acceptance test in A3.4 fires **once**, on the frozen folds, and the result is written to
+`futures/artifacts/distribution_eval.json`. Re-running to obtain a different coverage number is
+forbidden by the same rule that governs §7.

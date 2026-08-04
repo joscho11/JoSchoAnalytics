@@ -1,0 +1,194 @@
+{
+  "notebook": "futures/season_team_totals/04_fit_production.ipynb",
+  "model": {
+    "family": "M4-c",
+    "artifact": "futures/models/win_totals_model.pkl",
+    "sha256": "3116fa0c82d5e596be7fa82433cf2a0f041e5ff475967a5577698339ac275380",
+    "selected_because": [
+      "\u00a77 gate A requires the display to show projected wins AND the distribution; M4-c is the only family that emits a distribution",
+      "M5 cannot produce a predict-season row (no archived line exists for it) and A2.2 makes it fail closed there"
+    ],
+    "selection_is_requirement_driven": true,
+    "note": "M4 also happens to have the best structural point estimate, but that is recorded as an observation and is not the selection criterion"
+  },
+  "features": {
+    "order_is_contract": true,
+    "columns": [
+      "games_scheduled",
+      "designated_home_games",
+      "true_home_venue_games",
+      "effective_neutral_games",
+      "non_primary_home_venue_games",
+      "international_games",
+      "div_games",
+      "mean_rest",
+      "has_bye",
+      "prior_games",
+      "prior_wins",
+      "prior_win_pct",
+      "prior_point_diff",
+      "prior_points_for",
+      "prior_points_against",
+      "prior_pythag_win_pct",
+      "prior_off_epa_play",
+      "prior_def_epa_play",
+      "prior_epa_diff",
+      "prior_off_success_rate",
+      "form_3yr_win_pct",
+      "sos_prior_win_pct",
+      "coach_changed",
+      "coach_prior_win_pct",
+      "coach_prior_games"
+    ],
+    "n": 25
+  },
+  "fit": {
+    "train_seasons": [
+      2002,
+      2003,
+      2004,
+      2005,
+      2006,
+      2007,
+      2008,
+      2009,
+      2010,
+      2011,
+      2012,
+      2013,
+      2014,
+      2015,
+      2016,
+      2017,
+      2018,
+      2019,
+      2020,
+      2021,
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "n_seasons": 24,
+    "n_train_games": 6223,
+    "alpha": 1000.0,
+    "tau": 5.0,
+    "hfa": 1.8960262804899592,
+    "sigma": 14.067787844969908,
+    "tie_threshold": 0.030757424255522005,
+    "tie_rate": 0.0023094688221709007,
+    "holdout": "none - evaluation is complete; see 02 and 03",
+    "tau_reselected_not_averaged": true,
+    "alpha_grid": [
+      0.01,
+      0.1,
+      1.0,
+      3.0,
+      10.0,
+      30.0,
+      100.0,
+      300.0,
+      1000.0
+    ],
+    "tau_grid": [
+      0.0,
+      0.5,
+      1.0,
+      1.5,
+      2.0,
+      2.5,
+      3.0,
+      4.0,
+      5.0
+    ],
+    "tau_at_grid_boundary": true,
+    "tau_inner_coverage80_by_tau": {
+      "0.0": 0.625,
+      "0.5": 0.625,
+      "1.0": 0.6354,
+      "1.5": 0.6354,
+      "2.0": 0.6354,
+      "2.5": 0.6771,
+      "3.0": 0.7083,
+      "4.0": 0.7292,
+      "5.0": 0.7812
+    },
+    "tau_boundary_note": "inner coverage80 rises monotonically to the top of the frozen grid and is still below 0.80 there, so the inner optimum probably lies above the grid maximum and the production tau is capped by it. A3.3 froze the grid and A3.4 forbids retrying with a wider one, so it stands; widening it would need a new amendment declared before any refit. Measured out-of-sample coverage80 was 0.753, inside the accepted 0.72-0.88 band."
+  },
+  "reproducibility": {
+    "coefficients_identical_on_refit": true,
+    "constants_identical": true,
+    "simulation_identical": true,
+    "engine_matches_03_fold": "2025",
+    "engine_equivalence": {
+      "hfa": {
+        "nb03": 1.8886636072996559,
+        "nb04": 1.8886636072996559
+      },
+      "sigma": {
+        "nb03": 14.069817125323201,
+        "nb04": 14.069817125323201
+      },
+      "tie_threshold": {
+        "nb03": 0.0454047089364513,
+        "nb04": 0.0454047089364513
+      },
+      "n_train_games": {
+        "nb03": 5951,
+        "nb04": 5951
+      }
+    }
+  },
+  "evidence": {
+    "gate_A_passed": true,
+    "gate_A_delta_vs_persistence": -0.4750885753676468,
+    "gate_A_fold_win_rate": 1.0,
+    "gate_B_passed": false,
+    "gate_B_note": "every model is further from the realized win count than the archived market consensus; this artifact does not beat it",
+    "a3_calibration_accepted": true,
+    "coverage80": 0.753125,
+    "coverage80_band": [
+      0.72,
+      0.88
+    ],
+    "pooled_mae_headline": 2.3650428124999996,
+    "source_artifacts": [
+      "futures/artifacts/model_comparison.json",
+      "futures/artifacts/distribution_eval.json"
+    ]
+  },
+  "claim_licence": {
+    "permitted": "projected wins and a calibrated win distribution; accuracy against an archived market consensus of unattributed sportsbook origin, in aggregate, reported for both fold sets",
+    "required_label": "does not beat the archived market consensus; BACKTESTED, NOT LIVE-VALIDATED",
+    "naming": "archived market consensus of unattributed sportsbook origin - never 'the sportsbook line', 'Vegas', or 'the market'"
+  },
+  "lock": {
+    "tier_c_open": false,
+    "forbidden_downstream": [
+      "side",
+      "over/under recommendation",
+      "probability against a posted line",
+      "confidence tier",
+      "expected value",
+      "break-even",
+      "profitability"
+    ],
+    "authority": "PREREGISTRATION \u00a77 gate C + \u00a710 A1.5"
+  },
+  "inputs": {
+    "panel": "futures/data/team_season_panel.parquet",
+    "panel_frame_sha256": "039f0e0d9e5bc29f962b07a3d6728988369687a37ecf81448c03416daff68e1e",
+    "venue_context": "futures/data/season_schedule_context.parquet",
+    "audit": "futures/artifacts/data_audit.json",
+    "dataset_metadata": "futures/artifacts/dataset_metadata.json"
+  },
+  "environment": {
+    "python": "3.11.9",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "numpy": "1.26.4",
+    "pandas": "2.3.3",
+    "joblib": "1.5.3",
+    "run_at_utc": "2026-08-04T23:19:14.064104+00:00",
+    "seed": 20260802
+  }
+}
