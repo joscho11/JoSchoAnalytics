@@ -561,6 +561,13 @@ SORT_KEYS = {
     "College Talent Score": "college_talent",
 }
 
+# Columns whose direction defaults to DESCENDING when you select them. These four are MAGNITUDE
+# columns — more points, more talent — so the interesting end is the top, and ascending-first made
+# you flip the toggle every time. Everything else stays ascending-first because it is a RANK or a
+# draft price, where 1 / earliest is the interesting end. The toggle is never removed, only
+# re-defaulted, and each sort column remembers the direction you last set for it.
+DESCENDING_FIRST = {"Sleeper Proj", "Model Proj", "NFL Talent Score", "College Talent Score"}
+
 
 def _sort_board(view, sort_label, ascending):
     """Sort by the numeric field behind a display column. Sentinels (NaN sort keys) always
@@ -972,8 +979,12 @@ def render():
         with fc3:
             sort_label = st.selectbox("Sort by", list(SORT_KEYS), index=0, key="db26_sortby")
         with fc4:
-            order = st.radio("Order", ["Ascending", "Descending"], index=0,
-                             horizontal=True, key="db26_sortdir")
+            # Key is per sort column, so each column carries its own default AND remembers a
+            # direction you set on it. A single shared key would let Streamlit's stored value
+            # override the per-column default the moment you touched the toggle once.
+            order = st.radio("Order", ["Ascending", "Descending"],
+                             index=1 if sort_label in DESCENDING_FIRST else 0,
+                             horizontal=True, key=f"db26_sortdir_{SORT_KEYS[sort_label]}")
         detail = st.toggle(
             "Show projection and talent detail", value=True, key="db26_detail",
             help="On: the full board, including the raw Sleeper and model season-point estimates "
