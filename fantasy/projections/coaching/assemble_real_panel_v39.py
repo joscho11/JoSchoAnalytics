@@ -92,6 +92,120 @@ PLAYER_KEY = "player_id"
 SEASON_KEY = "season"
 PANEL_KEYS = (PLAYER_KEY, SEASON_KEY)
 
+# =====================================================================================================
+# THE CANONICAL PANEL-KEY CONTRACT (v3.9x)
+# =====================================================================================================
+# The first authorized real run reached the adapter and refused with "the join reordered the feature
+# rows". The rows were NOT reordered. The feature reader emitted `player_id` as pandas
+# `string[python]`; the outcome reader emitted it as numpy `object`; the merge resolved the key to
+# `object`; and the adapter's assertion used `DataFrame.equals`, which compares DTYPES as well as
+# values. A pure dtype disagreement between the two readers was reported as a row-ordering failure.
+#
+# The repair is a contract, not a relaxation. ONE canonical key schema is defined here and enforced at
+# BOTH real reader boundaries, so the two sides cannot disagree in the first place; the adapter then
+# checks dtype and ordering SEPARATELY and names whichever actually failed.
+PANEL_KEY_DTYPES = {
+    PLAYER_KEY: pd.StringDtype(storage="python"),
+    SEASON_KEY: np.dtype("int32"),
+}
+# nflverse gsis ids are `00-00XXXXX`; the frozen panel window is 2014-2025. The season bound is wide
+# on purpose — it rejects a corrupt or overflowing value, not a legitimate one.
+SEASON_MIN, SEASON_MAX = 1920, 2100
+# Strings that a careless `astype(str)` would manufacture out of a NULL. A player id equal to any of
+# these is a null that has already been stringified upstream, and it must not be accepted as identity.
+STRINGIFIED_NULLS = ("nan", "none", "null", "na", "n/a", "<na>", "nat", "")
+
+
+def canonical_key_dtype_problems(frame, where):
+    """Report every key column whose dtype is not the canonical one. Never raises, never converts."""
+    problems = []
+    for key, want in PANEL_KEY_DTYPES.items():
+        if key not in frame.columns:
+            problems.append(f"{where}: key column {key!r} is missing")
+            continue
+        got = frame[key].dtype
+        if got != want:
+            problems.append(f"{where}: key {key!r} has dtype {got!r}, canonical is {want!r}")
+    return problems
+
+
+def canonicalize_panel_keys(frame, where):
+    """Return `frame` with the panel keys in the CANONICAL dtypes, validating before converting.
+
+    Deliberately NOT `astype(str)` / `astype("int32")`. A blind cast is how a null becomes the literal
+    string "nan" and how 2018.7 or a 2**40 season silently becomes a plausible integer. Every rejection
+    below is checked BEFORE any conversion, so a bad value refuses rather than being manufactured into
+    a good-looking one:
+
+      player_id   must already be textual (object-of-str or a pandas string dtype) — a numeric or
+                  categorical id column is refused, not coerced; no nulls; no value that is a
+                  stringified null; no blank/whitespace-only id.
+      season      must be integral in VALUE (a float column is accepted only if every value is exactly
+                  integral), non-null, and inside [SEASON_MIN, SEASON_MAX] so the int32 narrowing is
+                  provably lossless. The round-trip is verified after conversion.
+    """
+    missing = [k for k in PANEL_KEYS if k not in frame.columns]
+    if missing:
+        raise AssemblyError(f"{where}: missing panel key column(s) {missing}")
+
+    out = frame.copy()
+
+    # ---- player_id -------------------------------------------------------------------------------
+    col = out[PLAYER_KEY]
+    if col.isna().any():
+        raise AssemblyError(f"{where}: {PLAYER_KEY} has {int(col.isna().sum())} null value(s); "
+                            f"identity must be resolved before canonicalization")
+    is_text = isinstance(col.dtype, pd.StringDtype) or (
+        col.dtype == object and col.map(lambda v: isinstance(v, str)).all())
+    if not is_text:
+        raise AssemblyError(f"{where}: {PLAYER_KEY} has dtype {col.dtype!r} and is not textual; "
+                            f"a non-string player id is refused, never coerced with astype(str)")
+    stripped = col.astype(object).map(lambda v: v.strip())
+    bad = stripped[stripped.str.lower().isin(STRINGIFIED_NULLS)]
+    if len(bad):
+        raise AssemblyError(f"{where}: {PLAYER_KEY} has {len(bad)} value(s) that are stringified "
+                            f"nulls or blank, e.g. {sorted(set(bad))[:5]}; these are missing "
+                            f"identities, not identifiers")
+    out[PLAYER_KEY] = pd.array(col.astype(object).to_numpy(), dtype=PANEL_KEY_DTYPES[PLAYER_KEY])
+
+    # ---- season ----------------------------------------------------------------------------------
+    col = out[SEASON_KEY]
+    if col.isna().any():
+        raise AssemblyError(f"{where}: {SEASON_KEY} has {int(col.isna().sum())} null value(s)")
+    if not pd.api.types.is_numeric_dtype(col) or pd.api.types.is_bool_dtype(col):
+        raise AssemblyError(f"{where}: {SEASON_KEY} has dtype {col.dtype!r}; it must be numeric")
+    as_float = col.astype("float64")
+    fractional = as_float[as_float != np.floor(as_float)]
+    if len(fractional):
+        raise AssemblyError(f"{where}: {SEASON_KEY} has {len(fractional)} non-integral value(s), "
+                            f"e.g. {sorted(set(fractional))[:5]}")
+    lo, hi = float(as_float.min()), float(as_float.max())
+    if lo < SEASON_MIN or hi > SEASON_MAX:
+        raise AssemblyError(f"{where}: {SEASON_KEY} range [{lo:.0f}, {hi:.0f}] is outside "
+                            f"[{SEASON_MIN}, {SEASON_MAX}]; the int32 narrowing would be lossy")
+    narrowed = as_float.astype(PANEL_KEY_DTYPES[SEASON_KEY])
+    if not np.array_equal(narrowed.astype("float64").to_numpy(), as_float.to_numpy()):
+        raise AssemblyError(f"{where}: {SEASON_KEY} did not survive the int32 round trip; "
+                            f"the conversion would be lossy")
+    out[SEASON_KEY] = narrowed
+
+    # ---- non-null and unique ---------------------------------------------------------------------
+    dup = out.duplicated(subset=list(PANEL_KEYS)).sum()
+    if dup:
+        raise AssemblyError(f"{where}: {int(dup)} duplicate {list(PANEL_KEYS)} row(s); panel keys "
+                            f"must be unique")
+
+    residual = canonical_key_dtype_problems(out, where)
+    if residual:                                          # unreachable by construction; asserted anyway
+        raise AssemblyError("canonicalization did not produce the canonical dtypes: "
+                            + "; ".join(residual))
+    return out
+
+
+def ordered_key_values(frame):
+    """The key columns as a plain object array — dtype-free, so ORDER can be compared on its own."""
+    return frame[list(PANEL_KEYS)].astype(object).to_numpy()
+
 # The Arm 0 target, reproduced EXACTLY as production defines it.
 OUTCOME_COLUMN = "season_total_half_ppr"
 WEEKLY_REQUIRED_COLUMNS = (PLAYER_KEY, SEASON_KEY, "season_type", "fantasy_points", "receptions")
@@ -658,6 +772,10 @@ def authorized_composed_feature_reader(veteran_path=None, rookie_path=None, veri
         spine = pd.read_parquet(vet_src, columns=list(VETERAN_FEATURE_COLUMNS))
         rookie = pd.read_parquet(rook_src, columns=list(ROOKIE_MATRIX_COLUMNS))
         frame = compose_feature_frame(spine, rookie, models_dir=models_dir)
+        # v3.9x: the canonical key contract is applied HERE, at the boundary, so this reader and the
+        # outcome reader cannot disagree about `player_id`'s dtype. That disagreement — string[python]
+        # against object — is what the first authorized real run died on.
+        frame = canonicalize_panel_keys(frame, "composed feature reader")
         problems = validate_feature_frame(frame)
         if problems:
             raise AssemblyError("composed feature reader output failed its own validator: "
@@ -888,6 +1006,17 @@ def panel_for_experiment(assembled, models_dir=None, require_bucket_coverage=Tru
         raise AssemblyError("adapter input: " + "; ".join(problems))
 
     keys = list(PANEL_KEYS)
+
+    # v3.9x: DTYPE FIRST, AND ON ITS OWN. The old code asserted ordering with `DataFrame.equals`,
+    # which compares dtypes too, so a dtype disagreement between the readers was reported as
+    # "the join reordered the feature rows" — a false and misleading diagnosis that stopped the first
+    # authorized real run. Dtype and ordering are now two checks with two messages.
+    key_problems = (canonical_key_dtype_problems(features, "adapter feature frame")
+                    + canonical_key_dtype_problems(outcomes, "adapter outcome frame"))
+    if key_problems:
+        raise AssemblyError("adapter: panel key dtype contract violated (this is a DTYPE failure, "
+                            "not a row-ordering failure): " + "; ".join(key_problems))
+
     if outcomes.duplicated(subset=keys).any():
         n = int(outcomes.duplicated(subset=keys).sum())
         raise AssemblyError(f"adapter: {n} duplicate {keys} row(s) in the outcome frame")
@@ -909,8 +1038,17 @@ def panel_for_experiment(assembled, models_dir=None, require_bucket_coverage=Tru
     if len(aligned) != len(features):
         raise AssemblyError(f"adapter: alignment changed the row count "
                             f"{len(features)} -> {len(aligned)}")
-    if not aligned[keys].equals(features[keys].reset_index(drop=True)):
-        raise AssemblyError("adapter: the join reordered the feature rows")
+    # ORDER, compared on VALUES ONLY — `ordered_key_values` drops dtype metadata, so this fires if and
+    # only if a key value actually moved. The dtype contract was already asserted above.
+    lhs = ordered_key_values(features.reset_index(drop=True))
+    rhs = ordered_key_values(aligned)
+    if not np.array_equal(lhs, rhs):
+        moved = int(np.sum(np.any(lhs != rhs, axis=1)))
+        first = int(np.argmax(np.any(lhs != rhs, axis=1)))
+        raise AssemblyError(
+            f"adapter: the join reordered the feature rows — {moved} row(s) hold a different key "
+            f"after alignment; first at position {first}: expected {tuple(lhs[first])}, "
+            f"got {tuple(rhs[first])}")
 
     panel = features.reset_index(drop=True).copy()
     panel[MODEL_TARGET_COLUMN] = aligned[OUTCOME_COLUMN].to_numpy(float)
@@ -1024,7 +1162,11 @@ def grouped_season_totals(weekly, seasons=ALL_PANEL_SEASONS):
                            + 0.5 * reg["receptions"].fillna(0).astype(float))
     out = (reg.groupby([PLAYER_KEY, SEASON_KEY])[OUTCOME_COLUMN].sum()
               .reset_index())
-    return out[[PLAYER_KEY, SEASON_KEY, OUTCOME_COLUMN]]
+    out = out[[PLAYER_KEY, SEASON_KEY, OUTCOME_COLUMN]]
+    # v3.9x: the SAME canonical key contract the feature reader applies. `groupby(...).reset_index()`
+    # hands back whatever dtypes the weekly parquet carried — `object` for `player_id` — and that
+    # mismatch is what the adapter mis-reported as a row reordering.
+    return canonicalize_panel_keys(out, "grouped season-total outcome reader")
 
 
 # =====================================================================================================
@@ -1107,6 +1249,16 @@ def assemble_panel_core(features, outcomes, *, required_seasons=ALL_PANEL_SEASON
     problems += validate_outcome_frame(outcomes)
     if problems:
         raise AssemblyError("; ".join(problems))
+
+    # v3.9x DEFENSIVE KEY-DTYPE ASSERTION. Both real readers canonicalize their own output, so this
+    # can only fire for an INJECTED or hand-built frame — and when it does it must say so accurately,
+    # naming the offending column and both dtypes, rather than surfacing later as a bogus "reordered"
+    # or a silently upcast join key.
+    key_problems = (canonical_key_dtype_problems(features, "feature frame")
+                    + canonical_key_dtype_problems(outcomes, "outcome frame"))
+    if key_problems:
+        raise AssemblyError("panel key dtype contract violated (both real readers emit the canonical "
+                            "dtypes; an injected frame must too): " + "; ".join(key_problems))
 
     keys = features[list(PANEL_KEYS)].copy()
     aligned = keys.merge(outcomes, on=list(PANEL_KEYS), how="left", validate="one_to_one")

@@ -103,7 +103,7 @@ interpreter `.\.venv-test\Scripts\python.exe` (Python 3.11.9). This is one line,
 `...` placeholders, no abbreviations:
 
 ```
-.\.venv-test\Scripts\python.exe -m pytest fantasy/projections/coaching/tests -q -p no:warnings --ignore=fantasy/projections/coaching/tests/test_arm_features_v39.py --ignore=fantasy/projections/coaching/tests/test_coach_projection_harness_v39.py --ignore=fantasy/projections/coaching/tests/test_boundary_corpus.py --ignore=fantasy/projections/coaching/tests/test_assemble_real_panel_v39.py --ignore=fantasy/projections/coaching/tests/test_combine_snapshot_provenance.py --ignore=fantasy/projections/coaching/tests/test_rookie_matrix_v39.py --ignore=fantasy/projections/coaching/tests/test_pff_point_in_time_v39.py --ignore=fantasy/projections/coaching/tests/test_arm0_refits_from_scratch_v39.py --ignore=fantasy/projections/coaching/tests/test_activation_wiring_v39.py --ignore=fantasy/projections/coaching/tests/test_veteran_snapshot_v39.py --ignore=fantasy/projections/coaching/tests/test_authorized_runner_v39.py --ignore=fantasy/projections/coaching/tests/test_composed_feature_reader_v39.py --ignore=fantasy/projections/coaching/tests/test_evaluation_eligibility_v39.py --ignore=fantasy/projections/coaching/tests/test_authorization_capability_v39.py --ignore=fantasy/projections/coaching/tests/test_two_phase_preflight_v39.py --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_each_protected_text_artifact_has_exactly_one_writer --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_build_arm_features_v39_writes_only_the_five_authorized_artifacts --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_the_harness_writes_no_repo_artifact_at_all --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_no_unauthorized_v39_artifact_exists_on_disk --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_the_head_coach_win_ledger_is_derived_in_memory_not_cached --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_the_v39_modules_never_write_outside_the_coaching_data_dir
+.\.venv-test\Scripts\python.exe -m pytest fantasy/projections/coaching/tests -q -p no:warnings --ignore=fantasy/projections/coaching/tests/test_arm_features_v39.py --ignore=fantasy/projections/coaching/tests/test_coach_projection_harness_v39.py --ignore=fantasy/projections/coaching/tests/test_boundary_corpus.py --ignore=fantasy/projections/coaching/tests/test_assemble_real_panel_v39.py --ignore=fantasy/projections/coaching/tests/test_combine_snapshot_provenance.py --ignore=fantasy/projections/coaching/tests/test_rookie_matrix_v39.py --ignore=fantasy/projections/coaching/tests/test_pff_point_in_time_v39.py --ignore=fantasy/projections/coaching/tests/test_arm0_refits_from_scratch_v39.py --ignore=fantasy/projections/coaching/tests/test_activation_wiring_v39.py --ignore=fantasy/projections/coaching/tests/test_veteran_snapshot_v39.py --ignore=fantasy/projections/coaching/tests/test_authorized_runner_v39.py --ignore=fantasy/projections/coaching/tests/test_composed_feature_reader_v39.py --ignore=fantasy/projections/coaching/tests/test_evaluation_eligibility_v39.py --ignore=fantasy/projections/coaching/tests/test_authorization_capability_v39.py --ignore=fantasy/projections/coaching/tests/test_two_phase_preflight_v39.py --ignore=fantasy/projections/coaching/tests/test_panel_key_contract_v39.py --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_each_protected_text_artifact_has_exactly_one_writer --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_build_arm_features_v39_writes_only_the_five_authorized_artifacts --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_the_harness_writes_no_repo_artifact_at_all --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_no_unauthorized_v39_artifact_exists_on_disk --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_the_head_coach_win_ledger_is_derived_in_memory_not_cached --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_the_v39_modules_never_write_outside_the_coaching_data_dir
 ```
 
 Literal output of that exact command:
@@ -185,7 +185,7 @@ Verified with egress blocked (`socket.create_connection`, `getaddrinfo`, `socket
 a freshly created empty directory:
 
 ```
-full coaching suite   1,316 collected; 1,316 passed.
+full coaching suite   1,354 collected; 1,354 passed.
                       + 1 optional git cross-check (passes or skips; see below)
 inherited baseline    141 passed, 6 deselected
 full v3.9 build       completed; all five artifact hashes reproduced
@@ -196,13 +196,13 @@ ambiguous, so this is the only form this document uses:
 
 | | |
 |---|---|
-| canonical collection total | **1316** |
-| mandatory tests | **1315 passed** |
-| **measured on 2026-08-04, after §10.15** | **1,316 passed · 0 failed** |
+| canonical collection total | **1354** |
+| mandatory tests | **1353 passed** |
+| **measured on 2026-08-04, after §10.16** | **1,354 passed · 0 failed** |
 | optional git cross-check | **passes when the historical blob `85c438f7d908e9df7da8d5e44ad8e30d3bbeeffe` is reachable, otherwise skips** |
 | the vendored historical red proof | **runs in BOTH states — it is never skipped** |
 
-So a green run legitimately reports either `1316 passed` or `1315 passed, 1 skipped`, and the two are the
+So a green run legitimately reports either `1354 passed` or `1353 passed, 1 skipped`, and the two are the
 same result. The variation is only whether `git cat-file -p <blob>` can reach the pinned blob: after the
 `BettingEdgeContinued` → `JoSchoAnalytics` rename the repository is owned by another account, so git
 refuses without `-c safe.directory=...` and the cross-check skips; in a review environment where the
@@ -921,7 +921,7 @@ generating function, input columns, timing rule, missing-value rule, and coverin
 |---|---|
 | inherited baseline (reproduced, offline) | **141** |
 | new v3.9 + v3.9a + v3.9b + v3.9c + v3.9d + v3.9e + v3.9f + v3.9g + v3.9i + v3.9j + v3.9k + v3.9m + v3.9n + v3.9o + v3.9p + v3.9q + v3.9r + v3.9s + v3.9t + v3.9u + v3.9v tests | **1,134** |
-| **full coaching suite** | **1,316 collected · 1,315 mandatory passed · 1 optional git cross-check (passes when the pinned blob is reachable, otherwise skips) — offline, egress blocked, fresh empty temp dir** |
+| **full coaching suite** | **1,354 collected · 1,353 mandatory passed · 1 optional git cross-check (passes when the pinned blob is reachable, otherwise skips) — offline, egress blocked, fresh empty temp dir** |
 
 ### 10.1 THE TWO CODEX REPRODUCTIONS NOW FAIL SEMANTICALLY
 
@@ -2774,6 +2774,115 @@ result refuses; and **no result file survives any failure path**.
 entirely in the ordering and phase of the runtime gate. No real outcome was read · nothing was fit · no
 real result was written · `coaching/results/` remains absent · `REAL_FIT_AUTHORIZED` is still `False` in
 source · the authorized command was NOT rerun · nothing staged · no commit.
+
+---
+
+---
+
+## 10.16 v3.9x — THE FIRST AUTHORIZED REAL RUN WAS EXECUTED AND FAILED IN THE ADAPTER (2026-08-04)
+
+### 10.16.1 What happened
+
+Authorized from clean commit `f2df754c` and executed **once**, with the frozen draw counts explicit
+(`--bootstrap-draws 20000 --placebo-draws 200`) and PowerShell environment syntax. Both gates cleared.
+**Both pinned snapshots were read** — the composed FEATURE snapshots and the pinned WEEKLY OUTCOME
+snapshot `e8dad7e4…`, which the outcome reader grouped into season totals. The run then died in the
+canonical adapter, before `run_experiment`:
+
+```
+AUTHORIZED REAL RUN — outer seasons [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
+draws: bootstrap 20000 | placebo 200  (frozen)
+  eligibility: source 7350 | -80 missing team | -117 no shipped bundle | eligible 7153
+  File "assemble_real_panel_v39.py", line 913, in panel_for_experiment
+    raise AssemblyError("adapter: the join reordered the feature rows")
+assemble_real_panel_v39.AssemblyError: adapter: the join reordered the feature rows
+```
+
+**What did NOT happen.** No arm was fitted. No fold ran. All four pipeline assertion counters remained
+`0`. **Zero bootstrap draws and zero placebo draws completed.** No metric, no selection, no verdict and
+**no result file** — `coaching/results/` did not exist before the attempt and did not exist after it.
+The environment token was cleared by the invocation's `finally`; `REAL_FIT_AUTHORIZED` stayed `False`;
+the lock state returned to `(False, False)`; the tree stayed clean; pinned inputs and production models
+were unchanged.
+
+The eligibility partition was correct and matched the preregistered figures exactly: 7,350 source −
+80 missing team − 117 no shipped bundle = **7,153 eligible**.
+
+### 10.16.2 Cause — the message conflated dtype equality with row ordering
+
+**The rows were not reordered.** Measured: 7,153 rows in, 7,153 out, every key value in the identical
+position. The failure was a **dtype disagreement between the two readers**:
+
+| key | feature reader | outcome reader | after the left merge | values in same order |
+|---|---|---|---|---|
+| `player_id` | `string[python]` | `object` | `object` | **yes** |
+| `season` | `int32` | `int32` | `int32` | **yes** |
+
+The adapter asserted ordering with `DataFrame.equals`, which compares **dtypes as well as values**. A
+pure dtype mismatch was therefore reported as a row-ordering failure — a false and misleading
+diagnosis, and the same class as the earlier "the check didn't check what it claimed" findings.
+
+**Why no test caught it.** Every test that reached the adapter built both sides from ONE frame, so the
+two readers' key dtypes were never contrasted — including the v3.9w end-to-end test, whose synthetic
+outcome was derived from the feature frame's own keys and so inherited `string` on both sides.
+
+### 10.16.3 The repair — a contract, not a relaxation
+
+**ONE canonical panel-key contract**, `PANEL_KEY_DTYPES`: `player_id` = `pd.StringDtype(storage="python")`,
+`season` = `np.int32`, keys non-null and unique. `canonicalize_panel_keys()` validates BEFORE converting
+and is deliberately **not** a blind cast — a blind `astype` is how a null becomes the literal string
+`"nan"` and how `2018.7` or `2**40` becomes a plausible season. It refuses non-textual player ids
+(numeric, float, bool), nulls, stringified nulls (`nan` / `None` / `null` / `na` / `n/a` / `<NA>` /
+`nat` / blank / whitespace), null seasons, non-numeric seasons, fractional seasons, seasons outside
+`[1920, 2100]`, any lossy int32 narrowing (verified by round trip), and duplicate keys.
+
+Enforced at **both** real reader boundaries — the authorized composed feature reader and the grouped
+season-total outcome reader — so the two sides cannot disagree in the first place. A **defensive
+assertion** in `assemble_panel_core` refuses an injected or hand-built frame with an accurate
+key-dtype error naming the column and both dtypes.
+
+The adapter now checks the two properties **separately**:
+
+- the canonical dtype contract, reported as a dtype-contract failure that says explicitly
+  *"this is a DTYPE failure, not a row-ordering failure"*;
+- ordering, compared on **values only** via `ordered_key_values()`, which drops dtype metadata, and
+  reporting how many rows moved and the first position at which they differ.
+
+Strict one-to-one alignment, missing/extra/duplicate-key and row-count checks are all retained
+unchanged. Neither the ordering check nor dtype enforcement was weakened.
+
+### 10.16.4 Permanent regression tests
+
+`tests/test_panel_key_contract_v39.py` (38 tests) pins: the exact real failure shape
+(`string[python]` features vs `object` outcomes, identical values and order); canonical reader output
+passing; genuine reordering still reported as reordering, with the first moved position named; the
+same values with a noncanonical injected dtype failing **specifically** on dtype; null, stringified-null
+and numeric player ids refused; fractional, non-numeric, null and overflowing seasons refused;
+duplicate/missing/extra keys still failing; and a synthetic weekly parquet plus a synthetic feature
+parquet driven through the REAL `grouped_season_totals` / `assemble_panel_core` / adapter path to an
+aligned panel.
+
+Two of those needed care and are labelled in the source. A pandas LEFT merge preserves the left order,
+so the ordering branch is unreachable by any arrangement of inputs — it is reached by explicit **fault
+injection**, stated as such, because otherwise the assertion would be permanently vacuous. And the
+blind-cast scan runs over the **AST**, not the text, because the module's own comments legitimately
+name the banned call while explaining why it is banned; the needles are assembled at runtime so the
+scanners cannot match their own source.
+
+### 10.16.5 The correction was chosen blind to the outcome
+
+**No outcome value and no model result was examined in choosing or validating this repair.** The defect
+was diagnosed from dtypes and row ordering alone, reproduced with synthetic frames, and every test in
+the new module is synthetic or a purpose-built temporary parquet. A permanent test asserts that the new
+module references neither the outcome reader nor the weekly snapshot. The canonical outcome snapshot was
+not read during the repair.
+
+### 10.16.6 What was NOT done
+
+**No statistical rule, threshold, denominator, seed or frozen constant changed.** The authorized
+command was **not** rerun. No real outcome was read during the repair · nothing was fitted · no result
+file was created · `coaching/results/` remains absent · `REAL_FIT_AUTHORIZED` is still `False` · both
+locks closed · nothing staged · no commit.
 
 ---
 

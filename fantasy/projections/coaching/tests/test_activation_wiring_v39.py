@@ -253,7 +253,9 @@ def _synthetic_features(seasons=ARP.ALL_PANEL_SEASONS, players=4, seed=5):
                       "position": "RB", "team": "ARI", ARP.SEASON_KEY: int(s),
                       "reconstructed": 0, "is_rookie": 0})
             rows.append(r)
-    return pd.DataFrame(rows)[list(ARP.VETERAN_FEATURE_COLUMNS)]
+    # v3.9x: emit the CANONICAL panel-key dtypes, exactly as both real readers now do.
+    return ARP.canonicalize_panel_keys(
+        pd.DataFrame(rows)[list(ARP.VETERAN_FEATURE_COLUMNS)], "_synthetic_features")
 
 
 def _synthetic_outcomes(features, seed=6):
@@ -261,7 +263,8 @@ def _synthetic_outcomes(features, seed=6):
     rng = np.random.default_rng(seed)
     out = features[list(ARP.PANEL_KEYS)].copy()
     out[ARP.OUTCOME_COLUMN] = rng.normal(150, 40, size=len(out)).round(2)
-    return out
+    # v3.9x: emit the CANONICAL panel-key dtypes, exactly as both real readers now do.
+    return ARP.canonicalize_panel_keys(out, "_synthetic_outcomes")
 
 
 def test_GREEN_the_door_opens_and_assembles_when_every_gate_clears(monkeypatch):

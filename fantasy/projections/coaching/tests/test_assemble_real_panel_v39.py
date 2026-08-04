@@ -47,7 +47,11 @@ def synthetic_features(seasons=ARP.ALL_PANEL_SEASONS, players=6, seed=11):
             for c in ARP.ARM0_VETERAN_FEATURES:
                 row[c] = float(rng.normal())
             rows.append(row)
-    return pd.DataFrame(rows)[list(ARP.FROZEN_FEATURE_COLUMNS)]
+    # v3.9x: emit the CANONICAL panel-key dtypes, exactly as both real readers now do. Before
+    # the contract these builders produced object/int64 keys, which is why no test ever
+    # contrasted the two readers' key dtypes — the defect that stopped the first real run.
+    return ARP.canonicalize_panel_keys(
+        pd.DataFrame(rows)[list(ARP.FROZEN_FEATURE_COLUMNS)], "synthetic_features")
 
 
 def synthetic_outcomes(features, seed=12, drop=0):
@@ -56,7 +60,10 @@ def synthetic_outcomes(features, seed=12, drop=0):
     if drop:
         keys = keys.iloc[:-drop].reset_index(drop=True)
     keys[ARP.OUTCOME_COLUMN] = rng.normal(150, 40, size=len(keys))
-    return keys
+    # v3.9x: emit the CANONICAL panel-key dtypes, exactly as both real readers now do. Before
+    # the contract these builders produced object/int64 keys, which is why no test ever
+    # contrasted the two readers' key dtypes — the defect that stopped the first real run.
+    return ARP.canonicalize_panel_keys(keys, "synthetic_outcomes")
 
 
 def synthetic_weekly(seasons=ARP.ALL_PANEL_SEASONS, players=6, weeks=3, seed=5,
@@ -1320,7 +1327,7 @@ def test_the_accounting_states_partition_the_feature_rows(feats):
     outs = synthetic_outcomes(feats, drop=3)
     ghost = pd.DataFrame({ARP.PLAYER_KEY: ["00-999999"], ARP.SEASON_KEY: [2020],
                           ARP.OUTCOME_COLUMN: [1.0]})
-    outs = pd.concat([outs, ghost], ignore_index=True)
+    outs = pd.concat([outs, ghost], ignore_index=True).astype(ARP.PANEL_KEY_DTYPES)   # v3.9x: concat/scalar-assign reverts the key dtypes
     acct = ARP.assemble_panel_core(feats, outs)["accounting"]
 
     feature_side = (acct[ARP.STATE_MISSING_IDENTITY] + acct[ARP.STATE_ZERO_FILLED]
@@ -1352,7 +1359,8 @@ def test_unmatched_outcome_keys_use_a_different_denominator(feats, outs):
     ghosts = pd.DataFrame({ARP.PLAYER_KEY: ["00-99999" + str(i) for i in range(3)],
                            ARP.SEASON_KEY: [2020, 2021, 2022],
                            ARP.OUTCOME_COLUMN: [1.0, 2.0, 3.0]})
-    acct = ARP.assemble_panel_core(feats, pd.concat([outs, ghosts], ignore_index=True))["accounting"]
+    joined = pd.concat([outs, ghosts], ignore_index=True).astype(ARP.PANEL_KEY_DTYPES)   # v3.9x: concat/scalar-assign reverts the key dtypes
+    acct = ARP.assemble_panel_core(feats, joined)["accounting"]
     assert acct[ARP.STATE_UNMATCHED_OUTCOME] == 3
     assert acct[ARP.STATE_MATCHED] == len(feats)
     assert acct["n_outcome_rows"] == len(outs) + 3

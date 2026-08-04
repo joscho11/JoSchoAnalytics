@@ -57,7 +57,11 @@ def synth_features(seasons=ARP.ALL_PANEL_SEASONS, players=3, seed=11):
                       "position": "RB", "team": "ARI", ARP.SEASON_KEY: int(s),
                       "reconstructed": 0, "is_rookie": 0})
             rows.append(r)
-    return pd.DataFrame(rows)[list(ARP.VETERAN_FEATURE_COLUMNS)]
+    # v3.9x: emit the CANONICAL panel-key dtypes, exactly as both real readers now do. Before
+    # the contract these builders produced object/int64 keys, which is why no test ever
+    # contrasted the two readers' key dtypes — the defect that stopped the first real run.
+    return ARP.canonicalize_panel_keys(
+        pd.DataFrame(rows)[list(ARP.VETERAN_FEATURE_COLUMNS)], "synth_features")
 
 
 def synth_outcomes(features, seed=12):
@@ -69,7 +73,10 @@ def synth_outcomes(features, seed=12):
     rng = np.random.default_rng(seed)
     out = features[list(ARP.PANEL_KEYS)].copy()
     out[ARP.OUTCOME_COLUMN] = rng.normal(150, 30, size=len(out)).round(3)
-    return out
+    # v3.9x: emit the CANONICAL panel-key dtypes, exactly as both real readers now do. Before
+    # the contract these builders produced object/int64 keys, which is why no test ever
+    # contrasted the two readers' key dtypes — the defect that stopped the first real run.
+    return ARP.canonicalize_panel_keys(out, "synth_outcomes")
 
 
 def assembled(features=None, outcomes=None):
@@ -331,7 +338,7 @@ def test_the_adapter_refuses_an_EXTRA_outcome_key():
     a = ARP.assemble_panel_core(f, synth_outcomes(f))
     extra = a["outcomes"].iloc[[0]].copy()
     extra[ARP.PLAYER_KEY] = "00-9999999"
-    a["outcomes"] = pd.concat([a["outcomes"], extra], ignore_index=True)
+    a["outcomes"] = pd.concat([a["outcomes"], extra], ignore_index=True).astype(ARP.PANEL_KEY_DTYPES)   # v3.9x: concat/scalar-assign reverts the key dtypes
     with pytest.raises(ARP.AssemblyError) as e:
         ARP.panel_for_experiment(a, require_bucket_coverage=False)
     assert "match no feature row" in str(e.value)
