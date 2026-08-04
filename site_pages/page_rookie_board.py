@@ -168,6 +168,36 @@ def _load_college_te() -> pd.DataFrame:
     return pd.read_csv(_COLLEGE_TE)
 
 
+def _college_scores(art: pd.DataFrame, rows: pd.DataFrame, cls: int) -> pd.Series:
+    """Look up one position's College Talent score for `rows`, keyed however that class allows.
+
+    Two different keys, because the two cases genuinely differ:
+      * cls == 2026 — brand-new players. The rookie board carries its OWN placeholder ids
+        (GRE361852) which do not always equal the season dataset's (00-0041092), and PFF college
+        shares no id namespace with either, so the only usable key is a GUARDED normalized name
+        against the artifact's `is_2026_rookie` rows. Names ambiguous on either side are refused
+        rather than guessed.
+      * past classes — those players have real gsis_ids, and the artifact carries a gsis_id
+        mapped through the pff_id crosswalk. That is an EXACT join, so no name guessing happens
+        at all; a gsis_id appearing twice in the artifact is refused outright. Restricted to
+        college careers that ended before the class entered the league, so a crosswalk error can
+        never attach a score containing seasons the player was already in the NFL for.
+    Returns a float Series indexed like `rows`; NaN where the build does not cover the player.
+    """
+    if art.empty or rows.empty:
+        return pd.Series(pd.NA, index=rows.index, dtype="Float64")
+    if cls == 2026:
+        pool = art[art["is_2026_rookie"].astype(bool)]
+        dup_art = set(pool.loc[pool["norm_name"].duplicated(keep=False), "norm_name"])
+        by_name = pool[~pool["norm_name"].isin(dup_art)].set_index("norm_name")["score"]
+        nn = rows["name"].map(norm_name)
+        dup_board = set(nn[nn.duplicated(keep=False)])
+        return nn.map(lambda v: by_name.get(v) if v not in dup_board else None)
+    pool = art[art["final_season"] <= cls - 1].dropna(subset=["gsis_id"])
+    pool = pool.drop_duplicates("gsis_id", keep=False)
+    return rows["gsis_id"].map(pool.set_index("gsis_id")["score"])
+
+
 def _attach_college_qb(df: pd.DataFrame, cls: int) -> pd.DataFrame:
     """Attach `talent_score` from the four dedicated college builds. Named for the QB build it
     started as; it now covers all four positions, each from its own artifact.
@@ -180,61 +210,31 @@ def _attach_college_qb(df: pd.DataFrame, cls: int) -> pd.DataFrame:
         the build does not cover keeps whatever was already there.
     Every position's rows are keyed on that position's artifact only, so no two builds can
     collide on one row.
+
+    All four builds score every qualifying FBS player back to 2014, not just this year's class,
+    so past draft classes are covered by the same instrument on the same anchored scale. The
+    box-score fallback (`rookie_score_2026.csv`) is 2026-only, so a past-class row the college
+    build misses stays blank instead of falling back.
     """
-    cq = _load_college_qb()
-    if cq.empty or df.empty or cls != 2026:
+    if df.empty:
         return df
     df = df.copy()
     if "talent_score" not in df.columns:
         df["talent_score"] = pd.NA
-    # Join on normalized name: the rookie board carries its OWN placeholder ids for brand-new
-    # players (GRE361852) which do not always equal the season dataset's (00-0041092), so no id
-    # namespace is shared. Names ambiguous on either side are refused rather than mis-joined.
-    qbs = cq[cq["is_2026_rookie"].astype(bool)]
-    dup_cfb = set(qbs.loc[qbs["norm_name"].duplicated(keep=False), "norm_name"])
-    by_name = (qbs[~qbs["norm_name"].isin(dup_cfb)]
-               .set_index("norm_name")["score"])
-    is_qb = df["position"].eq("QB")
-    nn = df.loc[is_qb, "name"].map(norm_name)
-    dup_board = set(nn[nn.duplicated(keep=False)])
-    filled = nn.map(lambda v: by_name.get(v) if v not in dup_board else None)
-    df.loc[is_qb, "talent_score"] = df.loc[is_qb, "talent_score"].where(
-        df.loc[is_qb, "talent_score"].notna(), filled)
-
-    cr = _load_college_rb()
-    if not cr.empty:
-        rbs = cr[cr["is_2026_rookie"].astype(bool)]
-        dup_r = set(rbs.loc[rbs["norm_name"].duplicated(keep=False), "norm_name"])
-        by_rb = rbs[~rbs["norm_name"].isin(dup_r)].set_index("norm_name")["score"]
-        is_rb = df["position"].eq("RB")
-        nnr = df.loc[is_rb, "name"].map(norm_name)
-        dup_b = set(nnr[nnr.duplicated(keep=False)])
-        got = nnr.map(lambda v: by_rb.get(v) if v not in dup_b else None)
-        # REPLACES the box-score rookie value wherever R36 covers the player (Joseph's
-        # direction 2026-07-27). Rows R36 does not cover keep whatever was already there.
-        df.loc[is_rb, "talent_score"] = got.where(got.notna(), df.loc[is_rb, "talent_score"])
-
-    cw = _load_college_wr()
-    if not cw.empty:
-        wrs = cw[cw["is_2026_rookie"].astype(bool)]
-        dup_w = set(wrs.loc[wrs["norm_name"].duplicated(keep=False), "norm_name"])
-        by_wr = wrs[~wrs["norm_name"].isin(dup_w)].set_index("norm_name")["score"]
-        is_wr = df["position"].eq("WR")
-        nnw = df.loc[is_wr, "name"].map(norm_name)
-        dup_bw = set(nnw[nnw.duplicated(keep=False)])
-        gw = nnw.map(lambda v: by_wr.get(v) if v not in dup_bw else None)
-        df.loc[is_wr, "talent_score"] = gw.where(gw.notna(), df.loc[is_wr, "talent_score"])
-
-    ct = _load_college_te()
-    if not ct.empty:
-        tes = ct[ct["is_2026_rookie"].astype(bool)]
-        dup_t = set(tes.loc[tes["norm_name"].duplicated(keep=False), "norm_name"])
-        by_te = tes[~tes["norm_name"].isin(dup_t)].set_index("norm_name")["score"]
-        is_te = df["position"].eq("TE")
-        nnt = df.loc[is_te, "name"].map(norm_name)
-        dup_bt = set(nnt[nnt.duplicated(keep=False)])
-        gt = nnt.map(lambda v: by_te.get(v) if v not in dup_bt else None)
-        df.loc[is_te, "talent_score"] = gt.where(gt.notna(), df.loc[is_te, "talent_score"])
+    for position, loader in (("QB", _load_college_qb), ("RB", _load_college_rb),
+                             ("WR", _load_college_wr), ("TE", _load_college_te)):
+        art = loader()
+        if art.empty:
+            continue
+        at_pos = df["position"].eq(position)
+        if not at_pos.any():
+            continue
+        got = _college_scores(art, df.loc[at_pos], cls)
+        existing = df.loc[at_pos, "talent_score"]
+        if position == "QB":
+            df.loc[at_pos, "talent_score"] = existing.where(existing.notna(), got)
+        else:
+            df.loc[at_pos, "talent_score"] = got.where(got.notna(), existing)
     return df
 
 
@@ -389,11 +389,15 @@ def render():
                                     "Every position has its own dedicated college charting build (QB from "
                                     "college passing, RB/WR/TE from their own builds), each anchored on "
                                     "players at that position who reached the NFL and each with its own "
-                                    "volume floor; a rookie a build does not cover keeps the older college "
-                                    "box-score value where one exists. No strength-of-schedule adjustment, "
-                                    "so production against weaker and stronger opponents counts the same. "
-                                    "2026 class only, and only a subset of it — players outside FBS can "
-                                    "never be covered. Blank elsewhere by design; never backfilled."),
+                                    "volume floor; a 2026 rookie a build does not cover keeps the older "
+                                    "college box-score value where one exists. No strength-of-schedule "
+                                    "adjustment, so production against weaker and stronger opponents counts "
+                                    "the same. The builds score college seasons back to 2014, so every draft "
+                                    "class here is on the same anchored scale, but only a subset of each — "
+                                    "players outside FBS, and players below a build's volume floor, can never "
+                                    "be covered and stay blank by design. The older box-score fallback exists "
+                                    "for the 2026 class only, so an uncovered player in an earlier class is "
+                                    "blank rather than filled from it."),
             "Athleticism (Percentile)": st.column_config.NumberColumn(format="%.0f", help=PCT_HELP),
             "Production (Percentile)": st.column_config.NumberColumn(format="%.0f", help=PCT_HELP),
         },
