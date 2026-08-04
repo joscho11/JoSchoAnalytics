@@ -96,10 +96,16 @@ SHAP_SNAPSHOTS = [
      "f79dad0ab26af5cb4e06a9f1723328cd", 66,
      [("draft_pick", 18.2), ("pff_receiving_grades_offense", 8.7), ("age", 7.3),
       ("pff_receiving_yprr", 4.7), ("pff_receiving_avg_depth_of_target", 4.5)]),
+    # RECOMPUTED 2026-08-03 after the dense-sack + All-Pro identity retrain. Note the
+    # shape change: `sack_diff` (was #2 at 11.783) and `sack_diff_reverse` (was #4 at
+    # 5.009) LEFT the top five entirely. Those were PROD_FEATURES_35 #2/#3 and carried the
+    # contemporaneous-outcome leak; with it removed the model leans on spread_line and
+    # coaching/rolling-form instead. Tree SHAP over the same n=3295 matrix.
     ("spread_xgb", "Spread · XGBoost component", "Betting",
-     "betting/models/ensemble_prod_model.pkl", "42a61911f6600852d9dcb094896735f0", 3295,
-     [("spread_line", 35.878), ("sack_diff", 11.783), ("scoring_diff", 6.459),
-      ("sack_diff_reverse", 5.009), ("home_coach_win_pct_roll3", 3.617)]),
+     "betting/models/ensemble_prod_model.pkl", "58d1391be3bf68d17f74c36cb3ed77b7", 3295,
+     [("spread_line", 39.167), ("scoring_diff", 7.175),
+      ("away_coach_win_pct_prior", 4.225), ("home_coach_win_pct_prior", 3.906),
+      ("away_rolling_avg_yards", 3.862)]),
 ]
 
 # Read-only walk-forward audit of non-rookie season-total projections. Bias is

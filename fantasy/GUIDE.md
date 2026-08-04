@@ -105,10 +105,10 @@ fantasy points the projection is off by; lower is better) next to the baseline's
 
 | Position | Test rows | Model error | Baseline error |
 |---|---|---|---|
-| Quarterback | 571 | 6.81 | 7.49 |
-| Running back | 1,397 | 4.40 | 4.59 |
-| Receiver | 2,215 | 3.96 | 4.06 |
-| Tight end | 1,145 | 3.16 | 3.48 |
+| Quarterback | 508 | 6.86 | 7.38 |
+| Running back | 1,284 | 4.49 | 4.58 |
+| Receiver | 2,030 | 4.01 | 4.03 |
+| Tight end | 1,022 | 3.20 | 3.48 |
 
 So the model is a real improvement over the naive method, but a modest one — it shaves roughly
 half a point to two-thirds of a point of error off the baseline. That's genuinely useful for

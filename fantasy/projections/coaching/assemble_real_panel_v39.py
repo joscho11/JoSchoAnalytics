@@ -52,8 +52,26 @@ SNAPSHOTS = SEAS / "snapshots"
 # =====================================================================================================
 # FROZEN INPUTS — both repo-owned, both pinned
 # =====================================================================================================
+# --- the VETERAN feature input -----------------------------------------------------------------
+# An earlier revision pinned the whole production CSV by md5. That was the WRONG SCOPE: the file is a
+# LIVE artifact carrying deploy-season 2026, so an ordinary 2026 refresh moved the hash and refused
+# activation for a reason unrelated to the experiment's inputs. Measured on the 2026-08-03 refresh:
+# every difference was confined to season 2026; nine columns differed only by CSV float round-trip
+# noise (max |diff| 3.5527e-15, no null flips); the one substantive change was `qb_changed` on 916
+# rows of 2026; and NO 2014-2025 value differed, bitwise, in any of the 47 columns.
+#
+# The experiment now reads an IMMUTABLE, feature-only 2014-2025 snapshot instead. Building it from the
+# pre-refresh copy of the CSV reproduces the same sha256, which is asserted by test.
+VETERAN_SNAPSHOT = SNAPSHOTS / "veteran_arm0_features_2014_2025.parquet"
+VETERAN_SNAPSHOT_SHA256 = "45cb2583acf7d046ecf54275d1ee3e70fcb9e4882d69a6b203e36350376bfbc8"
+VETERAN_SNAPSHOT_MANIFEST_KEY = "veteran_arm0_features_2014_2025"
+VETERAN_SNAPSHOT_GENERATOR = "fantasy/seasonal_projections/build_veteran_arm0_snapshot.py"
+VETERAN_SNAPSHOT_ROWS = 7350
+VETERAN_SNAPSHOT_COLS = 40
+
+# The generator's input, and the ONLY thing that still points at the mutable CSV. The authorized
+# experiment never reads it; `verify_pinned_activation_inputs` does not hash it.
 FEATURE_SOURCE = SEAS / "season_dataset_2014_2026.csv"
-FEATURE_SOURCE_MD5 = "8322a59e43251820cb393d40787f60e6"
 
 WEEKLY_SNAPSHOT = SNAPSHOTS / "player_stats_2011_2025.parquet"
 WEEKLY_SNAPSHOT_SHA256 = "e8dad7e48fd202d414d66f5a14fb23f72d4bdb5a1b60a09c5d71556444203344"
@@ -105,11 +123,49 @@ IDENTITY_COLUMNS = (PLAYER_KEY, "player", "norm_name", "position", "team", SEASO
 VETERAN_FEATURE_COLUMNS = IDENTITY_COLUMNS + ARM0_VETERAN_FEATURES
 FROZEN_FEATURE_COLUMNS = VETERAN_FEATURE_COLUMNS          # backwards-compatible alias, veteran scope
 
-# Declared input sources. `season_dataset` is repo-owned and pinned; `rookie_matrix` does not exist as
-# a repo-owned artifact and cannot be rebuilt from a clean checkout (see ROOKIE_INPUT_BLOCKER).
+# Declared input sources. BOTH are now repo-owned and pinned: Option A was authorized on 2026-08-03 and
+# the derived, outcome-free rookie matrix was frozen (raw PFF stays private and untracked).
 SOURCE_SEASON_DATASET = "season_dataset"
 SOURCE_ROOKIE_MATRIX = "rookie_matrix"
 SOURCE_UNRESOLVED = None
+
+ROOKIE_MATRIX = SNAPSHOTS / "rookie_arm0_features_2014_2025.parquet"
+ROOKIE_MATRIX_SHA256 = "7625980495886141efd65fb9c65862ef7f3cf8af67e50f231c6c3c12d9f45385"
+ROOKIE_MATRIX_MANIFEST_KEY = "rookie_arm0_features_2014_2025"
+ROOKIE_MATRIX_GENERATOR = "fantasy/seasonal_projections/build_rookie_arm0_features.py"
+ROOKIE_MATRIX_ROWS = 1263
+ROOKIE_MATRIX_COLS = 61
+ROOKIE_MATRIX_POSITIONS = ("RB", "TE", "WR")
+ROOKIE_MATRIX_IDENTITY = (PLAYER_KEY, SEASON_KEY, "position", "is_rookie", "norm_name")
+# Point-in-time provenance carried IN the artifact: the PFF college season each block came from. Not
+# features, in no bundle pool. They make the guarantee checkable offline, without the private library:
+# every non-null value must be STRICTLY LESS than the row's rookie season.
+ROOKIE_MATRIX_PROVENANCE = ("pff_receiving_source_season", "pff_rushing_source_season")
+# The private PFF inputs the matrix was derived from, fingerprinted without exposing any content:
+# one sha256 over the sorted relative paths + bytes of exactly the 36 files the build consumes.
+ROOKIE_MATRIX_PFF_SHA256 = "148e2465abb6389cdd4e741dee21f0d168638f91dc23f66407950d2fbd718038"
+ROOKIE_MATRIX_PFF_FILES = 36
+# The EXACT ordered schema, pinned here INDEPENDENTLY of the generator: a rebuild that reorders or
+# adds a column changes the hash AND fails this literal, so neither pin can silently absorb the other.
+ROOKIE_MATRIX_COLUMNS = (
+    "player_id", "season", "position", "is_rookie", "norm_name",
+    "pff_receiving_source_season", "pff_rushing_source_season",
+    "draft_round", "draft_pick", "log_pick", "age",
+    "forty", "vertical", "broad_jump", "cone", "shuttle", "bench", "ht_in", "wt", "bmi", "speed_score",
+    "cfb_final_dom", "cfb_best_dom", "cfb_scrim_ypg", "cfb_rush_ypg", "cfb_rec_ypg", "cfb_ypc",
+    "cfb_ypr", "cfb_career_scrim_yds", "cfb_career_scrim_td", "cfb_seasons", "cfb_breakout_class",
+    "pff_rushing_grades_run", "pff_rushing_grades_offense", "pff_rushing_elusive_rating",
+    "pff_rushing_breakaway_percent", "pff_rushing_elu_yco", "pff_rushing_avoided_tackles",
+    "pff_rushing_first_downs", "pff_rushing_touchdowns", "pff_receiving_yprr", "pff_receiving_routes",
+    "coach_changed", "qb_changed", "prior_team_pass_rate", "prior_team_plays",
+    "vacated_target_share", "vacated_rush_share",
+    "cfb_rec_pg", "cfb_final_recshare",
+    "pff_receiving_grades_offense", "pff_receiving_grades_pass_route",
+    "pff_receiving_avg_depth_of_target", "pff_receiving_contested_catch_rate",
+    "pff_receiving_drop_rate", "pff_receiving_yards_after_catch_per_reception",
+    "pff_receiving_targeted_qb_rating", "pff_receiving_receptions", "pff_receiving_yards",
+    "pff_receiving_touchdowns", "pff_receiving_avoided_tackles",
+)
 
 # (position, bucket) -> the bundle that ships it, and the input that must supply its features.
 SHIPPED_ARM0_BUCKETS = {
@@ -143,14 +199,47 @@ MODELS_DIR = HERE.parent / "models"
 # `test_the_rookie_missing_counts_are_derived_not_asserted`.
 ROOKIE_MISSING_FROM_SEASON_DATASET = {("RB", "rookie"): (32, 41), ("WR", "rookie"): (35, 44),
                                       ("TE", "rookie"): (35, 44)}
+# --- WITHDRAWN: the "contaminated trained bundles" activation blocker -------------------------------
+# A v3.9o revision of this module refused activation on the grounds that the shipped rookie bundles had
+# been FIT on the pre-repair PFF join, so their learned weights were contaminated. **That blocker rested
+# on a FALSE PREMISE and is WITHDRAWN.** The serialized estimator never enters this experiment:
+#
+#   * `arm0_definition()` returns METADATA ONLY. Its single touch of `bundle["model"]` is
+#     `type(b["model"]).__module__ + "." + type(b["model"]).__name__` — a class-name STRING. The
+#     estimator object is not placed in the returned spec.
+#   * `fit_predict(spec, train, test, features)` calls `RB._make_model(spec["family"], spec["params"])`
+#     and fits THAT fresh estimator on the fold's own training rows. Its `predict` is called on the
+#     fresh model. `bundle["model"]` is never fitted, never predicted from, never unpickled into a
+#     prediction path.
+#   * every inner and outer fold repeats that construct-and-fit, so nothing survives across folds.
+#   * `inner_cv_mae` is carried as a metadata record and is never used for selection.
+#
+# Verified by reading the harness, not by assertion, and pinned by
+# `tests/test_arm0_refits_from_scratch_v39.py`. What the experiment actually inherits from a shipped
+# bundle is the SPECIFICATION below; the corrected point-in-time matrix is what every fold trains on.
+BUNDLE_SPEC_FIELDS = ("feature_cols", "family", "params", "median_impute", "seed", "target")
+
+# DISCLOSED, NOT GATED. The fixed hyperparameters in each bundle's `params` (and `median_impute`,
+# `seed`) were selected under the historical production pipeline, which used the pre-repair PFF join.
+# They are FROZEN pre-experiment and applied IDENTICALLY to ARM_0 and to every coaching arm, so they
+# cannot differentially favour any arm, and the experiment does not retune them. This is a stated
+# limitation of the comparison's absolute level, not a leakage path into the arm contrast, and it is
+# deliberately NOT an activation gate. See V39_ACTIVATION_MANIFEST.md §0d.
+FROZEN_HYPERPARAMETER_DISCLOSURE = (
+    "the fixed production hyperparameters (family, params, median_impute, seed) were selected under the "
+    "historical production pipeline, which used the pre-repair PFF join. They are frozen pre-experiment "
+    "and applied identically to ARM_0 and every coaching arm; the experiment does not retune them. "
+    "Disclosed as a limitation of the absolute level, NOT gated: it is common to all arms and therefore "
+    "cannot differentially favour one.")
+
 ROOKIE_INPUT_BLOCKER = (
-    "the three rookie buckets have NO repo-owned feature source. Of their bundle features, the season "
-    "dataset lacks RB 32 of 41, WR 35 of 44 and TE 35 of 44 (combine, college-box and PFF-derived); the "
-    "declared rookie_matrix source does not exist at all, so it supplies none of them. Production "
-    "regenerates them via fantasy/rookie/harness, which calls live nflreadpy loaders and reads "
-    "fantasy/seasonal_projections/pff/ — a directory holding 418 local files and ZERO tracked files "
-    "(.gitignore:37). A clean checkout therefore cannot assemble these buckets. Joseph's decision is "
-    "required; see V39_ACTIVATION_MANIFEST.md section 0b.")
+    "RESOLVED 2026-08-03 by Option A: the derived, outcome-free rookie matrix is frozen at "
+    "snapshots/rookie_arm0_features_2014_2025.parquet and pinned in the snapshot manifest. The season "
+    "dataset still separately lacks RB 32 of 41, WR 35 of 44 and TE 35 of 44 bundle features — that "
+    "gap is what the matrix fills. Raw PFF remains private and untracked; only derived feature values "
+    "are repo-owned. Regenerating the matrix still requires the authorized private sources and is a "
+    "separate provenance operation.")
+
 
 # Never loadable, never permitted in a feature frame. `target_ppg`/`target_games`/`sample_weight` are
 # the LEGACY Model-A/B targets; `sleeper_pts_half_ppr` is a market projection of the very quantity being
@@ -187,6 +276,7 @@ def _refuse(kind):
 
 default_feature_reader = _refuse("feature")
 default_outcome_reader = _refuse("outcome")
+default_rookie_matrix_reader = _refuse("rookie matrix")
 
 
 def file_md5(path):
@@ -219,33 +309,83 @@ def verify_weekly_snapshot_provenance(manifest_path=None):
     return entry
 
 
-def authorized_feature_reader(path=None, verify_hash=True):
-    """Build the REAL feature reader. Constructing it is not reading; the returned callable reads.
+def verify_veteran_snapshot_provenance(path=None, manifest_path=None, verify_hash=True,
+                                       verify_manifest=True):
+    """Existence, sha256, manifest entry and exact ordered schema. METADATA ONLY — no row is read."""
+    import pyarrow.parquet as pq
+    src = VETERAN_SNAPSHOT if path is None else pathlib.Path(path)
+    if not src.exists():
+        raise AssemblyError(f"veteran snapshot missing: {src}")
 
-    `usecols` is explicit, so a forbidden target or market column is never loaded at all, and the frame
-    is filtered to 2014-2025 BEFORE it is returned — the source runs to 2026, which has no outcome.
+    problems = []
+    if verify_hash:
+        actual = file_sha256(src)
+        if actual != VETERAN_SNAPSHOT_SHA256:
+            problems.append(f"sha256 {actual} != pinned {VETERAN_SNAPSHOT_SHA256}")
+
+    entry = None
+    if verify_manifest:
+        mpath = SNAPSHOT_MANIFEST if manifest_path is None else pathlib.Path(manifest_path)
+        if not mpath.exists():
+            raise AssemblyError(f"snapshot manifest missing: {mpath}")
+        entry = json.loads(mpath.read_text(encoding="utf-8")).get(VETERAN_SNAPSHOT_MANIFEST_KEY)
+        if entry is None:
+            raise AssemblyError(f"manifest has no entry {VETERAN_SNAPSHOT_MANIFEST_KEY!r}")
+        for field, pinned in (("sha256", VETERAN_SNAPSHOT_SHA256),
+                              ("generator", VETERAN_SNAPSHOT_GENERATOR),
+                              ("rows", VETERAN_SNAPSHOT_ROWS), ("cols", VETERAN_SNAPSHOT_COLS)):
+            if entry.get(field) != pinned:
+                problems.append(f"manifest {field} {entry.get(field)!r} != pinned {pinned!r}")
+        if sorted(entry.get("seasons") or ()) != list(ALL_PANEL_SEASONS):
+            problems.append(f"manifest seasons {entry.get('seasons')} != {list(ALL_PANEL_SEASONS)}")
+        if tuple(entry.get("schema") or ()) != tuple(VETERAN_FEATURE_COLUMNS):
+            problems.append("manifest schema differs from the consumed contract")
+
+    schema = tuple(pq.ParquetFile(src).schema_arrow.names)
+    if schema != tuple(VETERAN_FEATURE_COLUMNS):
+        problems.append(f"schema differs from the consumed contract (got {len(schema)} column(s))")
+    # The row count is an attribute of the ONE pinned artifact, not of the schema contract, so it is
+    # checked exactly when the hash is. A test that deliberately injects a different file has already
+    # said so by passing verify_hash=False; the schema, season and forbidden-column checks still bind.
+    if verify_hash and pq.ParquetFile(src).metadata.num_rows != VETERAN_SNAPSHOT_ROWS:
+        problems.append(f"row count {pq.ParquetFile(src).metadata.num_rows} != pinned "
+                        f"{VETERAN_SNAPSHOT_ROWS}")
+    leaked = sorted(set(schema) & FORBIDDEN_IN_FEATURES)
+    if leaked:
+        problems.append(f"outcome-bearing column(s) present: {leaked}")
+
+    # The season set is checked on the FILE, not merely on the manifest. The reader also windows to
+    # 2014-2025, but a snapshot that CONTAINS 2026 was built wrong, and silently filtering it away
+    # would hide that. One column is read; no feature value is touched.
+    if SEASON_KEY in schema:
+        seasons = sorted(int(s) for s in
+                         pd.unique(pd.read_parquet(src, columns=[SEASON_KEY])[SEASON_KEY].dropna()))
+        if seasons != list(ALL_PANEL_SEASONS):
+            problems.append(f"season coverage is {seasons}, must be exactly {list(ALL_PANEL_SEASONS)}")
+
+    if problems:
+        raise AssemblyError("veteran snapshot provenance: " + "; ".join(problems))
+    return entry
+
+
+def authorized_feature_reader(path=None, verify_hash=True, verify_manifest=True):
+    """Build the REAL veteran feature reader. Constructing it is not reading; the callable reads.
+
+    Reads the IMMUTABLE 2014-2025 snapshot, never the live production CSV. The snapshot is already
+    feature-only and already windowed, so no forbidden column exists to exclude and no season filter
+    is needed — but both are still ASSERTED, because a check that is merely unnecessary today is the
+    kind that stops being true quietly.
     """
-    src = FEATURE_SOURCE if path is None else pathlib.Path(path)
+    src = VETERAN_SNAPSHOT if path is None else pathlib.Path(path)
 
     def _read():
-        if not src.exists():
-            raise AssemblyError(f"feature source missing: {src}")
-        if verify_hash:
-            actual = file_md5(src)
-            if actual != FEATURE_SOURCE_MD5:
-                raise AssemblyError(f"feature source hash drift: expected {FEATURE_SOURCE_MD5}, "
-                                    f"got {actual}")
-        header = pd.read_csv(src, nrows=0)
-        available = set(header.columns)
-        missing = [c for c in FROZEN_FEATURE_COLUMNS if c not in available]
-        if missing:
-            raise AssemblyError(f"feature source is missing frozen column(s): {missing}")
-        forbidden_loaded = sorted(set(FROZEN_FEATURE_COLUMNS) & FORBIDDEN_IN_FEATURES)
+        verify_veteran_snapshot_provenance(path=src, verify_hash=verify_hash,
+                                           verify_manifest=verify_manifest)
+        df = pd.read_parquet(src, columns=list(FROZEN_FEATURE_COLUMNS))
+        forbidden_loaded = sorted(set(df.columns) & FORBIDDEN_IN_FEATURES)
         if forbidden_loaded:
             raise AssemblyError(f"the frozen contract itself names forbidden column(s): "
                                 f"{forbidden_loaded}")
-
-        df = pd.read_csv(src, usecols=list(FROZEN_FEATURE_COLUMNS))
         df = df[(df[SEASON_KEY] >= PANEL_FIRST_SEASON) & (df[SEASON_KEY] <= PANEL_LAST_SEASON)]
         df = df.reset_index(drop=True)
         problems = validate_feature_frame(df)
@@ -277,6 +417,227 @@ def authorized_outcome_reader(path=None, verify_hash=True, verify_manifest=True)
         weekly = pd.read_parquet(src, columns=list(WEEKLY_REQUIRED_COLUMNS))
         return grouped_season_totals(weekly)
     return _read
+
+
+def verify_rookie_matrix_provenance(path=None, manifest_path=None, verify_hash=True,
+                                    verify_manifest=True):
+    """Existence, sha256, manifest entry and EXACT ordered schema of the frozen rookie matrix.
+
+    METADATA ONLY — the parquet schema is read, not a single row. Raises `AssemblyError` on any
+    violation; returns the manifest entry (or `None` when manifest verification is switched off).
+    """
+    import pyarrow.parquet as pq
+    src = ROOKIE_MATRIX if path is None else pathlib.Path(path)
+    if not src.exists():
+        raise AssemblyError(f"rookie matrix missing: {src}")
+
+    problems = []
+    if verify_hash:
+        actual = file_sha256(src)
+        if actual != ROOKIE_MATRIX_SHA256:
+            problems.append(f"sha256 {actual} != pinned {ROOKIE_MATRIX_SHA256}")
+
+    entry = None
+    if verify_manifest:
+        mpath = SNAPSHOT_MANIFEST if manifest_path is None else pathlib.Path(manifest_path)
+        if not mpath.exists():
+            raise AssemblyError(f"snapshot manifest missing: {mpath}")
+        entry = json.loads(mpath.read_text(encoding="utf-8")).get(ROOKIE_MATRIX_MANIFEST_KEY)
+        if entry is None:
+            raise AssemblyError(f"manifest has no entry {ROOKIE_MATRIX_MANIFEST_KEY!r}")
+        for field, pinned in (("sha256", ROOKIE_MATRIX_SHA256),
+                              ("generator", ROOKIE_MATRIX_GENERATOR),
+                              ("rows", ROOKIE_MATRIX_ROWS), ("cols", ROOKIE_MATRIX_COLS)):
+            if entry.get(field) != pinned:
+                problems.append(f"manifest {field} {entry.get(field)!r} != pinned {pinned!r}")
+        if sorted(entry.get("seasons") or ()) != list(ALL_PANEL_SEASONS):
+            problems.append(f"manifest seasons {entry.get('seasons')} != {list(ALL_PANEL_SEASONS)}")
+        if tuple(entry.get("keys") or ()) != PANEL_KEYS:
+            problems.append(f"manifest keys {entry.get('keys')} != {list(PANEL_KEYS)}")
+        if tuple(entry.get("positions") or ()) != ROOKIE_MATRIX_POSITIONS:
+            problems.append(f"manifest positions {entry.get('positions')} != "
+                            f"{list(ROOKIE_MATRIX_POSITIONS)}")
+
+    meta = pq.ParquetFile(src)
+    schema = tuple(meta.schema_arrow.names)
+    if schema != ROOKIE_MATRIX_COLUMNS:
+        problems.append(f"schema differs from the pinned {ROOKIE_MATRIX_COLS}-column contract "
+                        f"(got {len(schema)} column(s); first difference at "
+                        f"{_first_schema_difference(schema, ROOKIE_MATRIX_COLUMNS)})")
+    if meta.metadata.num_rows != ROOKIE_MATRIX_ROWS:
+        problems.append(f"row count {meta.metadata.num_rows} != pinned {ROOKIE_MATRIX_ROWS}")
+    leaked = sorted(set(schema) & FORBIDDEN_IN_FEATURES)
+    if leaked:
+        problems.append(f"outcome-bearing column(s) present: {leaked}")
+
+    if problems:
+        raise AssemblyError("rookie matrix provenance: " + "; ".join(problems))
+    return entry
+
+
+def _first_schema_difference(actual, expected):
+    for i in range(max(len(actual), len(expected))):
+        a = actual[i] if i < len(actual) else "<absent>"
+        e = expected[i] if i < len(expected) else "<absent>"
+        if a != e:
+            return f"index {i}: {a!r} vs expected {e!r}"
+    return "none"
+
+
+def rookie_matrix_columns(path=None, **kwargs):
+    """The pinned column tuple, returned only after provenance verification passes. No row is read."""
+    verify_rookie_matrix_provenance(path=path, **kwargs)
+    return ROOKIE_MATRIX_COLUMNS
+
+
+def authorized_rookie_matrix_reader(path=None, verify_hash=True, verify_manifest=True):
+    """Build the REAL rookie-feature reader. Constructing it is not reading; the callable reads.
+
+    The frame carries derived, outcome-free rookie features only. Its own output is passed through
+    `validate_rookie_matrix` before it is returned, so a reader that cannot satisfy the contract can
+    never hand a frame to the assembler.
+    """
+    src = ROOKIE_MATRIX if path is None else pathlib.Path(path)
+
+    def _read():
+        verify_rookie_matrix_provenance(path=src, verify_hash=verify_hash,
+                                        verify_manifest=verify_manifest)
+        df = pd.read_parquet(src, columns=list(ROOKIE_MATRIX_COLUMNS))
+        problems = validate_rookie_matrix(df)
+        if problems:
+            raise AssemblyError("rookie matrix reader output failed its own validator: "
+                                + "; ".join(problems))
+        return df
+    return _read
+
+
+def validate_rookie_matrix(matrix, models_dir=None):
+    """Schema order, keys, seasons, positions, row count and bundle coverage. Returns a problem list."""
+    problems = []
+    if tuple(matrix.columns) != ROOKIE_MATRIX_COLUMNS:
+        problems.append(f"column schema differs from the pinned contract "
+                        f"({_first_schema_difference(tuple(matrix.columns), ROOKIE_MATRIX_COLUMNS)})")
+        if not set(ROOKIE_MATRIX_IDENTITY) <= set(matrix.columns):
+            return problems                       # nothing key-based is checkable without identity
+
+    if len(matrix) != ROOKIE_MATRIX_ROWS:
+        problems.append(f"row count {len(matrix)} != pinned {ROOKIE_MATRIX_ROWS} (silent row loss)")
+    n_dup = int(matrix.duplicated(subset=list(PANEL_KEYS)).sum())
+    if n_dup:
+        problems.append(f"{n_dup} duplicate {list(PANEL_KEYS)} row(s)")
+    for key in PANEL_KEYS:
+        if matrix[key].isna().any():
+            problems.append(f"null {key}")
+
+    seasons = sorted(int(s) for s in pd.unique(matrix[SEASON_KEY].dropna()))
+    if seasons != list(ALL_PANEL_SEASONS):
+        problems.append(f"season coverage {seasons} != required {list(ALL_PANEL_SEASONS)}")
+    positions = tuple(sorted(set(pd.unique(matrix["position"].dropna()).tolist())))
+    if positions != ROOKIE_MATRIX_POSITIONS:
+        problems.append(f"positions {positions} != {ROOKIE_MATRIX_POSITIONS}")
+    if not bool((matrix["is_rookie"] == 1).all()):
+        problems.append("a non-rookie row is present")
+
+    leaked = sorted(set(matrix.columns) & FORBIDDEN_IN_FEATURES)
+    if leaked:
+        problems.append(f"outcome-bearing column(s) present: {leaked}")
+
+    # THE POINT-IN-TIME CONTRACT. The first matrix shipped with a PFF join that took the LATEST
+    # college season for a name across 2014-2025 and attached it regardless of the rookie season, so
+    # 2014 Mike Evans carried 2021 receiving. Checkable here from the artifact alone.
+    for sc in ROOKIE_MATRIX_PROVENANCE:
+        if sc not in matrix.columns:
+            problems.append(f"provenance column {sc} is absent; point-in-time is unverifiable")
+            continue
+        late = matrix[sc].notna() & (matrix[sc] >= matrix[SEASON_KEY])
+        if bool(late.any()):
+            ex = matrix.loc[late, ["norm_name", SEASON_KEY, sc]].head(3).to_dict("records")
+            problems.append(f"TEMPORAL LEAK: {int(late.sum())} row(s) carry {sc} >= {SEASON_KEY}; "
+                            f"e.g. {ex}")
+
+    # COVERAGE, not storage order. The matrix is a SHARED pool: RB and WR order their common features
+    # differently, so no single physical column order can equal all three bundle orders at once
+    # (measured: RB inverts at `coach_changed`, WR/TE at `cfb_rec_pg`). Storage order is pinned instead
+    # by ROOKIE_MATRIX_COLUMNS, and the ORDER a model is fed is enforced where it matters — on the
+    # per-bucket frame, by `rookie_bucket_frame` / `bucket_frame_satisfies_bundle`.
+    md = MODELS_DIR if models_dir is None else pathlib.Path(models_dir)
+    for (position, bucket), (fname, _n, source) in sorted(SHIPPED_ARM0_BUCKETS.items()):
+        if source != SOURCE_ROOKIE_MATRIX:
+            continue
+        if not (md / fname).exists():
+            problems.append(f"{position}/{bucket} bundle missing: {md / fname}")
+            continue
+        fc = bundle_feature_cols(position, bucket, models_dir=md)
+        absent = [c for c in fc if c not in matrix.columns]
+        if absent:
+            problems.append(f"{position}/{bucket} missing {len(absent)} of {len(fc)} bundle "
+                            f"feature(s): {absent[:6]}")
+    return problems
+
+
+def bundle_feature_cols(position, bucket, models_dir=None):
+    """The ordered `feature_cols` a shipped bundle expects. Bundle METADATA only."""
+    import pickle
+    md = MODELS_DIR if models_dir is None else pathlib.Path(models_dir)
+    fname = SHIPPED_ARM0_BUCKETS[(position, bucket)][0]
+    return tuple(pickle.loads((md / fname).read_bytes())["feature_cols"])
+
+
+def rookie_bucket_frame(matrix, position, bucket, models_dir=None):
+    """Select one rookie bucket's features FROM the shared matrix, in bundle order, and verify it.
+
+    This is the point at which order becomes real: the returned frame is what a model would be fed.
+    """
+    if SHIPPED_ARM0_BUCKETS[(position, bucket)][2] != SOURCE_ROOKIE_MATRIX:
+        raise AssemblyError(f"{position}/{bucket} is not sourced from the rookie matrix")
+    fc = bundle_feature_cols(position, bucket, models_dir=models_dir)
+    absent = [c for c in fc if c not in matrix.columns]
+    if absent:
+        raise AssemblyError(f"{position}/{bucket} missing {len(absent)} bundle feature(s): {absent[:8]}")
+    rows = matrix[matrix["position"] == position]
+    frame = rows[list(ROOKIE_MATRIX_IDENTITY) + list(fc)]
+    bucket_frame_satisfies_bundle(frame.columns, position, bucket, models_dir=models_dir)
+    return frame
+
+
+def verify_pinned_activation_inputs(strict=True):
+    """Every pinned INPUT an authorized run will read, checked by hash and manifest BEFORE reading.
+
+    Metadata only — not one row is read here. Covers the three data inputs:
+      * veteran features  `season_dataset_2014_2026.csv`      (md5)
+      * rookie features   `rookie_arm0_features_2014_2025.parquet` (sha256 + manifest + exact schema)
+      * weekly outcome    `player_stats_2011_2025.parquet`    (sha256 + manifest loader/rows/cols)
+    The five coaching artifacts are pinned by `preflight()`'s `v39_artifacts_pinned`, which
+    `require_preflight_clearance` evaluates before this runs.
+    """
+    problems = []
+    # The VETERAN input is the immutable 2014-2025 snapshot, NOT the live production CSV. The CSV is
+    # the generator's input only; refreshing deploy-season 2026 in it must never gate activation.
+    try:
+        verify_veteran_snapshot_provenance()
+    except AssemblyError as exc:
+        problems.append(str(exc))
+
+    if not WEEKLY_SNAPSHOT.exists():
+        problems.append(f"weekly outcome snapshot missing: {WEEKLY_SNAPSHOT}")
+    else:
+        actual = file_sha256(WEEKLY_SNAPSHOT)
+        if actual != WEEKLY_SNAPSHOT_SHA256:
+            problems.append(f"weekly snapshot sha256 {actual} != pinned {WEEKLY_SNAPSHOT_SHA256}")
+        else:
+            try:
+                verify_weekly_snapshot_provenance()
+            except AssemblyError as exc:
+                problems.append(str(exc))
+
+    try:
+        verify_rookie_matrix_provenance()
+    except AssemblyError as exc:
+        problems.append(str(exc))
+
+    if problems and strict:
+        raise AssemblyError("pinned activation inputs: " + "; ".join(problems))
+    return problems
 
 
 def grouped_season_totals(weekly, seasons=ALL_PANEL_SEASONS):
@@ -414,18 +775,28 @@ def assemble_panel_core(features, outcomes, *, required_seasons=ALL_PANEL_SEASON
 # =====================================================================================================
 # ARM 0 BUCKET AUDIT — all SEVEN shipped bundles, not the four that happen to be easy
 # =====================================================================================================
-def arm0_bucket_table(models_dir=None, feature_columns=None):
+def arm0_bucket_table(models_dir=None, feature_columns=None, rookie_columns=None):
     """One row per shipped (position, bucket): the ordered `feature_cols`, its declared input, and
     which features that input actually supplies.
 
-    Reads bundle METADATA only. `feature_columns` lets a test inject a column set instead of touching
-    the real season dataset.
+    Reads bundle METADATA only. `feature_columns` / `rookie_columns` let a test inject a column set
+    instead of touching the real season dataset or the frozen rookie matrix. When `rookie_columns` is
+    omitted the matrix's columns are taken from `rookie_matrix_columns()`, which VERIFIES provenance
+    first — if that fails the rookie source is reported as unavailable, so readiness fails closed
+    rather than trusting an unverified file.
     """
     import pickle
     md = MODELS_DIR if models_dir is None else pathlib.Path(models_dir)
     if feature_columns is None:
         feature_columns = set(pd.read_csv(FEATURE_SOURCE, nrows=0).columns)   # header only, 0 rows
-    available = {SOURCE_SEASON_DATASET: set(feature_columns), SOURCE_ROOKIE_MATRIX: set()}
+    rookie_error = None
+    if rookie_columns is None:
+        try:
+            rookie_columns = rookie_matrix_columns()
+        except AssemblyError as exc:
+            rookie_columns, rookie_error = (), str(exc)
+    available = {SOURCE_SEASON_DATASET: set(feature_columns),
+                 SOURCE_ROOKIE_MATRIX: set(rookie_columns)}
 
     rows = []
     for (pos, bucket), (fname, expected_n, source) in sorted(SHIPPED_ARM0_BUCKETS.items()):
@@ -436,6 +807,7 @@ def arm0_bucket_table(models_dir=None, feature_columns=None):
             continue
         b = pickle.loads(path.read_bytes())
         fc = tuple(b.get("feature_cols") or ())
+        spec_problems = bundle_spec_problems(b)
         # The two denominators, computed separately and never merged (see the note above).
         missing_sd = [c for c in fc if c not in available[SOURCE_SEASON_DATASET]]
         supplied = available.get(source, set())
@@ -448,9 +820,43 @@ def arm0_bucket_table(models_dir=None, feature_columns=None):
             "n_missing_from_declared_source": len(missing_src),
             "missing_from_declared_source": missing_src,
             "source_exists": source is not None and bool(supplied),
-            "complete": bool(fc) and not missing_src, "feature_cols": fc, "error": None,
+            "features_available": bool(fc) and not missing_src,
+            # What the experiment actually inherits from the bundle: the SPECIFICATION. The fitted
+            # estimator is never used (see BUNDLE_SPEC_FIELDS above), so a bundle is usable when its
+            # spec is complete and well-formed, NOT when its historical training matrix matches.
+            "spec_contract_ok": not spec_problems,
+            "spec_problems": spec_problems,
+            "complete": bool(fc) and not missing_src and not spec_problems,
+            "feature_cols": fc,
+            "error": rookie_error if source == SOURCE_ROOKIE_MATRIX and rookie_error else None,
         })
     return rows
+
+
+def bundle_spec_problems(bundle):
+    """Is the bundle's SPECIFICATION complete and well-formed? Returns a problem list.
+
+    Only the fields `fit_predict` and `arm0_definition` actually consume. The serialized estimator is
+    deliberately NOT inspected beyond its presence: it is never fitted, predicted from, or carried into
+    a fold, so its state cannot reach a result.
+    """
+    p = []
+    for field in BUNDLE_SPEC_FIELDS:
+        if field not in bundle:
+            p.append(f"spec field {field!r} is absent")
+    if p:
+        return p
+    if not bundle["feature_cols"]:
+        p.append("feature_cols is empty")
+    if not isinstance(bundle["family"], str) or not bundle["family"]:
+        p.append(f"family is {bundle['family']!r}")
+    if not isinstance(bundle["params"], dict) or not bundle["params"]:
+        p.append("params is not a non-empty dict")
+    if bundle["seed"] is None:
+        p.append("seed is None; the fold fit would not be reproducible")
+    if bundle["target"] != OUTCOME_COLUMN:
+        p.append(f"target is {bundle['target']!r}, must be {OUTCOME_COLUMN!r}")
+    return p
 
 
 def bucket_frame_satisfies_bundle(frame_columns, position, bucket, models_dir=None):
@@ -473,21 +879,32 @@ def bucket_frame_satisfies_bundle(frame_columns, position, bucket, models_dir=No
     return True
 
 
-def activation_readiness(models_dir=None, feature_columns=None):
+def activation_readiness(models_dir=None, feature_columns=None, rookie_columns=None):
     """Can an AUTHORIZED real run actually assemble every shipped bundle? Returns (ok, detail).
 
     This is a SEPARATE layer from prefit integrity. `preflight()` answering 21/21 says the prefit
-    system is sound; it must never be read as "ready to activate". Until the rookie input decision is
-    resolved this returns False and names each bucket that cannot be built.
+    system is sound; it must never be read as "ready to activate", and readiness being True is not
+    authorization either — `authorized_real_gate()` still requires both locks, which stay closed.
     """
-    rows = arm0_bucket_table(models_dir=models_dir, feature_columns=feature_columns)
+    rows = arm0_bucket_table(models_dir=models_dir, feature_columns=feature_columns,
+                             rookie_columns=rookie_columns)
     blocked = [r for r in rows if r.get("error") or not r.get("complete")]
     if not blocked:
-        return True, (f"all {len(rows)} shipped Arm 0 buckets have a complete pinned feature source")
+        by_source = {}
+        for r in rows:
+            by_source.setdefault(r["source"], []).append(f"{r['position']}/{r['bucket']}")
+        detail = "; ".join(f"{src}: {', '.join(sorted(v))}" for src, v in sorted(by_source.items()))
+        return True, (f"all {len(rows)} shipped Arm 0 buckets have a complete pinned feature source "
+                      f"({detail}). READY IS NOT AUTHORIZED: both real-fit locks remain closed and "
+                      f"`authorized_real_gate()` still refuses.")
     parts = []
     for r in blocked:
         if r.get("error"):
             parts.append(f"{r['position']}/{r['bucket']}: {r['error']}")
+            continue
+        if r.get("features_available") and not r.get("spec_contract_ok"):
+            parts.append(f"{r['position']}/{r['bucket']} ({r['bundle']}): features are complete, but "
+                         f"the bundle SPECIFICATION is not: {'; '.join(r['spec_problems'])}")
             continue
         src = r["source"] or "NO DECLARED SOURCE"
         if not r["source_exists"]:
@@ -632,7 +1049,8 @@ def validate_authorized_preflight(preflight_result):
     return p
 
 
-def authorized_real_gate(preflight_result, models_dir=None, feature_columns=None):
+def authorized_real_gate(preflight_result, models_dir=None, feature_columns=None,
+                         rookie_columns=None):
     """BOTH gates an authorized real run must clear BEFORE any outcome reader is called.
 
     Gate 1 — a preflight result that is *itself* an authorized-real result, validated against the
@@ -649,7 +1067,8 @@ def authorized_real_gate(preflight_result, models_dir=None, feature_columns=None
 
     try:
         ready, ready_detail = activation_readiness(models_dir=models_dir,
-                                                   feature_columns=feature_columns)
+                                                   feature_columns=feature_columns,
+                                                   rookie_columns=rookie_columns)
     except Exception as exc:                      # noqa: BLE001 - a crash must refuse, not propagate
         ready, ready_detail = False, f"readiness check raised {type(exc).__name__}: {exc}"
     if not ready:
@@ -688,7 +1107,8 @@ ASSEMBLY_BANNED_CALLEES = frozenset({"load_player_stats", "load_pbp", "load_pbp_
 NETWORK_ROOT_MODULES = frozenset({"requests", "httpx", "urllib", "urllib3", "aiohttp", "nflreadpy",
                                   "socket", "http", "ftplib", "telnetlib", "webbrowser"})
 NETWORK_FUNCTIONS = frozenset({"urlopen", "urlretrieve"})
-ASSEMBLY_READER_CALLEES = frozenset({"read_csv", "read_parquet", "read_json", "open"})
+ASSEMBLY_READER_CALLEES = frozenset({"read_csv", "read_parquet", "read_json", "open",
+                                     "ParquetFile"})
 ASSEMBLY_CONTRACT_NAME = "A1-A6"
 ASSEMBLY_OK_DETAIL = (
     "assemble_real_panel_v39.py satisfies the frozen assembly contract A1-A6 (no import-time I/O, no "
@@ -752,11 +1172,29 @@ def assembly_module_contract(source=None):
         problems.append("A5: the frozen feature contract names a forbidden column")
     if tuple(ALL_PANEL_SEASONS) != tuple(range(2014, 2026)):
         problems.append(f"A5: panel seasons are {ALL_PANEL_SEASONS}, expected 2014-2025")
-    if len(WEEKLY_SNAPSHOT_SHA256) != 64 or len(FEATURE_SOURCE_MD5) != 32:
+    if len(WEEKLY_SNAPSHOT_SHA256) != 64 or len(VETERAN_SNAPSHOT_SHA256) != 64:
         problems.append("A5: an input pin is malformed")
+    if tuple(VETERAN_FEATURE_COLUMNS) != IDENTITY_COLUMNS + ARM0_VETERAN_FEATURES:
+        problems.append("A5: the consumed veteran schema is not identity + the 32 features")
+    if len(VETERAN_FEATURE_COLUMNS) != VETERAN_SNAPSHOT_COLS:
+        problems.append(f"A5: consumed schema is {len(VETERAN_FEATURE_COLUMNS)} column(s) but "
+                        f"VETERAN_SNAPSHOT_COLS is {VETERAN_SNAPSHOT_COLS}")
     if REG_SEASON_TYPE != "REG":
         problems.append("A5: the season-type filter is not REG")
-    for reader, kind in ((default_feature_reader, "feature"), (default_outcome_reader, "outcome")):
+    # A5 — the rookie-matrix declarations, pinned independently of the generator.
+    if len(ROOKIE_MATRIX_SHA256) != 64:
+        problems.append("A5: the rookie matrix pin is malformed")
+    if len(ROOKIE_MATRIX_COLUMNS) != ROOKIE_MATRIX_COLS:
+        problems.append(f"A5: the pinned rookie schema has {len(ROOKIE_MATRIX_COLUMNS)} column(s) but "
+                        f"ROOKIE_MATRIX_COLS is {ROOKIE_MATRIX_COLS}")
+    if len(set(ROOKIE_MATRIX_COLUMNS)) != len(ROOKIE_MATRIX_COLUMNS):
+        problems.append("A5: the pinned rookie schema repeats a column")
+    if not set(ROOKIE_MATRIX_IDENTITY) <= set(ROOKIE_MATRIX_COLUMNS):
+        problems.append("A5: a rookie identity column is absent from the pinned schema")
+    if set(ROOKIE_MATRIX_COLUMNS) & FORBIDDEN_IN_FEATURES:
+        problems.append("A5: the pinned rookie schema names a forbidden column")
+    for reader, kind in ((default_feature_reader, "feature"), (default_outcome_reader, "outcome"),
+                         (default_rookie_matrix_reader, "rookie matrix")):
         try:
             reader()
         except AssemblyError:

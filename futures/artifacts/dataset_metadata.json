@@ -1,0 +1,1402 @@
+{
+  "notebook": "futures/season_team_totals/01_build_dataset.ipynb",
+  "panel": {
+    "path": "futures/data/team_season_panel.parquet",
+    "rows": 800,
+    "columns": [
+      "season",
+      "franchise",
+      "is_predict_season",
+      "has_target",
+      "line_covered",
+      "market_strictly_dated",
+      "games_scheduled",
+      "designated_home_games",
+      "true_home_venue_games",
+      "neutral_site_games",
+      "international_games",
+      "div_games",
+      "mean_rest",
+      "has_bye",
+      "prior_games",
+      "prior_wins",
+      "prior_win_pct",
+      "prior_point_diff",
+      "prior_points_for",
+      "prior_points_against",
+      "prior_pythag_win_pct",
+      "prior_off_epa_play",
+      "prior_def_epa_play",
+      "prior_epa_diff",
+      "prior_off_success_rate",
+      "form_3yr_win_pct",
+      "sos_prior_win_pct",
+      "coach_changed",
+      "coach_prior_win_pct",
+      "coach_prior_games",
+      "wins_half_ties",
+      "wins",
+      "losses",
+      "ties",
+      "games_played",
+      "points_for",
+      "points_against",
+      "point_diff",
+      "market_line",
+      "market_as_of",
+      "market_source",
+      "market_pit_status"
+    ],
+    "frame_sha256": "a790d1886fe086869c07e839a045e96856665151152be33c0db9ef64175c0b0b",
+    "file_sha256": "33bbd9a7f4b115c5d8b32064a86f3b7ea6af8a08eebaadeb436c3a3dcf92943c",
+    "grain": "one row per (season, franchise)"
+  },
+  "target": {
+    "column": "wins_half_ties",
+    "rows_with_target": 768,
+    "settlement_assumption": "tie = half a win (book convention, PREREGISTRATION \u00a72.1)"
+  },
+  "venue_contract": {
+    "authority": "PREREGISTRATION.md \u00a710 Amendment 2 (A2.1)",
+    "retired_feature": "home_games (counted nominal home designations incl. neutral and international sites; never measured home-field exposure)",
+    "features": [
+      "designated_home_games",
+      "true_home_venue_games",
+      "neutral_site_games",
+      "international_games"
+    ],
+    "venue_key_rule": "INTL::<venue> when the stadium name is in the pinned international table, else stadium_id",
+    "why_not_stadium_id_alone": "stadium_id is the nominal home team's id in this snapshot: JAX00 spans 7 stadium names incl. Wembley and Tottenham, and the 2026 JAX-PHI game at Tottenham is labelled location=Home with stadium_id=JAX00",
+    "why_stadium_id_for_domestic": "it absorbs renames a name key would split (SEA00 = CenturyLink Field -> Lumen Field, mid-2020)",
+    "primary_home_venue_rule": "modal venue key over designated-home games, excluding explicit Neutral; a surviving tie ABORTS the build",
+    "effective_neutral_rule": "location == Neutral OR venue key != nominal home team's primary venue key",
+    "counts_for_both_teams": true,
+    "no_team_specific_adjustment": "no Jacksonville-London familiarity term is introduced; it is not estimable from this sample",
+    "international_venues": {
+      "wembley": [
+        "Wembley Stadium"
+      ],
+      "tottenham": [
+        "Tottenham Stadium",
+        "Tottenham Hotspur Stadium"
+      ],
+      "twickenham": [
+        "Twickenham Stadium"
+      ],
+      "azteca": [
+        "Azteca Stadium",
+        "Estadio Banorte"
+      ],
+      "munich": [
+        "Allianz Arena",
+        "FC Bayern Munich Stadium"
+      ],
+      "frankfurt": [
+        "Deutsche Bank Park"
+      ],
+      "sao_paulo": [
+        "Arena Corinthians"
+      ],
+      "rio": [
+        "Maracana Stadium"
+      ],
+      "melbourne": [
+        "Melbourne Cricket Ground"
+      ],
+      "paris": [
+        "Stade de France"
+      ],
+      "madrid": [
+        "Bernabeu"
+      ],
+      "toronto": [
+        "Rogers Centre"
+      ]
+    },
+    "observed_name_id_pairs": [
+      [
+        "Allianz Arena",
+        "GER00"
+      ],
+      [
+        "Arena Corinthians",
+        "SAO00"
+      ],
+      [
+        "Azteca Stadium",
+        "MEX00"
+      ],
+      [
+        "Bernabeu",
+        "ATL97"
+      ],
+      [
+        "Deutsche Bank Park",
+        "FRA00"
+      ],
+      [
+        "Estadio Banorte",
+        "SFO01"
+      ],
+      [
+        "FC Bayern Munich Stadium",
+        "DET00"
+      ],
+      [
+        "Maracana Stadium",
+        "DAL00"
+      ],
+      [
+        "Melbourne Cricket Ground",
+        "LAX01"
+      ],
+      [
+        "Rogers Centre",
+        "BUF01"
+      ],
+      [
+        "Stade de France",
+        "NOR00"
+      ],
+      [
+        "Tottenham Hotspur Stadium",
+        "JAX00"
+      ],
+      [
+        "Tottenham Hotspur Stadium",
+        "WAS00"
+      ],
+      [
+        "Tottenham Stadium",
+        "LON02"
+      ],
+      [
+        "Twickenham Stadium",
+        "LON01"
+      ],
+      [
+        "Wembley Stadium",
+        "JAX00"
+      ],
+      [
+        "Wembley Stadium",
+        "LON00"
+      ]
+    ],
+    "artifact": "futures/data/season_schedule_context.parquet",
+    "by_season": [
+      {
+        "season": 2002,
+        "games": 256,
+        "explicit_neutral": 0,
+        "effective_neutral": 0,
+        "international": 0,
+        "reclassified_from_home": 0
+      },
+      {
+        "season": 2003,
+        "games": 256,
+        "explicit_neutral": 1,
+        "effective_neutral": 1,
+        "international": 0,
+        "reclassified_from_home": 0
+      },
+      {
+        "season": 2004,
+        "games": 256,
+        "explicit_neutral": 0,
+        "effective_neutral": 0,
+        "international": 0,
+        "reclassified_from_home": 0
+      },
+      {
+        "season": 2005,
+        "games": 256,
+        "explicit_neutral": 1,
+        "effective_neutral": 5,
+        "international": 1,
+        "reclassified_from_home": 4
+      },
+      {
+        "season": 2006,
+        "games": 256,
+        "explicit_neutral": 0,
+        "effective_neutral": 0,
+        "international": 0,
+        "reclassified_from_home": 0
+      },
+      {
+        "season": 2007,
+        "games": 256,
+        "explicit_neutral": 1,
+        "effective_neutral": 1,
+        "international": 1,
+        "reclassified_from_home": 0
+      },
+      {
+        "season": 2008,
+        "games": 256,
+        "explicit_neutral": 2,
+        "effective_neutral": 2,
+        "international": 2,
+        "reclassified_from_home": 0
+      },
+      {
+        "season": 2009,
+        "games": 256,
+        "explicit_neutral": 1,
+        "effective_neutral": 2,
+        "international": 2,
+        "reclassified_from_home": 1
+      },
+      {
+        "season": 2010,
+        "games": 256,
+        "explicit_neutral": 2,
+        "effective_neutral": 4,
+        "international": 2,
+        "reclassified_from_home": 2
+      },
+      {
+        "season": 2011,
+        "games": 256,
+        "explicit_neutral": 1,
+        "effective_neutral": 2,
+        "international": 2,
+        "reclassified_from_home": 1
+      },
+      {
+        "season": 2012,
+        "games": 256,
+        "explicit_neutral": 1,
+        "effective_neutral": 2,
+        "international": 2,
+        "reclassified_from_home": 1
+      },
+      {
+        "season": 2013,
+        "games": 256,
+        "explicit_neutral": 3,
+        "effective_neutral": 3,
+        "international": 3,
+        "reclassified_from_home": 0
+      },
+      {
+        "season": 2014,
+        "games": 256,
+        "explicit_neutral": 4,
+        "effective_neutral": 4,
+        "international": 3,
+        "reclassified_from_home": 0
+      },
+      {
+        "season": 2015,
+        "games": 256,
+        "explicit_neutral": 3,
+        "effective_neutral": 3,
+        "international": 3,
+        "reclassified_from_home": 0
+      },
+      {
+        "season": 2016,
+        "games": 256,
+        "explicit_neutral": 4,
+        "effective_neutral": 4,
+        "international": 4,
+        "reclassified_from_home": 0
+      },
+      {
+        "season": 2017,
+        "games": 256,
+        "explicit_neutral": 5,
+        "effective_neutral": 5,
+        "international": 5,
+        "reclassified_from_home": 0
+      },
+      {
+        "season": 2018,
+        "games": 256,
+        "explicit_neutral": 3,
+        "effective_neutral": 3,
+        "international": 3,
+        "reclassified_from_home": 0
+      },
+      {
+        "season": 2019,
+        "games": 256,
+        "explicit_neutral": 5,
+        "effective_neutral": 5,
+        "international": 5,
+        "reclassified_from_home": 0
+      },
+      {
+        "season": 2020,
+        "games": 256,
+        "explicit_neutral": 3,
+        "effective_neutral": 3,
+        "international": 0,
+        "reclassified_from_home": 0
+      },
+      {
+        "season": 2021,
+        "games": 272,
+        "explicit_neutral": 3,
+        "effective_neutral": 3,
+        "international": 2,
+        "reclassified_from_home": 0
+      },
+      {
+        "season": 2022,
+        "games": 271,
+        "explicit_neutral": 6,
+        "effective_neutral": 6,
+        "international": 5,
+        "reclassified_from_home": 0
+      },
+      {
+        "season": 2023,
+        "games": 272,
+        "explicit_neutral": 5,
+        "effective_neutral": 5,
+        "international": 5,
+        "reclassified_from_home": 0
+      },
+      {
+        "season": 2024,
+        "games": 272,
+        "explicit_neutral": 5,
+        "effective_neutral": 5,
+        "international": 5,
+        "reclassified_from_home": 0
+      },
+      {
+        "season": 2025,
+        "games": 272,
+        "explicit_neutral": 7,
+        "effective_neutral": 7,
+        "international": 0,
+        "reclassified_from_home": 0
+      },
+      {
+        "season": 2026,
+        "games": 272,
+        "explicit_neutral": 8,
+        "effective_neutral": 9,
+        "international": 9,
+        "reclassified_from_home": 1
+      }
+    ]
+  },
+  "model_tracks": {
+    "m1_m4_independent_structural": {
+      "features": [
+        "games_scheduled",
+        "designated_home_games",
+        "true_home_venue_games",
+        "neutral_site_games",
+        "international_games",
+        "div_games",
+        "mean_rest",
+        "has_bye",
+        "prior_games",
+        "prior_wins",
+        "prior_win_pct",
+        "prior_point_diff",
+        "prior_points_for",
+        "prior_points_against",
+        "prior_pythag_win_pct",
+        "prior_off_epa_play",
+        "prior_def_epa_play",
+        "prior_epa_diff",
+        "prior_off_success_rate",
+        "form_3yr_win_pct",
+        "sos_prior_win_pct",
+        "coach_changed",
+        "coach_prior_win_pct",
+        "coach_prior_games"
+      ],
+      "market_line_in_features": false,
+      "note": "independent structural projections; market_line must never be silently inserted into this track"
+    },
+    "m5_market_anchored": {
+      "features": [
+        "games_scheduled",
+        "designated_home_games",
+        "true_home_venue_games",
+        "neutral_site_games",
+        "international_games",
+        "div_games",
+        "mean_rest",
+        "has_bye",
+        "prior_games",
+        "prior_wins",
+        "prior_win_pct",
+        "prior_point_diff",
+        "prior_points_for",
+        "prior_points_against",
+        "prior_pythag_win_pct",
+        "prior_off_epa_play",
+        "prior_def_epa_play",
+        "prior_epa_diff",
+        "prior_off_success_rate",
+        "form_3yr_win_pct",
+        "sos_prior_win_pct",
+        "coach_changed",
+        "coach_prior_win_pct",
+        "coach_prior_games"
+      ],
+      "offset": "market_line",
+      "note": "market-anchored residual projection; cannot be described as independently beating a sportsbook or a market"
+    }
+  },
+  "m5_contract": {
+    "authority": "PREREGISTRATION.md \u00a710 Amendment 2 (A2.2)",
+    "definition": "residual = wins_half_ties - market_line; prediction = market_line + predicted_residual",
+    "market_line_role": "offset / base prediction, never a quote",
+    "withheld_quote_columns": "recorded in the panel restriction manifest",
+    "training_rows_require": [
+      "target",
+      "archived consensus line"
+    ],
+    "training_window": "line-covered team-seasons strictly before outer test season T",
+    "evaluation_rows": "exactly the frozen headline and A1.4 strict-sensitivity rows",
+    "estimator": "Ridge on the residual over the structural FEATURE_COLS",
+    "imputation": "median, fitted on each outer training window only",
+    "scaling": "standardization, fitted on each outer training window only",
+    "alpha_selection": "inner expanding-season validation inside the outer training window; smallest alpha among ties",
+    "alpha_grid": [
+      0.01,
+      0.1,
+      1.0,
+      3.0,
+      10.0,
+      30.0,
+      100.0,
+      300.0,
+      1000.0
+    ],
+    "fallback_alpha": 10.0,
+    "fallback_condition": "fewer than two usable inner validation seasons in the outer fold",
+    "random_cross_validation": false,
+    "clipping": "none",
+    "clipping_rationale": "no clipping rule is pre-declared for M1-M4, so M5-only clipping would make the tracks incomparable",
+    "training_by_fold": [
+      {
+        "test_season": 2015,
+        "train_seasons": [
+          2014
+        ],
+        "n_train": 32,
+        "usable_inner_validation_seasons": 0,
+        "takes_fallback_alpha": true
+      },
+      {
+        "test_season": 2016,
+        "train_seasons": [
+          2014,
+          2015
+        ],
+        "n_train": 64,
+        "usable_inner_validation_seasons": 1,
+        "takes_fallback_alpha": true
+      },
+      {
+        "test_season": 2017,
+        "train_seasons": [
+          2014,
+          2015,
+          2016
+        ],
+        "n_train": 96,
+        "usable_inner_validation_seasons": 2,
+        "takes_fallback_alpha": false
+      },
+      {
+        "test_season": 2018,
+        "train_seasons": [
+          2014,
+          2015,
+          2016,
+          2017
+        ],
+        "n_train": 128,
+        "usable_inner_validation_seasons": 3,
+        "takes_fallback_alpha": false
+      },
+      {
+        "test_season": 2019,
+        "train_seasons": [
+          2014,
+          2015,
+          2016,
+          2017,
+          2018
+        ],
+        "n_train": 160,
+        "usable_inner_validation_seasons": 4,
+        "takes_fallback_alpha": false
+      },
+      {
+        "test_season": 2020,
+        "train_seasons": [
+          2014,
+          2015,
+          2016,
+          2017,
+          2018,
+          2019
+        ],
+        "n_train": 192,
+        "usable_inner_validation_seasons": 5,
+        "takes_fallback_alpha": false
+      },
+      {
+        "test_season": 2021,
+        "train_seasons": [
+          2014,
+          2015,
+          2016,
+          2017,
+          2018,
+          2019,
+          2020
+        ],
+        "n_train": 224,
+        "usable_inner_validation_seasons": 6,
+        "takes_fallback_alpha": false
+      },
+      {
+        "test_season": 2022,
+        "train_seasons": [
+          2014,
+          2015,
+          2016,
+          2017,
+          2018,
+          2019,
+          2020,
+          2021
+        ],
+        "n_train": 256,
+        "usable_inner_validation_seasons": 7,
+        "takes_fallback_alpha": false
+      },
+      {
+        "test_season": 2024,
+        "train_seasons": [
+          2014,
+          2015,
+          2016,
+          2017,
+          2018,
+          2019,
+          2020,
+          2021,
+          2022
+        ],
+        "n_train": 288,
+        "usable_inner_validation_seasons": 8,
+        "takes_fallback_alpha": false
+      },
+      {
+        "test_season": 2025,
+        "train_seasons": [
+          2014,
+          2015,
+          2016,
+          2017,
+          2018,
+          2019,
+          2020,
+          2021,
+          2022,
+          2024
+        ],
+        "n_train": 320,
+        "usable_inner_validation_seasons": 9,
+        "takes_fallback_alpha": false
+      }
+    ],
+    "first_fold_limitation": "the earliest headline fold (2015) has exactly one line-covered training season (2014, 32 rows) and zero usable inner validation seasons, so it necessarily takes the fallback alpha",
+    "reporting_requirement": "every report must show M5 training seasons and row count by fold",
+    "predict_season_status": "no archived consensus line exists for the predict season, so M5 fails closed there while M1-M4 remain possible",
+    "permitted_claim": "whether structural information improved MAE relative to the archived consensus out of sample"
+  },
+  "preseason_feature_feasibility": {
+    "artifact": "futures/artifacts/preseason_feature_feasibility.json",
+    "counts": {
+      "AVAILABLE": 2,
+      "CONDITIONAL": 4,
+      "UNAVAILABLE": 7
+    },
+    "families_added_to_features": 0,
+    "note": "CONDITIONAL and UNAVAILABLE families are excluded by A2.4; the two AVAILABLE families are not added by Amendment 2 either"
+  },
+  "features": {
+    "order_is_contract": true,
+    "columns": [
+      "games_scheduled",
+      "designated_home_games",
+      "true_home_venue_games",
+      "neutral_site_games",
+      "international_games",
+      "div_games",
+      "mean_rest",
+      "has_bye",
+      "prior_games",
+      "prior_wins",
+      "prior_win_pct",
+      "prior_point_diff",
+      "prior_points_for",
+      "prior_points_against",
+      "prior_pythag_win_pct",
+      "prior_off_epa_play",
+      "prior_def_epa_play",
+      "prior_epa_diff",
+      "prior_off_success_rate",
+      "form_3yr_win_pct",
+      "sos_prior_win_pct",
+      "coach_changed",
+      "coach_prior_win_pct",
+      "coach_prior_games"
+    ],
+    "n": 24,
+    "available_families": [
+      "coach_identity",
+      "coach_prior_winpct",
+      "multi_year_record",
+      "prior_season_pbp_epa",
+      "prior_season_pythag",
+      "prior_season_record",
+      "schedule_strength_S"
+    ],
+    "deferred_families": {},
+    "pbp_family_columns": [
+      "prior_off_epa_play",
+      "prior_def_epa_play",
+      "prior_epa_diff",
+      "prior_off_success_rate"
+    ],
+    "excluded_families": [
+      "depth_chart_rank",
+      "free_agency_transactions",
+      "preseason_injuries",
+      "qb_identity_week1",
+      "roster_continuity",
+      "season_S_pbp",
+      "season_S_results"
+    ],
+    "pythagorean_exponent": 2.37,
+    "coach_prior_min_games": 16
+  },
+  "eligibility": {
+    "rule": "train = every settled team-season with season < T (line-covered or not); eval = line-covered rows in T. Market rows define evaluation and B0 only.",
+    "headline": [
+      {
+        "test_season": 2015,
+        "train_seasons": [
+          2002,
+          2003,
+          2004,
+          2005,
+          2006,
+          2007,
+          2008,
+          2009,
+          2010,
+          2011,
+          2012,
+          2013,
+          2014
+        ],
+        "n_train": 416,
+        "n_eval": 32,
+        "train_seasons_without_line": [
+          2002,
+          2003,
+          2004,
+          2005,
+          2006,
+          2007,
+          2008,
+          2009,
+          2010,
+          2011,
+          2012,
+          2013
+        ]
+      },
+      {
+        "test_season": 2016,
+        "train_seasons": [
+          2002,
+          2003,
+          2004,
+          2005,
+          2006,
+          2007,
+          2008,
+          2009,
+          2010,
+          2011,
+          2012,
+          2013,
+          2014,
+          2015
+        ],
+        "n_train": 448,
+        "n_eval": 32,
+        "train_seasons_without_line": [
+          2002,
+          2003,
+          2004,
+          2005,
+          2006,
+          2007,
+          2008,
+          2009,
+          2010,
+          2011,
+          2012,
+          2013
+        ]
+      },
+      {
+        "test_season": 2017,
+        "train_seasons": [
+          2002,
+          2003,
+          2004,
+          2005,
+          2006,
+          2007,
+          2008,
+          2009,
+          2010,
+          2011,
+          2012,
+          2013,
+          2014,
+          2015,
+          2016
+        ],
+        "n_train": 480,
+        "n_eval": 32,
+        "train_seasons_without_line": [
+          2002,
+          2003,
+          2004,
+          2005,
+          2006,
+          2007,
+          2008,
+          2009,
+          2010,
+          2011,
+          2012,
+          2013
+        ]
+      },
+      {
+        "test_season": 2018,
+        "train_seasons": [
+          2002,
+          2003,
+          2004,
+          2005,
+          2006,
+          2007,
+          2008,
+          2009,
+          2010,
+          2011,
+          2012,
+          2013,
+          2014,
+          2015,
+          2016,
+          2017
+        ],
+        "n_train": 512,
+        "n_eval": 32,
+        "train_seasons_without_line": [
+          2002,
+          2003,
+          2004,
+          2005,
+          2006,
+          2007,
+          2008,
+          2009,
+          2010,
+          2011,
+          2012,
+          2013
+        ]
+      },
+      {
+        "test_season": 2019,
+        "train_seasons": [
+          2002,
+          2003,
+          2004,
+          2005,
+          2006,
+          2007,
+          2008,
+          2009,
+          2010,
+          2011,
+          2012,
+          2013,
+          2014,
+          2015,
+          2016,
+          2017,
+          2018
+        ],
+        "n_train": 544,
+        "n_eval": 32,
+        "train_seasons_without_line": [
+          2002,
+          2003,
+          2004,
+          2005,
+          2006,
+          2007,
+          2008,
+          2009,
+          2010,
+          2011,
+          2012,
+          2013
+        ]
+      },
+      {
+        "test_season": 2020,
+        "train_seasons": [
+          2002,
+          2003,
+          2004,
+          2005,
+          2006,
+          2007,
+          2008,
+          2009,
+          2010,
+          2011,
+          2012,
+          2013,
+          2014,
+          2015,
+          2016,
+          2017,
+          2018,
+          2019
+        ],
+        "n_train": 576,
+        "n_eval": 32,
+        "train_seasons_without_line": [
+          2002,
+          2003,
+          2004,
+          2005,
+          2006,
+          2007,
+          2008,
+          2009,
+          2010,
+          2011,
+          2012,
+          2013
+        ]
+      },
+      {
+        "test_season": 2021,
+        "train_seasons": [
+          2002,
+          2003,
+          2004,
+          2005,
+          2006,
+          2007,
+          2008,
+          2009,
+          2010,
+          2011,
+          2012,
+          2013,
+          2014,
+          2015,
+          2016,
+          2017,
+          2018,
+          2019,
+          2020
+        ],
+        "n_train": 608,
+        "n_eval": 32,
+        "train_seasons_without_line": [
+          2002,
+          2003,
+          2004,
+          2005,
+          2006,
+          2007,
+          2008,
+          2009,
+          2010,
+          2011,
+          2012,
+          2013
+        ]
+      },
+      {
+        "test_season": 2022,
+        "train_seasons": [
+          2002,
+          2003,
+          2004,
+          2005,
+          2006,
+          2007,
+          2008,
+          2009,
+          2010,
+          2011,
+          2012,
+          2013,
+          2014,
+          2015,
+          2016,
+          2017,
+          2018,
+          2019,
+          2020,
+          2021
+        ],
+        "n_train": 640,
+        "n_eval": 32,
+        "train_seasons_without_line": [
+          2002,
+          2003,
+          2004,
+          2005,
+          2006,
+          2007,
+          2008,
+          2009,
+          2010,
+          2011,
+          2012,
+          2013
+        ]
+      },
+      {
+        "test_season": 2024,
+        "train_seasons": [
+          2002,
+          2003,
+          2004,
+          2005,
+          2006,
+          2007,
+          2008,
+          2009,
+          2010,
+          2011,
+          2012,
+          2013,
+          2014,
+          2015,
+          2016,
+          2017,
+          2018,
+          2019,
+          2020,
+          2021,
+          2022,
+          2023
+        ],
+        "n_train": 704,
+        "n_eval": 32,
+        "train_seasons_without_line": [
+          2002,
+          2003,
+          2004,
+          2005,
+          2006,
+          2007,
+          2008,
+          2009,
+          2010,
+          2011,
+          2012,
+          2013,
+          2023
+        ]
+      },
+      {
+        "test_season": 2025,
+        "train_seasons": [
+          2002,
+          2003,
+          2004,
+          2005,
+          2006,
+          2007,
+          2008,
+          2009,
+          2010,
+          2011,
+          2012,
+          2013,
+          2014,
+          2015,
+          2016,
+          2017,
+          2018,
+          2019,
+          2020,
+          2021,
+          2022,
+          2023,
+          2024
+        ],
+        "n_train": 736,
+        "n_eval": 32,
+        "train_seasons_without_line": [
+          2002,
+          2003,
+          2004,
+          2005,
+          2006,
+          2007,
+          2008,
+          2009,
+          2010,
+          2011,
+          2012,
+          2013,
+          2023
+        ]
+      }
+    ],
+    "strict_sensitivity": [
+      {
+        "test_season": 2015,
+        "train_seasons": [
+          2002,
+          2003,
+          2004,
+          2005,
+          2006,
+          2007,
+          2008,
+          2009,
+          2010,
+          2011,
+          2012,
+          2013,
+          2014
+        ],
+        "n_train": 416,
+        "n_eval": 32,
+        "train_seasons_without_line": [
+          2002,
+          2003,
+          2004,
+          2005,
+          2006,
+          2007,
+          2008,
+          2009,
+          2010,
+          2011,
+          2012,
+          2013
+        ]
+      },
+      {
+        "test_season": 2016,
+        "train_seasons": [
+          2002,
+          2003,
+          2004,
+          2005,
+          2006,
+          2007,
+          2008,
+          2009,
+          2010,
+          2011,
+          2012,
+          2013,
+          2014,
+          2015
+        ],
+        "n_train": 448,
+        "n_eval": 32,
+        "train_seasons_without_line": [
+          2002,
+          2003,
+          2004,
+          2005,
+          2006,
+          2007,
+          2008,
+          2009,
+          2010,
+          2011,
+          2012,
+          2013
+        ]
+      },
+      {
+        "test_season": 2017,
+        "train_seasons": [
+          2002,
+          2003,
+          2004,
+          2005,
+          2006,
+          2007,
+          2008,
+          2009,
+          2010,
+          2011,
+          2012,
+          2013,
+          2014,
+          2015,
+          2016
+        ],
+        "n_train": 480,
+        "n_eval": 32,
+        "train_seasons_without_line": [
+          2002,
+          2003,
+          2004,
+          2005,
+          2006,
+          2007,
+          2008,
+          2009,
+          2010,
+          2011,
+          2012,
+          2013
+        ]
+      },
+      {
+        "test_season": 2018,
+        "train_seasons": [
+          2002,
+          2003,
+          2004,
+          2005,
+          2006,
+          2007,
+          2008,
+          2009,
+          2010,
+          2011,
+          2012,
+          2013,
+          2014,
+          2015,
+          2016,
+          2017
+        ],
+        "n_train": 512,
+        "n_eval": 32,
+        "train_seasons_without_line": [
+          2002,
+          2003,
+          2004,
+          2005,
+          2006,
+          2007,
+          2008,
+          2009,
+          2010,
+          2011,
+          2012,
+          2013
+        ]
+      }
+    ],
+    "note": "every headline number must also be reported on the A1.4 strict subset"
+  },
+  "folds": {
+    "headline": [
+      2015,
+      2016,
+      2017,
+      2018,
+      2019,
+      2020,
+      2021,
+      2022,
+      2024,
+      2025
+    ],
+    "strict": [
+      2015,
+      2016,
+      2017,
+      2018
+    ],
+    "source": "read verbatim from data_audit.json; never recomputed here"
+  },
+  "market": {
+    "rows_covered": 352,
+    "seasons_covered": [
+      2014,
+      2015,
+      2016,
+      2017,
+      2018,
+      2019,
+      2020,
+      2021,
+      2022,
+      2024,
+      2025
+    ],
+    "strictly_dated_rows": 160,
+    "role": "defines evaluation rows and baseline B0 only \u2014 never training eligibility",
+    "naming": "archived market consensus of unattributed sportsbook origin \u2014 never 'the sportsbook line', 'Vegas', or 'the market'"
+  },
+  "lock": {
+    "tier_c_open": false,
+    "tier_available": "A+B",
+    "authority": "PREREGISTRATION \u00a77 gate C + \u00a710 Amendment 1 A1.5",
+    "price_columns_withheld_from_panel": [
+      "price_over",
+      "price_under"
+    ],
+    "why": "gate C requires a named book; the market source is an archived consensus with book=null, so no priced quantity may be computed or exported",
+    "forbidden_downstream": [
+      "side",
+      "over/under recommendation",
+      "probability vs a posted line",
+      "confidence tier",
+      "expected value",
+      "break-even",
+      "profitability",
+      "bet / edge / lock / value / play language"
+    ],
+    "permitted": [
+      "projected wins",
+      "win distribution",
+      "accuracy vs the archived market consensus (aggregate, reported for both the headline and the A1.4 strict subset)"
+    ],
+    "market_naming": "archived market consensus of unattributed sportsbook origin \u2014 never 'the sportsbook line', 'Vegas', or 'the market'",
+    "guard": "futures/season_team_totals/tier_lock.py :: assert_no_tier_c(obj, where, allowed_literals=..., tier_c_open=...) \u2014 import it; recursive over frames, mappings, sequences and strings. Call before writing any artifact.",
+    "exact_closing_timestamps_available": false
+  },
+  "leakage_tests": {
+    "blinding_probe": [
+      {
+        "season": 2015,
+        "identical": true,
+        "changed_features": []
+      },
+      {
+        "season": 2016,
+        "identical": true,
+        "changed_features": []
+      },
+      {
+        "season": 2017,
+        "identical": true,
+        "changed_features": []
+      },
+      {
+        "season": 2018,
+        "identical": true,
+        "changed_features": []
+      },
+      {
+        "season": 2019,
+        "identical": true,
+        "changed_features": []
+      },
+      {
+        "season": 2020,
+        "identical": true,
+        "changed_features": []
+      },
+      {
+        "season": 2021,
+        "identical": true,
+        "changed_features": []
+      },
+      {
+        "season": 2022,
+        "identical": true,
+        "changed_features": []
+      },
+      {
+        "season": 2024,
+        "identical": true,
+        "changed_features": []
+      },
+      {
+        "season": 2025,
+        "identical": true,
+        "changed_features": []
+      },
+      {
+        "season": 2026,
+        "identical": true,
+        "changed_features": []
+      }
+    ],
+    "red_control_detected_injected_leak": true,
+    "target_derived_columns_excluded": [
+      "games_played",
+      "losses",
+      "point_diff",
+      "points_against",
+      "points_for",
+      "ties",
+      "wins",
+      "wins_half_ties"
+    ]
+  },
+  "inputs": {
+    "audit": "futures/artifacts/data_audit.json",
+    "audit_verdict": "GO-TIER-B",
+    "schedule_snapshot": "futures/data/schedules_snapshot.parquet",
+    "schedule_sha256": "6d97ff5b662015b16c579c31f90faa1e0b98368bb30d905ec173f6df58d7bf87",
+    "lines_file": "futures/data/win_totals.csv",
+    "lines_sha256": "dd6753f654dec864b7fbeb7e3e23b7a3fa2cfc41c86e1de48c66bb86742eecbe",
+    "outcome_sha256": "b60d2ccd466215bf9ff7657ea18c5f14c8b1b664ef94dd2de27ed6cde68f7019",
+    "pbp_snapshot": "futures/data/pbp_team_season_epa.parquet",
+    "pbp_sha256": "c1008757ac780362b854ed6d440d14408774c1924d0ceb190d6328159d6cad71",
+    "pbp_source": "snapshot:futures/data/pbp_team_season_epa.parquet",
+    "pbp_provenance": "futures/data/pbp_team_season_epa.provenance.json"
+  },
+  "outputs": {
+    "panel": "futures/data/team_season_panel.parquet",
+    "panel_frame_sha256": "a790d1886fe086869c07e839a045e96856665151152be33c0db9ef64175c0b0b",
+    "venue_context": "futures/data/season_schedule_context.parquet",
+    "venue_frame_sha256": "a079766eb9b39acabcb738a55eef0e4db6995b7db428eda9c95ec63630ce8007",
+    "venue_rows": 6495,
+    "feasibility": "futures/artifacts/preseason_feature_feasibility.json"
+  },
+  "provenance": {
+    "notebook": "futures/season_team_totals/01_build_dataset.ipynb",
+    "run_at_utc": "2026-08-04T00:38:24.754309+00:00",
+    "as_of_date": "2026-08-04",
+    "python": "3.11.9",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "pandas": "2.3.3",
+    "numpy": "1.26.4",
+    "seed": 20260802,
+    "audit_verdict": "GO-TIER-B",
+    "audit_artifact": "futures/artifacts/data_audit.json"
+  }
+}

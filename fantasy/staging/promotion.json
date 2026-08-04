@@ -1,0 +1,78 @@
+{
+ "promoted_utc": "2026-08-03T22:57:54.790357+00:00",
+ "backup_dir": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\JoSchoAnalytics\\fantasy\\backup_pre_depthfix_20260803T225754Z",
+ "gate_report_all_pass": true,
+ "manifest": "manifest_primary.json",
+ "files": [
+  {
+   "target": "features_dataset.csv",
+   "backup_sha256": "50171153dcec25ffc1ba442b3fb07c47bb414903d8bcb5a92cb7914f14160490",
+   "new_sha256": "184986ebde8aa631f336f48d384526982a2498491c4e267256a9965c27503ef9"
+  },
+  {
+   "target": "raw_dataset.csv",
+   "backup_sha256": "984916874258da1f70ec40fdb28c8caa5a52f8bce6b114fb455598be2247db80",
+   "new_sha256": "4fbf4148f906eb002f1123bc51b698e3dd34bdb1d54143a01481f7fa89fdce2d"
+  },
+  {
+   "target": "models\\qb_model.pkl",
+   "backup_sha256": "a1248ea8fb22f0afaf755bb2e0d092ec3a434d66fbcae03210fd0951e60f888a",
+   "new_sha256": "e53b0ffd9acbace9dde58da86d63d1f61d553e6da71d6b1f546ba2668b52a452"
+  },
+  {
+   "target": "models\\qb_pass_yards_model.pkl",
+   "backup_sha256": "470afcb7775e10c1fb217481251f038215c645a5bd95a464e1e5a5a2091fe28c",
+   "new_sha256": "e0d053e7905af2d46fd21827cb855d018371593c587c44d72c258e3bd279af85"
+  },
+  {
+   "target": "models\\qb_rush_yards_model.pkl",
+   "backup_sha256": "51ff9a7bf22279f2f3be8d0ff87ecc9ce3fd3d08de4d9e16a0d9f097d25e33eb",
+   "new_sha256": "5c732013af45c9d3ba7b1d7674a571c63f0f2319980c0ab53d3af27fd7d1356b"
+  },
+  {
+   "target": "models\\rb_model.pkl",
+   "backup_sha256": "ac5a62b65c671a0b9231d34a91fde851a5be80012bf0667c5064f2aef240f9c4",
+   "new_sha256": "a2d18235bef170767633d0e4965dcc6340b3819160576c2ca86f4b8dd10ae930"
+  },
+  {
+   "target": "models\\rb_rec_yards_model.pkl",
+   "backup_sha256": "31b64efa8e2f609926031b21845a341967df6fd9023bfe224643050bdb61c0ff",
+   "new_sha256": "662ee6e2c16143f5e13f30be6381381d5036ef6ec08ff12f465f0e713e467164"
+  },
+  {
+   "target": "models\\rb_rush_yards_model.pkl",
+   "backup_sha256": "3004ac53ce682bdb50dcc1243bf925a1d634014f6b1e4be9757fc16c7b1e0ad3",
+   "new_sha256": "457baac7e94c9209628e07a9ac4e5a4cc4eca19536cca5e6de43c7173a5525c5"
+  },
+  {
+   "target": "models\\te_model.pkl",
+   "backup_sha256": "7e582fb1f1fdd3410a5e5d652fb762faf133c60e31d2009979cb1fb925b14052",
+   "new_sha256": "c169d375a2437f049a069e11c95ef3a6a98eae1c1faa38205e906d5998f6bf7e"
+  },
+  {
+   "target": "models\\te_rec_yards_model.pkl",
+   "backup_sha256": "268ca7c57d4aeaa38056fc889670edad555e618314cc12f21ed6006b0f24d2fd",
+   "new_sha256": "911a3d8c31f2b1c25743443a113f9b1d3f8f686e0e413ede9856032288216659"
+  },
+  {
+   "target": "models\\te_receptions_model.pkl",
+   "backup_sha256": "0f96de3742e31497a4e4c8f486a05437d1b8084cbaceffb04e8a18372a071c8f",
+   "new_sha256": "8a71b56341e87ad1f86dc53b4e37b62a30f05fb199f97bee3ceb6179a1a76956"
+  },
+  {
+   "target": "models\\wr_model.pkl",
+   "backup_sha256": "55b5d9fe9e2059b822cca7d4e0e861be861ea988d9f924e45b2c6e6afcdee203",
+   "new_sha256": "821dca9147a185fb8115f0f8ded2cfc735259aa476165ba32a7179503f98af61"
+  },
+  {
+   "target": "models\\wr_rec_yards_model.pkl",
+   "backup_sha256": "391022f7eb0947089a78f1db211ce186e16fd6535aa776f806ee9e1de3e3556a",
+   "new_sha256": "7c2d1943979d766085b3324b9fde5cdbabc922d2378d9f74133ea08209ecada6"
+  },
+  {
+   "target": "models\\wr_receptions_model.pkl",
+   "backup_sha256": "d0951b8eaf13c883ba9fd2d5188c974ea39c1bdaecabc28eb4915e759e33db59",
+   "new_sha256": "ba2e825ce471df6375d8c494b47387f437bb01bda79dd60f777d6023602fba66"
+  }
+ ]
+}

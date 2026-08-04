@@ -1,0 +1,17 @@
+# Backtest / walk-forward reproduction environment.
+#
+# WHY THIS FILE EXISTS (2026-08-03). The canonical ATS numbers published in README.md and
+# CLAUDE.md must come from a declared, pinned environment. Two problems made that
+# impossible before:
+#   1. requirements-ci.txt alone CANNOT run the documented backtest command --
+#      betting/historical_lines.py reads betting/data/nfl.xlsx with engine="openpyxl",
+#      and openpyxl is not in any requirements file. The command failed on a clean install.
+#   2. The walk-forward result is pandas-version sensitive. A run under pandas 3.0.3
+#      produced HIGH 131/237; the pinned pandas==2.3.3 produces HIGH 133/240. The
+#      published number must be the pinned one, so the environment has to be nameable.
+#
+# Install:  python -m venv <path> && <path>/Scripts/pip install -r requirements-backtest.txt
+# Use it for: betting/experiments/walkforward_oos_preds.py, betting/kelly_staking.py,
+#             betting/clv_backtest.py, betting/historical_lines.py
+-r requirements-ci.txt
+openpyxl==3.1.5

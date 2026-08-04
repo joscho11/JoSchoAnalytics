@@ -8,7 +8,61 @@ Live dashboard: [joschoanalytics.streamlit.app](https://joschoanalytics.streamli
 
 I built this to find out if a data-driven model can actually find an edge against the spread. Anyone can pick winners. The harder question is whether you can consistently beat the number Vegas sets.
 
-The evidence so far says yes, against the **opening** line. The number I stand behind is the walk-forward out-of-sample one: **HIGH-confidence picks hit 64.2% against the opening spread, 380 of 592 games, 2018–2025**, with a 95% Wilson lower bound of 60.2%. Break-even after the bookmaker's cut is 52.4%.
+> ### ⚠️ RETRACTED 2026-08-03 — the 64.2% ATS edge does not survive a leak fix
+>
+> I previously published: *"HIGH-confidence picks hit 64.2% against the opening spread,
+> 380 of 592 games, 2018–2025, 95% Wilson lower bound 60.2%."* **That number was produced
+> through a leaking feature and I am withdrawing it.**
+>
+> **The defect.** The sack history was built only from sack-positive game/team rows, so a
+> defense that recorded zero sacks in a game had *no row at all*. Row presence therefore
+> encoded that game's own outcome, and a downstream `fillna(0)` wrote 0 onto exactly those
+> rows — contemporaneous information inside a pregame feature. `sack_diff` and
+> `sack_diff_reverse` are the #2 and #3 of the 35 features the model trains on.
+>
+> **The regenerated numbers** (walk-forward out-of-sample, 2018–2025, 2,138 predictions,
+> pushes excluded via `won_open.notna()`, tiers over games with |edge| ≥ 1):
+>
+> All numbers below come from ONE declared pinned environment
+> (`requirements-backtest.txt`, pandas 2.3.3, Python 3.11.9). Full provenance and the
+> controlled 2×2:
+> [`betting/experiments/audit_2026-08-03c_final/PROVENANCE.md`](betting/experiments/audit_2026-08-03c_final/PROVENANCE.md).
+>
+> Two defects were found, and they are separated rather than conflated. **(1)** the sack
+> leak above; **(2)** an All-Pro **identity collision** — the roster file has no player ID
+> and two distinct players named C.J. Mosley were merged under a name key, with the
+> survivor decided by an unstable sort.
+>
+> | Arm | sack | identity | HIGH | win% | 95% Wilson lower | Clears 52.4%? |
+> |---|---|---|---|---|---|---|
+> | A | leaking | legacy | 380/592 | 64.1892% | 60.2469% | yes |
+> | B | dense | legacy | 133/240 | 55.4167% | 49.0918% | no |
+> | C | leaking | fixed | 378/589 | 64.1766% | 60.2239% | yes |
+> | **D (published)** | **dense** | **fixed** | **129/238** | **54.2017%** | **47.8551%** | **no** |
+>
+> Arm A reproduces the originally published figure **exactly**, which licenses the causal
+> claim: the collapse is the leak, not drift. The sack repair is the dominant effect (mean
+> margin change 1.77 pts, HIGH 592→240); the identity repair is small but real (mean 0.09,
+> HIGH 240→238). Arm D was run twice and is byte-identical.
+>
+> **Published: HIGH 129/238 = 54.2017%, Wilson lower 47.8551% — below break-even.**
+> MEDIUM 382/718 = 53.2033%, lower 49.5462% — also below. **No tier clears break-even.**
+>
+> **What I now claim: nothing.** 54.2% on 238 picks is a point estimate whose 95% interval
+> contains break-even. This system has **no demonstrated ATS edge**; the 2026 forward
+> record is the first real test.
+>
+> Reproduce (the pinned env is required — `requirements-ci.txt` alone lacks openpyxl):
+> ```
+> python -m venv C:/tmp/jsa-bt
+> C:/tmp/jsa-bt/Scripts/python.exe -m pip install -r requirements-backtest.txt
+> C:/tmp/jsa-bt/Scripts/python.exe betting/experiments/walkforward_oos_preds.py --line open --out <path>.csv
+> cd betting && C:/tmp/jsa-bt/Scripts/python.exe kelly_staking.py --preds <path>.csv
+> ```
+> Fix: `betting/features.py::_build_situational_pbp` + `model_comparison.ipynb` §7 build a
+> dense sack table. Guard: `betting/test_sack_leak.py` mutates the target game's sack count
+> and asserts every pregame feature is unchanged, with a red proof that the pre-fix builder
+> fails that test.
 
 The model does **not** beat the closing line, and I do not claim it does — an earlier "beats the close" reading turned out to be an artifact of the closing line being one of the model's own inputs.
 
@@ -161,10 +215,19 @@ Same leakage discipline as the betting side: every rolling window uses `shift(1)
 
 | Position | Train rows | Test rows | MAE | RMSE | Baseline MAE |
 |----------|-----------|-----------|-----|------|--------------|
-| QB | 2,781 | 571 | **6.81** | 8.43 | 7.49 |
-| RB | 6,652 | 1,397 | **4.40** | 6.36 | 4.59 |
-| WR | 10,643 | 2,215 | **3.96** | 5.28 | 4.06 |
-| TE | 5,265 | 1,145 | **3.16** | 4.55 | 3.48 |
+
+> **Corrected 2026-08-03.** The previous table was measured on a `features_dataset.csv` whose 2025 season had **16 of 16 depth/availability columns constant** — nflverse changed the depth-chart schema and the legacy filter silently dropped 100% of 2025, so defaults filled in. Rebuilt via `fantasy/depth_adapter.py`; 0 of 16 constant now. Holdout n falls because per-season rolling windows drop each player's week-1 row (3,072 of 3,185 removed rows; 0 unexplained). **Every MAE got slightly worse — the corrupted data made the holdout easier — and the "all four beat the baseline" claim does NOT survive: only QB and TE are statistically distinguishable from the rolling average.** Provenance: `fantasy/staging/manifest_primary.json`, `gate_report.json`.
+
+| Position | Holdout n | MAE | RMSE | Rolling baseline MAE | Paired gain vs baseline | t |
+|---|---|---|---|---|---|---|
+| QB | 508 | **6.859** | 8.502 | 7.378 | +0.519 | **3.13** |
+| RB | 1,284 | **4.489** | 6.331 | 4.578 | +0.089 | 1.15 |
+| WR | 2,030 | **4.015** | 5.293 | 4.027 | +0.012 | 0.23 |
+| TE | 1,022 | **3.200** | 4.646 | 3.485 | +0.284 | **4.16** |
+
+**Read plainly: QB and TE beat the rolling-average baseline; RB (t=1.15) and WR (t=0.23) do
+not.** WR is essentially indistinguishable from just averaging a player's last three games.
+
 
 Beats the rolling-average baseline at every position. TE has the lowest error because TE scoring is the most concentrated and predictable week to week.
 
@@ -300,7 +363,7 @@ fantasy/
   projections/                         # From-scratch season-total half-PPR builds (the Model Proj column)
     build_{rb,wr,te,qb}_projection.py  # One per position; each imports the RB engine, never modifies it
     results/                           # {pos}_projection_2026.csv, *_rookie_board_projection.csv, and
-                                       #   analyst_projection_adjustments_2026.csv (44-row display overlay)
+                                       #   analyst_projection_adjustments_2026.csv (45-row display overlay)
     preregs/PREREG_*.md                # Frozen pre-registrations
     GUIDE.md                           # Plain-language guide
   talent/                              # Descriptive talent scores (SPEC R34-R41, shipped 2026-07-27)

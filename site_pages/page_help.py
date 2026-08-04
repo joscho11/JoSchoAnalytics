@@ -11,6 +11,7 @@ import streamlit as st
 
 import dashboard_data
 import model_explanations
+from dashboard_utils import breakeven_verdict
 
 
 def render():
@@ -89,7 +90,12 @@ The model is trying to predict the margin of victory and figure out which side o
         """)
 
     with st.expander("How do you actually make money betting?"):
-        _hc_line = f" and **{_hc_pct}%** on high confidence picks" if _hc_pct is not None else ""
+        # The high-confidence rate comes from the agent-analysis caches, which cover far
+        # fewer games than the tracker — print its own denominator so a 6-game figure
+        # cannot read like the 117-game one beside it.
+        _hc_line = (f" and **{_hc_pct}%** on high confidence picks "
+                    f"({_hc_correct}/{_hc_total})" if _hc_pct is not None else "")
+        _be_comment = breakeven_verdict(_overall_pct, _hc_pct)
         st.markdown(f"""
 Honestly it's really hard and most people lose money. I want to be upfront about that.
 
@@ -97,7 +103,7 @@ Standard sportsbook odds are around 110 to win 100. That means you need to win a
 
 To be profitable over time you need to consistently win more than 52.4%, bet games where there's real edge instead of gut feeling, and manage your bankroll properly. A common rule is never betting more than 2 to 5% of your total bankroll on a single game.
 
-The model is currently at **{_overall_pct}% ATS** overall ({_overall_correct}/{_overall_total}){_hc_line}. {"Both are above break even, which is encouraging." if _hc_pct is not None else "This is above break even, which is encouraging."} But I want to be clear that past performance doesn't guarantee anything going forward. There will be bad weeks.
+The model is currently at **{_overall_pct}% ATS** overall ({_overall_correct}/{_overall_total}){_hc_line}. {_be_comment} But I want to be clear that past performance doesn't guarantee anything going forward. There will be bad weeks.
 
 Never bet more than you can afford to lose.
         """)
@@ -110,7 +116,10 @@ Sharp money is professional bettors who are placing large, calculated bets based
 
 Watching line movement can tell you a lot. If the Chiefs open at 7 and move to 7.5, someone is betting the Chiefs heavily. If it's sharp money driving that, it's a signal worth paying attention to.
 
-When the model and sharp money agree on the same side, that's a strong signal. When they disagree, the agent will flag it in the matchup analysis and it's worth being cautious.
+**To be clear about what this site does and doesn't know:** I don't have sharp-money or
+line-movement data. Nothing on this site tracks where professional money is going, and no
+number you see here is derived from it. The above is background on how betting markets
+work, not a description of an input to my model.
         """)
 
     st.divider()
@@ -148,9 +157,9 @@ After results are in, each card will show either WIN or LOSS based on whether th
         st.markdown("""
 The colored button on each game card tells you how confident the AI agent is after analyzing that matchup.
 
-🟢 **High** means the model edge is strong and outside signals like injuries, line movement, and historical data all point the same direction. These are the games worth prioritizing.
+🟢 **High** means the model edge is strong and outside signals like injuries and historical matchup data point the same direction. These are the games worth prioritizing.
 
-🟡 **Medium** means there's edge but something is giving mixed signals. Maybe sharp money is split or there's an injury that could swing things. Worth considering but not a lock.
+🟡 **Medium** means there's edge but something is giving mixed signals — an injury that could swing things, or a matchup history that cuts the other way. Worth considering but not a lock.
 
 🔴 **Skip** means the agent is recommending you pass on this game. The edge is too small, signals are conflicting, or there's too much uncertainty. Not every game is worth betting.
 
@@ -551,11 +560,23 @@ All models are retrained each offseason as new data comes in.
         st.markdown("""
 The agent is built on top of the prediction models using LlamaIndex and Anthropic's Claude API.
 
-It has 5 tools it can call: model predictions, injury reports, line movement data, historical head to head matchups going back to 2015, and a model confidence analyzer.
+**Status: paused as of August 2026.** The agent's line-movement tool was never connected to
+a real market feed — it returned hardcoded example values, and the one cached week it
+produced stated those as if they were observed sharp-money and line-movement figures. I've
+taken that cached analysis down, disabled the weekly agent run, and the site now refuses to
+render any market claim that can't prove where it came from. The section below describes
+what the agent did; it is not currently producing anything.
 
-Each week it goes through every game, calls those tools, and reasons about whether the model's prediction is backed up by real world signals. It's not overriding the model. It's asking whether everything else lines up with what the model is saying.
+It called tools for model predictions, injury reports, historical head to head matchups
+going back to 2015, and a model confidence analyzer.
 
-If the model likes a team, sharp money likes that team, they're healthy, and they dominate this matchup historically, the agent marks it high confidence. If the model likes a team but their star QB is out and sharp money is going the other way, the agent will tell you to skip it.
+Each week it went through every game, called those tools, and reasoned about whether the
+model's prediction was backed up by other signals. It never overrode the model — it asked
+whether the rest lined up with what the model was saying.
+
+If the model liked a team, they were healthy, and they dominated the matchup historically,
+the agent marked it high confidence. If the model liked a team but their star QB was out,
+it would tell you to skip it.
 
 The idea is that raw model predictions are a starting point. The agent adds a layer of reasoning to help filter out plays where the edge might just be noise.
         """)
@@ -567,10 +588,11 @@ The idea is that raw model predictions are a starting point. The agent adds a la
         _bw_str = (f"Season {_bw[0]} Week {_bw[1]} was the strongest week so far at "
                    f"{int(_best_week.loc[_bw,'sum'])} out of {int(_best_week.loc[_bw,'count'])} correct. "
                    ) if _bw else ""
-        _hc_line2 = f" and **{_hc_pct}%** on high confidence picks" if _hc_pct is not None else ""
-        _be_comment2 = "Both numbers are above that." if _hc_pct is not None else "That number is above break even."
+        _hc_line2 = (f" and **{_hc_pct}%** on high confidence picks "
+                     f"({_hc_correct}/{_hc_total})" if _hc_pct is not None else "")
+        _be_comment2 = breakeven_verdict(_overall_pct, _hc_pct)
         st.markdown(f"""
-The model has gone **{_overall_pct}% ATS** across {_overall_total} completed games ({_overall_correct} correct){_hc_line2}. The break even threshold at standard sportsbook odds is 52.4%, so {_be_comment2}
+The model has gone **{_overall_pct}% ATS** across {_overall_total} completed games ({_overall_correct} correct){_hc_line2}. {_be_comment2}
 
 {_bw_str}
 I want to be honest though. Past performance doesn't guarantee anything going forward. There will be bad weeks. The goal is to track this over multiple seasons and see if the edge holds up.

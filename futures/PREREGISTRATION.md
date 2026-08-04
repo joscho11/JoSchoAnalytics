@@ -344,3 +344,213 @@ exists.
 2026-08-03 into `futures/artifacts/data_audit.json` and read from there by every downstream
 notebook. Amending this amendment after a fold result is seen is forbidden by the same rule that
 governs §7.
+
+---
+
+### Amendment 2 — venue correction, the M5 market-anchored track, and feature-audit governance
+
+**Accepted by Joseph on 2026-08-03**, before `02_model_comparison.ipynb` was implemented or
+executed and **before any model result of any kind was observed**. Verified at acceptance:
+`02`–`05` carry zero code outputs and null `execution_count`s, contain only their
+`NotImplementedError` guard, and no model artifact, prediction file or metric exists anywhere under
+`futures/`. Sections 1–9 and Amendment 1 are **unchanged**.
+
+#### A2.1 — Venue correction (replaces the `home_games` feature)
+
+The feature previously called `home_games` counted **nominal home designations**. It included
+neutral-site and international games and therefore never measured home-field exposure. It is
+retired under that meaning and replaced by four features:
+
+| feature | definition |
+|---|---|
+| `designated_home_games` | games in which the team is the listed home team (the old count, honestly named) |
+| `true_home_venue_games` | designated-home games actually held at the team's primary home venue for that season |
+| `neutral_site_games` | appearances (home or away) in games with no genuine home-venue advantage |
+| `international_games` | appearances (home or away) at a pinned non-US venue |
+
+The remaining schedule features (`games_scheduled`, `div_games`, `mean_rest`, `has_bye`) are
+unchanged; no bug in them was demonstrated.
+
+**A2.1.1 — Frozen venue-key rule.** A game's venue key is:
+
+* `INTL::<canonical venue>` when the game's `stadium` name is in the pinned international-venue
+  table, **otherwise**
+* the game's `stadium_id`.
+
+*Why not `stadium_id` alone, as would be natural:* in this pinned snapshot `stadium_id` is **not a
+stable venue identifier**. It is the nominal home team's id. Measured on the snapshot: `JAX00` spans
+**seven** stadium names including `Wembley Stadium` and `Tottenham Hotspur Stadium`; `WAS00` spans
+`FedExField`, `Northwest Stadium` and `Tottenham Hotspur Stadium`; and one physical venue, Wembley,
+carries two different ids (`LON00` historically, `JAX00` in 2026). An id-only rule therefore cannot
+see the 2026 Jacksonville–Philadelphia game at Tottenham, which the snapshot labels
+`location = "Home"` with `stadium_id = JAX00`. The international table is keyed on **name** for that
+reason, and the observed `(name, stadium_id)` pairs are recorded in the artifact as diagnostics.
+
+*Why `stadium_id` for domestic venues:* it absorbs mid-season and cross-season renames that a name
+key would split — `SEA00` spans `CenturyLink Field` and `Lumen Field` (renamed mid-2020),
+`WAS00` spans `FedExField` and `Northwest Stadium`.
+
+**A2.1.2 — Frozen primary-home-venue rule.** A team-season's primary home venue is the **modal
+venue key among that team's designated-home games, after excluding games explicitly marked
+`location == "Neutral"`**. A tie that survives this rule **aborts the build**; it is never resolved
+by row order. (Measured at acceptance: zero ties across all 800 team-seasons 2002–2026 under the
+A2.1.1 key. The single tie present under a name-only key — Seattle 2020, four games at each of the
+venue's two names — is resolved by the id component, not by a preference.)
+
+**A2.1.3 — Frozen effective-neutral rule.** At game level:
+
+```
+effective_neutral = (location == "Neutral") OR (venue_key != nominal home team's primary venue key)
+international_game = venue name is in the pinned international-venue table
+```
+
+An effective-neutral or international game counts for **both** participating teams. A game may be
+international without being marked `Neutral` (the 2026 Jacksonville case) and neutral without being
+international (domestic relocations, e.g. the 2005 New Orleans season and the 2025 domestic neutral
+games).
+
+**A2.1.4 — No Jacksonville exception.** No team-specific home-advantage adjustment is introduced. A
+Jacksonville-London familiarity effect is **not estimable** from this sample and must not be
+invented. Jacksonville's London games reduce `true_home_venue_games` exactly as any other team's
+would.
+
+**A2.1.5 — Artifact.** `01` writes a deterministic game-level venue authority,
+`futures/data/season_schedule_context.parquet`, carrying `game_id, season, week, home_franchise,
+away_franchise, location, stadium_id, stadium, venue_key, primary_home_venue_key,
+primary_home_stadium_id, effective_neutral, international_game`. It is the venue authority for M4's
+schedule simulation.
+
+#### A2.2 — M5, a market-anchored residual model (declared before fitting)
+
+```
+residual   = wins_half_ties - market_line
+prediction = market_line + predicted_residual
+```
+
+**M5 is a market-anchored projection, not an independent model.** It is structurally incapable of
+demonstrating that this project beats a sportsbook or a market, and no report may describe it as
+doing so. The only claim M5 can support is whether structural information **improved MAE relative to
+the archived consensus** out of sample.
+
+Frozen rules:
+
+* **M5 training rows require both a target and an archived consensus line.** For outer test season
+  *T*, M5 trains only on line-covered team-seasons strictly before *T*.
+* **Evaluation uses exactly the frozen headline and A1.4 strict-sensitivity rows** — identical to
+  M1–M4, so the tracks are comparable on the same rows.
+* `market_line` is the **offset / base prediction**, never a quote. The two withheld quote columns
+  named in the panel's `lock` block stay excluded from every track.
+* **M5 cannot produce a 2026 prediction** unless a valid 2026 archived consensus line is supplied.
+  Its absence must **fail closed for M5 alone**, leaving M1–M4 predictions possible. At acceptance no
+  2026 line exists, so M5 has no 2026 output by construction.
+* **Tier C remains closed.** M5 changes nothing about §7 gate C.
+
+**Estimator and tuning, frozen now:**
+
+* Ridge regression on the residual, over the same structural `FEATURE_COLS` as M1–M4.
+* Median imputation **fitted on each outer training window only**.
+* Standardization **fitted on each outer training window only**.
+* `alpha` selected by **inner expanding-season validation** inside the outer training window, from
+  the frozen grid **`(0.01, 0.1, 1.0, 3.0, 10.0, 30.0, 100.0, 300.0, 1000.0)`**, choosing the
+  smallest alpha among ties.
+* **Deterministic fallback `alpha = 10.0`** when an outer fold has fewer than two usable inner
+  validation seasons. This is not a tuned value; it is the frozen grid's midpoint, fixed here.
+* **No random cross-validation anywhere.**
+* **No clipping.** Final win predictions are not clipped for M5, because no such rule is
+  pre-declared for M1–M4; introducing M5-only clipping would make the tracks incomparable.
+
+**First-fold limitation, acknowledged now:** the earliest headline fold is 2015, and the only
+line-covered season strictly before it is **2014 — 32 rows, one season, zero usable inner
+validation seasons**, so that fold necessarily takes the fallback alpha. Every report must show
+**M5's training seasons and row count per fold**, so this is visible rather than buried.
+
+#### A2.3 — Two tracks, kept distinct
+
+* **M1–M4 — independent structural projections.** `market_line` is **not** in their feature list and
+  must not be silently inserted into them.
+* **M5 — market-anchored residual projection.**
+
+The panel may carry `market_line` as a benchmark and as M5's offset. It does not appear in the
+structural `FEATURE_COLS`.
+
+#### A2.4 — Feature-audit governance
+
+A feature family may enter `FEATURE_COLS` only if it is verdicted **AVAILABLE** in
+`futures/artifacts/preseason_feature_feasibility.json` **and** its definition is written into this
+preregistration before the panel is rebuilt. **CONDITIONAL and UNAVAILABLE families are excluded by
+rule**, regardless of how promising they look.
+
+**High importance in the spread model is not evidence for this project**, and the spread model's
+importance ranking may not be cited as support. That ranking's own project history records
+`spread_line` domination (the top feature is ≈ the closing line, corr 0.994), a closing-line/CLV
+interpretation problem, a sack-feature leak, and an All-Pro identity collision; after correction in
+a pinned environment the published result is **HIGH 129/238 = 54.2017%, Wilson lower bound
+47.8551% — below the 52.4% break-even, with no tier clearing**
+(`betting/experiments/audit_2026-08-03c_final/`).
+
+**Amendment 2 adds no new feature family.** The audit is a feasibility record only; every family it
+examines is verdicted, and none is added to `FEATURE_COLS` by this amendment.
+
+#### A2.5 — Correction 1: upstream stadium metadata for the 2025 international games
+
+**Accepted 2026-08-03, the same day as Amendment 2, still before `02` was implemented or executed and
+before any model result existed. This is an input-integrity correction, not a result-driven change** —
+no result exists that it could have been fitted to.
+
+**The defect.** The pinned nflverse schedule marks all seven 2025 international games
+`location = "Neutral"` but supplies **the nominal host's own domestic stadium**. Under A2.1.3 as
+originally written, `international_game` is derived from the stadium name, so all seven were emitted
+as **non-international**. Measured on the snapshot at acceptance:
+
+| game_id | matchup | snapshot stadium (wrong) |
+|---|---|---|
+| `2025_01_KC_LAC` | KC @ LAC | SoFi Stadium |
+| `2025_04_MIN_PIT` | MIN @ PIT | Acrisure Stadium |
+| `2025_05_MIN_CLE` | MIN @ CLE | FirstEnergy Stadium |
+| `2025_06_DEN_NYJ` | DEN @ NYJ | MetLife Stadium |
+| `2025_07_LA_JAX` | LA @ JAX | TIAA Bank Stadium |
+| `2025_10_ATL_IND` | ATL @ IND | Lucas Oil Stadium |
+| `2025_11_WAS_MIA` | WAS @ MIA | Hard Rock Stadium |
+
+A scan of every season 2002–2025 for the same defect shape — a `Neutral` game carrying the nominal
+host's modal home stadium — returns **2025 only, 7 of 7**. No other season is corrected here.
+
+**A2.5.1 — Pinned override table.** A game-level `VERIFIED_INTERNATIONAL_GAMES` table keyed by
+`game_id` is pinned in `01`, carrying for each row the season, matchup, verified venue, city, country
+and the evidence note. It is operator-supplied from the official NFL 2025 international schedule and
+is recorded as such; this task did not re-derive the venues from a primary source. Only the
+**international classification** feeds a feature — `verified_stadium` is descriptive.
+
+**A2.5.2 — Source data is preserved, never overwritten.** `stadium` and `stadium_id` keep their raw
+snapshot values. Three fields are **added**:
+
+* `verified_stadium` — the corrected venue where an override applies, else the raw stadium
+* `venue_source` — `"snapshot"` or `"verified_override"`
+* `venue_override_applied` — boolean
+
+**A2.5.3 — Corrected definition.**
+
+```
+international_game = game_id in VERIFIED_INTERNATIONAL_GAMES
+                     OR normalized raw stadium in the pinned international-venue table
+```
+
+**A2.5.4 — Three separate factual fields.** These are distinct and are no longer conflated:
+
+* `explicit_neutral` — `location == "Neutral"` as published
+* `international_game` — per A2.5.3
+* `non_primary_home_venue` — the venue is not the nominal home team's primary venue
+
+**A domestic alternate venue is not automatically a genuinely neutral site.** New Orleans 2005 and
+Minnesota 2010 were displaced within the United States; that is a different fact from a London game.
+
+**A2.5.5 — Feature correction.** `neutral_site_games` is **renamed `effective_neutral_games`** and
+its modelling assumption is disclosed: it counts appearances in games that are explicitly neutral
+**or** international **or** at a non-primary home venue — i.e. it treats a domestic relocation as
+home-advantage-reducing, which is an assumption, not a measurement. `non_primary_home_venue_games`
+is added alongside it as the separable factual count. **`FEATURE_COLS` goes 24 → 25.**
+
+**A2.5.6 — M4 venue rule.** M4 may remove home-field advantage for games that are
+`explicit_neutral` **or** `international_game`. It **may not** automatically assign zero home
+advantage to every domestic alternate venue; doing so requires its own preregistered rule declared
+before M4 is fitted.

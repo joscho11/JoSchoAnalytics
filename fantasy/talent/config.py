@@ -3,6 +3,10 @@
 WEIGHTS ARE OWNER CONFIG (R13), RATIFIED-2026-07-16 by Joseph (R21) — applied
 verbatim from his ratification block. NO CODE PATH MAY ALTER THESE VECTORS.
 """
+import os as _os
+from pathlib import Path as _Path
+
+_PKG = _Path(__file__).resolve().parent
 
 WEIGHTS = {
     "RB": {"brkTkl_ru": .22, "yac_oe_rec": .28, "explosive": .14,   # RATIFIED-2026-07-16
@@ -72,4 +76,17 @@ RHO_RB_BOX_DISATT = 0.3852
 ANCHOR = dict(lo_pct=5, hi_pct=98, lo_score=52, hi_score=95, clip=(40, 99),
               anchor_min_w=0.30)
 
-WORK = "C:/tmp/talent_build"   # scratch checkpoints (not repo artifacts)
+# --- checkpoint locations ----------------------------------------------------
+# WORK is the BUILD scratch (not repo artifacts). It was hardcoded to
+# "C:/tmp/talent_build" -- a machine-local path outside the repo that exists on
+# no CI runner, which silently turned every checkpoint-dependent test into a
+# SKIP. It is now env-configurable with a repo-relative default.
+#   TALENT_WORK=C:/tmp/talent_build   reproduces the historical scratch location.
+WORK = _os.environ.get("TALENT_WORK") or str(_PKG / ".work")
+
+# FIXTURE_WORK holds the committed, deterministic checkpoint fixtures the test
+# suites read (see tests/fixtures/make_fixtures.py). A build stage never writes
+# here. TEST_WORK is what the suites resolve; point TALENT_TEST_WORK at a live
+# build dir to run them against a fresh build instead of the fixtures.
+FIXTURE_WORK = str(_PKG / "tests" / "fixtures" / "work")
+TEST_WORK = _os.environ.get("TALENT_TEST_WORK") or FIXTURE_WORK

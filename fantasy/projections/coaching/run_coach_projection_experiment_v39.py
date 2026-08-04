@@ -149,6 +149,24 @@ RUN_MODE_AUTHORIZED_REAL = "authorized_real"
 RUN_MODES = (RUN_MODE_SYNTHETIC_PREFIT, RUN_MODE_AUTHORIZED_REAL)
 DEFAULT_RUN_MODE = RUN_MODE_SYNTHETIC_PREFIT
 
+# --- WHICH C5 CONTRACT THE SOURCE MUST SATISFY -------------------------------------------------------
+# Declared EXPLICITLY, never inferred from the lock state — "which contract applies" must not be
+# decided by the very thing the contract protects. This says only what SHAPE `assemble_real_panel` has
+# in the file. It is NOT a run mode, NOT a lock, and it authorizes nothing: with the door implemented,
+# statement 1 still refuses unless BOTH locks are open and statement 2 still refuses unless preflight,
+# readiness and the gate all pass. `DEFAULT_RUN_MODE` above remains `synthetic_prefit`.
+ENTRY_POINT_CONTRACT_MODE = RUN_MODE_AUTHORIZED_REAL
+
+# Names C5-A pins by value, so a rename cannot quietly satisfy the contract against a different callee.
+PREFLIGHT_CLEARANCE_NAME = "require_preflight_clearance"
+PANEL_CORE_NAME = "assemble_panel_core"
+# C5-A clause 3: the door may not read. Readers arrive as parameters and are called on its behalf.
+ENTRY_POINT_BANNED_READER_CALLEES = frozenset({"read_csv", "read_parquet", "read_json", "open",
+                                               "ParquetFile", "load", "joblib"})
+# C5-A clause 4: nor may it reach a live outcome loader.
+BANNED_OUTCOME_CALLEES = frozenset({"load_player_stats", "load_pbp", "load_pbp_stats",
+                                    "season_total_target", "load_schedules", "load_rosters"})
+
 
 def validate_run_mode(run_mode, lock_state=None):
     """Fail-closed run-mode contract. Returns (ok, detail).
@@ -540,16 +558,73 @@ def attach_coach_features(panel, coach, arm, position):
     return out, feats
 
 
-def assemble_real_panel(*_a, **_k):
-    """The ONLY door to a real fantasy outcome. Default-closed behind both locks.
+# C5-A clause 5 pins the return callee BY NAME, so `assemble_panel_core` must resolve in this module.
+# Importing the assembly module reads nothing: every reader there is default-closed (contract A6), and
+# A1 forbids import-time I/O. The name is bound here rather than inside the door so the door's body
+# stays exactly the three statements C5-A allows.
+from assemble_real_panel_v39 import assemble_panel_core              # noqa: E402
 
-    No caller in this module, and no test, opens it. It exists so that the real run has one obvious
-    place to be authorised rather than a diffuse set of edits.
+
+def require_preflight_clearance(run_mode=RUN_MODE_AUTHORIZED_REAL, preflight_result=None,
+                                models_dir=None, feature_columns=None, verify_inputs=True):
+    """EVERY activation gate, evaluated BEFORE any reader runs. Raises on the first failure.
+
+    This is statement 2 of the implemented door (C5-A clause 2). It exists so the ordering
+    "clear every gate, THEN read" is structural rather than a convention a future edit could reorder:
+    the readers are arguments to statement 3, so they cannot be called until this has returned.
+
+    In order:
+      0. the run mode must be `authorized_real` — a `synthetic_prefit` run may not reach a reader;
+      1. BOTH locks must be open (re-checked here, not trusted from statement 1);
+      2. `preflight()` must be 21/21 IN `authorized_real` MODE;
+      3. `activation_readiness()` must be True;
+      4. `authorized_real_gate()` must be True — checked explicitly even though it re-derives 2 and 3,
+         because the brief requires the gate itself to have run before either reader;
+      5. every pinned input — veteran features, rookie matrix, weekly outcome snapshot — must match its
+         hash and manifest provenance. The five coaching artifacts are covered by check 2's
+         `v39_artifacts_pinned`.
+
+    Returns the preflight result it cleared, so a caller cannot re-derive a different one.
+    """
+    import assemble_real_panel_v39 as _arp
+    if run_mode != RUN_MODE_AUTHORIZED_REAL:
+        raise RuntimeError(f"clearance refused: run mode is {run_mode!r}; a real panel may be "
+                           f"assembled only in {RUN_MODE_AUTHORIZED_REAL!r}")
+    if not real_fit_is_unlocked():
+        raise RuntimeError(REAL_FIT_MESSAGE)
+
+    pf = preflight(run_mode=RUN_MODE_AUTHORIZED_REAL) if preflight_result is None \
+        else preflight_result
+    ready, ready_detail = _arp.activation_readiness(models_dir=models_dir,
+                                                    feature_columns=feature_columns)
+    if not ready:
+        raise RuntimeError(f"clearance refused: activation_readiness() is False — {ready_detail}")
+
+    gate_ok, gate_detail = _arp.authorized_real_gate(pf, models_dir=models_dir,
+                                                     feature_columns=feature_columns)
+    if not gate_ok:
+        raise RuntimeError(f"clearance refused: {gate_detail}")
+
+    if verify_inputs:
+        _arp.verify_pinned_activation_inputs()
+    return pf
+
+
+def assemble_real_panel(feature_reader, outcome_reader, run_mode=RUN_MODE_AUTHORIZED_REAL,
+                        models_dir=None, feature_columns=None):
+    """The ONLY door to a real fantasy outcome. Implemented, and default-closed behind both locks.
+
+    Readers are INJECTED (C5-A clause 3): this function contains no reader callee, so the module
+    physically cannot read a file by itself. With the locks shut, statement 1 raises and neither
+    injected reader is ever called — that is the complete prohibition, preserved, and a test asserts
+    it with tripwire readers.
+
+    Build the real readers with `assemble_real_panel_v39.authorized_feature_reader()` and
+    `.authorized_outcome_reader()`; both verify their own pins before returning a row.
     """
     require_real_fit_authorization()
-    raise NotImplementedError(
-        "authorization passed, but the real panel assembly is deliberately NOT implemented in the "
-        "v3.9 prefit pass — implement it in the authorised follow-up amendment")
+    require_preflight_clearance(run_mode, None, models_dir, feature_columns)
+    return assemble_panel_core(feature_reader(), outcome_reader())
 
 
 def synthetic_panel(seasons=range(PANEL_FIRST_SEASON, 2026), seed=7, players_per_team=3,
@@ -1342,9 +1417,36 @@ def env_bindings(tree):
     return hits
 
 
-def _entry_point_is_sealed(tree):
-    """C5: exactly one module-level, undecorated `def`, whose executable body is exactly two
-    statements — a zero-argument `require_real_fit_authorization()` then an unconditional raise."""
+def _entry_point_is_sealed(tree, contract_mode=None):
+    """C5, MODE-AWARE. Which shape `assemble_real_panel` must have, per the prereg.
+
+    Both variants demand the SAME structural guarantee first: `assemble_real_panel` is bound exactly
+    once, at module level, by one undecorated `def`. A rebinding, a decorator or a second binding
+    replaces the door, and that is refused in either mode.
+
+      C5-S  `synthetic_prefit`  — the executable body is exactly TWO statements: a zero-argument
+            `require_real_fit_authorization()`, then an unconditional `raise NotImplementedError`.
+            The door does not exist yet; there is nothing to authorize.
+
+      C5-A  `authorized_real`   — the door is IMPLEMENTED, and the seal moves from "the body raises"
+            to "the body cannot reach data without clearing every gate first":
+              1. statement 1 is a zero-argument `require_real_fit_authorization()`
+              2. statement 2 is a call to `require_preflight_clearance(...)`
+              3. NO reader callee appears anywhere in the body — readers are injected parameters
+              4. NO banned outcome callee appears anywhere in the body
+              5. the function returns the result of `assemble_panel_core(...)` and nothing else
+              6. no statement precedes 1
+            Clause 3 is what makes the implemented door safe: the module physically cannot read a
+            file by itself, so with the locks shut statement 1 raises and no injected reader is ever
+            called. That is the complete prohibition on real readers, preserved.
+
+    `contract_mode` defaults to the module constant `ENTRY_POINT_CONTRACT_MODE`, so which contract
+    applies is an explicit, reviewable declaration and is never inferred from the lock state — the
+    lock state is the very thing the contract protects.
+    """
+    mode = ENTRY_POINT_CONTRACT_MODE if contract_mode is None else contract_mode
+    if mode not in RUN_MODES:
+        return [f"unknown entry-point contract mode {mode!r}; expected one of {list(RUN_MODES)}"]
     problems = []
     bindings = [(kind, node) for kind, node, _ln, _direct in name_bindings(tree, ENTRY_POINT_NAME)]
     if not bindings:
@@ -1366,32 +1468,82 @@ def _entry_point_is_sealed(tree):
         problems.append(f"{ENTRY_POINT_NAME} is decorated — a decorator can replace the callable")
 
     body = fn.body                                  # docstrings already stripped by _executable_tree
-    if len(body) != 2:
-        kinds = ", ".join(type(s).__name__ for s in body) or "<empty>"
-        problems.append(f"{ENTRY_POINT_NAME} body must be exactly 2 statements "
-                        f"(authorization, raise); found {len(body)}: {kinds}")
+
+    def _is_zero_arg_auth(stmt):
+        return (isinstance(stmt, ast.Expr) and isinstance(stmt.value, ast.Call)
+                and isinstance(stmt.value.func, ast.Name)
+                and stmt.value.func.id == "require_real_fit_authorization"
+                and not stmt.value.args and not stmt.value.keywords)
+
+    if mode == RUN_MODE_SYNTHETIC_PREFIT:
+        # ---- C5-S: the door does not exist yet ------------------------------------------------
+        if len(body) != 2:
+            kinds = ", ".join(type(s).__name__ for s in body) or "<empty>"
+            problems.append(f"C5-S: {ENTRY_POINT_NAME} body must be exactly 2 statements "
+                            f"(authorization, raise); found {len(body)}: {kinds}")
+            return problems
+        first, second = body
+        if not _is_zero_arg_auth(first):
+            problems.append(f"C5-S: {ENTRY_POINT_NAME} statement 1 must be a zero-argument "
+                            f"require_real_fit_authorization() call")
+        if not isinstance(second, ast.Raise):
+            problems.append(f"C5-S: {ENTRY_POINT_NAME} statement 2 must be an unconditional raise, "
+                            f"not {type(second).__name__} — an early return leaves it unreachable")
+        else:
+            exc = second.exc
+            name = getattr(getattr(exc, "func", exc), "id", None)
+            if name != "NotImplementedError":
+                problems.append(f"C5-S: {ENTRY_POINT_NAME} must raise NotImplementedError, not {name}")
         return problems
 
-    first, second = body
-    ok_auth = (isinstance(first, ast.Expr) and isinstance(first.value, ast.Call)
-               and isinstance(first.value.func, ast.Name)
-               and first.value.func.id == "require_real_fit_authorization"
-               and not first.value.args and not first.value.keywords)
-    if not ok_auth:
-        problems.append(f"{ENTRY_POINT_NAME} statement 1 must be a zero-argument "
-                        f"require_real_fit_authorization() call")
-    if not isinstance(second, ast.Raise):
-        problems.append(f"{ENTRY_POINT_NAME} statement 2 must be an unconditional raise, not "
-                        f"{type(second).__name__} — an early return leaves the raise unreachable")
-    else:
-        exc = second.exc
-        name = getattr(getattr(exc, "func", exc), "id", None)
-        if name != "NotImplementedError":
-            problems.append(f"{ENTRY_POINT_NAME} must raise NotImplementedError, not {name}")
+    # ---- C5-A: the door is implemented, and gated before it can reach data ---------------------
+    if len(body) != 3:
+        kinds = ", ".join(type(s).__name__ for s in body) or "<empty>"
+        problems.append(f"C5-A: {ENTRY_POINT_NAME} body must be exactly 3 statements "
+                        f"(authorization, clearance, return); found {len(body)}: {kinds}")
+        return problems
+    first, second, third = body
+
+    # clause 1 + clause 6 — the authorization is statement 1, so nothing precedes it
+    if not _is_zero_arg_auth(first):
+        problems.append(f"C5-A clause 1/6: {ENTRY_POINT_NAME} statement 1 must be a zero-argument "
+                        f"require_real_fit_authorization() call; found "
+                        f"{type(first).__name__} — any statement before it runs unauthorized")
+
+    # clause 2 — the clearance is statement 2
+    ok_clear = (isinstance(second, ast.Expr) and isinstance(second.value, ast.Call)
+                and isinstance(second.value.func, ast.Name)
+                and second.value.func.id == PREFLIGHT_CLEARANCE_NAME)
+    if not ok_clear:
+        problems.append(f"C5-A clause 2: {ENTRY_POINT_NAME} statement 2 must call "
+                        f"{PREFLIGHT_CLEARANCE_NAME}()")
+
+    # clauses 3 + 4 — no reader, no banned outcome callee, ANYWHERE in the body
+    for node in ast.walk(fn):
+        if not isinstance(node, ast.Call):
+            continue
+        callee = node.func.attr if isinstance(node.func, ast.Attribute) else getattr(
+            node.func, "id", None)
+        if callee in ENTRY_POINT_BANNED_READER_CALLEES:
+            problems.append(f"C5-A clause 3: {ENTRY_POINT_NAME} calls reader {callee}() at line "
+                            f"{node.lineno} — readers must be injected parameters")
+        if callee in BANNED_OUTCOME_CALLEES:
+            problems.append(f"C5-A clause 4: {ENTRY_POINT_NAME} calls banned outcome loader "
+                            f"{callee}() at line {node.lineno}")
+
+    # clause 5 — the last statement returns assemble_panel_core(...) and nothing else
+    if not isinstance(third, ast.Return):
+        problems.append(f"C5-A clause 5: {ENTRY_POINT_NAME} statement 3 must be a return, not "
+                        f"{type(third).__name__}")
+    elif not (isinstance(third.value, ast.Call)
+              and getattr(third.value.func, "id", None) == PANEL_CORE_NAME):
+        got = getattr(getattr(third.value, "func", None), "id", type(third.value).__name__)
+        problems.append(f"C5-A clause 5: {ENTRY_POINT_NAME} must return {PANEL_CORE_NAME}(...), "
+                        f"got {got}")
     return problems
 
 
-def no_real_outcome_access(source_dir=None, sources=None):
+def no_real_outcome_access(source_dir=None, sources=None, contract_mode=None):
     """Enforce the frozen structural no-real-outcome contract `C1-C7 + C4b` on both v3.9 modules.
 
     On success this returns exactly `NO_OUTCOME_OK_DETAIL`, whose clause list is
@@ -1530,7 +1682,8 @@ def no_real_outcome_access(source_dir=None, sources=None):
     if harness is None:
         problems.append(f"harness source unavailable; cannot validate {ENTRY_POINT_NAME}")
     else:
-        problems.extend(_entry_point_is_sealed(_executable_tree(harness)))
+        problems.extend(_entry_point_is_sealed(_executable_tree(harness),
+                                               contract_mode=contract_mode))
 
     return (not problems), ("; ".join(problems[:4]) if problems else NO_OUTCOME_OK_DETAIL)
 

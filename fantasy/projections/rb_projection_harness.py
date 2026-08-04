@@ -16,6 +16,14 @@ from sklearn.ensemble import HistGradientBoostingRegressor   # native-NaN; proof
 
 HERE = Path(__file__).resolve().parent
 SEAS = HERE.parent / "seasonal_projections"
+sys.path.insert(0, str(HERE))
+# The walk-forward fold guard is SHARED, not re-implemented: build_fold /
+# assert_walk_forward_fold / assert_walk_forward_folds / FoldLeakError all come from the
+# RB engine. What this harness used to carry -- `assert (tr.season < Y).all()` with
+# `tr = df[df.season < Y]`, and `all((v[v.season < Y].season < Y).all() for Y in ...)` --
+# filtered a frame by a predicate and then re-tested that same predicate on the result.
+# Both expressions are tautologies: they printed PASS while testing nothing.
+import build_rb_projection as B                      # noqa: E402
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
@@ -84,11 +92,13 @@ def walk_forward(df, feats, y_col, tune=False):
     """Per prereg §8: for each test season Y, train on seasons < Y (nested-CV tuned if tune)."""
     out = []
     for Y in TEST_SEASONS:
-        tr = df[df.season < Y]
-        te = df[df.season == Y]
-        assert (tr.season < Y).all(), f"WALK-FORWARD LEAK: train has season >= {Y}"
+        # Build the fold ONCE, with the shared engine, then validate the ACTUAL
+        # train/test objects that are about to be handed to _fit_pred. The guard
+        # raises B.FoldLeakError, so nothing can be fitted on a leaky fold.
+        tr, te = B.build_fold(df, Y, y=y_col)
         if len(tr) < 60 or len(te) == 0:
             continue
+        B.assert_walk_forward_fold(tr, te, Y, "rb_harness", pool=df, y=y_col)
         params = nested_select(tr, feats, y_col, GRID) if tune else GRID[0]
         p = _fit_pred(tr, te, feats, y_col, params)
         out.append(pd.DataFrame({"season": Y, "y": te[y_col].to_numpy(float), "p": p}))
@@ -146,11 +156,22 @@ def prove():
     print(f"5. SHUFFLED-alignment probe (features scrambled vs target): rankcorr {shuf_rank:+.3f} "
           f"(expect ~0)  {'PASS' if p5 else 'FAIL'}")
 
-    # --- 6. WALK-FORWARD temporal guard (asserts inside walk_forward; re-confirm folds) ---
-    folds_ok = True
-    for Y in TEST_SEASONS:
-        folds_ok &= (v[v.season < Y].season < Y).all()
-    print(f"6. WALK-FORWARD guard (train seasons < test season, all folds): {'PASS' if folds_ok else 'FAIL'}")
+    # --- 6. WALK-FORWARD temporal guard (the same guard walk_forward enforces per fold) ---
+    # The SHARED guard, run over every fold of the real pool: exact test season,
+    # exact expected train-season set, strict train maximum, index and
+    # (player_id, season) disjointness, non-empty folds. The expression this
+    # replaced re-tested the filter that built the frame and could never be False.
+    try:
+        _rep = B.assert_walk_forward_folds(v, "rb_harness", y="y_plant")
+        folds_ok = True
+        _note = (f"{len(_rep['validated'])}/{len(TEST_SEASONS)} folds validated "
+                 f"(train seasons {_rep['validated'][0]['train_seasons'][0]}.."
+                 f"{_rep['validated'][-1]['train_seasons'][-1]})"
+                 + (f" empty {_rep['unvalidated_empty']}" if _rep['unvalidated_empty'] else ""))
+    except B.FoldLeakError as _e:
+        folds_ok, _note = False, f"RAISED: {_e}"
+    print(f"6. WALK-FORWARD guard (exact train/test season sets, strict train max, "
+          f"disjoint rows): {_note}  {'PASS' if folds_ok else 'FAIL'}")
 
     # --- 7. NESTED-CV tuning runs & selects without touching the outer test fold ---
     Y = 2024

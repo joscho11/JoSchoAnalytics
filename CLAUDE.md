@@ -18,7 +18,7 @@ JoSchoAnalytics is an NFL sports betting prediction system with two independent 
 ```bash
 streamlit run app.py
 ```
-Runs on port 8501. Requires `betting/predictions_tracker.csv` and any cached `betting/agent_analysis_2025_week*.json` files.
+Runs on port 8501. Requires `betting/predictions_tracker.csv`. **There are no agent_analysis JSONs on the public path any more** — the only one was quarantined 2026-08-03 (see LLM Agent below).
 
 **Run the spread prediction pipeline:**
 ```bash
@@ -102,12 +102,12 @@ pip install -r requirements.txt
 10. Coach win%: career win% + rolling 3-season win% for home/away coach
 
 ### LLM Agent
-Developed in `betting/sports_betting_agent.ipynb`. Uses LlamaIndex `ReActAgent` with 5 tools (predictions lookup, live injuries via nflreadpy, line movement mock data, historical matchups, confidence analysis). Output is cached per week as `betting/agent_analysis_2025_week{n}.json` and displayed in the dashboard as confidence overlays (HIGH/MEDIUM/PASS).
+**🔴 DISABLED 2026-08-03 — do not re-enable without reading this.** Developed in `betting/sports_betting_agent.ipynb` (LlamaIndex `ReActAgent`). Its line-movement tool was **hardcoded mock data** (`WEEK_10_LINES`), and the single artifact it produced, `agent_analysis_2025_week10.json`, stated 14 Sharp Money and 14 Line Movement figures as observed fact on the Weekly Predictions page. That artifact is **quarantined** at `betting/quarantine/` (retained, unreachable by both public readers), the Tuesday workflow step is **commented out**, and `agent_analysis_*.json` is **no longer staged for commit**. The site now refuses to render any agent artifact lacking structured, adapter-emitted provenance — see `dashboard_utils.sanitize_agent_analysis`. Re-enabling requires a real market feed plus an approved source adapter; a self-asserted `verified: true` is not machine verification and is rejected.
 
 **Key constraints:**
 - `llama-index==0.11.0` (pinned in `requirements-research.txt`) only recognises model IDs up to `claude-3-5-sonnet-20240620`. Newer models are patched into `CLAUDE_MODELS` at runtime in cell 5. pydantic v2 silently drops `_client`/`_aclient` set in `__init__` — cell 5 restores them via `object.__setattr__` after construction.
 - Line movement data is hardcoded mock (Week 10 2025). Replace with a live sportsbook API (e.g. The Odds API) for production use.
-- Run via papermill: `papermill betting/sports_betting_agent.ipynb /tmp/out.ipynb -p TARGET_WEEK 10 -p TARGET_SEASON 2025`
+- ~~Run via papermill~~ — **disabled**; running it regenerates the fabricated-market artifact. See the DISABLED note above.
 
 ### Data
 - `betting/nfl_allpro_1997_2025.csv` — All-Pro roster data; updated manually each January
@@ -115,7 +115,7 @@ Developed in `betting/sports_betting_agent.ipynb`. Uses LlamaIndex `ReActAgent` 
 - Live schedule, PBP, and stats pulled from `nflreadpy` at prediction time
 
 ### Automation
-`.github/workflows/weekly_predictions.yml` runs the prediction pipelines via papermill on three cron schedules (Tue 9am ET, Thu 9pm ET, Sun 9am ET) and commits the updated trackers. Supports manual dispatch with mode selection. Steps in order: (1) `predict_betting.ipynb` (spread), (2) `predict_totals.ipynb` (totals), (3) `sports_betting_agent.ipynb` — **Tuesday only** (gated on the Tuesday cron / `mode == tuesday` dispatch; `continue-on-error: true` so an agent/API failure never blocks the tracker commit). Commit stages `predictions_tracker.csv`, `totals_tracker.csv`, and `agent_analysis_*.json`. Job timeout is 60 min (agent adds ~10 min for a full slate). Each notebook uploads its own failed-notebook artifact on error.
+`.github/workflows/weekly_predictions.yml` runs the prediction pipelines via papermill on three cron schedules (Tue 9am ET, Thu 9pm ET, Sun 9am ET) and commits the updated trackers. Supports manual dispatch with mode selection. Steps in order: (1) `predict_betting.ipynb` (spread), (2) `predict_totals.ipynb` (totals). **The Tuesday `sports_betting_agent.ipynb` step was COMMENTED OUT 2026-08-03** because it regenerated a fabricated-market artifact, which would have made quarantining it futile. The commit step now stages **only** `predictions_tracker.csv` and `totals_tracker.csv` — `agent_analysis_*.json` is deliberately not staged. Job timeout is 60 min (agent adds ~10 min for a full slate). Each notebook uploads its own failed-notebook artifact on error.
 
 `.github/workflows/test.yml` runs on every push and PR against `main`, with **three** jobs: (1) **`features`** — `pytest betting/test_features.py` (the feature-pipeline contract tests, including the order-hash check that catches `PROD_FEATURES_35` / `FEATURE_COLS_85` reorder bugs) **plus `betting/test_calibration.py`**; (2) **`pytests`** — an explicit 13-file list of the seasonal / dashboard / talent suites (`tests/test_dashboard_utils.py`, `test_seasonal_projections.py`, `test_draft_board.py`, `tests/test_app_draft_board.py`, `tests/test_site_nav.py`, `tests/test_board_page.py`, `tests/test_betting_pages.py`, `tests/test_fantasy_league_pages.py`, `tests/test_help_page.py`, `tests/test_model_explanations.py`, `tests/test_app_talent_columns.py`, `fantasy/talent/tests/test_talent_build.py`, `test_phase2.py`) via `requirements-test.txt`, **plus a second step running the six betting execution-layer suites from `working-directory: betting`**; (3) **`deploy-parity`** — the dashboard/runtime suites run on Python 3.12 against `requirements.txt` exactly as Streamlit Cloud resolves it; training/seasonal suites remain in the full-dependency jobs instead of bloating the cloud runtime. Explicit file lists, never auto-discovery, so research scripts named `*_test.py` are never collected. Enumerated 2026-07-28, **eight** test files appear in no job in `test.yml`: `tests/test_nfl_qb_score.py`, `tests/test_college_qb_score.py`, `tests/test_board_refresh.py`, `tests/test_page_rookie_board.py`, and the four `fantasy/projections/test_*.py` files. The two talent suites additionally need the talent artifacts committed before they can be wired in; the other six have no such blocker. Re-check the gap with: `for each test_*.py, grep its basename in .github/workflows/test.yml`.
 
@@ -180,7 +180,7 @@ Break-even: 52.4% ATS. **Feature set reduced from 85 → 35** on 2026-05-20 afte
 ## Key Constraints
 - The XGBoost model pipeline expects a `preprocessor` named step — don't change the pkl structure without retraining.
 - `betting/nfl_allpro_1997_2025.csv` must be updated manually each January for the new season.
-- Agent analysis JSON files are cached by week; regenerating them requires re-running the agent notebook and costs API calls.
+- Agent analysis JSON generation is **disabled** (fabricated market data). Nothing on the public path reads one, and `dashboard_data._compute_hc_stats` now goes through the sanitising public loader rather than globbing raw files.
 - The dashboard reads the tracker CSV directly — column names and structure in `betting/predictions_tracker.csv` must stay consistent with `app.py` expectations.
 - **Prediction display convention (sportsbook style)** — In `app.py` game cards (around line 666), the PREDICTED column shows the favored team with a **negative** number and the underdog with a **positive** number, mirroring how sportsbooks display spreads. Internally `predicted_margin` / `ens_predicted_margin` are still the model's home_margin estimate (positive = home wins by that much), so the display logic negates for the home team and passes through for the away team:
   ```python
@@ -214,15 +214,24 @@ Target: `target_half_ppr` (half-PPR points in week W+1).
 
 | Position | Train rows | Test rows | MAE | RMSE | Baseline MAE |
 |----------|-----------|-----------|-----|------|--------------|
-| QB | 2,781 | 571 | 6.81 | 8.43 | 7.49 |
-| RB | 6,652 | 1,397 | 4.40 | 6.36 | 4.59 |
-| WR | 10,643 | 2,215 | 3.96 | 5.28 | 4.06 |
-| TE | 5,265 | 1,145 | 3.16 | 4.55 | 3.48 |
+
+> **Corrected 2026-08-03.** The previous table was measured on a `features_dataset.csv` whose 2025 season had **16 of 16 depth/availability columns constant** — nflverse changed the depth-chart schema and the legacy filter silently dropped 100% of 2025, so defaults filled in. Rebuilt via `fantasy/depth_adapter.py`; 0 of 16 constant now. Holdout n falls because per-season rolling windows drop each player's week-1 row (3,072 of 3,185 removed rows; 0 unexplained). **Every MAE got slightly worse — the corrupted data made the holdout easier — and the "all four beat the baseline" claim does NOT survive: only QB and TE are statistically distinguishable from the rolling average.** Provenance: `fantasy/staging/manifest_primary.json`, `gate_report.json`.
+
+| Position | Holdout n | MAE | RMSE | Rolling baseline MAE | Paired gain vs baseline | t |
+|---|---|---|---|---|---|---|
+| QB | 508 | **6.859** | 8.502 | 7.378 | +0.519 | **3.13** |
+| RB | 1,284 | **4.489** | 6.331 | 4.578 | +0.089 | 1.15 |
+| WR | 2,030 | **4.015** | 5.293 | 4.027 | +0.012 | 0.23 |
+| TE | 1,022 | **3.200** | 4.646 | 3.485 | +0.284 | **4.16** |
+
+**Read plainly: QB and TE beat the rolling-average baseline; RB (t=1.15) and WR (t=0.23) do
+not.** WR is essentially indistinguishable from just averaging a player's last three games.
+
 
 ### Known Next Improvements
 
 - **Include 2025 in training (still PENDING — intentionally deferred).** 2025 is kept as the **evaluation holdout** for now so the models can be improved against a real out-of-sample season. `TRAIN_SEASONS = [2020–2024]`, `TEST_SEASON = 2025` in both `model.ipynb` cell 3 and `retrain_models.py`. When ready to fold 2025 in, bump both to include 2025 and re-run `retrain_models.py` (the empty-holdout guards already handle the resulting empty 2026 holdout). This adds ~5,300 rows total when done.
-- **Infra fixes applied 2026-05-28 (retained regardless of holdout choice):** (1) `early_stopping_rounds` moved from `fit()` into the `XGB_PARAMS` constructor — XGBoost 2.x+ rejects it in `fit()`, so the old code couldn't retrain at all; (2) eval cells in `model.ipynb` (7, 9, 15) and player-profile cells (17-19) guarded to skip gracefully on an empty holdout; (3) `retrain_models.py` is the canonical retrain path covering all 12 models (the notebook only covers the 4 main + 6 RB per-stat). All 12 models retrained 2026-05-28 on 2020-2024 with 2025 holdout MAE: QB 6.81, RB 4.40, WR 3.96, TE 3.16 (all beat the rolling-avg baseline of 7.49 / 4.59 / 4.06 / 3.48).
+- **Infra fixes applied 2026-05-28 (retained regardless of holdout choice):** (1) `early_stopping_rounds` moved from `fit()` into the `XGB_PARAMS` constructor — XGBoost 2.x+ rejects it in `fit()`, so the old code couldn't retrain at all; (2) eval cells in `model.ipynb` (7, 9, 15) and player-profile cells (17-19) guarded to skip gracefully on an empty holdout; (3) `retrain_models.py` is the canonical retrain path covering all 12 models (the notebook only covers the 4 main + 6 RB per-stat). All 12 models RETRAINED 2026-08-03 on the corrected dataset (2020-2024 train, 2025 holdout): QB 6.859, RB 4.489, WR 4.015, TE 3.200 vs baselines 7.378 / 4.578 / 4.027 / 3.485. **Only QB (t=3.13) and TE (t=4.16) beat the baseline; RB (t=1.15) and WR (t=0.23) do not.** The superseded 2026-05-28 numbers were measured on the depth-corrupted file.
 - **Rebuild raw_dataset.csv annually** — re-run `data_pipeline.ipynb` each offseason to pull fresh nflreadpy data (new season stats, updated injury history, depth charts). Then re-run `features.ipynb` and retrain.
 
 ### data_pipeline.ipynb — Feature Groups
@@ -454,10 +463,16 @@ nowhere). It lists **every player with a 2026 Sleeper ADP (~245, from the frozen
 columns: Player · Position · Team · Sleeper ADP · Position Rank · Sleeper Proj Position Rank · Sleeper Gap ·
 Model Proj Position Rank · Model Gap · Sleeper Proj (raw) · Model Proj · NFL Talent Score · College Talent
 Score. Model Proj = `results/{pos}_projection_2026.csv` joined READ-ONLY by `player_id`, **with a disclosed
-44-row analyst overlay (`results/analyst_projection_adjustments_2026.csv`, QB 12 / WR 11 / RB 11 / TE 10)
+45-row analyst overlay (`results/analyst_projection_adjustments_2026.csv`, QB 12 / WR 12 / RB 11 / TE 10)
 replacing the DISPLAYED point estimate for selected named 2026 players; the untouched model value is kept
 internally as `model_proj_raw` and is never displayed or exported**. Position ranks and both gaps derive from
-the ADJUSTED value. Sleeper Proj = the
+the ADJUSTED value. An overlay row may also carry an optional `team` code — a dated ROSTER correction for a
+player who signed after the projection artifacts were built, applied to the displayed Team cell only; it is
+identity metadata and feeds no projection, rank or gap. Malformed codes raise. **News update 2026-08-03:**
+Ricky Pearsall 119.4 → **0.0** (PCL surgery, season-ending IR) and a new row for Deebo Samuel Sr. 93.6 →
+**120.0** with `team=SF` (re-signed with San Francisco 7/31, into a receiver room reduced by that injury).
+Those two rank moves shift 44 other WR gaps by exactly one rank each — mechanical dense-rank knock-on, WR
+only. The 95th-percentile gap color cap moved 21.0 → 21.75, absorbing the −61 outlier as designed. Sleeper Proj = the
 RAW Sleeper estimate (NOT the retired p50); gaps = Position Rank − Proj Position Rank (positive = projection
 ranks him above his draft cost). **A "Show projection and talent detail" toggle (added 2026-07-27, ON by
 default) can drop the last four columns — Sleeper Proj, Model Proj, NFL Talent Score, College Talent Score —
@@ -630,6 +645,36 @@ reweighting experiments, the notebook restructures and corruption recovery, and 
 
 
 ## Known Issues
+
+- **🔴 RETRACTED 2026-08-03 — the 64.2% ATS headline. Do not cite it.** The sack history was
+  built only from sack-positive game/team rows (`model_comparison.ipynb` §7 and
+  `features.py::_build_situational_pbp`), so a zero-sack team-game had **no row**; presence
+  encoded the current game's outcome and the downstream `fillna(0)` wrote 0 onto exactly
+  those rows. `sack_diff`/`sack_diff_reverse` are PROD_FEATURES_35 #2 and #3. Both builders
+  now produce a **dense** table. **Canonical regenerated walk-forward** — one declared
+  pinned environment (`requirements-backtest.txt`, pandas 2.3.3, Python 3.11.9), 2018–2025,
+  2,138 OOS rows, pushes excluded via `won_open.notna()`, tiers over |edge| ≥ 1, artifact
+  sha256 `37830520…530E25BA` reproduced byte-identically by two runs: HIGH **129/238 =
+  54.2017%**, Wilson lower **47.8551%** — *below* the 52.4% break-even. MEDIUM 382/718 =
+  53.2033%, lower 49.5462%. The **control** (leaking build, same env and inputs)
+  reproduces the published figure EXACTLY at 380/592 = 64.1892%, lower 60.24690% — which is
+  what licenses the causal claim: leak, not drift. **No tier clears break-even.** The system
+  has no demonstrated ATS edge; 2026 forward tracking is the first real test.
+  Provenance + controlled 2×2 audit bundle: `betting/experiments/audit_2026-08-03c_final/` (supersedes `audit_2026-08-03_sack_leak/`, which measured the sack fix under the legacy name-only All-Pro identity).
+  Guard: `betting/test_sack_leak.py` (target-game mutation + red proof).
+  **All-Pro identity FIXED 2026-08-03** (`betting/allpro_identity.py`): the roster CSV has no
+  player ID and two distinct players named C.J. Mosley (BAL ILB / DET MLB, both 2014) were
+  merged under a name key, with the survivor decided by pandas' unstable default sort — which
+  is why an earlier pandas-3.0.3 run gave 131/237. Resolution is a reviewed identity table plus
+  an order-invariant `idxmax` reduction with NO sort; a lineage must be fully covered or it
+  ABORTS. Applied to features.py (3 sites) and model_comparison.ipynb cell 15. Guard:
+  `betting/test_allpro_identity.py` (21 tests incl. shuffle-invariance and fail-closed).
+- **pandas 3 compatibility (fixed 2026-08-03).** `groupby("coach", group_keys=False).apply()`
+  raised `KeyError: 'coach'` on pandas 3 (the grouping column is withheld from the callable
+  and `include_groups` was removed). `features.py` and `model_comparison.ipynb` cell 24 now
+  use a vectorised equivalent, proven numerically identical. `pytest betting/test_features.py`
+  went from 2 failed/13 passed to **15 passed** on pandas 3.0.3. CI could never catch this —
+  it pins `pandas==2.3.3`.
 
 - **✓ FIXED (2026-05-28): DK lineup upload CSV format.** `dfs_pipeline.ipynb` cell 19 now exports the proper DraftKings Classic layout — one column per roster slot (`QB, RB, RB, WR, WR, WR, TE, FLEX, DST`), filled by consuming names from each `_assign_slots` label. Verify against DK's current template before a real contest, but the format now matches the documented Classic import spec.
 

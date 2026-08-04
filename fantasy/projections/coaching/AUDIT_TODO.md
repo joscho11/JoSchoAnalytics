@@ -429,7 +429,7 @@ Design A/B contrast — not for power. Both the 200/256 and the ~76 claims are r
 `build_preseason_snapshot.projection_cutoffs()` and the old `hc_game_results()` both called
 `nflreadpy.load_schedules()`, and the win ledger was cached in an untracked scratch directory. So a
 clean offline checkout **failed five v3.9 feature tests**, and the then-reported result of
-254 passes (SUPERSEDED; the suite is now 827 collected) depended on mutable state that is not in the repo.
+254 passes (SUPERSEDED; the suite is now 836 collected) depended on mutable state that is not in the repo.
 That is a reproducibility defect, not a cosmetic one: nobody else could have reproduced the number.
 
 Both now read `fantasy/seasonal_projections/snapshots/schedules_1999_2025.parquet` (repo-owned, frozen,
@@ -517,11 +517,11 @@ Related test renames: `test_design_a_and_b_differ_only_on_identity_supply` →
 
 ## 26. The 141 baseline is only reproducible with an explicit deselect list — CURRENT (updated v3.9d)
 
-**Current status: the full suite is 827 collected — 826 mandatory passed, plus 1 optional git
+**Current status: the full suite is 1,103 collected — 1,102 mandatory passed, plus 1 optional git
 cross-check that passes when the pinned historical blob is reachable and otherwise skips (the vendored
 red proof runs in both states); the inherited baseline is 141, reproduced as `141 passed,
-6 deselected`.** Reproducing it requires ignoring the four v3.9 test modules (`test_arm_features_v39.py`,
-`test_coach_projection_harness_v39.py`, `test_boundary_corpus.py`, `test_assemble_real_panel_v39.py`) **and deselecting all six**
+6 deselected`.** Reproducing it requires ignoring the ten v3.9 test modules (`test_arm_features_v39.py`,
+`test_coach_projection_harness_v39.py`, `test_boundary_corpus.py`, `test_assemble_real_panel_v39.py`, `test_combine_snapshot_provenance.py`, `test_rookie_matrix_v39.py`, `test_pff_point_in_time_v39.py`, `test_arm0_refits_from_scratch_v39.py`, `test_activation_wiring_v39.py`, `test_veteran_snapshot_v39.py`) **and deselecting all six**
 v3.9 additions to `test_artifact_ownership.py`, by their exact IDs:
 
 ```
@@ -533,7 +533,7 @@ test_the_head_coach_win_ledger_is_derived_in_memory_not_cached
 test_the_v39_modules_never_write_outside_the_coaching_data_dir
 ```
 
-Inherited per module: 22 + 33 + 34 + 27 + 15 + 7 + 3 = **141**. Full suite: 141 + 88 + 246 + 146 + 200 + 6 = **827**.
+Inherited per module: 22 + 33 + 34 + 27 + 15 + 7 + 3 = **141**. Full suite: 141 + 88 + 246 + 166 + 205 + 9 + 91 + 37 + 38 + 31 + 45 + 6 = **1,103**.
 
 `pytest --deselect` **silently ignores an ID that does not exist**, so a mistyped path deselects
 nothing and the run reports 147 with no error at all. Copy the six IDs verbatim; do not retype them.
@@ -558,12 +558,49 @@ feature path. Arm 0 ships SEVEN bundles; I defined the contract as "identity + 3
 called it the Arm 0 contract, and pinned exactly ONE bundle in a test, so the gap was invisible.
 Measured: RB rookie 32/41 features missing, WR 35/44, TE 35/44 — combine, college-box and PFF-derived.
 Production rebuilds them via `fantasy/rookie/harness` (live `nflreadpy` loaders + a read of
-`fantasy/seasonal_projections/pff/`, which holds 418 local files and **0 tracked** files,
+`fantasy/seasonal_projections/pff/`, which holds **941 local files (409 CSVs)** and **0 tracked** files (the earlier "418 local files" figure is **SUPERSEDED**; only the 0-tracked half was ever verified),
 `.gitignore:37`). A clean checkout cannot assemble those buckets. `activation_readiness()` now returns
 False and names them; `preflight()` stays 21/21 so the committed prefit checkpoint stays green.
-**OPEN — Joseph's decision (manifest §0b): freeze a feature-only pinned artifact (recommended,
-conditional on PFF licensing) / external pinned artifact / amend the population.** No artifact written,
-no PFF file touched, no rookie matrix regenerated.
+
+**41f. MY OWN ACTIVATION BLOCKER WAS WRONG AND IS WITHDRAWN (v3.9p, 2026-08-03).** In 41e I concluded
+that because the shipped rookie bundles had been fit on the contaminated join, they were unusable and
+`activation_readiness()` had to stay False. The historical fact is right; the conclusion was **FALSE**.
+The experiment never uses a bundle's fitted weights: `arm0_definition()` touches `bundle["model"]` only
+inside `type(...)` to record a class-name string, and `fit_predict()` builds a fresh estimator via
+`_make_model(spec["family"], spec["params"])` and fits it on each fold's own rows. Verified by reading
+the harness, then pinned permanently — the decisive test replaces every stored estimator with an object
+that raises on ANY use and shows the pipeline's metrics and selection frames are byte-equal to the
+canonical run. Readiness is now **True**; `authorized_real_gate()` refuses on gate 1 alone (run mode
+`synthetic_prefit`, both locks closed). What survives is a DISCLOSED, NON-GATING limitation: the fixed
+hyperparameters were tuned under the old pipeline, are frozen pre-experiment and are applied identically
+to ARM_0 and every coaching arm. The bundle SPECIFICATION (feature order, family, params, null handling,
+seed, target) is now pinned by value in `BUNDLE_SPEC_PINS`. Nothing retrained. Record: stop report
+§10.7, manifest §0d, matrix rows S-1..S-7.
+
+**41e. MATERIAL LEAKAGE (v3.9o, 2026-08-03) — the v3.9n matrix was INVALID and the shipped rookie
+bundles are training-incompatible.** Production `_load_pff` collapsed PFF college rows with
+`groupby(norm_name).season.idxmax()` and merged on the name alone, discarding the source season.
+Measured on the frozen population: receiving **963 matches / 20 leaked**, rushing **724 / 17** whole
+panel and **308 / 8** on RB rows; **28 leaked (row, kind) pairs over 22 player-seasons**, 292
+contaminated cells. 2014 Mike Evans took 2021 receiving; 2016 Michael Thomas took 2025; 2015 Matt
+Jones took 2025 in both blocks. Repaired at the production source (`_pff_long` + `_pff_point_in_time`,
+one shared implementation, strictly-prior seasons only, identity disambiguation by position then by
+the immediately-prior season, NULL when unestablished). Matrix rebuilt: sha256 `7625980495…`, 1,263×61
+with two point-in-time provenance columns. **`activation_readiness()` is FALSE again** — traced through
+`build_rb_projection.frozen_rb_matrix()` and its WR/TE twins, the shipped rookie bundles were TRAINED
+on the contaminated join. **Nothing retrained; that is Joseph's decision.** Full record: stop report
+§10.6, manifest §0c, matrix rows L-1…L-8.
+
+**41b-RESOLVED (v3.9n, 2026-08-03), then PARTLY SUPERSEDED by 41e.** Joseph selected **Option A** and confirmed authorization to use
+and commit PFF-*derived* feature values with the raw files staying private and untracked. The derived,
+outcome-free matrix `snapshots/rookie_arm0_features_2014_2025.parquet` (sha256 `4b4655ab…`, 1,263x59,
+RB 387 / WR 584 / TE 292, seasons 2014-2025) was built by calling the REAL production
+`assemble_features.build_features()` with only the two nflverse loaders injected from pinned local
+snapshots. All seven bundles are now complete and **`activation_readiness()` returns True**; the
+sentences above about it returning False are **SUPERSEDED**. `preflight()` is still 21/21,
+`authorized_real_gate()` is still **False**, both locks are still closed, and nothing was fit,
+activated or committed. Options B and C were not adopted and C's row/cohort impact is still not
+quantified. Full record: stop report §10.5.
 
 **41c. Three implementation defects behind it, all fixed:** the authorized feature reader returned 2026
 and the forbidden legacy target columns while its own validator rejects both (663 tests passed over a

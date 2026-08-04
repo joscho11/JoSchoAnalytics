@@ -291,12 +291,12 @@
   },
   "provenance": {
     "notebook": "futures/season_team_totals/00_data_audit.ipynb",
-    "run_at_utc": "2026-08-03T02:50:41.514030+00:00",
+    "run_at_utc": "2026-08-03T19:38:41.636828+00:00",
     "as_of_date": "2026-08-03",
     "python": "3.11.9",
     "platform": "Windows-10-10.0.26200-SP0",
-    "pandas": "2.3.3",
-    "numpy": "1.26.4",
+    "pandas": "3.0.3",
+    "numpy": "2.4.6",
     "seed": 20260802,
     "offline": false,
     "repo_root": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\JoSchoAnalytics"

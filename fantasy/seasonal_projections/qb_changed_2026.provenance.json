@@ -1,0 +1,24 @@
+{
+  "created_utc": "2026-08-03T21:17:01+00:00",
+  "target_season": 2026,
+  "prior_season": 2025,
+  "snapshot_date_requested": "2026-08-03",
+  "snapshot_dt_max": "2026-08-02 09:06:30+00:00",
+  "definition": {
+    "prior_primary_passer": "max 2025 pass attempts per team; ties = ambiguous",
+    "preseason_qb1": "depth_rank==1 at QB in the latest snapshot <= snapshot_date",
+    "qb_changed": "1 if different, 0 if same, <NA> if missing/ambiguous (NEVER defaulted to 0)"
+  },
+  "sources": {
+    "depth_charts": "nflreadpy.load_depth_charts (current dt/pos_rank schema)",
+    "player_stats": "nflreadpy.load_player_stats"
+  },
+  "counts": {
+    "unchanged": 25,
+    "changed": 7
+  },
+  "n_teams": 32,
+  "n_resolved": 32,
+  "n_changed": 7,
+  "n_unchanged": 25
+}

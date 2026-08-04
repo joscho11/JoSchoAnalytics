@@ -143,7 +143,7 @@ def test_the_current_validator_clears_every_positive_control(control):
 @pytest.mark.parametrize("case", CORPUS, ids=[c[0] for c in CORPUS])
 def test_the_historical_validator_matches_the_recorded_result(historical, case):
     cid, cat, _k, _m, _p, expected_undetected = case
-    ok, _detail = _verdict(historical, case_sources(case))
+    ok, _detail = _verdict(historical, case_sources(case, historical=True))
     assert ok is expected_undetected, (
         f"{cid} ({cat}): {HISTORICAL_REV} was recorded as "
         f"{'UNDETECTED' if expected_undetected else 'caught'} but returned ok={ok}")
@@ -153,7 +153,8 @@ def test_the_red_green_totals_are_exactly_as_reported(historical):
     """The single arithmetic any report may quote, computed from the table and re-measured here."""
     per, tot_undetected, n_cases = totals()
 
-    measured_hist = sum(1 for c in CORPUS if _verdict(historical, case_sources(c))[0] is True)
+    measured_hist = sum(1 for c in CORPUS
+                        if _verdict(historical, case_sources(c, historical=True))[0] is True)
     measured_now = sum(1 for c in CORPUS if _verdict(EX, case_sources(c))[0] is True)
 
     assert measured_hist == tot_undetected, (

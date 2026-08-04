@@ -1,0 +1,108 @@
+{
+  "refresh": "qb_changed deploy refresh (inference only, no retraining)",
+  "created_utc": "2026-08-04T00:45:30+00:00",
+  "why": "The 2026 deploy artifacts predated the qb_changed join. Models were NOT retrained \u2014 historical training already contained qb_changed; this is an inference refresh.",
+  "commands": [
+    "python fantasy/projections/build_qb_projection.py --refresh-deploy",
+    "python fantasy/projections/build_{rb,wr,te}_projection.py --assemble  # rebuild scratch",
+    "python fantasy/projections/build_{rb,wr,te}_projection.py --refresh-deploy",
+    "BOARD_SEASON=2026 python fantasy/seasonal_projections/build_draft_board.py"
+  ],
+  "interpreter": {
+    "path": "C:/tmp/jsa-bt/Scripts/python.exe",
+    "python": "3.11.9",
+    "pandas": "2.3.3",
+    "numpy": "2.4.6",
+    "lightgbm": "4.6.0",
+    "scikit_learn": "1.6.1"
+  },
+  "source_dataset": {
+    "file": "fantasy/seasonal_projections/season_dataset_2014_2026.csv",
+    "sha256": "B57EE3FF011A6D9ABD1E68A062F29645FDB2AF6C199E8CB4017F3F26E9AF4FDF",
+    "qb_changed_coverage": "916/916 rostered 2026 rows; 7 unrostered left NA"
+  },
+  "models_unchanged": {
+    "qb_veteran_model.pkl": "7632549F95995B9702BAEFDF016D7271",
+    "rb_rookie_model.pkl": "DA230EE66575CA574F02CBC2139E1A80",
+    "rb_veteran_model.pkl": "167ACA71A8511AFCCED37C0ABC846004",
+    "te_rookie_model.pkl": "F79DAD0AB26AF5CB4E06A9F1723328CD",
+    "te_veteran_model.pkl": "5A2F0B504D4CC6FC9A2E04453FD76A44",
+    "wr_rookie_model.pkl": "6C9A3F3ED02CE32C53594F383AADE882",
+    "wr_veteran_model.pkl": "17DFBCF01054BDD5CE032F2B55DF9AD2"
+  },
+  "artifacts": {
+    "qb_projection_2026.csv": {
+      "old_sha256": "9C462B2BA2FE2C3898F1AC42392B1A995EAD659273C8BACFB50DCBD453EA52CE",
+      "new_sha256": "49D0120F13B1C6684D1C41E15C0D797FE0F86798027798954811CD78E2A418F8"
+    },
+    "rb_projection_2026.csv": {
+      "old_sha256": "8782958BD74218EBCBB883ADB83431CB2EC550B3923BFC9637E6332901CBD9D1",
+      "new_sha256": "68B7C2DBB1E829D2E925BC90A37B08DA89640B678DC670C123D46A53D7DD3055"
+    },
+    "wr_projection_2026.csv": {
+      "old_sha256": "64F1A50E338670197EB59694DA7F0F1EE9595CB0860235D7140D51F5D2A9DB2B",
+      "new_sha256": "6894AFB57810BDBF9DD59CE3D11D887B3C37FEBA51FD6BB50CA0ACB5EE224946"
+    },
+    "te_projection_2026.csv": {
+      "old_sha256": "752E1C8A4E0070A9690721A2237DD27F8075F98B7C159447E853B3F663B1EA11",
+      "new_sha256": "15C2A5E42C3CD52BFBE074402BE01AD86CFB5788F9E7FEB4F5F00E1DE7949AB1"
+    },
+    "analyst_projection_adjustments_2026.csv": {
+      "old_sha256": "BE692E58E8D0FCC77194D24F8501125F0F62A70FF5CF247420516150F2D67EF8",
+      "new_sha256": "34FF7D2702483675D45DB8B2DC9B2C2F38F3AB42E9871CDC7FD24BB77D65B2AC"
+    },
+    "draft_board_2026.csv": {
+      "old_sha256": "A128FDDF70B358D947936AF8E52D767E604A7EBB5C5687EB4E1E4E8F0229A8EA",
+      "new_sha256": "B6F3B93895D3431CDECB807B04FBE520F783B03CAD872209D21FBF74D328D862"
+    }
+  },
+  "measured_effect_of_qb_changed_alone": {
+    "method": "re-score the CURRENT scratch with qb_changed forced to its pre-join NaN state",
+    "rows_moved": 169,
+    "all_on_the_seven_changed_teams": true,
+    "rows_moved_on_other_teams": 0,
+    "changed_teams": [
+      "ATL",
+      "CLE",
+      "LV",
+      "MIA",
+      "MIN",
+      "NYJ",
+      "WAS"
+    ],
+    "per_bundle": {
+      "rb_veteran": {
+        "n": 26,
+        "mean_abs": 2.0762,
+        "max_abs": 16.196
+      },
+      "rb_rookie": {
+        "n": 19,
+        "mean_abs": 0.4464,
+        "max_abs": 1.397
+      },
+      "wr_veteran": {
+        "n": 49,
+        "mean_abs": 0.345,
+        "max_abs": 3.344
+      },
+      "wr_rookie": {
+        "n": 37,
+        "mean_abs": 0.6391,
+        "max_abs": 2.014
+      },
+      "te_veteran": {
+        "n": 27,
+        "mean_abs": 0.1942,
+        "max_abs": 1.215
+      },
+      "te_rookie": {
+        "n": 11,
+        "mean_abs": 0.239,
+        "max_abs": 0.56
+      }
+    }
+  },
+  "note_on_larger_raw_deltas": "Raw before/after deltas vs the July-24 CSVs are much larger and hit unchanged teams. That is NOT qb_changed: --assemble re-pulls live nflverse rosters/stats, so the July artifacts were built on older inputs. Verified independently: the season dataset differs from its pre-join backup in exactly ONE column (qb_changed, 916 rows).",
+  "backup": "fantasy\\backup_pre_qbchanged_deploy_refresh_20260803"
+}

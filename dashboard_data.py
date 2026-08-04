@@ -49,14 +49,25 @@ def load_calibration(df):
 
 @st.cache_data(ttl=300)
 def _compute_hc_stats(acc_col: str, _df: pd.DataFrame) -> tuple:
+    """High-confidence record, counted ONLY from artifacts the public gate approves.
+
+    This used to `json.load` each `agent_analysis_*.json` directly, which bypassed the
+    provenance gate entirely: an artifact the site refuses to render could still supply the
+    HIGH/MEDIUM tiers behind a headline accuracy statistic. The tiers are not independent of
+    the market claims — the agent reasoned to them FROM those claims — so a rejected
+    artifact must contribute nothing. Routing through `load_agent_analysis` means one gate
+    governs both rendering and statistics.
+    """
+    from page_common import load_agent_analysis  # public, gated reader
     hc_correct, hc_total = 0, 0
     for af in glob.glob(str(_HERE / "betting" / "agent_analysis_*.json")):
         try:
             stem = os.path.basename(af).replace('.json', '').split('_')
             s, w = int(stem[2]), int(stem[3].replace('week', ''))
             wdf = _df[(_df['season'] == s) & (_df['week'] == w) & _df[acc_col].notna()]
-            with open(af) as f:
-                ga = json.load(f)
+            ga = load_agent_analysis(w, s)
+            if not ga:                     # rejected by the gate, or unreadable
+                continue
             _gc = ga.get('game_confidence', {})
             _ga = ga.get('game_analysis',   {})
             for _, r in wdf.iterrows():

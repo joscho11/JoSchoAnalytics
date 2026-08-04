@@ -1,8 +1,10 @@
 """Phase-2 hardening tests (R20): determinism, golden regression, schemas,
-join lint, dash rule, artifacts, veteran leak, provenance."""
+join lint, dash rule, artifacts, veteran leak, provenance.
+
+All inputs (checkpoints, goldens, shipped artifacts) are REQUIRED: absence is a
+hard failure, never a skip -- see tests/ckpt.py for the 2026-08-03 rationale.
+"""
 import hashlib
-import json
-import pickle
 import re
 import sys
 from pathlib import Path
@@ -13,29 +15,13 @@ import pytest
 
 HERE = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(HERE))
-from config import WORK, LEGACY_K, RHO_RB_BOX_DISATT          # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from ckpt import ck as _ck, art as _art, golden as _golden     # noqa: E402
+from config import LEGACY_K, RHO_RB_BOX_DISATT                 # noqa: E402
 from schemas import validate, SchemaError, is_nfl              # noqa: E402
 
-W = Path(WORK)
-GOLDEN_F = HERE / "tests" / "golden" / "golden_facets.json"
-GOLDEN_W = HERE / "tests" / "golden" / "golden_weighted.json"
 PIPE_FILES = ["facets.py", "model.py", "composite.py", "build_talent_score.py",
               "build_rookie_score.py", "schemas.py"]
-
-
-def _ck(name):
-    p = W / name
-    if not p.exists():
-        pytest.skip(f"checkpoint {name} not built")
-    with open(p, "rb") as fh:
-        return pickle.load(fh)
-
-
-def _art(name):
-    p = HERE / name
-    if not p.exists():
-        pytest.skip(f"artifact {name} not built")
-    return pd.read_csv(p)
 
 
 # ---- (a) determinism -----------------------------------------------------------
@@ -52,17 +38,16 @@ def test_board_and_artifact_determinism():
     B1, B2 = _ck("BOARD_ruled.pkl"), _ck("BOARD_ruled2.pkl")
     for P in B1["boards"]:
         pd.testing.assert_frame_equal(B1["boards"][P], B2["boards"][P])
-    h = [hashlib.md5((HERE / n).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
-         for n in ["talent_score_2026.csv"] if (HERE / n).exists()]   # LF-normalize (see rookie test)
-    g = json.loads(GOLDEN_W.read_text()) if GOLDEN_W.exists() else pytest.skip("no golden")
-    assert h and h[0] == g["artifact_md5"]["talent_score_2026.csv"]
+    _art("talent_score_2026.csv")   # REQUIRED: fails loudly if the CSV is absent
+    h = hashlib.md5((HERE / "talent_score_2026.csv").read_bytes()
+                    .replace(b"\r\n", b"\n")).hexdigest()   # LF-normalize (see rookie test)
+    g = _golden("golden_weighted.json")
+    assert h == g["artifact_md5"]["talent_score_2026.csv"]
 
 
 # ---- (b) golden regression (split: facets = weight-independent) ----------------
 def test_golden_facets_weight_independent():
-    if not GOLDEN_F.exists():
-        pytest.skip("facet golden not frozen")
-    g = json.loads(GOLDEN_F.read_text())
+    g = _golden("golden_facets.json")
     M = _ck("MODEL_ruled.pkl")
     for key, row in g["facets"].items():
         P, f = key.split("/")
@@ -74,9 +59,7 @@ def test_golden_facets_weight_independent():
 
 
 def test_golden_weighted():
-    if not GOLDEN_W.exists():
-        pytest.skip("weighted golden not frozen")
-    g = json.loads(GOLDEN_W.read_text())
+    g = _golden("golden_weighted.json")
     B = _ck("BOARD_ruled.pkl")
     for P, order in g["rank_order"].items():
         assert list(B["boards"][P].index) == order, f"{P} rank order moved"
@@ -86,12 +69,9 @@ def test_golden_weighted():
 
 
 def test_golden_rookie_artifact():
-    if not GOLDEN_W.exists():
-        pytest.skip("weighted golden not frozen")
-    g = json.loads(GOLDEN_W.read_text())
+    g = _golden("golden_weighted.json")
+    _art("rookie_score_2026.csv")   # REQUIRED
     p = HERE / "rookie_score_2026.csv"
-    if not p.exists():
-        pytest.skip("rookie artifact not built")
     # LF-normalize before hashing: the golden is a blob-basis (LF) md5, but
     # `* text=auto` + core.autocrlf=true smudges this CSV to CRLF on a fresh
     # Windows checkout — so a raw worktree hash is checkout-dependent and would
@@ -138,8 +118,8 @@ def test_position_override_travis_hunter():
     assert POSITION_OVERRIDES == {"00-0040718": "WR"}, "R22: single documented entry"
     fac = _ck("FACETS.pkl")
     in_wr = any("00-0040718" in set(df.pid) for _, df in fac["defs"]["WR"])
-    if not in_wr and "nfl_ids" in fac and "00-0040718" in fac["nfl_ids"]:
-        pytest.skip("R22 rebuild pending — override in config, facets not yet rebuilt")
+    # The "R22 rebuild pending" skip was removed 2026-08-03: the checkpoints are
+    # now pinned fixtures built AFTER the override, so a miss is a real failure.
     assert in_wr, "R22: 00-0040718 absent from every WR facet fit frame"
     B = _ck("BOARD_ruled.pkl")
     assert "00-0040718" in B["boards"]["WR"].index, "R22: not on the WR scored board"
@@ -204,10 +184,11 @@ def test_veteran_leak_dissolved():
 
 
 def test_provenance_sidecars():
+    import json
     for n in ["talent_score_2026", "rookie_score_2026"]:
+        _art(f"{n}.csv")   # REQUIRED
         p = HERE / f"{n}.provenance.json"
-        if not (HERE / f"{n}.csv").exists():
-            pytest.skip(f"{n} not built")
+        assert p.exists(), f"REQUIRED provenance sidecar missing: {p}"
         s = json.loads(p.read_text())
         for k in ["built_utc", "git_head", "config_md5", "NS", "seed", "code_version"]:
             assert k in s, (n, k)

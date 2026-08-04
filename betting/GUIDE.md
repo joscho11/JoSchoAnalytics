@@ -90,9 +90,16 @@ pick. Its write-ups are cached each week and shown in the dashboard.
 
 ## Honest results
 
-**The spread model's real number is 64.2% against the spread versus the opening line, on its
-HIGH-confidence tier** — that's 380 wins out of 592 bets, measured walk-forward and out-of-sample
-across 2018–2025. Against a break-even of 52.4%, that's a real edge. In the 2025 live test (weeks
+**RETRACTED 2026-08-03. The spread model has no demonstrated edge.** I previously reported
+64.2% ATS-vs-open on the HIGH tier (380 of 592, walk-forward 2018–2025) and called it a real
+edge. That number came through a leaking feature: the sack history was built only from
+sack-positive game/team rows, so a zero-sack team-game had no row, presence encoded that
+game's own outcome, and a downstream `fillna(0)` wrote 0 onto exactly those rows.
+Regenerated in a declared pinned environment with a dense sack table AND corrected
+All-Pro player identity (aggregate + injury paths), the HIGH tier is **129 of 238 =
+54.2017%**, Wilson lower bound **47.86%** — *below* the 52.4% break-even. A
+control run of the leaking build in the same environment reproduces 380/592 exactly, so the
+collapse is the leak, not drift. No tier clears break-even. Provenance (final): `betting/experiments/audit_2026-08-03c_final/PROVENANCE.md`. In the 2025 live test (weeks
 10–17, 117 graded games) the HIGH tier hit 64.7% (11 of 17), MEDIUM hit 59.5% (25 of 42), and
 overall the model was 56.4%. The live samples are small and there will be losing weeks; the point
 is to track it honestly over multiple seasons.
@@ -100,8 +107,9 @@ is to track it honestly over multiple seasons.
 **One thing I'm careful about: the model does not beat the closing line.** Early on it looked like
 it did, but that was a mirage — the model's most important feature is nearly identical to the
 closing line itself (they correlate at 0.994), so "beats the close" was just the model echoing the
-market. Measured honestly against the *opening* line, the edge is real (the 64.2% above); measured
-against the *closing* line, there's no edge. So I never claim the model beats the close, and I
+market. Measured against the *closing* line there was never an edge, and after the 2026-08-03 leak
+fix there is no demonstrated edge against the *opening* line either (see the retraction
+above). So I never claim the model beats the close, and I
 never claim what's called closing line value. Being able to state that plainly is the point of all
 the validation discipline.
 
@@ -120,8 +128,10 @@ in.
 ## The rules and fences, and why they exist
 
 - **Every result carries its sample size, date range, and baseline.** "64% ATS" alone is not a
-  claim; "64.2% ATS-vs-open, 380/592, walk-forward 2018–2025" is. A number without those three
-  things has fooled someone before and will again.
+  claim; "54.2% ATS-vs-open, 129/238, walk-forward 2018–2025, pinned env, sha256 37830520…" is.
+  A number without those things has fooled someone before and will again — including me: the
+  retracted 64.2% carried all three and was still wrong, because the *pipeline* leaked. Add a
+  fourth requirement: name the environment and the artifact hash.
 - **The feature list order is a contract.** The order of the feature lists determines the exact
   bytes of the trained models, so an automated test locks it. If I reorder features, I have to
   retrain and update the test in the same change. This exists because I once reordered a list "for

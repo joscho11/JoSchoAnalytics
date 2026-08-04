@@ -137,7 +137,7 @@ regression tests exercise the SAME function without touching canonical files.
 **Preflight is now 21 checks** (17 → 20 at v3.9c, → 21 at v3.9e): added `v39_artifacts_readable`,
 `lineage_states_the_primary_policy`, `no_real_outcome_access`.
 
-**Status:** **827 collected** offline with an empty temp directory — **826 mandatory tests pass**, plus 1 optional git cross-check that passes when the pinned historical blob is reachable and otherwise skips (the vendored red proof runs in both states). (141 inherited + 686
+**Status:** **836 collected** offline with an empty temp directory — **835 mandatory tests pass**, plus 1 optional git cross-check that passes when the pinned historical blob is reachable and otherwise skips (the vendored red proof runs in both states). (141 inherited + 695
 new). Locks not opened; the real outcome join remains unimplemented.
 
 ### Amendment record (v3.9a -> v3.9b, 2026-07-29, PREFIT — final correctness patch)
@@ -261,7 +261,7 @@ fit; the real-fit gate stayed shut; all 18 protected artifacts are byte-identica
 `build_preseason_snapshot.projection_cutoffs()` and the old `hc_game_results()` both called
 `nflreadpy.load_schedules()`, and the win ledger was cached in an untracked scratch directory. A clean
 checkout with an empty temp directory and no connectivity therefore **failed five v3.9 feature tests**,
-and the then-current 254-pass result (SUPERSEDED — the suite is now 827 collected) depended on mutable state that
+and the then-current 254-pass result (SUPERSEDED — the suite is now 836 collected) depended on mutable state that
 is not in the repo.
 
 Both now read the repository-owned frozen snapshot
@@ -588,6 +588,82 @@ position-correct and match each builder's own module pool exactly — asserted b
 **There is no `qb_rookie_model.pkl`** — the QB rookie arm was HELD. QB is therefore evaluated on the
 veteran path only and the QB top-12 cohort covers veterans. Recorded, not silently absorbed.
 
+**The rookie feature source — frozen 2026-08-03 (Option A), PREFIT.** The three rookie bundles need 41
+(RB) / 44 (WR) / 44 (TE) features, of which the season dataset supplies only 9; the rest are combine,
+college-box and PFF-derived and were regenerated live by `fantasy/rookie/harness` over an untracked
+private PFF directory. Joseph authorized committing PFF-*derived* feature values with the raw files
+staying private, and the derived, **outcome-free** matrix is now a repo-owned pinned artifact:
+
+```
+fantasy/seasonal_projections/snapshots/rookie_arm0_features_2014_2025.parquet
+sha256 4b4655abde1c63d6316db2277d2a5301360842c9cec94fea0c2c5d77f5252584
+1,263 rows x 59 cols · keys (player_id, season) · seasons 2014-2025 · RB 387 / WR 584 / TE 292
+generator fantasy/seasonal_projections/build_rookie_arm0_features.py
+```
+
+It is 5 identity/routing keys, 2 point-in-time provenance columns and the 54-column union of the three
+rookie pools, built by calling the **real** production `assemble_features.build_features()` with only
+the two nflverse loaders injected from pinned local snapshots.
+
+**AMENDMENT, PREFIT, 2026-08-03 (v3.9o) — the college PFF join is POINT-IN-TIME.** The first frozen
+matrix (sha256 `4b4655ab…`, 59 cols) is **INVALID and withdrawn**: production selected the latest
+college season carrying a player's name across 2014-2025 and merged on the name alone, so a later
+college player could supply features to an earlier NFL rookie (963 receiving matches, 20 leaked; 308 RB
+rushing matches, 8 leaked; 28 leaked pairs over 22 player-seasons). The production builder now retains
+the PFF source season and attaches only the **latest college season strictly before** the panel row's
+NFL season, resolving same-name collisions by position then by the immediately-prior season and
+returning NULL when identity cannot be established. The artifact carries `pff_receiving_source_season`
+and `pff_rushing_source_season` so the guarantee is checkable without the private library. This
+tightens the feature definition; it changes no population, threshold, cohort or evaluation rule.
+
+**CONSEQUENCE FOR ARM 0, RECORDED PREFIT — and the retraction of an over-strong reading.** The shipped
+`rb/wr/te_rookie_model.pkl` were historically fit on the contaminated join (established by reading
+`build_rb_projection.frozen_rb_matrix()` and its twins, which copy and execute the same builder). An
+earlier version of this amendment concluded that Arm 0 was therefore unusable until they were retrained.
+**That conclusion is RETRACTED.** This experiment does not predict from a shipped bundle: `arm0_definition`
+reads bundle METADATA only, and `fit_predict` constructs a fresh estimator from `(family, params)` and
+fits it on each fold's own training rows. Every fold trains on the corrected point-in-time matrix. No
+bundle was retrained or modified, and none needs to be for this experiment.
+
+**WHAT ARM 0 INHERITS, and the one limitation that remains.** From each bundle the experiment takes a
+frozen specification — `feature_cols` (order included), `family`, `params`, `median_impute`, `seed`,
+`target` — pinned by value in `tests/arm0_bundle_pins.py::BUNDLE_SPEC_PINS`. Those fixed hyperparameters
+were selected under the historical production pipeline, which used the pre-repair join. They are
+**frozen pre-experiment and applied identically to ARM_0 and to every coaching arm**, and the experiment
+does not retune them. This is DISCLOSED as a limitation of the comparison's absolute level; it is not a
+leakage path into the arm contrast, since a hyperparameter common to every arm cannot differentially
+favour one, and it is deliberately not an activation gate. It carries **no fantasy outcome, target, label, sample weight, ADP, market
+projection or target-season realized statistic**, and production's null semantics are preserved exactly
+— no imputation, no proxy substitution, no row dropped and **no amendment to the frozen population**.
+Two rebuilds are byte-identical. This changes only where the rookie features are READ FROM; it changes
+no feature definition, no population, no threshold and no evaluation rule in this prereg.
+
+**AMENDMENT, PREFIT, 2026-08-03 (v3.9q) — the activation wiring is BUILT, not executed.** The single
+door `assemble_real_panel` moves from the sealed C5-S shape to the preregistered **C5-A** shape. The
+seal MOVES rather than lifting: the body contains no reader callee at all, so the module cannot reach
+data by itself; statement 1 refuses unless both locks are open; statement 2
+(`require_preflight_clearance`) refuses unless the run mode is `authorized_real`, both locks are open,
+`preflight()` is 21/21 in `authorized_real` mode, `activation_readiness()` is True,
+`authorized_real_gate()` is True and every pinned input (veteran features, rookie matrix, weekly
+outcome snapshot; coaching artifacts via preflight) matches its hash and manifest; only then does
+statement 3 call the injected readers and return `assemble_panel_core(...)`. Which contract applies is
+a declared module constant, never inferred from the lock state. This changes no population, feature
+definition, threshold, cohort or evaluation rule — it is the mechanism by which an authorized run would
+later be permitted to start. **Both locks remain closed and no real run has been executed.**
+
+**AMENDMENT, PREFIT, 2026-08-03 (v3.9r) — the VETERAN input is a frozen snapshot.** The experiment
+previously pinned `season_dataset_2014_2026.csv` by whole-file md5. That file is a live production
+artifact carrying deploy-season 2026, and an ordinary 2026 refresh moved its hash without changing a
+single consumed value (measured: differences confined to 2026; nine columns differing only by float
+round-trip noise at most 3.5527e-15; `qb_changed` populated on 916 rows of 2026; **no 2014-2025 value
+different in any of the 47 columns**). The consumed 2014-2025 window is now frozen as
+`snapshots/veteran_arm0_features_2014_2025.parquet` (sha256 `45cb2583…`, 7,350 x 40, feature-only), and
+the authorized run reads that and nothing else; the CSV remains the generator's input. Schema and
+population are derived at build time from `VETERAN_FEATURE_COLUMNS` and `ALL_PANEL_SEASONS` and
+cross-checked against the four shipped veteran bundles. **This changes no population, feature
+definition, threshold, cohort or evaluation rule** — the values are provably identical; it changes only
+which file the experiment reads them from, so deploy-season maintenance can no longer gate activation.
+
 **The real-fit gate is DEFAULT-CLOSED and double-locked.** Both `REAL_FIT_AUTHORIZED = True` and
 `COACH_V39_REAL_FIT_AUTHORIZED_BY_JOSEPH=I-HAVE-WRITTEN-THE-PREFIT-AMENDMENT` are required; either
 alone leaves the gate shut. `assemble_real_panel` is the single door and is deliberately
@@ -638,8 +714,8 @@ context only** and does not answer whether general HC win history, tenure or cha
 projections — that question is what ARM_HC exists to test.
 
 **Status at the v3.9a freeze (HISTORICAL — SUPERSEDED, see the v3.9d status above for current):**
-**254 registered tests passed at that point (SUPERSEDED; now 827 collected)** — the **141** inherited baseline
-reproduced exactly, plus **113 new v3.9 tests at that point (SUPERSEDED; now 686)**. The deselect list
+**254 registered tests passed at that point (SUPERSEDED; now 836 collected)** — the **141** inherited baseline
+reproduced exactly, plus **113 new v3.9 tests at that point (SUPERSEDED; now 695)**. The deselect list
 quoted in that freeze was three IDs and is also SUPERSEDED: six exact IDs are required, and they are
 listed in `coaching/AUDIT_TODO.md` item 26. The five v3.9 artifacts rebuild **byte-identically** across
 two consecutive builds. All 18 protected artifacts (8 v3.8 + 2 preliminary + 8 production) are

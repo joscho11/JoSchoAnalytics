@@ -31,7 +31,44 @@ fantasy/seasonal_projections/content/
 # (board_adp_live_2026.csv) IS committed; only the log dir is ignored.
 fantasy/seasonal_projections/adp_logs/
 
+# PRIVATE point-in-time market archive (dated raw Sleeper responses + normalized
+# snapshots + manifest) — research evidence for the 2026 matched-cutoff study, same
+# fence as adp_logs/. Never committed to the public tip; nothing on the shipped
+# surface reads it. See capture_market_snapshot.py.
+fantasy/seasonal_projections/market_snapshots/
+
 # PFF exports live here as their OWN private nested git repo (github: pff-data, private).
 # The public JoSchoAnalytics repo ignores the ENTIRE folder so the licensed raw data can
 # never leak here; the nested repo (pff/.git) tracks the CSVs privately.
 fantasy/seasonal_projections/pff/
+
+# ── Local-only large artifacts and dated backups (added 2026-08-03) ───────────
+# Everything below STAYS ON DISK. These rules exclude it from git only — no local
+# evidence is deleted. Small durable JSON provenance files living in the same
+# directories are deliberately NOT matched and remain trackable.
+
+# nflverse parquet cache. pbp.parquet alone is 141.61 MB, over GitHub's 100 MB limit.
+fantasy/staging/_nflcache/
+
+# Staged model binaries and the repeat-run copies.
+fantasy/staging/models/
+fantasy/staging/models_repeat/
+
+# Staged dataset CSVs (24-32 MB each). The *.json manifests beside them stay tracked:
+# depth_report / gate_report / manifest_primary / manifest_repeat / promotion.
+fantasy/staging/*.csv
+
+# Dated pre-change backups of the fantasy datasets.
+fantasy/backup_pre_*/
+fantasy/backup_pre_qbchanged_deploy_refresh_*/
+
+# Staged / pre-change copies of the season dataset.
+fantasy/seasonal_projections/*.staged.csv
+fantasy/seasonal_projections/*.pre_qbchanged.csv
+
+# Pre-promotion model snapshots.
+betting/models_pre_*/
+
+# Duplicate staged PKLs (byte-identical to betting/models/*.pkl, verified 2026-08-03).
+# betting/models_staged/MANIFEST.json is NOT matched and stays tracked.
+betting/models_staged/*.pkl

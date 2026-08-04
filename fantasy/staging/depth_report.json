@@ -1,0 +1,167 @@
+{
+ "snapshot_check": {
+  "checked_rows": 33028,
+  "violations": 0,
+  "lag_hours_min": 6.27,
+  "lag_hours_median": 10.77,
+  "lag_hours_max": 18.74
+ },
+ "season_invariants": {
+  "2018": {
+   "season": 2018,
+   "rows": 34490,
+   "teams": 32,
+   "depth_rank_null_rate": 0.0,
+   "depth_rank_distinct": 3,
+   "positions": [
+    "QB",
+    "RB",
+    "TE",
+    "WR"
+   ],
+   "source_schemas": [
+    "legacy"
+   ]
+  },
+  "2019": {
+   "season": 2019,
+   "rows": 34199,
+   "teams": 32,
+   "depth_rank_null_rate": 0.0,
+   "depth_rank_distinct": 3,
+   "positions": [
+    "QB",
+    "RB",
+    "TE",
+    "WR"
+   ],
+   "source_schemas": [
+    "legacy"
+   ]
+  },
+  "2020": {
+   "season": 2020,
+   "rows": 33702,
+   "teams": 32,
+   "depth_rank_null_rate": 0.0,
+   "depth_rank_distinct": 3,
+   "positions": [
+    "QB",
+    "RB",
+    "TE",
+    "WR"
+   ],
+   "source_schemas": [
+    "legacy"
+   ]
+  },
+  "2021": {
+   "season": 2021,
+   "rows": 35190,
+   "teams": 32,
+   "depth_rank_null_rate": 0.0,
+   "depth_rank_distinct": 3,
+   "positions": [
+    "QB",
+    "RB",
+    "TE",
+    "WR"
+   ],
+   "source_schemas": [
+    "legacy"
+   ]
+  },
+  "2022": {
+   "season": 2022,
+   "rows": 35413,
+   "teams": 32,
+   "depth_rank_null_rate": 0.0,
+   "depth_rank_distinct": 3,
+   "positions": [
+    "QB",
+    "RB",
+    "TE",
+    "WR"
+   ],
+   "source_schemas": [
+    "legacy"
+   ]
+  },
+  "2023": {
+   "season": 2023,
+   "rows": 35064,
+   "teams": 32,
+   "depth_rank_null_rate": 0.0,
+   "depth_rank_distinct": 3,
+   "positions": [
+    "QB",
+    "RB",
+    "TE",
+    "WR"
+   ],
+   "source_schemas": [
+    "legacy"
+   ]
+  },
+  "2024": {
+   "season": 2024,
+   "rows": 35025,
+   "teams": 32,
+   "depth_rank_null_rate": 0.0,
+   "depth_rank_distinct": 3,
+   "positions": [
+    "QB",
+    "RB",
+    "TE",
+    "WR"
+   ],
+   "source_schemas": [
+    "legacy"
+   ]
+  },
+  "2025": {
+   "season": 2025,
+   "rows": 33028,
+   "teams": 32,
+   "depth_rank_null_rate": 0.0,
+   "depth_rank_distinct": 3,
+   "positions": [
+    "QB",
+    "RB",
+    "TE",
+    "WR"
+   ],
+   "source_schemas": [
+    "current"
+   ]
+  }
+ },
+ "rows_by_schema": {
+  "legacy": 243083,
+  "current": 33028
+ },
+ "unresolved_team_weeks": 3710,
+ "player_depth_rank_rows": 70459,
+ "teammate_flag_rows": 4704,
+ "def_flag_rows": 4704,
+ "ol_flag_rows": 4704,
+ "input_hashes": {
+  "coach_schedules.parquet": "78ff21f9530ad3e464dcf445f40664eb2e315be95e401aa578e75be5fbfc6cd3",
+  "depth_charts.parquet": "f3ffad5e0487091044c9ed4c3a180a8380a3a338d4629b8c4742e2e4f08a4659",
+  "ff_opportunity.parquet": "dbb6db22a0c860b2c2ba8c4bb4cb1c71fd9fc2b1834743d810c96dfcd17c70dc",
+  "injuries.parquet": "a78491db1b0d944d678dd93943405a8f61105bc7947a78160eb9be1d8e4e18f0",
+  "pbp.parquet": "87ccaacbb4606ee1482786eb8e177db79185c4b6fb162a0cfdead57268ad810a",
+  "player_stats.parquet": "c81d8e60dfafdc6111eac8f9de0034b8dc33222464ca854591906ce698f52a6b",
+  "players.parquet": "7ff7f18f7f92de9cefc8842441b3d1689baa2f2d0f4b1afc428f49ae584dcc20",
+  "schedules.parquet": "9f32215c6dc0b1ea36eea4d740f2a80212bd010ccdbedf3bc81b57f047503950",
+  "snap_counts.parquet": "328fa7870d74bd00f3eba553751251ea86dbe5c9fca52c2e5549c00bee782f7d"
+ },
+ "raw_shape": [
+  45657,
+  87
+ ],
+ "features_shape": [
+  36521,
+  97
+ ]
+}

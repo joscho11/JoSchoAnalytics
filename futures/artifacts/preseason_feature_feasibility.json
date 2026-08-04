@@ -1,0 +1,162 @@
+{
+  "written_by": "futures/season_team_totals/01_build_dataset.ipynb",
+  "authority": "PREREGISTRATION.md \u00a710 Amendment 2 (A2.4)",
+  "frozen_before": "any implementation or execution of notebook 02",
+  "rule": "CONDITIONAL and UNAVAILABLE families may not enter FEATURE_COLS; AVAILABLE families are not added by Amendment 2 either",
+  "spread_model_importance_is_not_evidence": {
+    "why": "its top feature is ~the closing line (corr 0.994), and the ranking's history records a closing-line interpretation problem, a sack-history leak and an All-Pro identity collision",
+    "corrected_published_result": "HIGH 129/238 = 54.2017%, Wilson lower 47.8551%, below the 52.4% break-even; no selection band clears it",
+    "reference": "betting/experiments/audit_2026-08-03c_final/PROVENANCE.md"
+  },
+  "counts": {
+    "AVAILABLE": 2,
+    "CONDITIONAL": 4,
+    "UNAVAILABLE": 7
+  },
+  "families": [
+    {
+      "family": "expected_preseason_starting_qb",
+      "source": "schedule home_qb_id/away_qb_id",
+      "earliest_season": 1999,
+      "source_is_point_in_time": false,
+      "historical_preseason_snapshot_exists": false,
+      "buildable_for_2026": false,
+      "verdict": "UNAVAILABLE",
+      "reason": "populated after games are completed; 272/272 null for 2026 in the pinned snapshot and 0 null for settled seasons",
+      "included_in_feature_cols": false
+    },
+    {
+      "family": "starting_qb_change",
+      "source": "derived from expected_preseason_starting_qb",
+      "earliest_season": 1999,
+      "source_is_point_in_time": false,
+      "historical_preseason_snapshot_exists": false,
+      "buildable_for_2026": false,
+      "verdict": "UNAVAILABLE",
+      "reason": "derived from the expected starting QB, whose source field is populated only after games are completed; inherits that blocker exactly",
+      "included_in_feature_cols": false
+    },
+    {
+      "family": "prior_qb_passing_epa_per_snap",
+      "source": "PBP prior season + starter identity",
+      "earliest_season": 1999,
+      "source_is_point_in_time": true,
+      "historical_preseason_snapshot_exists": false,
+      "buildable_for_2026": false,
+      "verdict": "CONDITIONAL",
+      "reason": "prior-season PBP is settled, but attaching it to the 2026 starter needs a dated preseason depth snapshot this repo does not own",
+      "included_in_feature_cols": false
+    },
+    {
+      "family": "prior_passer_rating",
+      "source": "nextgen stats (2016+) + starter identity",
+      "earliest_season": 2016,
+      "source_is_point_in_time": true,
+      "historical_preseason_snapshot_exists": false,
+      "buildable_for_2026": false,
+      "verdict": "CONDITIONAL",
+      "reason": "same identity blocker; source also starts 2016, leaving 2002-2015 uncovered",
+      "included_in_feature_cols": false
+    },
+    {
+      "family": "prior_cpoe",
+      "source": "nextgen stats (2016+) + starter identity",
+      "earliest_season": 2016,
+      "source_is_point_in_time": true,
+      "historical_preseason_snapshot_exists": false,
+      "buildable_for_2026": false,
+      "verdict": "CONDITIONAL",
+      "reason": "same identity blocker; same 2016 coverage floor",
+      "included_in_feature_cols": false
+    },
+    {
+      "family": "current_roster_weighted_allpro",
+      "source": "nfl_allpro_1997_2025.csv + a dated preseason roster",
+      "earliest_season": 1997,
+      "source_is_point_in_time": false,
+      "historical_preseason_snapshot_exists": false,
+      "buildable_for_2026": false,
+      "verdict": "UNAVAILABLE",
+      "reason": "the All-Pro file has no player id and its Team column is the honoring team, not the current one; mapping honored players to current teams needs a dated preseason roster",
+      "included_in_feature_cols": false
+    },
+    {
+      "family": "current_roster_allpro_off_def_split",
+      "source": "same as current_roster_weighted_allpro",
+      "earliest_season": 1997,
+      "source_is_point_in_time": false,
+      "historical_preseason_snapshot_exists": false,
+      "buildable_for_2026": false,
+      "verdict": "UNAVAILABLE",
+      "reason": "same missing identity spine and same absent dated preseason roster as the weighted variant",
+      "included_in_feature_cols": false
+    },
+    {
+      "family": "roster_continuity_returning_snaps",
+      "source": "roster + snap tables",
+      "earliest_season": 2012,
+      "source_is_point_in_time": false,
+      "historical_preseason_snapshot_exists": false,
+      "buildable_for_2026": false,
+      "verdict": "CONDITIONAL",
+      "reason": "roster tables are revised in place; no dated preseason snapshot is owned",
+      "included_in_feature_cols": false
+    },
+    {
+      "family": "preseason_ir_pup_nfi_status",
+      "source": "weekly in-season injury report",
+      "earliest_season": 2009,
+      "source_is_point_in_time": false,
+      "historical_preseason_snapshot_exists": false,
+      "buildable_for_2026": false,
+      "verdict": "UNAVAILABLE",
+      "reason": "the injury feed is a weekly in-season report; no preseason status snapshot exists, and a week-1 report is published in game week",
+      "included_in_feature_cols": false
+    },
+    {
+      "family": "expected_games_lost_injury_burden",
+      "source": "derived from preseason_ir_pup_nfi_status",
+      "earliest_season": 2009,
+      "source_is_point_in_time": false,
+      "historical_preseason_snapshot_exists": false,
+      "buildable_for_2026": false,
+      "verdict": "UNAVAILABLE",
+      "reason": "derived from preseason status, for which no dated preseason snapshot exists; inherits that blocker exactly",
+      "included_in_feature_cols": false
+    },
+    {
+      "family": "offensive_line_continuity",
+      "source": "depth charts + roster",
+      "earliest_season": 2012,
+      "source_is_point_in_time": false,
+      "historical_preseason_snapshot_exists": false,
+      "buildable_for_2026": false,
+      "verdict": "UNAVAILABLE",
+      "reason": "depth-chart coverage ends at 2024 in this stack, so it is absent for the 2026 deploy season",
+      "included_in_feature_cols": false
+    },
+    {
+      "family": "prior_season_turnover_rate",
+      "source": "PBP prior season",
+      "earliest_season": 1999,
+      "source_is_point_in_time": true,
+      "historical_preseason_snapshot_exists": true,
+      "buildable_for_2026": true,
+      "verdict": "AVAILABLE",
+      "reason": "settled before the target season, no identity join; NOT added - the pinned PBP aggregate carries no turnover column, and A2.4 adds no family",
+      "included_in_feature_cols": false
+    },
+    {
+      "family": "prior_season_special_teams_epa",
+      "source": "PBP prior season",
+      "earliest_season": 1999,
+      "source_is_point_in_time": true,
+      "historical_preseason_snapshot_exists": true,
+      "buildable_for_2026": true,
+      "verdict": "AVAILABLE",
+      "reason": "settled before the target season, no identity join; NOT added - same reason",
+      "included_in_feature_cols": false
+    }
+  ],
+  "prose": "futures/PRESEASON_FEATURE_NOTES.md"
+}

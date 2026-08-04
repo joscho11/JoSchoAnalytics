@@ -411,24 +411,49 @@ def test_selected_arm_features_are_appended_after_the_baseline(small_panel, coac
 def test_real_fit_is_blocked_by_a_default_closed_double_lock(monkeypatch):
     assert EX.REAL_FIT_AUTHORIZED is False
     assert EX.real_fit_is_unlocked() is False
+    # The door is now IMPLEMENTED (C5-A) and takes injected readers. Tripwires prove that a refusal
+    # happens BEFORE either reader is touched, which is the property the old `raise` gave for free.
+    calls = []
+
+    def _tripwire(name):
+        def _r():
+            calls.append(name)
+            raise AssertionError(f"the {name} reader RAN while the door should have refused")
+        return _r
+
+    def _door():
+        return EX.assemble_real_panel(_tripwire("feature"), _tripwire("outcome"))
+
     with pytest.raises(RuntimeError, match="NOT AUTHORIZED"):
-        EX.assemble_real_panel()
+        _door()
     # the env switch ALONE must not unlock it
     monkeypatch.setenv(EX.REAL_FIT_ENV_SWITCH, EX.REAL_FIT_ENV_TOKEN)
     assert EX.real_fit_is_unlocked() is False
     with pytest.raises(RuntimeError, match="NOT AUTHORIZED"):
-        EX.assemble_real_panel()
+        _door()
     # the constant ALONE must not unlock it either
     monkeypatch.delenv(EX.REAL_FIT_ENV_SWITCH, raising=False)
     monkeypatch.setattr(EX, "REAL_FIT_AUTHORIZED", True)
     assert EX.real_fit_is_unlocked() is False
     with pytest.raises(RuntimeError, match="NOT AUTHORIZED"):
-        EX.assemble_real_panel()
-    # both locks open -> authorization passes, and the real path is still unimplemented here
+        _door()
+    # both locks open -> statement 1 PASSES and control reaches statement 2. Asserted with a sentinel
+    # rather than by expecting a raise: whether clearance then refuses depends on the preflight
+    # counters, which are process state, so a bare `raises` here was order-dependent (it passed alone
+    # and failed in a full run where an earlier test had already exercised the pipeline).
     monkeypatch.setenv(EX.REAL_FIT_ENV_SWITCH, EX.REAL_FIT_ENV_TOKEN)
     assert EX.real_fit_is_unlocked() is True
-    with pytest.raises(NotImplementedError):
-        EX.assemble_real_panel()
+
+    class _Reached(Exception):
+        pass
+
+    def _sentinel(*_a, **_k):
+        raise _Reached("statement 2 reached")
+
+    monkeypatch.setattr(EX, "require_preflight_clearance", _sentinel)
+    with pytest.raises(_Reached):
+        _door()
+    assert calls == [], "a reader was reached before clearance returned"
 
 
 def test_the_wrong_env_token_does_not_unlock(monkeypatch):
@@ -1532,7 +1557,8 @@ def test_assemble_real_panel_must_stay_authorization_first_and_unimplemented():
                                     "    panel = 1\n"
                                     "    require_real_fit_authorization()\n"
                                     "    raise NotImplementedError('x')\n")
-    ok, detail = EX.no_real_outcome_access(sources=reordered)
+    ok, detail = EX.no_real_outcome_access(sources=reordered,
+                                          contract_mode=EX.RUN_MODE_SYNTHETIC_PREFIT)
     assert ok is False and "2 statements" in detail, detail
 
     # no longer unimplemented
@@ -1541,10 +1567,12 @@ def test_assemble_real_panel_must_stay_authorization_first_and_unimplemented():
                                       "def assemble_real_panel(*_a, **_k):\n"
                                       "    require_real_fit_authorization()\n"
                                       "    return None\n")
-    ok2, detail2 = EX.no_real_outcome_access(sources=implemented)
+    ok2, detail2 = EX.no_real_outcome_access(sources=implemented,
+                                            contract_mode=EX.RUN_MODE_SYNTHETIC_PREFIT)
     assert ok2 is False and "unconditional raise" in detail2, detail2
 
-    # the real source satisfies both
+    # the real source satisfies the contract DECLARED for it (C5-A); C5-S is exercised above on
+    # constructed sources, so both variants stay live. See test_activation_wiring_v39.py.
     ok3, _ = EX.no_real_outcome_access(sources=good)
     assert ok3 is True
 
@@ -1614,7 +1642,8 @@ def test_c5_rejects_an_implemented_or_dormant_entry_point(label, replacement, fr
     bad = _pure_sources()
     key = "run_coach_projection_experiment_v39.py"
     bad[key] = _swap_assemble(bad[key], replacement)
-    ok, detail = EX.no_real_outcome_access(sources=bad)
+    ok, detail = EX.no_real_outcome_access(sources=bad,
+                                          contract_mode=EX.RUN_MODE_SYNTHETIC_PREFIT)
     assert ok is False, f"{label}: NOT detected"
     assert fragment in detail, f"{label}: {detail}"
 

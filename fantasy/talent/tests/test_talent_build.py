@@ -1,10 +1,13 @@
 """Phase-1 build tests (STOP 3d).
 
-Checkpoint-dependent tests skip with a message if the build has not run;
-unit tests (UNIDENTIFIABLE path, no-percentile scan, config immutability shape)
-always run. Run from fantasy/talent/:  python -m pytest tests/ -q
+EVERY test here executes on a fresh checkout: the checkpoints come from the
+committed fixture set (`tests/fixtures/work/`, see fixtures/make_fixtures.py),
+and a missing REQUIRED checkpoint FAILS -- it does not skip. Until 2026-08-03
+these tests read a hardcoded `C:/tmp/talent_build`, so CI skipped 14 of the 26
+cases in this package and still reported success.
+
+Run from fantasy/talent/:  python -m pytest tests/ -q
 """
-import pickle
 import re
 import sys
 from pathlib import Path
@@ -14,25 +17,21 @@ import pytest
 
 HERE = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(HERE))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from config import WEIGHTS, LEGACY_K, WORK          # noqa: E402
+from ckpt import ck as _ck                           # noqa: E402
+from config import WEIGHTS, LEGACY_K                 # noqa: E402
 from model import facet_stats                        # noqa: E402
 import build_talent_score as bts                     # noqa: E402
 
-W = Path(WORK)
-
-
-def _ck(name):
-    p = W / name
-    if not p.exists():
-        pytest.skip(f"checkpoint {name} not built")
-    with open(p, "rb") as fh:
-        return pickle.load(fh)
-
 
 # ---- reproduction regression -------------------------------------------------
-def test_reproduction_matches_accepted_table(capsys):
+def test_reproduction_matches_accepted_table(capsys, monkeypatch):
     _ck("MODEL_reproduce.pkl"); _ck("BOARD_reproduce.pkl")
+    # stage_verify() reads through the BUILD scratch (config.WORK); point it at
+    # the resolved test checkpoint dir so the regression runs off the fixtures.
+    from ckpt import W as TESTW
+    monkeypatch.setattr(bts, "W", TESTW)
     try:
         bts.stage_verify()
     except SystemExit:

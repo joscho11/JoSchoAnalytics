@@ -15,7 +15,9 @@ Compliance — DESCRIPTIVE ONLY.
   • Sleeper ADP + Sleeper Proj are Sleeper's data (attributed).
   • Model Proj + Model Gap use a separate, from-scratch model, BACKTESTED (2021–2025)
     and NOT live-validated. A frozen, disclosed 2026 analyst overlay replaces the displayed
-    point estimate for selected players while preserving every raw model output.
+    point estimate for selected players while preserving every raw model output. The same
+    dated overlay rows may also correct a player's TEAM when he signs after the projection
+    artifacts were built — identity metadata only, feeding no projection, rank or gap.
   • The gap columns are neutral positional-rank differences, not recommendations.
   • Talent Scores are descriptive context on their own scales, and feed no other column.
   • No buy/sell/fade/steal/reach/target/tier/valued/hit-rate/accuracy language anywhere.
@@ -182,6 +184,22 @@ def _load_projections():
         out.loc[overlay.index, "projection"] = adjusted
         out.loc[overlay.index, "projection_adjustment"] = overlay["method"]
         out.loc[overlay.index, "projection_adjustment_as_of"] = overlay["as_of"]
+
+        # Optional dated ROSTER correction, on the same disclosed row as the scenario. The
+        # projection artifacts carry each player's team as of the build, so a signing after
+        # that date leaves the cell blank and the board renders blank as "not signed". A
+        # non-empty code here overwrites the team for that player only. It is identity
+        # metadata: it feeds no projection, no rank and no gap, and nothing is re-scored.
+        if "team" in overlay.columns:
+            team = overlay["team"].astype("string").str.strip()
+            corrected = team[team.notna() & team.ne("")]
+            malformed = corrected[~corrected.str.fullmatch(r"[A-Z]{2,3}")]
+            if len(malformed):
+                raise ValueError(
+                    "Analyst overlay team corrections must be 2-3 letter uppercase team "
+                    f"codes: {malformed.to_dict()}"
+                )
+            out.loc[corrected.index, "team"] = corrected
         out = out.reset_index()
     return out.set_index("player_id")
 
@@ -337,13 +355,13 @@ def _load_adjustment_disclosure():
     """Small audit table for the collapsed on-page overlay disclosure."""
     if not ANALYST_PROJECTION_ADJUSTMENTS.exists():
         return pd.DataFrame(
-            columns=["Position", "Player", "Raw model", "Board value", "Basis",
+            columns=["Position", "Player", "Team", "Raw model", "Board value", "Basis",
                      "Reason", "As of"]
         )
     adj = pd.read_csv(
         ANALYST_PROJECTION_ADJUSTMENTS,
         usecols=[
-            "position", "player", "raw_projection", "adjusted_projection",
+            "position", "player", "team", "raw_projection", "adjusted_projection",
             "method", "as_of", "note",
         ],
     )
@@ -353,6 +371,7 @@ def _load_adjustment_disclosure():
             columns={
                 "position": "Position",
                 "player": "Player",
+                "team": "Team",
                 "raw_projection": "Raw model",
                 "adjusted_projection": "Board value",
                 "method": "Basis",

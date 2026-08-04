@@ -87,7 +87,7 @@ Board** page shows the rookie slice beside Sleeper's projection and the differen
 an older, weaker per-game surface; and the **Draft Board** page uses the full surface as its **Model Proj**
 column, along with the Model Proj Position Rank and Model Gap derived from it.
 
-**The analyst overlay.** For 44 named 2026 players (QB 12 / WR 11 / RB 11 / TE 10) the Draft Board displays
+**The analyst overlay.** For 45 named 2026 players (QB 12 / WR 12 / RB 11 / TE 10) the Draft Board displays
 an explicit, frozen analyst scenario in place of the raw model projection —
 `results/analyst_projection_adjustments_2026.csv`. These are judgment calls about availability and role, not
 measured improvements to the model and not backtested; the board says so on the page. The raw model output
@@ -95,6 +95,20 @@ is preserved unchanged in `results/*_projection_2026.csv`, the overlay is never 
 the board's position ranks and gaps derive from the adjusted value so that what you see and what the ranks
 say cannot diverge. If you compare the board's Model Proj against the results CSV for a high-profile player
 and they differ, this is why.
+
+An overlay row can also correct a player's **team**. The projection files record whichever team a player was
+on when I built them, so anyone who signs after that date sits there blank — and the board reads a blank
+team cell as "not signed". Rather than hand-edit a model output, I put the new team code on that player's
+dated overlay row. It changes the Team cell and nothing else: no projection is re-scored and no rank or gap
+moves because of it. A code that isn't a real two- or three-letter team abbreviation stops the page rather
+than rendering something wrong.
+
+Two rows moved on 2026-08-03 on the same day's news. Ricky Pearsall had knee surgery that ends his season
+before it starts, so the healthy-role scenario I had been carrying for him (119.4) became 0.0. Deebo Samuel
+re-signed with San Francisco — into the receiver room that injury just thinned — so he picked up a new row
+at 120.0, up from the model's 93.6, plus the team correction from blank to SF. Because both moved inside the
+same position, 44 other receivers' Model Gap shifted by exactly one rank. That is arithmetic, not an opinion
+about those 44 players: a rank is a queue, and two people changed places in it.
 
 ## 3. A map of the key files
 
@@ -110,7 +124,7 @@ and they differ, this is why.
 | `results/walkforward_predictions.csv`, `results/sleeper_comparison.csv` | The backtest predictions and the Sleeper comparison, saved for the record. |
 | `build_{wr,te,qb}_projection.py` | The other three positions. Each **imports** the RB engine rather than copying or modifying it, and adds a short per-position feature block. |
 | `results/{wr,te,qb}_projection_2026.csv` + `*_rookie_board_projection.csv` | The same two outputs per position. The QB rookie file is deliberately header-only — see below. |
-| `results/analyst_projection_adjustments_2026.csv` | The 44-row display overlay described above, with the raw value, the adjusted value, the basis and a dated reason per player. |
+| `results/analyst_projection_adjustments_2026.csv` | The 45-row display overlay described above, with the raw value, the adjusted value, the basis, an optional team correction and a dated reason per player. |
 
 The raw PFF college tables are licensed and never stored in this repo; the rookie feature matrix that
 uses them is regenerated in a temporary folder each run and never written here.

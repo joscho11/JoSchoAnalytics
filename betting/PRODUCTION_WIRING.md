@@ -12,7 +12,7 @@ checklist. Nothing here touches `app.py` or `.github/workflows/` until you say g
 | `weekly_clv.py` | weekday-aware CLV snapshot driver (pick Tue–Thu, close Sun) | no-ops in offseason |
 | `line_shopping.py` | best number per side across ~9 books | works now |
 | `kelly_staking.py` | tier-weighted ¼-Kelly stake off the OOS edge | works now |
-| `clv_backtest.py` + `experiments/walkforward_oos_preds.py` | historical validation: HIGH = **64.2% ATS-vs-open, 380/592, walk-forward OOS 2018–2025** OOS (de-confounded; model does NOT beat the close) | done |
+| `clv_backtest.py` + `experiments/walkforward_oos_preds.py` | historical validation: **RETRACTED 2026-08-03.** The 64.2%/380-592 figure came through a leaking sack feature. Corrected (dense sack + All-Pro identity incl. injuries), pinned env: HIGH = **129/238 = 54.2017%, Wilson lower 47.86% — BELOW break-even.** No tier clears. See `experiments/audit_2026-08-03c_final/` | redo |
 | `props_scanner.py` | player-prop value vs fantasy projections | yardage props post near kickoff |
 
 ## The weekly sequence (once live)
@@ -55,9 +55,10 @@ checklist. Nothing here touches `app.py` or `.github/workflows/` until you say g
 - CLV snapshot is `continue-on-error` — an API hiccup must never block the tracker.
 - Free tier ≈ 500 credits/month; the weekly CLV snapshots cost ~3 each → trivial.
   Props are event-level (1 credit/game) so scan props only for games you'll bet.
-- The edge is **ATS skill, not CLV**: de-confounded OOS, the model does NOT beat
-  the close (45% beat-close), but HIGH-tier picks cover the line you bet at 64%
-  (64.2%, 380/592, 2018-2025, one opening-line source). Size off that ATS rate, not CLV.
-  Forward 2026 results confirm whether it holds vs the lines you actually get.
+- **There is no demonstrated edge to size against (2026-08-03).** The model does not beat
+  the close (45% beat-close), and after the sack-leak fix the HIGH tier is 129/238 = 54.2017%
+  with a Wilson lower bound of 47.86%, *below* the 52.4% break-even. `kelly_staking.py` on the
+  corrected artifact stakes **$0 on every tier**. Do not wire staking to a live bankroll until
+  a forward record establishes an edge. See `experiments/audit_2026-08-03c_final/`.
 - Nothing here changes the spread/totals models — execution only, by design
   (the models are at their documented ceiling).

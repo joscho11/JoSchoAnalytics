@@ -36,6 +36,64 @@ COACH = pathlib.Path(__file__).resolve().parent.parent
 #
 # id, category, kind, module, payload, historical_undetected
 CORPUS = (
+    # ---- C5-A: the IMPLEMENTED door, malformed ------------------------------------------------
+    # Judged by the live validator under ENTRY_POINT_CONTRACT_MODE = authorized_real. The historical
+    # validator only knows C5-S, so it rejects every one of these on "body must be exactly 2
+    # statements" — caught, but for a reason that says nothing about C5-A. Recorded as measured.
+    ("c5a-missing-clearance", "C5A", "replace_entry_point", HARNESS,
+     'def assemble_real_panel(feature_reader, outcome_reader):\n'
+     '    require_real_fit_authorization()\n'
+     '    _ = 1\n'
+     '    return assemble_panel_core(feature_reader(), outcome_reader())', False),
+    ("c5a-reader-callee-in-body", "C5A", "replace_entry_point", HARNESS,
+     'def assemble_real_panel(feature_reader, outcome_reader):\n'
+     '    require_real_fit_authorization()\n'
+     '    require_preflight_clearance()\n'
+     '    return assemble_panel_core(pd.read_csv("x.csv"), outcome_reader())', False),
+    ("c5a-banned-outcome-callee", "C5A", "replace_entry_point", HARNESS,
+     'def assemble_real_panel(feature_reader, outcome_reader):\n'
+     '    require_real_fit_authorization()\n'
+     '    require_preflight_clearance()\n'
+     '    return assemble_panel_core(feature_reader(), load_player_stats())', False),
+    ("c5a-returns-something-else", "C5A", "replace_entry_point", HARNESS,
+     'def assemble_real_panel(feature_reader, outcome_reader):\n'
+     '    require_real_fit_authorization()\n'
+     '    require_preflight_clearance()\n'
+     '    return (feature_reader(), outcome_reader())', False),
+    ("c5a-statement-before-auth", "C5A", "replace_entry_point", HARNESS,
+     'def assemble_real_panel(feature_reader, outcome_reader):\n'
+     '    features = feature_reader()\n'
+     '    require_real_fit_authorization()\n'
+     '    require_preflight_clearance()\n'
+     '    return assemble_panel_core(features, outcome_reader())', False),
+    ("c5a-clearance-before-auth", "C5A", "replace_entry_point", HARNESS,
+     'def assemble_real_panel(feature_reader, outcome_reader):\n'
+     '    require_preflight_clearance()\n'
+     '    require_real_fit_authorization()\n'
+     '    return assemble_panel_core(feature_reader(), outcome_reader())', False),
+    ("c5a-auth-with-args", "C5A", "replace_entry_point", HARNESS,
+     'def assemble_real_panel(feature_reader, outcome_reader):\n'
+     '    require_real_fit_authorization(True)\n'
+     '    require_preflight_clearance()\n'
+     '    return assemble_panel_core(feature_reader(), outcome_reader())', False),
+    ("c5a-clearance-renamed", "C5A", "replace_entry_point", HARNESS,
+     'def assemble_real_panel(feature_reader, outcome_reader):\n'
+     '    require_real_fit_authorization()\n'
+     '    _looks_like_clearance()\n'
+     '    return assemble_panel_core(feature_reader(), outcome_reader())', False),
+    ("c5a-decorated", "C5A", "replace_entry_point", HARNESS,
+     '@staticmethod\n'
+     'def assemble_real_panel(feature_reader, outcome_reader):\n'
+     '    require_real_fit_authorization()\n'
+     '    require_preflight_clearance()\n'
+     '    return assemble_panel_core(feature_reader(), outcome_reader())', False),
+    ("c5a-extra-statement", "C5A", "replace_entry_point", HARNESS,
+     'def assemble_real_panel(feature_reader, outcome_reader):\n'
+     '    require_real_fit_authorization()\n'
+     '    require_preflight_clearance()\n'
+     '    outcomes = outcome_reader()\n'
+     '    return assemble_panel_core(feature_reader(), outcomes)', False),
+
     # ---- C5: the sealed entry point, rebound -------------------------------------------------
     ("c5-rebind-lambda", "C5", "append", HARNESS,
      "assemble_real_panel = lambda *_a, **_k: None", True),
@@ -212,8 +270,32 @@ POSITIVE_CONTROLS = (
 )
 
 
+# The C5-S door, verbatim as it stood while the historical measurement was taken. The live harness now
+# carries the C5-A implemented door, and the vendored a5b4af7 validator only knows C5-S — so judging
+# today's source with it would flag the door itself and make every other injection look "caught" for
+# the wrong reason (measured: 41 -> 5). The historical arm therefore reverts ONLY the door; every other
+# clause is still exercised against the live module body.
+C5S_DOOR = '''def assemble_real_panel(*_a, **_k):
+    """The C5-S door, as it stood at the historical revision."""
+    require_real_fit_authorization()
+    raise NotImplementedError("not implemented in the v3.9 prefit pass")'''
+
+
 def pure_sources():
+    """The LIVE module sources — what the CURRENT validator is measured against."""
     return {m: (COACH / m).read_text(encoding="utf-8") for m in (BUILDER, HARNESS)}
+
+
+def historical_pure_sources():
+    """Live sources with the entry point reverted to C5-S — the basis the historical arm needs.
+
+    A red proof compares two validators; it is only meaningful if each judges a source its contract
+    was written for. The 41/65 figure is a property of (historical validator x C5-S source shape) and
+    is measured as such. The operative safety number, 0/65, is measured against the LIVE source.
+    """
+    s = pure_sources()
+    s[HARNESS] = _replace_entry_point(s[HARNESS], C5S_DOOR)
+    return s
 
 
 def _replace_entry_point(src, replacement):
@@ -224,9 +306,13 @@ def _replace_entry_point(src, replacement):
     return out
 
 
-def build_sources(kind, module, payload):
-    """Materialise one case as an in-memory sources mapping. Canonical files are never touched."""
-    s = pure_sources()
+def build_sources(kind, module, payload, historical=False):
+    """Materialise one case as an in-memory sources mapping. Canonical files are never touched.
+
+    `historical=True` bases the case on the C5-S source shape, which is the only shape the vendored
+    a5b4af7 validator's C5 clause was written for.
+    """
+    s = historical_pure_sources() if historical else pure_sources()
     if kind == "append":
         s[module] = s[module] + "\n\n" + payload + "\n"
     elif kind == "replace_entry_point":
@@ -240,22 +326,23 @@ def build_sources(kind, module, payload):
     return s
 
 
-def case_sources(case):
+def case_sources(case, historical=False):
     _id, _cat, kind, module, payload, _hist = case
-    return build_sources(kind, module, payload)
+    return build_sources(kind, module, payload, historical=historical)
 
 
-def control_sources(control):
+def control_sources(control, historical=False):
     _id, _label, module, payload = control
     if module is None:
-        return pure_sources()
-    return build_sources("append", module, payload)
+        return historical_pure_sources() if historical else pure_sources()
+    return build_sources("append", module, payload, historical=historical)
 
 
 # Every clause of the frozen contract that the corpus exercises, in contract order. C3 (banned callee)
 # is its own clause and was previously mislabelled C4 (banned token) — a case that calls
 # `season_total_target()` is caught by C3 whether or not any banned string appears.
-CATEGORIES = ("C1", "C3", "C4", "C4b", "C5", "C6", "C7")
+# C5A is the IMPLEMENTED-door contract, added when the entry point moved from C5-S to C5-A.
+CATEGORIES = ("C1", "C3", "C4", "C4b", "C5", "C5A", "C6", "C7")
 
 
 def totals():

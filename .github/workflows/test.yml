@@ -90,8 +90,31 @@ jobs:
           tests/test_app_talent_columns.py
           tests/test_runtime_telemetry.py
           tests/test_responsive_layout.py
-          fantasy/talent/tests/test_talent_build.py
-          fantasy/talent/tests/test_phase2.py
+          fantasy/projections/test_fold_guards.py
+
+      # Talent build suites (2026-08-03). These were previously in the list above and
+      # ran as "12 passed, 14 skipped" on every CI run: their checkpoint helper read
+      # config.WORK, hardcoded to C:/tmp/talent_build, which exists on no runner -- so
+      # the reproduction-vs-accepted-table regression, model/board determinism, three
+      # golden regressions, the shares-sum-to-1 invariant, per-position k derivation and
+      # the Travis Hunter override were all silently not tested. The checkpoints are now
+      # committed fixtures (fantasy/talent/tests/fixtures/work/) and a missing REQUIRED
+      # input FAILS. This step is separate so the counts can be asserted: any skip, or
+      # anything other than 26 passing, fails the job.
+      - name: Run talent suites and REQUIRE 26 passed / 0 skipped
+        run: |
+          set -o pipefail
+          pytest -v -rs \
+            fantasy/talent/tests/test_talent_build.py \
+            fantasy/talent/tests/test_phase2.py | tee /tmp/talent.log
+          if grep -qE "^SKIPPED|[0-9]+ skipped" /tmp/talent.log; then
+            echo "::error::talent cases skipped -- the checkpoint fixtures are not being read"
+            exit 1
+          fi
+          if ! grep -qE "(^|[^0-9])26 passed" /tmp/talent.log; then
+            echo "::error::expected exactly 26 talent tests to pass"
+            exit 1
+          fi
 
       # Betting execution layer (review 2026-07-17 L-17/R36a): hermetic, sibling
       # imports require running from betting/. Explicit list, never discovery.
@@ -105,6 +128,88 @@ jobs:
           test_props_scanner.py
           test_historical_clv.py
           test_weekly_clv.py
+
+  # Added 2026-08-03. tests/test_responsive_layout.py holds the ONLY automated proof of the
+  # mobile-navigation fixes, and its 9 browser cases skip cleanly when playwright is absent
+  # -- which meant they had never run in CI, and locally only via an undeclared PYTHONPATH
+  # bridge to a hand-built venv. This job installs the browser and, critically, FAILS if any
+  # case skips: `-p no:randomly -W error::UserWarning` is not enough, so the skip count is
+  # asserted explicitly from the report.
+  responsive:
+    name: Responsive layout (real browser)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install deps
+        run: |
+          pip install -r requirements-test.txt
+          python -m playwright install --with-deps chromium
+      - name: Run responsive suite and REQUIRE zero skips
+        env:
+          APP_OFFLINE: '1'
+        run: |
+          set -o pipefail
+          pytest -v tests/test_responsive_layout.py -rs | tee /tmp/resp.log
+          if grep -qE "^SKIPPED|[0-9]+ skipped" /tmp/resp.log; then
+            echo "::error::responsive cases skipped -- the browser guard is not actually running"
+            exit 1
+          fi
+
+  # Added 2026-08-03. The DFS lineup ILP had no CI at all and no proof it ever ran on a
+  # real solver -- an earlier verification used a scipy stand-in, which is a different
+  # problem (continuous relaxation) and is NOT evidence that the binary program solves.
+  # This job installs pulp, proves the bundled CBC binary is really present and runnable,
+  # and runs the optimizer + matching suites. Like the responsive job it FAILS on any
+  # skip: a skipped solver test is exactly the "CBC is missing" condition it exists to
+  # catch, so the counts are asserted explicitly (23 optimizer + 36 matching = 59).
+  dfs-optimizer:
+    name: DFS optimizer (real PuLP/CBC solve)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install deps (pulp range as declared in requirements-research.txt)
+        run: pip install -r requirements-ci.txt pytest "pulp>=2.7,<4.0"
+
+      # Fail here, loudly, rather than let the suite skip: PULP_CBC_CMD.available()
+      # returns the solver PATH in PuLP 3.x (truthy str, not the literal True).
+      - name: REQUIRE a runnable CBC binary and record it
+        run: |
+          python - <<'PY'
+          import sys, pathlib
+          sys.path.insert(0, "fantasy/dfs")
+          from lineup_optimizer import assert_cbc_available
+          info = assert_cbc_available()
+          for k, v in info.items():
+              print(f"{k:16s}: {v}")
+          assert info["available"] is True, info
+          assert pathlib.Path(info["path"]).exists(), info
+          assert info["cbc_version"], "no version string read out of the CBC binary"
+          PY
+
+      - name: Run the DFS suites and REQUIRE zero skips
+        run: |
+          set -o pipefail
+          pytest -v -rs \
+            fantasy/dfs/test_lineup_optimizer.py \
+            fantasy/dfs/test_dfs_matching.py | tee /tmp/dfs.log
+          if grep -qE "^SKIPPED|[0-9]+ skipped" /tmp/dfs.log; then
+            echo "::error::DFS cases skipped -- CBC or the retained week-10 pool is missing"
+            exit 1
+          fi
+          if ! grep -qE "(^|[^0-9])59 passed" /tmp/dfs.log; then
+            echo "::error::expected exactly 59 DFS tests to pass (23 optimizer + 36 matching)"
+            exit 1
+          fi
 
   deploy-parity:
     name: deploy parity (py3.12 + requirements.txt, as the cloud installs)

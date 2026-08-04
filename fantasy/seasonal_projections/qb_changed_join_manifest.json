@@ -1,0 +1,39 @@
+{
+  "created_utc": "2026-08-03T22:23:10+00:00",
+  "season": 2026,
+  "rows_2026": 923,
+  "rows_2026_rostered": 916,
+  "rows_2026_unrostered_left_na": 7,
+  "unrostered_players": [
+    "Brandon Aiyuk",
+    "Deebo Samuel Sr.",
+    "Joe Mixon",
+    "Keenan Allen",
+    "Najee Harris",
+    "Stefon Diggs",
+    "Tyreek Hill"
+  ],
+  "coverage_before": 0,
+  "coverage_after": 916,
+  "n_changed_teams": 7,
+  "n_unchanged_teams": 25,
+  "changed_teams": [
+    "ATL",
+    "CLE",
+    "LV",
+    "MIA",
+    "MIN",
+    "NYJ",
+    "WAS"
+  ],
+  "qb_changed_source": {
+    "file": "qb_changed_2026.csv",
+    "sha256": "85DACF90F56A45D05AD3ADA7F870E537E405A107153A06D430C442CF1413CB1C",
+    "provenance_sha256": "469D53897F691E5E5BFDD118C3E0B83D1663D4E85E3BD17DCA7CCADC1E881D4A",
+    "snapshot_dt_max": "2026-08-02 09:06:30+00:00"
+  },
+  "dataset_before_sha256": "F21A4BFE077321C249634EDCBFA520879AC5E6B1F7F95AEF9DB14FD5A1B8210D",
+  "dataset_staged_sha256": "B57EE3FF011A6D9ABD1E68A062F29645FDB2AF6C199E8CB4017F3F26E9AF4FDF",
+  "promoted": true,
+  "dataset_after_sha256": "B57EE3FF011A6D9ABD1E68A062F29645FDB2AF6C199E8CB4017F3F26E9AF4FDF"
+}

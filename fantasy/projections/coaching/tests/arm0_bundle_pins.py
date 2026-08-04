@@ -314,3 +314,43 @@ BUNDLE_FEATURE_PINS = {
             "qb_changed",
         )),
 }
+
+
+# =====================================================================================================
+# BUNDLE SPECIFICATION PINS — the metadata the experiment ACTUALLY consumes
+# =====================================================================================================
+# `fit_predict` builds a FRESH estimator every fold via `_make_model(spec["family"], spec["params"])`
+# and fits it on that fold's training rows; the serialized `bundle["model"]` object is never used for
+# prediction (`arm0_definition` reads only `type(...)` from it, to record a class-name string). So what
+# the experiment inherits from a shipped bundle is exactly this specification — feature order, family,
+# fixed hyperparameters, preprocessing/null handling and seed — and nothing else.
+#
+# These are INDEPENDENT literals, transcribed from the bundles on 2026-08-03 and compared against disk.
+#
+# DISCLOSED, NOT GATED: these hyperparameters were selected under the historical production pipeline,
+# which used the pre-repair PFF join. They are frozen pre-experiment and applied IDENTICALLY to ARM_0
+# and to every coaching arm, so they cannot differentially favour any arm; the experiment does not
+# retune them. See V39_ACTIVATION_MANIFEST.md §0d.
+BUNDLE_SPEC_PINS = {
+    ("QB", "veteran"): dict(family="lightgbm", seed=42,
+        params={"num_leaves": 31, "learning_rate": 0.03, "n_estimators": 400},
+        median_impute=None, model_class="lightgbm.sklearn.LGBMRegressor"),
+    ("RB", "veteran"): dict(family="lightgbm", seed=42,
+        params={"num_leaves": 15, "learning_rate": 0.03, "n_estimators": 400},
+        median_impute=None, model_class="lightgbm.sklearn.LGBMRegressor"),
+    ("WR", "veteran"): dict(family="lightgbm", seed=42,
+        params={"num_leaves": 15, "learning_rate": 0.03, "n_estimators": 400},
+        median_impute=None, model_class="lightgbm.sklearn.LGBMRegressor"),
+    ("TE", "veteran"): dict(family="lightgbm", seed=42,
+        params={"num_leaves": 15, "learning_rate": 0.03, "n_estimators": 400},
+        median_impute=None, model_class="lightgbm.sklearn.LGBMRegressor"),
+    ("RB", "rookie"): dict(family="lightgbm", seed=42,
+        params={"num_leaves": 15, "learning_rate": 0.06, "n_estimators": 400},
+        median_impute=None, model_class="lightgbm.sklearn.LGBMRegressor"),
+    ("WR", "rookie"): dict(family="lightgbm", seed=42,
+        params={"num_leaves": 31, "learning_rate": 0.06, "n_estimators": 400},
+        median_impute=None, model_class="lightgbm.sklearn.LGBMRegressor"),
+    ("TE", "rookie"): dict(family="lightgbm", seed=42,
+        params={"num_leaves": 15, "learning_rate": 0.03, "n_estimators": 400},
+        median_impute=None, model_class="lightgbm.sklearn.LGBMRegressor"),
+}

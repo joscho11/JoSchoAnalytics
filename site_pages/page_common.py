@@ -11,17 +11,28 @@ from pathlib import Path
 
 import streamlit as st
 
+from dashboard_utils import sanitize_agent_analysis
+
 _HERE = Path(__file__).resolve().parents[1]
 
 
 def load_agent_analysis(week: int, season: int) -> dict:
+    """Agent cache for one week, with unprovenanced market claims stripped.
+
+    Every public read of an agent artifact goes through here, so the provenance gate
+    cannot be bypassed by adding a new caller. Sanitisation is FAIL-CLOSED: an artifact
+    without verifiable market provenance loses its Sharp Money / Line Movement lines
+    entirely — they are removed, never replaced with a placeholder.
+    """
     cache_file = str(_HERE / "betting" / f"agent_analysis_{season}_week{week}.json")
     if os.path.exists(cache_file):
         try:
-            with open(cache_file, 'r') as f:
-                return json.load(f)
-        except (json.JSONDecodeError, OSError):
+            with open(cache_file, 'r', encoding='utf-8') as f:
+                payload = json.load(f)
+        except (json.JSONDecodeError, OSError, UnicodeDecodeError):
             return None
+        clean, _report = sanitize_agent_analysis(payload)
+        return clean
     return None
 
 

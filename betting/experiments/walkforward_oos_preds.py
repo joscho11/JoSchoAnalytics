@@ -37,14 +37,28 @@ _ap = argparse.ArgumentParser(description="Walk-forward OOS spread predictions")
 _ap.add_argument("--line", choices=["close", "open"], default="close",
                  help="line feature: 'close' = nflverse spread_line (default; confounds CLV); "
                       "'open' = substitute the aussportsbetting opening line (honest pick-time eval)")
-LINE = _ap.parse_args().line
+# --out lets a regeneration land somewhere other than the canonical artifact, so a rebuild
+# can be diffed against the incumbent before anything is replaced (added 2026-08-03 for the
+# dense-sack-table regeneration; the incumbent openline CSV is untracked and must survive).
+_ap.add_argument("--out", default=None,
+                 help="write predictions here instead of the default artifact path")
+# --notebook lets an A/B run the SAME production path against a modified copy of the data
+# prep, so a feature change can be attributed by controlled comparison rather than assumed
+# (added 2026-08-03 to isolate the dense-sack-table effect from data-vintage drift).
+_ap.add_argument("--notebook", default=None,
+                 help="path to an alternate model_comparison.ipynb for the data-prep cells")
+_args = _ap.parse_args()
+LINE = _args.line
+OUT_OVERRIDE = _args.out
+NB_OVERRIDE = _args.notebook
 
 TEST_SEASONS = list(range(2018, 2026))  # train on >=2014; 4+ train seasons each
 
 # ── 1. data prep (same as feature_ablation) ──────────────────────────────────
 print("Loading data prep from model_comparison.ipynb (cells 1-37)...")
 t0 = time.time()
-with open(ROOT / "betting/model_comparison.ipynb", "r", encoding="utf-8") as f:
+_NB_PATH = Path(NB_OVERRIDE) if NB_OVERRIDE else ROOT / "betting/model_comparison.ipynb"
+with open(_NB_PATH, "r", encoding="utf-8") as f:
     nb = json.load(f)
 ns = {"__name__": "__main__"}
 for i in range(1, 38):
@@ -161,8 +175,9 @@ for Y in TEST_SEASONS:
     print(f"  season {Y}: train {int(tr_m.sum())} / predict {int(te_m.sum())} games")
 
 preds = pd.concat(rows, ignore_index=True)
-dest = HERE / (f"walkforward_oos_preds_openline.csv" if LINE == "open"
-               else "walkforward_oos_preds.csv")
+dest = Path(OUT_OVERRIDE) if OUT_OVERRIDE else HERE / (
+    "walkforward_oos_preds_openline.csv" if LINE == "open"
+    else "walkforward_oos_preds.csv")
 preds.to_csv(dest, index=False)
 print(f"\nwrote {len(preds)} out-of-sample predictions ({preds['season'].min()}-"
       f"{preds['season'].max()}) -> {dest}")

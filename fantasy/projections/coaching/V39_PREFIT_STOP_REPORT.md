@@ -17,7 +17,7 @@ tests — and then found seven defects. All seven are repaired.
 
 | # | finding | status |
 |---|---|---|
-| 1 | The build was **not hermetic**: `projection_cutoffs()` and `hc_game_results()` both downloaded nflverse schedules, and the win ledger sat in an untracked scratch cache. A clean offline checkout failed **five** feature tests, so the then-current 254-pass claim (SUPERSEDED; the suite is now 827 collected) depended on state outside the repo. | **FIXED** — both read the repo-owned frozen snapshot; the ledger is computed in memory; suite and build now pass with egress blocked and an empty temp dir (§1.4) |
+| 1 | The build was **not hermetic**: `projection_cutoffs()` and `hc_game_results()` both downloaded nflverse schedules, and the win ledger sat in an untracked scratch cache. A clean offline checkout failed **five** feature tests, so the then-current 254-pass claim (SUPERSEDED; the suite is now 1,103 collected) depended on state outside the repo. | **FIXED** — both read the repo-owned frozen snapshot; the ledger is computed in memory; suite and build now pass with egress blocked and an empty temp dir (§1.4) |
 | 2 | The live canonical prereg sections still asserted the superseded policy **underneath** the correction banner, and this report claimed they had been corrected when only a banner covered them. | **FIXED** — §0, §2, §3.2, §4, §5, §6, §7, §8-T5, §8.1 rewritten to v3.9 truth; the false claim in this report is withdrawn (§2.1) |
 | 3 | The manifest pinned only appended coaching columns; `ARM_0` was empty and the veteran/rookie baseline difference was inexpressible. | **FIXED** — full ordered X per (position, bucket, arm) (§4.1) |
 | 4 | The ten-condition §7 primary verdict was **never computed**, its thresholds were not pinned, and no test covered it. | **FIXED** — `primary_verdict()` + 14 tests (§8.5) |
@@ -103,7 +103,7 @@ interpreter `.\.venv-test\Scripts\python.exe` (Python 3.11.9). This is one line,
 `...` placeholders, no abbreviations:
 
 ```
-.\.venv-test\Scripts\python.exe -m pytest fantasy/projections/coaching/tests -q -p no:warnings --ignore=fantasy/projections/coaching/tests/test_arm_features_v39.py --ignore=fantasy/projections/coaching/tests/test_coach_projection_harness_v39.py --ignore=fantasy/projections/coaching/tests/test_boundary_corpus.py --ignore=fantasy/projections/coaching/tests/test_assemble_real_panel_v39.py --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_each_protected_text_artifact_has_exactly_one_writer --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_build_arm_features_v39_writes_only_the_five_authorized_artifacts --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_the_harness_writes_no_repo_artifact_at_all --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_no_unauthorized_v39_artifact_exists_on_disk --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_the_head_coach_win_ledger_is_derived_in_memory_not_cached --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_the_v39_modules_never_write_outside_the_coaching_data_dir
+.\.venv-test\Scripts\python.exe -m pytest fantasy/projections/coaching/tests -q -p no:warnings --ignore=fantasy/projections/coaching/tests/test_arm_features_v39.py --ignore=fantasy/projections/coaching/tests/test_coach_projection_harness_v39.py --ignore=fantasy/projections/coaching/tests/test_boundary_corpus.py --ignore=fantasy/projections/coaching/tests/test_assemble_real_panel_v39.py --ignore=fantasy/projections/coaching/tests/test_combine_snapshot_provenance.py --ignore=fantasy/projections/coaching/tests/test_rookie_matrix_v39.py --ignore=fantasy/projections/coaching/tests/test_pff_point_in_time_v39.py --ignore=fantasy/projections/coaching/tests/test_arm0_refits_from_scratch_v39.py --ignore=fantasy/projections/coaching/tests/test_activation_wiring_v39.py --ignore=fantasy/projections/coaching/tests/test_veteran_snapshot_v39.py --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_each_protected_text_artifact_has_exactly_one_writer --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_build_arm_features_v39_writes_only_the_five_authorized_artifacts --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_the_harness_writes_no_repo_artifact_at_all --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_no_unauthorized_v39_artifact_exists_on_disk --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_the_head_coach_win_ledger_is_derived_in_memory_not_cached --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_the_v39_modules_never_write_outside_the_coaching_data_dir
 ```
 
 Literal output of that exact command:
@@ -124,12 +124,13 @@ and no claim is made here about what bare `python` resolves to.
 Every ID above is real and was executed. `pytest --deselect` silently ignores an ID that does not
 exist, so a mistyped path deselects nothing and returns 147 with no error — copy these verbatim.
 
-**Current totals, and the only ones stated anywhere in this document:** **827** tests in
-`coaching/tests/` — **141** inherited plus **686** added by this pass. The 686 is
-88 (`test_arm_features_v39.py`) + 246 (`test_coach_projection_harness_v39.py`) + 146 (`test_boundary_corpus.py`) + 200 (`test_assemble_real_panel_v39.py`) + 6 (the v3.9 additions
+**Current totals, and the only ones stated anywhere in this document:** **1,103** tests in
+`coaching/tests/` — **141** inherited plus **962** added by this pass. The 962 is
+88 (`test_arm_features_v39.py`) + 246 (`test_coach_projection_harness_v39.py`) + 166 (`test_boundary_corpus.py`) + 205 (`test_assemble_real_panel_v39.py`) + 9 (`test_combine_snapshot_provenance.py`) + 91 (`test_rookie_matrix_v39.py`) + 37 (`test_pff_point_in_time_v39.py`) + 38 (`test_arm0_refits_from_scratch_v39.py`) + 31 (`test_activation_wiring_v39.py`) + 45 (`test_veteran_snapshot_v39.py`) + 6 (the v3.9 additions
 to `test_artifact_ownership.py`). The per-module table in §10 carries the full split and reconciles to
-the same 827. Earlier drafts of this section quoted 254 total / 113 added; both are **WITHDRAWN** and
-were never current at the time this document was closed.
+the same 1,103. **SUPERSEDED:** an earlier draft quoted a suite total 254 and 113 new tests (both
+**SUPERSEDED**); a later one quoted 836 total / 695 added (also **SUPERSEDED**). Only the counts above
+are current, and they were collected, not estimated.
 
 Interpreter for every number in this report: the repo-local `.\.venv-test\Scripts\python.exe`
 (Python 3.11.9).
@@ -184,7 +185,8 @@ Verified with egress blocked (`socket.create_connection`, `getaddrinfo`, `socket
 a freshly created empty directory:
 
 ```
-full coaching suite   827 collected; 826 mandatory tests passed
+full coaching suite   1,103 collected; 1,103 passed. The four §10.9.6 failures are green, because
+                      the experiment no longer pins a mutable file - not because a check was relaxed.
                       + 1 optional git cross-check (passes or skips; see below)
 inherited baseline    141 passed, 6 deselected
 full v3.9 build       completed; all five artifact hashes reproduced
@@ -195,12 +197,13 @@ ambiguous, so this is the only form this document uses:
 
 | | |
 |---|---|
-| canonical collection total | **827** |
-| mandatory tests | **826 passed** |
+| canonical collection total | **1103** |
+| mandatory tests | **1102 passed** |
+| **measured on 2026-08-03, after §10.10** | **1,103 passed · 0 failed** — the four §10.9.6 failures are resolved by re-scoping the pin to an immutable snapshot, not by relaxing an assertion. |
 | optional git cross-check | **passes when the historical blob `85c438f7d908e9df7da8d5e44ad8e30d3bbeeffe` is reachable, otherwise skips** |
 | the vendored historical red proof | **runs in BOTH states — it is never skipped** |
 
-So a green run legitimately reports either `827 passed` or `826 passed, 1 skipped`, and the two are the
+So a green run legitimately reports either `1103 passed` or `1102 passed, 1 skipped`, and the two are the
 same result. The variation is only whether `git cat-file -p <blob>` can reach the pinned blob: after the
 `BettingEdgeContinued` → `JoSchoAnalytics` rename the repository is owned by another account, so git
 refuses without `-c safe.directory=...` and the cross-check skips; in a review environment where the
@@ -912,8 +915,8 @@ generating function, input columns, timing rule, missing-value rule, and coverin
 | scope | count |
 |---|---|
 | inherited baseline (reproduced, offline) | **141** |
-| new v3.9 + v3.9a + v3.9b + v3.9c + v3.9d + v3.9e + v3.9f + v3.9g + v3.9i + v3.9j + v3.9k tests | **686** |
-| **full coaching suite** | **827 collected · 826 mandatory passed · 1 optional git cross-check (passes when the pinned blob is reachable, otherwise skips) — offline, egress blocked, fresh empty temp dir** |
+| new v3.9 + v3.9a + v3.9b + v3.9c + v3.9d + v3.9e + v3.9f + v3.9g + v3.9i + v3.9j + v3.9k + v3.9m + v3.9n + v3.9o + v3.9p + v3.9q + v3.9r tests | **962** |
+| **full coaching suite** | **1,103 collected · 1,102 mandatory passed · 1 optional git cross-check (passes when the pinned blob is reachable, otherwise skips) — offline, egress blocked, fresh empty temp dir** |
 
 ### 10.1 THE TWO CODEX REPRODUCTIONS NOW FAIL SEMANTICALLY
 
@@ -971,10 +974,19 @@ Per-module counts, collected rather than estimated:
 | `test_artifact_ownership.py` | 9 | 3 inherited + **6 new** |
 | `test_arm_features_v39.py` | **88** | new |
 | `test_coach_projection_harness_v39.py` | **246** | new (155 at v3.9c; +91 from the v3.9d boundary, C5/C6/C7 binding-context and wording work) |
+| `test_boundary_corpus.py` | **146** | new |
+| `test_assemble_real_panel_v39.py` | **203** | new (200 at v3.9m; +2 at v3.9n, splitting the two missingness/readiness properties into a live case and an injected fail-closed case) |
+| `test_combine_snapshot_provenance.py` | **9** | new |
+| `test_rookie_matrix_v39.py` | **91** | new at v3.9n — the frozen rookie matrix, its corruption cases and its input pins |
+| `test_pff_point_in_time_v39.py` | **37** | new at v3.9o — the PFF temporal-leak repair, red-before-green |
+| `test_arm0_refits_from_scratch_v39.py` | **38** | new at v3.9p — the serialized estimator never reaches a prediction |
+| `test_activation_wiring_v39.py` | **31** | new at v3.9q — the implemented C5-A door and every transition into it |
+| `test_veteran_snapshot_v39.py` | **45** | new at v3.9r — the frozen veteran snapshot and its 2026-independence |
+| `test_boundary_corpus.py` | **166** | 146 at v3.9o; +20 at v3.9q for the 10 C5-A injections |
 
-22+33+34+27+15+7+3 = **141** inherited; 88+246+146+200+6 = **686** new; total **827**.
+22+33+34+27+15+7+3 = **141** inherited; 88+246+166+205+9+91+37+38+31+45+6 = **962** new; total **1,103**.
 
-To reproduce the 141 exactly, ignore the three v3.9 test modules and deselect these six. (The `tests/`
+To reproduce the 141 exactly, ignore the ten v3.9 test modules and deselect these six tests. (The `tests/`
 tree **is now tracked** — Joseph committed it on 2026-07-30, so new-vs-inherited *can* be diffed against
 `HEAD` today; the earlier statement that it was untracked is **SUPERSEDED**. The six IDs are still
 listed verbatim because a mistyped `--deselect` is silently ignored by pytest and yields 147.)
@@ -1153,7 +1165,7 @@ list.
 The list is now enumerated once, in `tests/boundary_corpus.py`, with a stable id, category, payload and
 recorded historical result per case. `tests/test_boundary_corpus.py` runs both validators over the corpus
 and **asserts the arithmetic**; `test_the_reported_arithmetic_appears_in_the_stop_report` then fails
-unless this document states the same numbers. The corpus is 65 injections plus 7 positive controls held
+unless this document states the same numbers. The corpus is 75 injections plus 7 positive controls held
 in a separate table, so a control can never be miscounted as an evasion.
 
 **The historical proof fails closed.** The first version of this test called `git show` and
@@ -1174,6 +1186,15 @@ skips — if the fixture is absent or its sha256 moves. A separate cross-check c
 `git cat-file -p <blob>` when git happens to be available; only that *cross-check* may skip, and the
 proof itself is unaffected by its absence.
 
+**The two arms are measured against different source shapes, deliberately.** The vendored `a5b4af7`
+validator's C5 clause only knows the C5-S door; the live harness now carries the C5-A implemented door
+(§10.8). Judging today's source with the historical validator would flag the door itself and make every
+other injection look "caught" for a reason that has nothing to do with the clause under test — measured,
+that collapses the historical figure from 41 to **5**. The historical arm therefore reverts ONLY the
+entry point to C5-S (`boundary_corpus.historical_pure_sources()`); every other clause is still exercised
+against the live module body. The operative safety number — **0 undetected now** — is measured against
+the LIVE source, unmodified.
+
 Measured, and asserted by that corpus:
 
 | category | undetected at `a5b4af7` | undetected now |
@@ -1182,10 +1203,11 @@ Measured, and asserted by that corpus:
 | C3 banned callee | C3 0/1 | 0 |
 | C4 banned tokens | C4 0/8 | 0 |
 | C4b reading through an exemption | C4b 0/2 | 0 |
-| **C5 sealed entry point** | **C5 19/21** | 0 |
+| **C5 sealed entry point (C5-S)** | **C5 19/21** | 0 |
+| **C5A implemented door (C5-A)** | **C5A 0/10** | 0 |
 | **C6 lock invariant** | **C6 8/12** | 0 |
 | **C7 process environment** | **C7 14/19** | 0 |
-| **total** | **41 of 65 injections passed undetected** | **0 of 65** |
+| **total** | **41 of 75 injections passed undetected** | **0 of 75** |
 
 Every figure in that table is generated from the corpus and asserted by
 `test_the_reported_arithmetic_appears_in_the_stop_report`, which builds the expected strings from
@@ -1347,7 +1369,7 @@ does **not** count them, which is why the diffstat covers 8 files rather than 11
 | `REQUIREMENT_MATRIX.md` | F-29, F-32, H-19, H-20, H-24, R-12, test counts |
 | `AUDIT_TODO.md` | items 24, 26, 27 |
 | `preregs/PREREG_coach_quality_2026-07-28.md` | §E contract wording, status counts |
-| `tests/boundary_corpus.py` *(new, untracked)* | the enumerated 65-injection + 7-control corpus |
+| `tests/boundary_corpus.py` *(new, untracked)* | the enumerated 75-injection + 7-control corpus |
 | `tests/test_boundary_corpus.py` *(new, untracked)* | runs the frozen `a5b4af7` validator, asserts the red/green arithmetic |
 | `tests/fixtures/historical_validator_a5b4af7.pysrc` *(new, untracked)* | the frozen historical validator, sha256-pinned |
 
@@ -1415,7 +1437,7 @@ Measured against `season_dataset_2014_2026.csv` (47 columns):
 
 The missing fields are combine, college-box (`cfb_*`) and PFF-derived. Production rebuilds them via
 `fantasy/rookie/harness`, which imports `nflreadpy` and calls `load_player_stats`, `load_draft_picks`
-and `load_combine` **live**, and reads `fantasy/seasonal_projections/pff/` — **418 local files, 0
+and `load_combine` **live**, and reads `fantasy/seasonal_projections/pff/` — **SUPERSEDED count, see §10.5.8: 941 local files, 0
 tracked** (`.gitignore:37`). A clean checkout cannot assemble those three buckets at all.
 
 **This is now fail-closed and layered.** `activation_readiness()` returns `False`, naming each blocked
@@ -1593,11 +1615,694 @@ proves the outcome path is closed.
 ### 10.4.4 What was NOT done
 
 No lock opened · no real fantasy outcome read, inspected, printed, aggregated or compared · no model fit ·
-no result artifact written · no production file touched · **no rookie matrix generated and no PFF file
-touched — that decision is Joseph's and is unresolved (§10.4.1a)**. The two authorized readers are
-exercised only against temporary synthetic files written by the tests themselves; the real weekly
-snapshot and feature source are verified by **hash and manifest metadata only**, never by reading a
-value.
+no result artifact written · no production file touched. **The rookie-matrix line in this paragraph is
+SUPERSEDED by §10.5**: Joseph selected Option A on 2026-08-03, the derived matrix was generated, and
+the private PFF directory was read under that authorization. Everything else in this paragraph still
+holds. The two authorized readers are exercised only against temporary synthetic files written by the
+tests themselves; the real weekly snapshot and feature source are verified by **hash and manifest
+metadata only**, never by reading a value.
+
+---
+
+## 10.5 v3.9n — OPTION A: THE FROZEN ROOKIE FEATURE MATRIX
+
+**Authorization used.** Joseph selected Option A (§10.4.1a / manifest §0b) and confirmed he is
+authorized to use and commit PFF-*derived* feature values, with the raw PFF files remaining private and
+untracked. That is the only new authorization exercised in this pass. **Both real-fit locks stayed
+closed, no fantasy outcome was read, nothing was fit, nothing was activated, and no commit was made.**
+
+> **§10.5 DESCRIBES A SUPERSEDED ARTIFACT.** Everything below was true of the v1 matrix as built, but
+> that matrix was found on the same day to be **temporally contaminated** through the production PFF
+> join and has been replaced. Read **§10.6** for the defect, the repair and the current artifact. The
+> Option A authorization, the population, the null semantics, the determinism method and the licensing
+> posture all carry over unchanged; the sha256, the column count and the readiness verdict do not.
+
+### 10.5.1 The artifact
+
+```
+fantasy/seasonal_projections/snapshots/rookie_arm0_features_2014_2025.parquet
+sha256    4b4655abde1c63d6316db2277d2a5301360842c9cec94fea0c2c5d77f5252584   <-- INVALID, see §10.6
+shape     1,263 rows x 59 columns
+keys      (player_id, season) - unique, no nulls
+seasons   2014-2025, all twelve present
+positions RB 387 · WR 584 · TE 292   (387+584+292 = 1,263)
+generator fantasy/seasonal_projections/build_rookie_arm0_features.py
+manifest  snapshots/manifest.json, key `rookie_arm0_features_2014_2025`
+```
+
+59 = 5 identity/routing keys (`player_id`, `season`, `position`, `is_rookie`, `norm_name`) + the
+**54-column union** of the three rookie bundle pools (RB 41, WR 44, TE 44; WR and TE are
+byte-identical), pinned in a fixed order: RB's pool in bundle order, then WR's 13 additional features
+in WR bundle order.
+
+### 10.5.2 Production logic, not a parallel implementation
+
+The generator imports `fantasy/rookie/harness/assemble_features.py` and calls the **real**
+`build_features()`. Only the two network-backed nflverse loaders are injected — `nfl.load_draft_picks`
+and `nfl.load_combine` are replaced by readers over the pinned local snapshots
+(`snapshots/draft_picks.parquet`, `snapshots/combine.parquet`). `_load_pff` is left untouched and reads
+the authorized private directory. No feature formula is reimplemented anywhere in the generator or in
+its tests.
+
+### 10.5.3 What it does not contain, enforced three ways
+
+No fantasy outcome, target, label, sample weight, ADP, market projection or target-season realized
+statistic:
+
+1. the generator refuses to write if any column name matches a forbidden token;
+2. `verify_rookie_matrix_provenance()` refuses to load a file whose schema intersects
+   `FORBIDDEN_IN_FEATURES`;
+3. a parametrized test injects **every** name in `FORBIDDEN_IN_FEATURES` in turn and asserts refusal,
+   and a second parametrized test scans column names for 13 outcome/market tokens.
+
+**A self-caught defect in my own guard.** The generator's first forbidden-token list used the bare
+substrings `_y` and `ppg`, which flagged **10 legitimate college columns** (`cfb_rec_ypg`,
+`cfb_career_scrim_yds`, …) and aborted the build. The tokens were made precise and split into
+substring and exact-name sets. An over-broad matcher that blocks real work is the same defect class as
+one that lets real leakage through; it is recorded rather than quietly fixed.
+
+### 10.5.4 Null semantics are production's
+
+A player without a combine row, without a PFF row, or without a college-box row keeps that row with
+nulls. No proxy substitution, no imputation, no row dropped for being incompletely measured, and the
+frozen population is not amended. Measured non-null coverage by source group:
+
+```
+draft     4 cols   mean non-null  54.7%
+combine   8 cols   mean non-null  37.2%
+college  13 cols   mean non-null  45.0%
+pff      21 cols   mean non-null  42.8%
+landing   6 cols   mean non-null  66.5%
+(bmi and speed_score are derived, in no source group: 4+8+13+21+6 = 52 of the 54 features)
+
+rows with ANY null: 1,263 of 1,263 - every one RETAINED
+```
+
+### 10.5.5 Determinism
+
+Rows sorted by `(season, player_id)` with a stable mergesort; fixed dtypes (identity as `string`,
+`season` int32, `is_rookie` int8, all 54 features float64); `to_parquet(index=False,
+engine="pyarrow", compression="snappy")`. **Two fresh rebuilds into a temp directory reproduced the
+sha256 above byte-for-byte.**
+
+### 10.5.6 Integration and the two-layer gate
+
+`assemble_real_panel_v39.py` gained `ROOKIE_MATRIX*` pins (path, sha256, manifest key, generator, rows,
+cols, positions, identity, and the **59-name ordered schema literal**, pinned independently of the
+generator), plus `verify_rookie_matrix_provenance()`, `rookie_matrix_columns()`,
+`authorized_rookie_matrix_reader()`, `validate_rookie_matrix()`, `bundle_feature_cols()` and
+`rookie_bucket_frame()`. A5 now checks the rookie pins for self-consistency and A6 requires a
+`default_rookie_matrix_reader` that refuses. `ParquetFile` was added to `ASSEMBLY_READER_CALLEES`, so
+A1/A3 still forbid module-level reads.
+
+Measured state after integration:
+
+```
+all seven Arm 0 buckets     complete, 0 features missing from their declared source
+activation_readiness()      True     (SUPERSEDED — False again as of §10.6)
+preflight()                 21/21, all_ok True, run_mode synthetic_prefit
+authorized_real_gate()      False    - refused at gate 1: a synthetic_prefit result asserts
+                                       BOTH LOCKS CLOSED and can never authorize a real run
+REAL_FIT_AUTHORIZED         False
+env lock                    unset
+assemble_real_panel()       still sealed (two statements: authorization check, then raise)
+```
+
+**Readiness moved; the refusal did not weaken — it moved from gate 2 to gate 1.** Gate 2's refusal path
+is kept live by injection (`rookie_columns=set()`) rather than by observation, so the fail-closed
+behaviour that v3.9g added does not silently stop being tested now that the real tree passes it.
+
+### 10.5.7 A vacuous check I wrote and then replaced
+
+The first version of `validate_rookie_matrix()` asserted `matrix[list(fc)].columns != fc` for each
+rookie bundle. **That can never fail** — selecting columns by name always returns them in that name
+order — so it was a check that always said yes.
+
+The replacement is honest about what is and is not enforceable. The matrix is a **shared** pool, and RB
+and WR order their common features differently, so no single physical column order can equal all three
+bundle orders at once (measured: RB inverts at `coach_changed`; WR/TE at `cfb_rec_pg`). Therefore:
+
+- **storage order** is pinned by the `ROOKIE_MATRIX_COLUMNS` literal and by the file hash;
+- **feed order** — the order a model would actually receive — is enforced at the point of use, by
+  `rookie_bucket_frame()` → `bucket_frame_satisfies_bundle()`, and a test shuffles a bucket frame's
+  columns and asserts refusal;
+- a test measures the RB/WR/TE order conflict rather than asserting it, so if the pools ever became
+  mutually consistent the weaker contract would be revisited.
+
+### 10.5.8 Licensing posture, verified
+
+`fantasy/seasonal_projections/pff/` holds **941 local files (409 of them CSVs)** and `git ls-files` returns **zero** of them
+(`.gitignore:37`). Only derived feature values are repo-owned. A test asserts that tracked count is
+still zero and that derived `pff_*` values survived into the matrix. Regenerating the matrix still
+requires the authorized private directory, so *rebuilding* it is not a clean-checkout operation even
+though *using* it now is.
+
+### 10.5.9 Tests and counts
+
+`tests/test_rookie_matrix_v39.py` — **91** tests: schema/hash/manifest agreement, the frozen
+population, null preservation, forbidden-column rejection (parametrized over every forbidden name), a
+flipped byte, an absent file, reordered / renamed / added / dropped columns, row loss at both file and
+frame level, duplicate and null keys, a missing season, an out-of-range season, a foreign position, a
+non-rookie row, seven manifest-field disagreements, bundle-order enforcement on the bucket frame, the
+default reader refusing, the reader running its own output through its own validator, readiness True,
+readiness failing closed on a missing file and on a hash mismatch, the gate still refusing, and the
+four non-PFF input pins with a RED case proving a drifted input is refused, and a MEASURED PFF
+local-file count that fails if a document quotes a superseded figure.
+
+Two tests in `test_assemble_real_panel_v39.py` were **split** rather than relaxed: the missingness and
+readiness properties now have a live case (the real, ready tree) and an injected fail-closed case.
+`test_combine_snapshot_provenance.py::test_the_snapshot_does_not_make_activation_ready` was renamed to
+`..._alone_does_not_make_activation_ready` and now proves the combine snapshot *by itself* supplies
+nothing to the rookie bundles. **No test was deleted or weakened.**
+
+Recomputed, collected rather than estimated: **929 collected · 928 mandatory · 1 optional**; inherited
+baseline **141 passed, 6 deselected** (unchanged). The baseline command in §1.1 gained one `--ignore`
+for the new module.
+
+### 10.5.10 What was NOT done in v3.9n
+
+No lock opened · no fantasy outcome read, inspected, printed, aggregated or compared · no model fit ·
+no activation · no result artifact written · no production model, projection, dashboard, betting,
+market or draft-board file touched · no commit, no staging. The 18 protected artifacts and the five
+v3.9 artifacts are byte-identical to their pins.
+
+
+---
+
+## 10.6 v3.9o — MATERIAL LEAKAGE: the production PFF join was not point-in-time
+
+**Found by Codex, reproduced here, repaired at the production source. The v1 rookie matrix (§10.5) is
+INVALID and has been replaced.** No lock was opened, no outcome was read, nothing was fit, nothing was
+retrained, nothing was committed.
+
+### 10.6.1 The defect
+
+`fantasy/rookie/harness/assemble_features.py::_load_pff` did:
+
+```python
+idx = alld.groupby("norm_name")["season"].idxmax()      # FINAL college season row
+fin = alld.loc[idx, ["norm_name"] + keep]
+...
+p = p.merge(recv, on="norm_name", how="left")           # season already gone
+```
+
+It selected the **latest PFF college season in 2014-2025 for a name** and merged on the name alone. The
+source season never reached the join, so nothing prevented a later college player from supplying
+features to an earlier NFL rookie.
+
+### 10.6.2 Reproduced, and enumerated
+
+Measured against the frozen 1,263-row rookie population:
+
+| block | matches | source season >= NFL rookie season |
+|---|---|---|
+| receiving | **963** | **20** |
+| rushing, whole panel | 724 | 17 |
+| rushing, RB rows only (the bundle that consumes it) | **308** | **8** |
+
+The two rushing rows are the same measurement over different denominators — Codex reported the RB-only
+view, this report gives both, and they agree.
+
+- **28** leaked `(row, kind)` pairs over **22 unique rookie player-seasons** — WR 10, RB 9, TE 3.
+- **292** contaminated non-null feature cells in the shipped v1 artifact.
+- Leaked source seasons ran 2014-2025; affected rookie seasons ran 2014-2024.
+- Named examples confirmed exactly: 2014 Mike Evans took **2021** receiving; 2016 Michael Thomas took
+  **2025** receiving; 2015 Matt Jones took **2025** receiving *and* rushing.
+
+**Same-person mistiming vs same-name collision, separated.** Of the 37 leaked pairs measured at join
+level, **21** have a `norm_name` mapping to more than one PFF `player_id` — true identity collisions.
+Classified by recoverability:
+
+| class | receiving | rushing | meaning |
+|---|---|---|---|
+| **A — recoverable** | 14 | 7 | an eligible earlier season existed; `idxmax` picked a later one |
+| **B — unrecoverable** | 6 | 10 | no PFF season precedes the rookie season, so the match could never have been this player |
+
+Every 2014-class case is Class B: the PFF college summary library **begins at 2014** (the 2008-2013
+directories exist but contain no receiving/rushing/passing summaries), and a 2014 NFL rookie's final
+college season is 2013.
+
+### 10.6.3 Bundle-training provenance — ESTABLISHED, not unknown
+
+Read from the generating code, not from bundle metadata:
+
+```
+build_rb_projection.frozen_rb_matrix()      (and the WR/TE twins in build_wr_/build_te_projection.py)
+  -> shutil.copy2(HARNESS/"assemble_features.py", scratch)
+  -> subprocess.run([sys.executable, "assemble_features.py"])
+  -> pd.read_parquet(scratch/"feat_hit.parquet")   -> trains {rb,wr,te}_rookie_model.pkl
+```
+
+All three builders copy and **execute the same `assemble_features.py`**. The shipped rookie bundles
+were therefore fit on the contaminated join. This is proven, not inferred; the answer is not UNKNOWN.
+
+**The INFERENCE drawn from this fact in §10.6.7 is WITHDRAWN (see §10.7):** the experiment never uses a
+bundle's fitted weights, so what those bundles were historically fit on cannot reach a result. The fact
+above stands; the activation conclusion drawn from it did not.
+
+### 10.6.4 The repair — one shared production implementation
+
+`_load_pff` is gone. `_pff_long` retains the source season; `_pff_point_in_time` selects it. The frozen
+rule, in order:
+
+1. eligible = rows for the name with `pff_season < reference_season`. A row at or after the reference
+   season is **never** eligible.
+2. no eligible row -> NULL.
+3. one PFF identity -> that identity's **latest eligible** season.
+4. several identities -> disambiguate by (a) position compatibility, then (b) presence in
+   `reference_season - 1`; if neither is decisive -> **NULL**.
+5. ties: latest season, then most college games, then lowest PFF player id.
+
+`build_features` now **raises** on a panel with no reference-season column (`entry_year` or `season`)
+instead of silently joining without one, and asserts after the join that no attached source season
+reaches the reference season. The matrix generator calls this same production function; a test asserts
+the generator contains no PFF join of its own.
+
+**A school-based disambiguator was considered and rejected.** PFF `team_name` and combine `school`
+share only 69 of 126 values ("APP STATE" vs "Appalachian St."), so matching them would be a fuzzy guess
+presented as identity evidence — the same error class as the leak. The conservative NULL is kept and
+its cost is measured below.
+
+**A defect in my own repair, caught by my own test:** when every candidate was an unresolvable
+collision, `pd.concat([])` raised `ValueError` instead of returning "no PFF block for this row". Fixed;
+the empty case is now the normal outcome it should always have been.
+
+### 10.6.5 Provenance fingerprint of the private inputs
+
+The build consumes **36** files — the receiving/rushing/passing college summaries for 2014-2025 — not
+the 941 files in the local library. `pff_provenance()` computes one SHA-256 over, per file in sorted
+relative-path order, the path bytes then the file bytes:
+
+```
+sha256   148e2465abb6389cdd4e741dee21f0d168638f91dc23f66407950d2fbd718038
+n_files  36 | kinds passing, receiving, rushing | seasons 2014-2025
+```
+
+Verified **before** any value is read (`verify_pff_inputs`) and **again after** the build. Recorded in
+the generator and in the snapshot manifest under `pff_consumed`. No PFF value is exposed: the manifest
+carries a digest, a file count, kinds and seasons only, and a test asserts the recorded block contains
+no player data.
+
+### 10.6.6 The regenerated artifact, and the old-vs-new difference
+
+```
+sha256    7625980495886141efd65fb9c65862ef7f3cf8af67e50f231c6c3c12d9f45385
+shape     1,263 x 61   (59 + pff_receiving_source_season + pff_rushing_source_season)
+seasons   2014-2025 | RB 387 | WR 584 | TE 292 | keys unique | two rebuilds byte-identical
+```
+
+The two new columns are provenance, not features; they are in no bundle pool and make the guarantee
+checkable **from the artifact alone**, without the private library.
+
+Old vs new, same 1,263 rows, keys identical, **no outcome consulted**:
+
+```
+33 non-PFF feature columns              byte-identical
+PFF non-null cells        11,343 -> 11,231      (4 gained | 116 lost | 181 changed)
+rookie player-seasons with any PFF change          22   (WR 10 | RB 9 | TE 3)
+of 38 changed (row, kind) pairs:  28 temporal leaks
+                                   1 same-name identity collision - jonathan williams, an NFL RB
+                                     who was being handed a college WR's row (id 21322 over 10790)
+                                   9 unchanged for that block (the row changed in the other block)
+source-season lag, new artifact:  receiving min 1 | rushing min 1 | zero rows with lag < 1
+                                  receiving {1:807, 2:95, 3:37, 4:12, 6:4, 7:2}
+```
+
+**Cost of the conservative identity rule, stated rather than buried:** 3 rushing blocks become NULL
+because two same-name, same-position players both appear in the eligible window — `matt jones` 2015,
+`tyree jackson` 2021, `zach evans` 2023.
+
+### 10.6.7 ACTIVATION — readiness returns to False  **[WITHDRAWN — superseded by §10.7]**
+
+> **THIS SUBSECTION IS WITHDRAWN.** Its premise — that a bundle trained on contaminated features is
+> unusable here — is false: `fit_predict` builds a fresh estimator every fold and the serialized object
+> is never fitted or predicted from. Readiness is **True**. Kept for the record; read §10.7.
+
+Per the activation rule as I then understood it: the shipped rookie bundles were proven to have been
+trained on the contaminated join, so readiness must remain False and name the blocker.
+
+```
+rookie features        COMPLETE and point-in-time   (features_available = True)
+rookie bundles         TRAINED ON THE LEAKED JOIN   (training_contract_ok = False)
+activation_readiness() False  -> ROOKIE_BUNDLE_TRAINING_BLOCKER
+preflight()            21/21, all_ok True, run_mode synthetic_prefit
+authorized_real_gate() False  -> BOTH gates refuse (gate 1 synthetic_prefit, gate 2 the blocker)
+REAL_FIT_AUTHORIZED    False | env lock unset | assemble_real_panel() sealed
+```
+
+`arm0_bucket_table()` now separates **feature availability** from **training compatibility**; conflating
+them is what would have let a corrected-features / contaminated-model run look ready. A GREEN control
+test clears `CONTAMINATED_TRAINED_BUCKETS` in memory and shows readiness would be True, so the check is
+not hard-wired to fail. **Nothing was retrained. Retraining is Joseph's decision.**
+
+**A production consequence Joseph should know:** `assemble_features.py` is shared, so the next run of
+`build_rb_projection.py` / `build_wr_projection.py` / `build_te_projection.py` will fit the rookie arms
+on point-in-time features and produce **different** bundles. No bundle was regenerated in this pass;
+all 18 protected artifacts and the 8 production models are byte-identical to their pins.
+
+### 10.6.8 Tests
+
+`tests/test_pff_point_in_time_v39.py` — **37** tests, red-before-green throughout. The retired rule is
+reproduced in the test module (never in production) so each measured leak has a RED side: three
+parametrized cases assert the retired rule selects 2021 / 2025 / 2025 and that each IS a leak, and the
+matching GREEN cases assert the shipped rule returns NULL / 2015 / 2014. Also covered: the exact
+strictly-less-than season boundary (source 2017 -> 2017, source 2018 -> NULL, source 2019 -> NULL, for
+a 2018 rookie), no eligible prior season, multiple eligible seasons, a later same-name player never
+matching, a collision resolved by position, a collision resolved by the immediately-prior season, an
+unresolvable collision yielding NULL, an unambiguous name surviving a position disagreement,
+determinism under input reordering, the retired collapse being absent from production, `build_features`
+refusing a panel with no reference season, the generator not owning a copy of the join, and — read from
+the repo-owned artifact with no private data — every measured example corrected, no row drawing from
+its own season or later, and every PFF block having a recorded source season.
+
+### 10.6.9 What was NOT done
+
+No lock opened | no fantasy outcome read, inspected, printed, aggregated or compared | no model fit |
+**no bundle retrained** | no activation | no result artifact written | no production model, projection,
+dashboard, betting, market or draft-board file touched | no commit, no staging.
+
+
+---
+
+## 10.7 v3.9p — THE BUNDLE-TRAINING BLOCKER IS WITHDRAWN. ARM 0 refits from scratch.
+
+**§10.6.3 and §10.6.7 drew a wrong conclusion from a right observation, and this section withdraws it.**
+The observation stands: the shipped rookie bundles were historically fit on the contaminated PFF join.
+The conclusion — that this makes them unusable and readiness must stay `False` — was **FALSE**, because
+this experiment never uses a bundle's fitted weights.
+
+### 10.7.1 What I got wrong, and how I checked it this time
+
+I reasoned that a model fit on contaminated features "still encodes what the contaminated features
+taught it". That is true of the artifact and irrelevant to the experiment, because the experiment does
+not predict from the artifact. Codex traced it; I then read the harness rather than taking the trace on
+assertion. Four findings, each verified in source:
+
+| claim | verified where |
+|---|---|
+| `arm0_definition()` returns metadata only | line 286 is its ONLY touch of `bundle["model"]`, and it reads `type(...)` to build a class-name **string** |
+| `fit_predict()` builds a fresh estimator | line 500: `m = RB._make_model(spec["family"], spec["params"])`; line 501 fits `m`; line 502 predicts from `m` |
+| every fold refits from scratch | `fit_predict` is called per inner and per outer fold; no estimator is cached or passed forward |
+| the fitted object never reaches a prediction | `bundle["model"]` appears nowhere in `fit_predict`; `inner_cv_mae` is recorded as metadata and never used for selection |
+
+### 10.7.2 The proof that is now permanent
+
+`tests/test_arm0_refits_from_scratch_v39.py` — **38** tests. The decisive one,
+`test_POISONING_the_stored_estimator_cannot_change_a_single_prediction`, writes a temp models directory
+whose every bundle carries an `ExplodingEstimator` — an object that raises on ANY attribute access or
+call — then runs the full nested pipeline twice, canonical and poisoned, and asserts the metrics and
+selection frames are **exactly equal** (`atol=0, rtol=0`). A prediction sourced from the stored object
+would detonate; stale state would diverge. Neither happens.
+
+Three guards keep that from passing vacuously: `test_the_sentinel_really_does_explode` proves the
+sentinel is unusable; `test_arm0_definition_survives_a_poisoned_estimator` proves the poisoned bundles
+are the ones being read; and the poisoning test itself asserts `model_class` ends with
+`ExplodingEstimator` before it runs. Canonical bundles are never touched.
+
+Also pinned: an AST test that `bundle["model"]` appears in `arm0_definition` **only inside `type(...)`**;
+that `fit_predict` names no `"model"` key and does call `_make_model`; that two `fit_predict` calls
+construct two distinct estimator instances and return identical predictions; and that the frame handed
+to `.fit` is the fold's own.
+
+### 10.7.3 What the experiment DOES inherit — now pinned by value
+
+The bundle contributes a **specification**, not a model: `feature_cols` (order included), `family`,
+`params`, `median_impute`, `seed`, `target`. `tests/arm0_bundle_pins.py` gains `BUNDLE_SPEC_PINS` — seven
+independent literals checked against disk, with a RED control proving a mutated pin cannot pass.
+`arm0_bucket_table()` reports `spec_contract_ok` (and `spec_problems`) in place of the withdrawn
+`training_contract_ok`; `bundle_spec_problems()` is its implementation, with a parametrized RED test
+removing each spec field in turn.
+
+### 10.7.4 The limitation that IS real — disclosed, not gated
+
+The fixed hyperparameters (`family`, `params`, `median_impute`, `seed`) were selected under the
+historical production pipeline, which used the pre-repair join. They are **frozen pre-experiment and
+applied identically to ARM_0 and to every coaching arm**, and the experiment does not retune them.
+
+That is a limitation of the comparison's absolute level, not a leakage path into the arm contrast: a
+hyperparameter common to every arm cannot differentially favour one. It is recorded in
+`FROZEN_HYPERPARAMETER_DISCLOSURE`, stated in manifest §0d, and deliberately **not** an activation gate.
+Retuning under the corrected features would be a different, retrospectively-specified experiment.
+
+### 10.7.5 State after the withdrawal
+
+```
+all seven buckets      features_available True | spec_contract_ok True | complete True
+activation_readiness() TRUE   ("all 7 shipped Arm 0 buckets have a complete pinned feature source")
+preflight()            21/21, all_ok True, run_mode synthetic_prefit
+authorized_real_gate() FALSE  -- gate 1 ONLY: run_mode is synthetic_prefit and BOTH LOCKS CLOSED.
+                              A test asserts the refusal text contains no "gate 2".
+REAL_FIT_AUTHORIZED    False | env lock unset | assemble_real_panel() sealed
+```
+
+The corrected point-in-time matrix is preserved unchanged — sha256 `7625980495…`, 1,263x61 — as is the
+aggregate digest `148e2465…` over exactly the 36 consumed private PFF files. Nothing was retrained; all
+18 protected artifacts and the 8 production model bundles are byte-identical to their pins.
+
+### 10.7.6 What was NOT done
+
+No lock opened | no fantasy outcome read, inspected, printed, aggregated or compared | no model fit
+against a real target | **no bundle retrained or modified** | no activation | no result artifact
+written | no production model, projection, dashboard, betting, market or draft-board file touched |
+no commit, no staging.
+
+
+---
+
+## 10.9 v3.9q — THE ACTIVATION WIRING IS BUILT. Still not executed.
+
+The entry point is no longer a `raise`. It is implemented under the preregistered **C5-A** contract,
+and the seal has **moved rather than weakened**. Both locks remain closed, no real outcome was read,
+nothing was fit, and no result artifact exists.
+
+### 10.9.1 C5 is now mode-aware
+
+`_entry_point_is_sealed(tree, contract_mode)` dispatches on a new module constant,
+`ENTRY_POINT_CONTRACT_MODE`. Both variants first demand the same structural guarantee — the entry point
+is bound exactly once, at module level, by one undecorated `def`, so a rebinding or a decorator is
+refused in either mode.
+
+```
+C5-S  synthetic_prefit   body is exactly 2 statements: zero-arg require_real_fit_authorization(),
+                         then an unconditional raise NotImplementedError.
+C5-A  authorized_real    1. statement 1 is a zero-arg require_real_fit_authorization()
+                         2. statement 2 calls require_preflight_clearance(...)
+                         3. NO reader callee anywhere in the body
+                         4. NO banned outcome callee anywhere in the body
+                         5. the last statement returns assemble_panel_core(...) and nothing else
+                         6. no statement precedes 1
+```
+
+`ENTRY_POINT_CONTRACT_MODE = authorized_real` is the live declaration. It says only what SHAPE the door
+has in the file. **It is not a run mode and not a lock**: `DEFAULT_RUN_MODE` is still
+`synthetic_prefit`, `REAL_FIT_AUTHORIZED` is still `False`, and the environment lock is unset. Which
+contract applies is declared explicitly and is never inferred from the lock state — the lock state is
+the thing the contract protects.
+
+### 10.9.2 Where the seal went
+
+Clause 3 is what makes an implemented door safe: **the module contains no reader callee at all**, so it
+physically cannot read a file by itself. The readers arrive as parameters and are called only in
+statement 3, after clearance has returned. So with the locks shut, statement 1 raises and neither
+injected reader is ever touched.
+
+That is asserted directly, not argued: `test_with_the_locks_CLOSED_the_door_refuses_and_no_reader_is_called`
+passes tripwire readers that record every call and raise if invoked, and checks `calls == []`. The same
+tripwire assertion covers all three partial/closed lock states and a `synthetic_prefit` run mode with
+both locks open. **This is the complete prohibition on real readers in `synthetic_prefit`, preserved.**
+
+### 10.9.3 What `require_preflight_clearance` enforces, in order
+
+0. run mode is `authorized_real` — a `synthetic_prefit` run may not reach a reader;
+1. BOTH locks open, re-checked here rather than trusted from statement 1;
+2. `preflight()` 21/21 **in `authorized_real` mode**;
+3. `activation_readiness()` True;
+4. `authorized_real_gate()` True — checked explicitly even though it re-derives 2 and 3, because the
+   gate itself must have run before either reader;
+5. every pinned input verified by `verify_pinned_activation_inputs()` — veteran features (md5), rookie
+   matrix (sha256 + manifest + exact 61-column schema), weekly outcome snapshot (sha256 + manifest
+   loader/rows/cols). The five coaching artifacts are covered by step 2's `v39_artifacts_pinned`.
+
+It returns the preflight result it cleared, so a caller cannot substitute a different one afterwards.
+A test proves the ordering is real: with the gate blocked, input verification is never reached.
+
+### 10.9.4 The panel path
+
+`return assemble_panel_core(feature_reader(), outcome_reader())` — the same already-tested core, with
+production's LEFT-join zero-fill and the mutually exclusive accounting partition. A test asserts the
+door's output is byte-equal to calling `assemble_panel_core` directly on the same frames, and a second
+asserts the zero-filled state and accounting totals survive the door. Design B stays oracle and
+unselectable; a test confirms the door introduced no `coach_b` path.
+
+Everything in this subsection is exercised against **synthetic frames and temp files written by the
+tests**. The canonical weekly snapshot is never opened — a self-scan test proves this module names it
+in no executable string, with the needle assembled at runtime so the scan cannot match itself.
+
+### 10.9.5 The boundary corpus, and a measurement that had to be re-based
+
+Ten **C5A** injections were added: missing clearance, a reader callee in the body, a banned outcome
+callee, returning something other than `assemble_panel_core(...)`, a statement before the
+authorization, clearance before authorization, authorization with arguments, a renamed clearance, a
+decorated door, and an extra statement. All ten are caught by the live validator.
+
+**The historical arm had to be re-based, and this is worth stating plainly.** The vendored `a5b4af7`
+validator's C5 clause only knows C5-S. Judging today's source with it flags the door itself, which
+makes every *other* injection look "caught" for a reason unrelated to the clause under test — measured,
+the historical figure collapses from **41 to 5**. The historical arm therefore reverts ONLY the entry
+point to C5-S (`boundary_corpus.historical_pure_sources()`); every other clause is still exercised
+against the live module body. The operative safety number, **0 undetected now**, is measured against
+the LIVE source, unmodified. Totals move from 41/65 → **41/75** and 0/65 → **0/75**.
+
+### 10.9.6 ⚠ A PINNED PRODUCTION INPUT DRIFTED MID-PASS  **[SCOPE CORRECTED — see §10.10]**
+
+While this pass was running, a **concurrent session modified a tracked production input**:
+
+```
+fantasy/seasonal_projections/season_dataset_2014_2026.csv
+pinned md5   8322a59e43251820cb393d40787f60e6
+current md5  71bad6a2d6af122b5f24ce1f03d486b9        (mtime 2026-08-03 18:23)
+same header, same 8,273 data rows, 1,572 lines changed in place
+```
+
+> **TWO CLAIMS IN THIS SUBSECTION ARE WITHDRAWN (§10.10).** "1,572 changed rows" was `git --numstat`
+> LINE arithmetic, not a row count — the semantic figure is **916 rows, all season 2026**. And calling
+> the ten columns "inside the veteran feature contract" was true of column membership but misleading
+> about impact: nine differed only by float round-trip noise (max 3.5527e-15) and all ten were
+> 2026-only. **No 2014-2025 value changed.** The refusal was still correct; the PIN was at the wrong
+> scope, and §10.10 fixes that.
+
+**All ten changed columns are INSIDE the Arm 0 veteran feature contract** — `prior_ppg`, `ppg_2yr`,
+`ppg_trend`, `career_high_ppg`, `prior_targets_pg`, `prior_ypc`, `prior_rec_epa`, `prior_rush_epa`,
+`age`, `qb_changed`. **None** is a market or ADP column. `player_id`, `season`, `position` and
+`is_rookie` are unchanged, so the frozen rookie population is intact, and **0 of the 1,263 frozen
+rookie-matrix rows** are touched by the `qb_changed` drift (916 rows changed dataset-wide, none of them
+in the matrix).
+
+**I did not write this file, I have not reverted it, and I have NOT re-pinned to the new md5.**
+Re-pinning would silently absorb an unreviewed change to the experiment's feature inputs. The fail-
+closed machinery is working exactly as designed: `verify_pinned_activation_inputs()` refuses, so an
+authorized run cannot start, and **four** tests are RED on purpose. Every one of them cites the same
+md5 mismatch and nothing else:
+
+```
+test_activation_wiring_v39.py::test_clearance_reaches_and_ENFORCES_the_input_pins
+test_activation_wiring_v39.py::test_all_four_pinned_input_families_are_verified_before_reading
+test_assemble_real_panel_v39.py::test_the_feature_source_matches_the_production_pin
+test_rookie_matrix_v39.py::test_every_non_pff_input_is_pinned_and_currently_matches
+```
+
+(An earlier draft of this section said **two**; that was written before the two new wiring tests were
+added and is corrected here. The count is four.)
+
+**RESOLVED in §10.10, and NOT by re-pinning or reverting.** The consumed 2014-2025 window is now an
+immutable feature-only snapshot, and the experiment reads that instead of the mutable CSV. The 2026 QB
+work was left exactly as the concurrent session wrote it. The clause above about the "veteran feature
+VALUES" having moved is **withdrawn**: they did not, and the rookie matrix did not need rebuilding
+(it rebuilds byte-identical from the snapshot).
+
+### 10.9.7 State at the stop
+
+```
+ENTRY_POINT_CONTRACT_MODE  authorized_real   (the SHAPE of the door; not a lock, not a run mode)
+DEFAULT_RUN_MODE           synthetic_prefit
+preflight()                21/21, all_ok True, run_mode synthetic_prefit
+activation_readiness()     TRUE
+authorized_real_gate()     FALSE — gate 1 only: run_mode is synthetic_prefit, BOTH LOCKS CLOSED.
+                           A test asserts the refusal text contains no "gate 2".
+REAL_FIT_AUTHORIZED        False | env lock unset
+readers reached            NONE — proven with tripwires, in every closed/partial lock state
+18/18 protected · 8 production models · 5 v3.9 artifacts   byte-identical
+```
+
+### 10.9.8 What was NOT done
+
+No lock opened | no real fantasy outcome read, inspected, printed, aggregated or compared | no model
+fit against a real target | no bundle retrained or modified | **no real run executed** | no result
+artifact written | no production model, projection, dashboard, betting, market or draft-board file
+touched | **the drifted season dataset was neither reverted nor re-pinned** | no commit, no staging.
+
+
+---
+
+## 10.10 v3.9r — THE VETERAN INPUT IS RE-SCOPED. §10.9.6 was too broad, and is corrected here.
+
+**§10.9.6 called the season-dataset change a blocker whose ten changed columns were "inside the Arm 0
+veteran feature contract", and quoted "1,572 changed rows". Both framings are WITHDRAWN.** The
+underlying refusal was correct — a pinned input had moved — but the pin was at the wrong scope and my
+description of the change overstated it. Reproduced independently before any edit:
+
+| claim | measured |
+|---|---|
+| `season_dataset_2014_2026.pre_qbchanged.csv` md5 | **`8322a59e43251820cb393d40787f60e6`** — exactly the value that was pinned |
+| where the two files differ | **season 2026 only**, every difference |
+| nine non-`qb_changed` columns | CSV float round-trip noise, **max |diff| 3.5527e-15**, zero null-status flips |
+| the one substantive change | **`qb_changed` on 916 rows of season 2026**: NaN → 717 zeros, 199 ones |
+| any 2014-2025 value differing | **NONE**, bitwise, across all 47 columns; the consumed 40-column block is exactly equal |
+| "1,572 changed rows" | **`git diff --numstat` line arithmetic** (1572 added / 1572 deleted), not a row count. The semantic figure is **916 rows, all season 2026.** |
+
+So the experiment-consumed data never moved. The failure was a **scope error of mine**: pinning a
+mutable 2014-2026 production file in order to protect an immutable 2014-2025 window. Refreshing the
+deploy season is normal and must not gate activation.
+
+### 10.10.1 The frozen veteran snapshot
+
+```
+fantasy/seasonal_projections/snapshots/veteran_arm0_features_2014_2025.parquet
+sha256    45cb2583acf7d046ecf54275d1ee3e70fcb9e4882d69a6b203e36350376bfbc8
+shape     7,350 rows x 40 columns   keys (player_id, season) unique   seasons 2014-2025
+generator fantasy/seasonal_projections/build_veteran_arm0_snapshot.py
+manifest  snapshots/manifest.json, key `veteran_arm0_features_2014_2025`
+```
+
+**Derived, not invented.** The generator reads the schema and window from the LIVE contracts at build
+time — `VETERAN_FEATURE_COLUMNS` (`IDENTITY_COLUMNS` + the 32 `ARM0_VETERAN_FEATURES`) and
+`ALL_PANEL_SEASONS` — and cross-checks the 32 features against the four shipped veteran bundles' own
+`feature_cols` before writing. It hard-codes neither list; if a contract moves, the snapshot moves with
+it and its hash changes.
+
+**Feature-only.** No target, outcome, label, sample weight, ADP or market column. `usecols` is
+explicit, so `target_ppg`, `target_games`, `sample_weight`, `adp_half_ppr`, `adp_overall_rank`,
+`adp_pos_rank` and `sleeper_pts_half_ppr` are never loaded at all; a non-vacuity test proves the source
+really does carry them and the snapshot really does drop them. The frame is also passed through the
+same `validate_feature_frame` the authorized reader applies to its own output.
+
+### 10.10.2 The asymmetry that makes this work
+
+The **generator** may read the live production CSV. The **authorized experiment** may not — it reads
+only the frozen snapshot. `authorized_feature_reader` now opens the parquet and contains no `read_csv`
+at all; `verify_pinned_activation_inputs` no longer references `FEATURE_SOURCE`; and
+`FEATURE_SOURCE_MD5` is **deleted**, not merely unused, with a test asserting the attribute is gone.
+
+### 10.10.3 Proof that 2026 cannot reach it
+
+Three independent ways, all asserted permanently:
+
+1. **Building from the pre-refresh copy reproduces the identical sha256.** The 2026-08-03 `qb_changed`
+   refresh cannot move this artifact, and that is demonstrated rather than argued.
+2. **A deliberate 2026-only mutation changes nothing.** A test rewrites `qb_changed` and `prior_ppg`
+   for every 2026 row, rebuilds, and the bytes are unchanged.
+3. **A 2014-2025 mutation DOES change it.** Parametrized over `prior_ppg`, `age`, `qb_changed`,
+   `draft_pick` and `is_rookie`: perturb season 2019, rebuild, and the hash must move. Without this
+   the first two would be satisfied by an artifact that ignored its source entirely.
+
+Plus: two fresh rebuilds byte-identical; the snapshot equals the source's 2014-2025 consumed values
+column by column (null-aware); a corrupted snapshot, a dropped or extra column, and a smuggled 2026 row
+are each refused.
+
+### 10.10.4 The rookie matrix was not touched
+
+`rookie_arm0_features_2014_2025.parquet` remains `7625980495…`, 1,263x61, point-in-time verified, and
+was **not rebuilt**. A test asserts the hash, the shape and the source-season lag.
+
+### 10.10.5 The four red tests are green, for the correct reason
+
+They are green because the experiment no longer pins a mutable file, **not** because an assertion was
+relaxed. Every one of them still fails closed on real drift: `VETERAN_SNAPSHOT_SHA256`,
+`ROOKIE_MATRIX_SHA256` and `WEEKLY_SNAPSHOT_SHA256` each break activation independently when corrupted,
+and that is parametrized.
+
+**The 2026 QB-change work was not reverted, not overwritten, not re-pinned and not touched.**
+`season_dataset_2014_2026.csv` is exactly as the concurrent session left it.
 
 ---
 
@@ -1607,6 +2312,22 @@ value.
    over the full retrospective ledger, and the retired rule is a labelled in-memory sensitivity. The
    "~76 usable rows" and "200/256 ceiling" claims are **retracted**; the realised gain is **zero rows**
    and +358 caller-games (§7). **The 2019–2022 power problem is NOT relieved** — see item 1.
+
+0c. **CLOSED, and my own blocker WITHDRAWN (v3.9p, §10.7).** I raised "the shipped rookie bundles
+   were trained on a leaked PFF join" as an activation blocker. The historical fact is true; the
+   blocker was **wrong**, because `fit_predict` builds a fresh estimator every fold and the serialized
+   weights never enter a prediction. Readiness is **True**. What survives as a stated limitation, NOT
+   a gate: the fixed hyperparameters were tuned under the old pipeline, are frozen pre-experiment and
+   are applied identically to every arm. One production note remains: `assemble_features.py` is shared,
+   so the next run of the RB/WR/TE projection builders will produce different rookie bundles.
+
+0b. **PARTLY SUPERSEDED (v3.9n, corrected by v3.9o) — the rookie feature source.** Joseph selected Option A; the derived,
+   outcome-free rookie matrix is frozen, hash-pinned and manifest-pinned, and `activation_readiness()`
+   is now `True` for all seven Arm 0 bundles (§10.5). Two residual facts, stated rather than closed:
+   **regenerating** the matrix still requires the authorized private PFF directory (941 local files, 0
+   tracked), so a clean checkout can *use* but not *rebuild* it; and readiness is **False**, not True —
+   the sentence that once said otherwise is superseded by item 0c. Both locks remain closed and
+   `authorized_real_gate()` refuses at both gates.
 
 1. **Design A caller power is thin in 2019–2022** — 3/4/7/6 of 32 team-seasons have an identified
    caller with any eligible prior history. A null caller arm cannot separate "no coaching signal" from

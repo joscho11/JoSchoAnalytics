@@ -89,29 +89,46 @@ jobs:
           name: failed-totals-notebook-${{ github.run_id }}
           path: /tmp/totals_out.ipynb
 
-      # Agent deps (llama-index, anthropic) are excluded from requirements-ci.txt
-      # to keep the Thu/Sun runs lean. Install them only for the Tuesday agent run.
-      - name: Install agent dependencies (Tuesday only)
-        if: success() && (github.event.schedule == '0 14 * * 2' || (github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'tuesday'))
-        run: pip install "llama-index==0.11.0" "llama-index-llms-anthropic==0.2.0" anthropic python-dotenv
+      # ---------------------------------------------------------------------
+      # AGENT STEP DISABLED 2026-08-03 — do not re-enable without reading this.
+      # ---------------------------------------------------------------------
+      # betting/sports_betting_agent.ipynb builds its "Sharp Money" and "Line Movement"
+      # findings from the hardcoded WEEK_10_LINES dictionary in that notebook. The one
+      # artifact it produced (agent_analysis_2025_week10.json) carried 14 Sharp Money and
+      # 14 Line Movement assertions with invented figures, and this job committed it to
+      # main where the Weekly Predictions page rendered them as analysis.
+      #
+      # Leaving the step enabled makes the problem removal-resistant: quarantining the
+      # artifact only holds until the next Tuesday run writes a fresh one. So the run and
+      # the commit of agent_analysis_*.json are both disabled here.
+      #
+      # To re-enable: replace the mock line source with a real market feed, have the
+      # notebook emit provenance.market_data {source, captured_at, verified: true}, and
+      # confirm tests/test_agent_market_provenance.py passes against a real artifact.
+      # dashboard_utils.market_provenance_ok is the gate the site enforces at render time.
+      #
+      # - name: Install agent dependencies (Tuesday only)
+      #   if: success() && (github.event.schedule == '0 14 * * 2' || (github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'tuesday'))
+      #   run: pip install "llama-index==0.11.0" "llama-index-llms-anthropic==0.2.0" anthropic python-dotenv
+      #
+      # - name: Run agent analysis (Tuesday only)
+      #   if: success() && (github.event.schedule == '0 14 * * 2' || (github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'tuesday'))
+      #   run: papermill betting/sports_betting_agent.ipynb /tmp/agent_out.ipynb -p TARGET_WEEK ${{ github.event.inputs.target_week || 'None' }}
+      #   continue-on-error: true
+      #
+      # - name: Upload failed agent notebook
+      #   if: steps.agent.outcome == 'failure'      # NOT if: failure() — a step that fails
+      #   uses: actions/upload-artifact@v4          # under continue-on-error reports
+      #   with:                                     # conclusion=success, so failure() is
+      #     name: failed-agent-notebook-${{ github.run_id }}   # never true and the upload
+      #     path: /tmp/agent_out.ipynb              # was skipped on every real failure.
 
-      - name: Run agent analysis (Tuesday only)
-        if: success() && (github.event.schedule == '0 14 * * 2' || (github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'tuesday'))
-        run: papermill betting/sports_betting_agent.ipynb /tmp/agent_out.ipynb -p TARGET_WEEK ${{ github.event.inputs.target_week || 'None' }}
-        continue-on-error: true
-
-      - name: Upload failed agent notebook
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: failed-agent-notebook-${{ github.run_id }}
-          path: /tmp/agent_out.ipynb
-
-      - name: Commit updated trackers and analysis
+      - name: Commit updated trackers
         if: success()
         run: |
           git config --global user.name  "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add betting/predictions_tracker.csv betting/totals_tracker.csv betting/agent_analysis_*.json
+          # agent_analysis_*.json is deliberately NOT staged — see the disabled agent step.
+          git add betting/predictions_tracker.csv betting/totals_tracker.csv
           git diff --staged --quiet || git commit -m "Auto (${{ env.MODE }}): week update $(date +'%Y-%m-%d')"
           git push

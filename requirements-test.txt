@@ -7,3 +7,9 @@ catboost==1.2.10
 streamlit==1.59.1
 plotly==6.7.0
 pytest==9.0.2
+# Responsive/viewport suite (tests/test_responsive_layout.py). Declared 2026-08-03: those
+# 9 browser cases were SKIPPING in CI and locally, and were only ever made to run via an
+# undeclared PYTHONPATH bridge to a hand-built C:/tmp/pw venv. A skipped guard is not a
+# guard — see the `responsive` job in .github/workflows/test.yml, which installs the
+# browser and fails if the cases skip.
+playwright==1.62.0

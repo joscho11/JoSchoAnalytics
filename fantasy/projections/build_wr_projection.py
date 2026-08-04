@@ -139,10 +139,22 @@ def run_asserts(vet, rook):
     print(f"3. SHUFFLE-LEAK probe (veteran, test 2024): aligned {aligned:+.3f} (>.20) | "
           f"within-season-shuffled {shuf:+.3f} (~0)  -> {'PASS' if a3 else 'FAIL'}")
 
-    a4 = all(bool((vet[vet.season < Y].season < Y).all() and (rook[rook.season < Y].season < Y).all())
-             for Y in TEST_SEASONS)
+    # Real fold-boundary validation via the shared RB-engine guard (2026-08-03). The
+    # previous expression filtered a frame by `season < Y` and then re-tested that same
+    # predicate on the result -- a tautology that printed PASS while testing nothing.
+    a4 = True
+    fold_note = []
+    for nm, pool in (("vet", vet), ("rook", rook)):
+        try:
+            rep = B.assert_walk_forward_folds(pool, nm)
+            fold_note.append(f"{nm} {len(rep['validated'])}/{len(TEST_SEASONS)} folds"
+                             + (f" (empty {rep['unvalidated_empty']})" if rep["unvalidated_empty"] else ""))
+        except B.FoldLeakError as e:
+            a4 = False
+            fold_note.append(f"{nm} RAISED: {e}")
     ok &= a4
-    print(f"4. WALK-FORWARD guard (train seasons < test, all folds): {'PASS' if a4 else 'FAIL'}")
+    print(f"4. WALK-FORWARD guard (exact train/test season sets, strict max, disjoint rows): "
+          f"{' | '.join(fold_note)}  -> {'PASS' if a4 else 'FAIL'}")
     assert ok, "WR PRE-REGISTERED ASSERTS FAILED — STOP"
     print("\nSTEP 2 ASSERTS: PASS")
 

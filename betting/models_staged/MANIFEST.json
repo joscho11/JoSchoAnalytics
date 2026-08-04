@@ -1,0 +1,127 @@
+{
+  "created_utc": "2026-08-03T21:14:29+00:00",
+  "reason": "retrain through corrected dense-sack + All-Pro identity pipeline",
+  "train_seasons": [
+    2014,
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024
+  ],
+  "n_train_rows": 3010,
+  "feature_contract": {
+    "name": "PROD_FEATURES_35",
+    "n": 35,
+    "order_sha256": "A1C552DE7C082B1EBD7DC5668D7B5383E6818688777F4E1AA1DFA60415EA2F78"
+  },
+  "code_hashes": {
+    "features.py": "70A5892677E6267D1CA9B55F52EEA9F6A310DEC653D86BFA8B4175AAB18949A5",
+    "allpro_identity.py": "48E40A9C2530274F800135E83BDFDFDF94280893518326EFD6235D723BF574CF",
+    "model_comparison.ipynb": "524406951C0CD01C8914B6C0D1BB6484AE0A6F0623828E3348C1EAEA6779E76A",
+    "retrain_spread_models.py": "A07FE4454EA9F244E5A5C5C54E9D8DED1179A92201B55A4A769D03F01ABAEDA8"
+  },
+  "input_hashes": {
+    "nfl_allpro_1997_2025.csv": "DAFEE95DE2D81171C802909689C16CE1B6C703946BE267C0DFCD7D5C1C353A08",
+    "data/nfl.xlsx": "AE2409E8D000508BA754FFDC2F5B4428035DF09E489CAD33245FDA76C12B6E80"
+  },
+  "environment": {
+    "python": "3.11.9",
+    "pandas": "2.3.3",
+    "numpy": "1.26.4",
+    "xgboost": "3.1.2",
+    "scikit_learn": "1.6.1",
+    "lightgbm": "4.6.0"
+  },
+  "staged_artifacts": {
+    "ensemble_prod_model.pkl": "FBEA09225EA04C4A41C88DCAB26C9B2B022BAB0FA3E9C8ED1B72653396F54202",
+    "lgbm_prod_model.pkl": "4B6501F944B18B302781EF278D7BEDB9EB9E4E77013AA3E1939A07185F230424",
+    "xgboost_prod_model.pkl": "3C2209DF4E8C46817A5D660DA7A6A115EB45FAA0BD4CB64C78C85B27D0532616"
+  },
+  "fixture": {
+    "path": "betting\\fixtures\\spread_pred_fixture.csv",
+    "sha256": "644F08744600090057A7D604B266ADC03C3BA9A6ED8E921D7414D4FDFB125FFE"
+  },
+  "old_vs_new_fixture_predictions": {
+    "n": 200,
+    "mean_abs": 1.0053436756134033,
+    "median_abs": 0.616001546382904,
+    "max_abs": 6.278049945831299,
+    "n_gt_1pt": 59,
+    "n_gt_3pt": 18,
+    "largest": [
+      {
+        "game_id": "2024_13_LAC_ATL",
+        "old": -6.27,
+        "new": 0.008,
+        "delta": 6.278
+      },
+      {
+        "game_id": "2024_08_NYG_PIT",
+        "old": 1.166,
+        "new": 7.263,
+        "delta": 6.097
+      },
+      {
+        "game_id": "2024_07_PHI_NYG",
+        "old": 1.272,
+        "new": -4.115,
+        "delta": -5.386
+      },
+      {
+        "game_id": "2024_06_CIN_NYG",
+        "old": 0.893,
+        "new": -4.208,
+        "delta": -5.101
+      },
+      {
+        "game_id": "2024_02_LA_ARI",
+        "old": -5.819,
+        "new": -0.758,
+        "delta": 5.061
+      },
+      {
+        "game_id": "2024_07_SEA_ATL",
+        "old": -1.419,
+        "new": 3.444,
+        "delta": 4.863
+      },
+      {
+        "game_id": "2024_10_NYG_CAR",
+        "old": -9.736,
+        "new": -5.094,
+        "delta": 4.642
+      },
+      {
+        "game_id": "2024_08_ATL_TB",
+        "old": 5.06,
+        "new": 0.506,
+        "delta": -4.554
+      },
+      {
+        "game_id": "2024_08_MIN_LA",
+        "old": -5.98,
+        "new": -1.612,
+        "delta": 4.369
+      },
+      {
+        "game_id": "2024_01_LV_LAC",
+        "old": 0.528,
+        "new": 4.746,
+        "delta": 4.218
+      }
+    ]
+  },
+  "promoted": true,
+  "backup_dir": "betting\\models_pre_2026-08-03",
+  "promoted_artifacts": {
+    "ensemble_prod_model.pkl": "FBEA09225EA04C4A41C88DCAB26C9B2B022BAB0FA3E9C8ED1B72653396F54202",
+    "lgbm_prod_model.pkl": "4B6501F944B18B302781EF278D7BEDB9EB9E4E77013AA3E1939A07185F230424",
+    "xgboost_prod_model.pkl": "3C2209DF4E8C46817A5D660DA7A6A115EB45FAA0BD4CB64C78C85B27D0532616"
+  }
+}

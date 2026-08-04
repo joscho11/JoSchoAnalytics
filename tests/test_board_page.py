@@ -1,4 +1,8 @@
-"""Proof for the rebuilt Draft Board tab (2026-07-22): the licensed Phase-4 band was
+"""REBOUND 2026-08-03 by the qb_changed DEPLOY REFRESH (inference only; the seven position
+model pkls are byte-identical). Provenance:
+fantasy/projections/results/QB_CHANGED_DEPLOY_REFRESH_2026-08-03.json
+
+Proof for the rebuilt Draft Board tab (2026-07-22): the licensed Phase-4 band was
 retired and the tab is now a 245-row season-projection comparison table (Sleeper ADP +
 Position Rank + two independent projections with their positional-rank gaps + descriptive
 talent scores). Renders the board page function directly via AppTest.from_function
@@ -148,7 +152,7 @@ def test_compact_view_keeps_numeric_sort_and_the_full_csv():
 
 
 def test_final_analyst_overlays_apply_and_preserve_raw_model_values():
-    """The frozen 2026 production overlay is exactly 44 named players.
+    """The 2026 production overlay is exactly 45 named players.
 
     Joseph's 2026-07-27 directive replaced the earlier conditional/status gates: every
     player previously held back for an unresolved competition, recovery timetable or
@@ -157,52 +161,58 @@ def test_final_analyst_overlays_apply_and_preserve_raw_model_values():
     import draft_board_2026 as board
 
     expected = {
-        "Josh Downs": (92.2, 109.6),
-        "Xavier Worthy": (82.4, 131.0),
-        "Ladd McConkey": (153.0, 174.7),
-        "Ricky Pearsall": (63.9, 119.4),
-        "Bijan Robinson": (230.2, 248.2),
-        "Chase Brown": (201.6, 219.6),
-        "De'Von Achane": (193.6, 211.6),
-        "Jahmyr Gibbs": (237.2, 255.2),
-        "Javonte Williams": (162.9, 180.9),
+        "Josh Downs": (92.5, 109.6),
+        "Xavier Worthy": (84.0, 131.0),
+        "Ladd McConkey": (153.1, 174.7),
+        # 2026-08-03 news: PCL surgery, out for the full season, placed on injured
+        # reserve. This row previously carried a 119.4 healthy-role scenario.
+        "Ricky Pearsall": (66.3, 0.0),
+        "Bijan Robinson": (208.2, 248.2),
+        "Chase Brown": (198.8, 219.6),
+        "De'Von Achane": (204.1, 211.6),
+        "Jahmyr Gibbs": (234.6, 255.2),
+        "Javonte Williams": (157.3, 180.9),
         "Jonathan Taylor": (177.8, 195.8),
-        "Kenneth Walker III": (160.2, 178.2),
-        "Brenton Strange": (70.0, 95.0),
-        "George Kittle": (151.2, 105.0),
-        "Gunnar Helm": (46.9, 70.0),
-        "Isaiah Likely": (56.4, 95.0),
-        "Theo Johnson": (90.4, 75.0),
-        "Brock Purdy": (160.8, 285.0),
-        "Jaxson Dart": (248.6, 270.0),
-        "Jayden Daniels": (102.4, 285.0),
-        "Joe Burrow": (249.8, 300.0),
-        "Lamar Jackson": (218.5, 315.0),
-        "Malik Willis": (23.0, 220.0),
-        "Trevor Lawrence": (226.7, 285.0),
-        "Tyler Shough": (115.6, 215.0),
+        "Kenneth Walker III": (159.1, 178.2),
+        "Brenton Strange": (67.8, 95.0),
+        "George Kittle": (127.5, 105.0),
+        "Gunnar Helm": (47.5, 70.0),
+        "Isaiah Likely": (50.6, 95.0),
+        "Theo Johnson": (90.8, 75.0),
+        "Brock Purdy": (162.5, 285.0),
+        "Jaxson Dart": (233.5, 270.0),
+        "Jayden Daniels": (145.8, 285.0),
+        "Joe Burrow": (257.1, 300.0),
+        "Lamar Jackson": (217.3, 315.0),
+        "Malik Willis": (20.4, 220.0),
+        "Trevor Lawrence": (230.5, 285.0),
+        "Tyler Shough": (114.3, 215.0),
         # Previously held for an unresolved status; now carried at a weighted value.
-        "Rome Odunze": (94.4, 125.0),
-        "Michael Wilson": (101.8, 129.4),
-        "Zach Charbonnet": (99.9, 63.2),
-        "Sam LaPorta": (104.3, 134.2),
-        "T.J. Hockenson": (56.1, 104.6),
-        "Oronde Gadsden II": (83.3, 109.0),
-        "Mark Andrews": (97.0, 117.1),
-        "Kyler Murray": (97.8, 186.0),
-        "J.J. McCarthy": (87.3, 116.2),
-        "Patrick Mahomes": (293.2, 286.0),
-        "Daniel Jones": (232.3, 239.3),
+        "Rome Odunze": (85.0, 125.0),
+        "Michael Wilson": (115.5, 129.4),
+        "Zach Charbonnet": (99.6, 63.2),
+        "Sam LaPorta": (97.9, 134.2),
+        "T.J. Hockenson": (59.4, 104.6),
+        "Oronde Gadsden II": (78.9, 109.0),
+        "Mark Andrews": (97.4, 117.1),
+        "Kyler Murray": (125.9, 186.0),
+        "J.J. McCarthy": (115.9, 116.2),
+        "Patrick Mahomes": (272.9, 286.0),
+        "Daniel Jones": (232.4, 239.3),
         # Rookie WRs added 2026-07-27 at Joseph's direction.
-        "Jordyn Tyson": (83.4, 149.5),
-        "Chris Brazzell": (12.8, 55.6),
-        "Chris Bell": (34.1, 24.3),
-        "Carnell Tate": (117.0, 138.4),
-        "De'Zhaun Stribling": (106.1, 99.3),
-        "Kenyon Sadiq": (56.2, 77.3),
-        "Jeremiyah Love": (173.9, 199.0),
+        "Jordyn Tyson": (78.7, 149.5),
+        "Chris Brazzell": (23.6, 55.6),
+        "Chris Bell": (38.4, 24.3),
+        "Carnell Tate": (102.9, 138.4),
+        "De'Zhaun Stribling": (102.6, 99.3),
+        "Kenyon Sadiq": (56.6, 77.3),
+        "Jeremiyah Love": (153.1, 199.0),
         "Jadarian Price": (145.1, 172.7),
-        "Demond Claiborne": (5.1, 21.3),
+        "Demond Claiborne": (5.4, 21.3),
+        # 2026-08-03 news: re-signed with San Francisco on a one-year deal into a
+        # receiver room reduced by Pearsall's season-ending injury. This row also
+        # carries the TEAM correction (the artifact has him blank as a free agent).
+        "Deebo Samuel Sr.": (93.4, 120.0),
     }
     # The eleven that were previously excluded are now REQUIRED to be present.
     formerly_conditional = {
@@ -219,7 +229,7 @@ def test_final_analyst_overlays_apply_and_preserve_raw_model_values():
     }
 
     overlay = pd.read_csv(board.ANALYST_PROJECTION_ADJUSTMENTS)
-    assert len(overlay) == len(expected) == 44
+    assert len(overlay) == len(expected) == 45
     assert not overlay["player_id"].duplicated().any()
     assert overlay["adjusted_projection"].notna().all()
     # No market/consensus field may enter the overlay artifact.
@@ -228,7 +238,7 @@ def test_final_analyst_overlays_apply_and_preserve_raw_model_values():
     assert formerly_conditional <= set(overlay["player"])
     assert not_approved.isdisjoint(set(overlay["player"]))
     assert overlay["position"].value_counts().to_dict() == \
-        {"QB": 12, "WR": 11, "RB": 11, "TE": 10}
+        {"QB": 12, "WR": 12, "RB": 11, "TE": 10}
 
     # Every overlay raw value must still match the untouched raw projection artifact,
     # and every board value must actually differ from it.
@@ -299,8 +309,8 @@ def test_overlay_audit_helper_and_caption_disclosure():
     import draft_board_2026 as board
 
     disclosure = board._load_adjustment_disclosure()
-    assert len(disclosure) == 44
-    for col in ("Position", "Player", "Raw model", "Board value", "Basis", "As of"):
+    assert len(disclosure) == 45
+    for col in ("Position", "Player", "Team", "Raw model", "Board value", "Basis", "As of"):
         assert col in disclosure.columns
 
     at = _run()
@@ -310,6 +320,61 @@ def test_overlay_audit_helper_and_caption_disclosure():
     assert "direction nor the magnitude" in captions
     assert "named-player scenario" in captions
     assert "raw model output is preserved" in captions
+
+
+def test_overlay_team_correction_is_identity_only_and_validated():
+    """A dated overlay row may correct a player's TEAM, and nothing else moves.
+
+    Deebo Samuel re-signed with San Francisco on 2026-07-31, after the projection artifacts
+    were built. Those artifacts still carry him blank, which the board renders as "not
+    signed" — so the correction rides on his disclosed overlay row. It must arrive on the
+    board WITHOUT the raw model artifact being hand-edited, and it must feed no number.
+    """
+    import draft_board_2026 as board
+
+    # The correction is real only if the underlying artifact is still blank.
+    raw = pd.read_csv(board.PROJ_RESULTS / "wr_projection_2026.csv",
+                      usecols=["player_id", "player", "team", "projection"])
+    deebo_raw = raw[raw["player_id"].eq("00-0035719")]
+    assert len(deebo_raw) == 1
+    assert pd.isna(deebo_raw.iloc[0]["team"]), \
+        "the WR artifact must stay untouched — the team correction belongs to the overlay"
+    assert float(deebo_raw.iloc[0]["projection"]) == 93.4
+
+    board_rows = board._load_board_2026().set_index("player_id")
+    assert board_rows.loc["00-0035719", "team"] == "SF"
+    assert float(board_rows.loc["00-0035719", "model_proj_raw"]) == 93.4
+
+    # Identity only: no other player's team is touched by the overlay, and every overlay row
+    # without a team code leaves the artifact's own team in place.
+    overlay = pd.read_csv(board.ANALYST_PROJECTION_ADJUSTMENTS)
+    corrected = overlay.loc[overlay["team"].notna(), "player_id"].tolist()
+    assert corrected == ["00-0035719"], "only the disclosed signing carries a team correction"
+    untouched = overlay.loc[overlay["team"].isna() & overlay["player_id"].eq("00-0039916")]
+    assert len(untouched) == 1
+    assert board_rows.loc["00-0039916", "team"] == "SF"  # from the artifact, not the overlay
+
+    # A malformed code must fail loudly rather than render a nonsense team.
+    import tempfile
+    original = board.ANALYST_PROJECTION_ADJUSTMENTS
+    bad = overlay.copy()
+    bad.loc[bad["player_id"].eq("00-0035719"), "team"] = "San Francisco"
+    try:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "bad_overlay.csv"
+            bad.to_csv(path, index=False)
+            board.ANALYST_PROJECTION_ADJUSTMENTS = path
+            try:
+                board._load_projections()
+            except ValueError as exc:
+                assert "team correction" in str(exc)
+            else:
+                raise AssertionError("a malformed team code must raise")
+    finally:
+        board.ANALYST_PROJECTION_ADJUSTMENTS = original
+
+    # And the guard is not vacuously passing: the real file loads clean afterwards.
+    assert board._load_projections().loc["00-0035719", "team"] == "SF"
 
 
 def test_overlay_participates_in_the_board_cache_fingerprint():
@@ -461,11 +526,11 @@ def test_outside_market_is_disjoint_from_the_board_and_fully_projected():
     assert outside["model_proj"].notna().all(), \
         "every outside-market row must carry a model projection"
 
-    # Current artifact set: 891 projected players, 245 priced, 648 outside.
-    assert board._projection_pool_size() == 891
-    assert len(outside) == 648, f"expected 648 outside-market rows, got {len(outside)}"
+    # Current artifact set: 897 projected players, 245 priced, 648 outside.
+    assert board._projection_pool_size() == 897
+    assert len(outside) == 654, f"expected 654 outside-market rows, got {len(outside)}"
     assert outside["position"].value_counts().to_dict() == \
-        {"WR": 293, "TE": 160, "RB": 139, "QB": 56}
+        {"WR": 293, "TE": 160, "RB": 139, "QB": 62}
 
     # The arithmetic is 891 - 243, not 891 - 245: the two un-projected rookie QBs hold a
     # board row (they have an ADP) but no projection-artifact row, so they are in neither
@@ -482,13 +547,18 @@ def test_outside_market_is_disjoint_from_the_board_and_fully_projected():
 def test_dontayvion_wicks_anchor_row():
     """One fully-verified anchor row, exact in every rendered field.
 
-    Rank note: WR106, not the WR105 the raw projection artifact gives. The explorer starts
-    from `_load_projections()`, so the disclosed analyst overlay is applied before ranking —
-    exactly as it is for the board's own Model Proj Position Rank. Chris Brazzell's overlay
-    (raw 12.8 -> board 55.6) is the single crossing above Wicks' 46.5, and it is the whole
-    difference. Ranking on the raw column instead would contradict
-    test_ranks_gaps_and_download_use_the_adjusted_projection, and would print a rank that
-    disagrees with the Model Proj shown beside it.
+    Rank note: WR105. The explorer starts from `_load_projections()`, so the disclosed
+    analyst overlay is applied before ranking — exactly as it is for the board's own Model
+    Proj Position Rank. This rank was WR106 until 2026-08-03, when Ricky Pearsall's row was
+    cut to 0.0 for season-ending surgery: his overlay now crosses DOWN past Wicks' 46.5,
+    cancelling Chris Brazzell's long-standing crossing UP (raw 12.8 -> board 55.6).
+
+    Because the two crossings cancel, the adjusted rank currently EQUALS the raw-column rank
+    (105), so this anchor no longer discriminates adjusted-vs-raw ranking by itself — that
+    property is proven globally by
+    test_ranks_gaps_and_download_use_the_adjusted_projection. What is pinned here is the
+    exact pair of crossings, so any future overlay edit that disturbs either one fails loudly
+    instead of silently shifting the anchor.
     """
     import draft_board_2026 as board
 
@@ -499,23 +569,26 @@ def test_dontayvion_wicks_anchor_row():
     assert wicks["player"] == "Dontayvion Wicks"
     assert wicks["position"] == "WR"
     assert wicks["team"] == "PHI"
-    assert float(wicks["model_proj"]) == 46.5
-    assert int(wicks["model_proj_pos_rank_full"]) == 106
+    assert float(wicks["model_proj"]) == 47.6
+    assert int(wicks["model_proj_pos_rank_full"]) == 101
     assert float(wicks["nfl_talent"]) == 67.9
     assert float(wicks["college_talent"]) == 61.4
 
-    # Pin the cause of 106-vs-105 so a future overlay edit fails loudly here rather than
-    # silently shifting the anchor.
+    # Pin BOTH crossings and the fact that they cancel, so a future overlay edit fails
+    # loudly here rather than silently shifting the anchor.
     projections = board._load_projections()
     wr = projections[projections["position"].eq("WR")]
     raw_rank = wr["model_projection_raw"].rank(method="min", ascending=False)
-    assert int(raw_rank.loc["00-0038393"]) == 105
-    crossed = wr[(wr["model_projection_raw"] <= 46.5) & (wr["projection"] > 46.5)]
-    assert crossed["player"].tolist() == ["Chris Brazzell"]
+    assert int(raw_rank.loc["00-0038393"]) == 101
+    up = wr[(wr["model_projection_raw"] <= 47.6) & (wr["projection"] > 47.6)]
+    down = wr[(wr["model_projection_raw"] > 47.6) & (wr["projection"] <= 47.6)]
+    assert up["player"].tolist() == ["Chris Brazzell"]
+    assert down["player"].tolist() == ["Ricky Pearsall"]
+    assert len(up) == len(down), "the two crossings must cancel for the anchor to be 105"
 
 
 def test_outside_market_rank_is_taken_against_the_full_projection_pool():
-    """The rank must be positional across all 891 projected players, never within the 648."""
+    """The rank must be positional across all 897 projected players, never within the 648."""
     import draft_board_2026 as board
 
     projections = board._load_projections().reset_index()

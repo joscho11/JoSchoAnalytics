@@ -109,7 +109,11 @@ ae4ad3e22f26da5e9 · Outsider a0a4d50d693322664 · Executor a63b9bd20015c3235.
 - #1 DONE: `walkforward_oos_preds.py --line open` substitutes the opening line →
   `walkforward_oos_preds_openline.csv` (2138 games). **Honest result: model does
   NOT beat the close (HIGH beat-close 45%, avgCLV +0.28) — the +CLV claim was the
-  artifact. But HIGH-tier ATS-vs-OPEN = 64% OOS (n~600) is a REAL edge.** Kelly
+  artifact. **RETRACTED 2026-08-03:** the HIGH-tier ATS-vs-OPEN = 64% OOS (n~600) claim on
+this line was ALSO an artifact — of a leaking sack feature plus an All-Pro identity
+collision. Corrected in a pinned environment, HIGH is 129/238 = 54.2017%, Wilson lower
+47.86%, BELOW the 52.4% break-even. No tier clears. See
+`betting/experiments/audit_2026-08-03c_final/`. Historical text preserved below.** Kelly
   re-fit off ATS-vs-open: HIGH 2%/bet, MEDIUM $0. Docs + memory corrected.
 - #2 DONE: clv_backtest franchise-normalizes (OAK→LV/SD→LAC/STL→LA) + warns on
   >5% join loss.

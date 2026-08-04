@@ -45,6 +45,20 @@ jobs:
       - name: Install dependencies
         run: pip install pandas requests
 
+      # ---------------------------------------------------------------------------
+      # POINT-IN-TIME MARKET ARCHIVE (research evidence; see capture_market_snapshot.py)
+      # Runs BEFORE the board refresh so the raw response is archived before any lossy
+      # field selection. Deliberately NOT gated by the in-season pause that stops the
+      # board overlay: capturing through the season is how we would detect Sleeper
+      # mutating its 2026 projections toward realized values, which is exactly the
+      # contamination confirmed for 2020 and the reason this archive exists.
+      # FAILURE ISOLATION: continue-on-error, so a failed research capture is visible as
+      # a red step and diagnosable in failures.jsonl but NEVER blocks the live board.
+      - name: Capture dated Sleeper market snapshot (research, private)
+        id: market_capture
+        continue-on-error: true
+        run: python fantasy/seasonal_projections/capture_market_snapshot.py --season 2026
+
       - name: Refresh board ADP
         env:
           # '1' only on a manual dispatch with force=true; empty on schedule so the
@@ -62,6 +76,22 @@ jobs:
           name: adp-logs-${{ github.run_id }}
           path: fantasy/seasonal_projections/adp_logs/
           if-no-files-found: ignore
+          retention-days: 90
+
+      # Private point-in-time archive: dated raw response + normalized snapshot +
+      # metadata + append-only manifest/failure ledger. market_snapshots/ is gitignored,
+      # so a CI checkout starts empty and this artifact holds exactly THIS run's capture.
+      # 90 days is the hard ceiling GitHub allows on a PUBLIC repository — see the
+      # retention note in capture_market_snapshot.py; the durable copy is Joseph's local
+      # archive, which never expires.
+      - name: Upload private market snapshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: market-snapshot-${{ github.run_id }}
+          path: fantasy/seasonal_projections/market_snapshots/
+          if-no-files-found: warn
+          include-hidden-files: true
           retention-days: 90
 
       # Commit ONLY the overlay. Gated on success: an aborted run fails the job above and

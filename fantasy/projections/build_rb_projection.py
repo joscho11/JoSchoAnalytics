@@ -284,6 +284,97 @@ def assemble():
     return vet, rook, rb
 
 
+# --------------------------------------------------------------------------- WALK-FORWARD FOLD GUARD
+# 2026-08-03. What was here before, in this file and copy-pasted into the WR/TE/QB
+# builders, was a TAUTOLOGY:
+#       assert (tr.season < Y).all()          with   tr = df[df.season < Y]
+#       a4 &= (vet[vet.season < Y].season < Y).all()
+# i.e. filter a frame by a predicate and then test that same predicate on the
+# result. It can never be False. Verified by injecting 50 season-Y rows into the
+# pool: the expression stayed True and the builder printed "PASS".
+#
+# The replacement validates the fold objects that are actually handed to the model,
+# at the construction boundary, against an expectation derived from the POOL's
+# season universe rather than from the filter that built the train fold.
+
+class FoldLeakError(AssertionError):
+    """A walk-forward fold violates the temporal / disjointness contract."""
+
+
+def build_fold(df, Y, y="y"):
+    """The one place a walk-forward fold is constructed: train = seasons strictly
+    before Y, test = exactly season Y, both with an observed target."""
+    Y = int(Y)
+    tr = df[df["season"] < Y].dropna(subset=[y])
+    te = df[df["season"] == Y].dropna(subset=[y])
+    return tr, te
+
+
+def assert_walk_forward_fold(tr, te, Y, tag, pool=None, y="y", key=("player_id", "season")):
+    """Validate ONE fold. Raises FoldLeakError; returns a summary dict."""
+    Y = int(Y)
+    tr_seasons = {int(s) for s in pd.unique(tr["season"])}
+    te_seasons = {int(s) for s in pd.unique(te["season"])}
+
+    # (1) row identity DISJOINTNESS — pandas index AND the (player, season) key.
+    #     Checked first: it is the only check that survives a frame whose season
+    #     labels themselves are wrong.
+    idx_overlap = set(tr.index) & set(te.index)
+    if idx_overlap:
+        raise FoldLeakError(f"WALK-FORWARD LEAK ({tag}, {Y}): {len(idx_overlap)} row(s) in BOTH "
+                            f"folds by index, e.g. {sorted(map(str, idx_overlap))[:5]}")
+    kcols = [c for c in key if c in tr.columns and c in te.columns]
+    if kcols:
+        ktr = set(map(tuple, tr[kcols].to_numpy()))
+        kte = set(map(tuple, te[kcols].to_numpy()))
+        both = ktr & kte
+        if both:
+            raise FoldLeakError(f"WALK-FORWARD LEAK ({tag}, {Y}): {len(both)} {tuple(kcols)} key(s) "
+                                f"in BOTH folds, e.g. {sorted(map(str, both))[:5]}")
+
+    # (2) the test fold is EXACTLY the target season
+    if te_seasons != {Y}:
+        raise FoldLeakError(f"WALK-FORWARD ({tag}, {Y}): test fold seasons "
+                            f"{sorted(te_seasons)} != exactly [{Y}]")
+
+    # (3) the train fold is EXACTLY the pool's pre-Y season set (independent of the
+    #     `< Y` filter: an injected/mis-filtered season-Y row shows up as a surplus)
+    if pool is not None:
+        expected = {int(s) for s in pd.unique(pool.dropna(subset=[y])["season"]) if int(s) < Y}
+        if tr_seasons != expected:
+            raise FoldLeakError(
+                f"WALK-FORWARD ({tag}, {Y}): train seasons {sorted(tr_seasons)} != expected "
+                f"{sorted(expected)} (surplus {sorted(tr_seasons - expected)}, "
+                f"missing {sorted(expected - tr_seasons)})")
+
+    # (4) strict temporal maximum
+    if not tr_seasons:
+        raise FoldLeakError(f"WALK-FORWARD ({tag}, {Y}): empty training fold")
+    if max(tr_seasons) >= Y:
+        raise FoldLeakError(f"WALK-FORWARD LEAK ({tag}, {Y}): max train season "
+                            f"{max(tr_seasons)} is not strictly < {Y}")
+
+    return {"season": Y, "n_train": len(tr), "n_test": len(te),
+            "train_seasons": sorted(tr_seasons)}
+
+
+def assert_walk_forward_folds(df, tag, seasons=TEST_SEASONS, y="y", min_train=1):
+    """Construct and validate EVERY fold of the walk-forward. Folds with an empty
+    train or test side are reported as unvalidated (never silently ignored); at
+    least one fold must validate."""
+    validated, empty = [], []
+    for Y in seasons:
+        tr, te = build_fold(df, Y, y=y)
+        if len(tr) < min_train or len(te) == 0:
+            empty.append(int(Y))
+            continue
+        validated.append(assert_walk_forward_fold(tr, te, Y, tag, pool=df, y=y))
+    if not validated:
+        raise FoldLeakError(f"WALK-FORWARD ({tag}): no fold could be validated "
+                            f"(empty folds {empty})")
+    return {"validated": validated, "unvalidated_empty": empty}
+
+
 # ----------------------------------------------------------------------------------------- ASSERTS
 def _mae(y, p): return float(np.mean(np.abs(np.asarray(y, float) - np.asarray(p, float))))
 def _rmse(y, p): return float(np.sqrt(np.mean((np.asarray(y, float) - np.asarray(p, float)) ** 2)))
@@ -347,12 +438,22 @@ def run_asserts(vet, rook):
     print(f"3. SHUFFLE-LEAK probe (veteran, test 2024): aligned rankcorr {aligned:+.3f} (>.20) | "
           f"within-season-shuffled {shuffled:+.3f} (~0)  -> {'PASS' if a3 else 'FAIL'}")
 
-    # 4. WALK-FORWARD folds never train on their test season (§8)
+    # 4. WALK-FORWARD folds never train on their test season (§8). Real fold-boundary
+    #    validation (exact season sets, strict temporal max, index/key disjointness):
+    #    the old expression re-tested the filter that built the frame and could not fail.
     a4 = True
-    for Y in TEST_SEASONS:
-        a4 &= bool((vet[vet.season < Y].season < Y).all() and (rook[rook.season < Y].season < Y).all())
+    fold_note = []
+    for nm, pool in (("vet", vet), ("rook", rook)):
+        try:
+            rep = assert_walk_forward_folds(pool, nm)
+            fold_note.append(f"{nm} {len(rep['validated'])}/{len(TEST_SEASONS)} folds"
+                             + (f" (empty {rep['unvalidated_empty']})" if rep["unvalidated_empty"] else ""))
+        except FoldLeakError as e:
+            a4 = False
+            fold_note.append(f"{nm} RAISED: {e}")
     ok &= a4
-    print(f"4. WALK-FORWARD guard (train seasons < test, all folds 2021-2025): {'PASS' if a4 else 'FAIL'}")
+    print(f"4. WALK-FORWARD guard (exact train/test season sets, strict max, disjoint rows): "
+          f"{' | '.join(fold_note)}  -> {'PASS' if a4 else 'FAIL'}")
 
     assert ok, "PRE-REGISTERED ASSERTS FAILED — STOP"
     print("\nSTEP 2 ASSERTS: PASS")
@@ -468,11 +569,10 @@ def walk_forward(df, feats, tag):
     """Per prereg §8: for each Y in 2021-2025, inner-CV select on seasons<Y, fit on seasons<Y, predict Y."""
     rows, chosen = [], []
     for Y in TEST_SEASONS:
-        tr = df[(df.season < Y)].dropna(subset=["y"])
-        te = df[df.season == Y].dropna(subset=["y"])
+        tr, te = build_fold(df, Y)
         if len(tr) < 60 or len(te) == 0:
             continue
-        assert (tr.season < Y).all(), f"WALK-FORWARD LEAK ({tag}, {Y})"
+        assert_walk_forward_fold(tr, te, Y, tag, pool=df)   # raises FoldLeakError
         t0 = time.time()
         (fam, params, imae), per_family = nested_select(tr, feats)
         Xtr, Xte = _prep(fam, tr, te, feats)

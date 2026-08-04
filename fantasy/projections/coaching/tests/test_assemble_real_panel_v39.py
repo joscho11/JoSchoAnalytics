@@ -98,15 +98,30 @@ def test_the_entry_point_is_still_sealed_and_this_pass_did_not_weaken_it():
                                .read_text(encoding="utf-8"))
     fn = next(n for n in ast.walk(tree)
               if isinstance(n, ast.FunctionDef) and n.name == EX.ENTRY_POINT_NAME)
-    assert len(fn.body) == 2 and isinstance(fn.body[1], ast.Raise)
+    # C5-A: three statements, authorization -> clearance -> return; the seal moved, it did not go.
+    assert len(fn.body) == 3
+    assert fn.body[1].value.func.id == EX.PREFLIGHT_CLEARANCE_NAME
+    assert isinstance(fn.body[2], ast.Return)
     assert not EX._entry_point_is_sealed(tree)
+    assert EX._entry_point_is_sealed(tree, contract_mode=EX.RUN_MODE_SYNTHETIC_PREFIT), (
+        'C5-S must reject the implemented door, or the two contracts are interchangeable')
 
 
 def test_assemble_real_panel_still_raises_with_both_locks_closed():
+    """The door is implemented now, so it takes injected readers — and must refuse before either."""
+    calls = []
+
+    def _tripwire(name):
+        def _r():
+            calls.append(name)
+            raise AssertionError(f"the {name} reader RAN")
+        return _r
+
     assert EX.real_fit_lock_state() == (False, False)
     with pytest.raises(RuntimeError) as exc:
-        EX.assemble_real_panel()
+        EX.assemble_real_panel(_tripwire("feature"), _tripwire("outcome"))
     assert "NOT AUTHORIZED" in str(exc.value)
+    assert calls == [], "a reader ran with both locks closed"
 
 
 @pytest.mark.parametrize("constant_open,env_open", [(False, False), (True, False), (False, True)])
@@ -151,7 +166,13 @@ def test_the_weekly_snapshot_provenance_matches_the_manifest():
 
 
 def test_the_feature_source_matches_the_production_pin():
-    assert ARP.file_md5(ARP.FEATURE_SOURCE) == ARP.FEATURE_SOURCE_MD5
+    # SUPERSEDED SCOPE (2026-08-03): this pinned the whole LIVE production CSV, so an ordinary
+    # deploy-season-2026 refresh moved the hash and refused activation for a reason unrelated
+    # to the experiment. The consumed 2014-2025 window is now an immutable snapshot, and THAT
+    # is what is pinned. The CSV is the generator's input only.
+    assert ARP.file_sha256(ARP.VETERAN_SNAPSHOT) == ARP.VETERAN_SNAPSHOT_SHA256
+    assert not hasattr(ARP, "FEATURE_SOURCE_MD5"), (
+        "the whole-CSV md5 pin must be gone, not merely unused")
 
 
 def test_no_outcome_snapshot_constant_survives():
@@ -351,15 +372,32 @@ def test_the_rookie_missing_counts_are_derived_not_asserted(pos, expected_missin
 
 # --- §1: the two missingness concepts stay apart ---------------------------------------------------
 def test_the_two_missingness_concepts_are_separate_fields():
+    """Still two different denominators, and now the rookie rows PROVE it rather than coinciding.
+
+    The rookie matrix supplies every rookie feature, so `n_missing_from_declared_source` is 0 while
+    `n_missing_from_season_dataset` stays 32/35 — the same two numbers that were once printed together
+    as if they meant the same thing.
+    """
     for row in ARP.arm0_bucket_table():
         assert "n_missing_from_season_dataset" in row
         assert "n_missing_from_declared_source" in row
+        assert row["source_exists"] is True
+        assert row["n_missing_from_declared_source"] == 0
         if row["bucket"] == "veteran":
             # the declared source IS the season dataset, so both are 0 and coincide
+            assert row["n_missing_from_season_dataset"] == 0
+        else:
+            expected = ARP.ROOKIE_MISSING_FROM_SEASON_DATASET[(row["position"], "rookie")][0]
+            assert row["n_missing_from_season_dataset"] == expected > 0
+            assert row["n_missing_from_season_dataset"] < row["n_features"]
+
+
+def test_the_two_concepts_STILL_stay_apart_when_the_rookie_source_is_absent():
+    """The v3.9h property, kept alive by injecting the absent-source state it was written for."""
+    for row in ARP.arm0_bucket_table(rookie_columns=set()):
+        if row["bucket"] == "veteran":
             assert row["n_missing_from_season_dataset"] == row["n_missing_from_declared_source"] == 0
         else:
-            # the declared source does not exist: everything is missing from it, which is a DIFFERENT
-            # statement from how much the season dataset lacks
             assert row["source_exists"] is False
             assert row["n_missing_from_declared_source"] == row["n_features"]
             assert row["n_missing_from_season_dataset"] < row["n_features"]
@@ -367,7 +405,7 @@ def test_the_two_missingness_concepts_are_separate_fields():
 
 def test_the_readiness_message_is_internally_consistent():
     """It must not print '32/41' and '41/41' as if they were the same denominator."""
-    ok, detail = ARP.activation_readiness()
+    ok, detail = ARP.activation_readiness(rookie_columns=set())
     assert ok is False
     assert "DOES NOT EXIST" in detail
     for pos, (missing, total) in ARP.ROOKIE_MISSING_FROM_SEASON_DATASET.items():
@@ -401,34 +439,65 @@ def test_a_bucket_frame_must_carry_every_bundle_feature_in_order():
 # =====================================================================================================
 # §4 — activation readiness FAILS CLOSED and is separate from prefit integrity
 # =====================================================================================================
-def test_activation_readiness_is_currently_FALSE_and_names_the_blocked_buckets():
-    ok, detail = ARP.activation_readiness()
+def test_activation_readiness_FAILS_CLOSED_when_the_rookie_source_is_absent():
+    """The v3.9g behaviour, kept as a live RED case by injecting an empty rookie source.
+
+    It stopped being the state of the tree on 2026-08-03 (Option A), so the absent-source state is
+    injected rather than observed — otherwise the fail-closed path would silently stop being tested.
+    """
+    ok, detail = ARP.activation_readiness(rookie_columns=set())
     assert ok is False, "activation must not report ready while three bundles cannot be assembled"
     for pos in ("RB", "WR", "TE"):
         assert f"{pos}/rookie" in detail
     assert "lacks 32 of 41" in detail and "lacks 35 of 44" in detail
-    assert "gitignore" in detail.lower() or "ZERO tracked" in detail
 
 
-def test_activation_readiness_would_pass_if_every_bucket_had_a_source():
-    """GREEN counterpart: the check is not hard-wired to fail."""
-    every = set()
-    for row in ARP.arm0_bucket_table(feature_columns=set()):
-        every |= set(row["feature_cols"])
-    ok, detail = ARP.activation_readiness(feature_columns=every)
-    assert ok is False, "rookie buckets declare the rookie_matrix source, which is still empty"
-    assert "RB/rookie" in detail
+def test_activation_readiness_is_TRUE_on_all_seven_buckets():
+    """TWICE SUPERSEDED, and this is the current state.
+
+    v3.9g-v3.9m: False, no rookie source at all. v3.9n: briefly True on a leaked matrix. v3.9o: False
+    again on a "the bundles were trained on contaminated features" blocker that rested on a FALSE
+    PREMISE — `fit_predict` builds a fresh estimator every fold and the serialized weights never enter
+    (see `test_arm0_refits_from_scratch_v39.py`). That blocker is WITHDRAWN, so readiness is True: all
+    seven buckets have a complete, pinned, point-in-time feature source and a well-formed spec.
+    """
+    ok, detail = ARP.activation_readiness()
+    assert ok is True, detail
+    assert "all 7 shipped Arm 0 buckets" in detail
+    assert ARP.SOURCE_ROOKIE_MATRIX in detail and ARP.SOURCE_SEASON_DATASET in detail
+    assert "NOT AUTHORIZED" in detail
+    assert EX.real_fit_lock_state() == (False, False)
+
+
+def test_readiness_still_FAILS_CLOSED_on_a_malformed_bundle_spec():
+    """RED counterpart: the check is not hard-wired to pass. Injected; no bundle is modified."""
+    saved = ARP.bundle_spec_problems
+    ARP.bundle_spec_problems = lambda b: ["injected: spec field 'seed' is absent"]
+    try:
+        ok, detail = ARP.activation_readiness()
+    finally:
+        ARP.bundle_spec_problems = saved
+    assert ok is False
+    assert "bundle SPECIFICATION is not" in detail and "seed" in detail
+    assert ARP.activation_readiness()[0] is True
 
 
 def test_prefit_integrity_and_activation_readiness_are_DIFFERENT_layers():
-    """21/21 preflight must never be read as 'ready to activate'."""
+    """21/21 preflight must never be read as 'ready to activate', in EITHER direction.
+
+    Readiness turning True must not make the prefit checkpoint mean more than it did, and readiness
+    turning False must not turn the committed v3.9d checkpoint red. The layering is what is under
+    test, not the current value of either layer.
+    """
     pf = EX.preflight(require_pipeline_assertions=False)
     assert pf["all_ok"] is True and pf["n_failed"] == 0
-    ready, _ = ARP.activation_readiness()
-    assert ready is False
+    assert ARP.activation_readiness()[0] is True
+    assert ARP.activation_readiness(rookie_columns=set())[0] is False
     assert "activation_readiness" not in pf["checks"], (
         "activation readiness must stay OUT of the prefit preflight, or a blocked activation would "
         "turn the committed v3.9d checkpoint red")
+    # and a blocked readiness leaves preflight untouched
+    assert EX.preflight(require_pipeline_assertions=False)["n_failed"] == 0
 
 
 def _all_bundle_features():
@@ -473,10 +542,27 @@ def _authorized_shaped_preflight(**overrides):
 
 
 def test_the_authorized_real_gate_needs_BOTH_and_currently_REFUSES():
-    """The real tree: preflight is 21/21 and the authorized run still fails closed."""
+    """The real tree: preflight is 21/21, readiness is now True, and the run STILL fails closed.
+
+    Before Option A the refusal came from gate 2. It now comes from gate 1 — the result is a
+    `synthetic_prefit` one, whose whole meaning is that both locks are closed. The refusal moved; it
+    did not weaken.
+    """
     pf = EX.preflight(require_pipeline_assertions=False)
     assert pf["all_ok"] is True and pf["n_failed"] == 0
+    assert ARP.activation_readiness()[0] is True
     ok, detail = ARP.authorized_real_gate(pf)
+    assert ok is False
+    # Gate 2 is CLEAR; the refusal is gate 1 alone, because the result is a synthetic_prefit one,
+    # whose whole meaning is that both locks are closed.
+    assert "gate 1" in detail and "BOTH LOCKS CLOSED" in detail
+    assert "gate 2" not in detail, f"gate 2 must be clear; it said: {detail}"
+    assert EX.real_fit_lock_state() == (False, False)
+
+
+def test_the_gate_still_refuses_on_gate_2_when_readiness_is_blocked():
+    """Gate 2's refusal path stays exercised, via an injected empty rookie source."""
+    ok, detail = ARP.authorized_real_gate(_authorized_shaped_preflight(), rookie_columns=set())
     assert ok is False
     assert "gate 2" in detail and "ACTIVATION NOT READY" in detail
 
@@ -574,7 +660,7 @@ def test_GREEN_an_authorized_shaped_preflight_plus_readiness_passes():
     """Proves the gate is not hard-wired to refuse.
 
     The preflight result is CONSTRUCTED in authorized-real shape; no lock is opened and nothing on the
-    real tree changes. `activation_readiness()` on the real tree still returns False afterwards.
+    real tree changes. The REAL preflight still refuses afterwards, because it is synthetic_prefit.
     """
     with _readiness_injected_pass() as every:
         ok, detail = ARP.authorized_real_gate(_authorized_shaped_preflight(), feature_columns=every)
@@ -582,13 +668,14 @@ def test_GREEN_an_authorized_shaped_preflight_plus_readiness_passes():
     assert "both gates clear" in detail
     assert ARP.AUTHORIZED_RUN_MODE in detail
 
-    assert ARP.activation_readiness()[0] is False, "the real tree must still be blocked"
+    real = EX.preflight(require_pipeline_assertions=False)
+    assert ARP.authorized_real_gate(real)[0] is False, "the real tree must still be refused"
     assert EX.real_fit_lock_state() == (False, False), "no lock may have been opened"
 
 
 def test_the_gate_refuses_when_only_gate_1_is_clear():
-    """Authorized-shaped preflight, but the REAL (blocked) readiness."""
-    ok, detail = ARP.authorized_real_gate(_authorized_shaped_preflight())
+    """Authorized-shaped preflight, but a blocked readiness (injected empty rookie source)."""
+    ok, detail = ARP.authorized_real_gate(_authorized_shaped_preflight(), rookie_columns=set())
     assert ok is False and "gate 2" in detail
 
 
@@ -765,10 +852,32 @@ def test_the_manifest_lists_readiness_failure_as_a_stop_condition():
         "gate failure must be a §7 stop condition"
 
 
-def test_the_manifest_still_records_the_run_as_not_ready():
+def test_the_manifest_still_records_the_run_as_not_executed_and_not_authorized():
+    """SUPERSEDED FACT, 2026-08-03: the manifest used to be required to say 'NOT READY'.
+
+    Option A made `activation_readiness()` True, so demanding that phrase would force the document to
+    state something false. What must remain true is the part that actually protects the run: it has not
+    been executed, it is not authorized, and the locks are closed. The readiness value is checked
+    against the module, not against prose.
+    """
     text = MANIFEST.read_text(encoding="utf-8")
-    assert "NOT READY" in text
-    assert "activation_readiness()` returns `False`".replace("`", "") in text.replace("`", "")
+    plain = text.replace("`", "")
+    assert "NOT EXECUTED" in text and "NOT AUTHORIZED" in text
+    assert "REAL_FIT_AUTHORIZED is False" in plain
+    assert "authorized_real_gate() returns False" in plain
+    # Readiness is True and the manifest must not ASSERT otherwise. §7 legitimately states
+    # "activation_readiness() returns False" as a STOP CONDITION, so the check is per-line and demands
+    # a same-line qualifier marking it conditional rather than a claim about the current value.
+    unqualified = [ln for ln in plain.splitlines()
+                   if "activation_readiness() returns False" in ln
+                   and not any(q in ln for q in ("on its own it stops the run", "It was", "it was"))]
+    assert not unqualified, ("the manifest asserts readiness is False while it returns True:\n  "
+                             + "\n  ".join(unqualified))
+    assert "WITHDRAWN" in text and "FALSE PREMISE" in text, (
+        "the withdrawn contaminated-bundles blocker must be recorded as withdrawn")
+    assert ARP.activation_readiness()[0] is True
+    assert ARP.authorized_real_gate(EX.preflight(require_pipeline_assertions=False))[0] is False
+    assert EX.real_fit_lock_state() == (False, False)
 
 
 # =====================================================================================================
@@ -1042,6 +1151,27 @@ def _write_feature_csv(tmp_path, include_2026=True, include_forbidden=True):
     return p
 
 
+def _write_feature_snapshot(tmp_path, name="veteran_fixture.parquet", include_2026=False,
+                            include_forbidden=False, frame=None):
+    """The reader now consumes the frozen PARQUET snapshot, not the mutable production CSV.
+
+    The snapshot is feature-only and already windowed by construction, so these fixtures exist to
+    prove the reader still refuses a snapshot that violates either property.
+    """
+    df = synthetic_features() if frame is None else frame
+    if include_2026:
+        extra = df[df[ARP.SEASON_KEY] == 2025].copy()
+        extra[ARP.SEASON_KEY] = ARP.DEPLOY_SEASON
+        df = pd.concat([df, extra], ignore_index=True)
+    if include_forbidden:
+        for c in ("target_ppg", "target_games", "sample_weight", "sleeper_pts_half_ppr",
+                  "adp_half_ppr"):
+            df[c] = 1.0
+    out = tmp_path / name
+    df.to_parquet(out, index=False, engine="pyarrow", compression="snappy")
+    return out
+
+
 def test_RED_a_naive_full_read_of_the_fixture_violates_the_validator(tmp_path):
     """RED: this is exactly what the previous reader did — read everything, return everything."""
     src = _write_feature_csv(tmp_path)
@@ -1054,8 +1184,8 @@ def test_RED_a_naive_full_read_of_the_fixture_violates_the_validator(tmp_path):
 
 
 def test_GREEN_the_authorized_feature_reader_returns_only_2014_2025_and_no_forbidden_column(tmp_path):
-    src = _write_feature_csv(tmp_path)
-    out = ARP.authorized_feature_reader(path=src, verify_hash=False)()
+    src = _write_feature_snapshot(tmp_path)
+    out = ARP.authorized_feature_reader(path=src, verify_hash=False, verify_manifest=False)()
     seasons = sorted(set(out[ARP.SEASON_KEY]))
     assert seasons == list(ARP.ALL_PANEL_SEASONS)
     assert ARP.DEPLOY_SEASON not in seasons
@@ -1066,35 +1196,47 @@ def test_GREEN_the_authorized_feature_reader_returns_only_2014_2025_and_no_forbi
 
 def test_the_feature_reader_output_passes_its_own_validator(tmp_path):
     """The gap that let a broken reader pass 663 tests: nobody ran its OUTPUT through the validator."""
-    src = _write_feature_csv(tmp_path)
-    out = ARP.authorized_feature_reader(path=src, verify_hash=False)()
+    src = _write_feature_snapshot(tmp_path)
+    out = ARP.authorized_feature_reader(path=src, verify_hash=False, verify_manifest=False)()
     assert ARP.validate_feature_frame(out) == []
 
 
+def test_the_feature_reader_refuses_a_snapshot_carrying_2026(tmp_path):
+    """The snapshot must never contain the deploy season; the reader refuses it rather than filtering
+    it away silently, because a 2026 row means the artifact was built wrong."""
+    src = _write_feature_snapshot(tmp_path, "with_2026.parquet", include_2026=True)
+    with pytest.raises(ARP.AssemblyError):
+        ARP.authorized_feature_reader(path=src, verify_hash=False, verify_manifest=False)()
+
+
+def test_the_feature_reader_refuses_a_snapshot_carrying_a_forbidden_column(tmp_path):
+    src = _write_feature_snapshot(tmp_path, "forbidden.parquet", include_forbidden=True)
+    with pytest.raises(ARP.AssemblyError):
+        ARP.authorized_feature_reader(path=src, verify_hash=False, verify_manifest=False)()
+
+
 def test_the_feature_reader_fails_on_a_missing_frozen_column(tmp_path):
-    df = synthetic_features().drop(columns=["prior_ppg"])
-    p = tmp_path / "short.csv"
-    df.to_csv(p, index=False)
+    src = _write_feature_snapshot(tmp_path, "short.parquet",
+                                  frame=synthetic_features().drop(columns=["prior_ppg"]))
     with pytest.raises(ARP.AssemblyError) as exc:
-        ARP.authorized_feature_reader(path=p, verify_hash=False)()
-    assert "missing frozen column" in str(exc.value) and "prior_ppg" in str(exc.value)
+        ARP.authorized_feature_reader(path=src, verify_hash=False, verify_manifest=False)()
+    assert "schema differs" in str(exc.value)
 
 
 def test_the_feature_reader_fails_on_hash_drift(tmp_path):
-    src = _write_feature_csv(tmp_path)
+    src = _write_feature_snapshot(tmp_path)
     with pytest.raises(ARP.AssemblyError) as exc:
-        ARP.authorized_feature_reader(path=src, verify_hash=True)()
-    assert "hash drift" in str(exc.value)
+        ARP.authorized_feature_reader(path=src, verify_hash=True, verify_manifest=False)()
+    assert "sha256" in str(exc.value)
 
 
 def test_the_feature_reader_enforces_unique_keys(tmp_path):
     df = synthetic_features()
-    df = pd.concat([df, df.iloc[[0]]], ignore_index=True)
-    p = tmp_path / "dup.csv"
-    df.to_csv(p, index=False)
+    src = _write_feature_snapshot(tmp_path, "dup.parquet",
+                                  frame=pd.concat([df, df.iloc[[0]]], ignore_index=True))
     with pytest.raises(ARP.AssemblyError) as exc:
-        ARP.authorized_feature_reader(path=p, verify_hash=False)()
-    assert "duplicate" in str(exc.value)
+        ARP.authorized_feature_reader(path=src, verify_hash=False, verify_manifest=False)()
+    assert "duplicate" in str(exc.value) or "row count" in str(exc.value)
 
 
 def test_the_frozen_feature_contract_matches_the_production_bundles():
@@ -1267,11 +1409,12 @@ def test_INTEGRATION_both_authorized_readers_feed_assemble_panel_core(tmp_path):
     This is the test whose absence let a reader that returned 2026 rows and forbidden target columns
     pass the entire suite: nothing ever ran the reader's OUTPUT through the assembler.
     """
-    fsrc = _write_feature_csv(tmp_path, include_2026=True, include_forbidden=True)
+    fsrc = _write_feature_snapshot(tmp_path)
     wsrc = tmp_path / "weekly.parquet"
     synthetic_weekly().to_parquet(wsrc, index=False)
 
-    features = ARP.authorized_feature_reader(path=fsrc, verify_hash=False)()
+    features = ARP.authorized_feature_reader(path=fsrc, verify_hash=False,
+                                             verify_manifest=False)()
     outcomes = ARP.authorized_outcome_reader(path=wsrc, verify_hash=False,
                                              verify_manifest=False)()
 
@@ -1285,12 +1428,13 @@ def test_INTEGRATION_both_authorized_readers_feed_assemble_panel_core(tmp_path):
 
 
 def test_INTEGRATION_a_player_absent_from_weekly_stats_survives_with_zero(tmp_path):
-    fsrc = _write_feature_csv(tmp_path, include_2026=False, include_forbidden=False)
+    fsrc = _write_feature_snapshot(tmp_path)
     wsrc = tmp_path / "weekly_missing.parquet"
     weekly = synthetic_weekly(players=5)          # feature fixture has 6 players
     weekly.to_parquet(wsrc, index=False)
 
-    features = ARP.authorized_feature_reader(path=fsrc, verify_hash=False)()
+    features = ARP.authorized_feature_reader(path=fsrc, verify_hash=False,
+                                             verify_manifest=False)()
     outcomes = ARP.authorized_outcome_reader(path=wsrc, verify_hash=False, verify_manifest=False)()
     out = ARP.assemble_panel_core(features, outcomes)
 
@@ -1322,12 +1466,17 @@ def test_the_real_reader_is_never_called_in_synthetic_prefit(feats, outs):
 
 
 def test_authorization_must_precede_the_reader_in_the_activation_path():
+    """SUPERSEDED SHAPE, same property. The door is now implemented under C5-A, so statement 2 is the
+    clearance rather than a raise — but authorization is still first and no reader precedes it."""
     src = (COACH / "run_coach_projection_experiment_v39.py").read_text(encoding="utf-8")
     fn = next(n for n in ast.walk(ast.parse(src))
               if isinstance(n, ast.FunctionDef) and n.name == "assemble_real_panel")
     body = [s for s in fn.body if not (isinstance(s, ast.Expr) and isinstance(s.value, ast.Constant))]
     assert isinstance(body[0], ast.Expr) and body[0].value.func.id == "require_real_fit_authorization"
-    assert isinstance(body[1], ast.Raise)
+    assert isinstance(body[1], ast.Expr) and body[1].value.func.id == EX.PREFLIGHT_CLEARANCE_NAME
+    callees = {getattr(n.func, "id", None) for n in ast.walk(fn) if isinstance(n, ast.Call)}
+    assert not (callees & EX.ENTRY_POINT_BANNED_READER_CALLEES), (
+        "the door may not contain a reader callee at all")
 
 
 # =====================================================================================================

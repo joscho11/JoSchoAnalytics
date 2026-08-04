@@ -83,8 +83,11 @@ retyped.
 
 | File | What it is |
 |---|---|
-| `fantasy/dfs/optimizer.ipynb` | The optimizer itself — the constraints, the solve, and helper reference. |
+| `fantasy/dfs/lineup_optimizer.py` | The optimizer itself — the constraints and the solve, written once. Both notebooks import it. |
+| `fantasy/dfs/dfs_matching.py` | Links a DraftKings name to the right projected player, and converts to DraftKings scoring. |
+| `fantasy/dfs/optimizer.ipynb` | Reference notebook: explains each constraint and exercises the module. It no longer contains the solver code. |
 | `fantasy/dfs/dfs_pipeline.ipynb` | The weekly workflow: load projections and salaries, solve, export the DraftKings file. |
+| `fantasy/dfs/test_lineup_optimizer.py` | Proof the solve is a real one: it checks the CBC program is installed, runs it on the kept week-10 slate, and measures every roster rule off the answer. |
 | `fantasy/fantasy_projections/` | The weekly projections (written by the fantasy model) that the optimizer reads. |
 
 ## Honest results

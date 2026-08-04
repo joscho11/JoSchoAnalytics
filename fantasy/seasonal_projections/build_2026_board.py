@@ -243,7 +243,27 @@ def seed_upcoming_rows(full):
     for c in ["is_rookie", "years_exp", "entry_year", "age", "draft_round", "draft_pick",
               "coach_changed", "vacated_target_share", "vacated_rush_share"]:
         seed[c] = ros[c].values
-    seed["qb_changed"] = np.nan            # unknowable pre-season from stats
+    # qb_changed is MANDATORY, not "unknowable" (2026-08-03). It sits in the saved
+    # feature_cols of TWELVE active artifacts, and seeding NaN made every 2026 player score
+    # as "his team did not change QB" — false for 7 of 32 teams. It IS knowable pre-season:
+    # a dated preseason QB1 depth snapshot vs the prior-season primary passer. The artifact
+    # and its provenance are a hard requirement; an unrostered player stays <NA> (a team
+    # feature is undefined without a team) but a rostered one must resolve.
+    _qbc_path = Path(__file__).resolve().parent / "qb_changed_2026.csv"
+    _qbc_prov = Path(__file__).resolve().parent / "qb_changed_2026.provenance.json"
+    if not _qbc_path.exists() or not _qbc_prov.exists():
+        raise FileNotFoundError(
+            f"qb_changed artifact + provenance are required: {_qbc_path.name}, "
+            f"{_qbc_prov.name}. Run build_qb_changed_2026.py first. Refusing to seed NaN.")
+    _qbc = pd.read_csv(_qbc_path)
+    if len(_qbc) != 32 or _qbc["team"].duplicated().any() or _qbc["qb_changed"].isna().any():
+        raise ValueError("qb_changed_2026.csv failed its contract (32 unique resolved teams)")
+    seed["qb_changed"] = seed["team"].map(
+        dict(zip(_qbc["team"], _qbc["qb_changed"].astype(int))))
+    _rostered = seed["team"].notna()
+    if seed.loc[_rostered, "qb_changed"].isna().any():
+        _bad = sorted(seed.loc[_rostered & seed["qb_changed"].isna(), "team"].unique())
+        raise ValueError(f"rostered teams with no qb_changed mapping: {_bad}")
     return seed
 
 

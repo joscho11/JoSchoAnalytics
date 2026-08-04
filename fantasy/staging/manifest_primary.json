@@ -1,0 +1,555 @@
+{
+ "run_tag": "primary",
+ "created_utc": "2026-08-03T22:43:36.196479+00:00",
+ "environment": {
+  "python": "3.11.9",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "executable": "C:\\tmp\\jsa-bt\\Scripts\\python.exe",
+  "pandas": "2.3.3",
+  "numpy": "2.4.6",
+  "xgboost": "3.1.2",
+  "sklearn": "1.6.1",
+  "joblib": "1.5.3"
+ },
+ "git_head": "dee343c0d2a236d3a00bcb86f4e846beb7643b50",
+ "seed": 42,
+ "xgb_params": {
+  "n_estimators": 500,
+  "max_depth": 4,
+  "learning_rate": 0.05,
+  "min_child_weight": 5,
+  "subsample": 0.8,
+  "colsample_bytree": 0.8,
+  "reg_alpha": 0.5,
+  "reg_lambda": 1.0,
+  "objective": "reg:squarederror",
+  "random_state": 42,
+  "tree_method": "hist",
+  "n_jobs": -1,
+  "early_stopping_rounds": 25
+ },
+ "train_seasons": [
+  2020,
+  2021,
+  2022,
+  2023,
+  2024
+ ],
+ "holdout_season": 2025,
+ "data": {
+  "features": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\JoSchoAnalytics\\fantasy\\staging\\features_dataset.staging.csv",
+  "features_sha256": "184986ebde8aa631f336f48d384526982a2498491c4e267256a9965c27503ef9",
+  "raw": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\JoSchoAnalytics\\fantasy\\staging\\raw_dataset.staging.csv",
+  "raw_sha256": "4fbf4148f906eb002f1123bc51b698e3dd34bdb1d54143a01481f7fa89fdce2d"
+ },
+ "code_sha256": {
+  "depth_adapter.py": "512267a86dcd084aa222d8188b7dd4b00db4956ca5232a462c74d72a29dec41c",
+  "depth_features.py": "4b51ae7cc9b62da88e945d85a3db80750ab6c422e3d6a8f8b218d43bb23fc205",
+  "build_staging_dataset.py": "179339d23a01a25868205ecfc00a0d29df6f7caf3b3c8b83cd0f7f28b8621b2a",
+  "retrain_models.py": "cea5d99d0472b4d3e5184295914a59caa3e0a597af4f1c8134aa314c66d053e3",
+  "gate_staging_dataset.py": "f39a1842f28fa2967bf3008aa8e0ef26650004c963ce2cdeaef007bb023b0305",
+  "equivalence_checks.py": "a5c82e2e0dc304fd3ca6bf7d88295202ccf8e3a8e59f388d620602dd61724f75"
+ },
+ "feature_order_hash": {
+  "QB": "9397be9110a3c6bd",
+  "RB": "28b0bef5aef9a2d6",
+  "WR": "28b0bef5aef9a2d6",
+  "TE": "28b0bef5aef9a2d6"
+ },
+ "artifacts": {
+  "qb_model.pkl": "e53b0ffd9acbace9dde58da86d63d1f61d553e6da71d6b1f546ba2668b52a452",
+  "qb_pass_yards_model.pkl": "e0d053e7905af2d46fd21827cb855d018371593c587c44d72c258e3bd279af85",
+  "qb_rush_yards_model.pkl": "5c732013af45c9d3ba7b1d7674a571c63f0f2319980c0ab53d3af27fd7d1356b",
+  "rb_model.pkl": "a2d18235bef170767633d0e4965dcc6340b3819160576c2ca86f4b8dd10ae930",
+  "rb_rec_yards_model.pkl": "662ee6e2c16143f5e13f30be6381381d5036ef6ec08ff12f465f0e713e467164",
+  "rb_rush_yards_model.pkl": "457baac7e94c9209628e07a9ac4e5a4cc4eca19536cca5e6de43c7173a5525c5",
+  "te_model.pkl": "c169d375a2437f049a069e11c95ef3a6a98eae1c1faa38205e906d5998f6bf7e",
+  "te_rec_yards_model.pkl": "911a3d8c31f2b1c25743443a113f9b1d3f8f686e0e413ede9856032288216659",
+  "te_receptions_model.pkl": "8a71b56341e87ad1f86dc53b4e37b62a30f05fb199f97bee3ceb6179a1a76956",
+  "wr_model.pkl": "821dca9147a185fb8115f0f8ded2cfc735259aa476165ba32a7179503f98af61",
+  "wr_rec_yards_model.pkl": "7c2d1943979d766085b3324b9fde5cdbabc922d2378d9f74133ea08209ecada6",
+  "wr_receptions_model.pkl": "ba2e825ce471df6375d8c494b47387f437bb01bda79dd60f777d6023602fba66"
+ },
+ "models": {
+  "QB": {
+   "n_train": 2481,
+   "n_test": 508,
+   "n_features": 66,
+   "feature_order_hash": "9397be9110a3c6bd",
+   "best_iteration": 77
+  },
+  "RB": {
+   "n_train": 6105,
+   "n_test": 1284,
+   "n_features": 89,
+   "feature_order_hash": "28b0bef5aef9a2d6",
+   "best_iteration": 90
+  },
+  "WR": {
+   "n_train": 9792,
+   "n_test": 2030,
+   "n_features": 89,
+   "feature_order_hash": "28b0bef5aef9a2d6",
+   "best_iteration": 40
+  },
+  "TE": {
+   "n_train": 4745,
+   "n_test": 1022,
+   "n_features": 89,
+   "feature_order_hash": "28b0bef5aef9a2d6",
+   "best_iteration": 76
+  }
+ },
+ "stat_models": {
+  "qb_pass_yards": {
+   "path": null,
+   "position": "QB",
+   "raw_col": "passing_yards",
+   "n_train": 2481,
+   "n_test": 508,
+   "feature_order_hash": "9397be9110a3c6bd",
+   "new_model_new_data": {
+    "n": 508,
+    "mae": 67.2508,
+    "rmse": 86.3955
+   }
+  },
+  "qb_rush_yards": {
+   "path": null,
+   "position": "QB",
+   "raw_col": "rushing_yards",
+   "n_train": 2481,
+   "n_test": 508,
+   "feature_order_hash": "9397be9110a3c6bd",
+   "new_model_new_data": {
+    "n": 508,
+    "mae": 12.3616,
+    "rmse": 16.5358
+   }
+  },
+  "rb_rush_yards": {
+   "path": null,
+   "position": "RB",
+   "raw_col": "rushing_yards",
+   "n_train": 6105,
+   "n_test": 1284,
+   "feature_order_hash": "28b0bef5aef9a2d6",
+   "new_model_new_data": {
+    "n": 1284,
+    "mae": 20.709,
+    "rmse": 29.5933
+   }
+  },
+  "rb_rec_yards": {
+   "path": null,
+   "position": "RB",
+   "raw_col": "receiving_yards",
+   "n_train": 6105,
+   "n_test": 1284,
+   "feature_order_hash": "28b0bef5aef9a2d6",
+   "new_model_new_data": {
+    "n": 1284,
+    "mae": 10.5541,
+    "rmse": 14.7601
+   }
+  },
+  "wr_receptions": {
+   "path": null,
+   "position": "WR",
+   "raw_col": "receptions",
+   "n_train": 9792,
+   "n_test": 2030,
+   "feature_order_hash": "28b0bef5aef9a2d6",
+   "new_model_new_data": {
+    "n": 2030,
+    "mae": 1.4074,
+    "rmse": 1.8409
+   }
+  },
+  "wr_rec_yards": {
+   "path": null,
+   "position": "WR",
+   "raw_col": "receiving_yards",
+   "n_train": 9792,
+   "n_test": 2030,
+   "feature_order_hash": "28b0bef5aef9a2d6",
+   "new_model_new_data": {
+    "n": 2030,
+    "mae": 21.6529,
+    "rmse": 28.6306
+   }
+  },
+  "te_receptions": {
+   "path": null,
+   "position": "TE",
+   "raw_col": "receptions",
+   "n_train": 4745,
+   "n_test": 1022,
+   "feature_order_hash": "28b0bef5aef9a2d6",
+   "new_model_new_data": {
+    "n": 1022,
+    "mae": 1.2416,
+    "rmse": 1.7079
+   }
+  },
+  "te_rec_yards": {
+   "path": null,
+   "position": "TE",
+   "raw_col": "receiving_yards",
+   "n_train": 4745,
+   "n_test": 1022,
+   "feature_order_hash": "28b0bef5aef9a2d6",
+   "new_model_new_data": {
+    "n": 1022,
+    "mae": 15.6399,
+    "rmse": 21.6188
+   }
+  }
+ },
+ "comparison": {
+  "main": {
+   "QB": {
+    "old_model_old_data": {
+     "n": 571,
+     "mae": 6.8136,
+     "rmse": 8.4318
+    },
+    "old_model_new_data": {
+     "n": 508,
+     "mae": 6.9138,
+     "rmse": 8.561
+    },
+    "new_model_new_data": {
+     "n": 508,
+     "mae": 6.859,
+     "rmse": 8.5023
+    },
+    "baseline_new_data": {
+     "n": 508,
+     "mae": 7.3775,
+     "rmse": 9.4
+    },
+    "baseline_old_data": {
+     "n": 571,
+     "mae": 7.488,
+     "rmse": 9.3683
+    },
+    "new_vs_baseline_paired": {
+     "mean_mae_gain": 0.5185,
+     "se": 0.1657,
+     "t": 3.13,
+     "n": 508
+    }
+   },
+   "RB": {
+    "old_model_old_data": {
+     "n": 1397,
+     "mae": 4.4009,
+     "rmse": 6.3589
+    },
+    "old_model_new_data": {
+     "n": 1284,
+     "mae": 4.4902,
+     "rmse": 6.3401
+    },
+    "new_model_new_data": {
+     "n": 1284,
+     "mae": 4.489,
+     "rmse": 6.3314
+    },
+    "baseline_new_data": {
+     "n": 1284,
+     "mae": 4.5779,
+     "rmse": 6.6956
+    },
+    "baseline_old_data": {
+     "n": 1397,
+     "mae": 4.5948,
+     "rmse": 6.6119
+    },
+    "new_vs_baseline_paired": {
+     "mean_mae_gain": 0.0889,
+     "se": 0.0772,
+     "t": 1.15,
+     "n": 1284
+    }
+   },
+   "WR": {
+    "old_model_old_data": {
+     "n": 2215,
+     "mae": 3.9556,
+     "rmse": 5.2833
+    },
+    "old_model_new_data": {
+     "n": 2030,
+     "mae": 3.9881,
+     "rmse": 5.2885
+    },
+    "new_model_new_data": {
+     "n": 2030,
+     "mae": 4.0148,
+     "rmse": 5.2926
+    },
+    "baseline_new_data": {
+     "n": 2030,
+     "mae": 4.0271,
+     "rmse": 5.7092
+    },
+    "baseline_old_data": {
+     "n": 2215,
+     "mae": 4.061,
+     "rmse": 5.7174
+    },
+    "new_vs_baseline_paired": {
+     "mean_mae_gain": 0.0123,
+     "se": 0.0546,
+     "t": 0.23,
+     "n": 2030
+    }
+   },
+   "TE": {
+    "old_model_old_data": {
+     "n": 1145,
+     "mae": 3.1637,
+     "rmse": 4.5504
+    },
+    "old_model_new_data": {
+     "n": 1022,
+     "mae": 3.1711,
+     "rmse": 4.6243
+    },
+    "new_model_new_data": {
+     "n": 1022,
+     "mae": 3.2002,
+     "rmse": 4.6457
+    },
+    "baseline_new_data": {
+     "n": 1022,
+     "mae": 3.4846,
+     "rmse": 5.1463
+    },
+    "baseline_old_data": {
+     "n": 1145,
+     "mae": 3.4782,
+     "rmse": 5.0862
+    },
+    "new_vs_baseline_paired": {
+     "mean_mae_gain": 0.2844,
+     "se": 0.0683,
+     "t": 4.16,
+     "n": 1022
+    }
+   }
+  },
+  "per_stat": {
+   "qb_pass_yards": {
+    "old_model_old_data": {
+     "n": 571,
+     "mae": 68.9842,
+     "rmse": 87.531
+    },
+    "baseline_old_data": null,
+    "old_model_new_data": {
+     "n": 508,
+     "mae": 66.8914,
+     "rmse": 85.6123
+    },
+    "baseline_new_data": null,
+    "new_model_new_data": {
+     "n": 508,
+     "mae": 67.2508,
+     "rmse": 86.3955
+    }
+   },
+   "qb_rush_yards": {
+    "old_model_old_data": {
+     "n": 571,
+     "mae": 12.1381,
+     "rmse": 15.9694
+    },
+    "baseline_old_data": {
+     "n": 571,
+     "mae": 12.7919,
+     "rmse": 17.9259
+    },
+    "old_model_new_data": {
+     "n": 508,
+     "mae": 12.2788,
+     "rmse": 16.1041
+    },
+    "baseline_new_data": {
+     "n": 508,
+     "mae": 13.0358,
+     "rmse": 18.173
+    },
+    "new_model_new_data": {
+     "n": 508,
+     "mae": 12.3616,
+     "rmse": 16.5358
+    }
+   },
+   "rb_rush_yards": {
+    "old_model_old_data": {
+     "n": 1397,
+     "mae": 20.5889,
+     "rmse": 30.2103
+    },
+    "baseline_old_data": {
+     "n": 1397,
+     "mae": 21.1977,
+     "rmse": 31.4348
+    },
+    "old_model_new_data": {
+     "n": 1284,
+     "mae": 20.4173,
+     "rmse": 29.5529
+    },
+    "baseline_new_data": {
+     "n": 1284,
+     "mae": 21.0347,
+     "rmse": 31.607
+    },
+    "new_model_new_data": {
+     "n": 1284,
+     "mae": 20.709,
+     "rmse": 29.5933
+    }
+   },
+   "rb_rec_yards": {
+    "old_model_old_data": {
+     "n": 1397,
+     "mae": 10.4916,
+     "rmse": 14.964
+    },
+    "baseline_old_data": {
+     "n": 1397,
+     "mae": 10.8777,
+     "rmse": 16.4957
+    },
+    "old_model_new_data": {
+     "n": 1284,
+     "mae": 10.5044,
+     "rmse": 14.761
+    },
+    "baseline_new_data": {
+     "n": 1284,
+     "mae": 10.7722,
+     "rmse": 16.501
+    },
+    "new_model_new_data": {
+     "n": 1284,
+     "mae": 10.5541,
+     "rmse": 14.7601
+    }
+   },
+   "wr_receptions": {
+    "old_model_old_data": {
+     "n": 2215,
+     "mae": 1.3833,
+     "rmse": 1.8288
+    },
+    "baseline_old_data": {
+     "n": 2215,
+     "mae": 1.4311,
+     "rmse": 1.9672
+    },
+    "old_model_new_data": {
+     "n": 2030,
+     "mae": 1.3987,
+     "rmse": 1.8435
+    },
+    "baseline_new_data": {
+     "n": 2030,
+     "mae": 1.4225,
+     "rmse": 1.9759
+    },
+    "new_model_new_data": {
+     "n": 2030,
+     "mae": 1.4074,
+     "rmse": 1.8409
+    }
+   },
+   "wr_rec_yards": {
+    "old_model_old_data": {
+     "n": 2215,
+     "mae": 21.1348,
+     "rmse": 28.2408
+    },
+    "baseline_old_data": {
+     "n": 2215,
+     "mae": 21.9277,
+     "rmse": 30.5881
+    },
+    "old_model_new_data": {
+     "n": 2030,
+     "mae": 21.4183,
+     "rmse": 28.567
+    },
+    "baseline_new_data": {
+     "n": 2030,
+     "mae": 22.145,
+     "rmse": 31.1417
+    },
+    "new_model_new_data": {
+     "n": 2030,
+     "mae": 21.6529,
+     "rmse": 28.6306
+    }
+   },
+   "te_receptions": {
+    "old_model_old_data": {
+     "n": 1145,
+     "mae": 1.2455,
+     "rmse": 1.7194
+    },
+    "baseline_old_data": {
+     "n": 1145,
+     "mae": 1.329,
+     "rmse": 1.8879
+    },
+    "old_model_new_data": {
+     "n": 1022,
+     "mae": 1.2546,
+     "rmse": 1.7292
+    },
+    "baseline_new_data": {
+     "n": 1022,
+     "mae": 1.3275,
+     "rmse": 1.8773
+    },
+    "new_model_new_data": {
+     "n": 1022,
+     "mae": 1.2416,
+     "rmse": 1.7079
+    }
+   },
+   "te_rec_yards": {
+    "old_model_old_data": {
+     "n": 1145,
+     "mae": 15.3733,
+     "rmse": 21.3457
+    },
+    "baseline_old_data": {
+     "n": 1145,
+     "mae": 16.2868,
+     "rmse": 23.3608
+    },
+    "old_model_new_data": {
+     "n": 1022,
+     "mae": 15.6045,
+     "rmse": 21.7402
+    },
+    "baseline_new_data": {
+     "n": 1022,
+     "mae": 16.5762,
+     "rmse": 23.7664
+    },
+    "new_model_new_data": {
+     "n": 1022,
+     "mae": 15.6399,
+     "rmse": 21.6188
+    }
+   }
+  }
+ }
+}

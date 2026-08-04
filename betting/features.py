@@ -31,6 +31,12 @@ import numpy as np
 import pandas as pd
 import nflreadpy as nfl
 
+# Canonical All-Pro player identity (2026-08-03). The source CSV has no player ID and two
+# distinct players share the name "C.J. Mosley"; keying on the name merged them and the
+# survivor depended on pandas' unstable default sort. See betting/allpro_identity.py.
+from allpro_identity import (AllProIdentityError, injured_allpro_weight,
+                             resolve_allpro_identities, weighted_lookback)
+
 # ============================================================================
 # Constants
 # ============================================================================
@@ -362,24 +368,24 @@ def _build_sos_and_performance(upcoming, _hist_rolling, history, week_margin_lkp
 # Group 4 — `_build_allpro`
 # ============================================================================
 def _build_allpro(upcoming, allpro_df, target_season):
-    """Group 4: weighted 3-year AllPro roster quality (offense/defense split)."""
+    """Group 4: weighted 3-year AllPro roster quality (offense/defense split).
+
+    Identity is resolved through `betting/allpro_identity.py` (2026-08-03). This used to
+    dedupe with `sort_values("Weight").drop_duplicates(["Player", "Year_target"])`, which
+    (a) keyed on the NAME, silently merging two distinct players called C.J. Mosley, and
+    (b) depended on pandas' unstable default sort for which of them survived. The
+    replacement keys on a canonical identity and never sorts.
+    """
+    allpro_df = resolve_allpro_identities(allpro_df)
     offense_df = allpro_df[allpro_df["Side"] == "offense"].copy()
     defense_df = allpro_df[allpro_df["Side"] == "defense"].copy()
 
     def build_weighted(df_ap):
-        frames = []
-        for year in range(2006, target_season + 1):
-            curr = []
-            for yrs_back, weight in zip([1, 2, 3], [4, 2, 1]):
-                tmp = df_ap[df_ap["Year"] == year - yrs_back].copy()
-                tmp["Weight"] = weight
-                tmp["Year_target"] = year
-                curr.append(tmp)
-            comb    = pd.concat(curr)
-            deduped = comb.sort_values("Weight", ascending=False).drop_duplicates(["Player", "Year_target"])
-            wc      = deduped.groupby(["Year_target", "Team"])["Weight"].sum().reset_index()
-            wc.columns = ["season", "Team", "allpro_weighted"]
-            frames.append(wc)
+        frames = [weighted_lookback(df_ap, year)
+                  for year in range(2006, target_season + 1)]
+        frames = [f for f in frames if len(f)]
+        if not frames:
+            return pd.DataFrame(columns=["season", "Team", "allpro_weighted"])
         return pd.concat(frames, ignore_index=True)
 
     weighted_allpro  = build_weighted(allpro_df)
@@ -398,9 +404,11 @@ def _build_allpro(upcoming, allpro_df, target_season):
     upcoming = merge_allpro(upcoming, offense_weighted, "allpro_weighted", "home_offense_allpro_3_years",        "away_offense_allpro_3_years")
     upcoming = merge_allpro(upcoming, defense_weighted, "allpro_weighted", "home_defense_allpro_3_years",        "away_defense_allpro_3_years")
 
-    prev_overall = allpro_df.assign(season=allpro_df["Year"] + 1).groupby(["season", "Team"])["Player"].nunique().reset_index(name="allpro_prev_year")
-    prev_offense = offense_df.assign(season=offense_df["Year"] + 1).groupby(["season", "Team"])["Player"].nunique().reset_index(name="allpro_prev_year")
-    prev_defense = defense_df.assign(season=defense_df["Year"] + 1).groupby(["season", "Team"])["Player"].nunique().reset_index(name="allpro_prev_year")
+    # Count distinct IDENTITIES, not names — two players sharing a name on one team would
+    # otherwise count as one (2026-08-03).
+    prev_overall = allpro_df.assign(season=allpro_df["Year"] + 1).groupby(["season", "Team"])["allpro_id"].nunique().reset_index(name="allpro_prev_year")
+    prev_offense = offense_df.assign(season=offense_df["Year"] + 1).groupby(["season", "Team"])["allpro_id"].nunique().reset_index(name="allpro_prev_year")
+    prev_defense = defense_df.assign(season=defense_df["Year"] + 1).groupby(["season", "Team"])["allpro_id"].nunique().reset_index(name="allpro_prev_year")
 
     upcoming = merge_allpro(upcoming, prev_overall, "allpro_prev_year", "home_allpro_prev_year",         "away_allpro_prev_year")
     upcoming = merge_allpro(upcoming, prev_offense, "allpro_prev_year", "home_offense_allpro_prev_year", "away_offense_allpro_prev_year")
@@ -419,8 +427,17 @@ def _build_allpro(upcoming, allpro_df, target_season):
 # ============================================================================
 def _build_situational_pbp(upcoming, pbp_s, wk_lookup):
     """Group 6: sacks, turnovers, third-down conversion rate (5-game rolling)."""
-    sack_df = pbp_s[pbp_s["sack"] == 1].copy()
-    sacks   = sack_df.groupby(["game_id", "defteam"]).size().reset_index(name="sacks").rename(columns={"defteam": "team"})
+    # DENSE sack table -- zero-sack games must keep a row. LEAK/BIAS FIX 2026-08-03.
+    # This used to filter `sack == 1` BEFORE the groupby, so a defense with no sack in a
+    # game produced no row and the 5-game window silently skipped it instead of averaging
+    # a 0. Reproduced: sacks of 3, 2, 0, 4 served 3.0 against a true mean of 2.25. The
+    # turnover and third-down blocks below always grouped the full pbp; sacks was the odd
+    # one out. Training (model_comparison.ipynb Section 7) carried the same defect plus a
+    # contemporaneous-information leak, and was fixed in the same change -- keep the two
+    # definitions identical or train/serve skew returns.
+    pbp_sack = pbp_s.copy()
+    pbp_sack["_sack_i"] = (pbp_sack["sack"] == 1).astype(int)
+    sacks   = pbp_sack.groupby(["game_id", "defteam"])["_sack_i"].sum().reset_index(name="sacks").rename(columns={"defteam": "team"})
     sacks   = sacks.merge(wk_lookup[["game_id", "week", "season"]], on="game_id", how="left").sort_values(["team", "season", "week"])
     sacks["rolling_sacks"] = sacks.groupby("team")["sacks"].transform(lambda x: x.rolling(5, min_periods=1).mean())
     latest_sacks = sacks.groupby("team").nth(-1).reset_index()[["team", "rolling_sacks"]]
@@ -619,12 +636,25 @@ def _build_injuries(upcoming, allpro_df, target_season, target_week):
             tmp["season"] = tmp["Year"] + yrs_back
             tmp["weight"] = weight
             allpro_hist.append(tmp)
-        allpro_wh = pd.concat(allpro_hist).drop_duplicates(["Player", "season"])
+        # ignore_index is load-bearing: pd.concat of the three lookback frames repeats
+        # index labels, and `.loc[groupby(...).idxmax()]` on a duplicated index returns
+        # EVERY row sharing a winning label — reintroducing the very fan-out the identity
+        # fix removes. The fan-out assertion in injured_allpro_weight caught this.
+        allpro_wh = pd.concat(allpro_hist, ignore_index=True)
+        # Identity-keyed, order-invariant: keep each identity's highest weight per season.
+        # Was drop_duplicates(["Player","season"]) — same name-collision defect as Group 4.
+        allpro_wh = resolve_allpro_identities(allpro_wh)
+        allpro_wh = allpro_wh.loc[allpro_wh.groupby(["allpro_id", "season"])["weight"].idxmax()]
         allpro_wh = allpro_wh.copy()
-        allpro_wh["_name_norm"] = allpro_wh["Player"].map(norm_name)
-        inj_all["_name_norm"]   = inj_all["full_name"].map(norm_name)
-        inj_all   = inj_all.merge(allpro_wh[["_name_norm", "season", "weight"]], on=["_name_norm", "season"], how="left")
-        inj_all   = inj_all[inj_all["weight"].notnull()]
+        # IDENTITY-AWARE injury match (2026-08-03). This previously dropped `allpro_id` and
+        # merged on ["_name_norm", "season"], which FANS OUT when two All-Pro players share
+        # a name in the same weight window — one injury row matched two All-Pro rows and the
+        # weight was subtracted twice, corrupting `diff_active_allpro_weighted`
+        # (PROD_FEATURES_35 #11). `injured_allpro_weight` is the shared implementation used
+        # by the training notebook too; it asserts no fan-out and aborts on any ambiguity
+        # its reviewed crosswalk does not cover.
+        inj_all = injured_allpro_weight(inj_all, allpro_wh, inj_name_col="full_name",
+                                        inj_team_col="team", season_col="season")
         inj_wt    = inj_all.groupby(["season", "week", "team"])["weight"].sum().reset_index().rename(columns={"weight": "inj_ap_wt"})
         upcoming  = upcoming.merge(inj_wt.rename(columns={"team": "home_team"}).drop(columns=["season", "week"]), on="home_team", how="left").rename(columns={"inj_ap_wt": "home_inj_ap_wt"})
         upcoming  = upcoming.merge(inj_wt.rename(columns={"team": "away_team"}).drop(columns=["season", "week"]), on="away_team", how="left").rename(columns={"inj_ap_wt": "away_inj_ap_wt"})
@@ -632,8 +662,10 @@ def _build_injuries(upcoming, allpro_df, target_season, target_week):
         upcoming["home_active_allpro_weighted"] = (upcoming["home_allpro_last_3_years_weighted"] - upcoming["home_inj_ap_wt"]).clip(lower=0)
         upcoming["away_active_allpro_weighted"] = (upcoming["away_allpro_last_3_years_weighted"] - upcoming["away_inj_ap_wt"]).clip(lower=0)
         upcoming["diff_active_allpro_weighted"] = upcoming["home_active_allpro_weighted"] - upcoming["away_active_allpro_weighted"]
-        _prev_yr_ap_norms   = set(allpro_df[allpro_df["Year"] == target_season - 1]["Player"].map(norm_name))
-        inj_prev_yr         = inj_all[inj_all["_name_norm"].isin(_prev_yr_ap_norms)]
+        # Identity-based, not name-based: a same-name player would otherwise be counted as
+        # the All-Pro. `inj_all` already carries `allpro_id` from the identity match above.
+        _prev_yr_ap_ids = set(allpro_df.loc[allpro_df["Year"] == target_season - 1, "allpro_id"])
+        inj_prev_yr     = inj_all[inj_all["allpro_id"].isin(_prev_yr_ap_ids)]
         inj_prev_yr_by_team = inj_prev_yr.groupby("team").size().reset_index(name="inj_ap_prev_yr")
         upcoming = upcoming.merge(inj_prev_yr_by_team.rename(columns={"team": "home_team", "inj_ap_prev_yr": "home_inj_ap_prev_yr"}), on="home_team", how="left")
         upcoming = upcoming.merge(inj_prev_yr_by_team.rename(columns={"team": "away_team", "inj_ap_prev_yr": "away_inj_ap_prev_yr"}), on="away_team", how="left")
@@ -642,6 +674,15 @@ def _build_injuries(upcoming, allpro_df, target_season, target_week):
         _away_active_prev = (upcoming["away_allpro_prev_year"] - upcoming["away_inj_ap_prev_yr"]).clip(lower=0)
         upcoming["diff_active_allpro_prev_year"] = _home_active_prev - _away_active_prev
 
+    except AllProIdentityError:
+        # FAIL CLOSED (2026-08-03). The broad handler below exists for one legitimate
+        # reason: the injury FEED may be unavailable, and a game with no injury report is
+        # honestly modelled as "no known injuries" (zeros). An IDENTITY failure is a
+        # different animal entirely — ambiguous player matches, a merge that fanned out, a
+        # violated invariant. Swallowing those and substituting zeros would silently ship
+        # wrong `diff_active_allpro_weighted` (PROD_FEATURES_35 #11) instead of refusing to
+        # predict. Re-raise so the caller aborts.
+        raise
     except Exception as e:
         print(f"  ⚠️  Injury data unavailable: {e} — using zeros")
         for col in ["home_injured_count", "away_injured_count", "diff_injured_count", "diff_active_allpro_weighted", "diff_active_allpro_prev_year"]:
@@ -666,13 +707,18 @@ def _build_coach_win_pct(upcoming, coach_hist_df, target_season, target_week):
     games_df = pd.concat([home_c, away_c], ignore_index=True)
     games_df["win"] = (games_df["team_score"] > games_df["opponent_score"]).astype(int)
 
-    def cumulative_coach(group):
-        group = group.sort_values(["season", "week", "game_id"]).copy()
-        group["cumulative_wins"]  = group["win"].cumsum().shift(fill_value=0)
-        group["cumulative_games"] = group["win"].expanding().count().shift(fill_value=0)
-        return group
-
-    games_df = games_df.groupby("coach", group_keys=False).apply(cumulative_coach)
+    # Vectorised, version-agnostic replacement for a per-coach `.apply` (2026-08-03).
+    # `groupby("coach", group_keys=False).apply(fn)` raised KeyError: 'coach' on pandas 3,
+    # which removed the grouping column from the frame handed to the callable and dropped
+    # `include_groups` entirely, so there was no kwarg fix. The whole build crashed --
+    # it was masked in CI only by the exact pandas==2.3.3 pin in requirements-ci.txt.
+    # Identities preserved exactly:
+    #   cumsum().shift(fill_value=0)          == cumsum() - win   (prior wins)
+    #   expanding().count().shift(fill_value=0) == cumcount()     (prior games: 0,1,2,...)
+    games_df = games_df.sort_values(["coach", "season", "week", "game_id"]).copy()
+    _by_coach = games_df.groupby("coach")
+    games_df["cumulative_wins"]  = _by_coach["win"].cumsum() - games_df["win"]
+    games_df["cumulative_games"] = _by_coach.cumcount().astype(float)
     games_df["coach_win_pct_prior"] = (
         games_df["cumulative_wins"] / games_df["cumulative_games"].replace(0, np.nan)
     ).fillna(0).round(3)

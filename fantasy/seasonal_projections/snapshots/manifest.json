@@ -1,4 +1,48 @@
 {
+  "combine": {
+    "args": "(seasons=True)",
+    "cols": 18,
+    "content": "public NFL Scouting Combine measurements (nflverse). Contains NO fantasy outcome, target, label, projection, ADP, market or sample-weight column; measurements are pre-draft and therefore point-in-time for every rookie season.",
+    "fetched_utc": "2026-08-03T18:03:58Z",
+    "loader": "load_combine",
+    "nflreadpy": "0.1.5",
+    "path": "fantasy/seasonal_projections/snapshots/combine.parquet",
+    "rows": 8968,
+    "schema_version": 1,
+    "season_max": 2026,
+    "season_min": 2000,
+    "seasons": [
+      2000,
+      2001,
+      2002,
+      2003,
+      2004,
+      2005,
+      2006,
+      2007,
+      2008,
+      2009,
+      2010,
+      2011,
+      2012,
+      2013,
+      2014,
+      2015,
+      2016,
+      2017,
+      2018,
+      2019,
+      2020,
+      2021,
+      2022,
+      2023,
+      2024,
+      2025,
+      2026
+    ],
+    "sha256": "1b6c48a0b56e515b043dd678ea38a2e6ae83cb9de488e6a0a89f8b2f980bf2cf",
+    "source_url": "https://github.com/nflverse/nflverse-data/releases/download/combine/combine.parquet"
+  },
   "depthchart_qb1_w1_2002_2025": {
     "args": "([2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025],)",
     "cols": 3,
@@ -53,6 +97,84 @@
     "rows": 25033,
     "sha256": "7b3acde823e41cbc3b5d170f8a52bce5c451f200843980be57faefac3b0e9856"
   },
+  "rookie_arm0_features_2014_2025": {
+    "args": "(build_rookie_arm0_features.build)",
+    "cols": 61,
+    "content": "DERIVED, OUTCOME-FREE rookie Arm 0 feature matrix for the frozen 2014-2025 RB/WR/TE rookie population. Contains NO fantasy outcome, target, label, sample weight, ADP, market projection or target-season realized statistic. Built by calling the production assemble_features.build_features() with the two nflverse loaders injected from pinned local snapshots; nulls are preserved exactly as production leaves them.",
+    "fetched_utc": "2026-08-03T20:44:18Z",
+    "generator": "fantasy/seasonal_projections/build_rookie_arm0_features.py",
+    "keys": [
+      "player_id",
+      "season"
+    ],
+    "loader": "build_rookie_arm0_features.build",
+    "nflreadpy": "0.1.5",
+    "path": "fantasy/seasonal_projections/snapshots/rookie_arm0_features_2014_2025.parquet",
+    "pff_consumed": {
+      "kinds": [
+        "passing",
+        "receiving",
+        "rushing"
+      ],
+      "n_files": 36,
+      "note": "aggregate sha256 over sorted relative paths + bytes of EXACTLY the PFF college summary files this build consumes (36 of 941 local files). Raw PFF files remain private and untracked; only this digest is repo-owned.",
+      "seasons": [
+        2014,
+        2015,
+        2016,
+        2017,
+        2018,
+        2019,
+        2020,
+        2021,
+        2022,
+        2023,
+        2024,
+        2025
+      ],
+      "sha256": "148e2465abb6389cdd4e741dee21f0d168638f91dc23f66407950d2fbd718038"
+    },
+    "point_in_time": "every attached PFF block comes from a college season STRICTLY BEFORE the NFL rookie season; verifiable from the artifact via pff_receiving_source_season / pff_rushing_source_season without the private PFF library",
+    "positions": [
+      "RB",
+      "TE",
+      "WR"
+    ],
+    "provenance_columns": [
+      "pff_receiving_source_season",
+      "pff_rushing_source_season"
+    ],
+    "rows": 1263,
+    "schema_version": 2,
+    "season_max": 2025,
+    "season_min": 2014,
+    "seasons": [
+      2014,
+      2015,
+      2016,
+      2017,
+      2018,
+      2019,
+      2020,
+      2021,
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "sha256": "7625980495886141efd65fb9c65862ef7f3cf8af67e50f231c6c3c12d9f45385",
+    "source_categories": [
+      "snapshots/combine.parquet (public nflverse, pinned)",
+      "snapshots/draft_picks.parquet (public nflverse, pinned)",
+      "season_dataset_2014_2026.csv (repo-owned; landing-spot features only)",
+      "college_features.csv (repo-owned college box)",
+      "PRIVATE PFF college summaries (authorized; RAW FILES REMAIN UNTRACKED - only derived feature values are stored here)"
+    ],
+    "supersedes": {
+      "reason": "INVALID \u2014 built with a non-temporal PFF join (max college season per norm_name, season discarded before the merge). 28 leaked (row, kind) pairs over 22 rookie player-seasons drew college data from at or after the NFL rookie season.",
+      "sha256": "4b4655abde1c63d6316db2277d2a5301360842c9cec94fea0c2c5d77f5252584"
+    }
+  },
   "rosters_2011_2025": {
     "args": "([2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025],)",
     "cols": 36,
@@ -106,5 +228,84 @@
     "nflreadpy": "0.1.5",
     "rows": 324611,
     "sha256": "7b85db1820364f0b5817c623485e179cf2747b3d7f35d8624af54e59bc424de9"
+  },
+  "veteran_arm0_features_2014_2025": {
+    "args": "(build_veteran_arm0_snapshot.build)",
+    "cols": 40,
+    "content": "FEATURE-ONLY Arm 0 VETERAN snapshot for the frozen 2014-2025 experiment window. Contains NO target, outcome, label, sample weight, ADP or market column. The schema and population are DERIVED at build time from the live contracts (assemble_real_panel_v39.VETERAN_FEATURE_COLUMNS and ALL_PANEL_SEASONS) and the 32 features are cross-checked against the four shipped veteran bundles' own feature_cols. The authorized experiment reads THIS file and not the mutable production CSV, so refreshing deploy-season 2026 cannot affect activation.",
+    "fetched_utc": "2026-08-04T00:23:31Z",
+    "generator": "fantasy/seasonal_projections/build_veteran_arm0_snapshot.py",
+    "keys": [
+      "player_id",
+      "season"
+    ],
+    "loader": "build_veteran_arm0_snapshot.build",
+    "path": "fantasy/seasonal_projections/snapshots/veteran_arm0_features_2014_2025.parquet",
+    "rows": 7350,
+    "schema": [
+      "player_id",
+      "player",
+      "norm_name",
+      "position",
+      "team",
+      "season",
+      "reconstructed",
+      "is_rookie",
+      "prior_ppg",
+      "prior_half_ppr",
+      "prior_games",
+      "ppg_2yr",
+      "ppg_3yr",
+      "ppg_trend",
+      "career_high_ppg",
+      "prior_snap_share_pg",
+      "prior_targets_pg",
+      "prior_carries_pg",
+      "prior_receptions_pg",
+      "prior_touches_pg",
+      "prior_target_share",
+      "prior_air_yards_share",
+      "prior_adot",
+      "prior_td_rate",
+      "prior_yptarget",
+      "prior_ypc",
+      "prior_rec_epa",
+      "prior_rush_epa",
+      "age",
+      "years_exp",
+      "draft_round",
+      "draft_pick",
+      "prior_team_pass_rate",
+      "prior_team_plays",
+      "vacated_target_share",
+      "vacated_rush_share",
+      "coach_changed",
+      "qb_changed",
+      "prior_games_missed",
+      "missed_prior_season"
+    ],
+    "schema_version": 1,
+    "season_max": 2025,
+    "season_min": 2014,
+    "seasons": [
+      2014,
+      2015,
+      2016,
+      2017,
+      2018,
+      2019,
+      2020,
+      2021,
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "sha256": "45cb2583acf7d046ecf54275d1ee3e70fcb9e4882d69a6b203e36350376bfbc8",
+    "source": {
+      "consumed_window": "season in 2014-2025 only; season 2026 is never read into the snapshot",
+      "note": "the source is a LIVE production artifact whose 2026 rows are refreshed; the 2014-2025 window it supplies is immutable in practice and was verified byte-equal across the 2026-08-03 qb_changed refresh (no 2014-2025 cell differed in any of the 47 columns). Building the snapshot from the pre-refresh copy reproduces this exact sha256.",
+      "path": "fantasy/seasonal_projections/season_dataset_2014_2026.csv"
+    }
   }
 }

@@ -17,9 +17,11 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(HERE))
-from config import WORK   # noqa: E402
+# TEST_WORK, not WORK: the goldens must be frozen from the SAME checkpoints the
+# suites read (the committed fixtures by default; TALENT_TEST_WORK to override).
+from config import TEST_WORK   # noqa: E402
 
-W = Path(WORK)
+W = Path(TEST_WORK)
 GOLD = HERE / "tests" / "golden"
 GOLD.mkdir(exist_ok=True)
 which = sys.argv[1] if len(sys.argv) > 1 else "all"
