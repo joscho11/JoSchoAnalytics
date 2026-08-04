@@ -186,12 +186,13 @@ def test_clearance_refuses_when_readiness_is_blocked(monkeypatch):
 def _authorized_shaped_preflight():
     """A preflight result SHAPED as an authorized-real pass. Constructed, never a real clearance.
 
-    A bare `preflight()` in a fresh process fails `pipeline_timing_assertions_ran`, so gate 1 would
-    refuse before the input stage was reached. Injecting a cleared result is what lets the LATER gates
-    be tested at all — and it is also how a real authorized run works: the run passes the preflight it
-    already cleared, rather than re-deriving a different one inside the door.
+    Injecting a cleared result is what lets the LATER gates be tested at all — and it is also how a
+    real authorized run works: the run passes the preflight it already cleared, rather than
+    re-deriving a different one inside the door. It is shaped as a PRE_RUN result, the only phase
+    `require_preflight_clearance` accepts (v3.9w).
     """
     return {"all_ok": True, "run_mode": ARP.AUTHORIZED_RUN_MODE,
+            "phase": ARP.PREFLIGHT_PHASE_PRE_RUN,
             "n_checks": len(ARP.FROZEN_AUTHORIZED_PREFLIGHT_CHECKS), "n_failed": 0, "failures": {},
             "checks": {n: {"ok": True, "detail": "synthetic fixture"}
                        for n in ARP.FROZEN_AUTHORIZED_PREFLIGHT_CHECKS}}
@@ -324,7 +325,7 @@ def test_the_authorized_readers_are_the_documented_way_to_build_them(tmp_path):
 # Design B stays oracle and unselectable; the pinned inputs are all four
 # =====================================================================================================
 def test_design_b_remains_oracle_and_unselectable():
-    pf = EX.preflight(require_pipeline_assertions=False)
+    pf = EX.preflight(phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     assert pf["checks"]["design_b_oracle_and_unselectable"]["ok"] is True
     src = (COACH / "run_coach_projection_experiment_v39.py").read_text(encoding="utf-8")
     body = src.split("def run_experiment", 1)[1].split("\ndef ", 1)[0]
@@ -340,7 +341,7 @@ def test_the_door_did_not_introduce_a_design_b_path():
 def test_all_four_pinned_input_families_are_verified_before_reading():
     """veteran features, rookie matrix, weekly outcome — plus coaching via preflight."""
     assert ARP.verify_pinned_activation_inputs(strict=False) == []
-    pf = EX.preflight(require_pipeline_assertions=False)
+    pf = EX.preflight(phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     assert pf["checks"]["v39_artifacts_pinned"]["ok"] is True, "coaching artifacts are the 4th family"
 
 
@@ -369,7 +370,7 @@ def test_the_stop_state_is_exactly_what_was_asked_for():
 
 
 def test_no_result_artifact_was_written():
-    pf = EX.preflight(require_pipeline_assertions=False)
+    pf = EX.preflight(phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     for check in ("no_unauthorized_v39_artifact", "v39_artifacts_pinned", "protected_hashes",
                   "production_models_identical", "no_coaching_parquet"):
         assert pf["checks"][check]["ok"] is True, pf["checks"][check]["detail"]

@@ -260,9 +260,49 @@ def validate_run_mode(run_mode, lock_state=None, authorization=None):
 
 
 # Tally of the timing / leakage / row-identity assertions the pipeline actually executed. C10 requires
-# each to be non-zero, so "the assertions passed" means they RAN, not merely that nothing raised.
+# each to be non-zero AFTER the pipeline, so "the assertions passed" means they RAN, not merely that
+# nothing raised.
 _PIPELINE_ASSERTIONS = {"inner_fold_timing": 0, "outer_no_self_train": 0,
                         "identical_rows_across_arms": 0, "coach_join_preserved_rows": 0}
+
+# The exact counter vocabulary, frozen BY VALUE so that deleting a counter cannot silently narrow the
+# post-pipeline requirement. `test_frozen_pipeline_assertion_names` pins it against the live dict.
+FROZEN_PIPELINE_ASSERTION_NAMES = ("inner_fold_timing", "outer_no_self_train",
+                                   "identical_rows_across_arms", "coach_join_preserved_rows")
+
+# =====================================================================================================
+# PREFLIGHT PHASES (v3.9w) — the repair for the CIRCULAR TIMING GATE
+# =====================================================================================================
+# The first authorized real run REFUSED at pre-run clearance. `pipeline_timing_assertions_ran` demanded
+# non-zero counters, but the counters are incremented BY `run_experiment`, which runs AFTER clearance —
+# so the authorized path could never clear its own gate. Every test had hidden it by injecting
+# `pipeline_assertions={...}` or stubbing `require_preflight_clearance`.
+#
+# The repair does NOT disable or fake the check. The check becomes PHASE-AWARE and is asserted TWICE,
+# with 21 checks in both phases:
+#   pre_run        every counter must be EXACTLY ZERO — the pipeline has not executed yet, as required.
+#                  A stale non-zero counter FAILS, because it would mean this process already ran a
+#                  pipeline and the post-run assertion could be satisfied by that earlier run.
+#   post_pipeline  every frozen counter must be POSITIVE, and any counter that did not execute is named.
+# The check is named `pipeline_timing_assertion_state` because "…_ran" is FALSE in the pre-run phase;
+# the name now describes what is actually being asserted in both phases.
+#
+# No statistical rule, threshold, denominator or frozen constant changes.
+PREFLIGHT_PHASE_PRE_RUN = "pre_run"
+PREFLIGHT_PHASE_POST_PIPELINE = "post_pipeline"
+PREFLIGHT_PHASES = (PREFLIGHT_PHASE_PRE_RUN, PREFLIGHT_PHASE_POST_PIPELINE)
+
+
+def validate_preflight_phase(phase):
+    """Fail-closed phase validation. Missing / unknown / malformed all REFUSE; nothing is inferred."""
+    if phase is None:
+        raise ValueError(f"preflight phase is missing; it must be exactly one of {PREFLIGHT_PHASES}")
+    if not isinstance(phase, str) or isinstance(phase, bool):
+        raise ValueError(f"preflight phase is {type(phase).__name__}, must be a str, "
+                         f"exactly one of {PREFLIGHT_PHASES}")
+    if phase not in PREFLIGHT_PHASES:
+        raise ValueError(f"unknown preflight phase {phase!r}; must be exactly one of {PREFLIGHT_PHASES}")
+    return phase
 
 
 def reset_pipeline_assertions():
@@ -287,6 +327,29 @@ BOOTSTRAP_DRAWS = 20_000
 BOOTSTRAP_SEED = 20260728
 PLACEBO_DRAWS = 200
 PLACEBO_SEED = 20260728
+# TEST-scale draws for the SYNTHETIC smoke path only. These were the CLI defaults, which meant the
+# documented authorized-real command would have run at 2,000/10 instead of the frozen 20,000/200
+# (v3.9w). They are now unreachable from `--run-mode authorized_real`.
+SMOKE_BOOTSTRAP_DRAWS = 2000
+SMOKE_PLACEBO_DRAWS = 10
+
+
+def validate_authorized_draw_counts(bootstrap_draws, placebo_draws):
+    """authorized_real accepts EXACTLY the frozen draw counts. Returns (ok, detail).
+
+    Not a clamp and not a warning: a differing count REFUSES the run, so a reduced-resolution real
+    result cannot be produced through the CLI at all — by omission, typo or convenience.
+    """
+    bad = []
+    for name, got, frozen in (("--bootstrap-draws", bootstrap_draws, BOOTSTRAP_DRAWS),
+                              ("--placebo-draws", placebo_draws, PLACEBO_DRAWS)):
+        if not (isinstance(got, int) and not isinstance(got, bool) and got == frozen):
+            bad.append(f"{name} is {got!r}, but authorized_real accepts exactly the frozen "
+                       f"integer {frozen}")
+    if bad:
+        return False, ("authorized_real draw counts are frozen and may not be varied: "
+                       + " || ".join(bad))
+    return True, f"draw counts match the frozen constants ({BOOTSTRAP_DRAWS}, {PLACEBO_DRAWS})"
 ARMS = AF.ARMS                        # ARM0, ARM_HC, ARM1..ARM5 — frozen order breaks final ties
 FIXED_DIAGNOSTIC_ARMS = [a for a in ARMS if a != "ARM_0"]
 POSITIONS = AF.POSITIONS
@@ -652,6 +715,11 @@ def require_preflight_clearance(run_mode=RUN_MODE_AUTHORIZED_REAL, preflight_res
          hash and manifest provenance. The five coaching artifacts are covered by check 2's
          `v39_artifacts_pinned`.
 
+    PHASE (v3.9w): this is PRE-RUN clearance and accepts ONLY a `pre_run` preflight result. A
+    `post_pipeline` result — in which the timing counters are positive — can NOT be replayed here, and
+    `require_post_pipeline_clearance` symmetrically refuses a `pre_run` result. Check 2 is therefore
+    21/21 in the pre-run phase, where the timing check asserts the counters are exactly zero.
+
     Returns the preflight result it cleared, so a caller cannot re-derive a different one.
     """
     import assemble_real_panel_v39 as _arp
@@ -661,7 +729,8 @@ def require_preflight_clearance(run_mode=RUN_MODE_AUTHORIZED_REAL, preflight_res
     if not real_fit_is_unlocked(authorization):
         raise RuntimeError(REAL_FIT_MESSAGE)
 
-    pf = preflight(run_mode=RUN_MODE_AUTHORIZED_REAL, authorization=authorization) \
+    pf = preflight(run_mode=RUN_MODE_AUTHORIZED_REAL, phase=PREFLIGHT_PHASE_PRE_RUN,
+                   authorization=authorization) \
         if preflight_result is None else preflight_result
     ready, ready_detail = _arp.activation_readiness(models_dir=models_dir,
                                                     feature_columns=feature_columns)
@@ -671,11 +740,50 @@ def require_preflight_clearance(run_mode=RUN_MODE_AUTHORIZED_REAL, preflight_res
     gate_ok, gate_detail = _arp.authorized_real_gate(pf, models_dir=models_dir,
                                                      feature_columns=feature_columns)
     if not gate_ok:
-        raise RuntimeError(f"clearance refused: {gate_detail}")
+        raise RuntimeError(f"clearance refused: {gate_detail}" + _failing_check_details(pf))
 
     if verify_inputs:
         _arp.verify_pinned_activation_inputs()
     return pf
+
+
+def _failing_check_details(preflight_result):
+    """The DETAIL of every not-ok check, so a refusal says what actually failed, not just its name.
+
+    The first authorized real run refused with `check(s) not explicitly ok:
+    ['pipeline_timing_assertions_ran']` and no further explanation; the detail that would have named
+    the circular dependency was sitting unused in the result (v3.9w).
+    """
+    if not isinstance(preflight_result, dict):
+        return ""
+    checks = preflight_result.get("checks")
+    if not isinstance(checks, dict):
+        return ""
+    bad = [f"{name}: {entry.get('detail')}" for name, entry in sorted(checks.items())
+           if isinstance(entry, dict) and entry.get("ok") is not True]
+    return ("  [details] " + " || ".join(bad)) if bad else ""
+
+
+def require_post_pipeline_clearance(preflight_result, authorization=None, verify_inputs=True):
+    """The SECOND 21/21 gate (v3.9w), evaluated AFTER `run_experiment` and BEFORE compose/write.
+
+    It is the phase-mirror of `require_preflight_clearance`: same 21 checks, same `authorized_real`
+    run mode, but the timing check now demands every counter be POSITIVE — i.e. the pipeline really did
+    execute every timing, leakage and row-identity assertion on the rows that produced these results.
+
+    It accepts ONLY a `post_pipeline` result. Raising here means ZERO result files land, because the
+    caller reaches `compose`/`write_results` only after this returns.
+    """
+    import assemble_real_panel_v39 as _arp
+    if not real_fit_is_unlocked(authorization):
+        raise RuntimeError(REAL_FIT_MESSAGE)
+    problems = _arp.validate_post_pipeline_preflight(preflight_result)
+    if problems:
+        raise RuntimeError("POST-PIPELINE CLEARANCE REFUSED — no result file may be written: "
+                           + " || ".join(problems) + _failing_check_details(preflight_result))
+    if verify_inputs:
+        _arp.verify_pinned_activation_inputs()
+    return preflight_result
 
 
 def assemble_real_panel(feature_reader, outcome_reader, authorization=None,
@@ -1180,7 +1288,11 @@ def run_experiment(panel, coach_a, coach_b=None, outer_seasons=OUTER_SEASONS, po
         sel_boot = {u: clustered_bootstrap(cohort, "pred_selected", "pred_ARM_0", unit,
                                            draws=bootstrap_draws)
                     for u, unit in CLUSTER_UNITS.items()}
-        integrity_ok, integrity_detail, pf = _integrity_check(run_mode=run_mode)
+        # The capability MUST be forwarded: `run_mode_locks` re-derives the lock state, and in an
+        # authorized real run the only opener is this invocation's capability. Without it every
+        # per-position C10 record would have reported a lock failure it did not have (v3.9w).
+        integrity_ok, integrity_detail, pf = _integrity_check(
+            run_mode=run_mode, phase=PREFLIGHT_PHASE_POST_PIPELINE, authorization=authorization)
         preflight_rows.append(dict(position=pos, run_mode=run_mode, all_ok=pf["all_ok"],
                                    n_checks=pf["n_checks"], n_failed=pf["n_failed"],
                                    **{f"chk_{k}": v["ok"] for k, v in pf["checks"].items()},
@@ -1844,18 +1956,24 @@ PREFLIGHT_CHECKS = (
     "contribution_lineage_reconciles", "design_b_oracle_and_unselectable",
     "production_models_identical", "no_real_outcome_access",
     "assembly_module_contract",
-    "pipeline_timing_assertions_ran", "run_mode_locks",
+    "pipeline_timing_assertion_state", "run_mode_locks",
 )
 
 
 def preflight(run_mode=DEFAULT_RUN_MODE, pipeline_assertions=None, data_dir=None,
-              require_pipeline_assertions=True, authorization=None):
+              phase=PREFLIGHT_PHASE_POST_PIPELINE, authorization=None):
     """Deterministic runtime validation backing condition (10). Reads no outcome.
 
-    Returns `{check: {"ok": bool, "detail": str}}` plus `all_ok`. C10 passes only when EVERY required
-    check is true. `data_dir` lets a test point the artifact checks at a temporary copy so a corrupted
-    contract can be proven to fail **without mutating a canonical artifact**.
+    Returns `{check: {"ok": bool, "detail": str}}` plus `all_ok` and the `phase` it was evaluated in.
+    C10 passes only when EVERY required check is true — 21 in BOTH phases. `data_dir` lets a test point
+    the artifact checks at a temporary copy so a corrupted contract can be proven to fail **without
+    mutating a canonical artifact**.
+
+    `phase` selects the required STATE of the pipeline timing counters (see PREFLIGHT_PHASES). It is
+    validated fail-closed and is carried in the result, so a pre-run result can never be replayed as a
+    post-pipeline clearance or the reverse.
     """
+    phase = validate_preflight_phase(phase)
     D = DATA if data_dir is None else pathlib.Path(data_dir)
     res, fails = {}, {}
 
@@ -2161,28 +2279,47 @@ def preflight(run_mode=DEFAULT_RUN_MODE, pipeline_assertions=None, data_dir=None
     check("assembly_module_contract", _assembly)
 
     def _assertions():
+        """PHASE-AWARE. Never disabled in either phase — only the required STATE differs."""
         tally = _PIPELINE_ASSERTIONS if pipeline_assertions is None else pipeline_assertions
-        if not require_pipeline_assertions:
-            return True, f"not required in this context; tally {dict(tally)}"
-        zero = [k for k, v in tally.items() if not v]
-        return (not zero), (f"assertions never executed: {zero}" if zero
-                            else f"all pipeline assertions ran: {dict(tally)}")
-    check("pipeline_timing_assertions_ran", _assertions)
+        if phase == PREFLIGHT_PHASE_PRE_RUN:
+            nonzero = {k: v for k, v in tally.items() if v}
+            if nonzero:
+                return False, (f"pre_run requires every pipeline assertion counter to be exactly 0, "
+                               f"but stale non-zero counters are present: {nonzero} — a pipeline has "
+                               f"already executed in this process")
+            return True, ("pre_run: the pipeline has not yet executed, as required; every counter is "
+                          f"exactly 0 {dict(tally)}")
+        missing = [k for k in FROZEN_PIPELINE_ASSERTION_NAMES if k not in tally]
+        zero = [k for k in FROZEN_PIPELINE_ASSERTION_NAMES
+                if k in tally and not (isinstance(tally[k], int) and not isinstance(tally[k], bool)
+                                       and tally[k] > 0)]
+        if missing or zero:
+            return False, (f"post_pipeline: assertions that did not execute: {sorted(zero + missing)} "
+                           f"(absent from the tally: {missing}) — tally {dict(tally)}")
+        return True, f"post_pipeline: every pipeline assertion executed {dict(tally)}"
+    check("pipeline_timing_assertion_state", _assertions)
 
     def _mode():
         return validate_run_mode(run_mode, authorization=authorization)
     check("run_mode_locks", _mode)
 
     all_ok = all(v["ok"] for v in res.values())
-    return dict(run_mode=run_mode, all_ok=all_ok, checks=res, failures=fails,
+    return dict(run_mode=run_mode, phase=phase, all_ok=all_ok, checks=res, failures=fails,
                 n_checks=len(res), n_failed=len(fails),
                 detail=("; ".join(f"{k}: {v}" for k, v in fails.items()) if fails
                         else "all preflight checks passed"))
 
 
-def _integrity_check(run_mode=DEFAULT_RUN_MODE, pipeline_assertions=None):
-    """C10 gate. Returns (ok, detail, structured record)."""
-    pf = preflight(run_mode=run_mode, pipeline_assertions=pipeline_assertions)
+def _integrity_check(run_mode=DEFAULT_RUN_MODE, pipeline_assertions=None,
+                     phase=PREFLIGHT_PHASE_POST_PIPELINE, authorization=None):
+    """C10 gate. Returns (ok, detail, structured record).
+
+    Defaults to `post_pipeline`: every call site is INSIDE `run_experiment`, after that position's
+    folds have executed, so the timing assertions must be POSITIVE — the strict requirement is
+    unchanged by the phase repair.
+    """
+    pf = preflight(run_mode=run_mode, pipeline_assertions=pipeline_assertions, phase=phase,
+                   authorization=authorization)
     return pf["all_ok"], pf["detail"], pf
 
 
@@ -2371,23 +2508,37 @@ def parse_outer_seasons(spec):
 
 
 def run_authorized_real(outer_seasons, bootstrap_draws, placebo_draws, out_dir=None,
-                        overwrite=False, verbose=True, authorization=None):
+                        overwrite=False, verbose=True, authorization=None,
+                        feature_source=None, outcome_source=None, positions=None):
     """THE authorized-real path. Unreachable unless BOTH locks are open.
 
-    Order is fixed and each step gates the next:
-      authorization -> preflight/readiness/gate clearance -> pinned readers -> assemble_real_panel
-      -> canonical adapter -> run_experiment(run_mode='authorized_real') -> validate frames
-      -> atomic five-file write -> hashes.
+    Order is fixed and each step gates the next (v3.9w):
+      authorization -> reset counters -> PRE_RUN preflight 21/21 -> clearance/readiness/gate
+      -> pinned readers -> assemble_real_panel -> canonical adapter
+      -> run_experiment(run_mode='authorized_real') -> POST_PIPELINE preflight 21/21
+      -> validate result frames -> atomic five-file write -> hashes.
 
     Statement 1 refuses on a closed or partial lock before any reader is constructed, so an
-    unauthorized invocation reaches no data at all.
+    unauthorized invocation reaches no data at all. The counters are reset immediately before the
+    pre-run preflight so that this invocation's post-pipeline evidence is its OWN — a positive counter
+    inherited from an earlier pipeline in the same process can never satisfy the second gate.
+
+    `feature_source` / `outcome_source` / `positions` exist so that THIS control flow — every real gate,
+    in this order — can be exercised by a test with synthetic readers and a temporary output directory,
+    WITHOUT injecting counters and WITHOUT stubbing any gate. That was the blind spot the first
+    authorized run hit: the circular pre-run gate was invisible because every test supplied
+    `pipeline_assertions=` or replaced `require_preflight_clearance`. Defaulting to `None` selects the
+    real pinned readers and the frozen position set, so the production path is unchanged; injecting a
+    reader grants no access, because every gate above still has to pass first.
     """
     import assemble_real_panel_v39 as _arp
     import write_v39_results as _wr
 
     require_real_fit_authorization(authorization)
 
-    pf = preflight(run_mode=RUN_MODE_AUTHORIZED_REAL, authorization=authorization)
+    reset_pipeline_assertions()
+    pf = preflight(run_mode=RUN_MODE_AUTHORIZED_REAL, phase=PREFLIGHT_PHASE_PRE_RUN,
+                   authorization=authorization)
     require_preflight_clearance(RUN_MODE_AUTHORIZED_REAL, pf, authorization=authorization)
 
     # the COMPOSED reader: veteran snapshot + rookie matrix under the frozen
@@ -2395,7 +2546,8 @@ def run_authorized_real(outer_seasons, bootstrap_draws, placebo_draws, out_dir=N
     # ELIGIBILITY runs INSIDE the feature reader, so it completes before the outcome reader is ever
     # called: Python evaluates `assemble_panel_core(feature_reader(), outcome_reader())` left to
     # right, and a malformed partition raises out of the first argument. Zero outcome-reader calls.
-    composed_reader = _arp.authorized_composed_feature_reader()
+    composed_reader = (_arp.authorized_composed_feature_reader() if feature_source is None
+                       else feature_source)
     eligibility = {}
 
     def feature_reader():
@@ -2409,7 +2561,7 @@ def run_authorized_real(outer_seasons, bootstrap_draws, placebo_draws, out_dir=N
                   f"eligible {accounting['eligible_evaluation_population']}")
         return eligible
 
-    outcome_reader = _arp.authorized_outcome_reader()
+    outcome_reader = _arp.authorized_outcome_reader() if outcome_source is None else outcome_source
     assembled = assemble_real_panel(feature_reader, outcome_reader, authorization,
                                     run_mode=RUN_MODE_AUTHORIZED_REAL)
     panel, report = _arp.panel_for_experiment(assembled)
@@ -2423,9 +2575,19 @@ def run_authorized_real(outer_seasons, bootstrap_draws, placebo_draws, out_dir=N
     coach_a = pd.read_csv(DATA / "team_coach_features_design_a_v39.csv")
     coach_b = pd.read_csv(DATA / "team_coach_features_design_b_oracle_v39.csv")
     frames = run_experiment(panel, coach_a, coach_b, outer_seasons=outer_seasons,
+                            positions=(POSITIONS if positions is None else positions),
                             bootstrap_draws=bootstrap_draws, placebo_draws=placebo_draws,
                             verbose=verbose, run_mode=RUN_MODE_AUTHORIZED_REAL,
                             authorization=authorization)
+
+    # ---- GATE 2 of 2: the post-pipeline 21/21, BEFORE compose and BEFORE any file is written ----
+    post_pf = preflight(run_mode=RUN_MODE_AUTHORIZED_REAL, phase=PREFLIGHT_PHASE_POST_PIPELINE,
+                        authorization=authorization)
+    require_post_pipeline_clearance(post_pf, authorization=authorization)
+    if verbose:
+        print(f"  post-pipeline preflight: {post_pf['n_checks'] - post_pf['n_failed']}"
+              f"/{post_pf['n_checks']} | assertions "
+              f"{post_pf['checks']['pipeline_timing_assertion_state']['detail']}")
 
     problems = _wr.validate_outputs(_wr.compose(frames, eligibility=eligibility))
     if problems:
@@ -2447,11 +2609,25 @@ def main():
     ap.add_argument("--overwrite-results", action="store_true",
                     help="replace existing result files (refused by default)")
     ap.add_argument("--outer", type=int, nargs="*", default=None)
-    ap.add_argument("--bootstrap-draws", type=int, default=2000)
-    ap.add_argument("--placebo-draws", type=int, default=10)
+    # DEFAULT None, not 2000/10 (v3.9w). The first authorized real run had to be told the frozen draw
+    # counts by hand because these defaults were TEST-scale — a silent 10x/20x reduction of the
+    # preregistered bootstrap and placebo resolution was one CLI omission away. In authorized_real the
+    # frozen constants are the default AND the only accepted values; the reduced counts remain
+    # reachable only by a direct injected call from a test, never through the real CLI.
+    ap.add_argument("--bootstrap-draws", type=int, default=None,
+                    help=f"authorized_real: defaults to and accepts ONLY {BOOTSTRAP_DRAWS}")
+    ap.add_argument("--placebo-draws", type=int, default=None,
+                    help=f"authorized_real: defaults to and accepts ONLY {PLACEBO_DRAWS}")
     a = ap.parse_args()
+    bootstrap_draws = SMOKE_BOOTSTRAP_DRAWS if a.bootstrap_draws is None else a.bootstrap_draws
+    placebo_draws = SMOKE_PLACEBO_DRAWS if a.placebo_draws is None else a.placebo_draws
 
     if a.run_mode == RUN_MODE_AUTHORIZED_REAL:
+        bootstrap_draws = BOOTSTRAP_DRAWS if a.bootstrap_draws is None else a.bootstrap_draws
+        placebo_draws = PLACEBO_DRAWS if a.placebo_draws is None else a.placebo_draws
+        ok_draws, draw_detail = validate_authorized_draw_counts(bootstrap_draws, placebo_draws)
+        if not ok_draws:
+            raise SystemExit("BLOCKED: " + draw_detail)
         # BOTH runtime locks, presented together, in this one invocation. Nothing is mutated.
         try:
             authorization = grant_real_fit_authorization(a.authorization_token)
@@ -2464,7 +2640,8 @@ def main():
         print("=" * 96)
         print(f"AUTHORIZED REAL RUN — outer seasons {list(seasons)}")
         print("=" * 96)
-        _frames, hashes = run_authorized_real(seasons, a.bootstrap_draws, a.placebo_draws,
+        print(f"draws: bootstrap {bootstrap_draws} | placebo {placebo_draws}  (frozen)")
+        _frames, hashes = run_authorized_real(seasons, bootstrap_draws, placebo_draws,
                                               overwrite=a.overwrite_results,
                                               authorization=authorization)
         print("\n--- RESULT HASHES ---")
@@ -2505,7 +2682,7 @@ def main():
         cb = pd.read_csv(DATA / "team_coach_features_design_b_oracle_v39.csv")
         outer = a.outer or [2024, 2025]
         res = run_experiment(panel, ca, cb, outer_seasons=outer,
-                             bootstrap_draws=a.bootstrap_draws, placebo_draws=a.placebo_draws)
+                             bootstrap_draws=bootstrap_draws, placebo_draws=placebo_draws)
         for k, df in res.items():
             print(f"\n[{k}] {df.shape}")
             if len(df):

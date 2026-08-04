@@ -454,13 +454,21 @@ def test_the_authorized_path_order_is_authorization_then_clearance_then_readers(
     body = src.split('"""')
     src = body[0] + ("".join(body[2:]) if len(body) > 2 else "")
     i_auth = src.index("require_real_fit_authorization(authorization)")
+    i_reset = src.index("reset_pipeline_assertions()")
+    i_pre = src.index("PREFLIGHT_PHASE_PRE_RUN")
     i_clear = src.index("require_preflight_clearance(")
     i_read = src.index("authorized_composed_feature_reader")
     i_panel = src.index("assemble_real_panel(")
     i_adapt = src.index("panel_for_experiment")
     i_run = src.index("run_experiment(")
+    i_post = src.index("PREFLIGHT_PHASE_POST_PIPELINE")
+    i_postclear = src.index("require_post_pipeline_clearance(")
+    i_compose = src.index("compose(")
     i_write = src.index("write_results(")
-    assert i_auth < i_clear < i_read < i_panel < i_adapt < i_run < i_write
+    # v3.9w: the counters are reset and the PRE_RUN preflight is taken before clearance, and the
+    # POST_PIPELINE preflight and its clearance both precede compose and write.
+    assert i_auth < i_reset < i_pre < i_clear < i_read < i_panel < i_adapt < i_run
+    assert i_run < i_post < i_postclear < i_compose < i_write
 
 
 # =====================================================================================================
@@ -505,7 +513,7 @@ def test_the_end_to_end_wrote_nothing_outside_the_temp_dir(tmp_path):
 # 7. Nothing production moved
 # =====================================================================================================
 def test_production_models_and_pinned_inputs_are_unchanged():
-    pf = EX.preflight(require_pipeline_assertions=False)
+    pf = EX.preflight(phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     for check in ("protected_hashes", "production_models_identical", "v39_artifacts_pinned",
                   "no_unauthorized_v39_artifact", "no_coaching_parquet"):
         assert pf["checks"][check]["ok"] is True, pf["checks"][check]["detail"]

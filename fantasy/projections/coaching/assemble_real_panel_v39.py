@@ -1334,9 +1334,17 @@ FROZEN_AUTHORIZED_PREFLIGHT_CHECKS = (
     "production_models_identical",
     "no_real_outcome_access",
     "assembly_module_contract",
-    "pipeline_timing_assertions_ran",
+    # RENAMED v3.9w from `pipeline_timing_assertions_ran`: the check is phase-aware and in the pre-run
+    # phase it passes precisely because the assertions have NOT run, so "…_ran" was a false name.
+    "pipeline_timing_assertion_state",
     "run_mode_locks",
 )
+
+# The two gate phases, pinned here BY VALUE against the harness's own literals so a phase can neither
+# be renamed on one side only nor widened by a caller.
+PREFLIGHT_PHASE_PRE_RUN = "pre_run"
+PREFLIGHT_PHASE_POST_PIPELINE = "post_pipeline"
+PREFLIGHT_PHASES = (PREFLIGHT_PHASE_PRE_RUN, PREFLIGHT_PHASE_POST_PIPELINE)
 
 
 def _is_exact_int(value, expected):
@@ -1344,14 +1352,21 @@ def _is_exact_int(value, expected):
     return isinstance(value, int) and not isinstance(value, bool) and value == expected
 
 
-def validate_authorized_preflight(preflight_result):
-    """Gate 1, FAIL-CLOSED. Returns a list of problems; empty means the result authorizes a real run.
+def _validate_preflight_shape(preflight_result, expected_phase):
+    """Gate shape validation, FAIL-CLOSED. Returns a list of problems; empty means it authorizes.
+
+    PRIVATE and phase-parameterised. The two PUBLIC entry points below each pin their own phase
+    literal and take NO phase parameter, for the same reason `expected_checks` was removed: a gate
+    whose vocabulary the caller supplies is not a gate. `validate_authorized_preflight` accepts only
+    `pre_run`; `validate_post_pipeline_preflight` accepts only `post_pipeline`; neither result can be
+    replayed as the other.
 
     Takes NO vocabulary parameter: it validates against `FROZEN_AUTHORIZED_PREFLIGHT_CHECKS` only.
 
     The frozen schema, matching what `preflight()` actually emits:
       all_ok    exactly True
       run_mode  exactly "authorized_real"
+      phase     exactly the expected phase literal for this gate
       n_checks  exactly 21, an int and not a bool
       n_failed  exactly integer 0, not a bool
       failures  PRESENT and an EMPTY DICT — measured: the real preflight emits `failures = {}`,
@@ -1379,6 +1394,14 @@ def validate_authorized_preflight(preflight_result):
         p.append(f"run_mode is {shown}, must be exactly {AUTHORIZED_RUN_MODE!r}"
                  + (" — a synthetic_prefit result asserts BOTH LOCKS CLOSED and can never authorize a "
                     "real run" if mode == SYNTHETIC_RUN_MODE else ""))
+
+    phase = preflight_result.get("phase", _MISSING)
+    if phase != expected_phase:
+        shown = "MISSING" if phase is _MISSING else repr(phase)
+        p.append(f"phase is {shown}, must be exactly {expected_phase!r}"
+                 + (f" — a {phase!r} result attests a DIFFERENT pipeline-counter state and cannot be "
+                    f"replayed as {expected_phase!r} clearance"
+                    if isinstance(phase, str) and phase in PREFLIGHT_PHASES else ""))
 
     expected = FROZEN_AUTHORIZED_PREFLIGHT_CHECKS
     n_checks = preflight_result.get("n_checks", _MISSING)
@@ -1429,6 +1452,26 @@ def validate_authorized_preflight(preflight_result):
                 p.append(f"check(s) not explicitly ok: {sorted(not_ok)}")
 
     return p
+
+
+def validate_authorized_preflight(preflight_result):
+    """Gate 1 (PRE-RUN), FAIL-CLOSED. Empty problem list means the result authorizes a real run.
+
+    Accepts ONLY a `pre_run` result: 21/21 in `authorized_real` with every pipeline timing counter
+    exactly zero. A `post_pipeline` result is refused here even though it is also 21/21, because it
+    attests that a pipeline has ALREADY executed and therefore cannot be pre-run clearance.
+    """
+    return _validate_preflight_shape(preflight_result, PREFLIGHT_PHASE_PRE_RUN)
+
+
+def validate_post_pipeline_preflight(preflight_result):
+    """Gate 2 (POST-PIPELINE), FAIL-CLOSED. Empty problem list means results may be composed/written.
+
+    Accepts ONLY a `post_pipeline` result: the same 21 checks in `authorized_real`, with every frozen
+    timing assertion POSITIVE. A `pre_run` result is refused, so pre-run clearance can never be
+    replayed to authorize a write.
+    """
+    return _validate_preflight_shape(preflight_result, PREFLIGHT_PHASE_POST_PIPELINE)
 
 
 def authorized_real_gate(preflight_result, models_dir=None, feature_columns=None,

@@ -287,9 +287,19 @@ def test_the_CORRECT_pair_reaches_the_SYNTHETIC_INJECTED_authorized_path(monkeyp
 
 
 def test_the_exact_documented_command_appears_in_the_manifest():
+    """v3.9w: the environment line is PowerShell, and the frozen draw counts are explicit.
+
+    The previously documented `set NAME=value` is CMD syntax — inert in PowerShell, which is the
+    shell this repo is driven from — so the lock would simply have been absent. The draw flags were
+    omitted entirely while the CLI defaulted to test-scale 2,000/10.
+    """
     text = (COACH / "V39_ACTIVATION_MANIFEST.md").read_text(encoding="utf-8")
     assert "--authorization-token JOSEPH-AUTHORIZED-V39-FIRST-REAL-RUN" in text
-    assert f"{EX.REAL_FIT_ENV_SWITCH}={ENV}" in text
+    assert f"$env:{EX.REAL_FIT_ENV_SWITCH}='{ENV}'" in text
+    assert f"--bootstrap-draws {EX.BOOTSTRAP_DRAWS}" in text
+    assert f"--placebo-draws {EX.PLACEBO_DRAWS}" in text
+    # the inert CMD form must not survive anywhere as an instruction
+    assert f"\nset {EX.REAL_FIT_ENV_SWITCH}=" not in text
 
 
 def test_no_document_still_instructs_editing_the_constant_to_True():

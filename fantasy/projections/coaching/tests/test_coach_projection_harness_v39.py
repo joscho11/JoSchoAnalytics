@@ -1047,14 +1047,14 @@ def temp_data(tmp_path):
 
 
 def test_preflight_passes_on_the_real_artifacts():
-    pf = EX.preflight(require_pipeline_assertions=False)
+    pf = EX.preflight(phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     assert pf["n_checks"] == len(EX.PREFLIGHT_CHECKS)
     assert set(pf["checks"]) == set(EX.PREFLIGHT_CHECKS)
     assert pf["all_ok"] is True, pf["failures"]
 
 
 def test_preflight_passes_on_an_untouched_copy(temp_data):
-    pf = EX.preflight(data_dir=temp_data, require_pipeline_assertions=False)
+    pf = EX.preflight(data_dir=temp_data, phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     assert pf["all_ok"] is True, pf["failures"]
 
 
@@ -1072,14 +1072,14 @@ def test_pinned_v39_hashes_match_disk():
 ])
 def test_preflight_fails_when_a_pinned_artifact_is_corrupted(temp_data, victim, check):
     (temp_data / victim).write_text("corrupted\n", encoding="utf-8")
-    pf = EX.preflight(data_dir=temp_data, require_pipeline_assertions=False)
+    pf = EX.preflight(data_dir=temp_data, phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     assert pf["all_ok"] is False
     assert pf["checks"][check]["ok"] is False, pf["failures"]
 
 
 def test_preflight_fails_on_an_unauthorized_sixth_artifact(temp_data):
     (temp_data / "sneaky_extra_v39.csv").write_text("a,b\n1,2\n", encoding="utf-8")
-    pf = EX.preflight(data_dir=temp_data, require_pipeline_assertions=False)
+    pf = EX.preflight(data_dir=temp_data, phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     assert pf["checks"]["no_unauthorized_v39_artifact"]["ok"] is False
     assert "sneaky_extra_v39.csv" in pf["checks"]["no_unauthorized_v39_artifact"]["detail"]
 
@@ -1087,7 +1087,7 @@ def test_preflight_fails_on_an_unauthorized_sixth_artifact(temp_data):
 def test_preflight_fails_on_wrong_row_count(temp_data):
     a = pd.read_csv(temp_data / "team_coach_features_design_a_v39.csv")
     a.head(400).to_csv(temp_data / "team_coach_features_design_a_v39.csv", index=False)
-    pf = EX.preflight(data_dir=temp_data, require_pipeline_assertions=False)
+    pf = EX.preflight(data_dir=temp_data, phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     assert pf["checks"]["feature_table_keys_and_rows"]["ok"] is False
     assert "400 rows" in pf["checks"]["feature_table_keys_and_rows"]["detail"]
 
@@ -1097,7 +1097,7 @@ def test_preflight_fails_when_design_a_identity_coverage_moves(temp_data):
     m = (a.season == 2019) & (a.caller_identity_known == 0)
     a.loc[a.index[m][:5], "caller_identity_known"] = 1
     a.to_csv(temp_data / "team_coach_features_design_a_v39.csv", index=False)
-    pf = EX.preflight(data_dir=temp_data, require_pipeline_assertions=False)
+    pf = EX.preflight(data_dir=temp_data, phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     assert pf["checks"]["design_a_outer_identity_coverage"]["ok"] is False
     assert "157/256" in pf["checks"]["design_a_outer_identity_coverage"]["detail"]
 
@@ -1107,7 +1107,7 @@ def test_preflight_fails_when_unknown_routing_is_broken(temp_data):
     m = a.caller_identity_known == 0
     a.loc[a.index[m][:3], "caller_is_head_coach"] = 0.0     # asserts delegation with no evidence
     a.to_csv(temp_data / "team_coach_features_design_a_v39.csv", index=False)
-    pf = EX.preflight(data_dir=temp_data, require_pipeline_assertions=False)
+    pf = EX.preflight(data_dir=temp_data, phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     assert pf["checks"]["unknown_and_no_history_routing"]["ok"] is False
 
 
@@ -1115,7 +1115,7 @@ def test_preflight_fails_when_a_model_feature_is_nan(temp_data):
     a = pd.read_csv(temp_data / "team_coach_features_design_a_v39.csv")
     a.loc[a.index[0], "pc_career_off_rank_pct"] = np.nan
     a.to_csv(temp_data / "team_coach_features_design_a_v39.csv", index=False)
-    pf = EX.preflight(data_dir=temp_data, require_pipeline_assertions=False)
+    pf = EX.preflight(data_dir=temp_data, phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     assert pf["checks"]["unknown_and_no_history_routing"]["ok"] is False
 
 
@@ -1123,7 +1123,7 @@ def test_preflight_fails_when_the_manifest_full_x_drifts(temp_data):
     man = json.loads((temp_data / "arm_feature_manifest_v39.json").read_text(encoding="utf-8"))
     man["full_model_x"]["RB/veteran"]["ARM_3"] = ["not", "the", "real", "columns"]
     (temp_data / "arm_feature_manifest_v39.json").write_text(json.dumps(man), encoding="utf-8")
-    pf = EX.preflight(data_dir=temp_data, require_pipeline_assertions=False)
+    pf = EX.preflight(data_dir=temp_data, phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     assert pf["checks"]["manifest_full_x_matches_bundles"]["ok"] is False
     assert "RB/veteran/ARM_3" in pf["checks"]["manifest_full_x_matches_bundles"]["detail"]
 
@@ -1132,7 +1132,7 @@ def test_preflight_fails_when_qb_rookie_is_not_null(temp_data):
     man = json.loads((temp_data / "arm_feature_manifest_v39.json").read_text(encoding="utf-8"))
     man["full_model_x"]["QB/rookie"] = {a: [] for a in AF.ARMS}
     (temp_data / "arm_feature_manifest_v39.json").write_text(json.dumps(man), encoding="utf-8")
-    pf = EX.preflight(data_dir=temp_data, require_pipeline_assertions=False)
+    pf = EX.preflight(data_dir=temp_data, phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     assert pf["checks"]["manifest_qb_rookie_null"]["ok"] is False
 
 
@@ -1141,7 +1141,7 @@ def test_preflight_fails_when_coverage_stops_reconciling(temp_data):
     m = (cov.design == "design_a") & (cov.arm == "ARM_1") & (cov.identity_state == "all")
     cov.loc[cov.index[m][0], "caller_identity_known"] = 99
     cov.to_csv(temp_data / "arm_feature_coverage_v39.csv", index=False)
-    pf = EX.preflight(data_dir=temp_data, require_pipeline_assertions=False)
+    pf = EX.preflight(data_dir=temp_data, phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     assert pf["checks"]["coverage_reconciles"]["ok"] is False
 
 
@@ -1150,7 +1150,7 @@ def test_preflight_fails_when_lineage_timing_is_violated(temp_data):
     i = lin.index[lin.record_kind == "caller_contribution"][0]
     lin.loc[i, "source_season"] = int(lin.loc[i, "season"]) + 1
     lin.to_csv(temp_data / "arm_feature_lineage_v39.csv", index=False)
-    pf = EX.preflight(data_dir=temp_data, require_pipeline_assertions=False)
+    pf = EX.preflight(data_dir=temp_data, phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     assert pf["checks"]["lineage_strict_timing"]["ok"] is False
 
 
@@ -1159,18 +1159,19 @@ def test_preflight_fails_when_contribution_lineage_stops_reconciling(temp_data):
     i = lin.index[(lin.record_kind == "caller_contribution") & (lin.included_in_career == 1)][0]
     lin.loc[i, "pbp_games"] = float(lin.loc[i, "pbp_games"]) + 7
     lin.to_csv(temp_data / "arm_feature_lineage_v39.csv", index=False)
-    pf = EX.preflight(data_dir=temp_data, require_pipeline_assertions=False)
+    pf = EX.preflight(data_dir=temp_data, phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     assert pf["checks"]["contribution_lineage_reconciles"]["ok"] is False
 
 
 def test_preflight_requires_the_pipeline_assertions_to_have_RUN():
+    """post_pipeline is the phase that demands execution; it is NOT relaxed by the v3.9w repair."""
     zero = {k: 0 for k in EX._PIPELINE_ASSERTIONS}
-    pf = EX.preflight(pipeline_assertions=zero)
-    assert pf["checks"]["pipeline_timing_assertions_ran"]["ok"] is False
-    assert "never executed" in pf["checks"]["pipeline_timing_assertions_ran"]["detail"]
+    pf = EX.preflight(pipeline_assertions=zero, phase=EX.PREFLIGHT_PHASE_POST_PIPELINE)
+    assert pf["checks"]["pipeline_timing_assertion_state"]["ok"] is False
+    assert "did not execute" in pf["checks"]["pipeline_timing_assertion_state"]["detail"]
     ran = {k: 3 for k in EX._PIPELINE_ASSERTIONS}
-    pf2 = EX.preflight(pipeline_assertions=ran)
-    assert pf2["checks"]["pipeline_timing_assertions_ran"]["ok"] is True
+    pf2 = EX.preflight(pipeline_assertions=ran, phase=EX.PREFLIGHT_PHASE_POST_PIPELINE)
+    assert pf2["checks"]["pipeline_timing_assertion_state"]["ok"] is True
 
 
 def test_the_pipeline_actually_increments_every_assertion_counter(small_panel, coach_a):
@@ -1232,7 +1233,7 @@ def test_authorized_real_is_reachable_so_a_candidate_verdict_is_possible():
     produce DEVELOPMENTAL CANDIDATE. Under authorized_real, open locks must be VALID."""
     ok, _ = EX.validate_run_mode(EX.RUN_MODE_AUTHORIZED_REAL, lock_state=(True, True))
     assert ok is True
-    pf = EX.preflight(run_mode=EX.RUN_MODE_SYNTHETIC_PREFIT, require_pipeline_assertions=False)
+    pf = EX.preflight(run_mode=EX.RUN_MODE_SYNTHETIC_PREFIT, phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     assert pf["checks"]["run_mode_locks"]["ok"] is True     # this pass: prefit, locks shut
 
 
@@ -1255,7 +1256,7 @@ def test_no_run_mode_relaxes_a_non_lock_check(temp_data):
     """The mode governs the lock expectation ONLY."""
     (temp_data / "arm_feature_coverage_v39.csv").write_text("x\n1\n", encoding="utf-8")
     for mode in EX.RUN_MODES:
-        pf = EX.preflight(run_mode=mode, data_dir=temp_data, require_pipeline_assertions=False)
+        pf = EX.preflight(run_mode=mode, data_dir=temp_data, phase=EX.PREFLIGHT_PHASE_PRE_RUN)
         assert pf["checks"]["v39_artifacts_pinned"]["ok"] is False, mode
         assert pf["all_ok"] is False, mode
 
@@ -1280,7 +1281,7 @@ def test_the_locks_are_not_opened_anywhere_in_this_pass():
 # v3.9c §1 — coverage_reconciles is a FULL-FRAME check, not a spot-check
 # =====================================================================================================
 def test_coverage_reconciles_is_a_full_frame_comparison():
-    pf = EX.preflight(require_pipeline_assertions=False)
+    pf = EX.preflight(phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     d = pf["checks"]["coverage_reconciles"]
     assert d["ok"] is True
     assert "full-frame" in d["detail"]
@@ -1300,7 +1301,7 @@ def test_THE_EXACT_CODEX_CASE_corrupting_ARM_2_known_with_history_now_fails(temp
     assert m.any()
     cov.loc[cov.index[m][0], "n_team_seasons"] = 999
     cov.to_csv(temp_data / "arm_feature_coverage_v39.csv", index=False)
-    pf = EX.preflight(data_dir=temp_data, require_pipeline_assertions=False)
+    pf = EX.preflight(data_dir=temp_data, phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     assert pf["checks"]["coverage_reconciles"]["ok"] is False, (
         "the SEMANTIC coverage check must catch this, not just the hash")
     assert "n_team_seasons" in pf["checks"]["coverage_reconciles"]["detail"]
@@ -1323,7 +1324,7 @@ def test_corrupting_any_coverage_column_fails_the_semantic_check(temp_data, col,
     assert m.any()
     cov.loc[cov.index[m][0], col] = value
     cov.to_csv(temp_data / "arm_feature_coverage_v39.csv", index=False)
-    pf = EX.preflight(data_dir=temp_data, require_pipeline_assertions=False)
+    pf = EX.preflight(data_dir=temp_data, phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     assert pf["checks"]["coverage_reconciles"]["ok"] is False, col
     assert col in pf["checks"]["coverage_reconciles"]["detail"]
 
@@ -1333,13 +1334,13 @@ def test_coverage_schema_key_and_duplicate_corruptions_are_caught(temp_data):
     base = pd.read_csv(p)
 
     base.drop(columns=["row_coverage_rate"]).to_csv(p, index=False)
-    pf = EX.preflight(data_dir=temp_data, require_pipeline_assertions=False)
+    pf = EX.preflight(data_dir=temp_data, phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     d = pf["checks"]["coverage_reconciles"]["detail"]
     assert pf["checks"]["coverage_reconciles"]["ok"] is False
     assert "schema" in d or "row_coverage_rate" in d
 
     pd.concat([base, base.head(1)], ignore_index=True).to_csv(p, index=False)
-    pf = EX.preflight(data_dir=temp_data, require_pipeline_assertions=False)
+    pf = EX.preflight(data_dir=temp_data, phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     assert pf["checks"]["coverage_reconciles"]["ok"] is False
     d = pf["checks"]["coverage_reconciles"]["detail"]
     assert "row count" in d or "duplicate" in d
@@ -1347,7 +1348,7 @@ def test_coverage_schema_key_and_duplicate_corruptions_are_caught(temp_data):
     dropped = base[~((base.design == "design_a") & (base.arm == "ARM_5")
                      & (base.identity_state == "unknown"))]
     dropped.to_csv(p, index=False)
-    pf = EX.preflight(data_dir=temp_data, require_pipeline_assertions=False)
+    pf = EX.preflight(data_dir=temp_data, phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     assert pf["checks"]["coverage_reconciles"]["ok"] is False
 
 
@@ -1372,7 +1373,7 @@ def challenge_ok(body):
 def test_THE_EXACT_CODEX_CASE_deleting_design_a_returns_instead_of_raising(temp_data):
     """Codex's reproduction: delete the Design A table. v3.9b raised FileNotFoundError."""
     (temp_data / "team_coach_features_design_a_v39.csv").unlink()
-    pf = EX.preflight(data_dir=temp_data, require_pipeline_assertions=False)   # must NOT raise
+    pf = EX.preflight(data_dir=temp_data, phase=EX.PREFLIGHT_PHASE_PRE_RUN)   # must NOT raise
     assert isinstance(pf, dict) and set(pf["checks"]) == set(EX.PREFLIGHT_CHECKS)
     assert pf["all_ok"] is False
     assert pf["checks"]["v39_artifacts_pinned"]["ok"] is False
@@ -1400,7 +1401,7 @@ def test_THE_EXACT_CODEX_CASE_deleting_design_a_returns_instead_of_raising(temp_
 def test_a_missing_artifact_blocks_its_dependents_without_crashing(temp_data, victim, blocked_key,
                                                                   dependents):
     (temp_data / victim).unlink()
-    pf = EX.preflight(data_dir=temp_data, require_pipeline_assertions=False)
+    pf = EX.preflight(data_dir=temp_data, phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     assert pf["all_ok"] is False
     assert pf["checks"]["v39_artifacts_readable"]["ok"] is False
     for dep in dependents:
@@ -1415,7 +1416,7 @@ def test_a_missing_artifact_blocks_its_dependents_without_crashing(temp_data, vi
 ])
 def test_a_malformed_csv_fails_closed(temp_data, victim, blocked_key):
     (temp_data / victim).write_text('a,b\n"unterminated,1\n\x00\x00\n', encoding="utf-8")
-    pf = EX.preflight(data_dir=temp_data, require_pipeline_assertions=False)
+    pf = EX.preflight(data_dir=temp_data, phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     assert pf["all_ok"] is False
     assert pf["checks"]["v39_artifacts_readable"]["ok"] is False
     assert blocked_key in pf["checks"]["v39_artifacts_readable"]["detail"]
@@ -1423,7 +1424,7 @@ def test_a_malformed_csv_fails_closed(temp_data, victim, blocked_key):
 
 def test_malformed_manifest_json_fails_closed(temp_data):
     (temp_data / "arm_feature_manifest_v39.json").write_text("{not: valid json,,,", encoding="utf-8")
-    pf = EX.preflight(data_dir=temp_data, require_pipeline_assertions=False)
+    pf = EX.preflight(data_dir=temp_data, phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     assert pf["all_ok"] is False
     assert pf["checks"]["v39_artifacts_readable"]["ok"] is False
     for dep in ("manifest_full_x_matches_bundles", "manifest_qb_rookie_null"):
@@ -1435,7 +1436,7 @@ def test_a_schema_invalid_csv_fails_closed(temp_data):
     """Right filename, valid CSV, wrong columns."""
     (temp_data / "team_coach_features_design_a_v39.csv").write_text(
         "alpha,beta\n1,2\n", encoding="utf-8")
-    pf = EX.preflight(data_dir=temp_data, require_pipeline_assertions=False)
+    pf = EX.preflight(data_dir=temp_data, phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     assert pf["all_ok"] is False
     assert "schema invalid" in pf["checks"]["v39_artifacts_readable"]["detail"]
     assert "blocked by design_a" in pf["checks"]["feature_table_keys_and_rows"]["detail"]
@@ -1444,7 +1445,7 @@ def test_a_schema_invalid_csv_fails_closed(temp_data):
 def test_an_empty_csv_fails_closed(temp_data):
     (temp_data / "arm_feature_coverage_v39.csv").write_text(
         "design,arm,season,identity_state\n", encoding="utf-8")
-    pf = EX.preflight(data_dir=temp_data, require_pipeline_assertions=False)
+    pf = EX.preflight(data_dir=temp_data, phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     assert pf["all_ok"] is False
     assert "is empty" in pf["checks"]["v39_artifacts_readable"]["detail"]
 
@@ -1457,7 +1458,7 @@ def test_preflight_never_raises_for_any_single_missing_artifact(temp_data):
         shutil.rmtree(temp_data)
         shutil.copytree(keep, temp_data)
         (temp_data / victim).unlink()
-        pf = EX.preflight(data_dir=temp_data, require_pipeline_assertions=False)
+        pf = EX.preflight(data_dir=temp_data, phase=EX.PREFLIGHT_PHASE_PRE_RUN)
         assert isinstance(pf, dict) and pf["all_ok"] is False, victim
         assert set(pf["checks"]) == set(EX.PREFLIGHT_CHECKS), victim
 
@@ -1466,7 +1467,7 @@ def test_preflight_never_raises_for_any_single_missing_artifact(temp_data):
 # v3.9c §3 — the lineage artifact must STATE the primary policy
 # =====================================================================================================
 def test_preflight_validates_the_lineage_policy_semantically():
-    pf = EX.preflight(require_pipeline_assertions=False)
+    pf = EX.preflight(phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     assert "lineage_states_the_primary_policy" in pf["checks"]
     assert pf["checks"]["lineage_states_the_primary_policy"]["ok"] is True
 
@@ -1479,7 +1480,7 @@ def test_a_reintroduced_source_date_gate_in_lineage_fails_the_semantic_check(tem
     lin.loc[i, "timing_rule"] = ("seasons < Y; Design A additionally requires source upper bound "
                                  "<= Y cutoff")
     lin.to_csv(temp_data / "arm_feature_lineage_v39.csv", index=False)
-    pf = EX.preflight(data_dir=temp_data, require_pipeline_assertions=False)
+    pf = EX.preflight(data_dir=temp_data, phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     assert pf["checks"]["lineage_states_the_primary_policy"]["ok"] is False
     assert "pc_career_epa_play_z" in pf["checks"]["lineage_states_the_primary_policy"]["detail"]
 
@@ -1489,7 +1490,7 @@ def test_a_reintroduced_gated_openers_note_fails_the_semantic_check(temp_data):
     i = lin.index[lin.feature == "pc_tenure_current_team"][0]
     lin.loc[i, "note"] = "Design A openers are themselves gated on Y's cutoff"
     lin.to_csv(temp_data / "arm_feature_lineage_v39.csv", index=False)
-    pf = EX.preflight(data_dir=temp_data, require_pipeline_assertions=False)
+    pf = EX.preflight(data_dir=temp_data, phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     assert pf["checks"]["lineage_states_the_primary_policy"]["ok"] is False
     assert "openers are themselves gated" in \
         pf["checks"]["lineage_states_the_primary_policy"]["detail"]
@@ -1505,7 +1506,7 @@ def test_no_real_outcome_access_passes_on_the_real_modules():
 
 
 def test_c10_includes_the_no_real_outcome_check():
-    pf = EX.preflight(require_pipeline_assertions=False)
+    pf = EX.preflight(phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     assert "no_real_outcome_access" in pf["checks"]
     assert pf["checks"]["no_real_outcome_access"]["ok"] is True
 
@@ -1956,7 +1957,7 @@ def test_the_c10_success_row_prints_the_exact_pinned_detail():
     ok, detail = EX.no_real_outcome_access()
     assert ok is True, detail
     assert detail == EX.NO_OUTCOME_OK_DETAIL
-    pf = EX.preflight(require_pipeline_assertions=False)
+    pf = EX.preflight(phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     assert pf["checks"]["no_real_outcome_access"]["detail"] == EX.NO_OUTCOME_OK_DETAIL
 
 

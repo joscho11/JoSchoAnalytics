@@ -103,7 +103,7 @@ interpreter `.\.venv-test\Scripts\python.exe` (Python 3.11.9). This is one line,
 `...` placeholders, no abbreviations:
 
 ```
-.\.venv-test\Scripts\python.exe -m pytest fantasy/projections/coaching/tests -q -p no:warnings --ignore=fantasy/projections/coaching/tests/test_arm_features_v39.py --ignore=fantasy/projections/coaching/tests/test_coach_projection_harness_v39.py --ignore=fantasy/projections/coaching/tests/test_boundary_corpus.py --ignore=fantasy/projections/coaching/tests/test_assemble_real_panel_v39.py --ignore=fantasy/projections/coaching/tests/test_combine_snapshot_provenance.py --ignore=fantasy/projections/coaching/tests/test_rookie_matrix_v39.py --ignore=fantasy/projections/coaching/tests/test_pff_point_in_time_v39.py --ignore=fantasy/projections/coaching/tests/test_arm0_refits_from_scratch_v39.py --ignore=fantasy/projections/coaching/tests/test_activation_wiring_v39.py --ignore=fantasy/projections/coaching/tests/test_veteran_snapshot_v39.py --ignore=fantasy/projections/coaching/tests/test_authorized_runner_v39.py --ignore=fantasy/projections/coaching/tests/test_composed_feature_reader_v39.py --ignore=fantasy/projections/coaching/tests/test_evaluation_eligibility_v39.py --ignore=fantasy/projections/coaching/tests/test_authorization_capability_v39.py --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_each_protected_text_artifact_has_exactly_one_writer --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_build_arm_features_v39_writes_only_the_five_authorized_artifacts --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_the_harness_writes_no_repo_artifact_at_all --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_no_unauthorized_v39_artifact_exists_on_disk --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_the_head_coach_win_ledger_is_derived_in_memory_not_cached --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_the_v39_modules_never_write_outside_the_coaching_data_dir
+.\.venv-test\Scripts\python.exe -m pytest fantasy/projections/coaching/tests -q -p no:warnings --ignore=fantasy/projections/coaching/tests/test_arm_features_v39.py --ignore=fantasy/projections/coaching/tests/test_coach_projection_harness_v39.py --ignore=fantasy/projections/coaching/tests/test_boundary_corpus.py --ignore=fantasy/projections/coaching/tests/test_assemble_real_panel_v39.py --ignore=fantasy/projections/coaching/tests/test_combine_snapshot_provenance.py --ignore=fantasy/projections/coaching/tests/test_rookie_matrix_v39.py --ignore=fantasy/projections/coaching/tests/test_pff_point_in_time_v39.py --ignore=fantasy/projections/coaching/tests/test_arm0_refits_from_scratch_v39.py --ignore=fantasy/projections/coaching/tests/test_activation_wiring_v39.py --ignore=fantasy/projections/coaching/tests/test_veteran_snapshot_v39.py --ignore=fantasy/projections/coaching/tests/test_authorized_runner_v39.py --ignore=fantasy/projections/coaching/tests/test_composed_feature_reader_v39.py --ignore=fantasy/projections/coaching/tests/test_evaluation_eligibility_v39.py --ignore=fantasy/projections/coaching/tests/test_authorization_capability_v39.py --ignore=fantasy/projections/coaching/tests/test_two_phase_preflight_v39.py --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_each_protected_text_artifact_has_exactly_one_writer --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_build_arm_features_v39_writes_only_the_five_authorized_artifacts --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_the_harness_writes_no_repo_artifact_at_all --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_no_unauthorized_v39_artifact_exists_on_disk --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_the_head_coach_win_ledger_is_derived_in_memory_not_cached --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_the_v39_modules_never_write_outside_the_coaching_data_dir
 ```
 
 Literal output of that exact command:
@@ -185,7 +185,7 @@ Verified with egress blocked (`socket.create_connection`, `getaddrinfo`, `socket
 a freshly created empty directory:
 
 ```
-full coaching suite   1,275 collected; 1,275 passed.
+full coaching suite   1,316 collected; 1,316 passed.
                       + 1 optional git cross-check (passes or skips; see below)
 inherited baseline    141 passed, 6 deselected
 full v3.9 build       completed; all five artifact hashes reproduced
@@ -196,13 +196,13 @@ ambiguous, so this is the only form this document uses:
 
 | | |
 |---|---|
-| canonical collection total | **1275** |
-| mandatory tests | **1274 passed** |
-| **measured on 2026-08-03, after §10.14** | **1,275 passed · 0 failed** |
+| canonical collection total | **1316** |
+| mandatory tests | **1315 passed** |
+| **measured on 2026-08-04, after §10.15** | **1,316 passed · 0 failed** |
 | optional git cross-check | **passes when the historical blob `85c438f7d908e9df7da8d5e44ad8e30d3bbeeffe` is reachable, otherwise skips** |
 | the vendored historical red proof | **runs in BOTH states — it is never skipped** |
 
-So a green run legitimately reports either `1275 passed` or `1274 passed, 1 skipped`, and the two are the
+So a green run legitimately reports either `1316 passed` or `1315 passed, 1 skipped`, and the two are the
 same result. The variation is only whether `git cat-file -p <blob>` can reach the pinned blob: after the
 `BettingEdgeContinued` → `JoSchoAnalytics` rename the repository is owned by another account, so git
 refuses without `-c safe.directory=...` and the cross-check skips; in a review environment where the
@@ -871,7 +871,7 @@ values, no NaN) · `forbidden_feature_policy` (every manifest arm) ·
 `manifest_full_x_matches_bundles` · `manifest_qb_rookie_null` · `coverage_reconciles` ·
 `lineage_strict_timing` · `contribution_lineage_reconciles` ·
 `design_b_oracle_and_unselectable` · `production_models_identical` ·
-`pipeline_timing_assertions_ran` · `run_mode_locks`.
+`pipeline_timing_assertion_state` (RENAMED v3.9w from `pipeline_timing_assertions_ran`; phase-aware, see the manifest §3a) · `run_mode_locks`.
 
 C10 passes only when all 17 are true; the record is returned as a `preflight` frame beside the verdict.
 
@@ -921,7 +921,7 @@ generating function, input columns, timing rule, missing-value rule, and coverin
 |---|---|
 | inherited baseline (reproduced, offline) | **141** |
 | new v3.9 + v3.9a + v3.9b + v3.9c + v3.9d + v3.9e + v3.9f + v3.9g + v3.9i + v3.9j + v3.9k + v3.9m + v3.9n + v3.9o + v3.9p + v3.9q + v3.9r + v3.9s + v3.9t + v3.9u + v3.9v tests | **1,134** |
-| **full coaching suite** | **1,275 collected · 1,274 mandatory passed · 1 optional git cross-check (passes when the pinned blob is reachable, otherwise skips) — offline, egress blocked, fresh empty temp dir** |
+| **full coaching suite** | **1,316 collected · 1,315 mandatory passed · 1 optional git cross-check (passes when the pinned blob is reachable, otherwise skips) — offline, egress blocked, fresh empty temp dir** |
 
 ### 10.1 THE TWO CODEX REPRODUCTIONS NOW FAIL SEMANTICALLY
 
@@ -2393,8 +2393,8 @@ The `--real` dead end (`raise SystemExit` with no lock check) is **removed**, so
 authorized-real path. The documented interface now exists:
 
 ```
-set COACH_V39_REAL_FIT_AUTHORIZED_BY_JOSEPH=I-HAVE-WRITTEN-THE-PREFIT-AMENDMENT
-.\.venv-test\Scripts\python.exe fantasy\projections\coaching\run_coach_projection_experiment_v39.py ^
+$env:COACH_V39_REAL_FIT_AUTHORIZED_BY_JOSEPH='I-HAVE-WRITTEN-THE-PREFIT-AMENDMENT'
+.\.venv-test\Scripts\python.exe fantasy\projections\coaching\run_coach_projection_experiment_v39.py `
     --run-mode authorized_real --outer-seasons 2018-2025
 ```
 
@@ -2672,10 +2672,10 @@ binding-target/evasion corpus stays live (75 injections, categories C1/C3/C4/C4b
 ### 10.14.4 The exact command
 
 ```
-set COACH_V39_REAL_FIT_AUTHORIZED_BY_JOSEPH=I-HAVE-WRITTEN-THE-PREFIT-AMENDMENT
-.\.venv-test\Scripts\python.exe fantasy\projections\coaching\run_coach_projection_experiment_v39.py ^
-    --run-mode authorized_real ^
-    --authorization-token JOSEPH-AUTHORIZED-V39-FIRST-REAL-RUN ^
+$env:COACH_V39_REAL_FIT_AUTHORIZED_BY_JOSEPH='I-HAVE-WRITTEN-THE-PREFIT-AMENDMENT'
+.\.venv-test\Scripts\python.exe fantasy\projections\coaching\run_coach_projection_experiment_v39.py `
+    --run-mode authorized_real `
+    --authorization-token JOSEPH-AUTHORIZED-V39-FIRST-REAL-RUN `
     --outer-seasons 2018-2025
 ```
 
@@ -2687,6 +2687,93 @@ The previously published command — the same line without `--authorization-toke
 No real outcome read · nothing fit · no result written · the real token pair presented only in-process
 against injected/stubbed readers · `REAL_FIT_AUTHORIZED` still `False` in source after every test ·
 no commit.
+
+---
+
+## 10.15 v3.9w — THE FIRST AUTHORIZED REAL RUN WAS ATTEMPTED AND REFUSED (2026-08-03/04)
+
+### 10.15.1 What happened
+
+The run was authorized from clean commit `193503fb` and executed **once**. It stopped after two seconds
+at **pre-run clearance** — `require_preflight_clearance`, gate 1 — reached from `run_authorized_real`
+BEFORE either reader was constructed:
+
+```
+gate 1 (authorized preflight): check(s) not explicitly ok: ['pipeline_timing_assertions_ran']
+```
+
+**Nothing was produced and nothing moved.** No reader was constructed, no fantasy outcome was read, no
+model was fit, and no result file landed — `coaching/results/` did not exist before the attempt and did
+not exist after it. The environment token was cleared by the invocation's `finally`;
+`REAL_FIT_AUTHORIZED` stayed `False` in source and at runtime; the lock state returned to
+`(False, False)`; the scoped tree stayed clean; 18/18 protected artifacts, the production models and
+every pinned input were unchanged. The refusal was total and correct in effect — but for the wrong
+reason.
+
+### 10.15.2 Cause — a circular gate of my own construction
+
+`pipeline_timing_assertions_ran` required every `_PIPELINE_ASSERTIONS` counter to be non-zero. Those
+counters are incremented **by** `run_experiment`, which runs **after** clearance. In a fresh process all
+four are zero, so `preflight(run_mode='authorized_real')` returned 19/21 and the authorized path could
+never clear its own gate.
+
+**Why no test caught it.** Every test that exercised the authorized path either passed
+`pipeline_assertions={k: 3 ...}` explicitly or replaced `require_preflight_clearance` with a stub. Both
+supply a value the real path cannot produce, so the real path's inability to produce it was
+unobservable. This is the same class as the earlier "the check didn't check what it claimed" findings —
+a test that manufactures the very evidence it is meant to verify.
+
+### 10.15.3 The repair — two-phase 21-check preflight
+
+The timing check is **not** disabled, relaxed or faked. It is phase-aware and asserted **twice**, all 21
+checks in both phases:
+
+| phase | required counter state | evaluated |
+|---|---|---|
+| `pre_run` | every counter EXACTLY zero; a stale non-zero counter FAILS, naming it | before any reader |
+| `post_pipeline` | every frozen counter POSITIVE; any that did not execute is NAMED | after `run_experiment`, before compose/write |
+
+Renamed `pipeline_timing_assertions_ran` → **`pipeline_timing_assertion_state`**: "…_ran" was false in
+the pre-run phase, where the check passes precisely because the pipeline has NOT run. The frozen check
+count stays **21** and both pinned vocabularies were updated by value.
+
+`validate_authorized_preflight` accepts only a `pre_run` result; the new
+`validate_post_pipeline_preflight` only a `post_pipeline` result. Neither can be replayed as the other,
+and both are phase-parameterised only through a PRIVATE helper — the public entry points take no phase
+argument, for the same reason `expected_checks` was removed.
+
+`run_authorized_real` now executes: authorization → **reset counters** → `pre_run` 21/21 →
+clearance/readiness/gate → readers and assembly → `run_experiment` → **`post_pipeline` 21/21** → validate
+result frames → atomic write. If the post-pipeline gate fails, **zero result files land**.
+`run_experiment`'s per-position C10 records use `post_pipeline` semantics and still require every timing
+assertion.
+
+### 10.15.4 The blind spot itself is now tested
+
+`tests/test_two_phase_preflight_v39.py` exercises the REAL `run_authorized_real` control flow with
+synthetic injected readers and the REAL preflight functions: no supplied `pipeline_assertions`, no
+stubbed clearance, counters observed at zero before and positive after, both phases 21/21, and the
+writer reached only afterward. Also tested: stale counters fail `pre_run` before any reader; zero
+counters fail `post_pipeline` before any write; one missing counter fails and is named; a wrong-phase
+result refuses; and **no result file survives any failure path**.
+
+### 10.15.5 The two operational defects in the published command
+
+1. **CMD syntax.** `set NAME=value` is inert in PowerShell, so the documented command would not have set
+   the lock at all. Corrected to `$env:NAME='value'` and pinned in a test.
+2. **Test-scale draw defaults.** `--bootstrap-draws` defaulted to `2000` against the frozen `20_000`,
+   `--placebo-draws` to `10` against the frozen `200`. The documented command omitted both flags, so it
+   would have produced a real result at one tenth and one twentieth of the preregistered resolution.
+   In `authorized_real` the flags now **default to the frozen constants** and
+   `validate_authorized_draw_counts()` **refuses any other value**; reduced counts remain reachable only
+   through a direct injected call from a test.
+
+### 10.15.6 What was NOT done
+
+**No statistical rule, threshold, denominator, seed or frozen constant changed** — the repair is
+entirely in the ordering and phase of the runtime gate. No real outcome was read · nothing was fit · no
+real result was written · `coaching/results/` remains absent · `REAL_FIT_AUTHORIZED` is still `False` in
+source · the authorized command was NOT rerun · nothing staged · no commit.
 
 ---
 

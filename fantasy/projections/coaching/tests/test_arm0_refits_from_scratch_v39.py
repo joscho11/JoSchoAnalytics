@@ -399,6 +399,6 @@ def test_nothing_was_retrained_in_this_pass():
         fc = tuple(pickle.loads((ARP.MODELS_DIR / fname).read_bytes())["feature_cols"])
         assert fc == tuple(pin["feature_cols"])
         assert hashlib.sha256("\n".join(fc).encode("utf-8")).hexdigest() == pin["sha256"]
-    pf = EX.preflight(require_pipeline_assertions=False)
+    pf = EX.preflight(phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     assert pf["checks"]["production_models_identical"]["ok"] is True
     assert pf["checks"]["protected_hashes"]["ok"] is True

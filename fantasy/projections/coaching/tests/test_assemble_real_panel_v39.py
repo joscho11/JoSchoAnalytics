@@ -498,7 +498,7 @@ def test_prefit_integrity_and_activation_readiness_are_DIFFERENT_layers():
     turning False must not turn the committed v3.9d checkpoint red. The layering is what is under
     test, not the current value of either layer.
     """
-    pf = EX.preflight(require_pipeline_assertions=False)
+    pf = EX.preflight(phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     assert pf["all_ok"] is True and pf["n_failed"] == 0
     assert ARP.activation_readiness()[0] is True
     assert ARP.activation_readiness(rookie_columns=set())[0] is False
@@ -506,7 +506,7 @@ def test_prefit_integrity_and_activation_readiness_are_DIFFERENT_layers():
         "activation readiness must stay OUT of the prefit preflight, or a blocked activation would "
         "turn the committed v3.9d checkpoint red")
     # and a blocked readiness leaves preflight untouched
-    assert EX.preflight(require_pipeline_assertions=False)["n_failed"] == 0
+    assert EX.preflight(phase=EX.PREFLIGHT_PHASE_PRE_RUN)["n_failed"] == 0
 
 
 def _all_bundle_features():
@@ -540,6 +540,9 @@ def _authorized_shaped_preflight(**overrides):
     pf = {
         "all_ok": True,
         "run_mode": ARP.AUTHORIZED_RUN_MODE,
+        # v3.9w: gate 1 accepts only a PRE_RUN result — the phase in which the pipeline timing
+        # counters must be exactly zero, which is the state before any reader runs.
+        "phase": ARP.PREFLIGHT_PHASE_PRE_RUN,
         "n_checks": len(ARP.FROZEN_AUTHORIZED_PREFLIGHT_CHECKS),
         "n_failed": 0,
         "failures": {},
@@ -557,7 +560,7 @@ def test_the_authorized_real_gate_needs_BOTH_and_currently_REFUSES():
     `synthetic_prefit` one, whose whole meaning is that both locks are closed. The refusal moved; it
     did not weaken.
     """
-    pf = EX.preflight(require_pipeline_assertions=False)
+    pf = EX.preflight(phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     assert pf["all_ok"] is True and pf["n_failed"] == 0
     assert ARP.activation_readiness()[0] is True
     ok, detail = ARP.authorized_real_gate(pf)
@@ -591,7 +594,7 @@ def test_RED_a_synthetic_prefit_result_can_never_authorize_a_real_run():
 
     That result's whole meaning is that BOTH LOCKS ARE CLOSED.
     """
-    pf = EX.preflight(require_pipeline_assertions=False)
+    pf = EX.preflight(phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     assert pf["run_mode"] == ARP.SYNTHETIC_RUN_MODE
     assert pf["all_ok"] is True and pf["n_failed"] == 0 and pf["n_checks"] == 21
     assert EX.real_fit_lock_state() == (False, False)
@@ -657,7 +660,7 @@ def test_RED_a_partial_or_closed_lock_state_cannot_produce_an_authorizing_prefli
     ok_mode, _ = EX.validate_run_mode(EX.RUN_MODE_AUTHORIZED_REAL)
     assert ok_mode is False, "a partial/closed lock state must not validate as authorized_real"
 
-    pf = EX.preflight(require_pipeline_assertions=False)
+    pf = EX.preflight(phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     assert pf["run_mode"] != ARP.AUTHORIZED_RUN_MODE
     with _readiness_injected_pass() as every:
         ok, detail = ARP.authorized_real_gate(pf, feature_columns=every)
@@ -677,7 +680,7 @@ def test_GREEN_an_authorized_shaped_preflight_plus_readiness_passes():
     assert "both gates clear" in detail
     assert ARP.AUTHORIZED_RUN_MODE in detail
 
-    real = EX.preflight(require_pipeline_assertions=False)
+    real = EX.preflight(phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     assert ARP.authorized_real_gate(real)[0] is False, "the real tree must still be refused"
     assert EX.real_fit_lock_state() == (False, False), "no lock may have been opened"
 
@@ -785,7 +788,7 @@ def test_RED_every_schema_violation_refuses_and_never_raises(label, pf):
 
 def test_the_frozen_failures_schema_matches_what_preflight_actually_emits():
     """MEASURED, not assumed: the real preflight emits `failures` as an EMPTY DICT, not integer 0."""
-    real = EX.preflight(require_pipeline_assertions=False)
+    real = EX.preflight(phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     assert "failures" in real
     assert isinstance(real["failures"], dict), (
         f"failures is {type(real['failures']).__name__}; the frozen schema must match the emitter")
@@ -797,7 +800,7 @@ def test_the_frozen_failures_schema_matches_what_preflight_actually_emits():
 
 def test_the_positive_control_uses_the_real_emitted_schema():
     """The GREEN fixture must be shaped like the real thing, or it proves nothing."""
-    real = EX.preflight(require_pipeline_assertions=False)
+    real = EX.preflight(phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     fixture = _authorized_shaped_preflight()
     assert set(fixture) <= set(real) | {"failures"}
     assert type(fixture["failures"]) is type(real["failures"])
@@ -885,7 +888,7 @@ def test_the_manifest_still_records_the_run_as_not_executed_and_not_authorized()
     assert "WITHDRAWN" in text and "FALSE PREMISE" in text, (
         "the withdrawn contaminated-bundles blocker must be recorded as withdrawn")
     assert ARP.activation_readiness()[0] is True
-    assert ARP.authorized_real_gate(EX.preflight(require_pipeline_assertions=False))[0] is False
+    assert ARP.authorized_real_gate(EX.preflight(phase=EX.PREFLIGHT_PHASE_PRE_RUN))[0] is False
     assert EX.real_fit_lock_state() == (False, False)
 
 
@@ -1126,7 +1129,7 @@ def test_the_optional_cross_check_is_the_only_environment_dependent_test():
 
 
 def test_the_committed_prefit_checkpoint_stays_green():
-    pf = EX.preflight(require_pipeline_assertions=False)
+    pf = EX.preflight(phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     assert pf["all_ok"] is True
     assert pf["checks"]["assembly_module_contract"]["ok"] is True
 
@@ -1469,7 +1472,7 @@ def test_the_real_reader_is_never_called_in_synthetic_prefit(feats, outs):
         ARP.authorized_feature_reader, ARP.authorized_outcome_reader = saved
     assert calls == []
 
-    pf = EX.preflight(require_pipeline_assertions=False)
+    pf = EX.preflight(phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     assert pf["all_ok"] is True
     assert pf["checks"]["assembly_module_contract"]["ok"] is True
 
@@ -1501,12 +1504,12 @@ def test_the_assembly_module_writes_nothing():
 
 
 def test_design_b_remains_oracle_only_and_unselectable():
-    pf = EX.preflight(require_pipeline_assertions=False)
+    pf = EX.preflight(phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     assert pf["checks"]["design_b_oracle_and_unselectable"]["ok"] is True
 
 
 def test_artifacts_and_production_untouched():
-    pf = EX.preflight(require_pipeline_assertions=False)
+    pf = EX.preflight(phase=EX.PREFLIGHT_PHASE_PRE_RUN)
     for check in ("v39_artifacts_pinned", "protected_hashes", "production_models_identical",
                   "no_unauthorized_v39_artifact", "no_coaching_parquet"):
         assert pf["checks"][check]["ok"] is True, pf["checks"][check]["detail"]

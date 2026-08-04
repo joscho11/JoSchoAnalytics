@@ -395,10 +395,81 @@ that in every closed or partial lock state, and in `synthetic_prefit` mode with 
 
 ## 3. The exact command
 
+```powershell
+$env:COACH_V39_REAL_FIT_AUTHORIZED_BY_JOSEPH='I-HAVE-WRITTEN-THE-PREFIT-AMENDMENT'
+.\.venv-test\Scripts\python.exe fantasy\projections\coaching\run_coach_projection_experiment_v39.py `
+    --run-mode authorized_real `
+    --authorization-token JOSEPH-AUTHORIZED-V39-FIRST-REAL-RUN `
+    --outer-seasons 2018-2025 `
+    --bootstrap-draws 20000 `
+    --placebo-draws 200
 ```
-set COACH_V39_REAL_FIT_AUTHORIZED_BY_JOSEPH=I-HAVE-WRITTEN-THE-PREFIT-AMENDMENT
-.\.venv-test\Scripts\python.exe fantasy\projections\coaching\run_coach_projection_experiment_v39.py --run-mode authorized_real --authorization-token JOSEPH-AUTHORIZED-V39-FIRST-REAL-RUN --outer-seasons 2018-2025
+
+
+**CORRECTED 2026-08-04 (v3.9w), on two operational defects in the command published above.**
+
+1. **The environment line was CMD syntax.** `set NAME=value` does not set an environment variable in
+   PowerShell — it is inert there, so the lock would have been absent and the run refused.
+   The PowerShell form is `$env:NAME='value'`.
+2. **The draw flags were omitted, and the CLI defaults were TEST-scale**: bootstrap `2000` against the
+   frozen `20_000`, placebo `10` against the frozen `200`. Omitting them would have produced a real
+   result at one tenth and one twentieth of the preregistered resolution.
+
+Both are now structural rather than documentary: in `authorized_real` the draw flags **default to the
+frozen constants**, and `validate_authorized_draw_counts()` **refuses any other value**, so a reduced
+draw count cannot reach a real result through the CLI at all. Reduced counts remain reachable only by a
+direct injected call from a test. The frozen constants themselves are unchanged — this amends no
+preregistered quantity.
+
+---
+
+## 3a. The first authorized real run — ATTEMPTED 2026-08-03, REFUSED, nothing produced
+
+The run was authorized from clean commit `193503fb` and executed once. It **stopped at pre-run
+clearance**, two seconds in:
+
 ```
+RuntimeError: clearance refused: AUTHORIZED REAL RUN REFUSED —
+  gate 1 (authorized preflight): all_ok is False, must be exactly True ||
+  gate 1 (authorized preflight): n_failed is 1, must be exactly integer 0 ||
+  gate 1 (authorized preflight): failures is non-empty (1) while n_failed claims 0 — contradictory ||
+  gate 1 (authorized preflight): check(s) not explicitly ok: ['pipeline_timing_assertions_ran']
+```
+
+**What did NOT happen.** No feature or outcome reader was constructed. No fantasy outcome was read. No
+model was fit. No result file landed anywhere — `coaching/results/` did not exist before the attempt and
+did not exist after it. The environment token was cleared by the invocation's `finally`;
+`REAL_FIT_AUTHORIZED` stayed `False` in source and at runtime; the lock state returned to `(False,
+False)`; the scoped tree stayed clean; 18/18 protected artifacts, the production models and all pinned
+inputs were unchanged.
+
+**Cause — a CIRCULAR GATE.** `pipeline_timing_assertions_ran` required every `_PIPELINE_ASSERTIONS`
+counter to be non-zero. Those counters are incremented **by** `run_experiment`, which runs **after**
+clearance. In a fresh process the counters are all zero, so `preflight(run_mode='authorized_real')`
+returned 19/21 and the authorized path could never clear its own gate.
+
+**Why no test caught it.** Every test that exercised the authorized path either passed
+`pipeline_assertions={k: 3 ...}` explicitly or replaced `require_preflight_clearance` with a stub. Both
+supply a value the real path cannot produce, so the real path's inability to produce it was never
+observable. This is the same defect class as the earlier "the check didn't check what it claimed"
+findings: a test that manufactures the evidence it is meant to verify.
+
+**Repair — two-phase semantics (v3.9w).** The timing check is not disabled, relaxed or faked. It is
+PHASE-AWARE and asserted TWICE, with all 21 checks in both phases:
+
+| phase | required counter state | when |
+|---|---|---|
+| `pre_run` | every counter EXACTLY zero; a stale non-zero counter FAILS | before readers |
+| `post_pipeline` | every frozen counter POSITIVE; any that did not execute is NAMED | after `run_experiment`, before compose/write |
+
+The check is renamed `pipeline_timing_assertion_state`, because `..._ran` is false in the pre-run phase,
+where it passes precisely because the pipeline has NOT run. `require_preflight_clearance` accepts only a
+`pre_run` result and `require_post_pipeline_clearance` only a `post_pipeline` result, so neither can be
+replayed as the other. If the post-pipeline gate fails, ZERO result files land.
+
+**No statistical rule, threshold, denominator, seed or frozen constant changes.** The repair is entirely
+in the ordering and phase of the runtime gate.
+
 
 Required simultaneously:
 
@@ -552,7 +623,7 @@ These requirements are pinned by `test_the_manifest_states_the_required_activati
 `manifest_qb_rookie_null` · `coverage_reconciles` · `lineage_strict_timing` ·
 `lineage_states_the_primary_policy` · `contribution_lineage_reconciles` ·
 `design_b_oracle_and_unselectable` · `production_models_identical` · `no_real_outcome_access` ·
-`assembly_module_contract` · `pipeline_timing_assertions_ran` · `run_mode_locks`
+`assembly_module_contract` · `pipeline_timing_assertion_state` (RENAMED v3.9w from `pipeline_timing_assertions_ran`; phase-aware, see the manifest §3a) · `run_mode_locks`
 
 `all_ok` must be `True` with `n_failed == 0` **before** the first outcome read. A single failure aborts
 before any outcome is touched.
