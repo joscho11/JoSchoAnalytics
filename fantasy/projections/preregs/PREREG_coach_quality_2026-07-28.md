@@ -664,6 +664,38 @@ cross-checked against the four shipped veteran bundles. **This changes no popula
 definition, threshold, cohort or evaluation rule** — the values are provably identical; it changes only
 which file the experiment reads them from, so deploy-season maintenance can no longer gate activation.
 
+**AMENDMENT, PREFIT, 2026-08-03 (v3.9s) — result storage and the authorized runner.** Three
+operational facts, none of them statistical. (1) The five preregistered result files move from
+`coaching/data/` to `coaching/results/`, because the preflight check `no_unauthorized_v39_artifact`
+requires the `*_v39.*` set in `data/` to equal exactly the five FEATURE artifacts — writing results
+there took preflight from 21/21 to 20/21. That check and `V39_ARTIFACT_HASHES` are unchanged.
+(2) The authorized-real CLI and the five-file writer, both previously documented but **never
+implemented**, now exist, together with the canonical adapter that turns the assembled panel into the
+frame `run_experiment` requires. (3) `run_experiment` returns seven frames for five files, so `oracle`
+is folded into `arm_metrics` under `record_type` and `preflight` into `arm_verdict` under a
+`preflight_` prefix, both provably recoverable. **No population, feature, arm, hyperparameter,
+threshold, cohort, selection rule or verdict criterion is changed by any of this.**
+
+**AMENDMENT, PREFIT, 2026-08-03 (v3.9u) — EVALUATION ELIGIBILITY.** A row enters the evaluation only
+when (1) `team` is non-null, so OC/HC exposure is defined for it, and (2) its `(position, bucket)` has
+a shipped Arm 0 bundle. Determined from the frozen feature frame BEFORE any outcome access and applied
+identically to ARM_0 and every coaching arm. Measured, mutually exclusive and exhaustive:
+
+```
+source_population                  7,350
+excluded_missing_team                 80    (WR 31 · TE 20 · RB 15 · QB 14, all veteran-bucket)
+excluded_no_shipped_bundle           117    (QB/rookie)
+eligible_evaluation_population     7,153
+```
+
+Coaching exposure is undefined without a team, and **neutral imputation was rejected because it invents
+the exposure the experiment measures**. The 117 QB/rookie rows were already outside the shipped
+seven-bundle experiment — the QB rookie arm was HELD — and are now excluded explicitly with a reason
+and a count rather than skipped silently by the bucket loop. All twelve seasons and all eight outer
+seasons remain represented, and every retained bucket keeps complete ordered features. **No outcome was
+accessed when this rule or these counts were chosen**, and no feature, arm, hyperparameter, threshold,
+cohort, selection rule or verdict criterion is changed.
+
 **The real-fit gate is DEFAULT-CLOSED and double-locked.** Both `REAL_FIT_AUTHORIZED = True` and
 `COACH_V39_REAL_FIT_AUTHORIZED_BY_JOSEPH=I-HAVE-WRITTEN-THE-PREFIT-AMENDMENT` are required; either
 alone leaves the gate shut. `assemble_real_panel` is the single door and is deliberately

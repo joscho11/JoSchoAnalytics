@@ -1,0 +1,294 @@
+{
+  "notebook": "futures/season_team_totals/03_distribution_model.ipynb",
+  "model": "M4 schedule-level Monte Carlo",
+  "research_only": true,
+  "authority": "PREREGISTRATION.md \u00a76 (M4) + \u00a74 metrics 5/7 + \u00a710 A2.5.6",
+  "lock": {
+    "audit_verdict": "GO-TIER-B",
+    "tier_c_open": false,
+    "metrics_computed": [
+      "CRPS",
+      "interval_coverage_50",
+      "interval_coverage_80",
+      "PIT",
+      "MAE_of_simulated_mean"
+    ],
+    "metrics_withheld": {
+      "p_over_against_posted_number": "requires gate C (probability against a posted line)",
+      "log_loss_and_brier_vs_settled_side": "requires gate C (settlement against a posted number)",
+      "push_settlement_on_integer_lines": "requires gate C (settlement rules and quote handling)",
+      "any_directional_selection": "requires gate C (side-taking)"
+    }
+  },
+  "simulation": {
+    "n_sims": 20000,
+    "seed": 20260802,
+    "tie_rule": "|margin| < tie_threshold counts 0.5 per team (\u00a72.1)",
+    "venue_rule": "home field removed for explicit-neutral or international only (A2.5.6); domestic alternate venues keep it"
+  },
+  "fits_by_fold": {
+    "2015": {
+      "alpha": 1000.0,
+      "fallback": false,
+      "hfa": 2.007617469303768,
+      "sigma": 14.409506001901443,
+      "tie_threshold": 0.03568998063894288,
+      "n_train_games": 3328,
+      "train_seasons": [
+        2002,
+        2014
+      ]
+    },
+    "2016": {
+      "alpha": 1000.0,
+      "fallback": false,
+      "hfa": 1.977059587426847,
+      "sigma": 14.35530358589231,
+      "tie_threshold": 0.04896525222088349,
+      "n_train_games": 3584,
+      "train_seasons": [
+        2002,
+        2015
+      ]
+    },
+    "2017": {
+      "alpha": 1000.0,
+      "fallback": false,
+      "hfa": 2.0078500459390245,
+      "sigma": 14.224569540270789,
+      "tie_threshold": 0.025075629368748863,
+      "n_train_games": 3840,
+      "train_seasons": [
+        2002,
+        2016
+      ]
+    },
+    "2018": {
+      "alpha": 1000.0,
+      "fallback": false,
+      "hfa": 2.02646269759325,
+      "sigma": 14.253218222560749,
+      "tie_threshold": 0.023947251450706312,
+      "n_train_games": 4096,
+      "train_seasons": [
+        2002,
+        2017
+      ]
+    },
+    "2019": {
+      "alpha": 1000.0,
+      "fallback": false,
+      "hfa": 2.039245569319426,
+      "sigma": 14.21743048870641,
+      "tie_threshold": 0.03585731222015995,
+      "n_train_games": 4352,
+      "train_seasons": [
+        2002,
+        2018
+      ]
+    },
+    "2020": {
+      "alpha": 1000.0,
+      "fallback": false,
+      "hfa": 1.9433297510910836,
+      "sigma": 14.207284172580717,
+      "tie_threshold": 0.023307369968975332,
+      "n_train_games": 4608,
+      "train_seasons": [
+        2002,
+        2019
+      ]
+    },
+    "2021": {
+      "alpha": 1000.0,
+      "fallback": false,
+      "hfa": 1.8633027585498587,
+      "sigma": 14.188662972911082,
+      "tie_threshold": 0.044126177456646196,
+      "n_train_games": 4864,
+      "train_seasons": [
+        2002,
+        2020
+      ]
+    },
+    "2022": {
+      "alpha": 1000.0,
+      "fallback": false,
+      "hfa": 1.8485197031583342,
+      "sigma": 14.197889071285696,
+      "tie_threshold": 0.052801851561607306,
+      "n_train_games": 5136,
+      "train_seasons": [
+        2002,
+        2021
+      ]
+    },
+    "2024": {
+      "alpha": 1000.0,
+      "fallback": false,
+      "hfa": 1.8948324602288544,
+      "sigma": 14.075002554039804,
+      "tie_threshold": 0.05744928661742284,
+      "n_train_games": 5679,
+      "train_seasons": [
+        2002,
+        2023
+      ]
+    },
+    "2025": {
+      "alpha": 1000.0,
+      "fallback": false,
+      "hfa": 1.8886636072996559,
+      "sigma": 14.069817125323201,
+      "tie_threshold": 0.0454047089364513,
+      "n_train_games": 5951,
+      "train_seasons": [
+        2002,
+        2024
+      ]
+    }
+  },
+  "point_estimate": {
+    "pooled_mae_headline": {
+      "M4": 2.35455296875,
+      "B0_market": 2.2453125,
+      "B1_persistence": 2.829641544117647
+    },
+    "pooled_mae_strict": {
+      "M4": 2.2663742187500002,
+      "B0_market": 2.21484375,
+      "B1_persistence": 2.84375
+    },
+    "delta_vs_B0_headline": 0.10924046875000037,
+    "delta_vs_B1_headline": -0.4750885753676468,
+    "fold_win_vs_B0": 0.2,
+    "fold_win_vs_B1": 1.0,
+    "per_fold": [
+      {
+        "test_season": 2015,
+        "n": 32,
+        "mae_M4": 2.2686124999999997,
+        "mae_B0_market": 2.234375,
+        "mae_B1_persistence": 2.6875
+      },
+      {
+        "test_season": 2016,
+        "n": 32,
+        "mae_M4": 2.3574859375,
+        "mae_B0_market": 2.234375,
+        "mae_B1_persistence": 2.84375
+      },
+      {
+        "test_season": 2017,
+        "n": 32,
+        "mae_M4": 2.3442578125,
+        "mae_B0_market": 2.3125,
+        "mae_B1_persistence": 3.125
+      },
+      {
+        "test_season": 2018,
+        "n": 32,
+        "mae_M4": 2.095140625,
+        "mae_B0_market": 2.078125,
+        "mae_B1_persistence": 2.71875
+      },
+      {
+        "test_season": 2019,
+        "n": 32,
+        "mae_M4": 2.1441046875,
+        "mae_B0_market": 1.984375,
+        "mae_B1_persistence": 2.46875
+      },
+      {
+        "test_season": 2020,
+        "n": 32,
+        "mae_M4": 2.5976484375,
+        "mae_B0_market": 2.328125,
+        "mae_B1_persistence": 2.90625
+      },
+      {
+        "test_season": 2021,
+        "n": 32,
+        "mae_M4": 1.8210515625,
+        "mae_B0_market": 1.59375,
+        "mae_B1_persistence": 2.4140625
+      },
+      {
+        "test_season": 2022,
+        "n": 32,
+        "mae_M4": 2.3089375,
+        "mae_B0_market": 2.390625,
+        "mae_B1_persistence": 3.0386029411764706
+      },
+      {
+        "test_season": 2024,
+        "n": 32,
+        "mae_M4": 2.8109953125000002,
+        "mae_B0_market": 2.859375,
+        "mae_B1_persistence": 2.9375
+      },
+      {
+        "test_season": 2025,
+        "n": 32,
+        "mae_M4": 2.7972953124999997,
+        "mae_B0_market": 2.4375,
+        "mae_B1_persistence": 3.15625
+      }
+    ]
+  },
+  "distribution": {
+    "headline": {
+      "n": 320,
+      "crps": 1.70316171875,
+      "coverage50": 0.45,
+      "coverage80": 0.65,
+      "pit_mean": 0.49539921875,
+      "pit_std": 0.3518052198795485
+    },
+    "strict_sensitivity": {
+      "n": 128,
+      "crps": 1.6313189453125,
+      "coverage50": 0.453125,
+      "coverage80": 0.671875,
+      "pit_mean": 0.48631035156249997,
+      "pit_std": 0.3471708373274222
+    },
+    "nominal": {
+      "interval_50": 0.5,
+      "interval_80": 0.8
+    },
+    "coverage_target_band_80": [
+      0.72,
+      0.88
+    ],
+    "pit_deciles_pct": [
+      20.312,
+      9.375,
+      7.5,
+      5.0,
+      7.812,
+      6.875,
+      9.375,
+      6.25,
+      5.938,
+      21.562
+    ]
+  },
+  "inputs": {
+    "panel": "futures/data/team_season_panel.parquet",
+    "panel_frame_sha256": "039f0e0d9e5bc29f962b07a3d6728988369687a37ecf81448c03416daff68e1e",
+    "venue_context": "futures/data/season_schedule_context.parquet",
+    "audit": "futures/artifacts/data_audit.json"
+  },
+  "provenance": {
+    "notebook": "futures/season_team_totals/03_distribution_model.ipynb",
+    "run_at_utc": "2026-08-04T02:22:44.360955+00:00",
+    "python": "3.11.9",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "pandas": "2.3.3",
+    "numpy": "1.26.4",
+    "seed": 20260802,
+    "n_sims": 20000,
+    "audit_verdict": "GO-TIER-B"
+  }
+}

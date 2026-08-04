@@ -123,8 +123,8 @@ def test_fit_predict_constructs_a_fresh_estimator_each_call(monkeypatch):
 
     def spy(family, params):
         m = real_make(family, params)
-        made.append(id(m))
-        return m
+        made.append(m)          # hold the OBJECT: id() can be recycled once the first is freed,
+        return m                # which made an `id` comparison flake in a full-suite run
 
     monkeypatch.setattr(RB, "_make_model", spy)
     rng = np.random.default_rng(0)
@@ -136,7 +136,7 @@ def test_fit_predict_constructs_a_fresh_estimator_each_call(monkeypatch):
 
     p1 = EX.fit_predict(spec, train, test, feats)
     p2 = EX.fit_predict(spec, train, test, feats)
-    assert len(made) == 2 and made[0] != made[1], "the same estimator instance was reused"
+    assert len(made) == 2 and made[0] is not made[1], "the same estimator instance was reused"
     np.testing.assert_allclose(p1, p2, err_msg="a fresh fit on identical data must be reproducible")
 
 

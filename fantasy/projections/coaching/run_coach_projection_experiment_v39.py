@@ -977,6 +977,27 @@ def placebo_distribution(panel, coach, position, outer_seasons, arm0, draws=PLAC
 # =====================================================================================================
 # DRIVER
 # =====================================================================================================
+def assert_no_implicit_row_loss(panel):
+    """The panel must already satisfy the eligibility invariant, so no row can be lost implicitly.
+
+    There are exactly two implicit-loss mechanisms in this pipeline: a null `team`, which makes
+    `attach_coach_features` refuse, and a (position, bucket) with no shipped bundle, which the bucket
+    loop SKIPS silently. If neither can occur on arrival, neither can shrink the population later.
+    Applied identically to ARM_0 and every coaching arm, because it is a property of the panel.
+    """
+    if "team" in panel.columns:
+        n_null = int(panel["team"].isna().sum())
+        assert not n_null, (f"{n_null} panel row(s) have a null team; coaching exposure is undefined "
+                            f"for them and they must be excluded BEFORE the run, not silently here")
+    if "bucket" in panel.columns and "position" in panel.columns:
+        shipped = {(p, b) for p, b in BUNDLE_FILE}
+        bad = sorted({(p, b) for p, b in zip(panel["position"], panel["bucket"])
+                      if (p, b) not in shipped})
+        assert not bad, (f"panel carries (position, bucket) with no shipped bundle: {bad}; the bucket "
+                         f"loop would skip them silently")
+    return True
+
+
 def run_experiment(panel, coach_a, coach_b=None, outer_seasons=OUTER_SEASONS, positions=POSITIONS,
                    bootstrap_draws=BOOTSTRAP_DRAWS, placebo_draws=PLACEBO_DRAWS,
                    run_placebo=True, verbose=True, run_mode=DEFAULT_RUN_MODE):
@@ -987,6 +1008,7 @@ def run_experiment(panel, coach_a, coach_b=None, outer_seasons=OUTER_SEASONS, po
     """
     ok, detail = validate_run_mode(run_mode)
     assert ok, f"invalid run mode: {detail}"
+    assert_no_implicit_row_loss(panel)
     reset_pipeline_assertions()
     arm0 = arm0_definition()
     sel_rows, metric_rows, boot_rows = [], [], []
@@ -2223,18 +2245,114 @@ def assert_no_production_writes(before=None):
     return now
 
 
+def parse_outer_seasons(spec):
+    """`2018-2025` or `2018,2019` or `2018` -> a tuple of ints, validated against the frozen set."""
+    if spec is None:
+        return tuple(OUTER_SEASONS)
+    text = str(spec).strip()
+    if "-" in text:
+        lo, _, hi = text.partition("-")
+        seasons = tuple(range(int(lo), int(hi) + 1))
+    else:
+        seasons = tuple(int(s) for s in text.replace(",", " ").split())
+    unknown = [s for s in seasons if s not in OUTER_SEASONS]
+    if not seasons or unknown:
+        raise SystemExit(f"--outer-seasons {spec!r}: {unknown or 'empty'} outside the frozen outer "
+                         f"set {list(OUTER_SEASONS)}")
+    return seasons
+
+
+def run_authorized_real(outer_seasons, bootstrap_draws, placebo_draws, out_dir=None,
+                        overwrite=False, verbose=True):
+    """THE authorized-real path. Unreachable unless BOTH locks are open.
+
+    Order is fixed and each step gates the next:
+      authorization -> preflight/readiness/gate clearance -> pinned readers -> assemble_real_panel
+      -> canonical adapter -> run_experiment(run_mode='authorized_real') -> validate frames
+      -> atomic five-file write -> hashes.
+
+    Statement 1 refuses on a closed or partial lock before any reader is constructed, so an
+    unauthorized invocation reaches no data at all.
+    """
+    import assemble_real_panel_v39 as _arp
+    import write_v39_results as _wr
+
+    require_real_fit_authorization()
+
+    pf = preflight(run_mode=RUN_MODE_AUTHORIZED_REAL)
+    require_preflight_clearance(RUN_MODE_AUTHORIZED_REAL, pf)
+
+    # the COMPOSED reader: veteran snapshot + rookie matrix under the frozen
+    # SHIPPED_ARM0_BUCKETS routing, so all seven buckets are feedable
+    # ELIGIBILITY runs INSIDE the feature reader, so it completes before the outcome reader is ever
+    # called: Python evaluates `assemble_panel_core(feature_reader(), outcome_reader())` left to
+    # right, and a malformed partition raises out of the first argument. Zero outcome-reader calls.
+    composed_reader = _arp.authorized_composed_feature_reader()
+    eligibility = {}
+
+    def feature_reader():
+        frame = composed_reader()
+        eligible, accounting = _arp.evaluation_eligibility(frame)
+        eligibility.update(accounting)
+        if verbose:
+            print(f"  eligibility: source {accounting['source_population']} | "
+                  f"-{accounting['excluded_missing_team']} missing team | "
+                  f"-{accounting['excluded_no_shipped_bundle']} no shipped bundle | "
+                  f"eligible {accounting['eligible_evaluation_population']}")
+        return eligible
+
+    outcome_reader = _arp.authorized_outcome_reader()
+    assembled = assemble_real_panel(feature_reader, outcome_reader,
+                                    run_mode=RUN_MODE_AUTHORIZED_REAL)
+    panel, report = _arp.panel_for_experiment(assembled)
+    assert len(panel) == eligibility["eligible_evaluation_population"], (
+        f"the adapter changed the eligible population "
+        f"{eligibility['eligible_evaluation_population']} -> {len(panel)}")
+    if verbose:
+        print(f"  panel: {report['n_rows']} rows | buckets {report['buckets']} | "
+              f"outcome states {report['outcome_states']}")
+
+    coach_a = pd.read_csv(DATA / "team_coach_features_design_a_v39.csv")
+    coach_b = pd.read_csv(DATA / "team_coach_features_design_b_oracle_v39.csv")
+    frames = run_experiment(panel, coach_a, coach_b, outer_seasons=outer_seasons,
+                            bootstrap_draws=bootstrap_draws, placebo_draws=placebo_draws,
+                            verbose=verbose, run_mode=RUN_MODE_AUTHORIZED_REAL)
+
+    problems = _wr.validate_outputs(_wr.compose(frames, eligibility=eligibility))
+    if problems:
+        raise SystemExit("result validation failed: " + "; ".join(problems))
+    hashes = _wr.write_results(frames, out_dir=out_dir, overwrite=overwrite, eligibility=eligibility)
+    return frames, hashes
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--audit", action="store_true", help="print the production audit (writes nothing)")
     ap.add_argument("--synthetic", action="store_true", help="SYNTHETIC-target smoke run")
-    ap.add_argument("--real", action="store_true", help="BLOCKED under prereg v3.9")
+    ap.add_argument("--run-mode", choices=list(RUN_MODES), default=None,
+                    help="authorized_real performs the real run; requires BOTH locks open")
+    ap.add_argument("--outer-seasons", default=None, help="e.g. 2018-2025")
+    ap.add_argument("--overwrite-results", action="store_true",
+                    help="replace existing result files (refused by default)")
     ap.add_argument("--outer", type=int, nargs="*", default=None)
     ap.add_argument("--bootstrap-draws", type=int, default=2000)
     ap.add_argument("--placebo-draws", type=int, default=10)
     a = ap.parse_args()
 
-    if a.real:
-        raise SystemExit("BLOCKED: " + REAL_FIT_MESSAGE)
+    if a.run_mode == RUN_MODE_AUTHORIZED_REAL:
+        ok, detail = validate_run_mode(RUN_MODE_AUTHORIZED_REAL)
+        if not ok:
+            raise SystemExit("BLOCKED: " + detail)
+        seasons = parse_outer_seasons(a.outer_seasons)
+        print("=" * 96)
+        print(f"AUTHORIZED REAL RUN — outer seasons {list(seasons)}")
+        print("=" * 96)
+        _frames, hashes = run_authorized_real(seasons, a.bootstrap_draws, a.placebo_draws,
+                                              overwrite=a.overwrite_results)
+        print("\n--- RESULT HASHES ---")
+        for name, h in sorted(hashes.items()):
+            print(f"  {name:26s} {h}")
+        return hashes
 
     print("=" * 96)
     print("PHASE 2B v3.9 — COACH-REPRESENTATION EVALUATION HARNESS")

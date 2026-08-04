@@ -1,0 +1,809 @@
+{
+  "notebook": "futures/season_team_totals/02_model_comparison.ipynb",
+  "research_only": true,
+  "authority": "PREREGISTRATION.md \u00a73/\u00a74/\u00a76/\u00a77 + \u00a710 Amendments 1-2",
+  "lock": {
+    "audit_verdict": "GO-TIER-B",
+    "tier_c_open": false,
+    "metrics_computed": [
+      "MAE",
+      "delta_MAE"
+    ],
+    "metrics_withheld": [
+      "directional hit rate against the posted number",
+      "quote-implied break-even threshold"
+    ],
+    "withheld_because": "both require gate C, which is shut; the quote columns are absent from the panel"
+  },
+  "folds": {
+    "headline": [
+      2015,
+      2016,
+      2017,
+      2018,
+      2019,
+      2020,
+      2021,
+      2022,
+      2024,
+      2025
+    ],
+    "strict_sensitivity": [
+      2015,
+      2016,
+      2017,
+      2018
+    ],
+    "eval_rows_headline": 320,
+    "eval_rows_strict": 128,
+    "strict_is_underpowered": true
+  },
+  "tracks": {
+    "independent_structural": [
+      "M1_linear",
+      "M2_ridge",
+      "M3_lightgbm"
+    ],
+    "market_anchored": [
+      "M5_anchored"
+    ],
+    "m5_note": "market-anchored; cannot show this project beating a sportsbook or market"
+  },
+  "pooled_mae": {
+    "headline": {
+      "B0_market": 2.2453125,
+      "B1_persistence": 2.829641544117647,
+      "B2_league_mean": 2.640625,
+      "B3_shrunk": 2.4597047986529375,
+      "M1_linear": 2.4754954282789177,
+      "M2_ridge": 2.3718530886509015,
+      "M3_lightgbm": 2.4134240461542995,
+      "M5_anchored": 2.289525847443641
+    },
+    "strict": {
+      "B0_market": 2.21484375,
+      "B1_persistence": 2.84375,
+      "B2_league_mean": 2.53125,
+      "B3_shrunk": 2.395829348361471,
+      "M1_linear": 2.2925336742863207,
+      "M2_ridge": 2.295454463823578,
+      "M3_lightgbm": 2.265243512828965,
+      "M5_anchored": 2.336973422107627
+    }
+  },
+  "per_fold": {
+    "headline": [
+      {
+        "test_season": 2015,
+        "n": 32,
+        "mae_B0_market": 2.234375,
+        "mae_B1_persistence": 2.6875,
+        "mae_B2_league_mean": 2.5,
+        "mae_B3_shrunk": 2.242887158996969,
+        "mae_M1_linear": 2.28663977706198,
+        "mae_M2_ridge": 2.312053612897909,
+        "mae_M3_lightgbm": 2.283591328207897,
+        "mae_M5_anchored": 2.661892615694721
+      },
+      {
+        "test_season": 2016,
+        "n": 32,
+        "mae_B0_market": 2.234375,
+        "mae_B1_persistence": 2.84375,
+        "mae_B2_league_mean": 2.5,
+        "mae_B3_shrunk": 2.536090320943803,
+        "mae_M1_linear": 2.4779889909946453,
+        "mae_M2_ridge": 2.38055817488289,
+        "mae_M3_lightgbm": 2.3870777541478643,
+        "mae_M5_anchored": 2.296316621897293
+      },
+      {
+        "test_season": 2017,
+        "n": 32,
+        "mae_B0_market": 2.3125,
+        "mae_B1_persistence": 3.125,
+        "mae_B2_league_mean": 2.625,
+        "mae_B3_shrunk": 2.503738621586476,
+        "mae_M1_linear": 2.2938473730510074,
+        "mae_M2_ridge": 2.3817374566778464,
+        "mae_M3_lightgbm": 2.323672605651743,
+        "mae_M5_anchored": 2.3170938822121157
+      },
+      {
+        "test_season": 2018,
+        "n": 32,
+        "mae_B0_market": 2.078125,
+        "mae_B1_persistence": 2.71875,
+        "mae_B2_league_mean": 2.5,
+        "mae_B3_shrunk": 2.3006012919186367,
+        "mae_M1_linear": 2.111658556037651,
+        "mae_M2_ridge": 2.107468610835668,
+        "mae_M3_lightgbm": 2.066632363308357,
+        "mae_M5_anchored": 2.072590568626379
+      },
+      {
+        "test_season": 2019,
+        "n": 32,
+        "mae_B0_market": 1.984375,
+        "mae_B1_persistence": 2.46875,
+        "mae_B2_league_mean": 2.5625,
+        "mae_B3_shrunk": 2.258734970712157,
+        "mae_M1_linear": 2.230461404450277,
+        "mae_M2_ridge": 2.133525976125281,
+        "mae_M3_lightgbm": 2.2335123761493607,
+        "mae_M5_anchored": 1.9774988146564327
+      },
+      {
+        "test_season": 2020,
+        "n": 32,
+        "mae_B0_market": 2.328125,
+        "mae_B1_persistence": 2.90625,
+        "mae_B2_league_mean": 2.9375,
+        "mae_B3_shrunk": 2.6470112937847596,
+        "mae_M1_linear": 2.8965048148469066,
+        "mae_M2_ridge": 2.629505518272599,
+        "mae_M3_lightgbm": 2.7438220988475113,
+        "mae_M5_anchored": 2.3087853252246173
+      },
+      {
+        "test_season": 2021,
+        "n": 32,
+        "mae_B0_market": 1.59375,
+        "mae_B1_persistence": 2.4140625,
+        "mae_B2_league_mean": 2.34375,
+        "mae_B3_shrunk": 1.948243265383554,
+        "mae_M1_linear": 2.0770108218848673,
+        "mae_M2_ridge": 1.8433445762513665,
+        "mae_M3_lightgbm": 1.9712709484782858,
+        "mae_M5_anchored": 1.5945677153900724
+      },
+      {
+        "test_season": 2022,
+        "n": 32,
+        "mae_B0_market": 2.390625,
+        "mae_B1_persistence": 3.0386029411764706,
+        "mae_B2_league_mean": 2.4375,
+        "mae_B3_shrunk": 2.5268789416644886,
+        "mae_M1_linear": 2.5081639593110965,
+        "mae_M2_ridge": 2.3324698832850257,
+        "mae_M3_lightgbm": 2.436854854249031,
+        "mae_M5_anchored": 2.3840145972640205
+      },
+      {
+        "test_season": 2024,
+        "n": 32,
+        "mae_B0_market": 2.859375,
+        "mae_B1_persistence": 2.9375,
+        "mae_B2_league_mean": 3.125,
+        "mae_B3_shrunk": 2.936654758166399,
+        "mae_M1_linear": 3.1301524956580424,
+        "mae_M2_ridge": 2.8180366867137714,
+        "mae_M3_lightgbm": 2.825315338635252,
+        "mae_M5_anchored": 2.8255033417542252
+      },
+      {
+        "test_season": 2025,
+        "n": 32,
+        "mae_B0_market": 2.4375,
+        "mae_B1_persistence": 3.15625,
+        "mae_B2_league_mean": 2.875,
+        "mae_B3_shrunk": 2.6962073633721317,
+        "mae_M1_linear": 2.7425260894927064,
+        "mae_M2_ridge": 2.7798303905666586,
+        "mae_M3_lightgbm": 2.8624907938676936,
+        "mae_M5_anchored": 2.4569949917165315
+      }
+    ],
+    "strict": [
+      {
+        "test_season": 2015,
+        "n": 32,
+        "mae_B0_market": 2.234375,
+        "mae_B1_persistence": 2.6875,
+        "mae_B2_league_mean": 2.5,
+        "mae_B3_shrunk": 2.242887158996969,
+        "mae_M1_linear": 2.28663977706198,
+        "mae_M2_ridge": 2.312053612897909,
+        "mae_M3_lightgbm": 2.283591328207897,
+        "mae_M5_anchored": 2.661892615694721
+      },
+      {
+        "test_season": 2016,
+        "n": 32,
+        "mae_B0_market": 2.234375,
+        "mae_B1_persistence": 2.84375,
+        "mae_B2_league_mean": 2.5,
+        "mae_B3_shrunk": 2.536090320943803,
+        "mae_M1_linear": 2.4779889909946453,
+        "mae_M2_ridge": 2.38055817488289,
+        "mae_M3_lightgbm": 2.3870777541478643,
+        "mae_M5_anchored": 2.296316621897293
+      },
+      {
+        "test_season": 2017,
+        "n": 32,
+        "mae_B0_market": 2.3125,
+        "mae_B1_persistence": 3.125,
+        "mae_B2_league_mean": 2.625,
+        "mae_B3_shrunk": 2.503738621586476,
+        "mae_M1_linear": 2.2938473730510074,
+        "mae_M2_ridge": 2.3817374566778464,
+        "mae_M3_lightgbm": 2.323672605651743,
+        "mae_M5_anchored": 2.3170938822121157
+      },
+      {
+        "test_season": 2018,
+        "n": 32,
+        "mae_B0_market": 2.078125,
+        "mae_B1_persistence": 2.71875,
+        "mae_B2_league_mean": 2.5,
+        "mae_B3_shrunk": 2.3006012919186367,
+        "mae_M1_linear": 2.111658556037651,
+        "mae_M2_ridge": 2.107468610835668,
+        "mae_M3_lightgbm": 2.066632363308357,
+        "mae_M5_anchored": 2.072590568626379
+      }
+    ]
+  },
+  "deltas": {
+    "headline": [
+      {
+        "model": "M1_linear",
+        "pooled_mae": 2.4754954282789177,
+        "d_B0_market": 0.23018292827891784,
+        "win_B0_market": 0.1,
+        "d_B1_persistence": -0.35414611583872935,
+        "win_B1_persistence": 0.9,
+        "d_B2_league_mean": -0.16512957172108234,
+        "win_B2_league_mean": 0.8,
+        "d_B3_shrunk": 0.015790629625980213,
+        "win_B3_shrunk": 0.5
+      },
+      {
+        "model": "M2_ridge",
+        "pooled_mae": 2.3718530886509015,
+        "d_B0_market": 0.12654058865090168,
+        "win_B0_market": 0.2,
+        "d_B1_persistence": -0.4577884554667455,
+        "win_B1_persistence": 1.0,
+        "d_B2_league_mean": -0.2687719113490985,
+        "win_B2_league_mean": 1.0,
+        "d_B3_shrunk": -0.08785171000203595,
+        "win_B3_shrunk": 0.8
+      },
+      {
+        "model": "M3_lightgbm",
+        "pooled_mae": 2.4134240461542995,
+        "d_B0_market": 0.16811154615429968,
+        "win_B0_market": 0.2,
+        "d_B1_persistence": -0.4162174979633475,
+        "win_B1_persistence": 1.0,
+        "d_B2_league_mean": -0.2272009538457005,
+        "win_B2_league_mean": 1.0,
+        "d_B3_shrunk": -0.046280752498637945,
+        "win_B3_shrunk": 0.6
+      },
+      {
+        "model": "M5_anchored",
+        "pooled_mae": 2.289525847443641,
+        "d_B0_market": 0.04421334744364103,
+        "win_B0_market": 0.5,
+        "d_B1_persistence": -0.5401156966740062,
+        "win_B1_persistence": 1.0,
+        "d_B2_league_mean": -0.35109915255635915,
+        "win_B2_league_mean": 0.9,
+        "d_B3_shrunk": -0.1701789512092966,
+        "win_B3_shrunk": 0.9
+      }
+    ],
+    "strict": [
+      {
+        "model": "M1_linear",
+        "pooled_mae": 2.2925336742863207,
+        "d_B0_market": 0.07768992428632071,
+        "win_B0_market": 0.25,
+        "d_B1_persistence": -0.5512163257136793,
+        "win_B1_persistence": 1.0,
+        "d_B2_league_mean": -0.2387163257136793,
+        "win_B2_league_mean": 1.0,
+        "d_B3_shrunk": -0.1032956740751505,
+        "win_B3_shrunk": 0.75
+      },
+      {
+        "model": "M2_ridge",
+        "pooled_mae": 2.295454463823578,
+        "d_B0_market": 0.0806107138235781,
+        "win_B0_market": 0.0,
+        "d_B1_persistence": -0.5482955361764219,
+        "win_B1_persistence": 1.0,
+        "d_B2_league_mean": -0.2357955361764219,
+        "win_B2_league_mean": 1.0,
+        "d_B3_shrunk": -0.10037488453789312,
+        "win_B3_shrunk": 0.75
+      },
+      {
+        "model": "M3_lightgbm",
+        "pooled_mae": 2.265243512828965,
+        "d_B0_market": 0.05039976282896497,
+        "win_B0_market": 0.25,
+        "d_B1_persistence": -0.578506487171035,
+        "win_B1_persistence": 1.0,
+        "d_B2_league_mean": -0.26600648717103503,
+        "win_B2_league_mean": 1.0,
+        "d_B3_shrunk": -0.13058583553250624,
+        "win_B3_shrunk": 0.75
+      },
+      {
+        "model": "M5_anchored",
+        "pooled_mae": 2.336973422107627,
+        "d_B0_market": 0.12212967210762704,
+        "win_B0_market": 0.25,
+        "d_B1_persistence": -0.506776577892373,
+        "win_B1_persistence": 1.0,
+        "d_B2_league_mean": -0.19427657789237296,
+        "win_B2_league_mean": 0.75,
+        "d_B3_shrunk": -0.05885592625384417,
+        "win_B3_shrunk": 0.75
+      }
+    ]
+  },
+  "bootstrap_season_block": {
+    "n_resamples": 10000,
+    "seed": 20260802,
+    "results": {
+      "M1_linear": {
+        "vs_B0_market": {
+          "point": 0.23018292827891798,
+          "lo95": 0.12389917638591177,
+          "hi95": 0.346403660077287,
+          "p_better": 0.0
+        },
+        "vs_B1_persistence": {
+          "point": -0.35414611583872907,
+          "lo95": -0.5195417356643333,
+          "hi95": -0.17800305686598206,
+          "p_better": 1.0
+        }
+      },
+      "M2_ridge": {
+        "vs_B0_market": {
+          "point": 0.12654058865090162,
+          "lo95": 0.046329838956543794,
+          "hi95": 0.20792714658038733,
+          "p_better": 0.0002
+        },
+        "vs_B1_persistence": {
+          "point": -0.4577884554667454,
+          "lo95": -0.575558494975673,
+          "hi95": -0.3430737888248258,
+          "p_better": 1.0
+        }
+      },
+      "M3_lightgbm": {
+        "vs_B0_market": {
+          "point": 0.16811154615429955,
+          "lo95": 0.06300215661977457,
+          "hi95": 0.28233176488898837,
+          "p_better": 0.0002
+        },
+        "vs_B1_persistence": {
+          "point": -0.4162174979633475,
+          "lo95": -0.5539063337559136,
+          "hi95": -0.2871628882701315,
+          "p_better": 1.0
+        }
+      },
+      "M5_anchored": {
+        "vs_B0_market": {
+          "point": 0.044213347443640784,
+          "lo95": -0.009771587173037033,
+          "hi95": 0.13506248056776143,
+          "p_better": 0.1572
+        },
+        "vs_B1_persistence": {
+          "point": -0.5401156966740063,
+          "lo95": -0.6860717622664726,
+          "hi95": -0.37061531105125806,
+          "p_better": 1.0
+        }
+      }
+    },
+    "note": "season-block per \u00a77 (within-season dependence). A row-level interval is computed alongside for reference only; on this data it is the WIDER of the two, so season-block is not the more conservative choice here."
+  },
+  "selection": {
+    "alpha_grid": [
+      0.01,
+      0.1,
+      1.0,
+      3.0,
+      10.0,
+      30.0,
+      100.0,
+      300.0,
+      1000.0
+    ],
+    "fallback_alpha": 10.0,
+    "m2_alpha_by_fold": {
+      "2015": {
+        "alpha": 100.0,
+        "fallback": false
+      },
+      "2016": {
+        "alpha": 300.0,
+        "fallback": false
+      },
+      "2017": {
+        "alpha": 300.0,
+        "fallback": false
+      },
+      "2018": {
+        "alpha": 100.0,
+        "fallback": false
+      },
+      "2019": {
+        "alpha": 100.0,
+        "fallback": false
+      },
+      "2020": {
+        "alpha": 100.0,
+        "fallback": false
+      },
+      "2021": {
+        "alpha": 100.0,
+        "fallback": false
+      },
+      "2022": {
+        "alpha": 100.0,
+        "fallback": false
+      },
+      "2024": {
+        "alpha": 100.0,
+        "fallback": false
+      },
+      "2025": {
+        "alpha": 100.0,
+        "fallback": false
+      }
+    },
+    "m3_cfg_by_fold": {
+      "2015": {
+        "cfg_index": 2,
+        "fallback": false,
+        "cfg": {
+          "num_leaves": 4,
+          "max_depth": 2,
+          "learning_rate": 0.02,
+          "n_estimators": 400
+        }
+      },
+      "2016": {
+        "cfg_index": 2,
+        "fallback": false,
+        "cfg": {
+          "num_leaves": 4,
+          "max_depth": 2,
+          "learning_rate": 0.02,
+          "n_estimators": 400
+        }
+      },
+      "2017": {
+        "cfg_index": 2,
+        "fallback": false,
+        "cfg": {
+          "num_leaves": 4,
+          "max_depth": 2,
+          "learning_rate": 0.02,
+          "n_estimators": 400
+        }
+      },
+      "2018": {
+        "cfg_index": 2,
+        "fallback": false,
+        "cfg": {
+          "num_leaves": 4,
+          "max_depth": 2,
+          "learning_rate": 0.02,
+          "n_estimators": 400
+        }
+      },
+      "2019": {
+        "cfg_index": 2,
+        "fallback": false,
+        "cfg": {
+          "num_leaves": 4,
+          "max_depth": 2,
+          "learning_rate": 0.02,
+          "n_estimators": 400
+        }
+      },
+      "2020": {
+        "cfg_index": 2,
+        "fallback": false,
+        "cfg": {
+          "num_leaves": 4,
+          "max_depth": 2,
+          "learning_rate": 0.02,
+          "n_estimators": 400
+        }
+      },
+      "2021": {
+        "cfg_index": 0,
+        "fallback": false,
+        "cfg": {
+          "num_leaves": 4,
+          "max_depth": 2,
+          "learning_rate": 0.05,
+          "n_estimators": 200
+        }
+      },
+      "2022": {
+        "cfg_index": 1,
+        "fallback": false,
+        "cfg": {
+          "num_leaves": 8,
+          "max_depth": 3,
+          "learning_rate": 0.05,
+          "n_estimators": 200
+        }
+      },
+      "2024": {
+        "cfg_index": 1,
+        "fallback": false,
+        "cfg": {
+          "num_leaves": 8,
+          "max_depth": 3,
+          "learning_rate": 0.05,
+          "n_estimators": 200
+        }
+      },
+      "2025": {
+        "cfg_index": 1,
+        "fallback": false,
+        "cfg": {
+          "num_leaves": 8,
+          "max_depth": 3,
+          "learning_rate": 0.05,
+          "n_estimators": 200
+        }
+      }
+    },
+    "m5_alpha_by_fold": {
+      "2015": {
+        "alpha": 10.0,
+        "fallback": true,
+        "train_seasons": [
+          2014
+        ],
+        "n_train": 32
+      },
+      "2016": {
+        "alpha": 10.0,
+        "fallback": true,
+        "train_seasons": [
+          2014,
+          2015
+        ],
+        "n_train": 64
+      },
+      "2017": {
+        "alpha": 1000.0,
+        "fallback": false,
+        "train_seasons": [
+          2014,
+          2015,
+          2016
+        ],
+        "n_train": 96
+      },
+      "2018": {
+        "alpha": 1000.0,
+        "fallback": false,
+        "train_seasons": [
+          2014,
+          2015,
+          2016,
+          2017
+        ],
+        "n_train": 128
+      },
+      "2019": {
+        "alpha": 1000.0,
+        "fallback": false,
+        "train_seasons": [
+          2014,
+          2015,
+          2016,
+          2017,
+          2018
+        ],
+        "n_train": 160
+      },
+      "2020": {
+        "alpha": 1000.0,
+        "fallback": false,
+        "train_seasons": [
+          2014,
+          2015,
+          2016,
+          2017,
+          2018,
+          2019
+        ],
+        "n_train": 192
+      },
+      "2021": {
+        "alpha": 1000.0,
+        "fallback": false,
+        "train_seasons": [
+          2014,
+          2015,
+          2016,
+          2017,
+          2018,
+          2019,
+          2020
+        ],
+        "n_train": 224
+      },
+      "2022": {
+        "alpha": 1000.0,
+        "fallback": false,
+        "train_seasons": [
+          2014,
+          2015,
+          2016,
+          2017,
+          2018,
+          2019,
+          2020,
+          2021
+        ],
+        "n_train": 256
+      },
+      "2024": {
+        "alpha": 1000.0,
+        "fallback": false,
+        "train_seasons": [
+          2014,
+          2015,
+          2016,
+          2017,
+          2018,
+          2019,
+          2020,
+          2021,
+          2022
+        ],
+        "n_train": 288
+      },
+      "2025": {
+        "alpha": 1000.0,
+        "fallback": false,
+        "train_seasons": [
+          2014,
+          2015,
+          2016,
+          2017,
+          2018,
+          2019,
+          2020,
+          2021,
+          2022,
+          2024
+        ],
+        "n_train": 320
+      }
+    },
+    "lgb_grid": [
+      {
+        "num_leaves": 4,
+        "max_depth": 2,
+        "learning_rate": 0.05,
+        "n_estimators": 200
+      },
+      {
+        "num_leaves": 8,
+        "max_depth": 3,
+        "learning_rate": 0.05,
+        "n_estimators": 200
+      },
+      {
+        "num_leaves": 4,
+        "max_depth": 2,
+        "learning_rate": 0.02,
+        "n_estimators": 400
+      }
+    ],
+    "grids_declared_before_first_execution": true,
+    "b3_shrinkage_by_fold": {
+      "2015": 0.31138054560484985,
+      "2016": 0.31548902702017,
+      "2017": 0.31339401820546164,
+      "2018": 0.30962067069818583,
+      "2019": 0.3100400781009146,
+      "2020": 0.31720167821250855,
+      "2021": 0.32753863134657835,
+      "2022": 0.3400073183122251,
+      "2024": 0.33558731155627014,
+      "2025": 0.340170546511473
+    }
+  },
+  "gates": {
+    "gate_A_delta_threshold": -0.15,
+    "fold_win_threshold": 0.6,
+    "verdicts": [
+      {
+        "model": "M1_linear",
+        "delta_vs_B1": -0.35414611583872935,
+        "fold_win_vs_B1": 0.9,
+        "gate_A": true,
+        "delta_vs_B0": 0.23018292827891784,
+        "fold_win_vs_B0": 0.1,
+        "ci95_vs_B0": [
+          0.12389917638591177,
+          0.346403660077287
+        ],
+        "gate_B": false,
+        "gate_C": "not evaluable - gate C is shut"
+      },
+      {
+        "model": "M2_ridge",
+        "delta_vs_B1": -0.4577884554667455,
+        "fold_win_vs_B1": 1.0,
+        "gate_A": true,
+        "delta_vs_B0": 0.12654058865090168,
+        "fold_win_vs_B0": 0.2,
+        "ci95_vs_B0": [
+          0.046329838956543794,
+          0.20792714658038733
+        ],
+        "gate_B": false,
+        "gate_C": "not evaluable - gate C is shut"
+      },
+      {
+        "model": "M3_lightgbm",
+        "delta_vs_B1": -0.4162174979633475,
+        "fold_win_vs_B1": 1.0,
+        "gate_A": true,
+        "delta_vs_B0": 0.16811154615429968,
+        "fold_win_vs_B0": 0.2,
+        "ci95_vs_B0": [
+          0.06300215661977457,
+          0.28233176488898837
+        ],
+        "gate_B": false,
+        "gate_C": "not evaluable - gate C is shut"
+      },
+      {
+        "model": "M5_anchored",
+        "delta_vs_B1": -0.5401156966740062,
+        "fold_win_vs_B1": 1.0,
+        "gate_A": true,
+        "delta_vs_B0": 0.04421334744364103,
+        "fold_win_vs_B0": 0.5,
+        "ci95_vs_B0": [
+          -0.009771587173037033,
+          0.13506248056776143
+        ],
+        "gate_B": false,
+        "gate_C": "not evaluable - gate C is shut"
+      }
+    ]
+  },
+  "inputs": {
+    "panel": "futures/data/team_season_panel.parquet",
+    "panel_frame_sha256": "039f0e0d9e5bc29f962b07a3d6728988369687a37ecf81448c03416daff68e1e",
+    "audit": "futures/artifacts/data_audit.json",
+    "metadata": "futures/artifacts/dataset_metadata.json"
+  },
+  "provenance": {
+    "notebook": "futures/season_team_totals/02_model_comparison.ipynb",
+    "run_at_utc": "2026-08-04T02:10:44.241730+00:00",
+    "python": "3.11.9",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "pandas": "2.3.3",
+    "numpy": "1.26.4",
+    "seed": 20260802,
+    "audit_verdict": "GO-TIER-B"
+  }
+}

@@ -453,17 +453,51 @@ parallel implementation, which is not production-equivalence evidence.
 
 ---
 
+## 4b. EVALUATION ELIGIBILITY — a pre-outcome population amendment (2026-08-03)
+
+A row is eligible only when `team` is non-null (so OC/HC exposure is DEFINED) **and** its
+`(position, bucket)` has a shipped Arm 0 bundle. Decided from the frozen feature frame before any
+outcome access, applied identically to ARM_0 and every coaching arm, and never imputed or proxied.
+
+```
+source_population                  7,350
+excluded_missing_team                 80    (WR 31 · TE 20 · RB 15 · QB 14, all veteran)
+excluded_no_shipped_bundle           117    (QB/rookie — the arm was HELD)
+eligible_evaluation_population     7,153
+```
+
+Mutually exclusive (overlap 0) and exhaustive, both measured. Neutral imputation was rejected because
+it invents exposure. The 117 QB/rookie rows were already outside the shipped seven-bundle experiment;
+they are now excluded explicitly with a reason and a count rather than skipped silently. The counts
+ride in `arm_verdict_v39.csv` under an `eligibility_` prefix — no sixth artifact. Stop report §10.13.
+
 ## 5. Outputs — files that will be NEWLY written
+
+**AMENDED 2026-08-03 (Option A, pre-outcome, operational only): the five results live in
+`coaching/results/`, NOT `coaching/data/`.** The original paths contradicted the exact input-artifact
+gate: `no_unauthorized_v39_artifact` requires the `*_v39.*` set in `coaching/data/` to equal exactly
+the five FEATURE artifacts, so writing results there took preflight from 21/21 to 20/21 (measured).
+`V39_ARTIFACT_HASHES` and that check are UNCHANGED. **Storage moved; the experiment did not** — no
+population, feature, arm, hyperparameter, threshold, selection rule or verdict criterion is affected.
+
+**Also corrected:** an earlier revision of this document described a command
+(`--run-mode authorized_real --outer-seasons 2018-2025`) and five writers that **did not exist**.
+`main()` had no `--run-mode`, `--real` was an unconditional `SystemExit`, and no module wrote any
+result file. Both are now implemented — see stop report §10.11 — and the CLI below is the real one.
+
+`run_experiment` returns SEVEN frames and §5 defines FIVE files; the lossless mapping folds `oracle`
+into `arm_metrics_v39.csv` under `record_type` and `preflight` into `arm_verdict_v39.csv` under a
+`preflight_` prefix, with round-trip tests recovering both exactly from the serialized files.
 
 Nothing on this list exists today.
 
 | path | contents |
 |---|---|
-| `coaching/data/arm_selection_v39.csv` | per outer season: selected arm, inner-fold scores |
-| `coaching/data/arm_metrics_v39.csv` | pooled top-cohort MAE per arm per outer season |
-| `coaching/data/arm_bootstrap_v39.csv` | 20,000-draw cluster bootstrap, seed 20260728 |
-| `coaching/data/arm_placebo_v39.csv` | within-season team-level permutation null |
-| `coaching/data/arm_verdict_v39.csv` | the §7 ten-condition verdict |
+| `coaching/results/arm_selection_v39.csv` | per outer season: selected arm, inner-fold scores |
+| `coaching/results/arm_metrics_v39.csv` | pooled top-cohort MAE per arm per outer season |
+| `coaching/results/arm_bootstrap_v39.csv` | 20,000-draw cluster bootstrap, seed 20260728 |
+| `coaching/results/arm_placebo_v39.csv` | within-season team-level permutation null |
+| `coaching/results/arm_verdict_v39.csv` | the §7 ten-condition verdict |
 | `coaching/V39_REAL_RUN_REPORT.md` | the run report |
 
 **No production model, projection, or existing artifact is written.** The five v3.9 artifacts and the

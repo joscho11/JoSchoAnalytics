@@ -21,9 +21,16 @@ HERMETIC — the outcome. The repository owns and pins the weekly player stats:
 and `wr_recent_full_game_features_harness.build_panel()` already reproduces
 `build_rb_projection.season_total_target()` from it, so the outcome needs no fetch and no new artifact.
 
-NOT READY — the features. Arm 0 ships SEVEN bundles. The four veteran buckets are fully supplied by the
-pinned season dataset; the three ROOKIE buckets (RB/WR/TE) have no repo-owned source at all. See
-`ROOKIE_INPUT_BLOCKER` and `activation_readiness()`, which returns False until Joseph resolves it.
+THE FEATURES — both sources are repo-owned, pinned, and composed under the FROZEN routing.
+Arm 0 ships SEVEN bundles. `SHIPPED_ARM0_BUCKETS` assigns the four VETERAN buckets to
+`snapshots/veteran_arm0_features_2014_2025.parquet` and the RB/WR/TE ROOKIE buckets to
+`snapshots/rookie_arm0_features_2014_2025.parquet`. `authorized_composed_feature_reader()` verifies
+both independently and merges them on the frozen panel keys, with the veteran snapshot as the
+population/routing spine. QB/rookie is deliberately absent from that mapping — the arm was HELD — and
+those spine rows keep veteran-source values.
+
+The earlier statement here that the rookie buckets "have no repo-owned source at all" is SUPERSEDED:
+that was true from v3.9g to v3.9m and was resolved by Option A on 2026-08-03.
 
 WHY THIS IS A SEPARATE MODULE
 -----------------------------
@@ -600,6 +607,367 @@ def rookie_bucket_frame(matrix, position, bucket, models_dir=None):
     return frame
 
 
+MODEL_TARGET_COLUMN = "y"
+
+# --- THE COMPOSED UNION SCHEMA -------------------------------------------------------------------
+# `SHIPPED_ARM0_BUCKETS` already froze the routing: the four VETERAN buckets are fed by the veteran
+# snapshot, the three ROOKIE buckets by the rookie matrix. This is that contract, implemented — not a
+# new design choice. The union is the veteran contract plus the rookie matrix's own feature columns,
+# in the rookie matrix's pinned order, plus its two point-in-time provenance columns.
+#
+# NINE columns appear in BOTH sources (draft_round, draft_pick, age, and the six landing-spot
+# features). Ownership is explicit and per row: a rookie-bucket row takes the ROOKIE value for every
+# one of them, INCLUDING a NULL. Nothing is coalesced — an intentional rookie NULL must never be
+# back-filled from the veteran source.
+ROOKIE_SOURCE_FEATURE_COLUMNS = tuple(
+    c for c in ROOKIE_MATRIX_COLUMNS
+    if c not in ROOKIE_MATRIX_IDENTITY and c not in ROOKIE_MATRIX_PROVENANCE)
+ROOKIE_ONLY_FEATURE_COLUMNS = tuple(c for c in ROOKIE_SOURCE_FEATURE_COLUMNS
+                                    if c not in VETERAN_FEATURE_COLUMNS)
+SHARED_SOURCE_COLUMNS = tuple(c for c in ROOKIE_SOURCE_FEATURE_COLUMNS
+                              if c in VETERAN_FEATURE_COLUMNS)
+FROZEN_UNION_FEATURE_COLUMNS = (VETERAN_FEATURE_COLUMNS + ROOKIE_ONLY_FEATURE_COLUMNS
+                                + ROOKIE_MATRIX_PROVENANCE)
+# Never a model input unless a bundle names it explicitly (none does).
+NON_MODEL_HELPER_COLUMNS = ROOKIE_MATRIX_PROVENANCE
+
+
+def authorized_composed_feature_reader(veteran_path=None, rookie_path=None, verify_hash=True,
+                                       verify_manifest=True, models_dir=None):
+    """THE composed feature reader: veteran snapshot + rookie matrix, per the FROZEN routing.
+
+    Constructing it is not reading; the returned callable reads. Both sources are verified
+    INDEPENDENTLY — hash, manifest and exact ordered schema — before either frame is accepted.
+
+    The veteran snapshot is the population and routing SPINE: its row count and order are preserved
+    exactly, and every row keeps its identity. The rookie matrix supplies the RB/WR/TE rookie-bucket
+    rows, whose key set must equal the spine's `is_rookie == 1` RB/WR/TE rows exactly.
+
+    QB/rookie is untouched: it is absent from `SHIPPED_ARM0_BUCKETS` (the arm was HELD), so those
+    spine rows are NOT expected in the rookie matrix and keep veteran-source values. That frozen
+    exclusion is asserted, not assumed.
+    """
+    vet_src = VETERAN_SNAPSHOT if veteran_path is None else pathlib.Path(veteran_path)
+    rook_src = ROOKIE_MATRIX if rookie_path is None else pathlib.Path(rookie_path)
+
+    def _read():
+        verify_veteran_snapshot_provenance(path=vet_src, verify_hash=verify_hash,
+                                           verify_manifest=verify_manifest)
+        verify_rookie_matrix_provenance(path=rook_src, verify_hash=verify_hash,
+                                        verify_manifest=verify_manifest)
+        spine = pd.read_parquet(vet_src, columns=list(VETERAN_FEATURE_COLUMNS))
+        rookie = pd.read_parquet(rook_src, columns=list(ROOKIE_MATRIX_COLUMNS))
+        frame = compose_feature_frame(spine, rookie, models_dir=models_dir)
+        problems = validate_feature_frame(frame)
+        if problems:
+            raise AssemblyError("composed feature reader output failed its own validator: "
+                                + "; ".join(problems))
+        return frame
+    return _read
+
+
+def compose_feature_frame(spine, rookie, models_dir=None):
+    """Merge the two pinned sources under the frozen routing. Pure: takes frames, returns a frame."""
+    keys = list(PANEL_KEYS)
+    spine = spine.reset_index(drop=True).copy()
+
+    if list(spine.columns) != list(VETERAN_FEATURE_COLUMNS):
+        raise AssemblyError("composition: the spine is not the veteran contract")
+    if list(rookie.columns) != list(ROOKIE_MATRIX_COLUMNS):
+        raise AssemblyError("composition: the rookie frame is not the rookie contract")
+    if rookie.duplicated(subset=keys).any():
+        n = int(rookie.duplicated(subset=keys).sum())
+        raise AssemblyError(f"composition: {n} duplicate {keys} row(s) in the rookie matrix")
+
+    routed = (spine["is_rookie"].astype(int) == 1) & spine["position"].isin(ROOKIE_MATRIX_POSITIONS)
+    spine_keys = set(map(tuple, spine.loc[routed, keys].to_numpy()))
+    rook_keys = set(map(tuple, rookie[keys].to_numpy()))
+    missing, extra = sorted(spine_keys - rook_keys)[:5], sorted(rook_keys - spine_keys)[:5]
+    if missing:
+        raise AssemblyError(f"composition: {len(spine_keys - rook_keys)} routed rookie row(s) have no "
+                            f"rookie-matrix row; e.g. {missing}")
+    if extra:
+        raise AssemblyError(f"composition: {len(rook_keys - spine_keys)} rookie-matrix row(s) match no "
+                            f"routed spine row; e.g. {extra}")
+
+    # QB/rookie is a FROZEN exclusion: those spine rows must not appear in the rookie matrix.
+    qb_rookie = spine[(spine["is_rookie"].astype(int) == 1) & (spine["position"] == "QB")]
+    leaked_qb = set(map(tuple, qb_rookie[keys].to_numpy())) & rook_keys
+    if leaked_qb:
+        raise AssemblyError(f"composition: {len(leaked_qb)} QB/rookie row(s) are in the rookie matrix; "
+                            f"the QB rookie arm is HELD and has no bundle")
+
+    # rookie values, reordered onto the spine's routed rows
+    ordered = spine.loc[routed, keys].merge(rookie, on=keys, how="left", validate="one_to_one")
+    if len(ordered) != int(routed.sum()):
+        raise AssemblyError("composition: the rookie join changed the routed row count")
+
+    mismatch = (ordered["position"].to_numpy() != spine.loc[routed, "position"].to_numpy())
+    if mismatch.any():
+        raise AssemblyError(f"composition: {int(mismatch.sum())} rookie row(s) disagree with the spine "
+                            f"on position")
+    if not (ordered["is_rookie"].astype(int) == 1).all():
+        raise AssemblyError("composition: a rookie-matrix row is not flagged is_rookie == 1")
+
+    frame = spine.copy()
+    for c in ROOKIE_ONLY_FEATURE_COLUMNS + ROOKIE_MATRIX_PROVENANCE:
+        frame[c] = np.nan                                   # veteran rows have no rookie feature
+    # EXPLICIT per-row ownership. Direct assignment, never fillna/combine_first: a NULL in the rookie
+    # matrix is an intentional "not measured" and must survive, not be back-filled from the spine.
+    for c in ROOKIE_SOURCE_FEATURE_COLUMNS + ROOKIE_MATRIX_PROVENANCE:
+        frame.loc[routed, c] = ordered[c].to_numpy()
+
+    frame = frame[list(FROZEN_UNION_FEATURE_COLUMNS)]
+    if len(frame) != len(spine):
+        raise AssemblyError(f"composition: row count changed {len(spine)} -> {len(frame)}")
+
+    gaps = union_bucket_gaps(frame, models_dir=models_dir)
+    if gaps:
+        raise AssemblyError("composition: not every shipped bucket is feedable: " + "; ".join(gaps))
+    return frame
+
+
+# =====================================================================================================
+# EVALUATION ELIGIBILITY — a PRE-OUTCOME population rule, decided from features alone
+# =====================================================================================================
+# Adopted 2026-08-03. A row is eligible only when BOTH hold:
+#   1. `team` is non-null, so OC/HC exposure is DEFINED for it;
+#   2. its (position, bucket) has a shipped Arm 0 bundle.
+#
+# Determined solely from the frozen feature frame, BEFORE any outcome reader runs, and applied
+# identically to ARM_0 and every coaching arm. Coaching exposure is never imputed, proxied or
+# fabricated: a row with no team has no OC/HC to be exposed to, and inventing a neutral value would
+# invent the very quantity under test.
+ELIGIBLE = "eligible"
+EXCLUDED_MISSING_TEAM = "excluded_missing_team"
+EXCLUDED_NO_SHIPPED_BUNDLE = "excluded_no_shipped_bundle"
+ELIGIBILITY_STATES = (ELIGIBLE, EXCLUDED_MISSING_TEAM, EXCLUDED_NO_SHIPPED_BUNDLE)
+
+
+def bucket_of(frame):
+    """`is_rookie` -> the routing bucket. The only place the mapping is written."""
+    return frame["is_rookie"].astype(int).map({1: "rookie", 0: "veteran"})
+
+
+def evaluation_eligibility(frame, models_dir=None):
+    """THE canonical eligibility rule. Returns (eligible_frame, accounting).
+
+    Exactly one `eligibility_state` per SOURCE row; the three states are mutually exclusive and
+    exhaustive, and that is asserted here rather than assumed. Source order is retained among the
+    eligible rows. Nothing about an outcome is consulted — this runs before the outcome reader.
+    """
+    if "team" not in frame.columns or "position" not in frame.columns:
+        raise AssemblyError("eligibility: the frame lacks `team` or `position`")
+
+    bucket = bucket_of(frame)
+    unknown_bucket = sorted(set(bucket.dropna()) - {"rookie", "veteran"})
+    if unknown_bucket:
+        raise AssemblyError(f"eligibility: unknown bucket(s) {unknown_bucket}")
+    known_positions = {p for p, _b in SHIPPED_ARM0_BUCKETS} | {"QB"}
+    unknown_pos = sorted(set(frame["position"].dropna()) - known_positions)
+    if unknown_pos:
+        raise AssemblyError(f"eligibility: unknown position(s) {unknown_pos}")
+
+    shipped = set(SHIPPED_ARM0_BUCKETS)
+    has_bundle = pd.Series([(p, b) in shipped for p, b in zip(frame["position"], bucket)],
+                           index=frame.index)
+    missing_team = frame["team"].isna()
+
+    # Precedence is explicit: a row with NO shipped bundle is outside the experiment structurally,
+    # whatever its team. The two reasons are also required to be DISJOINT, so no row is ambiguous.
+    both = int((missing_team & ~has_bundle).sum())
+    state = pd.Series(ELIGIBLE, index=frame.index, dtype=object)
+    state[missing_team] = EXCLUDED_MISSING_TEAM
+    state[~has_bundle] = EXCLUDED_NO_SHIPPED_BUNDLE
+
+    counts = {s: int((state == s).sum()) for s in ELIGIBILITY_STATES}
+    if sum(counts.values()) != len(frame):
+        raise AssemblyError(f"eligibility: states do not partition the source "
+                            f"({sum(counts.values())} vs {len(frame)})")
+    if set(pd.unique(state)) - set(ELIGIBILITY_STATES):
+        raise AssemblyError("eligibility: an unknown state was assigned")
+    if both:
+        raise AssemblyError(f"eligibility: {both} row(s) match BOTH exclusion reasons; the partition "
+                            f"would be ambiguous")
+
+    eligible = frame[state == ELIGIBLE].copy()          # boolean mask preserves source order
+    if missing_team[state == ELIGIBLE].any():
+        raise AssemblyError("eligibility: a retained row has a null team")
+    retained_bucket = bucket_of(eligible)
+    bad = [(p, b) for p, b in zip(eligible["position"], retained_bucket) if (p, b) not in shipped]
+    if bad:
+        raise AssemblyError(f"eligibility: {len(bad)} retained row(s) map to no shipped bundle")
+
+    by_reason = {}
+    for s in (EXCLUDED_MISSING_TEAM, EXCLUDED_NO_SHIPPED_BUNDLE):
+        sub = frame[state == s]
+        by_reason[s] = {
+            "n": int(len(sub)),
+            "by_position": {str(k): int(v) for k, v in sub["position"].value_counts().items()},
+            "by_season": {int(k): int(v) for k, v in sub[SEASON_KEY].value_counts().sort_index().items()},
+        }
+
+    accounting = {
+        "source_population": int(len(frame)),
+        "excluded_missing_team": counts[EXCLUDED_MISSING_TEAM],
+        "excluded_no_shipped_bundle": counts[EXCLUDED_NO_SHIPPED_BUNDLE],
+        "eligible_evaluation_population": counts[ELIGIBLE],
+        "states_are_exhaustive": True,
+        "states_are_mutually_exclusive": both == 0,
+        "by_reason": by_reason,
+        "eligible_seasons": sorted(int(s) for s in pd.unique(eligible[SEASON_KEY])),
+        "eligible_by_bucket": {f"{p}/{b}": int(((eligible['position'] == p)
+                                                & (retained_bucket == b)).sum())
+                               for p, b in sorted(shipped)},
+    }
+    gaps = union_bucket_gaps(eligible, models_dir=models_dir) if \
+        list(eligible.columns) == list(FROZEN_UNION_FEATURE_COLUMNS) else []
+    if gaps:
+        raise AssemblyError("eligibility: the retained frame cannot feed every shipped bucket: "
+                            + "; ".join(gaps))
+    return eligible.reset_index(drop=True), accounting
+
+
+def union_bucket_gaps(frame, models_dir=None):
+    """Which shipped (position, bucket) the union frame cannot feed. Empty means all seven are OK."""
+    gaps = []
+    is_rookie = frame["is_rookie"].astype(int) == 1
+    for (pos, bucket), (_f, _n, _s) in sorted(SHIPPED_ARM0_BUCKETS.items()):
+        want_rookie = bucket == "rookie"
+        rows = frame[(frame["position"] == pos) & (is_rookie == want_rookie)]
+        if not len(rows):
+            gaps.append(f"{pos}/{bucket}: no rows")
+            continue
+        fc = bundle_feature_cols(pos, bucket, models_dir=models_dir)
+        absent = [c for c in fc if c not in frame.columns]
+        if absent:
+            gaps.append(f"{pos}/{bucket}: missing {len(absent)} of {len(fc)} feature(s) "
+                        f"(e.g. {absent[:4]})")
+    return gaps
+
+
+def panel_for_experiment(assembled, models_dir=None, require_bucket_coverage=True):
+    """THE canonical adapter: `assemble_real_panel()`'s separated result -> `run_experiment`'s panel.
+
+    This is the ONE place where the outcome and the features are allowed to meet, and the only place
+    the verified outcome column is renamed to `y`. Everything upstream keeps them in separate objects
+    deliberately; everything downstream expects one frame.
+
+    Contract, all enforced:
+      * the join is on the FROZEN panel keys and nothing else;
+      * alignment is strictly ONE-TO-ONE — duplicate, missing, extra or reordered outcome keys refuse;
+      * the feature-row POPULATION and ORDER are preserved exactly;
+      * the accounting/zero-fill states are retained on the panel and reported, not dropped;
+      * no outcome-bearing field may enter the feature space: the target arrives ONLY as `y`, and the
+        original outcome column name does not survive into the panel.
+
+    `bucket` is derived from `is_rookie`, which is how `run_experiment` routes rows to a bundle.
+    """
+    for key in ("features", "outcomes"):
+        if key not in assembled:
+            raise AssemblyError(f"assembled result is missing {key!r}")
+    features, outcomes = assembled["features"], assembled["outcomes"]
+
+    # The adapter's input is POST-core, so the outcome frame legitimately carries `outcome_state`,
+    # which `validate_outcome_frame` (the READER's schema) forbids. Validating the post-core frame
+    # with the pre-core validator was a real bug: it rejected every well-formed assembled result.
+    problems = validate_feature_frame(features)
+    required = list(PANEL_KEYS) + [OUTCOME_COLUMN, "outcome_state"]
+    absent = [c for c in required if c not in outcomes.columns]
+    if absent:
+        problems.append(f"assembled outcome frame is missing {absent}")
+    else:
+        unexpected = sorted(set(outcomes.columns) - set(required))
+        if unexpected:
+            problems.append(f"assembled outcome frame carries unexpected column(s): {unexpected}")
+        bad_state = sorted(set(pd.unique(outcomes["outcome_state"].dropna()))
+                           - set(FEATURE_ROW_STATES) - {STATE_UNMATCHED_OUTCOME})
+        if bad_state:
+            problems.append(f"unknown outcome_state value(s): {bad_state}")
+    if problems:
+        raise AssemblyError("adapter input: " + "; ".join(problems))
+
+    keys = list(PANEL_KEYS)
+    if outcomes.duplicated(subset=keys).any():
+        n = int(outcomes.duplicated(subset=keys).sum())
+        raise AssemblyError(f"adapter: {n} duplicate {keys} row(s) in the outcome frame")
+
+    fk = features[keys].apply(tuple, axis=1)
+    ok = outcomes[keys].apply(tuple, axis=1)
+    fset, oset = set(fk), set(ok)
+    if len(fset) != len(features):
+        raise AssemblyError("adapter: the feature frame has duplicate panel keys")
+    missing, extra = sorted(fset - oset)[:5], sorted(oset - fset)[:5]
+    if missing:
+        raise AssemblyError(f"adapter: {len(fset - oset)} feature row(s) have no outcome key; "
+                            f"e.g. {missing}")
+    if extra:
+        raise AssemblyError(f"adapter: {len(oset - fset)} outcome key(s) match no feature row; "
+                            f"e.g. {extra}")
+
+    aligned = features[keys].merge(outcomes, on=keys, how="left", validate="one_to_one")
+    if len(aligned) != len(features):
+        raise AssemblyError(f"adapter: alignment changed the row count "
+                            f"{len(features)} -> {len(aligned)}")
+    if not aligned[keys].equals(features[keys].reset_index(drop=True)):
+        raise AssemblyError("adapter: the join reordered the feature rows")
+
+    panel = features.reset_index(drop=True).copy()
+    panel[MODEL_TARGET_COLUMN] = aligned[OUTCOME_COLUMN].to_numpy(float)
+    panel["outcome_state"] = aligned["outcome_state"].to_numpy()
+    panel["bucket"] = panel["is_rookie"].map(lambda v: "rookie" if int(v) == 1 else "veteran")
+
+    # `y` is IN `FORBIDDEN_IN_FEATURES` — deliberately, because it must never appear in a FEATURE
+    # frame. This is the one boundary where it is the sanctioned target, so it is excluded from the
+    # leak set here and nowhere else. Every other outcome-bearing name is still refused, and
+    # `panel_feature_columns()` below keeps `y` out of the model feature lists.
+    leaked = sorted((set(panel.columns) & FORBIDDEN_IN_FEATURES) - {MODEL_TARGET_COLUMN})
+    if leaked:
+        raise AssemblyError(f"adapter: outcome-bearing column(s) reached the panel: {leaked}")
+    if OUTCOME_COLUMN in panel.columns:
+        raise AssemblyError(f"adapter: {OUTCOME_COLUMN} survived into the panel; the target must "
+                            f"appear only as {MODEL_TARGET_COLUMN!r}")
+
+    if require_bucket_coverage:
+        gaps = panel_bucket_gaps(panel, models_dir=models_dir)
+        if gaps:
+            raise AssemblyError(
+                "adapter: the panel cannot supply every shipped bucket, and an incomplete panel would "
+                "SILENTLY shrink the population (run_experiment skips a bucket with no usable rows): "
+                + "; ".join(gaps))
+
+    states = pd.Series(panel["outcome_state"]).value_counts().to_dict()
+    return panel, {"n_rows": len(panel), "accounting": assembled.get("accounting"),
+                   "outcome_states": states,
+                   "buckets": panel["bucket"].value_counts().to_dict()}
+
+
+def panel_feature_columns(panel):
+    """The panel columns a model may be fed: everything that is not the target or bookkeeping.
+
+    The requirement is "no outcome field may enter the model feature lists". `y` and `outcome_state`
+    are the two the adapter adds, and both are excluded here.
+    """
+    excluded = {MODEL_TARGET_COLUMN, "outcome_state", "bucket"} | set(FORBIDDEN_IN_FEATURES)
+    return [c for c in panel.columns if c not in excluded]
+
+
+def panel_bucket_gaps(panel, models_dir=None):
+    """Which shipped (position, bucket) the panel cannot feed. Empty list means full coverage."""
+    gaps = []
+    for (pos, bucket), (_fname, _n, _src) in sorted(SHIPPED_ARM0_BUCKETS.items()):
+        sub = panel[(panel["position"] == pos) & (panel["bucket"] == bucket)]
+        if not len(sub):
+            gaps.append(f"{pos}/{bucket}: no rows")
+            continue
+        fc = bundle_feature_cols(pos, bucket, models_dir=models_dir)
+        absent = [c for c in fc if c not in panel.columns]
+        if absent:
+            gaps.append(f"{pos}/{bucket}: panel lacks {len(absent)} of {len(fc)} bundle feature(s) "
+                        f"(e.g. {absent[:4]})")
+    return gaps
+
+
 def verify_pinned_activation_inputs(strict=True):
     """Every pinned INPUT an authorized run will read, checked by hash and manifest BEFORE reading.
 
@@ -668,12 +1036,26 @@ def validate_feature_frame(features, required_seasons=ALL_PANEL_SEASONS):
     if missing_keys:
         return [f"feature frame missing identity key(s) {missing_keys}"]
 
-    missing_frozen = [c for c in FROZEN_FEATURE_COLUMNS if c not in features.columns]
-    if missing_frozen:
-        problems.append(f"feature frame missing frozen column(s): {missing_frozen}")
-    unexpected = sorted(set(features.columns) - set(FROZEN_FEATURE_COLUMNS))
-    if unexpected:
-        problems.append(f"feature frame carries column(s) outside the frozen contract: {unexpected}")
+    # TWO accepted schemas, both exact. The VETERAN contract is what a veteran-only frame must be;
+    # the UNION contract is the composed veteran+rookie frame the frozen routing produces. A union
+    # frame is accepted ONLY if all seven shipped buckets are feedable from it, so the wider schema
+    # can never be a way to smuggle in an incomplete panel.
+    cols = list(features.columns)
+    if cols == list(FROZEN_UNION_FEATURE_COLUMNS):
+        gaps = union_bucket_gaps(features)
+        if gaps:
+            problems.append("union feature frame cannot feed every shipped bucket: " + "; ".join(gaps))
+    elif cols != list(FROZEN_FEATURE_COLUMNS):
+        missing_frozen = [c for c in FROZEN_FEATURE_COLUMNS if c not in features.columns]
+        if missing_frozen:
+            problems.append(f"feature frame missing frozen column(s): {missing_frozen}")
+        unexpected = sorted(set(features.columns) - set(FROZEN_UNION_FEATURE_COLUMNS))
+        if unexpected:
+            problems.append(f"feature frame carries column(s) outside the frozen contract: "
+                            f"{unexpected}")
+        if not missing_frozen and not unexpected:
+            problems.append("feature frame matches neither the veteran nor the union contract "
+                            "exactly (column order or membership differs)")
 
     dup = features.duplicated(subset=list(PANEL_KEYS)).sum()
     if dup:

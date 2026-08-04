@@ -17,7 +17,7 @@ tests — and then found seven defects. All seven are repaired.
 
 | # | finding | status |
 |---|---|---|
-| 1 | The build was **not hermetic**: `projection_cutoffs()` and `hc_game_results()` both downloaded nflverse schedules, and the win ledger sat in an untracked scratch cache. A clean offline checkout failed **five** feature tests, so the then-current 254-pass claim (SUPERSEDED; the suite is now 1,103 collected) depended on state outside the repo. | **FIXED** — both read the repo-owned frozen snapshot; the ledger is computed in memory; suite and build now pass with egress blocked and an empty temp dir (§1.4) |
+| 1 | The build was **not hermetic**: `projection_cutoffs()` and `hc_game_results()` both downloaded nflverse schedules, and the win ledger sat in an untracked scratch cache. A clean offline checkout failed **five** feature tests, so the then-current 254-pass claim (SUPERSEDED; the suite is now 1,227 collected) depended on state outside the repo. | **FIXED** — both read the repo-owned frozen snapshot; the ledger is computed in memory; suite and build now pass with egress blocked and an empty temp dir (§1.4) |
 | 2 | The live canonical prereg sections still asserted the superseded policy **underneath** the correction banner, and this report claimed they had been corrected when only a banner covered them. | **FIXED** — §0, §2, §3.2, §4, §5, §6, §7, §8-T5, §8.1 rewritten to v3.9 truth; the false claim in this report is withdrawn (§2.1) |
 | 3 | The manifest pinned only appended coaching columns; `ARM_0` was empty and the veteran/rookie baseline difference was inexpressible. | **FIXED** — full ordered X per (position, bucket, arm) (§4.1) |
 | 4 | The ten-condition §7 primary verdict was **never computed**, its thresholds were not pinned, and no test covered it. | **FIXED** — `primary_verdict()` + 14 tests (§8.5) |
@@ -103,7 +103,7 @@ interpreter `.\.venv-test\Scripts\python.exe` (Python 3.11.9). This is one line,
 `...` placeholders, no abbreviations:
 
 ```
-.\.venv-test\Scripts\python.exe -m pytest fantasy/projections/coaching/tests -q -p no:warnings --ignore=fantasy/projections/coaching/tests/test_arm_features_v39.py --ignore=fantasy/projections/coaching/tests/test_coach_projection_harness_v39.py --ignore=fantasy/projections/coaching/tests/test_boundary_corpus.py --ignore=fantasy/projections/coaching/tests/test_assemble_real_panel_v39.py --ignore=fantasy/projections/coaching/tests/test_combine_snapshot_provenance.py --ignore=fantasy/projections/coaching/tests/test_rookie_matrix_v39.py --ignore=fantasy/projections/coaching/tests/test_pff_point_in_time_v39.py --ignore=fantasy/projections/coaching/tests/test_arm0_refits_from_scratch_v39.py --ignore=fantasy/projections/coaching/tests/test_activation_wiring_v39.py --ignore=fantasy/projections/coaching/tests/test_veteran_snapshot_v39.py --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_each_protected_text_artifact_has_exactly_one_writer --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_build_arm_features_v39_writes_only_the_five_authorized_artifacts --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_the_harness_writes_no_repo_artifact_at_all --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_no_unauthorized_v39_artifact_exists_on_disk --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_the_head_coach_win_ledger_is_derived_in_memory_not_cached --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_the_v39_modules_never_write_outside_the_coaching_data_dir
+.\.venv-test\Scripts\python.exe -m pytest fantasy/projections/coaching/tests -q -p no:warnings --ignore=fantasy/projections/coaching/tests/test_arm_features_v39.py --ignore=fantasy/projections/coaching/tests/test_coach_projection_harness_v39.py --ignore=fantasy/projections/coaching/tests/test_boundary_corpus.py --ignore=fantasy/projections/coaching/tests/test_assemble_real_panel_v39.py --ignore=fantasy/projections/coaching/tests/test_combine_snapshot_provenance.py --ignore=fantasy/projections/coaching/tests/test_rookie_matrix_v39.py --ignore=fantasy/projections/coaching/tests/test_pff_point_in_time_v39.py --ignore=fantasy/projections/coaching/tests/test_arm0_refits_from_scratch_v39.py --ignore=fantasy/projections/coaching/tests/test_activation_wiring_v39.py --ignore=fantasy/projections/coaching/tests/test_veteran_snapshot_v39.py --ignore=fantasy/projections/coaching/tests/test_authorized_runner_v39.py --ignore=fantasy/projections/coaching/tests/test_composed_feature_reader_v39.py --ignore=fantasy/projections/coaching/tests/test_evaluation_eligibility_v39.py --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_each_protected_text_artifact_has_exactly_one_writer --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_build_arm_features_v39_writes_only_the_five_authorized_artifacts --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_the_harness_writes_no_repo_artifact_at_all --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_no_unauthorized_v39_artifact_exists_on_disk --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_the_head_coach_win_ledger_is_derived_in_memory_not_cached --deselect fantasy/projections/coaching/tests/test_artifact_ownership.py::test_the_v39_modules_never_write_outside_the_coaching_data_dir
 ```
 
 Literal output of that exact command:
@@ -124,11 +124,11 @@ and no claim is made here about what bare `python` resolves to.
 Every ID above is real and was executed. `pytest --deselect` silently ignores an ID that does not
 exist, so a mistyped path deselects nothing and returns 147 with no error — copy these verbatim.
 
-**Current totals, and the only ones stated anywhere in this document:** **1,103** tests in
-`coaching/tests/` — **141** inherited plus **962** added by this pass. The 962 is
-88 (`test_arm_features_v39.py`) + 246 (`test_coach_projection_harness_v39.py`) + 166 (`test_boundary_corpus.py`) + 205 (`test_assemble_real_panel_v39.py`) + 9 (`test_combine_snapshot_provenance.py`) + 91 (`test_rookie_matrix_v39.py`) + 37 (`test_pff_point_in_time_v39.py`) + 38 (`test_arm0_refits_from_scratch_v39.py`) + 31 (`test_activation_wiring_v39.py`) + 45 (`test_veteran_snapshot_v39.py`) + 6 (the v3.9 additions
+**Current totals, and the only ones stated anywhere in this document:** **1,227** tests in
+`coaching/tests/` — **141** inherited plus **1,086** added by this pass. The 1,086 is
+88 (`test_arm_features_v39.py`) + 246 (`test_coach_projection_harness_v39.py`) + 166 (`test_boundary_corpus.py`) + 205 (`test_assemble_real_panel_v39.py`) + 9 (`test_combine_snapshot_provenance.py`) + 91 (`test_rookie_matrix_v39.py`) + 37 (`test_pff_point_in_time_v39.py`) + 38 (`test_arm0_refits_from_scratch_v39.py`) + 31 (`test_activation_wiring_v39.py`) + 45 (`test_veteran_snapshot_v39.py`) + 49 (`test_authorized_runner_v39.py`) + 47 (`test_composed_feature_reader_v39.py`) + 28 (`test_evaluation_eligibility_v39.py`) + 6 (the v3.9 additions
 to `test_artifact_ownership.py`). The per-module table in §10 carries the full split and reconciles to
-the same 1,103. **SUPERSEDED:** an earlier draft quoted a suite total 254 and 113 new tests (both
+the same 1,227. **SUPERSEDED:** an earlier draft quoted a suite total 254 and 113 new tests (both
 **SUPERSEDED**); a later one quoted 836 total / 695 added (also **SUPERSEDED**). Only the counts above
 are current, and they were collected, not estimated.
 
@@ -185,8 +185,7 @@ Verified with egress blocked (`socket.create_connection`, `getaddrinfo`, `socket
 a freshly created empty directory:
 
 ```
-full coaching suite   1,103 collected; 1,103 passed. The four §10.9.6 failures are green, because
-                      the experiment no longer pins a mutable file - not because a check was relaxed.
+full coaching suite   1,227 collected; 1,227 passed.
                       + 1 optional git cross-check (passes or skips; see below)
 inherited baseline    141 passed, 6 deselected
 full v3.9 build       completed; all five artifact hashes reproduced
@@ -197,13 +196,13 @@ ambiguous, so this is the only form this document uses:
 
 | | |
 |---|---|
-| canonical collection total | **1103** |
-| mandatory tests | **1102 passed** |
-| **measured on 2026-08-03, after §10.10** | **1,103 passed · 0 failed** — the four §10.9.6 failures are resolved by re-scoping the pin to an immutable snapshot, not by relaxing an assertion. |
+| canonical collection total | **1227** |
+| mandatory tests | **1226 passed** |
+| **measured on 2026-08-03, after §10.13** | **1,227 passed · 0 failed** |
 | optional git cross-check | **passes when the historical blob `85c438f7d908e9df7da8d5e44ad8e30d3bbeeffe` is reachable, otherwise skips** |
 | the vendored historical red proof | **runs in BOTH states — it is never skipped** |
 
-So a green run legitimately reports either `1103 passed` or `1102 passed, 1 skipped`, and the two are the
+So a green run legitimately reports either `1227 passed` or `1226 passed, 1 skipped`, and the two are the
 same result. The variation is only whether `git cat-file -p <blob>` can reach the pinned blob: after the
 `BettingEdgeContinued` → `JoSchoAnalytics` rename the repository is owned by another account, so git
 refuses without `-c safe.directory=...` and the cross-check skips; in a review environment where the
@@ -915,8 +914,8 @@ generating function, input columns, timing rule, missing-value rule, and coverin
 | scope | count |
 |---|---|
 | inherited baseline (reproduced, offline) | **141** |
-| new v3.9 + v3.9a + v3.9b + v3.9c + v3.9d + v3.9e + v3.9f + v3.9g + v3.9i + v3.9j + v3.9k + v3.9m + v3.9n + v3.9o + v3.9p + v3.9q + v3.9r tests | **962** |
-| **full coaching suite** | **1,103 collected · 1,102 mandatory passed · 1 optional git cross-check (passes when the pinned blob is reachable, otherwise skips) — offline, egress blocked, fresh empty temp dir** |
+| new v3.9 + v3.9a + v3.9b + v3.9c + v3.9d + v3.9e + v3.9f + v3.9g + v3.9i + v3.9j + v3.9k + v3.9m + v3.9n + v3.9o + v3.9p + v3.9q + v3.9r + v3.9s + v3.9t + v3.9u tests | **1,086** |
+| **full coaching suite** | **1,227 collected · 1,226 mandatory passed · 1 optional git cross-check (passes when the pinned blob is reachable, otherwise skips) — offline, egress blocked, fresh empty temp dir** |
 
 ### 10.1 THE TWO CODEX REPRODUCTIONS NOW FAIL SEMANTICALLY
 
@@ -982,11 +981,14 @@ Per-module counts, collected rather than estimated:
 | `test_arm0_refits_from_scratch_v39.py` | **38** | new at v3.9p — the serialized estimator never reaches a prediction |
 | `test_activation_wiring_v39.py` | **31** | new at v3.9q — the implemented C5-A door and every transition into it |
 | `test_veteran_snapshot_v39.py` | **45** | new at v3.9r — the frozen veteran snapshot and its 2026-independence |
+| `test_authorized_runner_v39.py` | **49** | new at v3.9s — result ownership, the panel adapter, the CLI and the 5-file mapping |
+| `test_composed_feature_reader_v39.py` | **47** | new at v3.9t — the frozen veteran+rookie routing, implemented |
+| `test_evaluation_eligibility_v39.py` | **28** | new at v3.9u — the pre-outcome eligibility partition |
 | `test_boundary_corpus.py` | **166** | 146 at v3.9o; +20 at v3.9q for the 10 C5-A injections |
 
-22+33+34+27+15+7+3 = **141** inherited; 88+246+166+205+9+91+37+38+31+45+6 = **962** new; total **1,103**.
+22+33+34+27+15+7+3 = **141** inherited; 88+246+166+205+9+91+37+38+31+45+49+47+28+6 = **1,086** new; total **1,227**.
 
-To reproduce the 141 exactly, ignore the ten v3.9 test modules and deselect these six tests. (The `tests/`
+To reproduce the 141 exactly, ignore the thirteen v3.9 test modules and deselect these six tests. (The `tests/`
 tree **is now tracked** — Joseph committed it on 2026-07-30, so new-vs-inherited *can* be diffed against
 `HEAD` today; the earlier statement that it was untracked is **SUPERSEDED**. The six IDs are still
 listed verbatim because a mistyped `--deselect` is silently ignored by pytest and yields 147.)
@@ -2303,6 +2305,308 @@ and that is parametrized.
 
 **The 2026 QB-change work was not reverted, not overwritten, not re-pinned and not touched.**
 `season_dataset_2014_2026.csv` is exactly as the concurrent session left it.
+
+
+---
+
+## 10.11 v3.9s — THE AUTHORIZED RUNNER IS BUILT. Result paths moved. Still not executed.
+
+**Approved 2026-08-03 as a pre-outcome OPERATIONAL amendment (Option A).** No lock was opened, no real
+outcome was read, no model was fit, no result file was created, nothing was staged or committed.
+
+### 10.11.1 Why the result paths moved
+
+Manifest §5 preregistered five result files into `coaching/data/`. The preflight check
+`no_unauthorized_v39_artifact` requires the `*_v39.*` set in that directory to equal **exactly** the
+five FEATURE artifacts in `V39_ARTIFACT_HASHES`. Measured on a temp copy:
+
+```
+temp copy, BEFORE writing results : 21 / 21  all_ok True
+temp copy, AFTER  writing results : 20 / 21  all_ok False
+  no_unauthorized_v39_artifact: unauthorized v3.9 artifacts:
+    ['arm_bootstrap_v39.csv','arm_metrics_v39.csv','arm_placebo_v39.csv',
+     'arm_selection_v39.csv','arm_verdict_v39.csv']
+```
+
+The run could not both write its preregistered outputs and pass its own preregistered gate. The five
+results now own **`coaching/results/`**. `V39_ARTIFACT_HASHES` and `no_unauthorized_v39_artifact` are
+**UNCHANGED** and still protect exactly the five feature artifacts in `coaching/data/`.
+
+**This changes storage only.** No population, feature, arm, hyperparameter, threshold, cohort,
+selection rule or verdict criterion is affected.
+
+### 10.11.2 The result-output contract
+
+A new module, `write_v39_results.py`, is the ONLY writer. It could not live in either existing module:
+the harness is held to "every `to_csv` targets `DATA /`" and the assembly module to "no writer callee
+at all", and both prohibitions are worth keeping exactly as they are.
+
+  * exactly the five permitted names — a missing or extra frame refuses;
+  * a pre-existing output refuses unless `overwrite=True` is passed explicitly (separately tested);
+  * every file is written atomically (temp file in the same directory, then `os.replace`);
+  * a partial write **fails closed** — an injected failure on the 3rd file removes the 1st and 2nd and
+    leaves no `.partial` behind;
+  * SHA-256 is emitted only after all five have landed.
+
+### 10.11.3 The lossless five-file mapping
+
+`run_experiment` returns **seven** frames; §5 defines **five** files. Nothing is silently discarded:
+
+| returned frame | file | how |
+|---|---|---|
+| selection | `arm_selection_v39.csv` | direct |
+| metrics | `arm_metrics_v39.csv` | `record_type = "metric"` |
+| **oracle** | `arm_metrics_v39.csv` | `record_type = "oracle"` — every oracle field preserved |
+| bootstrap | `arm_bootstrap_v39.csv` | direct |
+| placebo | `arm_placebo_v39.csv` | direct |
+| verdict | `arm_verdict_v39.csv` | direct |
+| **preflight** | `arm_verdict_v39.csv` | merged on `position` with a `preflight_` prefix |
+
+Round-trip tests read the SERIALIZED files back and recover the oracle, metrics, preflight and verdict
+frames exactly, so the merge is proven reversible rather than asserted to be.
+
+### 10.11.4 The canonical panel adapter
+
+`assemble_real_panel_v39.panel_for_experiment()` is the one place the outcome and the features meet,
+and the only place the verified outcome column becomes `y`. It joins on the frozen panel keys only,
+requires strict one-to-one alignment, preserves the feature-row population and order, retains the
+zero-fill/accounting states on the panel, and refuses duplicate, missing or extra outcome keys.
+
+`y` is deliberately IN `FORBIDDEN_IN_FEATURES` — it must never appear in a FEATURE frame — so the leak
+check excludes it at this one boundary and `panel_feature_columns()` keeps it, `outcome_state` and
+`bucket` out of any model feature list.
+
+**Two real defects were caught by these tests and fixed:** the adapter first validated the POST-core
+outcome frame with the PRE-core reader validator, which rejected every well-formed assembled result;
+and the leak check tripped on its own sanctioned target.
+
+### 10.11.5 The authorized-real CLI
+
+The `--real` dead end (`raise SystemExit` with no lock check) is **removed**, so there is exactly one
+authorized-real path. The documented interface now exists:
+
+```
+set COACH_V39_REAL_FIT_AUTHORIZED_BY_JOSEPH=I-HAVE-WRITTEN-THE-PREFIT-AMENDMENT
+.\.venv-test\Scripts\python.exe fantasy\projections\coaching\run_coach_projection_experiment_v39.py ^
+    --run-mode authorized_real --outer-seasons 2018-2025
+```
+
+`run_authorized_real()` executes in this fixed order, each step gating the next:
+
+```
+require_real_fit_authorization()          <- BOTH locks, or it raises before anything is constructed
+require_preflight_clearance()             <- run mode + locks + preflight 21/21 + readiness + gate
+                                             + every pinned input
+authorized_feature_reader / outcome_reader
+assemble_real_panel()
+panel_for_experiment()                    <- the canonical adapter
+run_experiment(..., run_mode='authorized_real')
+validate_outputs(compose(frames))
+write_results()                           <- atomic, fail-closed
+sha256 report
+```
+
+An AST-order test asserts that sequence in the source. Parametrized tests show that in every closed or
+partial lock state **zero readers are constructed**, and that `--run-mode synthetic_prefit` never
+reaches the real path.
+
+### 10.11.6 ⚠ A REMAINING BLOCKER, FOUND PRE-OUTCOME: the panel cannot feed the rookie buckets
+
+The door takes ONE feature reader, and the veteran snapshot is the veteran contract by construction
+(`validate_feature_frame` refuses any column outside it). Measured:
+
+```
+veteran snapshot            7,350 rows   40 columns
+  is_rookie == 1            1,380 rows   (QB 117 · RB 387 · WR 584 · TE 292)
+RB/rookie bundle needs      41 features; present in the snapshot: 9
+```
+
+So rows routed to the three ROOKIE buckets exist but carry only 9 of their 41/44/44 features.
+`run_experiment` skips a bucket with no usable rows **silently**, which would shrink the population
+without anyone noticing. The adapter therefore refuses by default (`require_bucket_coverage=True`) and
+names each unfeedable bucket.
+
+**RESOLVED in §10.12.** This was a missing IMPLEMENTATION of an already-frozen contract, not an open
+design question: `SHIPPED_ARM0_BUCKETS` had assigned the rookie buckets to `SOURCE_ROOKIE_MATRIX` all
+along. `authorized_composed_feature_reader()` now composes both pinned sources under that routing, and
+all seven buckets are feedable. The sentence above about a "design decision" is **withdrawn**.
+
+### 10.11.7 What was NOT done
+
+No lock opened · no real fantasy outcome read, inspected, printed, aggregated or compared · no model
+fit against a real target · **no result file created** · no production model, projection, dashboard,
+betting, market or draft-board file touched · the 2026 QB work untouched · no commit, no staging.
+
+
+---
+
+## 10.12 v3.9t — THE COMPOSED FEATURE READER. The frozen routing, implemented.
+
+`SHIPPED_ARM0_BUCKETS` already assigned the four VETERAN buckets to the veteran snapshot and the
+RB/WR/TE ROOKIE buckets to `SOURCE_ROOKIE_MATRIX`. §10.11.6 reported the panel could not feed the
+rookie buckets; that was a MISSING IMPLEMENTATION of an existing contract, not an open design
+question, and it is now implemented. No lock opened, no outcome read, no fit, no real result written.
+
+### 10.12.1 The composed reader
+
+`authorized_composed_feature_reader()` verifies BOTH pinned sources independently — hash, manifest and
+exact ordered schema — before either frame is accepted, then merges them on the frozen panel keys:
+
+```
+spine (population + routing)  veteran_arm0_features_2014_2025.parquet   7,350 x 40
+rookie-bucket rows            rookie_arm0_features_2014_2025.parquet    1,263 x 61
+composed union frame                                                    7,350 x 87
+```
+
+Union schema = 40 veteran + 45 rookie-only + 2 point-in-time provenance = **87**, exact and ordered.
+The spine's row count and order are preserved exactly.
+
+**Key-set equality is required, not assumed.** The rookie matrix's keys must equal the spine's
+`is_rookie == 1` RB/WR/TE rows **exactly**: measured 1,263 = 1,263, sets equal.
+
+### 10.12.2 Explicit per-row source ownership
+
+NINE columns exist in both sources — `draft_round`, `draft_pick`, `age`, and the six landing-spot
+features. A rookie-bucket row takes the **ROOKIE** value for every one of them, **including a NULL**.
+Assignment is direct; there is no `fillna`/`combine_first` anywhere in the composition, because an
+intentional rookie NULL means "not measured" and must never be back-filled from the veteran source.
+A constructed test nulls a shared column in the rookie source, confirms the spine HAS a value there,
+and asserts the composed frame is NULL.
+
+### 10.12.3 QB/rookie — the frozen exclusion, preserved and enforced
+
+QB/rookie is absent from `SHIPPED_ARM0_BUCKETS` (the arm was HELD). Its **117** spine rows are not in
+the rookie matrix and keep veteran-source values. A QB row appearing in the rookie matrix is REFUSED.
+No QB-rookie arm was invented and its routing is unchanged.
+
+### 10.12.4 Per-bucket rows and required-feature coverage (measured)
+
+| bucket | rows | required features | present | rows with >=1 non-null |
+|---|---|---|---|---|
+| QB/veteran | 885 | 32 | 32/32 | 885 |
+| RB/veteran | 1,496 | 32 | 32/32 | 1,496 |
+| WR/veteran | 2,266 | 32 | 32/32 | 2,266 |
+| TE/veteran | 1,323 | 32 | 32/32 | 1,323 |
+| RB/rookie | 387 | 41 | 41/41 | 387 |
+| WR/rookie | 584 | 44 | 44/44 | 584 |
+| TE/rookie | 292 | 44 | 44/44 | 292 |
+| **QB/rookie** | **117** | — | frozen exclusion, veteran-source values | — |
+| **total panel** | **7,350** | | | |
+
+7,233 bucket rows + 117 QB/rookie = 7,350. `panel_bucket_gaps()` and `union_bucket_gaps()` are
+**empty** on the pinned inputs, and a RED control drops one required feature to prove the check still
+fires.
+
+### 10.12.5 Validation widened WITHOUT weakening
+
+`validate_feature_frame` now accepts exactly two schemas: the VETERAN contract, or the UNION contract.
+A union frame is accepted **only if all seven shipped buckets are feedable from it**, so the wider
+schema can never smuggle in an incomplete panel. Model input is still selected per bucket in each
+bundle's exact `feature_cols` order, and the two provenance columns are in no bundle pool — a test
+asserts that for all seven.
+
+### 10.12.6 A measured population fact Joseph should see
+
+**80 of the 7,350 panel rows carry a NULL `team`** (QB 14 · RB 15 · TE 20 · WR 31, all veteran-bucket,
+spread across 2014-2024). They come from the veteran SOURCE — composition does not introduce them —
+and every non-null `(season, team)` pair IS covered by the Design A coaching table.
+
+`attach_coach_features` refuses a row whose `(season, team)` has no coaching bundle, so an authorized
+run over the full panel would have raised on these 80 rows. **RESOLVED in §10.13**: they are now
+excluded by an explicit pre-outcome eligibility rule, with a reason and a count, adopted as a
+population amendment. Recorded permanently by
+`test_the_null_team_rows_are_MEASURED_not_assumed` so the number cannot drift silently.
+
+### 10.12.7 Documentation corrected
+
+The module docstring that still said the rookie buckets "have no repo-owned source at all" is
+SUPERSEDED — true from v3.9g to v3.9m, resolved by Option A. That correction is the only documentation
+change in this pass.
+
+### 10.12.8 What was NOT done
+
+No lock opened · no real fantasy outcome read · no model fit against a real target · no real result
+written · no production model or pinned input touched · the 2026 QB work untouched · no commit.
+
+
+---
+
+## 10.13 v3.9u — EVALUATION ELIGIBILITY: a PRE-OUTCOME population amendment
+
+Adopted 2026-08-03, **before any outcome was accessed**. A row is eligible only when BOTH hold:
+
+1. `team` is non-null, so OC/HC exposure is **defined** for it; and
+2. its `(position, bucket)` has a shipped Arm 0 bundle.
+
+Determined solely from the frozen feature frame, and applied **identically to ARM_0 and every coaching
+arm** — eligibility is a property of the panel, not of an arm. Nothing is imputed, proxied or
+fabricated.
+
+### 10.13.1 The measured partition
+
+Verified rather than trusted; the categories are mutually exclusive and exhaustive:
+
+```
+source_population                  7,350
+excluded_missing_team                 80
+excluded_no_shipped_bundle           117   (QB/rookie)
+eligible_evaluation_population     7,153
+
+overlap between the two exclusion reasons: 0     (so the partition is unambiguous)
+80 + 117 + 7,153 = 7,350                          (so it is exhaustive)
+```
+
+Excluded by missing team, by position: **WR 31 · TE 20 · RB 15 · QB 14**, all veteran-bucket, spread
+across 2014-2024. Excluded for no shipped bundle: **QB 117**, all QB/rookie.
+
+Eligible rows by bucket: QB/veteran 871 · RB/veteran 1,481 · WR/veteran 2,235 · TE/veteran 1,303 ·
+RB/rookie 387 · WR/rookie 584 · TE/rookie 292. All twelve seasons and all eight outer seasons remain
+represented, and `union_bucket_gaps()` on the eligible frame is **empty**.
+
+### 10.13.2 Why these two rules
+
+**Missing team.** OC/HC exposure is undefined without a team: there is no coaching staff for the row to
+be exposed to. **Neutral imputation was considered and REJECTED** — assigning a placeholder invents the
+very quantity the experiment measures, and would let a fabricated exposure enter both the baseline and
+every coaching arm. `attach_coach_features` already refused such a row; the amendment makes the
+exclusion explicit and counted rather than a runtime crash.
+
+**No shipped bundle.** The 117 QB/rookie rows were **already outside** the shipped seven-bundle
+experiment — the QB rookie arm was HELD and there is no `qb_rookie_model.pkl`. The bucket loop skipped
+them *silently*. They are now excluded **explicitly, with a reason and a count**, which is the actual
+change: the population is the same, the accounting is honest.
+
+**No outcome was accessed when the rule or the counts were chosen.** The rule reads `team` and
+`position` only; a test asserts `evaluation_eligibility` names no outcome column, and a constructed
+test attaches a synthetic target and shows the partition is bit-identical.
+
+### 10.13.3 Where it runs
+
+`evaluation_eligibility()` is the single canonical function. In the authorized runner it executes
+**inside the feature reader**, so it completes before the outcome reader is ever called — Python
+evaluates `assemble_panel_core(feature_reader(), outcome_reader())` left to right, and a malformed
+partition raises out of the first argument. A test injects a failure and asserts **zero
+outcome-reader calls**.
+
+The full 7,350-row source validation and source-ownership checks in
+`authorized_composed_feature_reader()` are preserved unchanged; eligibility runs after composition.
+
+`run_experiment` now calls `assert_no_implicit_row_loss(panel)` on entry. There are exactly two
+implicit-loss mechanisms — a null team (which makes `attach_coach_features` refuse) and an unshipped
+bucket (which the loop skips) — so forbidding both on arrival forbids later silent loss.
+
+### 10.13.4 Accounting, carried without a sixth artifact
+
+The counts ride in `arm_verdict_v39.csv` under an `eligibility_` prefix, beside the `preflight_` block:
+source, both excluded counts by reason, the eligible total, the exclusivity/exhaustiveness flags, and
+the per-position and per-season breakdowns. `recover_eligibility()` reads them back from the serialized
+file, and the preflight and verdict round-trips are unaffected. **Still exactly five result files.**
+
+### 10.13.5 What was NOT done
+
+No lock opened · no outcome read · no fit · no real result written · no imputed or proxied coaching
+exposure · no change to any feature, arm, hyperparameter, threshold, cohort, selection rule or verdict
+criterion · no commit.
 
 ---
 

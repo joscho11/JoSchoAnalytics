@@ -13,7 +13,8 @@
       "games_scheduled",
       "designated_home_games",
       "true_home_venue_games",
-      "neutral_site_games",
+      "effective_neutral_games",
+      "non_primary_home_venue_games",
       "international_games",
       "div_games",
       "mean_rest",
@@ -47,8 +48,8 @@
       "market_source",
       "market_pit_status"
     ],
-    "frame_sha256": "a790d1886fe086869c07e839a045e96856665151152be33c0db9ef64175c0b0b",
-    "file_sha256": "33bbd9a7f4b115c5d8b32064a86f3b7ea6af8a08eebaadeb436c3a3dcf92943c",
+    "frame_sha256": "039f0e0d9e5bc29f962b07a3d6728988369687a37ecf81448c03416daff68e1e",
+    "file_sha256": "73085410ec6e8f4e7bd5b5f866f50fb0ba8213f596d391ffb40e9a13c57ebba5",
     "grain": "one row per (season, franchise)"
   },
   "target": {
@@ -62,14 +63,87 @@
     "features": [
       "designated_home_games",
       "true_home_venue_games",
-      "neutral_site_games",
+      "effective_neutral_games",
+      "non_primary_home_venue_games",
       "international_games"
     ],
     "venue_key_rule": "INTL::<venue> when the stadium name is in the pinned international table, else stadium_id",
     "why_not_stadium_id_alone": "stadium_id is the nominal home team's id in this snapshot: JAX00 spans 7 stadium names incl. Wembley and Tottenham, and the 2026 JAX-PHI game at Tottenham is labelled location=Home with stadium_id=JAX00",
     "why_stadium_id_for_domestic": "it absorbs renames a name key would split (SEA00 = CenturyLink Field -> Lumen Field, mid-2020)",
     "primary_home_venue_rule": "modal venue key over designated-home games, excluding explicit Neutral; a surviving tie ABORTS the build",
-    "effective_neutral_rule": "location == Neutral OR venue key != nominal home team's primary venue key",
+    "factual_fields": {
+      "explicit_neutral": "location == Neutral as published",
+      "international_game": "game_id in the A2.5 override table OR normalized raw stadium in the pinned international-venue table",
+      "non_primary_home_venue": "venue key != the nominal home team's primary venue key"
+    },
+    "effective_neutral_rule": "explicit_neutral OR international_game OR non_primary_home_venue",
+    "effective_neutral_is_an_assumption": "effective_neutral_games treats a DOMESTIC relocation as home-advantage-reducing; that is a modelling assumption, not a measurement. non_primary_home_venue_games is kept separately so the assumption can be undone downstream.",
+    "m4_rule": "M4 may remove home-field advantage for explicit_neutral OR international_game. It may NOT automatically zero home advantage for a domestic alternate venue without its own preregistered rule.",
+    "a2_5_correction": {
+      "defect": "the pinned snapshot marks all seven 2025 international games Neutral but supplies the nominal host's own domestic stadium, so a name-based rule emitted them as non-international",
+      "scope": "2025 only; a scan of 2002-2025 for the same defect shape returns 7 of 7 in 2025 and nothing elsewhere",
+      "override_table": {
+        "2025_01_KC_LAC": {
+          "venue_key": "sao_paulo",
+          "verified_stadium": "Arena Corinthians",
+          "city": "Sao Paulo",
+          "country": "Brazil"
+        },
+        "2025_04_MIN_PIT": {
+          "venue_key": "dublin",
+          "verified_stadium": "Croke Park",
+          "city": "Dublin",
+          "country": "Ireland"
+        },
+        "2025_05_MIN_CLE": {
+          "venue_key": "tottenham",
+          "verified_stadium": "Tottenham Hotspur Stadium",
+          "city": "London",
+          "country": "United Kingdom"
+        },
+        "2025_06_DEN_NYJ": {
+          "venue_key": "tottenham",
+          "verified_stadium": "Tottenham Hotspur Stadium",
+          "city": "London",
+          "country": "United Kingdom"
+        },
+        "2025_07_LA_JAX": {
+          "venue_key": "wembley",
+          "verified_stadium": "Wembley Stadium",
+          "city": "London",
+          "country": "United Kingdom"
+        },
+        "2025_10_ATL_IND": {
+          "venue_key": "berlin",
+          "verified_stadium": "Olympiastadion Berlin",
+          "city": "Berlin",
+          "country": "Germany"
+        },
+        "2025_11_WAS_MIA": {
+          "venue_key": "madrid",
+          "verified_stadium": "Santiago Bernabeu Stadium",
+          "city": "Madrid",
+          "country": "Spain"
+        }
+      },
+      "override_table_sha256": "772b42317209467574621a69bd942ab87c412d4f03bc043ad16d7614b95e2ead",
+      "official_source_url": "https://www.nfl.com/_amp/nfl-announces-2025-international-games-to-feature-seven-games-in-five-countries",
+      "evidence": "official NFL announcement of the 2025 International Games (seven games in five countries); operator-supplied 2026-08-03, not re-derived from a primary source in this notebook",
+      "raw_fields_preserved": [
+        "stadium",
+        "stadium_id"
+      ],
+      "fields_added": [
+        "verified_stadium",
+        "venue_source",
+        "venue_override_applied",
+        "explicit_neutral",
+        "non_primary_home_venue",
+        "international_game"
+      ],
+      "input_integrity_correction": true,
+      "discovered_before_notebook_02": true
+    },
     "counts_for_both_teams": true,
     "no_team_specific_adjustment": "no Jacksonville-London familiarity term is introduced; it is not estimable from this sample",
     "international_venues": {
@@ -115,6 +189,10 @@
     },
     "observed_name_id_pairs": [
       [
+        "Acrisure Stadium",
+        "PIT00"
+      ],
+      [
         "Allianz Arena",
         "GER00"
       ],
@@ -143,6 +221,18 @@
         "DET00"
       ],
       [
+        "FirstEnergy Stadium",
+        "CLE00"
+      ],
+      [
+        "Hard Rock Stadium",
+        "MIA00"
+      ],
+      [
+        "Lucas Oil Stadium",
+        "IND00"
+      ],
+      [
         "Maracana Stadium",
         "DAL00"
       ],
@@ -151,12 +241,24 @@
         "LAX01"
       ],
       [
+        "MetLife Stadium",
+        "NYC01"
+      ],
+      [
         "Rogers Centre",
         "BUF01"
       ],
       [
+        "SoFi Stadium",
+        "LAX01"
+      ],
+      [
         "Stade de France",
         "NOR00"
+      ],
+      [
+        "TIAA Bank Stadium",
+        "JAX00"
       ],
       [
         "Tottenham Hotspur Stadium",
@@ -189,200 +291,225 @@
         "season": 2002,
         "games": 256,
         "explicit_neutral": 0,
-        "effective_neutral": 0,
         "international": 0,
+        "non_primary_home_venue": 0,
+        "effective_neutral": 0,
         "reclassified_from_home": 0
       },
       {
         "season": 2003,
         "games": 256,
         "explicit_neutral": 1,
-        "effective_neutral": 1,
         "international": 0,
+        "non_primary_home_venue": 1,
+        "effective_neutral": 1,
         "reclassified_from_home": 0
       },
       {
         "season": 2004,
         "games": 256,
         "explicit_neutral": 0,
-        "effective_neutral": 0,
         "international": 0,
+        "non_primary_home_venue": 0,
+        "effective_neutral": 0,
         "reclassified_from_home": 0
       },
       {
         "season": 2005,
         "games": 256,
         "explicit_neutral": 1,
-        "effective_neutral": 5,
         "international": 1,
+        "non_primary_home_venue": 5,
+        "effective_neutral": 5,
         "reclassified_from_home": 4
       },
       {
         "season": 2006,
         "games": 256,
         "explicit_neutral": 0,
-        "effective_neutral": 0,
         "international": 0,
+        "non_primary_home_venue": 0,
+        "effective_neutral": 0,
         "reclassified_from_home": 0
       },
       {
         "season": 2007,
         "games": 256,
         "explicit_neutral": 1,
-        "effective_neutral": 1,
         "international": 1,
+        "non_primary_home_venue": 1,
+        "effective_neutral": 1,
         "reclassified_from_home": 0
       },
       {
         "season": 2008,
         "games": 256,
         "explicit_neutral": 2,
-        "effective_neutral": 2,
         "international": 2,
+        "non_primary_home_venue": 2,
+        "effective_neutral": 2,
         "reclassified_from_home": 0
       },
       {
         "season": 2009,
         "games": 256,
         "explicit_neutral": 1,
-        "effective_neutral": 2,
         "international": 2,
+        "non_primary_home_venue": 2,
+        "effective_neutral": 2,
         "reclassified_from_home": 1
       },
       {
         "season": 2010,
         "games": 256,
         "explicit_neutral": 2,
-        "effective_neutral": 4,
         "international": 2,
+        "non_primary_home_venue": 4,
+        "effective_neutral": 4,
         "reclassified_from_home": 2
       },
       {
         "season": 2011,
         "games": 256,
         "explicit_neutral": 1,
-        "effective_neutral": 2,
         "international": 2,
+        "non_primary_home_venue": 2,
+        "effective_neutral": 2,
         "reclassified_from_home": 1
       },
       {
         "season": 2012,
         "games": 256,
         "explicit_neutral": 1,
-        "effective_neutral": 2,
         "international": 2,
+        "non_primary_home_venue": 2,
+        "effective_neutral": 2,
         "reclassified_from_home": 1
       },
       {
         "season": 2013,
         "games": 256,
         "explicit_neutral": 3,
-        "effective_neutral": 3,
         "international": 3,
+        "non_primary_home_venue": 3,
+        "effective_neutral": 3,
         "reclassified_from_home": 0
       },
       {
         "season": 2014,
         "games": 256,
         "explicit_neutral": 4,
-        "effective_neutral": 4,
         "international": 3,
+        "non_primary_home_venue": 4,
+        "effective_neutral": 4,
         "reclassified_from_home": 0
       },
       {
         "season": 2015,
         "games": 256,
         "explicit_neutral": 3,
-        "effective_neutral": 3,
         "international": 3,
+        "non_primary_home_venue": 3,
+        "effective_neutral": 3,
         "reclassified_from_home": 0
       },
       {
         "season": 2016,
         "games": 256,
         "explicit_neutral": 4,
-        "effective_neutral": 4,
         "international": 4,
+        "non_primary_home_venue": 4,
+        "effective_neutral": 4,
         "reclassified_from_home": 0
       },
       {
         "season": 2017,
         "games": 256,
         "explicit_neutral": 5,
-        "effective_neutral": 5,
         "international": 5,
+        "non_primary_home_venue": 5,
+        "effective_neutral": 5,
         "reclassified_from_home": 0
       },
       {
         "season": 2018,
         "games": 256,
         "explicit_neutral": 3,
-        "effective_neutral": 3,
         "international": 3,
+        "non_primary_home_venue": 3,
+        "effective_neutral": 3,
         "reclassified_from_home": 0
       },
       {
         "season": 2019,
         "games": 256,
         "explicit_neutral": 5,
-        "effective_neutral": 5,
         "international": 5,
+        "non_primary_home_venue": 5,
+        "effective_neutral": 5,
         "reclassified_from_home": 0
       },
       {
         "season": 2020,
         "games": 256,
         "explicit_neutral": 3,
-        "effective_neutral": 3,
         "international": 0,
+        "non_primary_home_venue": 3,
+        "effective_neutral": 3,
         "reclassified_from_home": 0
       },
       {
         "season": 2021,
         "games": 272,
         "explicit_neutral": 3,
-        "effective_neutral": 3,
         "international": 2,
+        "non_primary_home_venue": 3,
+        "effective_neutral": 3,
         "reclassified_from_home": 0
       },
       {
         "season": 2022,
         "games": 271,
         "explicit_neutral": 6,
-        "effective_neutral": 6,
         "international": 5,
+        "non_primary_home_venue": 6,
+        "effective_neutral": 6,
         "reclassified_from_home": 0
       },
       {
         "season": 2023,
         "games": 272,
         "explicit_neutral": 5,
-        "effective_neutral": 5,
         "international": 5,
+        "non_primary_home_venue": 5,
+        "effective_neutral": 5,
         "reclassified_from_home": 0
       },
       {
         "season": 2024,
         "games": 272,
         "explicit_neutral": 5,
-        "effective_neutral": 5,
         "international": 5,
+        "non_primary_home_venue": 5,
+        "effective_neutral": 5,
         "reclassified_from_home": 0
       },
       {
         "season": 2025,
         "games": 272,
         "explicit_neutral": 7,
+        "international": 7,
+        "non_primary_home_venue": 7,
         "effective_neutral": 7,
-        "international": 0,
         "reclassified_from_home": 0
       },
       {
         "season": 2026,
         "games": 272,
         "explicit_neutral": 8,
-        "effective_neutral": 9,
         "international": 9,
+        "non_primary_home_venue": 9,
+        "effective_neutral": 9,
         "reclassified_from_home": 1
       }
     ]
@@ -393,7 +520,8 @@
         "games_scheduled",
         "designated_home_games",
         "true_home_venue_games",
-        "neutral_site_games",
+        "effective_neutral_games",
+        "non_primary_home_venue_games",
         "international_games",
         "div_games",
         "mean_rest",
@@ -423,7 +551,8 @@
         "games_scheduled",
         "designated_home_games",
         "true_home_venue_games",
-        "neutral_site_games",
+        "effective_neutral_games",
+        "non_primary_home_venue_games",
         "international_games",
         "div_games",
         "mean_rest",
@@ -638,7 +767,8 @@
       "games_scheduled",
       "designated_home_games",
       "true_home_venue_games",
-      "neutral_site_games",
+      "effective_neutral_games",
+      "non_primary_home_venue_games",
       "international_games",
       "div_games",
       "mean_rest",
@@ -660,7 +790,7 @@
       "coach_prior_win_pct",
       "coach_prior_games"
     ],
-    "n": 24,
+    "n": 25,
     "available_families": [
       "coach_identity",
       "coach_prior_winpct",
@@ -1381,20 +1511,20 @@
   },
   "outputs": {
     "panel": "futures/data/team_season_panel.parquet",
-    "panel_frame_sha256": "a790d1886fe086869c07e839a045e96856665151152be33c0db9ef64175c0b0b",
+    "panel_frame_sha256": "039f0e0d9e5bc29f962b07a3d6728988369687a37ecf81448c03416daff68e1e",
     "venue_context": "futures/data/season_schedule_context.parquet",
-    "venue_frame_sha256": "a079766eb9b39acabcb738a55eef0e4db6995b7db428eda9c95ec63630ce8007",
+    "venue_frame_sha256": "ade87352c6e06b877a9d2d9a43a201ed99fbb3e9d74ae11b65976e6b70c57824",
     "venue_rows": 6495,
     "feasibility": "futures/artifacts/preseason_feature_feasibility.json"
   },
   "provenance": {
     "notebook": "futures/season_team_totals/01_build_dataset.ipynb",
-    "run_at_utc": "2026-08-04T00:38:24.754309+00:00",
+    "run_at_utc": "2026-08-04T01:51:49.194778+00:00",
     "as_of_date": "2026-08-04",
     "python": "3.11.9",
     "platform": "Windows-10-10.0.26200-SP0",
-    "pandas": "2.3.3",
-    "numpy": "1.26.4",
+    "pandas": "3.0.3",
+    "numpy": "2.4.6",
     "seed": 20260802,
     "audit_verdict": "GO-TIER-B",
     "audit_artifact": "futures/artifacts/data_audit.json"

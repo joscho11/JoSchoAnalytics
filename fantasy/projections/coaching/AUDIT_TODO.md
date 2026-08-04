@@ -517,11 +517,11 @@ Related test renames: `test_design_a_and_b_differ_only_on_identity_supply` →
 
 ## 26. The 141 baseline is only reproducible with an explicit deselect list — CURRENT (updated v3.9d)
 
-**Current status: the full suite is 1,103 collected — 1,102 mandatory passed, plus 1 optional git
+**Current status: the full suite is 1,227 collected — 1,226 mandatory passed, plus 1 optional git
 cross-check that passes when the pinned historical blob is reachable and otherwise skips (the vendored
 red proof runs in both states); the inherited baseline is 141, reproduced as `141 passed,
-6 deselected`.** Reproducing it requires ignoring the ten v3.9 test modules (`test_arm_features_v39.py`,
-`test_coach_projection_harness_v39.py`, `test_boundary_corpus.py`, `test_assemble_real_panel_v39.py`, `test_combine_snapshot_provenance.py`, `test_rookie_matrix_v39.py`, `test_pff_point_in_time_v39.py`, `test_arm0_refits_from_scratch_v39.py`, `test_activation_wiring_v39.py`, `test_veteran_snapshot_v39.py`) **and deselecting all six**
+6 deselected`.** Reproducing it requires ignoring the thirteen v3.9 test modules (`test_arm_features_v39.py`,
+`test_coach_projection_harness_v39.py`, `test_boundary_corpus.py`, `test_assemble_real_panel_v39.py`, `test_combine_snapshot_provenance.py`, `test_rookie_matrix_v39.py`, `test_pff_point_in_time_v39.py`, `test_arm0_refits_from_scratch_v39.py`, `test_activation_wiring_v39.py`, `test_veteran_snapshot_v39.py`, `test_authorized_runner_v39.py`, `test_composed_feature_reader_v39.py`, `test_evaluation_eligibility_v39.py`) **and deselecting all six**
 v3.9 additions to `test_artifact_ownership.py`, by their exact IDs:
 
 ```
@@ -533,7 +533,7 @@ test_the_head_coach_win_ledger_is_derived_in_memory_not_cached
 test_the_v39_modules_never_write_outside_the_coaching_data_dir
 ```
 
-Inherited per module: 22 + 33 + 34 + 27 + 15 + 7 + 3 = **141**. Full suite: 141 + 88 + 246 + 166 + 205 + 9 + 91 + 37 + 38 + 31 + 45 + 6 = **1,103**.
+Inherited per module: 22 + 33 + 34 + 27 + 15 + 7 + 3 = **141**. Full suite: 141 + 88 + 246 + 166 + 205 + 9 + 91 + 37 + 38 + 31 + 45 + 49 + 47 + 28 + 6 = **1,227**.
 
 `pytest --deselect` **silently ignores an ID that does not exist**, so a mistyped path deselects
 nothing and the run reports 147 with no error at all. Copy the six IDs verbatim; do not retype them.
