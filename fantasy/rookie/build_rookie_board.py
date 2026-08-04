@@ -243,9 +243,27 @@ def main():
 
     # team/name from draft_picks
     import nflreadpy as nfl
-    dp = nfl.load_draft_picks().to_pandas().dropna(subset=["gsis_id"]).drop_duplicates("gsis_id")
+    dp_all = nfl.load_draft_picks().to_pandas()
+    dp = dp_all.dropna(subset=["gsis_id"]).drop_duplicates("gsis_id")
     dp = dp[["gsis_id", "pfr_player_name", "team"]].rename(columns={"pfr_player_name": "name"})
     feat_score = feat_score.merge(dp, on="gsis_id", how="left")
+    # The rows recovered by assemble_panel's scoring-class gsis backfill are still null in
+    # draft_picks, so the gsis merge above leaves their name/team blank. Fill from the DRAFT SLOT,
+    # which identifies a pick exactly — (season, round, pick) is unique, so no name is guessed here.
+    slot = (dp_all.dropna(subset=["season", "round", "pick"])
+                  .drop_duplicates(["season", "round", "pick"], keep=False)
+                  .set_index(["season", "round", "pick"])[["pfr_player_name", "team"]])
+    miss = feat_score["name"].isna()
+    if miss.any():
+        key = pd.MultiIndex.from_arrays([feat_score.loc[miss, "entry_year"].astype("Int64"),
+                                         feat_score.loc[miss, "round"].astype("Int64"),
+                                         feat_score.loc[miss, "pick"].astype("Int64")])
+        feat_score.loc[miss, "name"] = slot["pfr_player_name"].reindex(key).values
+        feat_score.loc[miss, "team"] = slot["team"].reindex(key).values
+        print(f"  name/team from draft slot for {int(miss.sum())} backfilled rows: "
+              f"{int(feat_score.loc[miss, 'name'].notna().sum())} resolved")
+    assert feat_score["name"].notna().all(), "a board row has no name"
+    assert feat_score["name"].is_unique, "duplicate player name on the board"
 
     # reference population for percentiles = 2015-2026 drafted-skill panel
     refpop = pd.concat([feat_hit, feat_score], ignore_index=True)
@@ -265,7 +283,17 @@ def main():
     assert set(board.gsis_id).isdisjoint(set(feat_hit.gsis_id)), "training-class player leaked into board"
     assert _md5(ROOKIE_PPG_PKL) == ROOKIE_PPG_MD5, "rookie_ppg_model.pkl md5 changed"
     # the FULL arm must reproduce the already-shipped values (else the full arm wasn't reproduced -> HALT)
-    ANCH = {"ashton jeanty": 88.4, "brock bowers": 78.9, "travis hunter": 78.5, "caleb williams": 28.2}
+    #
+    # RE-ANCHORED 2026-08-04 (Joseph's call). The previous constants — jeanty 88.4, bowers 78.9,
+    # hunter 78.5, williams 28.2 — were frozen from the 2026-07-24 build (3b4cde0), which ran BEFORE
+    # the college-PFF leakage repair (`_pff_point_in_time`, ae3e14d 2026-08-03). That repair replaced a
+    # `groupby(norm_name).season.idxmax()` collapse that let a LATER same-name college player feed an
+    # EARLIER rookie; measured against the pre-repair harness it moves 32 of 68 feature columns across
+    # 20 of the 712 TRAINING rows (hit labels identical), which refits the CatBoost and therefore moves
+    # every scored player. The old anchors were contaminated-join values and could never be reproduced
+    # again. These are the clean-join values. The tripwire itself is unchanged and still HALTS the build
+    # on any future drift — only the reference point moved, and only once, deliberately.
+    ANCH = {"ashton jeanty": 84.5, "brock bowers": 71.0, "travis hunter": 75.2, "caleb williams": 47.2}
     bn = board.assign(nn=board.name.map(norm_name))
     for nm, ev in ANCH.items():
         g = bn.loc[bn.nn == nm, "hit_prob_full"]
