@@ -294,7 +294,10 @@ def main():
 
     print("=" * 64); print("PART B STRUCTURAL ASSERTS (no feature-vs-target)"); print("=" * 64)
     assert len(fh) == 712, "hit rows changed after feature join"
-    assert len(fs) == 235, "scoring rows changed after feature join"
+    # 243, was 235: the scoring-class gsis_id backfill in assemble_panel restored 8 drafted
+    # players nflverse's draft_picks left without an id (7 in 2026 incl. Stribling 2.33, 1 in
+    # 2025). The HIT panel above is deliberately unchanged — see backfill_scoring_gsis.
+    assert len(fs) == 243, "scoring rows changed after feature join"
     report("HIT panel", fh, groups, feat_cols)
     report("SCORING", fs, groups, feat_cols)
 

@@ -74,7 +74,9 @@ def regen_features_in_scratch():
     feat_score = pd.read_parquet(scr / "feat_scoring.parquet")
     groups = json.loads((scr / "feature_groups.json").read_text())
     assert len(feat_hit) == 712 and int(feat_hit.hit.sum()) == 135, "panel != frozen 712/135"
-    assert len(feat_score) == 235, f"scoring panel != 235 (got {len(feat_score)})"
+    # 243, was 235 — scoring-class gsis_id backfill (assemble_panel.backfill_scoring_gsis)
+    # recovered 8 drafted players nflverse left without an id. HIT panel unchanged at 712/135.
+    assert len(feat_score) == 243, f"scoring panel != 243 (got {len(feat_score)})"
     return feat_hit, feat_score, groups, scr
 
 
@@ -258,7 +260,7 @@ def main():
     # structural asserts
     for h in hitcols:
         assert board[h].between(0, 100).all() and board[h].notna().all(), f"{h} out of [0,100] or NaN"
-    assert len(board) == 235, f"board rows != 235 ({len(board)})"
+    assert len(board) == 243, f"board rows != 243 ({len(board)})"
     assert board.entry_class.isin(SCORE_CLASSES).all(), "non-scoring class in board"
     assert set(board.gsis_id).isdisjoint(set(feat_hit.gsis_id)), "training-class player leaked into board"
     assert _md5(ROOKIE_PPG_PKL) == ROOKIE_PPG_MD5, "rookie_ppg_model.pkl md5 changed"

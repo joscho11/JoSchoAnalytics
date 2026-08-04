@@ -63,12 +63,62 @@ def build_season_finish():
     return seas
 
 
+def _norm(name):
+    """Lowercase, strip punctuation and generational suffixes — join key for the backfill only."""
+    s = str(name).lower().replace(".", "").replace("'", "").replace("-", " ")
+    s = " ".join(w for w in s.split() if w not in {"jr", "sr", "ii", "iii", "iv", "v"})
+    return s
+
+
+def backfill_scoring_gsis(draft):
+    """Fill a MISSING gsis_id on SCORING-class rows only, from nflverse's players table.
+
+    `load_draft_picks()` leaves gsis_id null for some recent picks even though the player has a
+    real, active id in `load_players()` — as of the 2026 class, 7 drafted skill players (Stribling
+    2.33, Beck 3.65, Delp 3.73, Young 4.140, Singleton 5.165, Royer 5.170, Burks 7.254). The
+    `dropna` below then silently removed them from the board, so a second-round pick was simply
+    absent from a page listing his draft class.
+
+    SCOPED TO SCORING CLASSES ON PURPOSE. The dropna is CORRECT for the hit panel: no gsis_id
+    means the outcome join in `best_of_first3` cannot run, so there is no label. Scoring rows
+    carry no outcome and need only features, so the id is pure identity there. Backfilling the
+    hit panel would also add rows to the frozen 712/135 panel and silently change the fitted
+    models — hence the assert that the hit classes are untouched.
+
+    Guarded name+position join; anything ambiguous on either side is refused, never guessed.
+    """
+    target = draft["season"].isin(SCORE_CLASSES) & draft["gsis_id"].isna()
+    if not target.any():
+        return draft
+    players = pdf(nfl.load_players())
+    players = players.dropna(subset=["gsis_id", "display_name", "position"]).copy()
+    players["_k"] = players["display_name"].map(_norm) + "|" + players["position"].astype(str)
+    players = players.drop_duplicates("_k", keep=False)          # ambiguous on the players side
+    key = draft.loc[target, "pfr_player_name"].map(_norm) + "|" + draft.loc[target, "position"].astype(str)
+    key = key.where(~key.duplicated(keep=False))                 # ambiguous on the draft side
+    found = key.map(players.set_index("_k")["gsis_id"])
+    # never collide with an id the table already carries — drop_duplicates("gsis_id") below
+    # would otherwise silently discard one of the two rows
+    existing = set(draft["gsis_id"].dropna())
+    found = found.where(~found.isin(existing))
+    draft = draft.copy()
+    draft.loc[target, "gsis_id"] = found
+    filled = draft.loc[target, "gsis_id"].notna()
+    print(f"  gsis_id backfill (scoring classes only): {int(filled.sum())}/{int(target.sum())} filled")
+    return draft
+
+
 def build_panel():
     seas = build_season_finish()
     finish_by_player = seas.groupby("player_id")
 
     draft = pdf(nfl.load_draft_picks())
-    draft = draft[draft["position"].isin(SKILL)].dropna(subset=["gsis_id"]).copy()
+    draft = draft[draft["position"].isin(SKILL)].copy()
+    before_hit = set(draft.loc[draft["season"].isin(HIT_CLASSES) & draft["gsis_id"].notna(), "gsis_id"])
+    draft = backfill_scoring_gsis(draft)
+    after_hit = set(draft.loc[draft["season"].isin(HIT_CLASSES) & draft["gsis_id"].notna(), "gsis_id"])
+    assert before_hit == after_hit, "backfill touched the HIT panel — frozen 712/135 at risk"
+    draft = draft.dropna(subset=["gsis_id"]).copy()
     draft = (draft.rename(columns={"season": "entry_year"})
                   [["gsis_id", "entry_year", "position", "round", "pick"]]
                   .drop_duplicates("gsis_id"))
