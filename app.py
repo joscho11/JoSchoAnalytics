@@ -62,12 +62,17 @@ help_pg = st.Page(_lazy_render("page_help"), title="Help & Guide", icon="❓",
                   url_path="help")
 rb_pg = st.Page(_lazy_render("page_rookie_board"), title="Rookie Board", icon="🧬",
                 url_path="rookie-board")
+# "(Beta)" rides in the nav label because st.Page titles are plain text (no HTML in the top nav),
+# and the url_path stays "season-totals" so the flag can come off without breaking a shared link.
+fut_pg = st.Page(_lazy_render("page_futures"), title="Season Totals (Beta)", icon="📊",
+                 url_path="season-totals")
 
 # cross-link registry (design 4g) — populated before nav.run() so pages can link
 nav_registry.PAGES = {
     "draft-board": board_pg, "weekly-predictions": wp_pg, "weekly-fantasy": wf_pg,
     "dfs-optimizer": dfs_pg, "track-record": tr_pg, "film-room": film_pg,
     "league-history": lh_pg, "help": help_pg, "rookie-board": rb_pg,
+    "season-totals": fut_pg,
 }
 
 # Persistent branded header ABOVE the top nav — rendered before st.navigation so the
@@ -82,7 +87,7 @@ chrome.render_header()
 mobile.inject()
 
 nav = st.navigation(
-    {"Betting": [wp_pg, tr_pg],
+    {"Betting": [wp_pg, tr_pg, fut_pg],
      "Fantasy": [board_pg, rb_pg, wf_pg, dfs_pg],
      "More": [film_pg, lh_pg, help_pg]},
     position="top",

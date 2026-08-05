@@ -28,6 +28,7 @@ PAGE_MODULES = (
     "page_film_room",
     "page_league_history",
     "page_help",
+    "page_futures",
 )
 
 
