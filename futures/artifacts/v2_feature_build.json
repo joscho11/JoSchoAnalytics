@@ -1,0 +1,42 @@
+{
+  "script": "futures/build_v2_features.py",
+  "governed_by": "PREREGISTRATION Amendment 4 (A4.3)",
+  "written_at_utc": "2026-08-05T19:56:45.475364+00:00",
+  "new_features": [
+    "qb_returning",
+    "qb_prior_epa_per_att",
+    "qb_prior_cpoe",
+    "qb_prior_attempts",
+    "allpro_weighted",
+    "allpro_offense",
+    "allpro_defense",
+    "roster_continuity",
+    "reserve_count"
+  ],
+  "rows": 800,
+  "allpro_name_resolution_rate": 0.8174,
+  "coverage_all": {
+    "qb_returning": 0.96,
+    "qb_prior_epa_per_att": 0.96,
+    "qb_prior_cpoe": 0.8,
+    "qb_prior_attempts": 0.96,
+    "allpro_weighted": 1.0,
+    "allpro_offense": 1.0,
+    "allpro_defense": 1.0,
+    "roster_continuity": 0.52,
+    "reserve_count": 1.0
+  },
+  "coverage_predict_season": {
+    "qb_returning": 1.0,
+    "qb_prior_epa_per_att": 1.0,
+    "qb_prior_cpoe": 1.0,
+    "qb_prior_attempts": 1.0,
+    "allpro_weighted": 1.0,
+    "allpro_offense": 1.0,
+    "allpro_defense": 1.0,
+    "roster_continuity": 1.0,
+    "reserve_count": 1.0
+  },
+  "deploy_gaps": [],
+  "frame_sha256": "08d959b68e8aa6670720ef678b296792dbde6af9dccfce5f5a8f2c6dbbd07e6d"
+}

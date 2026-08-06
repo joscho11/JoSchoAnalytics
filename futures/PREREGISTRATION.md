@@ -640,3 +640,114 @@ shut. §7's gate A verdict from `02` stands. M4-c is a calibration variant of M4
 The acceptance test in A3.4 fires **once**, on the frozen folds, and the result is written to
 `futures/artifacts/distribution_eval.json`. Re-running to obtain a different coverage number is
 forbidden by the same rule that governs §7.
+
+---
+
+### Amendment 4. v1 closed; the one-shot rule retired; v2 governance
+
+**Accepted by Joseph on 2026-08-05**, after every v1 result was observed and after the Season Totals
+page shipped. This amendment is explicit that it is written with full knowledge of the v1 results,
+which is exactly why it may not touch them.
+
+#### A4.1. v1 is closed, and its record is frozen
+
+Sections 1 to 9 and Amendments 1 to 3 describe **v1**. Every gate that fired under them has fired,
+and those results stand exactly as recorded in `futures/artifacts/`. Nothing in this amendment
+re-opens, re-fires, re-interprets or supersedes any of them.
+
+The v1 shipped artifact keeps its label without change:
+
+> does not beat the archived market consensus; BACKTESTED, NOT LIVE-VALIDATED
+
+#### A4.2. The one-shot rule is retired, going forward only
+
+The §7 one-shot rule and the A3.7 restatement of it **no longer govern new work.** Joseph's
+direction, 2026-08-05: feature engineering is a critical part of improving a model and is not up for
+discussion. Re-running an evaluation to try a different feature set is permitted from this point on.
+
+This is a change of process, not a change of arithmetic. The rule existed to protect the *status of
+a number*, and retiring it does not make a re-used fold set produce a clean out-of-sample estimate.
+So the protection moves from restricting the work to labelling the result, per A4.3.
+
+#### A4.3. v2 governance, in full
+
+* **Features are open.** Any family may be added, on the single condition that it is buildable
+  point-in-time for both history and the deploy season. The AVAILABLE / CONDITIONAL / UNAVAILABLE
+  verdict system of A2.4 no longer bars a family; the point-in-time requirement is what remains, and
+  it is a leakage rule, not a governance one.
+* **No gate fires.** Gates A, B and C do not run on v2. There is no pass or fail to report.
+* **Seasons 2015 to 2025 are development seasons.** Any number computed on them is a **development
+  estimate** and must be called that. It may be used to compare candidate models against each other,
+  because the selection bias is shared, and it may not be presented as an unbiased out-of-sample
+  result.
+* **2026 is SEALED.** No v2 model may be selected, tuned, filtered or compared using any 2026
+  outcome. When the 2026 season is graded it becomes the first honest live test this project has
+  had, and it is a one-shot read by nature rather than by rule: the season only happens once.
+* **The site may not strengthen its claim on development evidence.** Any v2 number reaching the page
+  carries "development estimate" and the existing not-live-validated label. A stronger claim waits
+  for graded 2026.
+
+#### A4.4. Named-book lines admitted
+
+`futures/data/win_totals_2026_named_books.csv`, captured 2026-08-05, carries DraftKings and FanDuel
+2026 win totals with `book` populated. DraftKings has both sides priced and is therefore the first
+G3-C-shaped source this project holds; FanDuel has the over side only and is a cross-check.
+
+This does **not** open gate C. G3-C requires named-book rows across the *evaluation* seasons, and
+the historical archive is still unattributed. One deploy season of named-book lines cannot backtest
+anything. Its use here is to supply M5's 2026 anchor, which A2.2 already permits, and to begin a
+forward named-book record.
+
+#### A4.5. What survives from v1, unchanged
+
+The leakage discipline of §2.3, the venue rules of A2.1, the two-track separation of A2.3, the
+Tier-C language fence of §7 and A1.5, and the requirement that every claim name its evidence. Gate C
+stays shut and `tier_c_open` stays false.
+
+---
+
+### Amendment 5. Publishing a disconfirming directional result
+
+**Accepted by Joseph on 2026-08-05.** Narrow by design: it licenses publishing evidence that the
+projection FAILS to beat the posted numbers, and licenses nothing else.
+
+#### A5.1. What was measured, and the correction that prompted this
+
+Section 7 gate C reserved the directional comparison for a passing gate, and notebook 02 recorded it
+as withheld because "the quote columns are absent from the panel". That is true of the modelling
+frame and misleading about the source: `futures/data/win_totals.csv` carries `price_over` and
+`price_under` at **100% coverage across all 11 seasons**. The comparison was never blocked by
+missing data. It was withheld by rule, and the record should say so.
+
+Measured 2026-08-05 on the frozen headline folds, production M4-c: **306 graded team-seasons,
+50.65% on the correct side against a 52.41% break-even implied by the postings, a shortfall of 1.75
+points, 95% interval [-7.62, +3.75], return -3.59% per unit, above break-even in 3 of 10 seasons.**
+
+#### A5.2. What may be published
+
+A directional result may be shown on the site **only while it is disconfirming**, meaning the
+measured rate does not exceed the break-even rate those postings imply. It must appear with its
+sample size, its interval, and the power note in A5.3.
+
+If a future measurement comes back positive, **it may not be published under this amendment.** A
+positive claim still requires gate C in full: a named book across the evaluation seasons (G3-C), the
+margin and lower-bound thresholds of section 7, and calibration. This asymmetry is deliberate.
+Publishing a failure costs a reader nothing if it is wrong; publishing an unearned success does.
+
+#### A5.3. The power note travels with the number
+
+Any published directional result carries the fact that this comparison is structurally
+underpowered: 32 rows per season, roughly 4,900 graded rows needed to establish a two-point
+advantage, about 150 seasons. A reader must not take "no advantage demonstrated" as "an advantage
+was ruled out", nor the reverse.
+
+#### A5.4. The language fence is unchanged
+
+Section 7's fence still binds. The published wording carries no fenced vocabulary, takes no side,
+and quotes no confidence tier, and `tests/test_page_futures.py` continues to enforce that
+mechanically against `tier_lock.py`'s own word list. This amendment did not weaken that check and
+must not be used to.
+
+#### A5.5. Gate C remains shut
+
+`tier_c_open` stays false. Nothing here opens it.

@@ -44,6 +44,7 @@ _CSV = _HERE / "futures" / "futures_predictions.csv"
 _META = _HERE / "futures" / "artifacts" / "model_metadata.json"
 _COMP = _HERE / "futures" / "artifacts" / "model_comparison.json"
 _PAGE = _HERE / "site_pages" / "page_futures.py"
+_EVIDENCE = _HERE / "futures" / "artifacts" / "season_totals_evidence.json"
 
 pytestmark = pytest.mark.skipif(not _CSV.exists(),
                                 reason="futures_predictions.csv not built (run notebook 05)")
@@ -165,6 +166,75 @@ def test_displayed_evidence_numbers_come_from_the_artifacts():
     # and the direction is reported the way the numbers actually run
     assert mae > bench, "the artifacts no longer support the 'does not beat' claim - re-read them"
     assert f"{mae - bench:+.2f}" in text, "the gap must be shown with its sign"
+
+
+def test_directional_evidence_is_shown_and_is_disconfirming():
+    """PREREGISTRATION Amendment 5 licenses publishing a DISCONFIRMING directional result only.
+
+    So this asserts two separate things: that the result reaches the page at all, and that it is
+    still disconfirming. If a future rebuild produces a rate ABOVE break-even, this test fails on
+    purpose. A positive result is not publishable under A5 and must go back through gate C.
+    """
+    ev = json.loads(_EVIDENCE.read_text(encoding="utf-8"))
+    d = ev["direction"]
+    assert d["correct_rate"] <= d["break_even_rate"], (
+        "the directional result is no longer disconfirming, so Amendment 5 does not license "
+        "publishing it. Gate C, not this page, is where a positive claim gets decided.")
+    text = _text(_run())
+    assert f"{d['correct_rate']:.2%}" in text, "the measured rate must be shown"
+    assert f"{d['break_even_rate']:.2%}" in text, "the break-even rate must be shown"
+    assert str(d["seasons_above_break_even"]) in text and str(d["seasons_total"]) in text
+    assert "does not beat" in text.lower()
+
+
+def test_power_note_travels_with_the_directional_number():
+    """A5.3: the number may not be published without its sample-size caveat, in both directions."""
+    text = _text(_run()).lower()
+    assert "sample-size problem" in text or "sample size problem" in text
+    assert "not a demonstrated absence" in text, \
+        "the reader must be told absence of evidence is not evidence of absence"
+    ev = json.loads(_EVIDENCE.read_text(encoding="utf-8"))
+    assert str(ev["direction"]["power_note"]["seasons_needed"]) in text
+
+
+def test_accuracy_ladder_is_anchored_not_a_bare_number():
+    """A bare 2.37 means nothing. The ladder has to show what beating nothing looks like."""
+    at = _run()
+    ladder = None
+    for el in at.dataframe:
+        v = el.value
+        dd = v.data if hasattr(v, "data") else v
+        try:
+            if "Approach" in list(dd.columns):
+                ladder = dd
+        except Exception:
+            pass
+    assert ladder is not None, "the accuracy ladder must render"
+    assert len(ladder) == 4
+    m = ladder["Average miss (wins)"]
+    assert m.is_monotonic_decreasing, "the ladder must run worst to best"
+    ev = json.loads(_EVIDENCE.read_text(encoding="utf-8"))
+    assert abs(float(m.iloc[-1]) - ev["accuracy"]["ladder"][-1]["mae"]) < 1e-9
+
+
+def test_evidence_section_degrades_without_its_artifact(tmp_path, monkeypatch):
+    """A missing evidence file must drop the section, never break the page or half-render it.
+
+    monkeypatch, not a bare assignment: AppTest.from_function re-executes the function against the
+    SAME module object, so mutating `_EVIDENCE` inline leaks the absent path into every later test
+    in the file. monkeypatch restores it at teardown.
+    """
+    import page_futures
+
+    monkeypatch.setattr(page_futures, "_EVIDENCE", tmp_path / "absent.json")
+    at = AppTest.from_function(_entry, default_timeout=180).run()
+    assert not at.exception, at.exception
+    assert not at.error, [e.value for e in at.error]
+    txt = " ".join(str(e.value) for g in (at.markdown, at.caption, at.subheader) for e in g)
+    assert "How good is this" not in txt, "the section must vanish, not half-render"
+    # the projections themselves must survive the missing evidence file
+    assert any("Proj Wins" in str(list((e.value.data if hasattr(e.value, "data") else e.value)
+                                       .columns)) for e in at.dataframe)
 
 
 def test_no_hardcoded_backtest_number_in_the_source():

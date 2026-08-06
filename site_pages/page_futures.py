@@ -32,6 +32,7 @@ _HERE = Path(__file__).resolve().parents[1]
 _CSV = _HERE / "futures" / "futures_predictions.csv"
 _META = _HERE / "futures" / "artifacts" / "model_metadata.json"
 _COMPARISON = _HERE / "futures" / "artifacts" / "model_comparison.json"
+_EVIDENCE = _HERE / "futures" / "artifacts" / "season_totals_evidence.json"
 
 # NOTE: the site-wide ORIENTATION line ("...models for NFL betting and fantasy...") is
 # deliberately NOT used on this page. §7's fence forbids that vocabulary here while gate C is
@@ -94,6 +95,82 @@ called an archived market consensus of unattributed sportsbook origin rather tha
 and it is the reason the strongest class of claim about this model was ruled out before any model
 was fitted.
 """
+
+
+def _render_evidence():
+    """The honest scorecard: how accurate, and the disconfirming directional result.
+
+    Authorised by PREREGISTRATION Amendment 5, which licenses publishing a result showing the
+    projection FAILS to beat the posted numbers and licenses nothing else. Every number is read
+    from the artifact; none is retyped here. The wording carries no fenced vocabulary, which
+    `tests/test_page_futures.py` checks against tier_lock's own word list.
+    """
+    ev = _read_json(str(_EVIDENCE))
+    if not ev:
+        return
+    acc, dr = ev.get("accuracy", {}), ev.get("direction", {})
+
+    st.subheader("How good is this, honestly")
+
+    if acc.get("ladder"):
+        st.markdown(
+            "**On accuracy.** Average miss per team over ten held-out seasons, in wins. "
+            "Lower is better."
+        )
+        ladder = pd.DataFrame(acc["ladder"]).rename(
+            columns={"name": "Approach", "mae": "Average miss (wins)"})
+        st.dataframe(ladder, hide_index=True, width="stretch",
+                     column_config={"Average miss (wins)":
+                                    st.column_config.NumberColumn(format="%.2f")})
+        st.caption(
+            f"Repeating last season's record is worse than assuming nothing. Measured against "
+            f"that flat 8.5-win assumption, this model closes about "
+            f"**{acc['model_share_of_available_improvement']:.0%}** of the distance the archived "
+            f"market consensus closes, and remains {acc['gap_to_consensus']:.2f} wins further from "
+            "the truth than the consensus is."
+        )
+
+    if dr.get("n_graded"):
+        st.markdown(
+            "**On direction, the question everyone actually asks.** For each team the projection "
+            "was compared with the posted season number and recorded as higher or lower. Then the "
+            "real result settled it."
+        )
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Landed correctly", f"{dr['correct_rate']:.1%}",
+                  help=f"{dr['n_graded']} team-seasons where the projection differed from the "
+                       f"posted number. {dr['n_excluded_exact']} exact matches were excluded "
+                       "because there is nothing to settle.")
+        c2.metric("Needed to break even", f"{dr['break_even_rate']:.1%}",
+                  help="The rate the posted numbers themselves imply is required simply to come "
+                       "out level, before anything is gained. It sits above 50% because neither direction "
+                       "is ever quoted at even money.")
+        c3.metric("Return per unit", f"{dr['return_per_unit']:+.1%}",
+                  help="What a flat, unweighted unit on every one of these comparisons would have "
+                       "returned across the ten seasons.")
+        lo, hi = dr["ci95_shortfall"]
+        # st.warning, NOT st.error. An error banner reads as "the page broke" rather than "the
+        # finding is negative", and `tests/test_page_futures.py` treats any error element as a
+        # render failure. Keeping that check strict is worth more than the redder box.
+        st.warning(
+            f"**{dr['verdict'].title()}.** The projection landed correctly "
+            f"{dr['correct_rate']:.2%} of the time against the {dr['break_even_rate']:.2%} needed "
+            f"to break even, a shortfall of {abs(dr['shortfall']) * 100:.2f} points "
+            f"(95% interval {lo * 100:+.2f} to {hi * 100:+.2f}). It cleared break-even in "
+            f"{dr['seasons_above_break_even']} of {dr['seasons_total']} seasons. "
+            "This is published because it is the honest answer, not because it is a useful one."
+        )
+        pn = dr.get("power_note", {})
+        if pn:
+            st.caption(
+                f"**Read the interval carefully.** It spans zero, so the shortfall is not "
+                f"statistically established either. That is a sample-size problem, not a hidden "
+                f"positive: with 32 teams a season this comparison needs roughly "
+                f"{pn['n_needed_for_two_point_claim']:,} settled team-seasons, about "
+                f"{pn['seasons_needed']} seasons, to establish a two-point difference in either "
+                f"direction. The current interval is {pn['ci_halfwidth_points']:.1f} points wide "
+                "in each direction. Absence of a demonstrated difference is not a demonstrated absence."
+            )
 
 
 def _rg_color(ratio: float) -> str:
@@ -245,6 +322,8 @@ def render():
                   "No" if ev.get("gate_B_passed") is False else "See notes",
                   help="A pre-registered test, fired once, on a frozen set of seasons chosen "
                        "before any model was fitted.")
+
+    _render_evidence()
 
     with st.expander("How this is built, and what it does not know"):
         st.markdown(METHOD)

@@ -1,0 +1,52 @@
+{
+  "generated_at_utc": "2026-08-05T20:57:38.800729+00:00",
+  "authority": "PREREGISTRATION Amendment 5: a DISCONFIRMING directional result may be published. Gate C stays shut; no positive claim is licensed by this file.",
+  "status": "BACKTESTED, NOT LIVE-VALIDATED",
+  "benchmark_naming": "archived market consensus of unattributed sportsbook origin - never 'the sportsbook line', 'Vegas', or 'the market'",
+  "accuracy": {
+    "metric": "mean absolute error in wins, 10 held-out seasons, 320 team-seasons",
+    "ladder": [
+      {
+        "name": "Last season's record, repeated",
+        "mae": 2.829641544117647
+      },
+      {
+        "name": "Every team gets 8.5 wins",
+        "mae": 2.640625
+      },
+      {
+        "name": "This model",
+        "mae": 2.3650428124999996
+      },
+      {
+        "name": "Archived market consensus",
+        "mae": 2.2453125
+      }
+    ],
+    "model_share_of_available_improvement": 0.6971249011857714,
+    "gap_to_consensus": 0.11973031249999977
+  },
+  "direction": {
+    "question": "how often the projection landed on the correct side of the posted number",
+    "n_graded": 306,
+    "n_excluded_exact": 14,
+    "correct_rate": 0.5065359477124183,
+    "break_even_rate": 0.524066382676832,
+    "shortfall": -0.017530434964413755,
+    "ci95_shortfall": [
+      -0.07615707817593464,
+      0.037459059910327185
+    ],
+    "ci_excludes_zero": false,
+    "return_per_unit": -0.035921210983744054,
+    "seasons_above_break_even": 3,
+    "seasons_total": 10,
+    "verdict": "DOES NOT BEAT THE POSTED NUMBERS",
+    "power_note": {
+      "ci_halfwidth_points": 5.68,
+      "n_needed_for_two_point_claim": 4900,
+      "seasons_needed": 153,
+      "reading": "with 32 teams a season this comparison cannot establish a small advantage in either direction within any realistic horizon"
+    }
+  }
+}

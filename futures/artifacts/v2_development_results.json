@@ -1,0 +1,208 @@
+{
+  "governed_by": "PREREGISTRATION Amendment 4 (A4.3): development estimates, no gate fires",
+  "status": "DEVELOPMENT ESTIMATE, NOT OUT-OF-SAMPLE",
+  "sealed": {
+    "season": 2026,
+    "note": "not scored anywhere in this run"
+  },
+  "harness_validation": {
+    "reproduced_v1": true,
+    "reference": {
+      "M2_ridge": 2.3719,
+      "M4c": 2.365,
+      "B0_market": 2.2453,
+      "B1_persistence": 2.8296
+    },
+    "tol": 0.0002
+  },
+  "new_features": [
+    "qb_returning",
+    "qb_prior_epa_per_att",
+    "qb_prior_cpoe",
+    "qb_prior_attempts",
+    "allpro_weighted",
+    "allpro_offense",
+    "allpro_defense",
+    "roster_continuity",
+    "reserve_count"
+  ],
+  "v1": {
+    "label": "v1",
+    "n_features": 25,
+    "n_rows": 320,
+    "M2_ridge": 2.3718530886509015,
+    "per_fold": {
+      "2015": {
+        "m2_alpha": 100.0,
+        "m2_fallback": false,
+        "n_eval": 32,
+        "m4_alpha": 1000.0,
+        "m4_tau": 3.0,
+        "m4_fallback": false
+      },
+      "2016": {
+        "m2_alpha": 300.0,
+        "m2_fallback": false,
+        "n_eval": 32,
+        "m4_alpha": 1000.0,
+        "m4_tau": 3.0,
+        "m4_fallback": false
+      },
+      "2017": {
+        "m2_alpha": 300.0,
+        "m2_fallback": false,
+        "n_eval": 32,
+        "m4_alpha": 1000.0,
+        "m4_tau": 3.0,
+        "m4_fallback": false
+      },
+      "2018": {
+        "m2_alpha": 100.0,
+        "m2_fallback": false,
+        "n_eval": 32,
+        "m4_alpha": 1000.0,
+        "m4_tau": 5.0,
+        "m4_fallback": false
+      },
+      "2019": {
+        "m2_alpha": 100.0,
+        "m2_fallback": false,
+        "n_eval": 32,
+        "m4_alpha": 1000.0,
+        "m4_tau": 5.0,
+        "m4_fallback": false
+      },
+      "2020": {
+        "m2_alpha": 100.0,
+        "m2_fallback": false,
+        "n_eval": 32,
+        "m4_alpha": 1000.0,
+        "m4_tau": 4.0,
+        "m4_fallback": false
+      },
+      "2021": {
+        "m2_alpha": 100.0,
+        "m2_fallback": false,
+        "n_eval": 32,
+        "m4_alpha": 1000.0,
+        "m4_tau": 5.0,
+        "m4_fallback": false
+      },
+      "2022": {
+        "m2_alpha": 100.0,
+        "m2_fallback": false,
+        "n_eval": 32,
+        "m4_alpha": 1000.0,
+        "m4_tau": 4.0,
+        "m4_fallback": false
+      },
+      "2024": {
+        "m2_alpha": 100.0,
+        "m2_fallback": false,
+        "n_eval": 32,
+        "m4_alpha": 1000.0,
+        "m4_tau": 2.5,
+        "m4_fallback": false
+      },
+      "2025": {
+        "m2_alpha": 100.0,
+        "m2_fallback": false,
+        "n_eval": 32,
+        "m4_alpha": 1000.0,
+        "m4_tau": 5.0,
+        "m4_fallback": false
+      }
+    },
+    "M4c": 2.3650428124999996
+  },
+  "v2": {
+    "label": "v2",
+    "n_features": 34,
+    "n_rows": 320,
+    "M2_ridge": 2.51903537829008,
+    "per_fold": {
+      "2015": {
+        "m2_alpha": 30.0,
+        "m2_fallback": false,
+        "n_eval": 32,
+        "m4_alpha": 1000.0,
+        "m4_tau": 3.0,
+        "m4_fallback": false
+      },
+      "2016": {
+        "m2_alpha": 30.0,
+        "m2_fallback": false,
+        "n_eval": 32,
+        "m4_alpha": 1000.0,
+        "m4_tau": 1.5,
+        "m4_fallback": false
+      },
+      "2017": {
+        "m2_alpha": 30.0,
+        "m2_fallback": false,
+        "n_eval": 32,
+        "m4_alpha": 1000.0,
+        "m4_tau": 2.5,
+        "m4_fallback": false
+      },
+      "2018": {
+        "m2_alpha": 100.0,
+        "m2_fallback": false,
+        "n_eval": 32,
+        "m4_alpha": 1000.0,
+        "m4_tau": 4.0,
+        "m4_fallback": false
+      },
+      "2019": {
+        "m2_alpha": 100.0,
+        "m2_fallback": false,
+        "n_eval": 32,
+        "m4_alpha": 1000.0,
+        "m4_tau": 4.0,
+        "m4_fallback": false
+      },
+      "2020": {
+        "m2_alpha": 100.0,
+        "m2_fallback": false,
+        "n_eval": 32,
+        "m4_alpha": 1000.0,
+        "m4_tau": 5.0,
+        "m4_fallback": false
+      },
+      "2021": {
+        "m2_alpha": 100.0,
+        "m2_fallback": false,
+        "n_eval": 32,
+        "m4_alpha": 1000.0,
+        "m4_tau": 4.0,
+        "m4_fallback": false
+      },
+      "2022": {
+        "m2_alpha": 100.0,
+        "m2_fallback": false,
+        "n_eval": 32,
+        "m4_alpha": 1000.0,
+        "m4_tau": 4.0,
+        "m4_fallback": false
+      },
+      "2024": {
+        "m2_alpha": 100.0,
+        "m2_fallback": false,
+        "n_eval": 32,
+        "m4_alpha": 1000.0,
+        "m4_tau": 2.0,
+        "m4_fallback": false
+      },
+      "2025": {
+        "m2_alpha": 100.0,
+        "m2_fallback": false,
+        "n_eval": 32,
+        "m4_alpha": 1000.0,
+        "m4_tau": 4.0,
+        "m4_fallback": false
+      }
+    },
+    "M4c": 2.3589353125
+  },
+  "written_at_utc": "2026-08-05T20:02:33.658515+00:00"
+}

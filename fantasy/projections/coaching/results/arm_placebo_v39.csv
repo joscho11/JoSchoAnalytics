@@ -1,0 +1,5 @@
+position,design,challenger,improvement_statistic,observed_improvement,draws,p95,beats_p95,draws_with_fold_specific_selection,observed_fold_selections
+QB,design_a,nested_selected_design_a,pooled_top_cohort_mae_reduction,0.018635151445025144,200,1.0462264062967797,False,166,2018:ARM_3;2019:ARM_3;2020:ARM_0;2021:ARM_0;2022:ARM_2;2023:ARM_0;2024:ARM_5;2025:ARM_5
+RB,design_a,nested_selected_design_a,pooled_top_cohort_mae_reduction,-0.015958602769700292,200,0.43217823961354035,False,129,2018:ARM_0;2019:ARM_0;2020:ARM_2;2021:ARM_0;2022:ARM_0;2023:ARM_0;2024:ARM_2;2025:ARM_2
+WR,design_a,nested_selected_design_a,pooled_top_cohort_mae_reduction,-0.1489097810952913,200,0.63444509454376,False,184,2018:ARM_HC;2019:ARM_HC;2020:ARM_HC;2021:ARM_1;2022:ARM_1;2023:ARM_1;2024:ARM_1;2025:ARM_0
+TE,design_a,nested_selected_design_a,pooled_top_cohort_mae_reduction,0.19910582131416987,200,0.3562473694541858,False,156,2018:ARM_HC;2019:ARM_HC;2020:ARM_HC;2021:ARM_0;2022:ARM_1;2023:ARM_2;2024:ARM_1;2025:ARM_2

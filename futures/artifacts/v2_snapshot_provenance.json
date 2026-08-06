@@ -1,0 +1,69 @@
+{
+  "script": "futures/acquire_v2_snapshots.py",
+  "purpose": "point-in-time capture for the v2 feature families; acquisition only",
+  "capture_date": "2026-08-05",
+  "captured_at_utc": "2026-08-05T18:56:06.933871+00:00",
+  "artifacts": {
+    "roster_snapshot_2026.parquet": {
+      "rows": 2930,
+      "teams": 32,
+      "gsis_coverage": 0.998,
+      "sha256": "8e875dc310a6f30777ded80714ea78e206bc1a9f628eb976fd1befa67f7e7a8b"
+    },
+    "roster_snapshot_opening_2002_2025.parquet": {
+      "rows": 54636,
+      "seasons": [
+        2002,
+        2025
+      ],
+      "teams_per_season": 32,
+      "rule": "earliest week present per team-season (week 1 for 798 of 800)",
+      "not_week_1": [
+        {
+          "season": 2017,
+          "team": "MIA",
+          "week": 2
+        },
+        {
+          "season": 2017,
+          "team": "TB",
+          "week": 2
+        }
+      ],
+      "gsis_coverage": 0.9999,
+      "sha256": "ddb371438f4a6fd4b05eac3861e8d3ab53ca456b2aec8a21f5a14c46dadeeb61"
+    },
+    "snap_counts_2012_2025.parquet": {
+      "rows": 324611,
+      "seasons": [
+        2013,
+        2025
+      ],
+      "coverage_limit": "loader refuses seasons before 2012; any snap-based continuity feature is undefined for 2002-2012 and first resolves in 2014 (the loader accepts 2012 but returns no rows for it)",
+      "sha256": "7b85db1820364f0b5817c623485e179cf2747b3d7f35d8624af54e59bc424de9"
+    },
+    "win_totals_2026_named_books.csv": {
+      "rows": 64,
+      "books": [
+        "DraftKings",
+        "FanDuel"
+      ],
+      "both_sides_priced": [
+        "DraftKings"
+      ],
+      "sha256": "fa8b993f0feae547eb9899430d41dd8653d7531f7d0c11799c4291d19a487fb0"
+    }
+  },
+  "corrections": {
+    "supersedes": "futures/PRESEASON_FEATURE_NOTES.md blockers B and C",
+    "finding": "the audit verdicted the All-Pro, roster-continuity and preseason-injury families UNAVAILABLE for want of a dated preseason roster. load_rosters_weekly carries week-level rosters for 2002-2025 with gsis_id fully populated, and week 1 is a pre-kickoff snapshot. The audit never probed it, so those verdicts were too strict.",
+    "still_unavailable": "a true preseason IR/PUP/NFI transaction feed. The week-1 roster status field (RES/INA/DEV) is the honest proxy and must be described as reserve-list status, never as an injury report."
+  },
+  "lines_note": "FanDuel rows carry the over price only, so they cannot be devigged and are a cross-check source, not a gate-C-eligible benchmark. DraftKings carries both sides.",
+  "environment": {
+    "python": "3.11.9",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "pandas": "2.3.3",
+    "nflreadpy": "0.1.5"
+  }
+}

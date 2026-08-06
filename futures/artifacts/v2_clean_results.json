@@ -1,0 +1,89 @@
+{
+  "label": "v2-clean",
+  "n_features": 33,
+  "n_rows": 320,
+  "M2_ridge": 2.352119562171009,
+  "per_fold": {
+    "2015": {
+      "m2_alpha": 300.0,
+      "m2_fallback": false,
+      "n_eval": 32,
+      "m4_alpha": 1000.0,
+      "m4_tau": 3.0,
+      "m4_fallback": false
+    },
+    "2016": {
+      "m2_alpha": 300.0,
+      "m2_fallback": false,
+      "n_eval": 32,
+      "m4_alpha": 1000.0,
+      "m4_tau": 3.0,
+      "m4_fallback": false
+    },
+    "2017": {
+      "m2_alpha": 300.0,
+      "m2_fallback": false,
+      "n_eval": 32,
+      "m4_alpha": 1000.0,
+      "m4_tau": 4.0,
+      "m4_fallback": false
+    },
+    "2018": {
+      "m2_alpha": 300.0,
+      "m2_fallback": false,
+      "n_eval": 32,
+      "m4_alpha": 1000.0,
+      "m4_tau": 5.0,
+      "m4_fallback": false
+    },
+    "2019": {
+      "m2_alpha": 300.0,
+      "m2_fallback": false,
+      "n_eval": 32,
+      "m4_alpha": 1000.0,
+      "m4_tau": 4.0,
+      "m4_fallback": false
+    },
+    "2020": {
+      "m2_alpha": 300.0,
+      "m2_fallback": false,
+      "n_eval": 32,
+      "m4_alpha": 1000.0,
+      "m4_tau": 4.0,
+      "m4_fallback": false
+    },
+    "2021": {
+      "m2_alpha": 300.0,
+      "m2_fallback": false,
+      "n_eval": 32,
+      "m4_alpha": 1000.0,
+      "m4_tau": 4.0,
+      "m4_fallback": false
+    },
+    "2022": {
+      "m2_alpha": 300.0,
+      "m2_fallback": false,
+      "n_eval": 32,
+      "m4_alpha": 1000.0,
+      "m4_tau": 2.5,
+      "m4_fallback": false
+    },
+    "2024": {
+      "m2_alpha": 300.0,
+      "m2_fallback": false,
+      "n_eval": 32,
+      "m4_alpha": 1000.0,
+      "m4_tau": 3.0,
+      "m4_fallback": false
+    },
+    "2025": {
+      "m2_alpha": 300.0,
+      "m2_fallback": false,
+      "n_eval": 32,
+      "m4_alpha": 1000.0,
+      "m4_tau": 4.0,
+      "m4_fallback": false
+    }
+  },
+  "M4c": 2.3522179687499998
+}
