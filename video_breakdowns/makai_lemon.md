@@ -1,4 +1,4 @@
-# Makai Lemon — Rookie Receiver Profile
+# Makai Lemon: Rookie Receiver Profile
 
 *2026 · WR, Philadelphia Eagles*
 

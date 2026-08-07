@@ -254,9 +254,9 @@ The page also carries four collapsed lists of **college players who are not in t
 
     with st.expander("What is the Film Room page?"):
         st.markdown("""
-The Film Room page collects short, model-backed video breakdowns — each TikTok short sits next to the full written analysis it's based on. Click **📖 Full breakdown** under a video to open the deep dive the short couldn't fit.
+The Film Room page collects short, model-backed video breakdowns. Each TikTok short sits next to the full written analysis it's based on, newest first, with the channel intro pinned to the first slot. Click **📖 Full breakdown** under a video to open the deep dive the short couldn't fit.
 
-Some older videos predate my validation work and make calls I wouldn't make today. Those carry a **📼 Archived — why?** pop-out explaining what's changed; they stay up, unedited, as part of the record, and point you to what I publish now.
+Some older videos predate my validation work and make calls I wouldn't make today. Those carry a **📼 Archived: why?** pop-out explaining what's changed; they stay up, unedited, as part of the record, and point you to what I publish now.
         """)
 
     st.divider()
