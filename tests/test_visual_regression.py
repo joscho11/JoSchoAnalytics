@@ -109,7 +109,7 @@ def test_catalog_actions_are_registered():
 
 def test_catalog_covers_publishing_badge_states():
     blob = " ".join(" ".join(scene.must_contain) for scene in SCENES)
-    for status in ("Published", "Scheduled", "Awaiting projections"):
+    for status in ("Published", "Awaiting projections"):
         assert status in blob, f"publishing status {status!r} has no screenshot scene"
 
 

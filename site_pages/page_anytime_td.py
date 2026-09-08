@@ -250,6 +250,11 @@ def render() -> None:
         "Chance a skill player scores a rushing or receiving touchdown. "
         "Passing TDs are out. Demo. For fun. Bet responsibly."
     )
+    st.info(
+        "2026 Week 1 is not on this board yet. It lands later this week, because "
+        "the book Yes prices are posted about three hours before kickoff. "
+        "Everything below is the 2025 weeks 10 to 17 demo."
+    )
     available = available_weeks()
     if not available:
         st.error("Anytime TD demo files are missing.")

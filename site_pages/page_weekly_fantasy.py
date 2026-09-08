@@ -142,7 +142,9 @@ def _fantasy_season_week_controls(
 
 def _coming_soon_copy(season: int, week: int) -> str:
     return (
-        f"{season} Week {week} projections will be here soon. "
+        f"{season} Week {week} projections are not published yet. They land later "
+        "this week. Fantasy is published as immutable revisions: each game's rows "
+        "lock at kickoff while future games remain eligible for the next revision. "
         "Switch Season to 2025 for a demo of this board."
     )
 
@@ -200,13 +202,21 @@ def eligible_board_rows(
         return out
     out = out.loc[~_ruled_out_by_injury(out)].copy()
     pid = out["player_id"].astype(str)
+
+    def alias_hit(values) -> pd.Series:
+        wanted = {str(x) for x in values}
+        mask = pd.Series(False, index=out.index)
+        for col in ("player_id", "gsis_id", "sleeper_id"):
+            if col in out.columns:
+                mask = mask | out[col].astype(str).isin(wanted)
+        return mask
+
     blocked = {str(x) for x in (unavailable_ids or ())}
     if blocked:
-        out = out.loc[~pid.isin(blocked)].copy()
+        out = out.loc[~alias_hit(blocked)].copy()
         pid = out["player_id"].astype(str)
     if played_ids is not None:
-        allowed = {str(x) for x in played_ids}
-        out = out.loc[pid.isin(allowed)].copy()
+        out = out.loc[alias_hit(played_ids)].copy()
     return out
 
 
@@ -218,12 +228,15 @@ def _roster_player_id_column(frame: pd.DataFrame) -> str | None:
 
 
 def _ids_with_status(frame: pd.DataFrame, statuses: frozenset[str]) -> frozenset[str]:
-    id_col = _roster_player_id_column(frame)
-    if id_col is None or "status" not in frame.columns or frame.empty:
+    id_cols = [col for col in ("gsis_id", "sleeper_id", "player_id") if col in frame.columns]
+    if not id_cols or "status" not in frame.columns or frame.empty:
         return frozenset()
     status = frame["status"].astype("string").str.strip().str.upper()
-    hit = frame.loc[status.isin({s.upper() for s in statuses}), id_col]
-    return frozenset(hit.dropna().astype(str))
+    selected = frame.loc[status.isin({s.upper() for s in statuses})]
+    values = set()
+    for col in id_cols:
+        values.update(selected[col].dropna().astype(str).str.strip())
+    return frozenset(value for value in values if value)
 
 
 def _to_pandas(raw):

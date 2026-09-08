@@ -103,29 +103,26 @@ def _render_weekly_release(tmp_path, projection_path, season=2026, week=1):
     return at
 
 
-def test_weekly_fantasy_names_2025_preview(tmp_path):
+def test_weekly_fantasy_defaults_to_live_2026_release(tmp_path):
     at = _render_weekly(tmp_path)
     blob = " ".join(
         str(getattr(w, "value", ""))
         for w in list(at.caption) + list(at.info) + list(at.markdown) + list(at.title)
     ).lower()
-    assert "preview" in blob
-    assert "2025" in blob
-    assert "week 17" in blob
+    assert "published" in blob
+    assert "2026" in blob
+    assert "weekly fantasy projections" in blob
 
 
-def test_weekly_fantasy_defaults_to_2025_week17(tmp_path):
+def test_weekly_fantasy_defaults_to_2026_week1(tmp_path):
     at = _render_weekly(tmp_path)
     by_key = {getattr(w, "key", None): w.value for w in at.selectbox}
-    assert int(by_key["wf_season"]) == 2025
-    assert int(by_key["wf_week"]) == 17
+    assert int(by_key["wf_season"]) == 2026
+    assert int(by_key["wf_week"]) == 1
     markdown = " ".join(str(item.value) for item in at.markdown)
     assert "green-badge" in markdown and "Published" in markdown
-    captions = " ".join(str(item.value) for item in at.caption)
-    assert "Next: 2026 Week 1 · Awaiting projections" in captions
+    assert "Published" in markdown
     infos = " ".join(str(w.value) for w in at.info).lower()
-    assert "2025" in infos
-    assert "2026 format preview" in infos
     assert "no agent notes for this week" not in infos
 
 
@@ -342,25 +339,11 @@ def test_week17_renders_simple_and_detailed_2026_preview(tmp_path):
     assert not at.exception, at.exception
     assert not at.error, [e.value for e in at.error]
     infos = " ".join(str(item.value) for item in at.info)
-    assert "2026 format preview" in infos
-    assert "source CSV has not been changed" in infos
-    assert "simple by default" in infos
+    assert "immutable revision" in infos
+    assert "lock at kickoff" in infos
     assert "No agent notes for this week" not in infos
     assert all(widget.key != "wf_view" for widget in at.segmented_control)
-    more_info = next(widget for widget in at.toggle if widget.key == "wf_more_info")
-    assert more_info.value is False
-    assert more_info.label == "More info: projected yards for player props"
-    captions = " ".join(str(item.value) for item in at.caption)
-    assert "compare our projected yardage" in captions
-    assert "player-prop over/under lines" in captions
-    assert "not sportsbook lines or betting recommendations" in captions
-
-    at = more_info.set_value(True).run()
-    assert not at.exception, at.exception
-    assert not at.error, [e.value for e in at.error]
-    more_info = next(widget for widget in at.toggle if widget.key == "wf_more_info")
-    assert more_info.value is True
-    assert len(at.dataframe) >= 2
+    assert not any(widget.key == "wf_more_info" for widget in at.toggle)
 
 
 def test_preview_phone_grid_keeps_ranking_columns():
@@ -370,4 +353,3 @@ def test_preview_phone_grid_keeps_ranking_columns():
         "#", "Player", "Opponent", "Proj Pts", "Health", "Actual Pts",
     ]
     assert set(page.PREVIEW_SIMPLE_COLUMNS).issubset(page.PREVIEW_PHONE_COLUMNS)
-

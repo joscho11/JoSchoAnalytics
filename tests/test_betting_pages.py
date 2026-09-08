@@ -35,14 +35,13 @@ def test_weekly_predictions_renders_and_owns_controls(tmp_path):
     keys = _control_keys(at)
     assert {"wp_season", "wp_week"} <= keys, \
         f"Weekly Predictions must own Season/Week; got {keys}"
-    assert "wp_edge" in keys, "the default 2025 demo keeps the Min Edge slider"
+    assert "wp_edge" not in keys, "the live 2026 card does not expose the 2025 demo edge slider"
     controls = {w.key: w.value for w in at.selectbox}
-    assert controls["wp_season"] == 2025
-    assert controls["wp_week"] == 10
+    assert controls["wp_season"] == 2026
+    assert controls["wp_week"] == 1
     markdown = " ".join(str(item.value) for item in at.markdown)
     assert "green-badge" in markdown and "Published" in markdown
-    captions = " ".join(str(item.value) for item in at.caption)
-    assert "Next: 2026 Week 1 · Scheduled" in captions
+    assert "Published" in markdown
     assert not any(str(k).startswith("tr_") for k in keys), \
         "Weekly Predictions must not carry Track Record's controls"
 
@@ -75,7 +74,7 @@ def test_weekly_predictions_reads_shared_season_week_url(tmp_path):
     assert controls["wp_season"] == 2026
     assert controls["wp_week"] == 1
     markdown = " ".join(str(item.value) for item in at.markdown)
-    assert "orange-badge" in markdown and "Scheduled" in markdown
+    assert "Published" in markdown
 
 
 def test_track_record_renders_and_owns_controls(tmp_path):
@@ -125,7 +124,7 @@ def test_weekly_predictions_hides_paused_agent_chrome(tmp_path):
     assert "No totals on this season" in " ".join(str(s.value) for s in at.success)
     assert "jsa-tot-badge" not in md
     assert "NE @ SEA" in md
-    assert "MATCHUP" in md
+    assert "Published" in md
 
 
 def test_weekly_predictions_live_2026_banner(tmp_path):

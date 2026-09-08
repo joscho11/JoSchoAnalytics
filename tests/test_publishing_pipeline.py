@@ -128,6 +128,20 @@ def test_prediction_contract_detects_duplicates_and_schedule_gaps(tmp_path):
     assert any("schedule coverage mismatch" in error for error in report.errors)
 
 
+def test_public_prediction_contract_rejects_gameday_mode(tmp_path):
+    artifact, metadata, schedule = _prediction_candidate(tmp_path)
+    rows = pd.read_csv(artifact)
+    rows["mode"] = "gameday"
+    rows.to_csv(artifact, index=False)
+    metadata = build_candidate_metadata(
+        "predictions", artifact, season=2026, week=1,
+        model_version="spread-v3-gameday-test", produced_at="2026-09-08T13:00:00Z",
+    )
+    report = validate_candidate(artifact, metadata, schedule=schedule)
+    assert not report.ok
+    assert any("gameday spread rows" in error for error in report.errors)
+
+
 def test_live_prediction_timestamp_must_be_timezone_aware(tmp_path):
     artifact, _, schedule = _prediction_candidate(tmp_path)
     rows = pd.read_csv(artifact)
@@ -265,6 +279,25 @@ def test_fantasy_grading_is_separate_and_zero_fills_only_complete_feed(tmp_path)
     assert first["artifact_sha256"] == second["artifact_sha256"]
     assert first["graded_at"] == second["graded_at"]
     assert (site / build["artifact"]).read_bytes() == frozen
+
+
+def test_fantasy_grading_reconciles_gsis_alias_for_synthetic_serving_id(tmp_path):
+    site = tmp_path / "site"
+    site.mkdir()
+    artifact, metadata, schedule = _fantasy_candidate(tmp_path)
+    rows = pd.read_csv(artifact)
+    rows["sleeper_id"] = rows["player_id"].str.replace("QB-0", "123", regex=False)
+    rows["gsis_id"] = ""
+    rows.loc[rows["player_id"].eq("QB-0"), "player_id"] = "sleeper:123"
+    rows.to_csv(artifact, index=False)
+    metadata = build_candidate_metadata(
+        "fantasy", artifact, season=2026, week=1,
+        model_version="weekly-fantasy-alias-test", produced_at="2026-09-08T13:00:00Z",
+    )
+    publish_candidate(artifact, metadata, schedule=schedule, root=site)
+    actuals = pd.DataFrame([{"gsis_id": "123", "team": "SEA", "actual_half_ppr": 7.0}])
+    result = grade_fantasy(2026, 1, actuals, root=site)
+    assert result["graded_rows"] == 1
 
 
 def test_dashboard_overlay_retains_prior_week_after_next_week_activates(tmp_path):

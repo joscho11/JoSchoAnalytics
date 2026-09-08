@@ -201,20 +201,47 @@ def grade_fantasy(
         stats = stats[pd.to_numeric(stats["week"], errors="coerce").eq(int(week))]
     if "season_type" in stats:
         stats = stats[stats["season_type"].astype(str).eq("REG")]
-    if "player_id" not in stats:
-        raise PublicationError("actual stats are missing player_id")
     stats = stats.copy()
-    stats["player_id"] = stats["player_id"].astype("string")
+    if "player_id" not in stats:
+        for alias in ("gsis_id", "sleeper_id"):
+            if alias in stats:
+                stats["player_id"] = stats[alias]
+                break
+    if "player_id" not in stats:
+        raise PublicationError("actual stats are missing player_id/gsis_id/sleeper_id")
+    for col in ("player_id", "gsis_id", "sleeper_id"):
+        if col in stats:
+            stats[col] = stats[col].astype("string").str.strip()
+    stats["player_id"] = stats["player_id"].astype("string").str.strip()
     stats = stats[stats["player_id"].notna() & stats["player_id"].str.strip().ne("")].copy()
     released = released.copy()
-    released["player_id"] = released["player_id"].astype("string")
+    for col in ("player_id", "gsis_id", "sleeper_id"):
+        if col in released:
+            released[col] = released[col].astype("string").str.strip()
     if stats["player_id"].duplicated().any():
         raise PublicationError("actual stats contain duplicate player_id values")
     stats["actual_half_ppr"] = _half_ppr(stats)
     if "team" not in stats and "recent_team" in stats:
         stats["team"] = stats["recent_team"]
     keep = ["player_id", "actual_half_ppr"] + (["team"] if "team" in stats else [])
-    merged = released.merge(stats[keep], on="player_id", how="left", validate="one_to_one")
+    actual_by_alias = {}
+    for row in stats.to_dict(orient="records"):
+        value = {"actual_half_ppr": row["actual_half_ppr"]}
+        for col in ("player_id", "gsis_id", "sleeper_id"):
+            alias = row.get(col)
+            if alias is not None and str(alias).strip():
+                key = str(alias).strip()
+                if key in actual_by_alias and actual_by_alias[key]["actual_half_ppr"] != value["actual_half_ppr"]:
+                    raise PublicationError(f"actual stats aliases collide for {key}")
+                actual_by_alias[key] = value
+    def lookup(row):
+        for col in ("player_id", "gsis_id", "sleeper_id"):
+            value = row.get(col)
+            if value is not None and str(value).strip() in actual_by_alias:
+                return actual_by_alias[str(value).strip()]
+        return {"actual_half_ppr": float("nan")}
+    actual = pd.DataFrame([lookup(row) for row in released.to_dict(orient="records")], index=released.index)
+    merged = pd.concat([released, actual], axis=1)
 
     complete_feed = False
     final_games = 0

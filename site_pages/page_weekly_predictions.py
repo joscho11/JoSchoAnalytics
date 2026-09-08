@@ -42,14 +42,14 @@ def _demo_2025_notice():
 def _live_notice():
     st.success(
         "**Live 2026. Tuesday model.** Every game gets a pick. "
-        f"**HIGH** (green) is a {HIGH_GAP:g}+ point disagreement with the Tuesday 9am line. "
+        f"**HIGH** (green) is a {HIGH_GAP:g}+ point disagreement with the Tuesday market snapshot. "
         f"If the line moves and that gap falls under {HIGH_GAP:g}, HIGH is dropped. "
         "No medium tier. No totals on this season. "
         f"HIGH walk-forward is {LIVE_HIGH_WINS}/{LIVE_HIGH_N} = "
         f"{LIVE_HIGH_WINS / LIVE_HIGH_N * 100:.2f}% ATS, one-sided 95% Wilson "
         f"lower {LIVE_HIGH_WILSON_LOWER * 100:.2f}%, 2021-2025, last regular-season "
         f"week skipped, scored at the best US Tuesday number. "
-        f"{live_high_bar_sentence()} Picks lock Tuesday 9:00 ET."
+        f"{live_high_bar_sentence()} Picks use the first valid Tuesday capture from 09:00–15:30 ET."
     )
 
 
@@ -118,7 +118,13 @@ def render():
 
     _wk_correct_col = 'ens_model_correct' if ('ens_model_correct' in week_df.columns and week_df['ens_model_correct'].notna().any()) else 'model_correct'
     if live and not _any_pick:
-        st.info("Matchups are locked. Picks lock Tuesday 9:00 ET after the line freeze.")
+        if int(week) == 1:
+            st.info(
+                "Matchups are locked and the Week 1 Tuesday market capture is recorded. "
+                "The Week 1 card lands later this week."
+            )
+        else:
+            st.info("Matchups are locked. Picks use the first valid Tuesday market capture from 09:00–15:30 ET.")
     elif results_in:
         correct = int(week_df[_wk_correct_col].sum())
         total   = int(week_df[_wk_correct_col].notna().sum())
@@ -148,7 +154,7 @@ def render():
             'thursday': ('🟠', 'Injury Reports In', 'Updated Thursday with injury data'),
             'sunday':   ('🟢', 'Final Predictions', 'Final update, games starting soon'),
             'backfill': ('🔵', 'Backfilled',        'Historical predictions'),
-            'matchup':  ('⚪', 'Schedule',          'Matchups locked. Picks lock Tuesday 9:00 ET'),
+            'matchup':  ('⚪', 'Schedule',          'Matchups locked. Tuesday capture window 09:00–15:30 ET'),
         }
         _icon, label, desc = mode_labels.get(mode, ('⚪', 'Manual run', ''))
         _badge_colors = {
@@ -239,7 +245,7 @@ def render():
                 <span style='font-size:11px;color:#888;letter-spacing:1px;text-transform:uppercase;'>Tuesday HIGH</span>
                 <span style='font-size:12px;background:#1a3a1a;border:1px solid #00c853;
                             border-radius:4px;padding:2px 8px;color:#00c853;'>HIGH</span>
-                <span style='font-size:11px;color:#93A0B1;'>Green card = {HIGH_GAP:g}+ points vs the Tuesday 9am line, and the live line still {HIGH_GAP:g}+. Every other game still shows a pick. No medium tier. A line move can drop HIGH. It cannot create HIGH.</span>
+                <span style='font-size:11px;color:#93A0B1;'>Green card = {HIGH_GAP:g}+ points vs the Tuesday market snapshot, and the live line still {HIGH_GAP:g}+. Every other game still shows a pick. No medium tier. A line move can drop HIGH. It cannot create HIGH.</span>
             </div>
         """, unsafe_allow_html=True)
     elif _has_consensus_col:

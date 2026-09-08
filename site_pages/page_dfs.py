@@ -225,8 +225,8 @@ def render():
         else:
             try:
                 lineup = pipeline.solve_pool(pool, locked=locked, excluded=excluded)
-            except ValueError as exc:
-                st.error(f"Lineup controls are invalid: {exc}")
+            except (ValueError, RuntimeError) as exc:
+                st.error(f"No legal lineup satisfies these locks and exclusions: {exc}")
             else:
                 if lineup is None:
                     st.error("No legal lineup satisfies these locks and exclusions.")

@@ -63,6 +63,13 @@ def build_candidate_metadata(
     else:
         if "player_id" in frame:
             metadata["expected_player_ids_sha256"] = canonical_values_hash(frame["player_id"])
+        aliases = []
+        for alias in ("gsis_id", "sleeper_id"):
+            if alias in frame:
+                aliases.append(alias)
+                metadata[f"expected_{alias}_sha256"] = canonical_values_hash(frame[alias].dropna())
+        if aliases:
+            metadata["identity_aliases"] = aliases
         metadata["position_counts"] = {
             str(key): int(value)
             for key, value in frame.get("position", pd.Series(dtype=str)).value_counts().sort_index().items()

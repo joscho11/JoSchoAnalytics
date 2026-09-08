@@ -224,7 +224,7 @@ def render_preseason_banner(board_page=None, season_year=2026):
         f"🏈 The {season_year} season hasn't kicked off yet. My **2026 Draft Board** is "
         "live with frozen Model Proj and daily Sleeper market data; the next model "
         "update is the planned early-September pre-kickoff snapshot. Week 1 matchups "
-        "are already on Weekly Predictions. Picks lock that Tuesday at 9:00 ET.")
+        "are already on Weekly Predictions. The public spread card uses the first valid Tuesday capture from 09:00–15:30 ET.")
     if board_page is not None:
         st.page_link(board_page, label="Open the Draft Board", icon="📋")
 
@@ -240,7 +240,12 @@ def render_header():
 @media (min-width:920px){{
   /* Streamlit Cloud's toolbar occupies the top-right. Move the pill left of that area
      without moving the toolbar or main menu themselves. */
- .jsa-tip{{margin-right:10.5rem;}}
+ .jsa-tip{{margin-right:15rem;}}
+}}
+@media (min-width:920px) and (max-width:1100px){{
+ .jsa-tip{{width:2.25rem;height:2.25rem;min-width:2.25rem;padding:0;
+  flex:0 0 2.25rem;margin-right:10.5rem;}}
+ .jsa-tip-label{{display:none;}}
 }}
 /* z-index MUST be 999990 — the same layer as stHeader, NOT above it.
      stHeader/stToolbar 999990  <  stSidebar 999991

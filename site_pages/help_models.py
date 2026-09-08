@@ -86,7 +86,7 @@ def render_rundowns():
 def _spread_2026():
     with st.expander("How the 2026 spread model works"):
         st.markdown(f"""
-Each week the model guesses the **margin leftover versus the Tuesday 9:00 ET spread**.
+Each week the model guesses the **margin leftover versus the first valid Tuesday market capture (09:00–15:30 ET)**.
 It is a Ridge regression on 49 inputs. The Tuesday line is one of those inputs. The
 rest are how the two teams have been playing, who is available, quarterback and
 coaching changes, rest, and venue.
@@ -104,7 +104,7 @@ ATS, one-sided 95% Wilson lower bound **{LIVE_HIGH_WILSON_LOWER * 100:.2f}%**, w
 Take the best number. Betting every game is not the claim. No 2026 games are graded yet.
 This is Tuesday line value, not closing-line value.
 
-Picks lock Tuesday 9:00 ET. Matchups for weeks 1-18 are on Weekly Predictions now.
+The public spread release uses the first valid Tuesday market capture from 09:00–15:30 ET. Matchups for weeks 1-18 are on Weekly Predictions now.
         """)
         rows = me.spread_high_season_rows()
         _bar(

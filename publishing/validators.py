@@ -140,6 +140,10 @@ def _validate_predictions(
     if missing:
         report.errors.append(f"predictions missing columns: {', '.join(missing)}")
         return
+    if "mode" in frame.columns:
+        gameday = frame["mode"].astype("string").str.lower().eq("gameday")
+        if gameday.any() and int(metadata.get("season", 0)) >= 2026:
+            report.errors.append("gameday spread rows are not a public prediction product")
     for col in ("game_id", "home_team", "away_team", "recommendation"):
         if frame[col].isna().any() or frame[col].astype(str).str.strip().eq("").any():
             report.errors.append(f"{col} contains missing or empty values")
@@ -264,6 +268,17 @@ def _validate_fantasy(
     if frame["player_id"].duplicated().any():
         dupes = sorted(frame.loc[frame["player_id"].duplicated(False), "player_id"].astype(str).unique())
         report.errors.append(f"duplicate player_id values: {', '.join(dupes[:8])}")
+    for alias in ("gsis_id", "sleeper_id"):
+        if alias not in frame:
+            continue
+        values = frame[alias].astype("string").str.strip()
+        nonempty = values[values.notna() & values.ne("")]
+        if nonempty.duplicated().any():
+            dupes = sorted(nonempty[nonempty.duplicated(False)].astype(str).unique())
+            report.errors.append(f"duplicate {alias} values: {', '.join(dupes[:8])}")
+        expected_alias_hash = metadata.get(f"expected_{alias}_sha256")
+        if expected_alias_hash and str(expected_alias_hash) != canonical_values_hash(nonempty):
+            report.errors.append(f"fantasy {alias} coverage hash does not match sidecar")
     positions = set(frame["position"].astype(str))
     invalid_positions = sorted(positions - set(POSITION_MINIMUMS))
     if invalid_positions:

@@ -13,6 +13,7 @@ NARROW = ("phone", "desktop")
 # url_path values from app.py. Home is the empty string.
 NAV_ROUTES = {
     "": "Home",
+    "this-week": "This Week",
     "draft-board": "Draft Board",
     "weekly-predictions": "Weekly Predictions",
     "anytime-tds": "Anytime TDs",
@@ -98,21 +99,28 @@ SCENES: tuple[Scene, ...] = (
         "publishing",
         "weekly-predictions",
         query="wp_season=2026&wp_week=1",
-        must_contain=("Scheduled", "Live 2026", "MATCHUP", "NE @ SEA"),
+        must_contain=("Published", "Live 2026", "NE @ SEA"),
         must_not_contain=("Agent Confidence",),
     ),
     _s(
         "wf_published_2025w17",
         "publishing",
         "weekly-fantasy",
+        query="wf_season=2025&wf_week=17",
         must_contain=("Weekly fantasy", "Published", "2025"),
     ),
     _s(
-        "wf_awaiting_2026w1",
+        "wf_awaiting_2026w17",
         "publishing",
         "weekly-fantasy",
-        query="wf_season=2026&wf_week=1",
-        must_contain=("Awaiting projections", "will be here soon"),
+        query="wf_season=2026&wf_week=17",
+        must_contain=("Awaiting projections", "Week 17", "2026"),
+    ),
+    _s(
+        "this_week_home",
+        "matchup",
+        "this-week",
+        must_contain=("This week",),
     ),
     _s(
         "wf_published_2025w10",
