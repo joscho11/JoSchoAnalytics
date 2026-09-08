@@ -152,6 +152,8 @@ def test_dfs_is_available_in_the_public_fantasy_nav():
     fantasy = src.split('"Fantasy":', 1)[1].split("]", 1)[0]
     assert "dfs_pg" in fantasy
     assert "wf_pg" in fantasy
+    assert fantasy.index("wf_pg") < fantasy.index("dfs_pg")
+    assert fantasy.index("dfs_pg") < fantasy.index("board_pg")
     betting = src.split('"Betting":', 1)[1].split("]", 1)[0]
     assert "atd_pg" in betting
 
