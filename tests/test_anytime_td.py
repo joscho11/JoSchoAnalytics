@@ -30,10 +30,10 @@ def _render(tmp_path):
 def test_anytime_td_renders_and_owns_controls(tmp_path):
     at = _render(tmp_path)
     keys = {getattr(w, "key", None) for w in list(at.selectbox)}
-    assert "atd_week" in keys, keys
+    assert "atd_release" in keys, keys
     assert "atd_pos" not in keys
     controls = {w.key: w.value for w in at.selectbox}
-    assert controls["atd_week"] == 10
+    assert controls["atd_release"] == (2026, 1)
     titles = " ".join(str(t.value) for t in at.title)
     assert "Anytime TDs" in titles
     captions = " ".join(str(c.value) for c in at.caption)
@@ -43,6 +43,7 @@ def test_anytime_td_renders_and_owns_controls(tmp_path):
     assert "not even money" in blob
     assert "Bet responsibly" in blob
     assert "closer in 5" in blob
+    assert "awaiting the first manual odds release" in blob
     assert "Eight players" not in blob
     assert any("How to read this board" in str(e.label) for e in at.expander)
     assert any(getattr(w, "key", None) == "atd_search" for w in at.text_input)

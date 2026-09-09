@@ -303,40 +303,26 @@ def render() -> None:
         st.stop()
     live_keys = sorted((key for key in releases if key[0] == LIVE_SEASON), reverse=True)
     demo = available_weeks()
-    if live_keys:
-        options = live_keys + sorted(((DEMO_SEASON, w) for w in demo), reverse=True)
-        labels = {key: f"{key[0]} Week {key[1]}" for key in options}
-        seeded = page_common.seed_widget_from_query("atd_release", "atd_release", options)
-        with st.container(key="jsa-filter-bar"):
-            controls = st.columns([1, 2])
-            kwargs = {"key": "atd_release", "format_func": lambda key: labels[key]}
-            if not seeded and "atd_release" not in st.session_state:
-                kwargs["index"] = options.index(default_release(options))
-            release = controls[0].selectbox("Week", options, **kwargs)
-            page_common.sync_query_value("atd_release", release)
-            search = controls[1].text_input("Search player", placeholder="Barkley, Jefferson", key="atd_search")
-        available = releases
-        season, week = release
-        if season == LIVE_SEASON:
-            st.info("Live 2026 prices are copied manually from the sportsbook when available (preferably near T-3h). "
-                    "Early preparation captures are labeled; additional games appear as they are frozen. No odds API is used.")
-            meta = _live_metadata()
-            if meta:
-                books = ", ".join(meta.get("book", []))
-                st.caption(f"Book: {books or 'manual paste'} · Last capture: {meta.get('capture_max', 'unknown')}")
-    else:
-        weeks = sorted(demo)
-        with st.container(key="jsa-filter-bar"):
-            controls = st.columns([1, 2])
-            seeded = page_common.seed_widget_from_query("atd_week", "atd_week", weeks)
-            week_kwargs = {"key": "atd_week"}
-            if not seeded and "atd_week" not in st.session_state:
-                week_kwargs["index"] = weeks.index(DEFAULT_WEEK) if DEFAULT_WEEK in weeks else 0
-            week = int(controls[0].selectbox("Week", weeks, **week_kwargs))
-            page_common.sync_query_value("atd_week", week)
-            search = controls[1].text_input("Search player", placeholder="Barkley, Jefferson", key="atd_search")
-        available = {(DEMO_SEASON, w): p for w, p in demo.items()}
-        season = DEMO_SEASON
+    options = sorted(set(live_keys + [DEFAULT_RELEASE] + [(DEMO_SEASON, w) for w in demo]), reverse=True)
+    labels = {key: f"{key[0]} Week {key[1]}" for key in options}
+    seeded = page_common.seed_widget_from_query("atd_release", "atd_release", options)
+    with st.container(key="jsa-filter-bar"):
+        controls = st.columns([1, 2])
+        kwargs = {"key": "atd_release", "format_func": lambda key: labels[key]}
+        if not seeded and "atd_release" not in st.session_state:
+            kwargs["index"] = options.index(default_release(options))
+        release = controls[0].selectbox("Week", options, **kwargs)
+        page_common.sync_query_value("atd_release", release)
+        search = controls[1].text_input("Search player", placeholder="Barkley, Jefferson", key="atd_search")
+    available = releases | {(DEMO_SEASON, w): p for w, p in demo.items()}
+    season, week = release
+    if season == LIVE_SEASON:
+        st.info("Live 2026 prices are copied manually from the sportsbook when available (preferably near T-3h). "
+                "Early preparation captures are labeled; additional games appear as they are frozen. No odds API is used.")
+        meta = _live_metadata()
+        if meta:
+            books = ", ".join(meta.get("book", []))
+            st.caption(f"Book: {books or 'manual paste'} · Last capture: {meta.get('capture_max', 'unknown')}")
     with st.container(horizontal=True, vertical_alignment="center"):
         is_live = season == LIVE_SEASON
         st.badge("Live" if is_live else "Demo", icon=":material/live_tv:" if is_live else ":material/science:",
@@ -344,6 +330,11 @@ def render() -> None:
         st.caption("Priced players only. Sorted by our P(TD). " +
                    ("Cumulative 2026 Week 1 release." if is_live else "2025 weeks 10-17 demo."))
     _reading_guide()
+
+    if (season, week) not in available:
+        st.info("2026 Week 1 is selected and awaiting the first manual odds release. "
+                "The 2025 demo remains available from the Week selector.")
+        return
 
     raw = _load_csv(str(available[(season, week)]))
     need = [
