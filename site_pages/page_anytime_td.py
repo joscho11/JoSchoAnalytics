@@ -412,13 +412,21 @@ def render() -> None:
         )]
 
     st.caption(f"{len(priced)} priced · all positions")
-    st.caption("Matchups · tap a game to open its team boards.")
-    with st.container(key="jsa-atd-matchups"):
-        for label, teams, matchup in _matchup_groups(priced):
-            with st.expander(label, expanded=False):
-                for team in teams:
-                    team_view = matchup[matchup.team.astype(str).eq(team)]
-                    if team_view.empty:
-                        continue
-                    st.markdown(f"**{team} Anytime TDs**")
-                    _board(team_view, f"atd-{team.lower()}-{label.replace(' ', '-')}", search or "")
+    matchups = list(_matchup_groups(priced))
+    if not matchups:
+        st.info("No matchups match this search.")
+        return
+    matchup_labels = [item[0] for item in matchups]
+    selected_label = st.selectbox(
+        "Matchup", matchup_labels,
+        key=f"atd_matchup_{season}_{week}",
+        help="Choose a game to view both teams' anytime touchdown boards.",
+    )
+    label, teams, matchup = next(item for item in matchups if item[0] == selected_label)
+    st.markdown(f"#### {label}")
+    for team in teams:
+        team_view = matchup[matchup.team.astype(str).eq(team)]
+        if team_view.empty:
+            continue
+        st.markdown(f"**{team} Anytime TDs**")
+        _board(team_view, f"atd-{team.lower()}-{label.replace(' ', '-')}", search or "")

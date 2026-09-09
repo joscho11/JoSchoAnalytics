@@ -48,12 +48,13 @@ def test_anytime_td_renders_and_owns_controls(tmp_path):
     assert "DraftKings" in blob
     assert "Eight players" not in blob
     assert any("How to read this board" in str(e.label) for e in at.expander)
-    labels = {str(e.label) for e in at.expander}
-    assert "NE vs SEA" in labels
+    assert any(getattr(w, "key", None) == "atd_matchup_2026_1" for w in at.selectbox)
+    assert "NE vs SEA" in {str(w.value) for w in at.selectbox}
     assert any("NE Anytime TDs" in str(item.value) for item in at.markdown)
     assert any(getattr(w, "key", None) == "atd_search" for w in at.text_input)
     expected = pd.read_csv(_HERE / "betting" / "anytime_td" / "anytime_td_2026_week01.csv")
-    expected_counts = sorted(expected.groupby("team").size().tolist())
+    selected = expected[expected.team.isin(["NE", "SEA"])]
+    expected_counts = sorted(selected.groupby("team").size().tolist())
     rendered_counts = sorted(len(frame.value) for frame in at.dataframe)
     assert rendered_counts == sorted(expected_counts * 2)
 

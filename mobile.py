@@ -845,20 +845,6 @@ details summary{
 
 /* 10e. Filter toolbars: two-up instead of a four-deep stack. */
 @media (max-width: 640px){
-  /* Anytime TD matchup accordions are the primary navigation on the live board.
-     The global expander contract intentionally uses fit-content pills for short
-     reading-guide controls; give game sections the full tap lane and a slightly
-     larger label so the list scans as a board rather than a column of chips. */
-  [class*="st-key-jsa-atd-matchups"] details{
-    margin: 0 0 .45rem 0 !important;
-  }
-  [class*="st-key-jsa-atd-matchups"] details summary{
-    width: 100% !important;
-    box-sizing: border-box !important;
-    padding: 8px 12px !important;
-    font-size: 13px !important;
-  }
-
   [class*="st-key-jsa-filter-bar"] [data-testid="stHorizontalBlock"]{
     display:grid !important;
     grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
