@@ -413,7 +413,7 @@ def render() -> None:
 
     st.caption(f"{len(priced)} priced · all positions")
     for label, teams, matchup in _matchup_groups(priced):
-        with st.expander(label, expanded=True):
+        with st.expander(label, expanded=False):
             for team in teams:
                 team_view = matchup[matchup.team.astype(str).eq(team)]
                 if team_view.empty:
