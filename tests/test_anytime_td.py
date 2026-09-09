@@ -30,10 +30,11 @@ def _render(tmp_path):
 def test_anytime_td_renders_and_owns_controls(tmp_path):
     at = _render(tmp_path)
     keys = {getattr(w, "key", None) for w in list(at.selectbox)}
-    assert "atd_release" in keys, keys
-    assert "atd_pos" not in keys
+    assert {"atd_year", "atd_week"}.issubset(keys), keys
+    assert len(at.tabs) == 0
     controls = {w.key: w.value for w in at.selectbox}
-    assert controls["atd_release"] == (2026, 1)
+    assert controls["atd_year"] == 2026
+    assert controls["atd_week"] == 1
     titles = " ".join(str(t.value) for t in at.title)
     assert "Anytime TDs" in titles
     captions = " ".join(str(c.value) for c in at.caption)
@@ -43,10 +44,30 @@ def test_anytime_td_renders_and_owns_controls(tmp_path):
     assert "not even money" in blob
     assert "Bet responsibly" in blob
     assert "closer in 5" in blob
-    assert "awaiting the first manual odds release" in blob
+    assert "No odds API is used" in blob
+    assert "DraftKings" in blob
     assert "Eight players" not in blob
     assert any("How to read this board" in str(e.label) for e in at.expander)
+    labels = {str(e.label) for e in at.expander}
+    assert "NE vs SEA" in labels
+    assert any("NE Anytime TDs" in str(item.value) for item in at.markdown)
     assert any(getattr(w, "key", None) == "atd_search" for w in at.text_input)
+    expected = pd.read_csv(_HERE / "betting" / "anytime_td" / "anytime_td_2026_week01.csv")
+    expected_counts = sorted(expected.groupby("team").size().tolist())
+    rendered_counts = sorted(len(frame.value) for frame in at.dataframe)
+    assert rendered_counts == sorted(expected_counts * 2)
+
+
+def test_year_and_week_selectors_keep_2025_available(tmp_path):
+    at = _render(tmp_path)
+    at.selectbox(key="atd_year").set_value(2025).run()
+    assert not at.exception, at.exception
+    controls = {w.key: w.value for w in at.selectbox}
+    assert controls["atd_year"] == 2025
+    assert controls["atd_week"] == 10
+    at.selectbox(key="atd_week").set_value(17).run()
+    assert not at.exception, at.exception
+    assert {w.key: w.value for w in at.selectbox}["atd_week"] == 17
 
 
 def test_anytime_td_files_cover_weeks_10_17():
@@ -77,6 +98,7 @@ def test_priced_rows_drop_unpriced_and_keep_rb_fb():
     summary = page.week_summary(priced)
     assert summary["n"] == 2
     assert summary["hits"] == 1
+    assert len(page._display(priced)) == len(priced)
 
 
 def test_phone_grid_keeps_five_pinned_columns():
@@ -118,3 +140,28 @@ def test_2026_week1_is_default_release_when_present():
     assert page.default_release([(2025, 17), (2026, 1)]) == (2026, 1)
     assert page.default_release([(2026, 1), (2026, 2)]) == (2026, 1)
     assert page.default_release([(2025, 10), (2025, 17)]) == (2025, 10)
+
+
+def test_matchups_are_grouped_then_split_by_team():
+    import page_anytime_td as page
+
+    rows = pd.DataFrame([
+        {"game_id": "2026_01_NE_SEA", "team": "SEA", "opponent_team": "NE"},
+        {"game_id": "2026_01_NE_SEA", "team": "NE", "opponent_team": "SEA"},
+    ])
+    groups = list(page._matchup_groups(rows))
+    assert len(groups) == 1
+    label, teams, grouped = groups[0]
+    assert label == "NE vs SEA"
+    assert teams == ["NE", "SEA"]
+    assert set(grouped.team) == {"NE", "SEA"}
+
+    later = rows.assign(
+        game_id=["2026_01_ARI_LAC", "2026_01_ARI_LAC"],
+        team=["ARI", "LAC"], opponent_team=["LAC", "ARI"],
+        kickoff_et=["2026-09-13 16:25", "2026-09-13 16:25"],
+    )
+    ordered = list(page._matchup_groups(pd.concat([later, rows.assign(
+        kickoff_et=["2026-09-10 20:20", "2026-09-10 20:20"]
+    )], ignore_index=True)))
+    assert [item[0] for item in ordered] == ["NE vs SEA", "ARI vs LAC"]

@@ -309,7 +309,12 @@ still requires the DraftKings salary CSV for the contest.
 def _anytime_td():
     with st.expander("How the Anytime TD demo works"):
         st.markdown("""
-**Status: demo. For fun. Do not bet this.** 2025 weeks 10-17 only.
+**Status: live 2026 Week 1 plus historical demo. For fun. Do not bet this.**
+
+The live board is built from manually pasted US-book Yes prices. The page
+defaults to 2026 Week 1 and keeps 2025 weeks 10-17 selectable for context.
+New Week 1 slates are appended as Joseph supplies them; started-game rows are
+frozen, and no odds API is used.
 
 The number is the chance a skill player scores a **rushing or receiving** touchdown
 in that game. Passing touchdowns are out. The model is a Poisson rate on 34 locked
@@ -327,8 +332,8 @@ disagreements lost on 2025. Full 2025: the books were about 0.08% more accurate.
 Demo weeks 10-17: closer in 5 of 8 weeks. That is not a betting record.
         """)
         st.caption(
-            "This page does not prove a 2026 live freeze would beat the book. "
-            "It is a historical walkthrough of the closest research arm."
+            "The live board is a comparison, not a claim it beats the book. "
+            "Pregame outcomes remain blank until grading is attached."
         )
 
 

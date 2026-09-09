@@ -1,11 +1,10 @@
 # Anytime TDs
 
-Status: checked against the site board and 2025 overlap numbers on 2026-08-22.
-
-The Anytime TDs tab is a 2025 weeks 10-17 demo. It compares our chance a skill
-player scores a rushing or receiving touchdown with the sportsbook Yes price.
-Passing touchdowns are out. The page is for fun. It is not a proven edge.
-Bet responsibly.
+The tab defaults to the published 2026 Week 1 live comparison board. It also
+keeps the 2025 Weeks 10-17 demo selectable from the Year and Week controls.
+The model compares our chance a skill player scores a rushing or receiving
+touchdown with a sportsbook Yes price. Passing touchdowns are out. The page is
+for fun, not a proven edge. Bet responsibly.
 
 Training lives in the private `td_count_model_beta` repo. This public tree only
 ships CSV.
@@ -20,13 +19,15 @@ model.
 | Column | Meaning |
 |---|---|
 | Our P(TD) | Our chance of a rushing or receiving TD |
-| Book | Median implied Yes from at least 3 US books, two hours before kickoff |
+| Book | Implied Yes from the one manually pasted US sportsbook price |
 | vs book | Our probability minus the book, in percentage points. Not a bet |
 | Our fair | American odds implied by our P(TD) |
 | P(2+) | Chance of two or more rushing or receiving TDs |
 | Hit | Did they score a rushing or receiving TD? |
 
 On a phone the grid keeps #, Player, Ours, Book, and Hit. Position tabs swipe.
+Live boards are grouped by matchup and then team (for example, NE vs SEA,
+with separate NE and SEA sections).
 
 ## How it scored in 2025
 
@@ -41,15 +42,45 @@ projection. The anytime price is not an input.
 
 Week 18 is out (rest and backups). Sleeper's dump has no freeze timestamp.
 
-## Live 2026
+## Live 2026 manual-paste contract
 
-Joseph pastes one sportsbook's Yes prices whenever practical, preferably about
-three hours before each slate. The release records the book, `snapped_at_et`,
-and `kickoff_et`; early preparation copies are accepted and marked with their
-lead time. Week 1 releases accumulate as
-games are frozen, and already-started game rows never change. No Odds API pull
-is made for live weeks, and the historical two-hour, three-book median does not
-apply. Pregame Hit and scored totals remain blank until results are attached.
+Joseph pastes one US sportsbook's Yes prices whenever practical. About three
+hours before kickoff is preferred, but early preparation captures are accepted
+and labeled with their actual lead time; only a post-kickoff timestamp blocks a
+row. The canonical input is `td_count_model_beta/live/2026_week01_<slate>.csv`
+with `season`, `week`, `kickoff_et`, `snapped_at_et`, `book`, `player`, `team`,
+`opponent`, and `yes_amer`. `yes_amer` is an American-odds Yes price. No Odds
+API is called.
+
+The publisher normalizes names using the explicit alias file when needed,
+checks the Week 1 schedule, timestamps, odds, duplicates, and player-game
+coverage, then writes a frozen per-slate release. Unmatched pasted names are
+reported in release metadata and excluded from scoring rather than silently
+fuzzy-matched. Defense and the synthetic "No Touchdown Scorer" row are not
+skill-player predictions.
+
+Each successful slate is appended to
+`betting/anytime_td/anytime_td_2026_week01.csv`. Existing game rows remain
+byte-for-byte frozen; changing a frozen price requires the explicit replacement
+flag and creates `replacement_audit.jsonl`. A missing paste leaves that slate
+off the board. Pregame `Hit` and scored totals stay blank until outcomes are
+attached; null outcomes never render as “No”.
+
+## Rebuild and publish
+
+From `td_count_model_beta`, convert a copied DraftKings text page (or prepare
+the canonical CSV directly), then publish predictions:
+
+```text
+python scripts/parse_draftkings_text.py <pasted-text.txt> live/2026_week01_<slate>.csv --snapped-at "YYYY-MM-DD HH:MM"
+python scripts/publish_live_week.py live/2026_week01_<slate>.csv <slate>
+```
+
+The publisher fits the live product arm on the rebuilt historical artifact
+(the 34 locked features plus the current-week Sleeper half-PPR projection),
+scores only players quoted by that paste, and copies the cumulative CSV into
+this public directory. Attach results later through the grading workflow; do
+not backfill an ungraded game with zeros.
 
 ## Public files
 

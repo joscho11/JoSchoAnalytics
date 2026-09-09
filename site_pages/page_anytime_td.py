@@ -1,7 +1,7 @@
-"""Anytime TDs demo page. 2025 weeks 10-17 CSVs from td_count_model_beta.
+"""Anytime TD comparison boards from the frozen td_count_model_beta releases.
 
 Rushing and receiving TDs only. Passing TDs are out. CSV only. No model code.
-A priced comparison board: our P(TD) next to the book, not a pick list.
+A priced comparison board: our P(TD) next to the pasted book, not a pick list.
 """
 from __future__ import annotations
 
@@ -20,7 +20,6 @@ DEMO_SEASON = 2025
 LIVE_SEASON = 2026
 DEFAULT_RELEASE = (LIVE_SEASON, 1)
 DEFAULT_WEEK = 10
-POS_TABS = ("All", "QB", "RB", "WR", "TE")
 DESKTOP_COLS = [
     "#", "Player", "Pos", "Opp", "Our P(TD)", "Book", "vs book",
     "Our fair", "P(2+)", "Hit",
@@ -73,10 +72,12 @@ def available_releases() -> dict[tuple[int, int], Path]:
 
 def default_release(options: list[tuple[int, int]]) -> tuple[int, int]:
     """Prefer the live 2026 Week 1 board whenever it has been published."""
+    if not options:
+        raise ValueError("at least one release is required")
     if DEFAULT_RELEASE in options:
         return DEFAULT_RELEASE
-    live = [key for key in options if key[0] == LIVE_SEASON]
-    return live[0] if live else options[0]
+    live = sorted(key for key in options if key[0] == LIVE_SEASON)
+    return live[0] if live else sorted(options)[0]
 
 
 def available_weeks() -> dict[int, Path]:
@@ -106,6 +107,31 @@ def by_position(df: pd.DataFrame, position: str) -> pd.DataFrame:
     return df[df.position.eq(position)]
 
 
+def _matchup_groups(df: pd.DataFrame):
+    """Yield matchup sections in kickoff order, then alphabetical order."""
+    work = df.copy()
+    if "game_id" in work.columns and work.game_id.notna().any():
+        work["_matchup_key"] = work.game_id.astype(str)
+    else:
+        work["_matchup_key"] = work.apply(
+            lambda r: "_".join(sorted((str(r.team), str(r.opponent_team)))), axis=1
+        )
+    groups = []
+    for key, group in work.groupby("_matchup_key", sort=False):
+        parts = str(key).rsplit("_", 2)
+        if len(parts) == 3 and parts[0].startswith("2026"):
+            teams = [parts[1], parts[2]]
+        else:
+            teams = sorted(set(group.team.astype(str)) | set(group.opponent_team.astype(str)))
+        label = f"{teams[0]} vs {teams[1]}" if len(teams) >= 2 else str(teams[0])
+        kickoff = pd.to_datetime(group.get("kickoff_et"), errors="coerce")
+        first_kickoff = kickoff.min() if kickoff is not None else pd.NaT
+        groups.append((first_kickoff, label, teams, group.drop(columns=["_matchup_key"])))
+    groups.sort(key=lambda item: (pd.Timestamp.max if pd.isna(item[0]) else item[0], item[1]))
+    for _, label, teams, group in groups:
+        yield label, teams, group
+
+
 def week_summary(df: pd.DataFrame) -> dict:
     n = int(len(df))
     outcomes = pd.to_numeric(df["scored_anytime"], errors="coerce")
@@ -131,18 +157,19 @@ def _load_meta(path: str) -> dict:
     raw = Path(path)
     if not raw.is_file():
         return {}
+    try:
+        value = json.loads(raw.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return value if isinstance(value, dict) else {}
 
 
-def _live_metadata() -> dict:
-    files = sorted(_DIR.glob("anytime_td_2026_week01_*.json"))
+def _live_metadata(season: int = LIVE_SEASON, week: int = 1) -> dict:
+    files = sorted(_DIR.glob(f"anytime_td_{season}_week{week:02d}_*.json"))
     if not files:
         return {}
     # The newest slate metadata describes the most recent cumulative append.
     return _load_meta(str(files[-1]))
-    try:
-        return json.loads(raw.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return {}
 
 
 def _amer(value) -> str:
@@ -209,7 +236,7 @@ def _desktop_column_config() -> dict:
         ),
         "Book": st.column_config.NumberColumn(
             "Book", format="percent",
-            help="Median implied Yes from at least 3 US books, T-2h close.",
+            help="Implied Yes from the manually pasted US sportsbook price.",
         ),
         "vs book": st.column_config.NumberColumn(
             "vs book", format="%+.1f",
@@ -245,7 +272,7 @@ def _phone_column_config() -> dict:
     )
     cfg["Book"] = st.column_config.NumberColumn(
         "Book", format="percent", width=PHONE_WIDTHS["Book"], pinned=True,
-        help="Median implied Yes from at least 3 US books, T-2h close.",
+        help="Implied Yes from the manually pasted US sportsbook price.",
     )
     cfg["Hit"] = st.column_config.TextColumn(
         "Hit", width=PHONE_WIDTHS["Hit"], pinned=True,
@@ -287,7 +314,9 @@ betting record. For fun, not a proven edge. Bet responsibly.
 **Desktop columns.** #, Player (name and team), Pos, Opp, Our P(TD), Book,
 vs book (percentage points, not a pick), Our fair, P(2+), Hit.
 
-**Phone columns.** #, Player, Ours, Book, Hit. Swipe the position tabs.
+**Phone columns.** #, Player, Ours, Book, Hit.
+Week 1 is organized by matchup, then by team (for example, NE vs SEA with
+separate NE and SEA boards).
         """)
 
 
@@ -303,25 +332,39 @@ def render() -> None:
         st.stop()
     live_keys = sorted((key for key in releases if key[0] == LIVE_SEASON), reverse=True)
     demo = available_weeks()
-    options = sorted(set(live_keys + [DEFAULT_RELEASE] + [(DEMO_SEASON, w) for w in demo]), reverse=True)
-    labels = {key: f"{key[0]} Week {key[1]}" for key in options}
-    seeded = page_common.seed_widget_from_query("atd_release", "atd_release", options)
+    year_weeks = {
+        DEMO_SEASON: sorted(demo),
+        LIVE_SEASON: sorted(set([1] + [week for season, week in live_keys if season == LIVE_SEASON])),
+    }
+    years = sorted(year_weeks, reverse=True)
     with st.container(key="jsa-filter-bar"):
-        controls = st.columns([1, 2])
-        kwargs = {"key": "atd_release", "format_func": lambda key: labels[key]}
-        if not seeded and "atd_release" not in st.session_state:
-            kwargs["index"] = options.index(default_release(options))
-        release = controls[0].selectbox("Week", options, **kwargs)
-        page_common.sync_query_value("atd_release", release)
-        search = controls[1].text_input("Search player", placeholder="Barkley, Jefferson", key="atd_search")
+        controls = st.columns([1, 1, 2])
+        seeded_year = page_common.seed_widget_from_query("atd_year", "atd_year", years)
+        year_kwargs = {"key": "atd_year"}
+        if not seeded_year and "atd_year" not in st.session_state:
+            year_kwargs["index"] = years.index(LIVE_SEASON) if LIVE_SEASON in years else 0
+        season = int(controls[0].selectbox("Year", years, **year_kwargs))
+        page_common.sync_query_value("atd_year", season)
+        weeks = year_weeks[season]
+        if "atd_week" in st.session_state and st.session_state["atd_week"] not in weeks:
+            del st.session_state["atd_week"]
+        seeded_week = page_common.seed_widget_from_query("atd_week", "atd_week", weeks)
+        week_kwargs = {"key": "atd_week"}
+        default_week = 1 if season == LIVE_SEASON else (DEFAULT_WEEK if DEFAULT_WEEK in weeks else weeks[0])
+        if not seeded_week and "atd_week" not in st.session_state:
+            week_kwargs["index"] = weeks.index(default_week)
+        week = int(controls[1].selectbox("Week", weeks, **week_kwargs))
+        page_common.sync_query_value("atd_week", week)
+        search = controls[2].text_input("Search player", placeholder="Barkley, Jefferson", key="atd_search")
     available = releases | {(DEMO_SEASON, w): p for w, p in demo.items()}
-    season, week = release
     if season == LIVE_SEASON:
-        st.info("Live 2026 prices are copied manually from the sportsbook when available (preferably near T-3h). "
-                "Early preparation captures are labeled; additional games appear as they are frozen. No odds API is used.")
-        meta = _live_metadata()
+        st.info("Live 2026 prices are copied manually from the sportsbook when available. "
+                "Early preparation captures are accepted and labeled; additional games appear as they are frozen. "
+                "No odds API is used.")
+        meta = _live_metadata(season, week)
         if meta:
-            books = ", ".join(meta.get("book", []))
+            book_value = meta.get("book", [])
+            books = ", ".join(book_value) if isinstance(book_value, list) else str(book_value)
             st.caption(f"Book: {books or 'manual paste'} · Last capture: {meta.get('capture_max', 'unknown')}")
     with st.container(horizontal=True, vertical_alignment="center"):
         is_live = season == LIVE_SEASON
@@ -332,8 +375,11 @@ def render() -> None:
     _reading_guide()
 
     if (season, week) not in available:
-        st.info("2026 Week 1 is selected and awaiting the first manual odds release. "
-                "The 2025 demo remains available from the Week selector.")
+        if season == LIVE_SEASON:
+            st.info(f"2026 Week {week} is selected and awaiting a manual odds release. "
+                    "The 2025 demo remains available from the Year and Week selectors.")
+        else:
+            st.info(f"{season} Week {week} does not have a published board yet.")
         return
 
     raw = _load_csv(str(available[(season, week)]))
@@ -365,14 +411,12 @@ def render() -> None:
             search, case=False, na=False, regex=False,
         )]
 
-    tabs = st.tabs(list(POS_TABS), key="atd_position_tabs", on_change="rerun")
-    for tab, pos in zip(tabs, POS_TABS):
-        if not tab.open:
-            continue
-        with tab:
-            view = by_position(priced, pos)
-            if view.empty:
-                st.info("No priced players in this filter.")
-                continue
-            st.caption(f"{len(view)} priced · {pos}")
-            _board(view, f"atd-{pos.lower()}", search or "")
+    st.caption(f"{len(priced)} priced · all positions")
+    for label, teams, matchup in _matchup_groups(priced):
+        with st.expander(label, expanded=True):
+            for team in teams:
+                team_view = matchup[matchup.team.astype(str).eq(team)]
+                if team_view.empty:
+                    continue
+                st.markdown(f"**{team} Anytime TDs**")
+                _board(team_view, f"atd-{team.lower()}-{label.replace(' ', '-')}", search or "")

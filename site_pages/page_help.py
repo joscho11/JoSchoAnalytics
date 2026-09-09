@@ -244,14 +244,16 @@ How the file contract works sits in **How the DFS optimizer works** below.
 
     with st.expander("What is the Anytime TDs page?"):
         st.markdown("""
-A 2025 weeks 10-17 board of rushing and receiving anytime-TD probabilities
-versus the book. Priced players only, sorted by our P(TD). Passing TDs are out.
-Not even money: a typical quote is around one in five, so misses will outnumber
-hits. For fun. Not a proven edge. Bet responsibly.
+A live 2026 Week 1 board of rushing and receiving anytime-TD probabilities
+versus one manually pasted US-book price, plus a 2025 weeks 10-17 historical
+demo. Priced players only, sorted by our P(TD). Passing TDs are out. Not even
+money: a typical quote is around one in five, so misses will outnumber hits.
+For fun. Not a proven edge. Bet responsibly.
 
 Over full 2025 the sportsbooks were still about 0.08% more accurate. On these
 eight demo weeks our numbers were closer in 5; that is not a betting record.
-How the number is built sits in **How the Anytime TD demo works** below.
+The live board is grouped by matchup and then team; pregame outcomes stay blank
+until grading. How the number is built sits in **How the Anytime TD demo works** below.
         """)
 
     with st.expander("What is the Draft Board page?"):
