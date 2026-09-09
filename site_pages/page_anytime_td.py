@@ -18,6 +18,7 @@ _HERE = Path(__file__).resolve().parents[1]
 _DIR = _HERE / "betting" / "anytime_td"
 DEMO_SEASON = 2025
 LIVE_SEASON = 2026
+DEFAULT_RELEASE = (LIVE_SEASON, 1)
 DEFAULT_WEEK = 10
 POS_TABS = ("All", "QB", "RB", "WR", "TE")
 DESKTOP_COLS = [
@@ -68,6 +69,14 @@ def available_releases() -> dict[tuple[int, int], Path]:
         if key is not None:
             found[key] = path
     return found
+
+
+def default_release(options: list[tuple[int, int]]) -> tuple[int, int]:
+    """Prefer the live 2026 Week 1 board whenever it has been published."""
+    if DEFAULT_RELEASE in options:
+        return DEFAULT_RELEASE
+    live = [key for key in options if key[0] == LIVE_SEASON]
+    return live[0] if live else options[0]
 
 
 def available_weeks() -> dict[int, Path]:
@@ -302,7 +311,7 @@ def render() -> None:
             controls = st.columns([1, 2])
             kwargs = {"key": "atd_release", "format_func": lambda key: labels[key]}
             if not seeded and "atd_release" not in st.session_state:
-                kwargs["index"] = 0
+                kwargs["index"] = options.index(default_release(options))
             release = controls[0].selectbox("Week", options, **kwargs)
             page_common.sync_query_value("atd_release", release)
             search = controls[1].text_input("Search player", placeholder="Barkley, Jefferson", key="atd_search")

@@ -109,3 +109,11 @@ def test_live_release_discovery_and_pending_hit_is_blank(tmp_path, monkeypatch):
     assert page.available_releases()[(2026, 1)] == live
     display = page._display(page.priced_rows(pd.read_csv(live)))
     assert display.loc[0, "Hit"] == ""
+
+
+def test_2026_week1_is_default_release_when_present():
+    import page_anytime_td as page
+
+    assert page.default_release([(2025, 17), (2026, 1)]) == (2026, 1)
+    assert page.default_release([(2026, 1), (2026, 2)]) == (2026, 1)
+    assert page.default_release([(2025, 10), (2025, 17)]) == (2025, 10)
