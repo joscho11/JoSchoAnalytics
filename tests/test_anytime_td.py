@@ -94,3 +94,18 @@ def test_week10_priced_board_is_larger_than_a_card():
     priced = page.priced_rows(pd.read_csv(path))
     assert len(priced) > 8
     assert priced.p_book.notna().all()
+
+
+def test_live_release_discovery_and_pending_hit_is_blank(tmp_path, monkeypatch):
+    import page_anytime_td as page
+
+    live = tmp_path / "anytime_td_2026_week01.csv"
+    pd.DataFrame([{
+        "season": 2026, "week": 1, "player_id": "p1", "player_display_name": "Player One",
+        "position": "RB", "team": "SF", "opponent_team": "LA", "p_ge1": .4,
+        "p_ge2": .1, "p_book": .375, "fair_amer": 150, "scored_anytime": None,
+    }]).to_csv(live, index=False)
+    monkeypatch.setattr(page, "_DIR", tmp_path)
+    assert page.available_releases()[(2026, 1)] == live
+    display = page._display(page.priced_rows(pd.read_csv(live)))
+    assert display.loc[0, "Hit"] == ""

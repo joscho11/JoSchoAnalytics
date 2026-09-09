@@ -17,6 +17,7 @@ from dashboard_chrome import TABLE_HEIGHT, dataframe_phone_desktop
 _HERE = Path(__file__).resolve().parents[1]
 _DIR = _HERE / "betting" / "anytime_td"
 DEMO_SEASON = 2025
+LIVE_SEASON = 2026
 DEFAULT_WEEK = 10
 POS_TABS = ("All", "QB", "RB", "WR", "TE")
 DESKTOP_COLS = [
@@ -45,6 +46,28 @@ def _parse_week(name: str) -> int | None:
         return int(parts[3].replace("week", ""))
     except (IndexError, ValueError):
         return None
+
+
+def _parse_release(name: str) -> tuple[int, int] | None:
+    stem = name.removesuffix(".csv")
+    parts = stem.split("_")
+    if len(parts) < 4 or parts[0] != "anytime" or parts[1] != "td":
+        return None
+    try:
+        return int(parts[2]), int(parts[3].removeprefix("week"))
+    except ValueError:
+        return None
+
+
+def available_releases() -> dict[tuple[int, int], Path]:
+    found: dict[tuple[int, int], Path] = {}
+    if not _DIR.is_dir():
+        return found
+    for path in sorted(_DIR.glob("anytime_td_*_week*.csv")):
+        key = _parse_release(path.name)
+        if key is not None:
+            found[key] = path
+    return found
 
 
 def available_weeks() -> dict[int, Path]:
@@ -76,11 +99,14 @@ def by_position(df: pd.DataFrame, position: str) -> pd.DataFrame:
 
 def week_summary(df: pd.DataFrame) -> dict:
     n = int(len(df))
-    hits = int(pd.to_numeric(df["scored_anytime"], errors="coerce").fillna(0).eq(1).sum())
+    outcomes = pd.to_numeric(df["scored_anytime"], errors="coerce")
+    hits = int(outcomes.eq(1).sum())
+    graded = int(outcomes.notna().sum())
     return {
         "n": n,
         "hits": hits,
-        "hit_rate": (hits / n) if n else None,
+        "graded": graded,
+        "hit_rate": (hits / graded) if graded else None,
         "mean_p": float(df.p_ge1.mean()) if n else None,
         "mean_book": float(df.p_book.mean()) if n else None,
     }
@@ -96,6 +122,14 @@ def _load_meta(path: str) -> dict:
     raw = Path(path)
     if not raw.is_file():
         return {}
+
+
+def _live_metadata() -> dict:
+    files = sorted(_DIR.glob("anytime_td_2026_week01_*.json"))
+    if not files:
+        return {}
+    # The newest slate metadata describes the most recent cumulative append.
+    return _load_meta(str(files[-1]))
     try:
         return json.loads(raw.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
@@ -121,7 +155,8 @@ def _p_color(val, lo: float = 0.08, hi: float = 0.55) -> str:
 def _display(df: pd.DataFrame) -> pd.DataFrame:
     ranked = df.sort_values("p_ge1", ascending=False).reset_index(drop=True)
     vs = 100 * (ranked.p_ge1 - ranked.p_book)
-    hit = pd.to_numeric(ranked.scored_anytime, errors="coerce").fillna(0).eq(1)
+    outcome = pd.to_numeric(ranked.scored_anytime, errors="coerce")
+    hit = outcome.map(lambda value: "Yes" if value == 1 else ("No" if pd.notna(value) else ""))
     return pd.DataFrame({
         "#": range(1, len(ranked) + 1),
         "Player": ranked.player_display_name + " · " + ranked.team.astype(str),
@@ -132,7 +167,7 @@ def _display(df: pd.DataFrame) -> pd.DataFrame:
         "vs book": vs.round(1),
         "Our fair": ranked.fair_amer.map(_amer),
         "P(2+)": ranked.p_ge2.astype(float),
-        "Hit": hit.map(lambda ok: "Yes" if ok else "No"),
+        "Hit": hit,
         "_p": ranked.p_ge1.astype(float),
     })
 
@@ -213,8 +248,11 @@ def _phone_column_config() -> dict:
 def _board(view: pd.DataFrame, slug: str, search: str) -> None:
     table = _display(view)
     style_fn = _style(table)
-    show = table[DESKTOP_COLS]
-    phone = table[PHONE_COLS]
+    graded = pd.to_numeric(view.scored_anytime, errors="coerce").notna().any()
+    desktop_cols = DESKTOP_COLS if graded else [c for c in DESKTOP_COLS if c != "Hit"]
+    phone_cols = PHONE_COLS if graded else [c for c in PHONE_COLS if c != "Hit"]
+    show = table[desktop_cols]
+    phone = table[phone_cols]
     dataframe_phone_desktop(
         show.style.apply(style_fn, axis=None),
         phone.style.apply(style_fn, axis=None),
@@ -248,36 +286,57 @@ def render() -> None:
     st.title("Anytime TDs")
     st.caption(
         "Chance a skill player scores a rushing or receiving touchdown. "
-        "Passing TDs are out. Demo. For fun. Bet responsibly."
+        "Passing TDs are out. Live 2026 releases plus a 2025 demo. For fun. Bet responsibly."
     )
-    st.info(
-        "2026 Week 1 is not on this board yet. It lands later this week, because "
-        "the book Yes prices are posted about three hours before kickoff. "
-        "Everything below is the 2025 weeks 10 to 17 demo."
-    )
-    available = available_weeks()
-    if not available:
+    releases = available_releases()
+    if not releases:
         st.error("Anytime TD demo files are missing.")
         st.stop()
-    weeks = sorted(available)
-    with st.container(key="jsa-filter-bar"):
-        controls = st.columns([1, 2])
-        seeded = page_common.seed_widget_from_query("atd_week", "atd_week", weeks)
-        week_kwargs = {"key": "atd_week"}
-        if not seeded and "atd_week" not in st.session_state:
-            week_kwargs["index"] = weeks.index(DEFAULT_WEEK) if DEFAULT_WEEK in weeks else 0
-        week = int(controls[0].selectbox("Week", weeks, **week_kwargs))
-        page_common.sync_query_value("atd_week", week)
-        search = controls[1].text_input(
-            "Search player", placeholder="Barkley, Jefferson", key="atd_search",
-        )
-
+    live_keys = sorted((key for key in releases if key[0] == LIVE_SEASON), reverse=True)
+    demo = available_weeks()
+    if live_keys:
+        options = live_keys + sorted(((DEMO_SEASON, w) for w in demo), reverse=True)
+        labels = {key: f"{key[0]} Week {key[1]}" for key in options}
+        seeded = page_common.seed_widget_from_query("atd_release", "atd_release", options)
+        with st.container(key="jsa-filter-bar"):
+            controls = st.columns([1, 2])
+            kwargs = {"key": "atd_release", "format_func": lambda key: labels[key]}
+            if not seeded and "atd_release" not in st.session_state:
+                kwargs["index"] = 0
+            release = controls[0].selectbox("Week", options, **kwargs)
+            page_common.sync_query_value("atd_release", release)
+            search = controls[1].text_input("Search player", placeholder="Barkley, Jefferson", key="atd_search")
+        available = releases
+        season, week = release
+        if season == LIVE_SEASON:
+            st.info("Live 2026 prices are copied manually from the sportsbook when available (preferably near T-3h). "
+                    "Early preparation captures are labeled; additional games appear as they are frozen. No odds API is used.")
+            meta = _live_metadata()
+            if meta:
+                books = ", ".join(meta.get("book", []))
+                st.caption(f"Book: {books or 'manual paste'} · Last capture: {meta.get('capture_max', 'unknown')}")
+    else:
+        weeks = sorted(demo)
+        with st.container(key="jsa-filter-bar"):
+            controls = st.columns([1, 2])
+            seeded = page_common.seed_widget_from_query("atd_week", "atd_week", weeks)
+            week_kwargs = {"key": "atd_week"}
+            if not seeded and "atd_week" not in st.session_state:
+                week_kwargs["index"] = weeks.index(DEFAULT_WEEK) if DEFAULT_WEEK in weeks else 0
+            week = int(controls[0].selectbox("Week", weeks, **week_kwargs))
+            page_common.sync_query_value("atd_week", week)
+            search = controls[1].text_input("Search player", placeholder="Barkley, Jefferson", key="atd_search")
+        available = {(DEMO_SEASON, w): p for w, p in demo.items()}
+        season = DEMO_SEASON
     with st.container(horizontal=True, vertical_alignment="center"):
-        st.badge("Demo", icon=":material/science:", color="orange")
-        st.caption("Priced players only. Sorted by our P(TD). 2025 weeks 10-17 demo.")
+        is_live = season == LIVE_SEASON
+        st.badge("Live" if is_live else "Demo", icon=":material/live_tv:" if is_live else ":material/science:",
+                 color="green" if is_live else "orange")
+        st.caption("Priced players only. Sorted by our P(TD). " +
+                   ("Cumulative 2026 Week 1 release." if is_live else "2025 weeks 10-17 demo."))
     _reading_guide()
 
-    raw = _load_csv(str(available[week]))
+    raw = _load_csv(str(available[(season, week)]))
     need = [
         "player_display_name", "position", "team", "opponent_team",
         "p_ge1", "p_ge2", "p_book", "fair_amer", "scored_anytime",
@@ -295,8 +354,9 @@ def render() -> None:
     hit_pct = 100 * summary["hit_rate"] if summary["hit_rate"] is not None else 0
     with st.container(horizontal=True, key="jsa-metric-even-atd"):
         st.metric("Priced", summary["n"], border=True)
-        st.metric("Scored", f"{summary['hits']}/{summary['n']}", f"{hit_pct:.0f}%",
-                  delta_arrow="off", border=True)
+        if summary["graded"]:
+            st.metric("Scored", f"{summary['hits']}/{summary['graded']}", f"{hit_pct:.0f}%",
+                      delta_arrow="off", border=True)
         st.metric("Our P", f"{100 * summary['mean_p']:.0f}%", border=True)
         st.metric("Book P", f"{100 * summary['mean_book']:.0f}%", border=True)
 

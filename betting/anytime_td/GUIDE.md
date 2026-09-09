@@ -43,9 +43,13 @@ Week 18 is out (rest and backups). Sleeper's dump has no freeze timestamp.
 
 ## Live 2026
 
-Not on the site yet. When a week is added, Joseph pastes Yes prices about three
-hours before kickoff. No Odds API pull for live weeks. Do not mix that clock
-with the 2025 two-hour, three-book bar.
+Joseph pastes one sportsbook's Yes prices whenever practical, preferably about
+three hours before each slate. The release records the book, `snapped_at_et`,
+and `kickoff_et`; early preparation copies are accepted and marked with their
+lead time. Week 1 releases accumulate as
+games are frozen, and already-started game rows never change. No Odds API pull
+is made for live weeks, and the historical two-hour, three-book median does not
+apply. Pregame Hit and scored totals remain blank until results are attached.
 
 ## Public files
 
@@ -54,3 +58,6 @@ with the 2025 two-hour, three-book bar.
 | `anytime_td/` | Frozen 2025 week CSVs plus `meta.json` |
 | `../site_pages/page_anytime_td.py` | Comparison board |
 | `../tests/test_anytime_td.py` | Offline AppTest |
+
+The live producer is in the private `td_count_model_beta` repo:
+`scripts/publish_live_week.py`. Its input contract is `live/README.md`.
