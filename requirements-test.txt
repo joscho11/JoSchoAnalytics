@@ -6,4 +6,4 @@ pytest==9.0.2
 # Responsive/viewport suite. The dedicated CI job installs Chromium and
 # fails if those cases skip.
 playwright==1.62.0
-./vendor/jsa_dfs_optimizer-0.2.2-py3-none-any.whl
+./vendor/jsa_dfs_optimizer-0.2.3-py3-none-any.whl

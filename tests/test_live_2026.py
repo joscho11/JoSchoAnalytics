@@ -25,6 +25,8 @@ from live_2026 import (  # noqa: E402
     is_live_season,
     leftover_to_home_margin,
     row_display_high,
+    row_qualifying_edge,
+    row_qualifying_spread,
     row_high_dropped,
     season_high_record,
     sportsbook_to_nflverse,
@@ -120,6 +122,30 @@ def test_row_helpers_and_live_season():
     )
     assert not row_display_high(row)
     assert row_high_dropped(row)
+
+
+def test_2026_high_qualifies_off_the_shopped_line():
+    """Selection, display, and grading share the best captured 2026 quote."""
+    row = pd.Series(
+        {
+            "ens_predicted_margin": 2.89,
+            "tuesday_median_spread_line": 5.0,   # consensus: gap 2.11, under the cut
+            "tuesday_spread_line": 5.5,          # best quote: gap 2.61, over the cut
+            "tuesday_spread_book": "DraftKings",
+            "season": 2026,
+            "week": 1,
+            "game_type": "REG",
+        }
+    )
+    assert row_qualifying_spread(row) == 5.5
+    assert round(row_qualifying_edge(row), 2) == -2.61
+    assert row_display_high(row)
+
+    # The median can move independently without changing the public ticket.
+    row["ens_predicted_margin"] = 0.53
+    row["tuesday_median_spread_line"] = 3.5
+    row["tuesday_spread_line"] = 4.0
+    assert row_display_high(row)
 
 
 def test_one_sided_wilson_claim_matches_locked_book():

@@ -1,0 +1,39 @@
+{
+  "product": "dfs_optimizer_v1",
+  "scoring": "draftkings_classic",
+  "projection_units": "direct_dk_points",
+  "season": 2026,
+  "week": 1,
+  "projection_csv_sha256": "9000c71b8c8b4565191a4245cd15eae88a20ba48d897dbaea8d54589e7eaedcf",
+  "row_count": 399,
+  "position_counts": {
+    "QB": 32,
+    "RB": 103,
+    "TE": 100,
+    "WR": 164
+  },
+  "source_artifact": "artifact.csv",
+  "source_build_id": "fantasy-2026w01-d25ab6451a39",
+  "source_artifact_sha256": "d25ab6451a399440aa390256a6c09a61e2b0bf7b88f74aa650ed3171435b9f19",
+  "method": "Per-position affine calibration E[DK | half-PPR projection] fitted on the model's 2025 holdout predictions against nflverse box-score DraftKings Classic points. This is not the unfitted direct-DK model.",
+  "calibration": {
+    "QB": [
+      4.9315,
+      0.8072
+    ],
+    "RB": [
+      1.1044,
+      1.1639
+    ],
+    "WR": [
+      1.3809,
+      1.237
+    ],
+    "TE": [
+      0.9123,
+      1.3261
+    ]
+  },
+  "limits": "QB fit R2 0.104. Residual sd 4.9 to 7.9 DK points per player. Fitted on 2025 only.",
+  "produced_at": "2026-09-09T01:05:32.130474Z"
+}

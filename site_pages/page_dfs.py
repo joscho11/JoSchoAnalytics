@@ -97,9 +97,23 @@ def _render_lineup(pipeline, lineup: pd.DataFrame) -> None:
 
 def render():
     st.title("DFS optimizer")
-    st.caption(
-        "DraftKings NFL Classic. Direct DK-point projections. "
-        "Integer lineup under the $50,000 cap."
+    with st.container(horizontal=True, vertical_alignment="center"):
+        st.badge("Beta", icon=":material/science:", color="orange")
+        st.caption(
+            "DraftKings NFL Classic. Direct DK-point projections. "
+            "Integer lineup under the $50,000 cap."
+        )
+    st.warning(
+        "**Beta, and incomplete in ways that matter.** Projections are the mean "
+        "outcome, so the optimizer builds the highest-expected-score lineup. That is "
+        "the right target for cash games and the wrong one for tournaments, where "
+        "first place usually needs roughly 4x salary per slot, around 200 points, and "
+        "is reached through ceiling and correlation rather than expectation. There is "
+        "no ceiling model, no stacking, and no ownership leverage here yet. The player "
+        "pool is also thinner than the slate: anyone we do not project is excluded, "
+        "which mostly removes minimum-salary players. Treat a lineup as a starting "
+        "point, not a play.",
+        icon=":material/science:",
     )
 
     try:
@@ -185,6 +199,20 @@ def render():
         f"Projection source: `{projection_label}` · "
         f"{pool.attrs['projection_season']} Week {pool.attrs['projection_week']} · direct DK points"
     )
+    if projection_upload is None:
+        # Say what the shipped artifact actually is. It is a calibrated
+        # translation of the published half-PPR model, not a model trained on
+        # DraftKings points, and a reader deserves to know which one they have.
+        st.info(
+            "These are the site's half-PPR weekly projections mapped onto DraftKings "
+            "Classic scoring, one calibration per position fitted on the model's own "
+            "2025 out-of-sample predictions against actual DK points. On the 2025 "
+            "holdout the mapping is unbiased for the players an optimizer selects. "
+            "It is not a model trained directly on DraftKings scoring, and it does not "
+            "model ownership, correlation, or ceiling. Lineups are a starting point, "
+            "not a play recommendation.",
+            icon=":material/info:",
+        )
     _render_pool_summary(pool, summary)
     labels = _player_labels(pool)
     eligible = pool[pool["optimization_eligible"]]

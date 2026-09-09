@@ -84,7 +84,7 @@ atd_pg = st.Page(_lazy_render("page_anytime_td"), title="Anytime TDs", icon=":ma
                  url_path="anytime-tds")
 wf_pg = st.Page(_lazy_render("page_weekly_fantasy"), title="Weekly Fantasy", icon=":material/trophy:",
                 url_path="weekly-fantasy")
-dfs_pg = st.Page(_lazy_render("page_dfs"), title="DFS Optimizer", icon=":material/target:",
+dfs_pg = st.Page(_lazy_render("page_dfs"), title="DFS Optimizer (Beta)", icon=":material/target:",
                  url_path="dfs-optimizer")
 tr_pg = st.Page(_lazy_render("page_track_record"), title="Track Record", icon=":material/monitoring:",
                 url_path="track-record")

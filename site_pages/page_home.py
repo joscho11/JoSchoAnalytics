@@ -89,8 +89,8 @@ def render() -> None:
     season_start = board_refresh_season_start()
     if app_today() < season_start:
         st.info(
-            "The site is in preseason mode. The Draft Board and Week 1 matchups are live. "
-            "Weekly fantasy rankings and DFS projections publish when those files land. "
+            "The site is in preseason mode. The Draft Board, Week 1 matchups, weekly fantasy rankings, and DFS projections are live. "
+            "The DFS Optimizer still needs the DraftKings salary CSV for the contest. "
             "Anytime TDs is a 2025 demo. "
             f"The next planned Draft Board model snapshot is before {season_start:%B %d}."
         )

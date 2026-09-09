@@ -1,8 +1,7 @@
 """2026 live Tuesday-model display rules. Not the 2025 3-voter demo.
 
 Production lives in the private leftover Ridge (`spread_v3_prod`). For 2026
-releases, the pick, display, and grading use the best US quote; the HIGH flag
-qualifies off the Tuesday US median, which is the rule the 302/535 book measures. The best US
+releases, the pick, edge, HIGH flag, display, and grading all use the best US
 Tuesday quote for the recommended side. The frozen model still receives the US
 median as a feature. A later line can drop HIGH; it cannot create HIGH. No MEDIUM.
 
@@ -149,31 +148,16 @@ def row_tuesday_spread(row):
 
 
 def row_qualifying_spread(row):
-    """The line HIGH is judged against: the Tuesday US median.
+    """The public line used for every 2026 decision: best Tuesday US quote.
 
-    Shopping is execution, not selection. Qualifying off the shopped quote
-    loosens the 2.5 cut to roughly 2.2, because the shopped number always moves
-    toward the bet. Measured 2021-2025: median-flag / shop-grade 302/535 =
-    56.45%, Wilson 0.5290; shop-flag / shop-grade 335/603 = 55.56%,
-    Wilson 0.5221, under the 0.524 break-even.
-
-    2025 demo rows carry no median column, so they fall back to the line they
-    have and their behaviour is unchanged.
+    The Tuesday median remains model-input provenance only. Historical 2025 demo
+    rows have no shopped field and therefore retain their existing spread.
     """
-    med = _num(row.get("tuesday_median_spread_line"))
-    if med is not None:
-        return med
     return row_tuesday_spread(row)
 
 
 def row_qualifying_edge(row):
-    """Model disagreement with the Tuesday median: the number HIGH is judged on.
-
-    The published artifact keeps ``model_edge`` against the shopped line, because
-    that is the line the release is graded at and the validator enforces
-    ``edge == predicted - tuesday_spread_line``. The card shows this consensus
-    edge instead so the arithmetic on screen matches the badge.
-    """
+    """Model disagreement with the best shopped Tuesday line."""
     pred = _num(row_pred(row))
     line = _num(row_qualifying_spread(row))
     if pred is None or line is None:

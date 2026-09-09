@@ -81,7 +81,7 @@ Edge is the gap between what the model predicts and the posted spread.
 
 If the model has the Chiefs by 10 and the spread is 7.5, that is 2.5 points on the Chiefs. Games under 1 point of disagreement are coin flips in the model's eyes.
 
-On **2026**, every game still shows. HIGH is the green highlight ({HIGH_GAP:g} or more points off the Tuesday line, and still {HIGH_GAP:g} off the live line). On the **2025 demo** weeks, use the **Min Edge (pts)** slider to hide the coin flips.
+On **2026**, every game still shows. HIGH is the green highlight ({HIGH_GAP:g} or more points off the best shopped Tuesday line, and still {HIGH_GAP:g} off the live line). On the **2025 demo** weeks, use the **Min Edge (pts)** slider to hide the coin flips.
         """)
 
     with st.expander("What does it mean to cover?"):
@@ -102,7 +102,7 @@ The model predicts the margin, then asks which side of the posted number is more
         st.markdown(f"""
 Standard sportsbook odds are about 110 to win 100. You need about **52.4%** of bets to break even. Most casual bettors don't hit that.
 
-The **frozen 2021-2025 benchmark** used median-triggered HIGH tickets scored at the best US Tuesday number: **{LIVE_HIGH_WINS}/{LIVE_HIGH_N} = {LIVE_HIGH_ATS * 100:.2f}%** ATS, one-sided 95% Wilson lower bound **{LIVE_HIGH_WILSON_LOWER * 100:.2f}%**. {live_high_bar_sentence()} Starting with 2026 releases, the displayed line, price, sportsbook and grading use the selected shopped quote. HIGH still qualifies off the Tuesday median, so the badge means the same thing it did in that record. Shopping is execution, not selection. All-bets is not the claim. No 2026 games are graded yet. This is Tuesday line value, not closing-line value.
+The **frozen 2021-2025 benchmark** used median-triggered HIGH tickets scored at the best US Tuesday number: **{LIVE_HIGH_WINS}/{LIVE_HIGH_N} = {LIVE_HIGH_ATS * 100:.2f}%** ATS, one-sided 95% Wilson lower bound **{LIVE_HIGH_WILSON_LOWER * 100:.2f}%**. {live_high_bar_sentence()} Starting with 2026 releases, pick, edge, HIGH, displayed line, price, sportsbook, and grading all use the selected shopped quote. The historical benchmark used the older median-triggered rule, so it is context rather than the 2026 ticket definition. All-bets is not the claim. No 2026 games are graded yet. This is Tuesday line value, not closing-line value.
 
 The **2025 demo test** on this site (weeks 10-17) is **{_overall_pct}% ATS** ({_overall_correct}/{_overall_total}){_hc_line}. {_be_comment} That walkthrough is the old three-model consensus, not the 2026 live book. Past performance doesn't guarantee anything going forward. There will be bad weeks.
 
@@ -129,8 +129,8 @@ Sharp money is professional bettors placing large, calculated bets. When they be
 - **Rookie Board:** hit % and RB/WR/TE season-total projections for the 2024-2026 classes.
 - **Season Totals:** 32-team win projections. HIGH is the only certified pick.
 - **Weekly Predictions:** 2026 matchups are up. The public spread card uses the first valid Tuesday market capture from 09:00–15:30 ET. HIGH is the green {HIGH_GAP:g}-point Tuesday ticket.
-- **Weekly Fantasy:** 2026 Week 1 rankings land once that file is published. Until then the page opens on the latest published file (the 2025 Week 17 demo in the 2026 layout).
-- **DFS Optimizer:** DraftKings Classic lineup builder. Upload a salary CSV. Uses a published direct-DK file when one exists; otherwise upload your own. No 2026 Week 1 projection file is published yet. Not a performance claim.
+- **Weekly Fantasy:** 2026 Week 1 is live with 399 player rows. Each game locks at kickoff across later immutable revisions.
+- **DFS Optimizer:** DraftKings Classic lineup builder. Week 1 direct-DK projections are available; upload the salary CSV for the contest. Not a performance claim.
 
 **Demo / walkthrough (not the live book)**
 
@@ -149,7 +149,7 @@ Talent Scores are descriptive context. League History is your Sleeper, ESPN, Yah
 Everything lives in the top navigation bar, grouped into three menus:
 
 - **Home**: a stable overview of what is live and where to start.
-- **Fantasy**: Draft Board, Rookie Board, Weekly Fantasy, and DFS Optimizer.
+- **Fantasy**: Weekly Fantasy, DFS Optimizer, Draft Board, and Rookie Board.
 - **Betting**: Weekly Predictions, Anytime TDs, Track Record, and Season Totals.
 - **More**: Film Room, League History, and this Help & Guide.
 
@@ -168,7 +168,7 @@ Each card is one matchup.
 
 **BET X** is the recommended side. The bold name is who the model likes.
 
-**2026 live:** every game gets a pick. **HIGH** (green) is a {HIGH_GAP:g}+ point disagreement with the Tuesday US median, and the live line still {HIGH_GAP:g}+. The card shows the best captured quote and its sportsbook, which is what you would bet. If the line moves and that gap falls under {HIGH_GAP:g}, HIGH is dropped. It cannot be created mid-week. No medium tier. No totals on the 2026 week page.
+**2026 live:** every game gets a pick. **HIGH** (green) is a {HIGH_GAP:g}+ point disagreement with the best shopped Tuesday quote, and the live line still {HIGH_GAP:g}+. That same captured quote drives the pick, displayed edge, badge, and grading; the card names its sportsbook and price. If the line moves and that gap falls under {HIGH_GAP:g}, HIGH is dropped. It cannot be created mid-week. No medium tier. No totals on the 2026 week page.
 
 **2025 demo test:** weeks 10 through the end of that season still use HIGH / MED / PASS consensus badges. Those weeks are unchanged.
 
@@ -200,7 +200,7 @@ Season-long ATS, not one week.
 
 Week-by-week bars, a cumulative line, and a breakdown of HIGH versus the rest. Best and worst weeks, a season table, and (on the 2025 demo) a separate Over/Under section.
 
-2026 Track Record grades HIGH by the Tuesday {HIGH_GAP:g}-point rule. There is no medium bucket. 2026 Track Record does not include totals.
+2026 Track Record grades HIGH by the best shopped Tuesday {HIGH_GAP:g}-point rule. There is no medium bucket. 2026 Track Record does not include totals.
         """)
 
     with st.expander("What is the Season Totals page?"):
@@ -220,7 +220,7 @@ How the number is built sits in **How Season Totals are built** below.
         st.markdown("""
 Weekly half-PPR projections for QB, RB, WR, and TE.
 
-The page currently opens on the latest published file: the **2025 Week 17** demo in the 2026 layout. Rankings are simple by default; **More info** reveals projected yards and matchup context when that file has them. **2026 Week 1** rankings land once that file is published. Older 2025 weeks are a demo from the previous weekly model.
+The page opens on the live **2026 Week 1** release: 399 QB/RB/WR/TE rows from the captured Sleeper universe, scored by the independent model. Rankings are simple by default; **More info** reveals extra fields when a release has them. Older 2025 weeks are a demo from the previous weekly model.
 
 Out, Doubtful, IR, inactives, and anyone who did not play are removed from the board. Questionable stays until box scores exist.
 
@@ -235,7 +235,7 @@ A DraftKings NFL Classic lineup builder. Upload the salary CSV for the contest y
 
 Classic roster: 1 QB, 2 RB, 3 WR, 1 TE, 1 FLEX, 1 DST, $50,000 salary cap. OUT, IR, Doubtful, PUP, SUSP, and NFI players are excluded. Questionable players stay eligible. DST uses opponent implied total when a game line exists, otherwise DraftKings average.
 
-This site does not generate DFS projections. Those files come from a private producer and have to pass the same release checks as the other products. No 2026 Week 1 projection file is published yet.
+This site does not generate DFS projections. Those files come from a private producer and have to pass their artifact checks. Week 1 direct-DK projections are available; you still need the DraftKings salary CSV for the contest.
 
 The optimizer picks the highest projected legal lineup under your locks and exclusions. Historical diagnostics have not shown a projection edge. Treat the output as research, not a performance claim. Check late news and the DraftKings import preview before you enter.
 
@@ -319,7 +319,7 @@ render any market claim that can't prove where it came from.
 
 The colored High / Medium / Skip buttons are not on the game cards right now. What you see
 on **2026** Weekly Predictions is **Tuesday HIGH**: a green highlight when the model
-disagrees with the Tuesday US median by {HIGH_GAP:g}+ points and the live line still does. The
+disagrees with the best shopped Tuesday quote by {HIGH_GAP:g}+ points and the live line still does. The
 **2025 demo** weeks still show **Model Consensus** (HIGH / MED / PASS).
 
 When an approved agent artifact is present again, High means the model edge is strong and outside signals lined up, Medium means mixed signals, and Skip means pass.
@@ -337,7 +337,7 @@ The Weekly Fantasy page uses a separate system from the betting model. The DFS O
 
 **2025 demo (weeks 10-17 on this page).** Four per-position XGBoost models trained on 2020-2024, with 2025 held out. Walkthrough only. Not the 2026 live weekly model.
 
-**2026 live, starting Week 1.** One LightGBM for all four positions. Same scoring: 0.5 per reception, yards and touchdowns as usual. Last four played games plus this week's closing line, opponent, and injury report as of that game's kickoff. The first live week is 2026 Week 1.
+**2026 live, starting Week 1.** One LightGBM for all four positions. Same scoring: 0.5 per reception, yards and touchdowns as usual. Week 1 uses historical form through 2025, current roster and depth, reviewed matchup and venue context, and the captured Tuesday market. Sleeper defines the player universe and comparison benchmark; its projected points are not an input. Missing rookie history stays missing rather than becoming zero.
 
 The models are rebuilt in the offseason as more data lands.
         """)

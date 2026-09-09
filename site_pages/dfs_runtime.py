@@ -18,7 +18,7 @@ class DfsRuntimeUnavailable(RuntimeError):
     pass
 
 
-EXPECTED_ENGINE_VERSION = "0.2.2"
+EXPECTED_ENGINE_VERSION = "0.2.3"
 SITE_ROOT = Path(__file__).resolve().parents[1]
 
 

@@ -145,10 +145,10 @@ def test_dfs_is_available_in_the_public_fantasy_nav():
     src = Path(ENTRY).read_text(encoding="utf-8")
     assert '_lazy_render("page_dfs")' in src
     assert (_HERE / "site_pages" / "page_dfs.py").is_file()
-    wheel = _HERE / "vendor" / "jsa_dfs_optimizer-0.2.2-py3-none-any.whl"
+    wheel = _HERE / "vendor" / "jsa_dfs_optimizer-0.2.3-py3-none-any.whl"
     assert wheel.is_file() and wheel.stat().st_size > 0
     req = (_HERE / "requirements.txt").read_text(encoding="utf-8")
-    assert "./vendor/jsa_dfs_optimizer-0.2.2-py3-none-any.whl" in req
+    assert "./vendor/jsa_dfs_optimizer-0.2.3-py3-none-any.whl" in req
     fantasy = src.split('"Fantasy":', 1)[1].split("]", 1)[0]
     assert "dfs_pg" in fantasy
     assert "wf_pg" in fantasy

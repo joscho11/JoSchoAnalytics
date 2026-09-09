@@ -410,7 +410,14 @@ def render():
             )
     else:
         live_format_preview = (int(season), int(week)) == LIVE_FORMAT_PREVIEW
-        if live_format_preview:
+        if int(season) >= LIVE_FROM_SEASON:
+            st.success(
+                "Live 2026 release. Sleeper defines the scheduled player universe and "
+                "comparison benchmark; its projected points are not model inputs. Releases "
+                "are immutable revisions: a later build preserves every row for games that "
+                "have kicked off and recomputes only future games."
+            )
+        elif live_format_preview:
             st.info(
                 "2026 format preview: these are the frozen 2025 Week 17 projections "
                 "in the planned live layout. Rankings are simple by default; turn on "

@@ -93,7 +93,7 @@ and makes every public comparison against the best quote for the selected side. 
 other inputs describe team form, availability, quarterbacks, coaching, rest, and venue.
 
 **Every game still gets a pick.** **HIGH** (green) is the only highlighted slice: the
-model disagrees with the Tuesday US median by {HIGH_GAP:g} or more points, and the live line still
+model disagrees with the best shopped Tuesday quote by {HIGH_GAP:g} or more points, and the live line still
 does. If the line moves and that gap falls under {HIGH_GAP:g}, HIGH is dropped. A later line
 cannot create HIGH. There is no medium tier. The last regular-season week is skipped
 for HIGH. Totals are not on the 2026 week page.
@@ -102,8 +102,8 @@ for HIGH. Totals are not on the 2026 week page.
 **{LIVE_HIGH_WINS}/{LIVE_HIGH_N} = {LIVE_HIGH_ATS * 100:.2f}%**
 ATS, one-sided 95% Wilson lower bound **{LIVE_HIGH_WILSON_LOWER * 100:.2f}%**, walk-forward
 2021-2025. {live_high_bar_sentence()} Starting with 2026 releases, the pick, edge,
-display, and grading use the selected shopped quote, while HIGH still qualifies
-off the Tuesday median, which is the rule the record above measures. Betting every
+HIGH flag, display, and grading use the selected shopped quote. The historical benchmark
+used the older median-triggered rule, so it is context rather than the 2026 ticket definition. Betting every
 game is not the claim. No 2026 games are graded yet.
 This is Tuesday line value, not closing-line value.
 
@@ -243,9 +243,9 @@ It is **not live-validated**. The first live test is the 2026 season.
 def _weekly_fantasy():
     with st.expander("How weekly fantasy projections are built"):
         st.markdown("""
-**2026 Week 1 is not on the site yet.** Rankings land once the live weekly file is
-published. Until then the page opens on the latest published file, the **2025 Week 17**
-demo in the 2026 layout.
+**2026 Week 1 is live.** The 399-player release covers every scheduled QB, RB, WR,
+and TE in the captured Sleeper projection payload with a numeric half-PPR benchmark.
+The independent model supplies the score; Sleeper's projection is not an input.
 
 **What you can read today** is the **2025 demo** (weeks 10-17). Those files came from
 four per-position XGBoost models trained on 2020-2024, with 2025 held out. Scoring is
@@ -253,12 +253,16 @@ half-PPR: 0.5 per reception, yards and touchdowns as usual. Demo weeks also carr
 stat columns (pass/rush/rec yards, receptions) from eight smaller models. Those extras
 will not appear on a 2026 live week unless that file has them.
 
-**2026 live model** (Week 1 onward, once published). One LightGBM across QB, RB, WR,
+**2026 live model** (Week 1 onward). One LightGBM across QB, RB, WR,
 and TE. It predicts this week's half-PPR points. Form is the last four played games,
 most recent weighted 40/25/20/15. Early in the year it blends prior-season games.
-Missed games are skipped, not zeroed. This week it can use the closing line, opponent,
-and injury or practice status as of **that game's kickoff**. Sleeper's weekly
-projection is the benchmark, not an input.
+Missed games are skipped, not zeroed. Week 1 uses history only through 2025, the current
+roster and depth chart, reviewed venue context, and the captured Tuesday market. Missing
+rookie history stays missing rather than becoming zero. Sleeper's weekly projection is
+the benchmark and universe definition, not an input.
+
+Releases are immutable revisions. The first build precedes the first kickoff; later
+builds copy every started game's rows exactly and recompute only games that have not begun.
 
 On the 2025 holdout (train 2021-2024, n=3,060 Sleeper-covered top-180 player-weeks):
 MAE **4.999** vs Sleeper **5.188**. Rank correlation **0.395** vs Sleeper **0.402**.
@@ -293,8 +297,8 @@ Classic points-allowed buckets plus a locked league-mean bonus. No line: DraftKi
 average, labeled on the page. Injured and unmatched skill players are dropped.
 Questionable stays in.
 
-No projection-edge claim. The 2026 Week 1 artifact is not published yet, so a
-salary-only upload cannot produce a lineup.
+No projection-edge claim. The 2026 Week 1 direct-DK artifact is published; a real lineup
+still requires the DraftKings salary CSV for the contest.
         """)
         st.caption(
             "This page does not prove a Classic lineup will beat the field. It is a "

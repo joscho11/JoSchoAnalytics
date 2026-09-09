@@ -167,7 +167,8 @@ def test_help_covers_live_model_rundowns(tmp_path):
     assert "absolute ridge coefficient" in md
     assert "4.999" in md
     assert "0.395" in md
-    assert "that game's kickoff" in md
+    assert "history only through 2025" in md
+    assert "not an input" in md
     assert "not a claim it beats Sleeper" in md
 
 
