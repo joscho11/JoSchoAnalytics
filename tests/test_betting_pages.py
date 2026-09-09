@@ -121,7 +121,9 @@ def test_weekly_predictions_hides_paused_agent_chrome(tmp_path):
     assert "Matchup Analysis" not in md
     assert "Tuesday HIGH" in md
     assert "Model Consensus:" not in md
-    assert "No totals on this season" in " ".join(str(s.value) for s in at.success)
+    assert "No totals on this season" in (
+        " ".join(str(s.value) for s in at.success) + " " + md
+    )
     assert "jsa-tot-badge" not in md
     assert "NE @ SEA" in md
     assert "Published" in md
@@ -144,17 +146,21 @@ def test_weekly_predictions_live_2026_banner(tmp_path):
     at.run()
     assert not at.exception, at.exception
     successes = " ".join(str(s.value) for s in at.success)
-    assert "Live 2026" in successes
-    assert "one-sided 95% Wilson" in successes
-    assert "302/535" in successes
-    assert "56.45%" in successes
-    assert "52.90%" in successes
-    assert "above 52.4%" in successes
-    assert "best US Tuesday" in successes
-    assert "57.14%" not in successes
-    assert "192/336" not in successes
-    assert "No medium tier" in successes
-    assert "No totals on this season" in successes
+    notice_copy = successes + " " + " ".join(str(m.value) for m in at.markdown)
+    assert "Live 2026" in notice_copy
+    assert "one-sided 95%" in notice_copy and "Wilson lower bound" in notice_copy
+    assert "302/535" in notice_copy
+    assert "56.45%" in notice_copy
+    assert "52.90%" in notice_copy
+    assert "above 52.4%" in notice_copy
+    assert "best US Tuesday" in notice_copy
+    assert "57.14%" not in notice_copy
+    assert "192/336" not in notice_copy
+    assert "No medium tier" in notice_copy
+    assert "No totals on this season" in notice_copy
+    assert any(
+        exp.label == "Tuesday model rules and frozen benchmark" for exp in at.expander
+    )
     headings = " ".join(str(t.value) for t in [*at.title, *at.subheader])
     assert "2026" in headings
     assert "Week 1" in headings

@@ -7,7 +7,7 @@ import pandas as pd
 import streamlit as st
 
 import dfs_runtime as runtime
-from dashboard_chrome import TABLE_HEIGHT, dataframe_phone_desktop
+from dashboard_chrome import TABLE_HEIGHT, exact_table_height, dataframe_phone_desktop
 
 _LINEUP_PHONE_COLS = ["Slot", "Player", "Pos", "Salary", "DK projection"]
 
@@ -81,7 +81,7 @@ def _render_lineup(pipeline, lineup: pd.DataFrame) -> None:
         slug="dfs-lineup",
         hide_index=True,
         width="stretch",
-        height=TABLE_HEIGHT,
+        height=exact_table_height(len(table)),
         column_config=col_config,
         key="dfs_lineup_grid",
     )
@@ -100,21 +100,26 @@ def render():
     with st.container(horizontal=True, vertical_alignment="center"):
         st.badge("Beta", icon=":material/science:", color="orange")
         st.caption(
-            "DraftKings NFL Classic. Direct DK-point projections. "
+            "DraftKings NFL Classic. Calibrated DK-point projections. "
             "Integer lineup under the $50,000 cap."
         )
     st.warning(
-        "**Beta, and incomplete in ways that matter.** Projections are the mean "
-        "outcome, so the optimizer builds the highest-expected-score lineup. That is "
-        "the right target for cash games and the wrong one for tournaments, where "
-        "first place usually needs roughly 4x salary per slot, around 200 points, and "
-        "is reached through ceiling and correlation rather than expectation. There is "
-        "no ceiling model, no stacking, and no ownership leverage here yet. The player "
-        "pool is also thinner than the slate: anyone we do not project is excluded, "
-        "which mostly removes minimum-salary players. Treat a lineup as a starting "
-        "point, not a play.",
+        "**Beta.** Cash optimizes expected points; Tournament optimizes an "
+        "85th-percentile player ceiling. Neither mode models stacking, ownership, or "
+        "the full DraftKings player pool. Treat every lineup as a starting point, not a play.",
         icon=":material/science:",
     )
+    with st.expander("What this beta does — and does not do", expanded=False):
+        st.markdown(
+            "Cash builds the highest-expected-score lineup from mean projections. "
+            "Tournament swaps in a per-player 85th-percentile ceiling, which is the "
+            "right direction for GPPs — first place usually needs roughly 4x salary "
+            "per slot, around 200 points — but a ceiling objective alone is not a GPP "
+            "model. There is no stacking or ownership leverage yet, so the lineup "
+            "ignores correlation between a quarterback and his receivers and ignores "
+            "what the field will roster. Anyone we do not project is excluded, which "
+            "mostly removes minimum-salary players."
+        )
 
     try:
         pipeline = runtime.load_pipeline()
@@ -183,6 +188,39 @@ def render():
         projection_bytes = latest.read_bytes()
         projection_label = latest.name
 
+    # Cash maximises the expected score. Tournaments pay the right tail, so they
+    # optimise an 85th-percentile OUTCOME instead. Residuals are right skewed:
+    # the median residual is negative at every position while the mean is zero,
+    # so most players miss their projection and a few blow past it. A winning
+    # GPP lineup is roughly 4x salary per $1000, about 200 points, which the
+    # mean objective cannot reach by construction.
+    objective = st.radio(
+        "Objective",
+        ["Cash (expected points)", "Tournament (ceiling)"],
+        horizontal=True,
+        key="dfs_objective",
+        help=(
+            "Cash builds the highest expected score. Tournament swaps in an "
+            "85th-percentile outcome per player, which is what a first-place "
+            "lineup actually needs. Ceiling models neither stacking nor "
+            "ownership, so it is a starting point for a GPP, not a full one."
+        ),
+    )
+    use_ceiling = objective.startswith("Tournament")
+    if use_ceiling:
+        _pf = pd.read_csv(BytesIO(projection_bytes))
+        if "ceiling_pts" in _pf.columns and _pf["ceiling_pts"].notna().any():
+            _pf["projected_pts"] = pd.to_numeric(_pf["ceiling_pts"], errors="coerce")
+            projection_bytes = _pf.to_csv(index=False).encode("utf-8")
+            projection_label = f"{projection_label} (ceiling)"
+        else:
+            st.warning(
+                "This projection file has no `ceiling_pts` column, so Tournament "
+                "mode falls back to expected points.",
+                icon=":material/warning:",
+            )
+            use_ceiling = False
+
     source_key = runtime.source_digest(salary_bytes, projection_bytes)
     if st.session_state.get("dfs_input_key") != source_key:
         st.session_state["dfs_input_key"] = source_key
@@ -200,17 +238,20 @@ def render():
         f"{pool.attrs['projection_season']} Week {pool.attrs['projection_week']} · direct DK points"
     )
     if projection_upload is None:
-        # Say what the shipped artifact actually is. It is a calibrated
-        # translation of the published half-PPR model, not a model trained on
-        # DraftKings points, and a reader deserves to know which one they have.
+        # Say what the shipped artifact actually is. Week 1 is a calibrated
+        # translation of Sleeper; Week 2 onward is our own half-PPR model,
+        # calibrated the same way. Neither is trained on DraftKings points.
         st.info(
-            "These are the site's half-PPR weekly projections mapped onto DraftKings "
-            "Classic scoring, one calibration per position fitted on the model's own "
-            "2025 out-of-sample predictions against actual DK points. On the 2025 "
-            "holdout the mapping is unbiased for the players an optimizer selects. "
-            "It is not a model trained directly on DraftKings scoring, and it does not "
-            "model ownership, correlation, or ceiling. Lineups are a starting point, "
-            "not a play recommendation.",
+            "Week 1 projections come from Sleeper, mapped onto DraftKings Classic "
+            "scoring with one calibration per position. Sleeper ranked players better "
+            "than our model did at a season boundary on the 2025 check (Spearman 0.786 "
+            "against 0.729), and our model has no in-season form to work from in Week 1. "
+            "From Week 2 the site's own half-PPR projections take over, calibrated the "
+            "same way against actual DK points on 2025 out-of-sample predictions. "
+            "Tournament mode uses a per-position 85th-percentile ceiling rather than the "
+            "mean. Neither mode is a model trained directly on DraftKings scoring, and "
+            "neither models ownership or correlation. Lineups are a starting point, not "
+            "a play recommendation.",
             icon=":material/info:",
         )
     _render_pool_summary(pool, summary)

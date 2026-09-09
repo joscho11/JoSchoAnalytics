@@ -124,6 +124,8 @@ def test_weekly_fantasy_defaults_to_2026_week1(tmp_path):
     assert "Published" in markdown
     infos = " ".join(str(w.value) for w in at.info).lower()
     assert "no agent notes for this week" not in infos
+    assert "sleeper's projection beside ours" in infos
+    assert any(exp.label == "Why Sleeper is included for Week 1" for exp in at.expander)
 
 
 def test_coming_soon_copy_points_at_2025_demo():
@@ -353,3 +355,17 @@ def test_preview_phone_grid_keeps_ranking_columns():
         "#", "Player", "Opponent", "Proj Pts", "Health", "Actual Pts",
     ]
     assert set(page.PREVIEW_SIMPLE_COLUMNS).issubset(page.PREVIEW_PHONE_COLUMNS)
+
+
+def test_week_one_phone_grid_keeps_sleeper_beside_model_projection():
+    import page_weekly_fantasy as page
+
+    available = [
+        "#", "Player", "Opponent", "Proj Pts", "Sleeper", "Health", "Actual Pts",
+    ]
+    assert page._preview_phone_columns(available, show_sleeper=True) == [
+        "#", "Player", "Proj Pts", "Sleeper", "Opponent", "Health", "Actual Pts",
+    ]
+    assert page._preview_phone_columns(available, show_sleeper=False) == [
+        "#", "Player", "Opponent", "Proj Pts", "Health", "Actual Pts",
+    ]

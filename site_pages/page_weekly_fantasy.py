@@ -40,6 +40,9 @@ PREVIEW_DETAIL_SOURCE_COLUMNS = (
 )
 PREVIEW_SIMPLE_COLUMNS = ["Player", "Opponent", "Proj Pts"]
 PREVIEW_PHONE_COLUMNS = ["#", "Player", "Opponent", "Proj Pts", "Health", "Actual Pts"]
+PREVIEW_PHONE_SLEEPER_COLUMNS = [
+    "#", "Player", "Proj Pts", "Sleeper", "Opponent", "Health", "Actual Pts",
+]
 PREVIEW_PROJECTED_COLUMNS = {
     "QB": ["Proj Pass Yds", "Proj Rush Yds"],
     "RB": ["Proj Rush Yds", "Proj Rec Yds"],
@@ -151,6 +154,19 @@ def _coming_soon_copy(season: int, week: int) -> str:
 
 def _preview_detail_available(frame: pd.DataFrame) -> bool:
     return set(PREVIEW_DETAIL_SOURCE_COLUMNS) <= set(frame.columns)
+
+
+def _show_sleeper_comparison(season: int, week: int) -> bool:
+    """Show Sleeper beside our number for live week 1 only.
+
+    Measured on the 2025 holdout, week 1: our MAE beats Sleeper at every
+    position (3.29 vs 3.49 overall) but our rank correlation loses at every
+    position (0.728 vs 0.784; RB 0.697 vs 0.828). A start/sit board is a
+    ranking product, so at week 1 we are the weaker ranker and say so instead
+    of hiding it. From week 2 the window fills with current-season games and
+    the gap closes, so the comparison column comes off.
+    """
+    return int(season) >= LIVE_FROM_SEASON and int(week) == 1
 
 
 def _uses_preview_layout(season: int, week: int) -> bool:
@@ -294,8 +310,11 @@ def _preview_table_columns(
     position: str,
     show_more_info: bool,
     actuals_in: bool,
+    show_sleeper: bool = False,
 ) -> list[str]:
     columns = list(PREVIEW_SIMPLE_COLUMNS)
+    if show_sleeper:
+        columns.append("Sleeper")
     if show_more_info:
         columns.extend(PREVIEW_PROJECTED_COLUMNS[position])
         columns.extend(PREVIEW_CONTEXT_COLUMNS)
@@ -303,6 +322,12 @@ def _preview_table_columns(
         columns.append("Actual Pts")
         columns.extend(PREVIEW_ACTUAL_COLUMNS[position])
     return columns
+
+
+def _preview_phone_columns(available_columns, *, show_sleeper: bool) -> list[str]:
+    """Keep the Week 1 benchmark next to our projection on narrow screens."""
+    preferred = PREVIEW_PHONE_SLEEPER_COLUMNS if show_sleeper else PREVIEW_PHONE_COLUMNS
+    return [column for column in preferred if column in available_columns]
 
 
 @st.cache_data(ttl=3600)
@@ -412,10 +437,9 @@ def render():
         live_format_preview = (int(season), int(week)) == LIVE_FORMAT_PREVIEW
         if int(season) >= LIVE_FROM_SEASON:
             st.success(
-                "Live 2026 release. Sleeper defines the scheduled player universe and "
-                "comparison benchmark; its projected points are not model inputs. Releases "
-                "are immutable revisions: a later build preserves every row for games that "
-                "have kicked off and recomputes only future games."
+                "Live 2026. Our model scores the players; Sleeper supplies coverage and, "
+                "in Week 1 only, the comparison. Rankings lock per game at kickoff, and later "
+                "revisions change future games only."
             )
         elif live_format_preview:
             st.info(
@@ -469,7 +493,26 @@ def render():
         if actuals_in:
             st.success(f"Results are in! Actual stats are now shown alongside projections for Week {week}.")
         else:
-            st.info("Games not yet played. Actual stats will appear here once the week's results are in.")
+            st.caption("Games not yet played · actual stats appear after the week's results are in.")
+
+        if _show_sleeper_comparison(season, week):
+            st.info(
+                "**Week 1 shows Sleeper's projection beside ours.** For start/sit "
+                "ordering, use Sleeper where the two disagree this week.",
+                icon=":material/compare_arrows:",
+            )
+            with st.expander("Why Sleeper is included for Week 1", expanded=False):
+                st.markdown(
+                    "Week 1 is the model's weakest week: with no current-season games "
+                    "yet, every player's form comes from his last four games of last "
+                    "season, which is mostly noise across an eight-month gap. Measured on 2025 "
+                    "Week 1, our average error was smaller than Sleeper's at every "
+                    "position, but our ordering was worse at every position (rank "
+                    "correlation 0.73 against 0.78, and 0.70 against 0.83 at running "
+                    "back). A start/sit board is a ranking, so Sleeper is the better bet "
+                    "where the two disagree. The comparison column comes off in Week 2, "
+                    "when the window fills with current-season games."
+                )
 
         st.divider()
 
@@ -570,11 +613,34 @@ def render():
                 if pos == "QB" and "depth_chart_position" in pos_subset.columns:
                     pos_subset = pos_subset[pos_subset["depth_chart_position"] == 1]
                     pos_subset = pos_subset.sort_values("projected_pts", ascending=False).drop_duplicates(subset="team")
-                top_n = 40 if pos in ("RB", "WR") else 20
+                # Rows shown per position tab. QB is 24 to match the scored
+                # universe cap in the producer (UNIVERSE_CAPS), which is also
+                # roughly a 12-team league's startable pool plus streamers.
+                top_n = {"QB": 24, "RB": 40, "WR": 40, "TE": 24}.get(pos, 20)
                 pos_df = pos_subset.sort_values("projected_pts", ascending=False)
                 if player_search:
                     mask = pos_df["player_display_name"].str.contains(player_search, case=False, na=False, regex=False)
                     pos_df = pos_df[mask]
+                elif (
+                    _show_sleeper_comparison(season, week)
+                    and "slp_proj" in pos_df.columns
+                    and pos_df["slp_proj"].notna().any()
+                ):
+                    # Week 1 only: show the UNION of our top N and Sleeper's top N.
+                    # Our week-1 ordering is the weaker of the two (rank correlation
+                    # 0.73 against 0.78), so cutting the board at our own top N hides
+                    # players Sleeper ranks as startable. Measured on this slate that
+                    # was 26 players, including Mark Andrews, Jayden Daniels and
+                    # Jaylen Waddle, most of them on new teams whose windows still
+                    # describe their old role. Rows stay sorted by our projection so
+                    # the disagreement is visible rather than resolved silently.
+                    ours = pos_df.head(top_n)
+                    theirs = pos_df.nlargest(top_n, "slp_proj")
+                    pos_df = (
+                        pd.concat([ours, theirs])
+                        .drop_duplicates(subset="player_id")
+                        .sort_values("projected_pts", ascending=False)
+                    )
                 else:
                     pos_df = pos_df.head(top_n)
                 pos_df = pos_df.reset_index(drop=True)
@@ -593,7 +659,7 @@ def render():
                     continue
                 keep = list(_core_cols)
                 for extra in ("injury_status_score", "is_home", "off_epa_roll4",
-                              "off_epa_rank", "implied_team_total"):
+                              "off_epa_rank", "implied_team_total", "slp_proj"):
                     if extra in pos_df.columns:
                         keep.append(extra)
                 display = pos_df[keep].copy()
@@ -662,9 +728,18 @@ def render():
                 if has_total:
                     display["Team Total"] = display["implied_team_total"].round(1)
 
+                _show_slp = (
+                    _show_sleeper_comparison(season, week)
+                    and "slp_proj" in display.columns
+                    and display["slp_proj"].notna().any()
+                )
+                if _show_slp:
+                    display["Sleeper"] = pd.to_numeric(
+                        display["slp_proj"], errors="coerce"
+                    ).round(1)
                 if preview_layout:
                     base_cols = _preview_table_columns(
-                        pos, show_more_info, actuals_in=False
+                        pos, show_more_info, actuals_in=False, show_sleeper=_show_slp
                     )
                 else:
                     extra_stat = []
@@ -754,6 +829,8 @@ def render():
                                       help="Player's injury status from the weekly NFL injury report.\n\n✅ Healthy  🟡 Questionable\n\nOut, Doubtful, IR, and anyone who did not play are removed from the board.\n\nNote: sorts alphabetically due to a Streamlit limitation."),
                     "Proj Pts":   st.column_config.NumberColumn("Proj Pts",   format="%.1f",
                                       help="Projected half-PPR fantasy points for this week. Half-PPR scoring: 0.5 pts per reception, 1 pt per 10 rush/rec yards, 6 pts per TD."),
+                    "Sleeper":    st.column_config.NumberColumn("Sleeper",    format="%.1f",
+                                      help="Sleeper's own half-PPR projection for this week, shown for comparison in week 1 only. On 2025 week 1 Sleeper ranked players better than we did at every position, so where the two disagree this week, theirs is the better bet. Not an input to our model."),
                     "Off EPA":    st.column_config.NumberColumn("Off EPA",    format="%+.3f",
                                       help="Team's offensive Expected Points Added (EPA) per play, averaged over the last 4 games. EPA measures how many points each play is worth above expectation. Higher = more efficient offense."),
                     "Team Total": st.column_config.NumberColumn("Team Total", format="%.1f",
@@ -802,7 +879,9 @@ def render():
                                       help=f"Actual number of receptions recorded in this game. {_dnp_note}")
 
                 if preview_layout:
-                    phone_keep = [col for col in PREVIEW_PHONE_COLUMNS if col in tbl.columns]
+                    phone_keep = _preview_phone_columns(
+                        tbl.columns, show_sleeper=_show_slp,
+                    )
                 else:
                     phone_keep = [
                         col for col in (

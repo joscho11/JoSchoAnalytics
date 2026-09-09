@@ -29,6 +29,18 @@ _REPO = "https://github.com/joscho11/JoSchoAnalytics"   # repo ROOT only (Q3)
 # the long per-position / all-time tables all import this. Trivially tunable after
 # on-device eyeballing.
 TABLE_HEIGHT = 735
+ROW_PX = 35          # st.dataframe row height
+HEADER_PX = 38       # header row plus the 3px border
+
+
+def exact_table_height(n_rows: int) -> int:
+    """Height that fits n_rows with no trailing blank rows.
+
+    TABLE_HEIGHT is sized for long scrolling boards. A fixed-length table (a
+    9-slot DFS lineup, say) rendered at that height pads a dozen empty rows
+    under the data and reads like the table failed to load.
+    """
+    return HEADER_PX + ROW_PX * max(int(n_rows), 1)
 
 
 def dataframe_phone_desktop(desktop_data, phone_data, *, slug: str,

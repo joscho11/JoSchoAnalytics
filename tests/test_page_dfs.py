@@ -15,6 +15,7 @@ PROJECTION_FIXTURE = FIXTURES / "direct_dk_projections.csv"
 sys.path[:0] = [str(ROOT), str(SITE_PAGES)]
 
 import dfs_runtime as runtime  # noqa: E402
+from dashboard_chrome import exact_table_height  # noqa: E402
 
 
 def _render_page():
@@ -50,6 +51,7 @@ def test_runtime_and_test_fixtures_solve():
     assert int(pool["optimization_eligible"].sum()) == 24
     assert lineup is not None and len(lineup) == 9
     assert int(lineup["salary"].sum()) <= 50_000
+    assert exact_table_height(len(lineup)) == 353
 
 
 def test_page_is_real_slate_upload_only():
@@ -60,6 +62,9 @@ def test_page_is_real_slate_upload_only():
         "Direct-DK projection CSV",
     }
     assert any("Upload a DraftKings NFL Classic salary CSV" in item.value for item in at.info)
+    assert any(
+        exp.label == "What this beta does — and does not do" for exp in at.expander
+    )
 
 
 def test_valid_salary_explains_missing_projection(tmp_path, monkeypatch):
@@ -84,6 +89,16 @@ def test_uploaded_inputs_optimize_and_expose_dk_download():
     metrics = {metric.label: metric.value for metric in at.metric}
     assert metrics["Salary used"] == "$50,000"
     assert metrics["Projected DK points"] == "152.5"
+
+
+def test_tournament_mode_without_ceiling_falls_back_cleanly():
+    at = _upload_inputs(_run())
+    objective = next(widget for widget in at.radio if widget.key == "dfs_objective")
+    assert objective.options == ["Cash (expected points)", "Tournament (ceiling)"]
+    at = objective.set_value("Tournament (ceiling)").run()
+    assert not at.exception, at.exception
+    assert any("no `ceiling_pts` column" in item.value for item in at.warning)
+    assert any(button.label == "Optimize lineup" for button in at.button)
 
 
 def test_failed_resolve_clears_the_previous_download():

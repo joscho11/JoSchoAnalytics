@@ -43,17 +43,23 @@ def _demo_2025_notice():
 
 def _live_notice():
     st.success(
-        "**Live 2026. Tuesday model.** Every game gets a pick. "
+        "**Live 2026 · Tuesday model.** Every game gets a pick. "
         f"**HIGH** (green) is a {HIGH_GAP:g}+ point disagreement with the Tuesday US median. "
         f"If the line moves and that gap falls under {HIGH_GAP:g}, HIGH is dropped. "
-        "No medium tier. No totals on this season. "
-        f"The frozen 2021-2025 benchmark is {LIVE_HIGH_WINS}/{LIVE_HIGH_N} = "
-        f"{LIVE_HIGH_WINS / LIVE_HIGH_N * 100:.2f}% ATS, one-sided 95% Wilson "
-        f"lower {LIVE_HIGH_WILSON_LOWER * 100:.2f}%, with median-triggered tickets graded at the "
-        f"best US Tuesday number and the last regular-season week skipped. {live_high_bar_sentence()} "
-        f"The Tuesday line, pick, edge, and HIGH flag use the median; the named best-available quote is execution and grading. "
-        f"Picks use the first valid Tuesday capture from 09:00–15:30 ET."
+        "A line move cannot create a new HIGH. The named best-available quote is used "
+        "for execution and grading."
     )
+    with st.expander("Tuesday model rules and frozen benchmark", expanded=False):
+        st.markdown(
+            "No medium tier. No totals on this season. "
+            f"The frozen 2021–2025 benchmark is {LIVE_HIGH_WINS}/{LIVE_HIGH_N} = "
+            f"{LIVE_HIGH_WINS / LIVE_HIGH_N * 100:.2f}% ATS, with a one-sided 95% "
+            f"Wilson lower bound of {LIVE_HIGH_WILSON_LOWER * 100:.2f}%. Median-triggered "
+            "tickets are graded at the best US Tuesday number and the last regular-season "
+            f"week is skipped. {live_high_bar_sentence()} The Tuesday line, pick, edge, "
+            "and HIGH flag use the median; the named best-available quote is execution "
+            "and grading. Picks use the first valid Tuesday capture from 09:00–15:30 ET."
+        )
 
 
 def _format_price(value) -> str:
