@@ -160,7 +160,7 @@ The site opens on **Home** every time. There is no sidebar. Each product page ca
         st.markdown(f"""
 Each card is one matchup.
 
-**TUE MODEL LINE** on 2026 cards is the Tuesday US median used by the model and HIGH rule. **Best available** separately names the locked spread, sportsbook, and price used for grading. Negative means that team is favored. The 2025 demo keeps the older **SPREAD** label.
+**TUESDAY LINE** on 2026 cards is the Tuesday US median used by the model and HIGH rule. **Best available** separately names the locked spread, sportsbook, and price used for grading. Negative means that team is favored. The 2025 demo keeps the older **SPREAD** label.
 
 **PREDICTED** is the model's version of the line, sportsbook-style (favorite negative). When the model's number is more extreme than Vegas on a side, that is the edge. Example: Vegas SEA -7, model SEA -11.3. The model likes SEA by 4.3 more points, so it recommends SEA.
 

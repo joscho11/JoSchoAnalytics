@@ -51,7 +51,7 @@ def _live_notice():
         f"{LIVE_HIGH_WINS / LIVE_HIGH_N * 100:.2f}% ATS, one-sided 95% Wilson "
         f"lower {LIVE_HIGH_WILSON_LOWER * 100:.2f}%, with median-triggered tickets graded at the "
         f"best US Tuesday number and the last regular-season week skipped. {live_high_bar_sentence()} "
-        f"The model line, pick, edge, and HIGH flag use the median; the named best-available quote is execution and grading. "
+        f"The Tuesday line, pick, edge, and HIGH flag use the median; the named best-available quote is execution and grading. "
         f"Picks use the first valid Tuesday capture from 09:00–15:30 ET."
     )
 
@@ -296,7 +296,7 @@ def render():
                 <span style='font-size:11px;color:#888;letter-spacing:1px;text-transform:uppercase;'>Tuesday HIGH</span>
                 <span style='font-size:12px;background:#1a3a1a;border:1px solid #00c853;
                             border-radius:4px;padding:2px 8px;color:#00c853;'>HIGH</span>
-                <span style='font-size:11px;color:#93A0B1;'>Green card = {HIGH_GAP:g}+ points vs the Tuesday US median, and the live line still {HIGH_GAP:g}+. TUE MODEL LINE and the displayed edge use the median. Best available names the locked sportsbook quote used for grading. Every other game still shows a pick. No medium tier. A line move can drop HIGH. It cannot create HIGH.</span>
+                <span style='font-size:11px;color:#93A0B1;'>Green card = {HIGH_GAP:g}+ points vs the Tuesday US median, and the live line still {HIGH_GAP:g}+. TUESDAY LINE and the displayed edge use the median. Best available names the locked sportsbook quote used for grading. Every other game still shows a pick. No medium tier. A line move can drop HIGH. It cannot create HIGH.</span>
             </div>
         """, unsafe_allow_html=True)
     elif _has_consensus_col:
@@ -508,7 +508,7 @@ def render():
                 else:
                     h0, h1, h2, h4 = st.columns([2.2, 1.2, 1.2, 1.8])
 
-                _spread_header = "TUE MODEL LINE" if live else "SPREAD"
+                _spread_header = "TUESDAY LINE" if live else "SPREAD"
                 h1.markdown(f"<div class='jsa-gc-hdr' style='text-align:center;font-size:11px;color:#aaa;letter-spacing:1px'>{_spread_header}</div>", unsafe_allow_html=True)
                 h2.markdown("<div class='jsa-gc-hdr' style='text-align:center;font-size:11px;color:#aaa;letter-spacing:1px'>PREDICTED</div>", unsafe_allow_html=True)
                 h4.markdown("<div class='jsa-gc-hdr jsa-gc-pick'></div>", unsafe_allow_html=True)
