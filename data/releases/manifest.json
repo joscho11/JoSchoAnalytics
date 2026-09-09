@@ -274,7 +274,7 @@
       "previous_build": "fantasy-2026w01-1269fd7bb3da"
     },
     "predictions": {
-      "active_build": "predictions-2026w01-8c37c4bf98b2",
+      "active_build": "predictions-2026w01-652c2c5fe7c9",
       "builds": {
         "predictions-2025w10-8f1701d7a6db": {
           "artifact": "data/releases/builds/predictions/2025/week10/predictions-2025w10-8f1701d7a6db/artifact.csv",
@@ -476,6 +476,32 @@
           },
           "week": 17
         },
+        "predictions-2026w01-652c2c5fe7c9": {
+          "artifact": "data/releases/builds/predictions/2026/week01/predictions-2026w01-652c2c5fe7c9/artifact.csv",
+          "build_id": "predictions-2026w01-652c2c5fe7c9",
+          "metadata": "data/releases/builds/predictions/2026/week01/predictions-2026w01-652c2c5fe7c9/metadata.json",
+          "model_version": "spread-v3-prod-ridge-only-c482820619c7",
+          "produced_at": "2026-09-08T20:21:45Z",
+          "product": "predictions",
+          "published_at": "2026-09-08T20:25:40Z",
+          "row_count": 16,
+          "season": 2026,
+          "sha256": "652c2c5fe7c983651a0fa1a438f0aef6cc91ee8a87d60e72654b503a918484b5",
+          "status": "Published",
+          "validation": {
+            "checks": {
+              "artifact_sha256": "652c2c5fe7c983651a0fa1a438f0aef6cc91ee8a87d60e72654b503a918484b5",
+              "produced_at_utc": "2026-09-08T20:21:45Z",
+              "scheduled_games": 16
+            },
+            "errors": [],
+            "ok": true,
+            "product": "predictions",
+            "row_count": 16,
+            "warnings": []
+          },
+          "week": 1
+        },
         "predictions-2026w01-8c37c4bf98b2": {
           "artifact": "data/releases/builds/predictions/2026/week01/predictions-2026w01-8c37c4bf98b2/artifact.csv",
           "build_id": "predictions-2026w01-8c37c4bf98b2",
@@ -509,9 +535,9 @@
         "status": "Scheduled",
         "week": 1
       },
-      "previous_build": "predictions-2025w10-8f1701d7a6db"
+      "previous_build": "predictions-2026w01-8c37c4bf98b2"
     }
   },
   "schema_version": 1,
-  "updated_at": "2026-09-08T19:03:06Z"
+  "updated_at": "2026-09-08T20:25:40Z"
 }

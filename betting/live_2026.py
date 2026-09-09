@@ -1,10 +1,13 @@
 """2026 live Tuesday-model display rules. Not the 2025 3-voter demo.
 
-Production lives in the private leftover Ridge (`spread_v3_prod`). HIGH flags
-|predicted home margin - Tuesday US-median| >= 2.5, last REG week skipped.
-A later line can drop HIGH. It cannot create HIGH. No MEDIUM tier.
-The live HIGH book is scored at the best US Tuesday number (line shop),
-Joseph 2026-09-01. All-bets stays off the claim.
+Production lives in the private leftover Ridge (`spread_v3_prod`). For 2026
+releases, the pick, display, and grading use the best US quote; the HIGH flag
+qualifies off the Tuesday US median, which is the rule the 302/535 book measures. The best US
+Tuesday quote for the recommended side. The frozen model still receives the US
+median as a feature. A later line can drop HIGH; it cannot create HIGH. No MEDIUM.
+
+The 2021-2025 benchmark below remains the locked median-triggered ticket set
+graded at the best US Tuesday number. Historical releases are not rewritten.
 """
 from __future__ import annotations
 
@@ -19,8 +22,8 @@ SLATE_NAME = "slate_2026.csv"
 
 # spread_v3_prod Tuesday HIGH book, 2021-2025, last REG week skipped.
 # Injury reports as-of Tuesday 9:00 ET (legal_injury_reports).
-# Clean Ridge, 49 columns, seed 7. HIGH flags vs the Tuesday US-median.
-# Live book scores those tickets at the best US Tuesday number.
+# Clean Ridge, 49 columns, seed 7. Historical HIGH flags vs the Tuesday US-median.
+# The locked historical book scores those tickets at the best US Tuesday number.
 # One-sided 95% Wilson 0.5290 clears 52.4%. All-bets is diagnostic.
 # Median on the same tickets: 299/538, Wilson 0.5203.
 # Withdrawn: 192/336 used same-week injury reports that postdate Tuesday.
@@ -145,6 +148,39 @@ def row_tuesday_spread(row):
     return _num(row.get("spread_line"))
 
 
+def row_qualifying_spread(row):
+    """The line HIGH is judged against: the Tuesday US median.
+
+    Shopping is execution, not selection. Qualifying off the shopped quote
+    loosens the 2.5 cut to roughly 2.2, because the shopped number always moves
+    toward the bet. Measured 2021-2025: median-flag / shop-grade 302/535 =
+    56.45%, Wilson 0.5290; shop-flag / shop-grade 335/603 = 55.56%,
+    Wilson 0.5221, under the 0.524 break-even.
+
+    2025 demo rows carry no median column, so they fall back to the line they
+    have and their behaviour is unchanged.
+    """
+    med = _num(row.get("tuesday_median_spread_line"))
+    if med is not None:
+        return med
+    return row_tuesday_spread(row)
+
+
+def row_qualifying_edge(row):
+    """Model disagreement with the Tuesday median: the number HIGH is judged on.
+
+    The published artifact keeps ``model_edge`` against the shopped line, because
+    that is the line the release is graded at and the validator enforces
+    ``edge == predicted - tuesday_spread_line``. The card shows this consensus
+    edge instead so the arithmetic on screen matches the badge.
+    """
+    pred = _num(row_pred(row))
+    line = _num(row_qualifying_spread(row))
+    if pred is None or line is None:
+        return None
+    return pred - line
+
+
 def row_live_spread(row):
     return _num(row.get("live_spread_line"))
 
@@ -159,7 +195,7 @@ def row_game_type(row) -> str:
 def row_display_high(row) -> bool:
     return display_high(
         row_pred(row),
-        row_tuesday_spread(row),
+        row_qualifying_spread(row),
         row_live_spread(row),
         season=int(row.get("season", LIVE_SEASON)),
         week=int(row.get("week", 1)),
@@ -170,7 +206,7 @@ def row_display_high(row) -> bool:
 def row_high_dropped(row) -> bool:
     return high_dropped(
         row_pred(row),
-        row_tuesday_spread(row),
+        row_qualifying_spread(row),
         row_live_spread(row),
         season=int(row.get("season", LIVE_SEASON)),
         week=int(row.get("week", 1)),

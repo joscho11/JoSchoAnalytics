@@ -33,14 +33,16 @@ def _prediction_candidate(tmp_path: Path, *, shift: float = 0.0, week: int = 1):
             "season": 2026, "week": week, "gameday": f"2026-09-{first_day:02d}", "gametime": "20:20",
             "predicted_margin": 4.0 + shift, "model_edge": 1.0 + shift,
             "recommendation": "HOME (SEA)", "logged_at": "2026-09-08T13:00:00Z",
-            "tuesday_spread_line": 3.0,
+            "tuesday_spread_line": 3.0, "tuesday_spread_book": "DraftKings",
+            "tuesday_spread_price": -110, "tuesday_median_spread_line": 3.5,
         },
         {
             "game_id": f"2026_{week:02d}_SF_LA", "home_team": "LA", "away_team": "SF",
             "season": 2026, "week": week, "gameday": f"2026-09-{second_day:02d}", "gametime": "20:35",
             "predicted_margin": -1.0 + shift, "model_edge": -3.0 + shift,
             "recommendation": "AWAY (SF)", "logged_at": "2026-09-08T13:00:00Z",
-            "tuesday_spread_line": 2.0,
+            "tuesday_spread_line": 2.0, "tuesday_spread_book": "BetRivers",
+            "tuesday_spread_price": -108, "tuesday_median_spread_line": 1.5,
         },
     ])
     rows.to_csv(artifact, index=False)
@@ -140,6 +142,32 @@ def test_public_prediction_contract_rejects_gameday_mode(tmp_path):
     report = validate_candidate(artifact, metadata, schedule=schedule)
     assert not report.ok
     assert any("gameday spread rows" in error for error in report.errors)
+
+
+def test_live_prediction_contract_requires_and_checks_shopped_quote(tmp_path):
+    artifact, _, schedule = _prediction_candidate(tmp_path)
+    rows = pd.read_csv(artifact)
+    rows = rows.drop(columns=["tuesday_spread_book"])
+    rows.to_csv(artifact, index=False)
+    metadata = build_candidate_metadata(
+        "predictions", artifact, season=2026, week=1,
+        model_version="spread-v3-test", produced_at="2026-09-08T13:00:00Z",
+    )
+    missing = validate_candidate(artifact, metadata, schedule=schedule)
+    assert not missing.ok
+    assert any("missing shopped-line fields" in error for error in missing.errors)
+
+    artifact, _, schedule = _prediction_candidate(tmp_path)
+    rows = pd.read_csv(artifact)
+    rows.loc[0, "tuesday_median_spread_line"] = 2.5
+    rows.to_csv(artifact, index=False)
+    metadata = build_candidate_metadata(
+        "predictions", artifact, season=2026, week=1,
+        model_version="spread-v3-test", produced_at="2026-09-08T13:00:00Z",
+    )
+    worse = validate_candidate(artifact, metadata, schedule=schedule)
+    assert not worse.ok
+    assert any("worse than the US median" in error for error in worse.errors)
 
 
 def test_live_prediction_timestamp_must_be_timezone_aware(tmp_path):

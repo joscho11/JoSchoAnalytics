@@ -4,7 +4,7 @@
 
 **The one-liner:** Each tab has one job. Draft Board compares Model Proj to ADP. Weekly Fantasy is player-week projections. Weekly Predictions is the betting page, and HIGH is a 2.5-point disagreement with the Tuesday 9am line that still holds. Track Record and Season Totals post the sample and the confidence-interval floor next to the headline. Film Room, League History, and Help sit under More.
 
-Live-page updates since this recording: Draft Board can toggle Sleeper ADP or ESPN ADP. League History loads public and private ESPN leagues, and Yahoo on the live page. Yahoo is not in this video. Weekly Fantasy holdout is now MAE 4.999 vs Sleeper 5.188, rank 0.395 vs 0.402. HIGH on the site is a 2.5-point leftover cut scored at the best US Tuesday number.
+Live-page updates since this recording: Draft Board can toggle Sleeper ADP or ESPN ADP. League History loads public and private ESPN leagues, and Yahoo on the live page. Yahoo is not in this video. Weekly Fantasy holdout is now MAE 4.999 vs Sleeper 5.188, rank 0.395 vs 0.402. Starting in 2026, the best US Tuesday quote drives the pick, edge, 2.5-point HIGH cut, display, and grading.
 
 ---
 
@@ -28,7 +28,7 @@ The 2026 weekly model was scored on a 2025 holdout of **3,060** player-weeks. MA
 
 Every game gets a pick. HIGH means the model disagrees with the Tuesday 9:00 AM EST line by **2.5 or more** points, and the live line still holds that gap. If the gap falls under 2.5, HIGH comes off. Picks freeze Tuesday 9:00 AM EST.
 
-Tuesday HIGH, 2021-2025, injury reports as-of Tuesday 9:00 ET, scored at the best US Tuesday number: **302/535**, 56.45% ATS. The conservative end of a 95% interval on that sample is **52.90%**, above the **52.4%** break-even at -110. HIGH still flags off the Tuesday median. Take the best number. That is Tuesday line value, not closing-line value.
+Frozen Tuesday HIGH benchmark, 2021-2025, injury reports as-of Tuesday 9:00 ET, median-triggered and scored at the best US Tuesday number: **302/535**, 56.45% ATS. The conservative end of a 95% interval on that sample is **52.90%**, above the **52.4%** break-even at -110. Starting in 2026, selection also uses the shopped quote. That is Tuesday line value, not closing-line value.
 
 The video may still say an older HIGH sample. The live pages are the book.
 

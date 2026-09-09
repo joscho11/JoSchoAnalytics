@@ -1,8 +1,7 @@
 # Weekly publication contract
 
-Status: checked against the current CLI, validators, manifest, and grading workflow on 2026-08-21.
-At this check, the active public baselines are the 2025 Week 10 demos, Weeks 10-17 are registered,
-and no 2026 release has been graded.
+Status: checked against the current CLI, validators, manifest, and grading workflow on 2026-09-08.
+At this check, 2026 Week 1 prediction and fantasy releases are active and no 2026 release has been graded.
 
 This package is the only public write boundary for spread predictions and weekly
 fantasy projections. Producer repositories write candidates to their own `outputs/`
@@ -16,6 +15,9 @@ folder under `cowork_OS` is required.
 2. `publishing.cli publish` verifies the schema, season/week, identifiers,
    duplicates, finite values, model version, SHA-256, row and coverage claims,
    timezone-aware production time, and exact NFL schedule coverage.
+   A live prediction candidate must also carry `tuesday_spread_book`,
+   `tuesday_spread_price`, and `tuesday_median_spread_line`; its
+   `tuesday_spread_line` is the best captured quote for the recommended side.
 3. A passing candidate is copied into an immutable build directory under
    `data/releases/builds/`. Only then does the manifest's active pointer move.
 4. Weekly Predictions and Weekly Fantasy use that active pointer as their default.

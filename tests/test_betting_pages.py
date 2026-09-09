@@ -125,6 +125,14 @@ def test_weekly_predictions_hides_paused_agent_chrome(tmp_path):
     assert "jsa-tot-badge" not in md
     assert "NE @ SEA" in md
     assert "Published" in md
+    captions = " ".join(str(c.value) for c in at.caption)
+    # The best-available quote renders as white markdown, not a muted caption.
+    assert "Best available for <b style='color:#fff'>TB</b>" in md
+    assert "+4.0" in md and "(-109)" in md and "BetRivers" in md
+    metrics = {str(m.label): str(m.value) for m in at.metric}
+    # 4, not 5. WAS clears 2.5 only against the shopped line (2.61); its median
+    # edge is 2.11. HIGH qualifies off the median, so it does not get the badge.
+    assert metrics["HIGH picks"] == "4"
 
 
 def test_weekly_predictions_live_2026_banner(tmp_path):
@@ -152,6 +160,21 @@ def test_weekly_predictions_live_2026_banner(tmp_path):
         at = _render_page(tmp_path, module)
         md = " ".join(str(m.value) for m in at.markdown)
         assert "52.4% ATS" in md, f"ATS blurb must appear on {module}"
+
+
+def test_weekly_predictions_formats_named_shopped_quote():
+    import page_weekly_predictions as page
+
+    row = {
+        "home_team": "CIN",
+        "away_team": "TB",
+        "tuesday_spread_line": 4.0,
+        "tuesday_spread_book": "BetRivers",
+        "tuesday_spread_price": -109,
+    }
+    assert page._best_quote_label(row, "TB") == (
+        "Best available for TB: +4.0 (-109) at BetRivers"
+    )
 
 
 if __name__ == "__main__":

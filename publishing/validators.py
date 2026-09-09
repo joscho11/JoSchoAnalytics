@@ -22,6 +22,10 @@ PREDICTION_REQUIRED = {
     "game_id", "home_team", "away_team", "season", "week",
     "predicted_margin", "model_edge", "recommendation", "logged_at",
 }
+PREDICTION_EXECUTION_REQUIRED = {
+    "tuesday_spread_line", "tuesday_spread_book", "tuesday_spread_price",
+    "tuesday_median_spread_line",
+}
 FANTASY_REQUIRED = {
     "player_id", "player_display_name", "position", "team", "opponent_team",
     "season", "week", "projected_pts",
@@ -144,6 +148,14 @@ def _validate_predictions(
         gameday = frame["mode"].astype("string").str.lower().eq("gameday")
         if gameday.any() and int(metadata.get("season", 0)) >= 2026:
             report.errors.append("gameday spread rows are not a public prediction product")
+    live_release = int(metadata.get("season", 0)) >= 2026 and not metadata.get("legacy_bootstrap")
+    if live_release:
+        missing_execution = sorted(PREDICTION_EXECUTION_REQUIRED - set(frame.columns))
+        if missing_execution:
+            report.errors.append(
+                "live predictions missing shopped-line fields: "
+                + ", ".join(missing_execution)
+            )
     for col in ("game_id", "home_team", "away_team", "recommendation"):
         if frame[col].isna().any() or frame[col].astype(str).str.strip().eq("").any():
             report.errors.append(f"{col} contains missing or empty values")
@@ -177,6 +189,25 @@ def _validate_predictions(
     mismatch = (edge - (pred - line)).abs()
     if mismatch.notna().any() and float(mismatch.max()) > 1e-5:
         report.errors.append(f"model edge identity fails; max absolute mismatch {float(mismatch.max()):.6g}")
+    if live_release and PREDICTION_EXECUTION_REQUIRED <= set(frame.columns):
+        books = frame["tuesday_spread_book"].astype("string")
+        if books.isna().any() or books.str.strip().eq("").any():
+            report.errors.append("tuesday_spread_book must identify a sportsbook for every game")
+        prices = pd.to_numeric(frame["tuesday_spread_price"], errors="coerce")
+        if prices.isna().any() or not np.isfinite(prices).all():
+            report.errors.append("tuesday_spread_price must be finite for every game")
+        median_line = pd.to_numeric(frame["tuesday_median_spread_line"], errors="coerce")
+        if median_line.isna().any() or not np.isfinite(median_line).all():
+            report.errors.append("tuesday_median_spread_line must be finite for every game")
+        else:
+            worse_home = edge.gt(0) & line.gt(median_line + 1e-9)
+            worse_away = edge.lt(0) & line.lt(median_line - 1e-9)
+            if (worse_home | worse_away).any():
+                bad = frame.loc[worse_home | worse_away, "game_id"].astype(str).tolist()
+                report.errors.append(
+                    "shopped line is worse than the US median for the recommended side: "
+                    + ", ".join(bad[:8])
+                )
 
     expected_hash = metadata.get("expected_game_ids_sha256")
     actual_hash = canonical_values_hash(frame["game_id"])

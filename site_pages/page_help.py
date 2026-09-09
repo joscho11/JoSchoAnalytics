@@ -102,7 +102,7 @@ The model predicts the margin, then asks which side of the posted number is more
         st.markdown(f"""
 Standard sportsbook odds are about 110 to win 100. You need about **52.4%** of bets to break even. Most casual bettors don't hit that.
 
-The **2026 live book** is Tuesday HIGH scored at the best US Tuesday number: **{LIVE_HIGH_WINS}/{LIVE_HIGH_N} = {LIVE_HIGH_ATS * 100:.2f}%** ATS, one-sided 95% Wilson lower bound **{LIVE_HIGH_WILSON_LOWER * 100:.2f}%**, walk-forward 2021-2025. {live_high_bar_sentence()} HIGH still flags off the Tuesday median. Take the best number. All-bets is not the claim. No 2026 games are graded yet. This is Tuesday line value, not closing-line value.
+The **frozen 2021-2025 benchmark** used median-triggered HIGH tickets scored at the best US Tuesday number: **{LIVE_HIGH_WINS}/{LIVE_HIGH_N} = {LIVE_HIGH_ATS * 100:.2f}%** ATS, one-sided 95% Wilson lower bound **{LIVE_HIGH_WILSON_LOWER * 100:.2f}%**. {live_high_bar_sentence()} Starting with 2026 releases, the displayed line, price, sportsbook and grading use the selected shopped quote. HIGH still qualifies off the Tuesday median, so the badge means the same thing it did in that record. Shopping is execution, not selection. All-bets is not the claim. No 2026 games are graded yet. This is Tuesday line value, not closing-line value.
 
 The **2025 demo test** on this site (weeks 10-17) is **{_overall_pct}% ATS** ({_overall_correct}/{_overall_total}){_hc_line}. {_be_comment} That walkthrough is the old three-model consensus, not the 2026 live book. Past performance doesn't guarantee anything going forward. There will be bad weeks.
 
@@ -160,7 +160,7 @@ The site opens on **Home** every time. There is no sidebar. Each product page ca
         st.markdown(f"""
 Each card is one matchup.
 
-**SPREAD** is the Vegas line. Negative means that team is favored.
+**BEST LINE** on 2026 cards is the best captured spread for the recommended side, with its sportsbook and price shown. Negative means that team is favored. The 2025 demo keeps the older **SPREAD** label.
 
 **PREDICTED** is the model's version of the line, sportsbook-style (favorite negative). When the model's number is more extreme than Vegas on a side, that is the edge. Example: Vegas SEA -7, model SEA -11.3. The model likes SEA by 4.3 more points, so it recommends SEA.
 
@@ -168,7 +168,7 @@ Each card is one matchup.
 
 **BET X** is the recommended side. The bold name is who the model likes.
 
-**2026 live:** every game gets a pick. **HIGH** (green) is a {HIGH_GAP:g}+ point disagreement with the Tuesday market snapshot, and the live line still {HIGH_GAP:g}+. If the line moves and that gap falls under {HIGH_GAP:g}, HIGH is dropped. It cannot be created mid-week. No medium tier. No totals on the 2026 week page.
+**2026 live:** every game gets a pick. **HIGH** (green) is a {HIGH_GAP:g}+ point disagreement with the Tuesday US median, and the live line still {HIGH_GAP:g}+. The card shows the best captured quote and its sportsbook, which is what you would bet. If the line moves and that gap falls under {HIGH_GAP:g}, HIGH is dropped. It cannot be created mid-week. No medium tier. No totals on the 2026 week page.
 
 **2025 demo test:** weeks 10 through the end of that season still use HIGH / MED / PASS consensus badges. Those weeks are unchanged.
 
@@ -319,7 +319,7 @@ render any market claim that can't prove where it came from.
 
 The colored High / Medium / Skip buttons are not on the game cards right now. What you see
 on **2026** Weekly Predictions is **Tuesday HIGH**: a green highlight when the model
-disagrees with the Tuesday market snapshot by {HIGH_GAP:g}+ points and the live line still does. The
+disagrees with the Tuesday US median by {HIGH_GAP:g}+ points and the live line still does. The
 **2025 demo** weeks still show **Model Consensus** (HIGH / MED / PASS).
 
 When an approved agent artifact is present again, High means the model edge is strong and outside signals lined up, Medium means mixed signals, and Skip means pass.

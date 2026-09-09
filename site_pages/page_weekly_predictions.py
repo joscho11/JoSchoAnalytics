@@ -26,6 +26,8 @@ from live_2026 import (
     is_live_season,
     row_display_high,
     row_high_dropped,
+    row_qualifying_edge,
+    row_qualifying_spread,
 )
 from page_common import load_agent_analysis
 
@@ -42,14 +44,61 @@ def _demo_2025_notice():
 def _live_notice():
     st.success(
         "**Live 2026. Tuesday model.** Every game gets a pick. "
-        f"**HIGH** (green) is a {HIGH_GAP:g}+ point disagreement with the Tuesday market snapshot. "
+        f"**HIGH** (green) is a {HIGH_GAP:g}+ point disagreement with the Tuesday US median. "
         f"If the line moves and that gap falls under {HIGH_GAP:g}, HIGH is dropped. "
         "No medium tier. No totals on this season. "
-        f"HIGH walk-forward is {LIVE_HIGH_WINS}/{LIVE_HIGH_N} = "
+        f"The frozen 2021-2025 benchmark is {LIVE_HIGH_WINS}/{LIVE_HIGH_N} = "
         f"{LIVE_HIGH_WINS / LIVE_HIGH_N * 100:.2f}% ATS, one-sided 95% Wilson "
-        f"lower {LIVE_HIGH_WILSON_LOWER * 100:.2f}%, 2021-2025, last regular-season "
-        f"week skipped, scored at the best US Tuesday number. "
-        f"{live_high_bar_sentence()} Picks use the first valid Tuesday capture from 09:00–15:30 ET."
+        f"lower {LIVE_HIGH_WILSON_LOWER * 100:.2f}%, with median-triggered tickets graded at the "
+        f"best US Tuesday number and the last regular-season week skipped. {live_high_bar_sentence()} "
+        f"Starting in 2026, every public comparison and result uses the selected shopped quote. "
+        f"Picks use the first valid Tuesday capture from 09:00–15:30 ET."
+    )
+
+
+def _format_price(value) -> str:
+    if value is None or pd.isna(value):
+        return ""
+    number = float(value)
+    return f"{number:+.0f}" if abs(number) >= 10 else f"{number:.2f}"
+
+
+def _best_quote_label(row, recommended_team: str | None) -> str:
+    if not recommended_team:
+        return ""
+    book = row.get("tuesday_spread_book")
+    price = row.get("tuesday_spread_price")
+    spread = row.get("tuesday_spread_line", row.get("spread_line"))
+    if book is None or pd.isna(book) or price is None or pd.isna(price) or pd.isna(spread):
+        return ""
+    team_line = -float(spread) if recommended_team == row.get("home_team") else float(spread)
+    return (
+        f"Best available for {recommended_team}: {team_line:+.1f} "
+        f"({_format_price(price)}) at {book}"
+    )
+
+
+def _best_quote_html(row, recommended_team: str | None) -> str:
+    """White, not muted. This is the number a viewer would actually bet.
+
+    TUE LINE on the card below is the Tuesday median, which is what the HIGH
+    badge is judged against and deliberately not the price. Keeping this line
+    visually louder than the column stops the two being confused.
+    """
+    if not _best_quote_label(row, recommended_team):
+        return ""
+    book = str(row.get("tuesday_spread_book"))
+    price = _format_price(row.get("tuesday_spread_price"))
+    spread = row.get("tuesday_spread_line", row.get("spread_line"))
+    team_line = -float(spread) if recommended_team == row.get("home_team") else float(spread)
+    return (
+        "<div style='font-size:13px;color:#e8eaed;margin:0 0 6px 0'>"
+        f"Best available for <b style='color:#fff'>{_html.escape(str(recommended_team))}</b>: "
+        f"<span style='color:#fff;font-weight:800;font-size:15px'>{team_line:+.1f}</span>"
+        f"<span style='color:#fff;font-weight:600'>&nbsp;({_html.escape(price)})</span>"
+        f"<span style='color:#e8eaed'>&nbsp;at&nbsp;</span>"
+        f"<span style='color:#fff;font-weight:700'>{_html.escape(book)}</span>"
+        "</div>"
     )
 
 
@@ -177,6 +226,17 @@ def render():
     st.divider()
 
     _primary_edge = 'ens_model_edge'       if ('ens_model_edge'       in week_df.columns and week_df['ens_model_edge'].notna().any())       else 'model_edge'
+    if live and not week_df.empty:
+        # The artifact stores model_edge against the SHOPPED line, because that is
+        # the line the release is graded at and the validator enforces the identity
+        # edge == predicted - tuesday_spread_line. HIGH, however, qualifies off the
+        # Tuesday median. Showing the shopped edge next to a median-driven badge
+        # makes about 1 card a slate look broken (5.4% of games 2021-2025), so the
+        # card, the sort, and the average-edge metric all use the consensus edge.
+        week_df['_qualifying_edge'] = week_df.apply(row_qualifying_edge, axis=1)
+        week_df['_qualifying_line'] = week_df.apply(row_qualifying_spread, axis=1)
+        if week_df['_qualifying_edge'].notna().any():
+            _primary_edge = '_qualifying_edge'
     _pred_col     = 'ens_predicted_margin' if ('ens_predicted_margin' in week_df.columns and week_df['ens_predicted_margin'].notna().any()) else 'predicted_margin'
     _correct_col  = 'ens_model_correct'    if ('ens_model_correct'    in week_df.columns and week_df['ens_model_correct'].notna().any())    else 'model_correct'
     if live:
@@ -245,7 +305,7 @@ def render():
                 <span style='font-size:11px;color:#888;letter-spacing:1px;text-transform:uppercase;'>Tuesday HIGH</span>
                 <span style='font-size:12px;background:#1a3a1a;border:1px solid #00c853;
                             border-radius:4px;padding:2px 8px;color:#00c853;'>HIGH</span>
-                <span style='font-size:11px;color:#93A0B1;'>Green card = {HIGH_GAP:g}+ points vs the Tuesday market snapshot, and the live line still {HIGH_GAP:g}+. Every other game still shows a pick. No medium tier. A line move can drop HIGH. It cannot create HIGH.</span>
+                <span style='font-size:11px;color:#93A0B1;'>Green card = {HIGH_GAP:g}+ points vs the Tuesday US median, and the live line still {HIGH_GAP:g}+. TUE LINE is that median, so PREDICTED minus TUE LINE is the gap the badge uses. The best available price and its sportsbook are named above each card, and that is what you would bet. Every other game still shows a pick. No medium tier. A line move can drop HIGH. It cannot create HIGH.</span>
             </div>
         """, unsafe_allow_html=True)
     elif _has_consensus_col:
@@ -352,7 +412,7 @@ def render():
         for _gc_i, (_, row) in enumerate(filtered_df.iterrows()):
             home      = row['home_team']
             away      = row['away_team']
-            spread    = row['spread_line']
+            spread    = row['_qualifying_line'] if (live and pd.notna(row.get('_qualifying_line'))) else row['spread_line']
             predicted = row[_pred_col]
             edge      = row[_primary_edge]
             tier      = str(row['consensus_tier']) if _has_consensus_col and pd.notna(row.get('consensus_tier')) else ''
@@ -446,13 +506,19 @@ def render():
                     unsafe_allow_html=True
                 )
 
+                if live:
+                    _quote_html = _best_quote_html(row, rec_team)
+                    if _quote_html:
+                        st.markdown(_quote_html, unsafe_allow_html=True)
+
                 if results_available:
                     h0, h1, h2, h3, h4 = st.columns([2.2, 1.2, 1.2, 1.2, 1.8])
                     h3.markdown("<div class='jsa-gc-hdr' style='text-align:center;font-size:11px;color:#aaa;letter-spacing:1px'>SCORE</div>", unsafe_allow_html=True)
                 else:
                     h0, h1, h2, h4 = st.columns([2.2, 1.2, 1.2, 1.8])
 
-                h1.markdown("<div class='jsa-gc-hdr' style='text-align:center;font-size:11px;color:#aaa;letter-spacing:1px'>SPREAD</div>",    unsafe_allow_html=True)
+                _spread_header = "TUE LINE" if live else "SPREAD"
+                h1.markdown(f"<div class='jsa-gc-hdr' style='text-align:center;font-size:11px;color:#aaa;letter-spacing:1px'>{_spread_header}</div>", unsafe_allow_html=True)
                 h2.markdown("<div class='jsa-gc-hdr' style='text-align:center;font-size:11px;color:#aaa;letter-spacing:1px'>PREDICTED</div>", unsafe_allow_html=True)
                 h4.markdown("<div class='jsa-gc-hdr jsa-gc-pick'></div>", unsafe_allow_html=True)
 
