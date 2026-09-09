@@ -7,9 +7,9 @@ from datetime import datetime
 from pathlib import Path
 
 from .contract import PublicationError, sha256_file, utc_now_iso
-from .manifest import load_manifest, write_manifest
+from .manifest import load_manifest, published_builds, write_manifest
 from .paths import releases_root, relative_to_site, resolve_site_path
-from .validators import read_metadata, validate_candidate
+from .validators import read_metadata, read_table, validate_candidate
 
 
 def _build_id(metadata: dict) -> str:
@@ -18,6 +18,36 @@ def _build_id(metadata: dict) -> str:
     week = int(metadata["week"])
     digest = str(metadata["artifact_sha256"])
     return f"{product}-{season}w{week:02d}-{digest[:12]}"
+
+
+def _high_game_ids(frame) -> set[str]:
+    """Return the explicitly released HIGH set; blank means not HIGH."""
+    if "consensus_tier" not in frame:
+        return set()
+    tiers = frame["consensus_tier"].fillna("").astype(str).str.strip().str.upper()
+    return set(frame.loc[tiers.eq("HIGH"), "game_id"].astype(str))
+
+
+def _reject_high_promotions(source: Path, product: str, season: int, week: int, root) -> None:
+    """A later public build may demote an initial HIGH, never add one."""
+    if product != "predictions" or season < 2026:
+        return
+    matching = [
+        build for build in published_builds(product, root=root)
+        if int(build["season"]) == season and int(build["week"]) == week
+    ]
+    if not matching:
+        return
+    initial = matching[0]
+    initial_frame = read_table(resolve_site_path(initial["artifact"], root))
+    allowed = _high_game_ids(initial_frame)
+    candidate = _high_game_ids(read_table(source))
+    promoted = sorted(candidate - allowed)
+    if promoted:
+        raise PublicationError(
+            "later prediction releases cannot promote new HIGH games; "
+            f"initial={sorted(allowed)} promoted={promoted}"
+        )
 
 
 def publish_candidate(
@@ -36,6 +66,7 @@ def publish_candidate(
     build_id = _build_id(meta)
     product = str(meta["product"])
     season, week = int(meta["season"]), int(meta["week"])
+    _reject_high_promotions(source, product, season, week, root)
     build_dir = releases_root(root) / "builds" / product / str(season) / f"week{week:02d}" / build_id
     build_dir.mkdir(parents=True, exist_ok=True)
     suffix = source.suffix.lower()

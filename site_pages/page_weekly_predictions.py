@@ -44,14 +44,14 @@ def _demo_2025_notice():
 def _live_notice():
     st.success(
         "**Live 2026. Tuesday model.** Every game gets a pick. "
-        f"**HIGH** (green) is a {HIGH_GAP:g}+ point disagreement with the best shopped Tuesday quote. "
+        f"**HIGH** (green) is a {HIGH_GAP:g}+ point disagreement with the Tuesday US median. "
         f"If the line moves and that gap falls under {HIGH_GAP:g}, HIGH is dropped. "
         "No medium tier. No totals on this season. "
         f"The frozen 2021-2025 benchmark is {LIVE_HIGH_WINS}/{LIVE_HIGH_N} = "
         f"{LIVE_HIGH_WINS / LIVE_HIGH_N * 100:.2f}% ATS, one-sided 95% Wilson "
         f"lower {LIVE_HIGH_WILSON_LOWER * 100:.2f}%, with median-triggered tickets graded at the "
         f"best US Tuesday number and the last regular-season week skipped. {live_high_bar_sentence()} "
-        f"That historical benchmark used a median-triggered ticket set; starting in 2026, every public comparison and result uses the selected shopped quote. "
+        f"The model line, pick, edge, and HIGH flag use the median; the named best-available quote is execution and grading. "
         f"Picks use the first valid Tuesday capture from 09:00–15:30 ET."
     )
 
@@ -79,7 +79,7 @@ def _best_quote_label(row, recommended_team: str | None) -> str:
 
 
 def _best_quote_html(row, recommended_team: str | None) -> str:
-    """White, not muted. This is the number every public decision uses."""
+    """White, not muted. This is the locked execution and grading quote."""
     if not _best_quote_label(row, recommended_team):
         return ""
     book = str(row.get("tuesday_spread_book"))
@@ -222,9 +222,8 @@ def render():
 
     _primary_edge = 'ens_model_edge'       if ('ens_model_edge'       in week_df.columns and week_df['ens_model_edge'].notna().any())       else 'model_edge'
     if live and not week_df.empty:
-        # One 2026 number drives selection, display, and grading. Keeping the
-        # derived columns here makes the contract explicit and preserves the
-        # 2025 fallback behavior in live_2026.
+        # The Tuesday median drives selection and the displayed model edge. The
+        # independently shopped quote is rendered separately and used to grade.
         week_df['_qualifying_edge'] = week_df.apply(row_qualifying_edge, axis=1)
         week_df['_qualifying_line'] = week_df.apply(row_qualifying_spread, axis=1)
         if week_df['_qualifying_edge'].notna().any():
@@ -297,7 +296,7 @@ def render():
                 <span style='font-size:11px;color:#888;letter-spacing:1px;text-transform:uppercase;'>Tuesday HIGH</span>
                 <span style='font-size:12px;background:#1a3a1a;border:1px solid #00c853;
                             border-radius:4px;padding:2px 8px;color:#00c853;'>HIGH</span>
-                <span style='font-size:11px;color:#93A0B1;'>Green card = {HIGH_GAP:g}+ points vs the best shopped Tuesday quote, and the live line still {HIGH_GAP:g}+. BEST LINE, the named sportsbook, the displayed edge, the HIGH badge, and grading all use that same captured quote. Every other game still shows a pick. No medium tier. A line move can drop HIGH. It cannot create HIGH.</span>
+                <span style='font-size:11px;color:#93A0B1;'>Green card = {HIGH_GAP:g}+ points vs the Tuesday US median, and the live line still {HIGH_GAP:g}+. TUE MODEL LINE and the displayed edge use the median. Best available names the locked sportsbook quote used for grading. Every other game still shows a pick. No medium tier. A line move can drop HIGH. It cannot create HIGH.</span>
             </div>
         """, unsafe_allow_html=True)
     elif _has_consensus_col:
@@ -509,7 +508,7 @@ def render():
                 else:
                     h0, h1, h2, h4 = st.columns([2.2, 1.2, 1.2, 1.8])
 
-                _spread_header = "BEST LINE" if live else "SPREAD"
+                _spread_header = "TUE MODEL LINE" if live else "SPREAD"
                 h1.markdown(f"<div class='jsa-gc-hdr' style='text-align:center;font-size:11px;color:#aaa;letter-spacing:1px'>{_spread_header}</div>", unsafe_allow_html=True)
                 h2.markdown("<div class='jsa-gc-hdr' style='text-align:center;font-size:11px;color:#aaa;letter-spacing:1px'>PREDICTED</div>", unsafe_allow_html=True)
                 h4.markdown("<div class='jsa-gc-hdr jsa-gc-pick'></div>", unsafe_allow_html=True)

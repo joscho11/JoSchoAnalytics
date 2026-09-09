@@ -1,9 +1,9 @@
 """2026 live Tuesday-model display rules. Not the 2025 3-voter demo.
 
 Production lives in the private leftover Ridge (`spread_v3_prod`). For 2026
-releases, the pick, edge, HIGH flag, display, and grading all use the best US
-Tuesday quote for the recommended side. The frozen model still receives the US
-median as a feature. A later line can drop HIGH; it cannot create HIGH. No MEDIUM.
+releases, the Tuesday US median drives the model, pick, model edge, and HIGH
+flag. The best US Tuesday quote for that side is displayed separately and used
+for grading. A later line can drop HIGH; it cannot create HIGH. No MEDIUM.
 
 The 2021-2025 benchmark below remains the locked median-triggered ticket set
 graded at the best US Tuesday number. Historical releases are not rewritten.
@@ -148,16 +148,23 @@ def row_tuesday_spread(row):
 
 
 def row_qualifying_spread(row):
-    """The public line used for every 2026 decision: best Tuesday US quote.
+    """Tuesday US median used for the model pick, edge, and HIGH decision.
 
-    The Tuesday median remains model-input provenance only. Historical 2025 demo
-    rows have no shopped field and therefore retain their existing spread.
+    Older candidates without the explicit median field fall back to their
+    original spread. The shopped Tuesday quote remains available separately via
+    :func:`row_tuesday_spread` for display and grading.
     """
+    median = _num(row.get("tuesday_median_spread_line"))
+    if median is not None:
+        return median
+    original = _num(row.get("spread_line"))
+    if original is not None:
+        return original
     return row_tuesday_spread(row)
 
 
 def row_qualifying_edge(row):
-    """Model disagreement with the best shopped Tuesday line."""
+    """Model disagreement with the Tuesday US median."""
     pred = _num(row_pred(row))
     line = _num(row_qualifying_spread(row))
     if pred is None or line is None:

@@ -31,18 +31,20 @@ def _prediction_candidate(tmp_path: Path, *, shift: float = 0.0, week: int = 1):
         {
             "game_id": f"2026_{week:02d}_NE_SEA", "home_team": "SEA", "away_team": "NE",
             "season": 2026, "week": week, "gameday": f"2026-09-{first_day:02d}", "gametime": "20:20",
-            "predicted_margin": 4.0 + shift, "model_edge": 1.0 + shift,
+            "predicted_margin": 4.0 + shift, "model_edge": 0.5 + shift,
             "recommendation": "HOME (SEA)", "logged_at": "2026-09-08T13:00:00Z",
             "tuesday_spread_line": 3.0, "tuesday_spread_book": "DraftKings",
             "tuesday_spread_price": -110, "tuesday_median_spread_line": 3.5,
+            "consensus_tier": "",
         },
         {
             "game_id": f"2026_{week:02d}_SF_LA", "home_team": "LA", "away_team": "SF",
             "season": 2026, "week": week, "gameday": f"2026-09-{second_day:02d}", "gametime": "20:35",
-            "predicted_margin": -1.0 + shift, "model_edge": -3.0 + shift,
+            "predicted_margin": -1.0 + shift, "model_edge": -2.5 + shift,
             "recommendation": "AWAY (SF)", "logged_at": "2026-09-08T13:00:00Z",
             "tuesday_spread_line": 2.0, "tuesday_spread_book": "BetRivers",
             "tuesday_spread_price": -108, "tuesday_median_spread_line": 1.5,
+            "consensus_tier": "HIGH" if shift <= 0 else "",
         },
     ])
     rows.to_csv(artifact, index=False)
@@ -170,6 +172,22 @@ def test_live_prediction_contract_requires_and_checks_shopped_quote(tmp_path):
     assert any("worse than the US median" in error for error in worse.errors)
 
 
+def test_live_prediction_contract_rejects_shopped_triggered_high(tmp_path):
+    artifact, _, schedule = _prediction_candidate(tmp_path)
+    rows = pd.read_csv(artifact)
+    rows.loc[0, "predicted_margin"] = 5.7
+    rows.loc[0, "model_edge"] = 2.2
+    rows.loc[0, "consensus_tier"] = "HIGH"
+    rows.to_csv(artifact, index=False)
+    metadata = build_candidate_metadata(
+        "predictions", artifact, season=2026, week=1,
+        model_version="spread-v3-shop-trigger-test", produced_at="2026-09-08T13:00:00Z",
+    )
+    report = validate_candidate(artifact, metadata, schedule=schedule)
+    assert not report.ok
+    assert any("Tuesday-median edge" in error for error in report.errors)
+
+
 def test_live_prediction_timestamp_must_be_timezone_aware(tmp_path):
     artifact, _, schedule = _prediction_candidate(tmp_path)
     rows = pd.read_csv(artifact)
@@ -235,6 +253,25 @@ def test_same_artifact_cannot_change_immutable_release_metadata(tmp_path):
     changed["model_version"] = "different-model-version"
     with pytest.raises(PublicationError, match="immutable metadata collision"):
         publish_candidate(artifact, changed, schedule=schedule, root=site)
+
+
+def test_later_prediction_release_cannot_promote_new_high(tmp_path):
+    site = tmp_path / "site"
+    site.mkdir()
+    artifact, metadata, schedule = _prediction_candidate(tmp_path)
+    publish_candidate(artifact, metadata, schedule=schedule, root=site)
+
+    rows = pd.read_csv(artifact)
+    rows.loc[0, "predicted_margin"] = 6.5
+    rows.loc[0, "model_edge"] = 3.0
+    rows.loc[0, "consensus_tier"] = "HIGH"
+    rows.to_csv(artifact, index=False)
+    promoted = build_candidate_metadata(
+        "predictions", artifact, season=2026, week=1,
+        model_version="spread-v3-promoted", produced_at="2026-09-08T13:05:00Z",
+    )
+    with pytest.raises(PublicationError, match="cannot promote new HIGH"):
+        publish_candidate(artifact, promoted, schedule=schedule, root=site)
 
 
 def test_pointer_only_rollback_and_release_status(tmp_path):

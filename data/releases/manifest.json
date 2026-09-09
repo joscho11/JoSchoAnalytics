@@ -303,7 +303,7 @@
       "previous_build": "fantasy-2026w01-3473d7cd62ae"
     },
     "predictions": {
-      "active_build": "predictions-2026w01-652c2c5fe7c9",
+      "active_build": "predictions-2026w01-f620ec646e0e",
       "builds": {
         "predictions-2025w10-8f1701d7a6db": {
           "artifact": "data/releases/builds/predictions/2025/week10/predictions-2025w10-8f1701d7a6db/artifact.csv",
@@ -556,6 +556,32 @@
             "warnings": []
           },
           "week": 1
+        },
+        "predictions-2026w01-f620ec646e0e": {
+          "artifact": "data/releases/builds/predictions/2026/week01/predictions-2026w01-f620ec646e0e/artifact.csv",
+          "build_id": "predictions-2026w01-f620ec646e0e",
+          "metadata": "data/releases/builds/predictions/2026/week01/predictions-2026w01-f620ec646e0e/metadata.json",
+          "model_version": "spread-v3-prod-ridge-only-c482820619c7",
+          "produced_at": "2026-09-09T02:18:00Z",
+          "product": "predictions",
+          "published_at": "2026-09-09T02:18:39Z",
+          "row_count": 16,
+          "season": 2026,
+          "sha256": "f620ec646e0e5ae596b50a12548e59ef2aa1dfcffbb55ecabc8740a7ccc0b1cc",
+          "status": "Published",
+          "validation": {
+            "checks": {
+              "artifact_sha256": "f620ec646e0e5ae596b50a12548e59ef2aa1dfcffbb55ecabc8740a7ccc0b1cc",
+              "produced_at_utc": "2026-09-09T02:18:00Z",
+              "scheduled_games": 16
+            },
+            "errors": [],
+            "ok": true,
+            "product": "predictions",
+            "row_count": 16,
+            "warnings": []
+          },
+          "week": 1
         }
       },
       "next_release": {
@@ -564,9 +590,9 @@
         "status": "Scheduled",
         "week": 1
       },
-      "previous_build": "predictions-2026w01-8c37c4bf98b2"
+      "previous_build": "predictions-2026w01-652c2c5fe7c9"
     }
   },
   "schema_version": 1,
-  "updated_at": "2026-09-09T00:57:21Z"
+  "updated_at": "2026-09-09T02:18:39Z"
 }

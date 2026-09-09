@@ -129,10 +129,11 @@ def test_weekly_predictions_hides_paused_agent_chrome(tmp_path):
     # The best-available quote renders as white markdown, not a muted caption.
     assert "Best available for <b style='color:#fff'>TB</b>" in md
     assert "+4.0" in md and "(-109)" in md and "BetRivers" in md
+    assert "TUE MODEL LINE" in md
     metrics = {str(m.label): str(m.value) for m in at.metric}
-    # WAS clears 2.5 against the shopped line (2.61). All 2026 public decisions
-    # use that quote, so it is the fifth HIGH card.
-    assert metrics["HIGH picks"] == "5"
+    # WAS is 2.11 points off the Tuesday median. Its available +5.5 improves
+    # execution but cannot promote it into the median-triggered HIGH set.
+    assert metrics["HIGH picks"] == "4"
 
 
 def test_weekly_predictions_live_2026_banner(tmp_path):

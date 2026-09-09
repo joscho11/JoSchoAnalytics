@@ -124,8 +124,8 @@ def test_row_helpers_and_live_season():
     assert row_high_dropped(row)
 
 
-def test_2026_high_qualifies_off_the_shopped_line():
-    """Selection, display, and grading share the best captured 2026 quote."""
+def test_2026_high_qualifies_off_median_and_shop_cannot_promote():
+    """The best captured quote is execution only, never a looser trigger."""
     row = pd.Series(
         {
             "ens_predicted_margin": 2.89,
@@ -137,11 +137,11 @@ def test_2026_high_qualifies_off_the_shopped_line():
             "game_type": "REG",
         }
     )
-    assert row_qualifying_spread(row) == 5.5
-    assert round(row_qualifying_edge(row), 2) == -2.61
-    assert row_display_high(row)
+    assert row_qualifying_spread(row) == 5.0
+    assert round(row_qualifying_edge(row), 2) == -2.11
+    assert not row_display_high(row)
 
-    # The median can move independently without changing the public ticket.
+    # A median-qualified game remains HIGH while its shopped execution improves.
     row["ens_predicted_margin"] = 0.53
     row["tuesday_median_spread_line"] = 3.5
     row["tuesday_spread_line"] = 4.0

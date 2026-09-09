@@ -89,11 +89,11 @@ def _spread_2026():
 Each week the model guesses the **margin leftover versus the first valid Tuesday market capture (09:00–15:30 ET)**.
 It is a Ridge regression on 49 inputs. The Tuesday US median is its frozen market
 input; after the model produces a margin, the 2026 release shops the captured books
-and makes every public comparison against the best quote for the selected side. The
+and locks the best quote for the selected side as its execution line. The
 other inputs describe team form, availability, quarterbacks, coaching, rest, and venue.
 
 **Every game still gets a pick.** **HIGH** (green) is the only highlighted slice: the
-model disagrees with the best shopped Tuesday quote by {HIGH_GAP:g} or more points, and the live line still
+model disagrees with the Tuesday US median by {HIGH_GAP:g} or more points, and the live line still
 does. If the line moves and that gap falls under {HIGH_GAP:g}, HIGH is dropped. A later line
 cannot create HIGH. There is no medium tier. The last regular-season week is skipped
 for HIGH. Totals are not on the 2026 week page.
@@ -101,9 +101,9 @@ for HIGH. Totals are not on the 2026 week page.
 **The frozen 2021-2025 benchmark** used median-triggered HIGH tickets scored at the best US Tuesday number:
 **{LIVE_HIGH_WINS}/{LIVE_HIGH_N} = {LIVE_HIGH_ATS * 100:.2f}%**
 ATS, one-sided 95% Wilson lower bound **{LIVE_HIGH_WILSON_LOWER * 100:.2f}%**, walk-forward
-2021-2025. {live_high_bar_sentence()} Starting with 2026 releases, the pick, edge,
-HIGH flag, display, and grading use the selected shopped quote. The historical benchmark
-used the older median-triggered rule, so it is context rather than the 2026 ticket definition. Betting every
+2021-2025. {live_high_bar_sentence()} Starting with 2026 releases, the model, pick,
+edge, and HIGH flag use the Tuesday US median. The selected shopped quote is displayed
+separately and used for grading, matching the benchmark's execution rule. Betting every
 game is not the claim. No 2026 games are graded yet.
 This is Tuesday line value, not closing-line value.
 

@@ -12,7 +12,7 @@ The 2026 display logic lives in `live_2026.py`:
 
 - The model predicts home margin from information available by Tuesday at 9:00 a.m. ET.
 - The frozen 2021-2025 benchmark marks `HIGH` when the model differs from the Tuesday US median by at least 2.5 points, then grades those tickets at the best US Tuesday number.
-- Starting in 2026, the best captured US quote for the recommended side drives the pick, edge, `HIGH` flag, public display, and grading. The median remains a model feature and provenance field only.
+- Starting in 2026, the Tuesday US median drives the model, pick, edge, and `HIGH` flag. The best captured US quote for the recommended side is displayed separately and drives grading.
 - A later line can remove a `HIGH` label, but cannot create one.
 - The final regular-season week is excluded from `HIGH` labels.
 - There is no `MEDIUM` tier and no all-bets performance claim.

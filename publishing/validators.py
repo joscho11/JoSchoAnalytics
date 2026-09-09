@@ -24,8 +24,9 @@ PREDICTION_REQUIRED = {
 }
 PREDICTION_EXECUTION_REQUIRED = {
     "tuesday_spread_line", "tuesday_spread_book", "tuesday_spread_price",
-    "tuesday_median_spread_line",
+    "tuesday_median_spread_line", "consensus_tier",
 }
+PREDICTION_HIGH_GAP = 2.5
 FANTASY_REQUIRED = {
     "player_id", "player_display_name", "position", "team", "opponent_team",
     "season", "week", "projected_pts",
@@ -175,21 +176,27 @@ def _validate_predictions(
     edge = pd.to_numeric(frame.get("ens_model_edge", frame["model_edge"]), errors="coerce")
     if "ens_model_edge" in frame:
         edge = edge.where(edge.notna(), pd.to_numeric(frame["model_edge"], errors="coerce"))
-    if "tuesday_spread_line" in frame:
-        line = pd.to_numeric(frame["tuesday_spread_line"], errors="coerce")
-        if "spread_line" in frame:
-            line = line.where(line.notna(), pd.to_numeric(frame["spread_line"], errors="coerce"))
+    if live_release and "tuesday_median_spread_line" in frame:
+        model_line = pd.to_numeric(frame["tuesday_median_spread_line"], errors="coerce")
     elif "spread_line" in frame:
-        line = pd.to_numeric(frame["spread_line"], errors="coerce")
+        model_line = pd.to_numeric(frame["spread_line"], errors="coerce")
+    elif "tuesday_spread_line" in frame:
+        model_line = pd.to_numeric(frame["tuesday_spread_line"], errors="coerce")
     else:
-        report.errors.append("predictions need tuesday_spread_line or spread_line")
-        line = pd.Series(np.nan, index=frame.index)
-    if line.isna().any() or not np.isfinite(line).all():
-        report.errors.append("the frozen spread line must be finite for every game")
-    mismatch = (edge - (pred - line)).abs()
+        report.errors.append("predictions need a Tuesday model line")
+        model_line = pd.Series(np.nan, index=frame.index)
+    if model_line.isna().any() or not np.isfinite(model_line).all():
+        report.errors.append("the Tuesday model line must be finite for every game")
+    mismatch = (edge - (pred - model_line)).abs()
     if mismatch.notna().any() and float(mismatch.max()) > 1e-5:
-        report.errors.append(f"model edge identity fails; max absolute mismatch {float(mismatch.max()):.6g}")
+        report.errors.append(
+            "model edge must be prediction minus the Tuesday US median; "
+            f"max absolute mismatch {float(mismatch.max()):.6g}"
+        )
     if live_release and PREDICTION_EXECUTION_REQUIRED <= set(frame.columns):
+        execution_line = pd.to_numeric(frame["tuesday_spread_line"], errors="coerce")
+        if execution_line.isna().any() or not np.isfinite(execution_line).all():
+            report.errors.append("tuesday_spread_line must be finite for every game")
         books = frame["tuesday_spread_book"].astype("string")
         if books.isna().any() or books.str.strip().eq("").any():
             report.errors.append("tuesday_spread_book must identify a sportsbook for every game")
@@ -200,12 +207,38 @@ def _validate_predictions(
         if median_line.isna().any() or not np.isfinite(median_line).all():
             report.errors.append("tuesday_median_spread_line must be finite for every game")
         else:
-            worse_home = edge.gt(0) & line.gt(median_line + 1e-9)
-            worse_away = edge.lt(0) & line.lt(median_line - 1e-9)
+            if "spread_line" in frame:
+                public_model_line = pd.to_numeric(frame["spread_line"], errors="coerce")
+                spread_mismatch = (public_model_line - median_line).abs()
+                if spread_mismatch.notna().any() and float(spread_mismatch.max()) > 1e-5:
+                    report.errors.append(
+                        "spread_line must equal the Tuesday US median for live predictions"
+                    )
+            worse_home = edge.gt(0) & execution_line.gt(median_line + 1e-9)
+            worse_away = edge.lt(0) & execution_line.lt(median_line - 1e-9)
             if (worse_home | worse_away).any():
                 bad = frame.loc[worse_home | worse_away, "game_id"].astype(str).tolist()
                 report.errors.append(
                     "shopped line is worse than the US median for the recommended side: "
+                    + ", ".join(bad[:8])
+                )
+            tiers = frame["consensus_tier"].fillna("").astype(str).str.strip().str.upper()
+            invalid_tiers = sorted(set(tiers) - {"", "HIGH"})
+            if invalid_tiers:
+                report.errors.append(
+                    f"live prediction tiers must be HIGH or empty, got {invalid_tiers}"
+                )
+            expected_high = edge.abs().ge(PREDICTION_HIGH_GAP)
+            if int(metadata.get("week", 0)) == 18:
+                game_type = frame.get(
+                    "game_type", pd.Series("REG", index=frame.index)
+                ).fillna("REG").astype(str)
+                expected_high = expected_high & ~game_type.eq("REG")
+            tier_mismatch = tiers.eq("HIGH").ne(expected_high)
+            if tier_mismatch.any():
+                bad = frame.loc[tier_mismatch, "game_id"].astype(str).tolist()
+                report.errors.append(
+                    "HIGH tier must use the 2.5-point Tuesday-median edge: "
                     + ", ".join(bad[:8])
                 )
 
