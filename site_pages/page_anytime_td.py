@@ -12,7 +12,7 @@ import pandas as pd
 import streamlit as st
 
 import page_common
-from dashboard_chrome import TABLE_HEIGHT, dataframe_phone_desktop
+from dashboard_chrome import dataframe_phone_desktop, exact_table_height
 
 _HERE = Path(__file__).resolve().parents[1]
 _DIR = _HERE / "betting" / "anytime_td"
@@ -295,7 +295,7 @@ def _board(view: pd.DataFrame, slug: str, search: str) -> None:
         slug=slug,
         hide_index=True,
         width="stretch",
-        height=TABLE_HEIGHT,
+        height=exact_table_height(len(view)),
         column_config=_desktop_column_config(),
         phone_column_config=_phone_column_config(),
         key=f"atd_grid_{slug}_{search}_{len(table)}",
