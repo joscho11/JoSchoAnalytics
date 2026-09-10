@@ -18,8 +18,8 @@ ORIENTATION = ("I build machine-learning models for NFL betting and fantasy, run
 PURPOSE = ("My pre-season draft board: the independent model's exact 180-player 2026 "
            "projection universe. Sleeper ADP (default), ESPN ADP, Yahoo ADP, or Model "
            "Draft Rank, Sleeper projections, "
-           "and both rank gaps refresh daily; Model Proj points and ranks stay frozen until "
-           "the planned early-September snapshot.")
+           "and both rank gaps refresh through kickoff, then show the latest pre-kickoff "
+           "snapshot; Model Proj points and ranks stay frozen by design.")
 
 
 def render():
@@ -31,4 +31,11 @@ def render():
     if app_today() < _ss:
         # No page_link here — this IS the Draft Board page, so the link would be circular.
         chrome.render_preseason_banner(None, _ss.year)
+    else:
+        _freeze_date = f"{_ss:%B} {_ss.day}, {_ss.year}"
+        st.info(
+            f"ADP refreshes are paused after {_freeze_date}. Sleeper, ESPN, and Yahoo ADP "
+            "show the latest available pre-kickoff market snapshot; the 2026 Model Proj "
+            "and its ranks remain frozen by design."
+        )
     board.render()
