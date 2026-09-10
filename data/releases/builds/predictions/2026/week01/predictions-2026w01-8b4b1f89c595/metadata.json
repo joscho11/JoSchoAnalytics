@@ -1,0 +1,69 @@
+{
+  "artifact_name": "predictions_2026_week01.csv",
+  "artifact_sha256": "8b4b1f89c5957dac5c0ddaaa429d6016c711569e9b4f3553b7f53b148bf2471b",
+  "correction": {
+    "model_update": true,
+    "reason": "Promoted validated causal-cleanup Ridge model with point-in-time inputs; supersedes the prior Week 1 release.",
+    "source_snapshot_captured_at": "2026-09-08T11:23:16-04:00",
+    "source_snapshot_sha256": "dd15bf1fba268e21ee1f241924ebae49a950aac023bb4135ba7ec20dba09b5f0",
+    "supersedes_build_id": "predictions-2026w01-57d4781adbd7"
+  },
+  "expected_game_ids_sha256": "2eca943853669c2e4c0beb4782851c9c6919cd0093b5b6ae3ad15c143cfc6e84",
+  "expected_rows": 16,
+  "expected_teams": [
+    "ARI",
+    "ATL",
+    "BAL",
+    "BUF",
+    "CAR",
+    "CHI",
+    "CIN",
+    "CLE",
+    "DAL",
+    "DEN",
+    "DET",
+    "GB",
+    "HOU",
+    "IND",
+    "JAX",
+    "KC",
+    "LA",
+    "LAC",
+    "LV",
+    "MIA",
+    "MIN",
+    "NE",
+    "NO",
+    "NYG",
+    "NYJ",
+    "PHI",
+    "PIT",
+    "SEA",
+    "SF",
+    "TB",
+    "TEN",
+    "WAS"
+  ],
+  "legacy_bootstrap": false,
+  "model_version": "spread-v3-prod-ridge-only-43d72d950d5b",
+  "produced_at": "2026-09-10T22:53:35Z",
+  "product": "predictions",
+  "schema_version": 1,
+  "season": 2026,
+  "validation": {
+    "checks": {
+      "artifact_sha256": "8b4b1f89c5957dac5c0ddaaa429d6016c711569e9b4f3553b7f53b148bf2471b",
+      "post_kickoff_correction": true,
+      "produced_at_utc": "2026-09-10T22:53:35Z",
+      "scheduled_games": 16
+    },
+    "errors": [],
+    "ok": true,
+    "product": "predictions",
+    "row_count": 16,
+    "warnings": [
+      "correction was produced after the first kickoff; correction controls verified"
+    ]
+  },
+  "week": 1
+}

@@ -98,7 +98,7 @@ does. If the line moves and that gap falls under {HIGH_GAP:g}, HIGH is dropped. 
 cannot create HIGH. There is no medium tier. The last regular-season week is skipped
 for HIGH. Totals are not on the 2026 week page.
 
-**The frozen 2021-2025 benchmark** used median-triggered HIGH tickets scored at the best US Tuesday number:
+**The current clean 2021-2025 benchmark** uses median-triggered HIGH tickets scored at the best US Tuesday number:
 **{LIVE_HIGH_WINS}/{LIVE_HIGH_N} = {LIVE_HIGH_ATS * 100:.2f}%**
 ATS, one-sided 95% Wilson lower bound **{LIVE_HIGH_WILSON_LOWER * 100:.2f}%**, walk-forward
 2021-2025. {live_high_bar_sentence()} Starting with 2026 releases, the model, pick,

@@ -1,7 +1,8 @@
-"""Weekly Predictions page (site revamp Batch 3b). Tab1 body moved byte-identical
-from app.py; shared stats/helpers come from dashboard_data / page_common. Its own
-Season/Week/Min-edge controls (filter independence) are preserved. The ATS blurb
-moved here from the retired sidebar. Stale "tab" wording is verbatim (later sweep).
+"""Weekly Predictions page (site revamp Batch 3b).
+
+The page owns its Season/Week/Min-edge controls, while shared stats/helpers come
+from dashboard_data and page_common. The 2026 card reads the active published
+spread release directly; the 2025 demo remains the older walkthrough.
 """
 import glob
 import html as _html
@@ -32,16 +33,7 @@ from live_2026 import (
 from page_common import load_agent_analysis
 
 
-# Week 1 audit disposition: the JAX HIGH label depends on the reviewed coach-state
-# input. Keep the model artifact immutable, but suppress that label on the public card
-# until the input is repaired and the model is rerun.
-WEEK1_REVIEW_EXCLUDED_HIGH = {"2026_01_CLE_JAX"}
-
-
 def _public_high(row) -> bool:
-    if int(row.get("season", 0)) == 2026 and int(row.get("week", 0)) == 1:
-        if str(row.get("game_id", "")) in WEEK1_REVIEW_EXCLUDED_HIGH:
-            return False
     return row_display_high(row)
 
 
@@ -62,10 +54,10 @@ def _live_notice():
         "A line move cannot create a new HIGH. The named best-available quote is used "
         "for execution and grading."
     )
-    with st.expander("Tuesday model rules and frozen benchmark", expanded=False):
+    with st.expander("Tuesday model rules and clean benchmark", expanded=False):
         st.markdown(
             "No medium tier. No totals on this season. "
-            f"The frozen 2021–2025 benchmark is {LIVE_HIGH_WINS}/{LIVE_HIGH_N} = "
+            f"The current clean 2021–2025 benchmark is {LIVE_HIGH_WINS}/{LIVE_HIGH_N} = "
             f"{LIVE_HIGH_WINS / LIVE_HIGH_N * 100:.2f}% ATS, with a one-sided 95% "
             f"Wilson lower bound of {LIVE_HIGH_WILSON_LOWER * 100:.2f}%. Median-triggered "
             "tickets are graded at the best US Tuesday number and the last regular-season "

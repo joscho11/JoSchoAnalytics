@@ -149,8 +149,8 @@ def test_2026_high_qualifies_off_median_and_shop_cannot_promote():
 
 
 def test_one_sided_wilson_claim_matches_locked_book():
-    assert LIVE_HIGH_WINS == 302
-    assert LIVE_HIGH_N == 535
+    assert LIVE_HIGH_WINS == 295
+    assert LIVE_HIGH_N == 521
     lo = _wilson_one_sided_lower(LIVE_HIGH_WINS, LIVE_HIGH_N, LIVE_HIGH_WILSON_Z)
     assert round(lo, 4) == LIVE_HIGH_WILSON_LOWER
     assert lo > 0.524

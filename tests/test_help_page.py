@@ -106,9 +106,9 @@ def test_help_site_org_and_paused_copy(tmp_path):
 def test_help_states_live_high_wilson_claim(tmp_path):
     at = _render(tmp_path)
     md = " ".join(str(m.value) for m in at.markdown)
-    assert "302/535" in md
-    assert "56.45%" in md
-    assert "52.90%" in md
+    assert "295/521" in md
+    assert "56.62%" in md
+    assert "53.03%" in md
     assert "above 52.4%" in md
     assert "best US Tuesday" in md
     assert "192/336" not in md

@@ -25,15 +25,16 @@ VETERAN_CALIBRATION_AUDIT = [
     {"position": "TE", "n": 558, "overall_bias": -2.57, "top_n": 112, "top_bias": -1.58},
 ]
 
-# Live-product charts on Help. Frozen from the published books, not computed at
-# render time. Tests lock the load-bearing totals against futures/published/evidence.json
+# Live-product charts on Help. Frozen from the current clean published book, not
+# computed at render time. Tests lock the load-bearing totals against the active
+# model constants and the published/evidence snapshot
 # and the HIGH season splits against LIVE_HIGH_WINS / LIVE_HIGH_N.
 SPREAD_HIGH_BY_SEASON = [
-    {"season": 2021, "wins": 94, "n": 156},
-    {"season": 2022, "wins": 64, "n": 115},
-    {"season": 2023, "wins": 63, "n": 119},
-    {"season": 2024, "wins": 40, "n": 74},
-    {"season": 2025, "wins": 41, "n": 71},
+    {"season": 2021, "wins": 93, "n": 153},
+    {"season": 2022, "wins": 55, "n": 103},
+    {"season": 2023, "wins": 66, "n": 125},
+    {"season": 2024, "wins": 37, "n": 66},
+    {"season": 2025, "wins": 44, "n": 74},
 ]
 
 # Absolute ridge coefficients from season_totals_v2_prod artifacts/prod_card.json

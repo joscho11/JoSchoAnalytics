@@ -5,7 +5,7 @@ releases, the Tuesday US median drives the model, pick, model edge, and HIGH
 flag. The best US Tuesday quote for that side is displayed separately and used
 for grading. A later line can drop HIGH; it cannot create HIGH. No MEDIUM.
 
-The 2021-2025 benchmark below remains the locked median-triggered ticket set
+The 2021-2025 benchmark below is the current clean median-triggered ticket set
 graded at the best US Tuesday number. Historical releases are not rewritten.
 """
 from __future__ import annotations
@@ -19,22 +19,23 @@ HIGH_GAP = 2.5
 LAST_REG_WEEK = 18
 SLATE_NAME = "slate_2026.csv"
 
-# spread_v3_prod Tuesday HIGH book, 2021-2025, last REG week skipped.
+# spread_v3_prod causal-cleanup Tuesday HIGH book, 2021-2025, last REG week skipped.
 # Injury reports as-of Tuesday 9:00 ET (legal_injury_reports).
-# Clean Ridge, 49 columns, seed 7. Historical HIGH flags vs the Tuesday US-median.
-# The locked historical book scores those tickets at the best US Tuesday number.
-# One-sided 95% Wilson 0.5290 clears 52.4%. All-bets is diagnostic.
-# Median on the same tickets: 299/538, Wilson 0.5203.
+# Clean Ridge, 49 columns, seed 7, with point-in-time HFA, coach, vacated-snaps,
+# and QB1 inputs. HIGH flags use the Tuesday US median.
+# The current historical book scores those tickets at the best US Tuesday number.
+# One-sided 95% Wilson 0.5303 clears 52.4%. All-bets is diagnostic.
+# Median grade on the same tickets: 291/521, Wilson 0.5225.
 # Withdrawn: 192/336 used same-week injury reports that postdate Tuesday.
 # Prior as-of 75/25 was 155/290. See spread_v3_prod/LEAKAGE_AUDIT.md.
-LIVE_HIGH_WINS = 302
-LIVE_HIGH_N = 535
+LIVE_HIGH_WINS = 295
+LIVE_HIGH_N = 521
 LIVE_HIGH_ATS = LIVE_HIGH_WINS / LIVE_HIGH_N
 LIVE_HIGH_WILSON_Z = 1.64485
-LIVE_HIGH_WILSON_LOWER = 0.5290
+LIVE_HIGH_WILSON_LOWER = 0.5303
 LIVE_HIGH_WILSON_CLEARS = True
-LIVE_ALL_BETS_WINS = 669
-LIVE_ALL_BETS_N = 1292
+LIVE_ALL_BETS_WINS = 691
+LIVE_ALL_BETS_N = 1285
 BREAKEVEN = 0.524
 TRACKER_2025_MD5 = "88d526ca46e8cbb9f1eea77a3d96fa08"
 

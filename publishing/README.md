@@ -1,7 +1,7 @@
 # Weekly publication contract
 
-Status: checked against the current CLI, validators, manifest, and grading workflow on 2026-09-08.
-At this check, 2026 Week 1 prediction and fantasy releases are active and no 2026 release has been graded.
+Status: checked against the current CLI, validators, manifest, and grading workflow on 2026-09-10.
+At this check, the clean 2026 Week 1 prediction release and fantasy release are active and no 2026 release has been graded.
 
 This package is the only public write boundary for spread predictions and weekly
 fantasy projections. Producer repositories write candidates to their own `outputs/`
@@ -20,6 +20,9 @@ folder under `cowork_OS` is required.
    `tuesday_spread_line` is the best captured quote for the recommended side.
 3. A passing candidate is copied into an immutable build directory under
    `data/releases/builds/`. Only then does the manifest's active pointer move.
+   A post-kickoff correction may explicitly set `correction.model_update: true`
+   when a validated model replacement changes the model version; line and
+   schedule controls remain mandatory.
 4. Weekly Predictions and Weekly Fantasy use that active pointer as their default.
    Track Record stays on 2025 until a 2026 prediction release has at least one final
    graded game.

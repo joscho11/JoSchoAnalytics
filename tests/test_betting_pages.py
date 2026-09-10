@@ -133,8 +133,8 @@ def test_weekly_predictions_hides_paused_agent_chrome(tmp_path):
     assert "TUESDAY LINE" in md
     assert "TUE MODEL LINE" not in md
     metrics = {str(m.label): str(m.value) for m in at.metric}
-    # The public Week 1 card excludes the audited JAX HIGH label pending input repair.
-    assert metrics["HIGH picks"] == "2"
+    # The active clean Week 1 artifact has four HIGH picks.
+    assert metrics["HIGH picks"] == "4"
 
 
 def test_weekly_predictions_live_2026_banner(tmp_path):
@@ -147,9 +147,9 @@ def test_weekly_predictions_live_2026_banner(tmp_path):
     notice_copy = successes + " " + " ".join(str(m.value) for m in at.markdown)
     assert "Live 2026" in notice_copy
     assert "one-sided 95%" in notice_copy and "Wilson lower bound" in notice_copy
-    assert "302/535" in notice_copy
-    assert "56.45%" in notice_copy
-    assert "52.90%" in notice_copy
+    assert "295/521" in notice_copy
+    assert "56.62%" in notice_copy
+    assert "53.03%" in notice_copy
     assert "above 52.4%" in notice_copy
     assert "best US Tuesday" in notice_copy
     assert "57.14%" not in notice_copy
@@ -157,7 +157,7 @@ def test_weekly_predictions_live_2026_banner(tmp_path):
     assert "No medium tier" in notice_copy
     assert "No totals on this season" in notice_copy
     assert any(
-        exp.label == "Tuesday model rules and frozen benchmark" for exp in at.expander
+        exp.label == "Tuesday model rules and clean benchmark" for exp in at.expander
     )
     headings = " ".join(str(t.value) for t in [*at.title, *at.subheader])
     assert "2026" in headings

@@ -102,7 +102,7 @@ The model predicts the margin, then asks which side of the posted number is more
         st.markdown(f"""
 Standard sportsbook odds are about 110 to win 100. You need about **52.4%** of bets to break even. Most casual bettors don't hit that.
 
-The **frozen 2021-2025 benchmark** used median-triggered HIGH tickets scored at the best US Tuesday number: **{LIVE_HIGH_WINS}/{LIVE_HIGH_N} = {LIVE_HIGH_ATS * 100:.2f}%** ATS, one-sided 95% Wilson lower bound **{LIVE_HIGH_WILSON_LOWER * 100:.2f}%**. {live_high_bar_sentence()} Starting with 2026 releases, the model, pick, displayed edge, and HIGH flag use the Tuesday US median. The named best-available quote is locked for execution and grading. All-bets is not the claim. No 2026 games are graded yet. This is Tuesday line value, not closing-line value.
+The **current clean 2021-2025 benchmark** uses median-triggered HIGH tickets scored at the best US Tuesday number: **{LIVE_HIGH_WINS}/{LIVE_HIGH_N} = {LIVE_HIGH_ATS * 100:.2f}%** ATS, one-sided 95% Wilson lower bound **{LIVE_HIGH_WILSON_LOWER * 100:.2f}%**. {live_high_bar_sentence()} Starting with 2026 releases, the model, pick, displayed edge, and HIGH flag use the Tuesday US median. The named best-available quote is locked for execution and grading. All-bets is not the claim. No 2026 games are graded yet. This is Tuesday line value, not closing-line value.
 
 The **2025 demo test** on this site (weeks 10-17) is **{_overall_pct}% ATS** ({_overall_correct}/{_overall_total}){_hc_line}. {_be_comment} That walkthrough is the old three-model consensus, not the 2026 live book. Past performance doesn't guarantee anything going forward. There will be bad weeks.
 

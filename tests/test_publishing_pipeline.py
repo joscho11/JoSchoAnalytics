@@ -312,6 +312,39 @@ def test_audited_correction_can_promote_high_without_changing_tuesday_lines(tmp_
     assert load_manifest(site)["products"]["predictions"]["previous_build"] == original["build_id"]
 
 
+def test_audited_model_update_can_promote_high_without_changing_tuesday_lines(tmp_path):
+    site = tmp_path / "site"
+    site.mkdir()
+    artifact, metadata, schedule = _prediction_candidate(tmp_path)
+    original = publish_candidate(artifact, metadata, schedule=schedule, root=site)
+
+    rows = pd.read_csv(artifact)
+    rows.loc[0, "predicted_margin"] = 6.5
+    rows.loc[0, "model_edge"] = 3.0
+    rows.loc[0, "consensus_tier"] = "HIGH"
+    rows.to_csv(artifact, index=False)
+    updated = build_candidate_metadata(
+        "predictions",
+        artifact,
+        season=2026,
+        week=1,
+        model_version="spread-v3-clean-ridge",
+        produced_at="2026-09-11T13:05:00Z",
+    )
+    updated["correction"] = {
+        "supersedes_build_id": original["build_id"],
+        "reason": "Promote the validated causal-cleanup model.",
+        "source_snapshot_captured_at": "2026-09-08T11:23:16-04:00",
+        "source_snapshot_sha256": "a" * 64,
+        "model_update": True,
+    }
+    entry = publish_candidate(artifact, updated, schedule=schedule, root=site)
+    assert entry["status"] == "Published"
+    assert entry["correction"]["model_update"] is True
+    assert entry["validation"]["checks"]["post_kickoff_correction"] is True
+    assert load_manifest(site)["products"]["predictions"]["active_build"] == entry["build_id"]
+
+
 def test_correction_cannot_change_frozen_tuesday_lines(tmp_path):
     site = tmp_path / "site"
     site.mkdir()

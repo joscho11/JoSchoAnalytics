@@ -80,7 +80,8 @@ def _validated_correction(source: Path, metadata: dict, root) -> dict | None:
         or int(prior.get("week", -1)) != int(metadata["week"])
     ):
         raise PublicationError("correction season/week differs from the superseded build")
-    if str(prior.get("model_version")) != str(metadata.get("model_version")):
+    model_update = correction.get("model_update") is True
+    if not model_update and str(prior.get("model_version")) != str(metadata.get("model_version")):
         raise PublicationError("correction must use the superseded build's frozen model")
 
     prior_frame = read_table(resolve_site_path(prior["artifact"], root))
