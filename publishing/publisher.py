@@ -2,14 +2,24 @@
 from __future__ import annotations
 
 import json
+import re
 import shutil
 from datetime import datetime
 from pathlib import Path
+
+import pandas as pd
 
 from .contract import PublicationError, sha256_file, utc_now_iso
 from .manifest import load_manifest, published_builds, write_manifest
 from .paths import releases_root, relative_to_site, resolve_site_path
 from .validators import read_metadata, read_table, validate_candidate
+
+CORRECTION_LINE_COLUMNS = (
+    "game_id",
+    "home_team",
+    "away_team",
+    "tuesday_median_spread_line",
+)
 
 
 def _build_id(metadata: dict) -> str:
@@ -28,7 +38,81 @@ def _high_game_ids(frame) -> set[str]:
     return set(frame.loc[tiers.eq("HIGH"), "game_id"].astype(str))
 
 
-def _reject_high_promotions(source: Path, product: str, season: int, week: int, root) -> None:
+def _validated_correction(source: Path, metadata: dict, root) -> dict | None:
+    correction = metadata.get("correction")
+    if correction is None:
+        return None
+    if metadata.get("product") != "predictions" or not isinstance(correction, dict):
+        raise PublicationError("correction metadata is only valid for prediction releases")
+    supersedes = str(correction.get("supersedes_build_id") or "").strip()
+    reason = str(correction.get("reason") or "").strip()
+    snapshot_hash = str(correction.get("source_snapshot_sha256") or "").strip().lower()
+    if not supersedes or not reason:
+        raise PublicationError("correction requires supersedes_build_id and reason")
+    if not re.fullmatch(r"[0-9a-f]{64}", snapshot_hash):
+        raise PublicationError("correction source_snapshot_sha256 must be a SHA-256 digest")
+    try:
+        snapshot_at = datetime.fromisoformat(
+            str(correction.get("source_snapshot_captured_at") or "").replace("Z", "+00:00")
+        )
+    except ValueError as exc:
+        raise PublicationError("correction source_snapshot_captured_at must include a timezone") from exc
+    if snapshot_at.tzinfo is None or snapshot_at.utcoffset() is None:
+        raise PublicationError("correction source_snapshot_captured_at must include a timezone")
+
+    manifest = load_manifest(root, strict=True)
+    state = manifest["products"]["predictions"]
+    active_build = state.get("active_build")
+    candidate_build = _build_id(metadata)
+    existing_candidate = state.get("builds", {}).get(candidate_build)
+    is_idempotent_retry = (
+        active_build == candidate_build
+        and isinstance(existing_candidate, dict)
+        and existing_candidate.get("correction", {}).get("supersedes_build_id") == supersedes
+    )
+    if active_build != supersedes and not is_idempotent_retry:
+        raise PublicationError("correction must supersede the active prediction build")
+    prior = state.get("builds", {}).get(supersedes)
+    if not isinstance(prior, dict):
+        raise PublicationError(f"correction references unknown build {supersedes!r}")
+    if (
+        int(prior.get("season", -1)) != int(metadata["season"])
+        or int(prior.get("week", -1)) != int(metadata["week"])
+    ):
+        raise PublicationError("correction season/week differs from the superseded build")
+    if str(prior.get("model_version")) != str(metadata.get("model_version")):
+        raise PublicationError("correction must use the superseded build's frozen model")
+
+    prior_frame = read_table(resolve_site_path(prior["artifact"], root))
+    current_frame = read_table(source)
+    missing = [
+        col for col in CORRECTION_LINE_COLUMNS
+        if col not in prior_frame.columns or col not in current_frame.columns
+    ]
+    if missing:
+        raise PublicationError(f"correction comparison is missing columns: {', '.join(missing)}")
+    prior_lines = prior_frame[list(CORRECTION_LINE_COLUMNS)].sort_values("game_id").reset_index(drop=True)
+    current_lines = current_frame[list(CORRECTION_LINE_COLUMNS)].sort_values("game_id").reset_index(drop=True)
+    if not prior_lines[["game_id", "home_team", "away_team"]].equals(
+        current_lines[["game_id", "home_team", "away_team"]]
+    ):
+        raise PublicationError("correction schedule differs from the superseded build")
+    prior_spreads = pd.to_numeric(prior_lines["tuesday_median_spread_line"], errors="coerce")
+    current_spreads = pd.to_numeric(current_lines["tuesday_median_spread_line"], errors="coerce")
+    if prior_spreads.isna().any() or current_spreads.isna().any() or not prior_spreads.equals(current_spreads):
+        raise PublicationError("correction changed the frozen Tuesday median lines")
+    return dict(correction)
+
+
+def _reject_high_promotions(
+    source: Path,
+    product: str,
+    season: int,
+    week: int,
+    root,
+    *,
+    correction: dict | None = None,
+) -> None:
     """A later public build may demote an initial HIGH, never add one."""
     if product != "predictions" or season < 2026:
         return
@@ -37,6 +121,8 @@ def _reject_high_promotions(source: Path, product: str, season: int, week: int, 
         if int(build["season"]) == season and int(build["week"]) == week
     ]
     if not matching:
+        return
+    if correction is not None:
         return
     initial = matching[0]
     initial_frame = read_table(resolve_site_path(initial["artifact"], root))
@@ -61,12 +147,25 @@ def publish_candidate(
 ) -> dict:
     source = Path(artifact)
     meta = read_metadata(metadata)
-    report = validate_candidate(source, meta, schedule=schedule)
+    correction = _validated_correction(source, meta, root)
+    report = validate_candidate(
+        source,
+        meta,
+        schedule=schedule,
+        allow_post_kickoff_correction=correction is not None,
+    )
     report.require_ok()
     build_id = _build_id(meta)
     product = str(meta["product"])
     season, week = int(meta["season"]), int(meta["week"])
-    _reject_high_promotions(source, product, season, week, root)
+    _reject_high_promotions(
+        source,
+        product,
+        season,
+        week,
+        root,
+        correction=correction,
+    )
     build_dir = releases_root(root) / "builds" / product / str(season) / f"week{week:02d}" / build_id
     build_dir.mkdir(parents=True, exist_ok=True)
     suffix = source.suffix.lower()
@@ -113,6 +212,8 @@ def publish_candidate(
         "row_count": int(report.row_count),
         "validation": report.to_dict(),
     }
+    if correction is not None:
+        entry["correction"] = correction
     if existing_entry.get("grading"):
         entry["grading"] = existing_entry["grading"]
     state["builds"][build_id] = entry

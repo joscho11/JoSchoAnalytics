@@ -274,6 +274,71 @@ def test_later_prediction_release_cannot_promote_new_high(tmp_path):
         publish_candidate(artifact, promoted, schedule=schedule, root=site)
 
 
+def test_audited_correction_can_promote_high_without_changing_tuesday_lines(tmp_path):
+    site = tmp_path / "site"
+    site.mkdir()
+    artifact, metadata, schedule = _prediction_candidate(tmp_path)
+    original = publish_candidate(artifact, metadata, schedule=schedule, root=site)
+
+    rows = pd.read_csv(artifact)
+    rows.loc[0, "predicted_margin"] = 6.5
+    rows.loc[0, "model_edge"] = 3.0
+    rows.loc[0, "consensus_tier"] = "HIGH"
+    rows.to_csv(artifact, index=False)
+    corrected = build_candidate_metadata(
+        "predictions",
+        artifact,
+        season=2026,
+        week=1,
+        model_version=metadata["model_version"],
+        produced_at="2026-09-11T13:05:00Z",
+    )
+    corrected["correction"] = {
+        "supersedes_build_id": original["build_id"],
+        "reason": "Correct the Week 1 team-state construction.",
+        "source_snapshot_captured_at": "2026-09-08T11:23:16-04:00",
+        "source_snapshot_sha256": "a" * 64,
+    }
+    entry = publish_candidate(artifact, corrected, schedule=schedule, root=site)
+    assert entry["status"] == "Published"
+    assert entry["correction"] == corrected["correction"]
+    assert entry["validation"]["checks"]["post_kickoff_correction"] is True
+    assert load_manifest(site)["products"]["predictions"]["active_build"] == entry["build_id"]
+    status = release_status("predictions", 2026, 1, root=site)
+    assert status["status"] == "Published"
+
+    retried = publish_candidate(artifact, corrected, schedule=schedule, root=site)
+    assert retried["build_id"] == entry["build_id"]
+    assert load_manifest(site)["products"]["predictions"]["previous_build"] == original["build_id"]
+
+
+def test_correction_cannot_change_frozen_tuesday_lines(tmp_path):
+    site = tmp_path / "site"
+    site.mkdir()
+    artifact, metadata, schedule = _prediction_candidate(tmp_path)
+    original = publish_candidate(artifact, metadata, schedule=schedule, root=site)
+    rows = pd.read_csv(artifact)
+    rows.loc[0, "tuesday_median_spread_line"] = 4.0
+    rows.loc[0, "model_edge"] = rows.loc[0, "predicted_margin"] - 4.0
+    rows.to_csv(artifact, index=False)
+    corrected = build_candidate_metadata(
+        "predictions",
+        artifact,
+        season=2026,
+        week=1,
+        model_version=metadata["model_version"],
+        produced_at="2026-09-11T13:05:00Z",
+    )
+    corrected["correction"] = {
+        "supersedes_build_id": original["build_id"],
+        "reason": "Correction with a changed line must fail.",
+        "source_snapshot_captured_at": "2026-09-08T11:23:16-04:00",
+        "source_snapshot_sha256": "a" * 64,
+    }
+    with pytest.raises(PublicationError, match="changed the frozen Tuesday median"):
+        publish_candidate(artifact, corrected, schedule=schedule, root=site)
+
+
 def test_pointer_only_rollback_and_release_status(tmp_path):
     site = tmp_path / "site"
     site.mkdir()

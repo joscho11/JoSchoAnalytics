@@ -303,7 +303,7 @@
       "previous_build": "fantasy-2026w01-3473d7cd62ae"
     },
     "predictions": {
-      "active_build": "predictions-2026w01-f620ec646e0e",
+      "active_build": "predictions-2026w01-57d4781adbd7",
       "builds": {
         "predictions-2025w10-8f1701d7a6db": {
           "artifact": "data/releases/builds/predictions/2025/week10/predictions-2025w10-8f1701d7a6db/artifact.csv",
@@ -505,6 +505,41 @@
           },
           "week": 17
         },
+        "predictions-2026w01-57d4781adbd7": {
+          "artifact": "data/releases/builds/predictions/2026/week01/predictions-2026w01-57d4781adbd7/artifact.csv",
+          "build_id": "predictions-2026w01-57d4781adbd7",
+          "correction": {
+            "reason": "Corrected Week 1 forward team state to use the training lag path.",
+            "source_snapshot_captured_at": "2026-09-08T11:23:16-04:00",
+            "source_snapshot_sha256": "dd15bf1fba268e21ee1f241924ebae49a950aac023bb4135ba7ec20dba09b5f0",
+            "supersedes_build_id": "predictions-2026w01-f620ec646e0e"
+          },
+          "metadata": "data/releases/builds/predictions/2026/week01/predictions-2026w01-57d4781adbd7/metadata.json",
+          "model_version": "spread-v3-prod-ridge-only-c482820619c7",
+          "produced_at": "2026-09-10T17:57:55Z",
+          "product": "predictions",
+          "published_at": "2026-09-10T17:58:36Z",
+          "row_count": 16,
+          "season": 2026,
+          "sha256": "57d4781adbd7c5e3f29f4d69d7d7ba1ed1f5e8fe48dd503043fa47fcdd903508",
+          "status": "Published",
+          "validation": {
+            "checks": {
+              "artifact_sha256": "57d4781adbd7c5e3f29f4d69d7d7ba1ed1f5e8fe48dd503043fa47fcdd903508",
+              "post_kickoff_correction": true,
+              "produced_at_utc": "2026-09-10T17:57:55Z",
+              "scheduled_games": 16
+            },
+            "errors": [],
+            "ok": true,
+            "product": "predictions",
+            "row_count": 16,
+            "warnings": [
+              "correction was produced after the first kickoff; correction controls verified"
+            ]
+          },
+          "week": 1
+        },
         "predictions-2026w01-652c2c5fe7c9": {
           "artifact": "data/releases/builds/predictions/2026/week01/predictions-2026w01-652c2c5fe7c9/artifact.csv",
           "build_id": "predictions-2026w01-652c2c5fe7c9",
@@ -590,9 +625,9 @@
         "status": "Scheduled",
         "week": 1
       },
-      "previous_build": "predictions-2026w01-652c2c5fe7c9"
+      "previous_build": "predictions-2026w01-f620ec646e0e"
     }
   },
   "schema_version": 1,
-  "updated_at": "2026-09-09T02:18:39Z"
+  "updated_at": "2026-09-10T18:21:02Z"
 }

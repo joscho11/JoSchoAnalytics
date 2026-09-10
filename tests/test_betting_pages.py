@@ -41,7 +41,6 @@ def test_weekly_predictions_renders_and_owns_controls(tmp_path):
     assert controls["wp_week"] == 1
     markdown = " ".join(str(item.value) for item in at.markdown)
     assert "green-badge" in markdown and "Published" in markdown
-    assert "Published" in markdown
     assert not any(str(k).startswith("tr_") for k in keys), \
         "Weekly Predictions must not carry Track Record's controls"
 
@@ -134,9 +133,8 @@ def test_weekly_predictions_hides_paused_agent_chrome(tmp_path):
     assert "TUESDAY LINE" in md
     assert "TUE MODEL LINE" not in md
     metrics = {str(m.label): str(m.value) for m in at.metric}
-    # WAS is 2.11 points off the Tuesday median. Its available +5.5 improves
-    # execution but cannot promote it into the median-triggered HIGH set.
-    assert metrics["HIGH picks"] == "4"
+    # The corrected build has three median-triggered HIGH picks.
+    assert metrics["HIGH picks"] == "3"
 
 
 def test_weekly_predictions_live_2026_banner(tmp_path):

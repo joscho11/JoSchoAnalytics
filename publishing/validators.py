@@ -140,6 +140,8 @@ def _validate_predictions(
     frame: pd.DataFrame,
     metadata: dict,
     schedule: pd.DataFrame | None,
+    *,
+    allow_post_kickoff_correction: bool = False,
 ) -> None:
     missing = sorted(PREDICTION_REQUIRED - set(frame.columns))
     if missing:
@@ -312,7 +314,13 @@ def _validate_predictions(
         except (TypeError, ValueError):
             produced = None
         if kickoff is not None and produced is not None and produced >= kickoff:
-            report.errors.append("candidate produced_at is not before the first kickoff")
+            if allow_post_kickoff_correction:
+                report.warnings.append(
+                    "correction was produced after the first kickoff; correction controls verified"
+                )
+                report.checks["post_kickoff_correction"] = True
+            else:
+                report.errors.append("candidate produced_at is not before the first kickoff")
     report.checks["scheduled_games"] = int(len(sched))
 
 
@@ -442,6 +450,7 @@ def validate_candidate(
     metadata: str | Path | dict,
     *,
     schedule: str | Path | pd.DataFrame | None = None,
+    allow_post_kickoff_correction: bool = False,
 ) -> ValidationReport:
     path = Path(artifact)
     try:
@@ -473,7 +482,13 @@ def validate_candidate(
         except Exception as exc:
             report.errors.append(f"schedule could not be read: {exc}")
     if report.product == "predictions":
-        _validate_predictions(report, frame, meta, schedule_frame)
+        _validate_predictions(
+            report,
+            frame,
+            meta,
+            schedule_frame,
+            allow_post_kickoff_correction=allow_post_kickoff_correction,
+        )
     elif report.product == "fantasy":
         _validate_fantasy(report, frame, meta, schedule_frame)
     elif report.product not in PRODUCTS:

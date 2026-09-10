@@ -215,7 +215,11 @@ def release_status(
         if int(build.get("season", -1)) == int(season) and int(build.get("week", -1)) == int(week)
     ]
     if matching:
-        build = matching[-1]
+        active_id = state.get("active_build")
+        build = next(
+            (item for item in matching if item.get("build_id") == active_id),
+            matching[-1],
+        )
         return {
             "status": str(build.get("status") or "Published"),
             "color": "green",
