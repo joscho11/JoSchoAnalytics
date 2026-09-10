@@ -219,18 +219,22 @@ def _load_projections():
 
 
 def _latest_market_scoring():
-    """Return optional Sleeper standard/PPR season totals keyed by GSIS id."""
+    """Return optional Sleeper scoring totals with GSIS and name/position identity."""
+    columns = ["gsis_id", "player", "position", "pts_half_ppr", "pts_std", "pts_ppr", "rec"]
     snapshots = sorted(MARKET_SNAPSHOT_ROOT.glob("*/normalized.csv"))
     if not snapshots:
-        return pd.DataFrame(columns=["gsis_id", "pts_half_ppr", "pts_std", "pts_ppr", "rec"])
+        return pd.DataFrame(columns=columns)
     try:
         frame = pd.read_csv(
-            snapshots[-1], usecols=["gsis_id", "pts_half_ppr", "pts_std", "pts_ppr", "rec"],
+            snapshots[-1], usecols=columns,
             dtype={"gsis_id": "string"},
         )
     except (OSError, ValueError, pd.errors.EmptyDataError):
-        return pd.DataFrame(columns=["gsis_id", "pts_half_ppr", "pts_std", "pts_ppr", "rec"])
-    return frame.dropna(subset=["gsis_id"]).drop_duplicates("gsis_id")
+        return pd.DataFrame(columns=columns)
+    frame["gsis_id"] = frame["gsis_id"].replace("", pd.NA)
+    with_id = frame.dropna(subset=["gsis_id"]).drop_duplicates("gsis_id")
+    without_id = frame.loc[frame["gsis_id"].isna()]
+    return pd.concat([with_id, without_id], ignore_index=True)
 
 
 @st.cache_data
@@ -349,15 +353,32 @@ def _load_board_2026_cached(source_fingerprint):
                 missing_sleeper, "_name_position"].map(legacy["sleeper"])
         df = df.drop(columns="_name_position")
 
-    scoring_market = _latest_market_scoring().set_index("gsis_id")
+    scoring_market = _latest_market_scoring()
     if not scoring_market.empty:
+        # The normalized snapshot does not have a GSIS id for every Sleeper row. Use
+        # the stable player/position key only when it is unambiguous, keeping the id
+        # join as the primary path.
+        scoring_market["gsis_id"] = scoring_market["gsis_id"].replace("", pd.NA)
+        by_id = scoring_market.dropna(subset=["gsis_id"]).drop_duplicates("gsis_id")
+        by_id = by_id.set_index("gsis_id")
+        scoring_market["_name_position"] = _name_position_key(scoring_market)
+        by_name = scoring_market.dropna(subset=["player", "position"])
+        by_name = by_name.drop_duplicates("_name_position", keep=False).set_index("_name_position")
         ids = df["player_id"].astype("string")
+        names = _name_position_key(df)
         for _source, _target in (("pts_half_ppr", "sleeper_proj_half_ppr"),
                                  ("pts_std", "sleeper_proj_standard"),
                                  ("pts_ppr", "sleeper_proj_ppr")):
-            df[_target] = pd.to_numeric(ids.map(scoring_market[_source]), errors="coerce")
+            by_id_values = ids.map(by_id[_source])
+            by_name_values = names.map(by_name[_source])
+            df[_target] = pd.to_numeric(
+                by_id_values.where(by_id_values.notna(), by_name_values), errors="coerce"
+            )
+        by_id_receptions = ids.map(by_id["rec"])
+        by_name_receptions = names.map(by_name["rec"])
         df["sleeper_receptions"] = pd.to_numeric(
-            ids.map(scoring_market["rec"]), errors="coerce"
+            by_id_receptions.where(by_id_receptions.notna(), by_name_receptions),
+            errors="coerce",
         )
     df["sleeper_proj_half_ppr"] = df["sleeper_proj_half_ppr"].where(
         df["sleeper_proj_half_ppr"].notna(), df["sleeper_proj"])
@@ -1438,8 +1459,8 @@ def render():
         scoring = st.segmented_control(
             "Scoring format", list(SCORING_MODES), default=DEFAULT_SCORING,
             key="db26_scoring", required=True,
-            help="The board's published model is half-PPR; Standard/PPR labels are available "
-                 "for the scoring context while the source artifact remains half-PPR.",
+            help="Sleeper projections, Model Proj, ranks, and gaps recalculate for the selected "
+                 "reception scoring format. ADP remains the published market price.",
         ) or DEFAULT_SCORING
         sort_keys = sort_keys_for(market)
         prev_sort = st.session_state.get("db26_sortby")

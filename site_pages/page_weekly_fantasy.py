@@ -157,6 +157,33 @@ def _preview_detail_available(frame: pd.DataFrame) -> bool:
     return set(PREVIEW_DETAIL_SOURCE_COLUMNS) <= set(frame.columns)
 
 
+_WEEKLY_RECEPTION_COLUMNS = {
+    "QB": "pred_qb_receptions", "RB": "pred_rb_receptions",
+    "WR": "pred_wr_receptions", "TE": "pred_te_receptions",
+}
+_WEEKLY_RECEPTION_FALLBACKS = {"QB": 0.0, "RB": 2.5, "WR": 5.5, "TE": 4.5}
+
+
+def apply_weekly_scoring(frame: pd.DataFrame, scoring: str) -> pd.DataFrame:
+    """Apply the selected format to both our and Sleeper's weekly points."""
+    out = frame.copy()
+    receptions = pd.Series(float("nan"), index=out.index, dtype="float64")
+    for position, column in _WEEKLY_RECEPTION_COLUMNS.items():
+        mask = out["position"].eq(position)
+        if column in out.columns:
+            values = pd.to_numeric(out.loc[mask, column], errors="coerce")
+            receptions.loc[mask] = values.fillna(_WEEKLY_RECEPTION_FALLBACKS[position])
+        else:
+            receptions.loc[mask] = _WEEKLY_RECEPTION_FALLBACKS[position]
+
+    out["_scoring_pts"] = points_from_half_ppr(out["projected_pts"], receptions, scoring)
+    if "slp_proj" in out.columns:
+        out["_sleeper_scoring_pts"] = points_from_half_ppr(
+            out["slp_proj"], receptions, scoring
+        )
+    return out
+
+
 def _show_sleeper_comparison(season: int, week: int) -> bool:
     """Show Sleeper beside our number for live week 1 only.
 
@@ -412,7 +439,7 @@ def load_actual_stats(season: int, week: int) -> dict:
 def render():
     st.title("Weekly fantasy projections")
     st.caption(
-        "Half-PPR player rankings, independent stat estimates when published, "
+        "Player rankings by scoring format, independent stat estimates when published, "
         "and postgame actuals."
     )
     available = available_projection_files()
@@ -620,24 +647,7 @@ def render():
             st.stop()
 
         proj_df = proj_df.copy()
-        _reception_cols = {
-            "QB": "pred_qb_receptions", "RB": "pred_rb_receptions",
-            "WR": "pred_wr_receptions", "TE": "pred_te_receptions",
-        }
-        _fallback_receptions = {"QB": 0.0, "RB": 2.5, "WR": 5.5, "TE": 4.5}
-        proj_df["_scoring_pts"] = proj_df["projected_pts"]
-        for _pos, _col in _reception_cols.items():
-            if _col in proj_df.columns:
-                _mask = proj_df["position"].eq(_pos)
-                _receptions = proj_df.loc[_mask, _col]
-            else:
-                _mask = proj_df["position"].eq(_pos)
-                _receptions = pd.Series(
-                    _fallback_receptions[_pos], index=proj_df.index[_mask], dtype="float64"
-                )
-            proj_df.loc[_mask, "_scoring_pts"] = points_from_half_ppr(
-                proj_df.loc[_mask, "projected_pts"], _receptions, scoring
-            )
+        proj_df = apply_weekly_scoring(proj_df, scoring)
 
         for ptab, pos in zip([ptab_qb, ptab_rb, ptab_wr, ptab_te], ["QB", "RB", "WR", "TE"]):
             if not ptab.open:
@@ -657,8 +667,8 @@ def render():
                     pos_df = pos_df[mask]
                 elif (
                     _show_sleeper_comparison(season, week)
-                    and "slp_proj" in pos_df.columns
-                    and pos_df["slp_proj"].notna().any()
+                    and "_sleeper_scoring_pts" in pos_df.columns
+                    and pos_df["_sleeper_scoring_pts"].notna().any()
                 ):
                     # Week 1 only: show the UNION of our top N and Sleeper's top N.
                     # Our week-1 ordering is the weaker of the two (rank correlation
@@ -669,11 +679,11 @@ def render():
                     # describe their old role. Rows stay sorted by our projection so
                     # the disagreement is visible rather than resolved silently.
                     ours = pos_df.head(top_n)
-                    theirs = pos_df.nlargest(top_n, "slp_proj")
+                    theirs = pos_df.nlargest(top_n, "_sleeper_scoring_pts")
                     pos_df = (
                         pd.concat([ours, theirs])
                         .drop_duplicates(subset="player_id")
-                        .sort_values("projected_pts", ascending=False)
+                        .sort_values("_scoring_pts", ascending=False)
                     )
                 else:
                     pos_df = pos_df.head(top_n)
@@ -769,7 +779,7 @@ def render():
                 )
                 if _show_slp:
                     display["Sleeper"] = pd.to_numeric(
-                        display["slp_proj"], errors="coerce"
+                        pos_df.loc[display.index, "_sleeper_scoring_pts"], errors="coerce"
                     ).round(1)
                 if preview_layout:
                     base_cols = _preview_table_columns(
@@ -866,9 +876,9 @@ def render():
                     "Health":     st.column_config.TextColumn("Health",
                                       help="Player's injury status from the weekly NFL injury report.\n\n✅ Healthy  🟡 Questionable\n\nOut, Doubtful, IR, and anyone who did not play are removed from the board.\n\nNote: sorts alphabetically due to a Streamlit limitation."),
                     "Proj Pts":   st.column_config.NumberColumn("Proj Pts",   format="%.1f",
-                                      help="Projected half-PPR fantasy points for this week. Half-PPR scoring: 0.5 pts per reception, 1 pt per 10 rush/rec yards, 6 pts per TD."),
+                                      help=f"Projected {scoring} fantasy points for this week. Standard = 0 points per reception, Half-PPR = 0.5, PPR = 1.0; yardage and touchdown scoring stays unchanged."),
                     "Sleeper":    st.column_config.NumberColumn("Sleeper",    format="%.1f",
-                                      help="Sleeper's own half-PPR projection for this week, shown for comparison in week 1 only. On 2025 week 1 Sleeper ranked players better than we did at every position, so where the two disagree this week, theirs is the better bet. Not an input to our model."),
+                                      help=f"Sleeper's own {scoring} projection for this week, shown for comparison in week 1 only. On 2025 week 1 Sleeper ranked players better than we did at every position, so where the two disagree this week, theirs is the better bet. Not an input to our model."),
                     "Off EPA":    st.column_config.NumberColumn("Off EPA",    format="%+.3f",
                                       help="Team's offensive Expected Points Added (EPA) per play, averaged over the last 4 games. EPA measures how many points each play is worth above expectation. Higher = more efficient offense."),
                     "Team Total": st.column_config.NumberColumn("Team Total", format="%.1f",

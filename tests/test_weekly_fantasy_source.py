@@ -296,6 +296,23 @@ def test_slim_2026_schema_has_core_columns():
     assert "off_epa_roll4" not in frame.columns
 
 
+def test_weekly_scoring_recalculates_sleeper_projection():
+    frame = pd.DataFrame({
+        "player_id": ["rb", "wr", "te", "qb"],
+        "player_display_name": ["Runner", "Receiver", "Tight End", "Passer"],
+        "position": ["RB", "WR", "TE", "QB"],
+        "projected_pts": [10.0, 12.0, 8.0, 20.0],
+        "slp_proj": [11.0, 13.0, 9.0, 21.0],
+    })
+    standard = weekly.apply_weekly_scoring(frame, "Standard")
+    ppr = weekly.apply_weekly_scoring(frame, "PPR")
+
+    assert standard["_sleeper_scoring_pts"].tolist() == [9.75, 10.25, 6.75, 21.0]
+    assert ppr["_sleeper_scoring_pts"].tolist() == [12.25, 15.75, 11.25, 21.0]
+    assert standard["_scoring_pts"].tolist() == [8.75, 9.25, 5.75, 20.0]
+    assert ppr["_scoring_pts"].tolist() == [11.25, 14.75, 10.25, 20.0]
+
+
 def test_future_release_uses_enabled_player_prop_toggle(tmp_path):
     projection_path = tmp_path / "projections_2026_week01.csv"
     pd.DataFrame({

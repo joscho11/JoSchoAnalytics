@@ -55,6 +55,29 @@ def test_board_sort_is_numeric_and_sentinels_sink():
           f"no-data rows sink to bottom both ways; default Sleeper-ADP")
 
 
+def test_scoring_format_recalculates_sleeper_projection_for_reception_players():
+    sys.path.insert(0, str(_HERE))
+    import draft_board_2026 as board
+
+    base = board._load_board_2026()
+    standard = board.apply_scoring_mode(base, "Standard")
+    ppr = board.apply_scoring_mode(base, "PPR")
+    sleeper = pd.to_numeric(base["sleeper_proj"], errors="coerce")
+    receptions = pd.to_numeric(base["sleeper_receptions"], errors="coerce")
+    affected = sleeper.notna() & receptions.gt(0)
+
+    for view in (standard, ppr):
+        changed = (
+            pd.to_numeric(view["sleeper_proj"], errors="coerce") - sleeper
+        ).abs().gt(1e-9)
+        assert changed[affected].all(), "every populated reception projection must move"
+        assert not changed[~affected].any(), "zero-reception rows must stay unchanged"
+
+    rows = standard.set_index("player")
+    assert rows.loc["Bijan Robinson", "sleeper_proj"] == 260.9
+    assert ppr.set_index("player").loc["Bijan Robinson", "sleeper_proj"] == 324.9
+
+
 def test_outside_market_sort_is_numeric_and_blanks_sink():
     """Same guarantee for the outside-market explorer: every numeric sort orders on the
     number (never the display string) and blank talent cells stay at the BOTTOM in both
