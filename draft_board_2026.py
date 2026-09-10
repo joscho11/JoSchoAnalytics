@@ -222,14 +222,14 @@ def _latest_market_scoring():
     """Return optional Sleeper standard/PPR season totals keyed by GSIS id."""
     snapshots = sorted(MARKET_SNAPSHOT_ROOT.glob("*/normalized.csv"))
     if not snapshots:
-        return pd.DataFrame(columns=["gsis_id", "pts_half_ppr", "pts_std", "pts_ppr"])
+        return pd.DataFrame(columns=["gsis_id", "pts_half_ppr", "pts_std", "pts_ppr", "rec"])
     try:
         frame = pd.read_csv(
-            snapshots[-1], usecols=["gsis_id", "pts_half_ppr", "pts_std", "pts_ppr"],
+            snapshots[-1], usecols=["gsis_id", "pts_half_ppr", "pts_std", "pts_ppr", "rec"],
             dtype={"gsis_id": "string"},
         )
     except (OSError, ValueError, pd.errors.EmptyDataError):
-        return pd.DataFrame(columns=["gsis_id", "pts_half_ppr", "pts_std", "pts_ppr"])
+        return pd.DataFrame(columns=["gsis_id", "pts_half_ppr", "pts_std", "pts_ppr", "rec"])
     return frame.dropna(subset=["gsis_id"]).drop_duplicates("gsis_id")
 
 
@@ -263,6 +263,7 @@ def _load_board_2026_cached(source_fingerprint):
     df["sleeper_proj_half_ppr"] = pd.NA
     df["sleeper_proj_standard"] = pd.NA
     df["sleeper_proj_ppr"] = pd.NA
+    df["sleeper_receptions"] = pd.NA
     live_market_loaded = False
     if LIVE_OVERLAY.exists():
         overlay = pd.read_csv(LIVE_OVERLAY)
@@ -355,6 +356,9 @@ def _load_board_2026_cached(source_fingerprint):
                                  ("pts_std", "sleeper_proj_standard"),
                                  ("pts_ppr", "sleeper_proj_ppr")):
             df[_target] = pd.to_numeric(ids.map(scoring_market[_source]), errors="coerce")
+        df["sleeper_receptions"] = pd.to_numeric(
+            ids.map(scoring_market["rec"]), errors="coerce"
+        )
     df["sleeper_proj_half_ppr"] = df["sleeper_proj_half_ppr"].where(
         df["sleeper_proj_half_ppr"].notna(), df["sleeper_proj"])
 
@@ -432,6 +436,7 @@ def _load_board_2026_cached(source_fingerprint):
     for c in (
         "model_proj", "model_proj_raw", "sleeper_proj",
         "sleeper_proj_half_ppr", "sleeper_proj_standard", "sleeper_proj_ppr",
+        "sleeper_receptions",
         "nfl_talent", "college_talent",
     ):
         df[c] = pd.to_numeric(df[c], errors="coerce")
@@ -547,9 +552,14 @@ def apply_scoring_mode(df: pd.DataFrame, scoring: str) -> pd.DataFrame:
         "PPR": "sleeper_proj_ppr",
     }[scoring]
     current = pd.to_numeric(out["sleeper_proj"], errors="coerce")
-    selected = pd.to_numeric(out[source_col], errors="coerce").where(
-        pd.to_numeric(out[source_col], errors="coerce").notna(), current
-    )
+    source_values = pd.to_numeric(out[source_col], errors="coerce")
+    snapshot_half = pd.to_numeric(out["sleeper_proj_half_ppr"], errors="coerce")
+    # Sleeper's archived payload uses 0 for players without a scoring-total projection
+    # (notably QBs in this capture). Do not turn a valid live half-PPR projection into zero.
+    has_receptions = pd.to_numeric(out["sleeper_receptions"], errors="coerce").gt(0)
+    valid_variant = source_values.gt(0) & snapshot_half.gt(0) & has_receptions
+    scoring_delta = (source_values - snapshot_half).where(valid_variant, 0.0)
+    selected = current + scoring_delta
     delta = selected - current
     out["sleeper_proj"] = selected
     out["model_proj"] = pd.to_numeric(out["model_proj"], errors="coerce") + delta.fillna(0)

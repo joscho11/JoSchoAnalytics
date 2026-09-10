@@ -936,7 +936,7 @@ def render():
                     column_config=col_config,
                     key=(
                         f"wf_grid_{pos}_{season}_{week}_{player_search}_{len(tbl)}_"
-                        f"{'detail' if show_more_info else 'simple'}"
+                        f"{scoring}_{'detail' if show_more_info else 'simple'}"
                     ),
                 )
 

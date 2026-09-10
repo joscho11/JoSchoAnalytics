@@ -34,6 +34,8 @@ def _refresh_cloud_synced_modules() -> None:
     # on app_today while Home is still the selected page.
     for name in (
         "seasonal_config",
+        "draft_board_2026",
+        "fantasy_scoring",
         "fantasy.league_intelligence",
         "league_insights_view",
     ):
