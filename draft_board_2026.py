@@ -26,6 +26,7 @@ DATASET = SEAS / "season_dataset_2014_2026.csv"
 LIVE_OVERLAY = SEAS / "board_adp_live_2026.csv"
 LIVE_ESPN_OVERLAY = SEAS / "board_espn_adp_live_2026.csv"
 LIVE_YAHOO_OVERLAY = SEAS / "board_yahoo_adp_live_2026.csv"
+MARKET_SNAPSHOT_ROOT = SEAS / "market_snapshots" / "2026"
 # Legacy per-position files supply only optional Sleeper projection and team metadata.
 # The independent model projection is read solely from INDEPENDENT_V2.
 PROJ_RESULTS = _HERE / "fantasy" / "projections" / "results"
@@ -217,6 +218,21 @@ def _load_projections():
     return _stamp_team_overrides(indexed)
 
 
+def _latest_market_scoring():
+    """Return optional Sleeper standard/PPR season totals keyed by GSIS id."""
+    snapshots = sorted(MARKET_SNAPSHOT_ROOT.glob("*/normalized.csv"))
+    if not snapshots:
+        return pd.DataFrame(columns=["gsis_id", "pts_half_ppr", "pts_std", "pts_ppr"])
+    try:
+        frame = pd.read_csv(
+            snapshots[-1], usecols=["gsis_id", "pts_half_ppr", "pts_std", "pts_ppr"],
+            dtype={"gsis_id": "string"},
+        )
+    except (OSError, ValueError, pd.errors.EmptyDataError):
+        return pd.DataFrame(columns=["gsis_id", "pts_half_ppr", "pts_std", "pts_ppr"])
+    return frame.dropna(subset=["gsis_id"]).drop_duplicates("gsis_id")
+
+
 @st.cache_data
 def _load_board_2026_cached(source_fingerprint):
     if not INDEPENDENT_V2.exists():
@@ -244,6 +260,9 @@ def _load_board_2026_cached(source_fingerprint):
     df["model_proj_pos_rank"] = pd.to_numeric(
         df["projected_pos_rank"], errors="raise").astype("Int64")
     df["sleeper_proj"] = pd.NA
+    df["sleeper_proj_half_ppr"] = pd.NA
+    df["sleeper_proj_standard"] = pd.NA
+    df["sleeper_proj_ppr"] = pd.NA
     live_market_loaded = False
     if LIVE_OVERLAY.exists():
         overlay = pd.read_csv(LIVE_OVERLAY)
@@ -329,6 +348,16 @@ def _load_board_2026_cached(source_fingerprint):
                 missing_sleeper, "_name_position"].map(legacy["sleeper"])
         df = df.drop(columns="_name_position")
 
+    scoring_market = _latest_market_scoring().set_index("gsis_id")
+    if not scoring_market.empty:
+        ids = df["player_id"].astype("string")
+        for _source, _target in (("pts_half_ppr", "sleeper_proj_half_ppr"),
+                                 ("pts_std", "sleeper_proj_standard"),
+                                 ("pts_ppr", "sleeper_proj_ppr")):
+            df[_target] = pd.to_numeric(ids.map(scoring_market[_source]), errors="coerce")
+    df["sleeper_proj_half_ppr"] = df["sleeper_proj_half_ppr"].where(
+        df["sleeper_proj_half_ppr"].notna(), df["sleeper_proj"])
+
     # Explicit current-team metadata corrections, retained outside model artifacts.
     df.loc[df["player_id"].isin(TEAM_OVERRIDES_2026), "team"] = df["player_id"].map(
         TEAM_OVERRIDES_2026
@@ -402,6 +431,7 @@ def _load_board_2026_cached(source_fingerprint):
 
     for c in (
         "model_proj", "model_proj_raw", "sleeper_proj",
+        "sleeper_proj_half_ppr", "sleeper_proj_standard", "sleeper_proj_ppr",
         "nfl_talent", "college_talent",
     ):
         df[c] = pd.to_numeric(df[c], errors="coerce")
@@ -425,6 +455,7 @@ def _board_source_fingerprint():
         *(PROJ_RESULTS / f"{position}_projection_2026.csv"
           for position in ("rb", "wr", "te", "qb")),
         ANALYST_PROJECTION_ADJUSTMENTS,
+        *(MARKET_SNAPSHOT_ROOT.glob("*/normalized.csv")),
         TALENT_CSV,
         ROOKIE_CSV,
         COLLEGE_QB_CSV,
@@ -504,6 +535,33 @@ def _attach_model_draft_rank(df: pd.DataFrame) -> pd.DataFrame:
 
 def _load_board_2026():
     return _load_board_2026_cached(_board_source_fingerprint())
+
+
+def apply_scoring_mode(df: pd.DataFrame, scoring: str) -> pd.DataFrame:
+    """Recalculate board point estimates and their positional ranks."""
+    out = df.copy()
+    if scoring == DEFAULT_SCORING:
+        return out
+    source_col = {
+        "Standard": "sleeper_proj_standard",
+        "PPR": "sleeper_proj_ppr",
+    }[scoring]
+    current = pd.to_numeric(out["sleeper_proj"], errors="coerce")
+    selected = pd.to_numeric(out[source_col], errors="coerce").where(
+        pd.to_numeric(out[source_col], errors="coerce").notna(), current
+    )
+    delta = selected - current
+    out["sleeper_proj"] = selected
+    out["model_proj"] = pd.to_numeric(out["model_proj"], errors="coerce") + delta.fillna(0)
+    out["model_proj_pos_rank"] = out.groupby("position")["model_proj"].rank(
+        method="min", ascending=False
+    ).astype("Int64")
+    out["sleeper_proj_pos_rank"] = out.groupby("position")["sleeper_proj"].rank(
+        method="min", ascending=False
+    ).astype("Int64")
+    out["model_gap"] = (out["pos_rank"] - out["model_proj_pos_rank"]).astype("Int64")
+    out["sleeper_gap"] = (out["pos_rank"] - out["sleeper_proj_pos_rank"]).astype("Int64")
+    return _attach_model_draft_rank(out)
 
 
 # Preserve the existing test/maintenance API while the cached implementation
@@ -1432,6 +1490,7 @@ def render():
     page_common.sync_query_value("db26_order", order)
 
     df = apply_board_market(df, market)
+    df = apply_scoring_mode(df, scoring)
     view = df[df.position.isin(pos)]
     if name.strip():
         view = view[view.player.str.contains(name.strip(), case=False, na=False)]
@@ -1449,8 +1508,9 @@ def render():
             display_view[_k] = _blank_missing_talent(display_view[_k], decimals=0)
     st.caption(_adp_caption(market))
     st.caption(
-        f"Scoring format: **{scoring}**. The published Draft Board projection artifact is "
-        "half-PPR; use the format selector to keep the board context aligned with your league."
+        f"Scoring format: **{scoring}**. Sleeper Proj uses the selected scoring totals from "
+        "the latest market snapshot; Model Proj is translated by the same reception-point "
+        "delta, and positional ranks/gaps update with the displayed points."
     )
     direction = "low to high" if ascending else "high to low"
     sort_note = (f"Sorted by **{sort_label}** ({direction}). The arrow and soft green tint mark "
@@ -1492,7 +1552,7 @@ def render():
     grid_kwargs = dict(
         width="stretch", height=TABLE_HEIGHT, hide_index=True,
         key=("db26_grid_"
-             f"{market.replace(' ', '_')}_{sort_keys[sort_label]}_{order}_"
+             f"{market.replace(' ', '_')}_{scoring.replace('-', '_')}_{sort_keys[sort_label]}_{order}_"
              f"{'detail' if detail else 'compact'}_"
              f"{'-'.join(sorted(pos))}_{name.strip().lower()}_{len(view)}"),
         column_config=_column_config(active_sort_key, ascending, market),

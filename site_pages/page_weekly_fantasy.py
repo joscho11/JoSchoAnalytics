@@ -425,6 +425,11 @@ def render():
         "Scoring format", list(SCORING_MODES), default=DEFAULT_SCORING,
         key="wf_scoring", help="Choose how reception points are counted.",
     ) or DEFAULT_SCORING
+    st.caption(
+        f"Scoring view: **{scoring}**. Projection points recalculate from receptions; "
+        "live slim artifacts use position-level reception estimates when individual "
+        "reception projections are not included."
+    )
 
     st.subheader(f"Week {week} · {season} season")
 
@@ -619,13 +624,20 @@ def render():
             "QB": "pred_qb_receptions", "RB": "pred_rb_receptions",
             "WR": "pred_wr_receptions", "TE": "pred_te_receptions",
         }
+        _fallback_receptions = {"QB": 0.0, "RB": 2.5, "WR": 5.5, "TE": 4.5}
         proj_df["_scoring_pts"] = proj_df["projected_pts"]
         for _pos, _col in _reception_cols.items():
             if _col in proj_df.columns:
                 _mask = proj_df["position"].eq(_pos)
-                proj_df.loc[_mask, "_scoring_pts"] = points_from_half_ppr(
-                    proj_df.loc[_mask, "projected_pts"], proj_df.loc[_mask, _col], scoring
+                _receptions = proj_df.loc[_mask, _col]
+            else:
+                _mask = proj_df["position"].eq(_pos)
+                _receptions = pd.Series(
+                    _fallback_receptions[_pos], index=proj_df.index[_mask], dtype="float64"
                 )
+            proj_df.loc[_mask, "_scoring_pts"] = points_from_half_ppr(
+                proj_df.loc[_mask, "projected_pts"], _receptions, scoring
+            )
 
         for ptab, pos in zip([ptab_qb, ptab_rb, ptab_wr, ptab_te], ["QB", "RB", "WR", "TE"]):
             if not ptab.open:
