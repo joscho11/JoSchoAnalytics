@@ -252,7 +252,7 @@ def render_header():
 @media (min-width:920px){{
   /* Streamlit Cloud's toolbar occupies the top-right. Move the pill left of that area
      without moving the toolbar or main menu themselves. */
- .jsa-tip{{margin-right:15rem;}}
+ .jsa-tip{{margin-right:16rem;}}
 }}
 @media (min-width:920px) and (max-width:1100px){{
  .jsa-tip{{width:2.25rem;height:2.25rem;min-width:2.25rem;padding:0;
