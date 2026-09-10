@@ -10,6 +10,7 @@ import pandas as pd
 import streamlit as st
 
 import page_common
+from fantasy_scoring import DEFAULT_SCORING, SCORING_MODES, points_from_half_ppr
 from dashboard_chrome import TABLE_HEIGHT, dataframe_phone_desktop, _OFFLINE
 from publishing.manifest import published_builds
 from publishing.paths import resolve_site_path
@@ -399,6 +400,8 @@ def load_actual_stats(season: int, week: int) -> dict:
             'wr_recs':     _col('WR', 'receptions'),
             'te_rec_yds':  _col('TE', 'receiving_yards'),
             'te_recs':     _col('TE', 'receptions'),
+            'qb_recs':     _col('QB', 'receptions'),
+            'rb_recs':     _col('RB', 'receptions'),
         }
     except Exception as _e:
         import logging as _logging
@@ -418,6 +421,10 @@ def render():
     )
     season, week = _fantasy_season_week_controls(available, default)
     page_common.render_release_status("fantasy", season, week)
+    scoring = st.segmented_control(
+        "Scoring format", list(SCORING_MODES), default=DEFAULT_SCORING,
+        key="wf_scoring", help="Choose how reception points are counted.",
+    ) or DEFAULT_SCORING
 
     st.subheader(f"Week {week} · {season} season")
 
@@ -464,6 +471,8 @@ def render():
         actual_wr_recs     = _actuals.get('wr_recs',     {})
         actual_te_rec_yds  = _actuals.get('te_rec_yds',  {})
         actual_te_recs     = _actuals.get('te_recs',     {})
+        actual_qb_recs     = _actuals.get('qb_recs',     {})
+        actual_rb_recs     = _actuals.get('rb_recs',     {})
 
         played_ids = (
             {str(pid) for pid in _half_ppr_dict} if actuals_in else None
@@ -605,6 +614,19 @@ def render():
             st.warning(f"Projection CSV is missing columns: {_early_missing}.")
             st.stop()
 
+        proj_df = proj_df.copy()
+        _reception_cols = {
+            "QB": "pred_qb_receptions", "RB": "pred_rb_receptions",
+            "WR": "pred_wr_receptions", "TE": "pred_te_receptions",
+        }
+        proj_df["_scoring_pts"] = proj_df["projected_pts"]
+        for _pos, _col in _reception_cols.items():
+            if _col in proj_df.columns:
+                _mask = proj_df["position"].eq(_pos)
+                proj_df.loc[_mask, "_scoring_pts"] = points_from_half_ppr(
+                    proj_df.loc[_mask, "projected_pts"], proj_df.loc[_mask, _col], scoring
+                )
+
         for ptab, pos in zip([ptab_qb, ptab_rb, ptab_wr, ptab_te], ["QB", "RB", "WR", "TE"]):
             if not ptab.open:
                 continue
@@ -612,12 +634,12 @@ def render():
                 pos_subset = proj_df[proj_df["position"] == pos]
                 if pos == "QB" and "depth_chart_position" in pos_subset.columns:
                     pos_subset = pos_subset[pos_subset["depth_chart_position"] == 1]
-                    pos_subset = pos_subset.sort_values("projected_pts", ascending=False).drop_duplicates(subset="team")
+                    pos_subset = pos_subset.sort_values("_scoring_pts", ascending=False).drop_duplicates(subset="team")
                 # Rows shown per position tab. QB is 24 to match the scored
                 # universe cap in the producer (UNIVERSE_CAPS), which is also
                 # roughly a 12-team league's startable pool plus streamers.
                 top_n = {"QB": 24, "RB": 40, "WR": 40, "TE": 24}.get(pos, 20)
-                pos_df = pos_subset.sort_values("projected_pts", ascending=False)
+                pos_df = pos_subset.sort_values("_scoring_pts", ascending=False)
                 if player_search:
                     mask = pos_df["player_display_name"].str.contains(player_search, case=False, na=False, regex=False)
                     pos_df = pos_df[mask]
@@ -713,7 +735,7 @@ def render():
                     display["Opponent"] = sep + " " + display["opponent_team"].astype(str)
                 else:
                     display["Opponent"] = display["opponent_team"]
-                display["Proj Pts"] = display["projected_pts"].round(1)
+                display["Proj Pts"] = pos_df["_scoring_pts"].round(1).to_numpy()
                 has_health = "injury_status_score" in display.columns
                 has_epa_value = "off_epa_roll4" in display.columns
                 has_epa_rank = "off_epa_rank" in display.columns
@@ -760,7 +782,11 @@ def render():
 
                 if actuals_in:
                     _actual_raw = display["player_id"].map(_half_ppr_dict)
-                    display["Actual Pts"] = pd.to_numeric(_actual_raw, errors="coerce").round(1)
+                    _actual_recs = {"QB": actual_qb_recs, "RB": actual_rb_recs,
+                                    "WR": actual_wr_recs, "TE": actual_te_recs}[pos]
+                    display["Actual Pts"] = points_from_half_ppr(
+                        _actual_raw, display["player_id"].map(_actual_recs), scoring
+                    ).round(1)
                     if preview_layout:
                         display["Actual Pass Yds"] = pd.to_numeric(
                             display["player_id"].map(actual_qb_pass_yds if pos == "QB" else {}),

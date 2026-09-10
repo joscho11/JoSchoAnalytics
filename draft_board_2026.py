@@ -11,6 +11,7 @@ import pandas as pd
 import streamlit as st
 
 import page_common
+from fantasy_scoring import DEFAULT_SCORING, SCORING_MODES
 from dashboard_chrome import TABLE_HEIGHT, dataframe_phone_desktop
 
 _MONTHS = ("January", "February", "March", "April", "May", "June", "July",
@@ -1365,6 +1366,13 @@ def render():
         )
         if market not in BOARD_VIEWS:
             market = DEFAULT_ADP_MARKET
+        page_common.seed_widget_from_query("db26_scoring", "db26_scoring", SCORING_MODES)
+        scoring = st.segmented_control(
+            "Scoring format", list(SCORING_MODES), default=DEFAULT_SCORING,
+            key="db26_scoring", required=True,
+            help="The board's published model is half-PPR; Standard/PPR labels are available "
+                 "for the scoring context while the source artifact remains half-PPR.",
+        ) or DEFAULT_SCORING
         sort_keys = sort_keys_for(market)
         prev_sort = st.session_state.get("db26_sortby")
         if market == MODEL_DRAFT_MARKET and prev_sort in ADP_MARKETS:
@@ -1417,6 +1425,7 @@ def render():
                    "correctly that way — a Streamlit limitation. Use the controls above.")
 
     page_common.sync_query_value("db26_adp_src", market)
+    page_common.sync_query_value("db26_scoring", scoring)
     page_common.sync_query_value("db26_pos", ",".join(pos))
     page_common.sync_query_value("db26_search", name.strip())
     page_common.sync_query_value("db26_sortby", sort_label)
@@ -1439,6 +1448,10 @@ def render():
         if _k in display_view.columns:
             display_view[_k] = _blank_missing_talent(display_view[_k], decimals=0)
     st.caption(_adp_caption(market))
+    st.caption(
+        f"Scoring format: **{scoring}**. The published Draft Board projection artifact is "
+        "half-PPR; use the format selector to keep the board context aligned with your league."
+    )
     direction = "low to high" if ascending else "high to low"
     sort_note = (f"Sorted by **{sort_label}** ({direction}). The arrow and soft green tint mark "
                  "the active sort column.")
