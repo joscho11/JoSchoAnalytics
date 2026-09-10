@@ -133,8 +133,8 @@ def test_weekly_predictions_hides_paused_agent_chrome(tmp_path):
     assert "TUESDAY LINE" in md
     assert "TUE MODEL LINE" not in md
     metrics = {str(m.label): str(m.value) for m in at.metric}
-    # The corrected build has three median-triggered HIGH picks.
-    assert metrics["HIGH picks"] == "3"
+    # The public Week 1 card excludes the audited JAX HIGH label pending input repair.
+    assert metrics["HIGH picks"] == "2"
 
 
 def test_weekly_predictions_live_2026_banner(tmp_path):

@@ -32,6 +32,19 @@ from live_2026 import (
 from page_common import load_agent_analysis
 
 
+# Week 1 audit disposition: the JAX HIGH label depends on the reviewed coach-state
+# input. Keep the model artifact immutable, but suppress that label on the public card
+# until the input is repaired and the model is rerun.
+WEEK1_REVIEW_EXCLUDED_HIGH = {"2026_01_CLE_JAX"}
+
+
+def _public_high(row) -> bool:
+    if int(row.get("season", 0)) == 2026 and int(row.get("week", 0)) == 1:
+        if str(row.get("game_id", "")) in WEEK1_REVIEW_EXCLUDED_HIGH:
+            return False
+    return row_display_high(row)
+
+
 def _demo_2025_notice():
     """2025 weeks 10-end stay on the old consensus model. Not live 2026."""
     st.info(
@@ -246,7 +259,7 @@ def render():
     with st.container(horizontal=True, key="jsa-metric-even-wp"):
         st.metric("Total games", len(week_df), border=True)
         if live:
-            _n_high = int(week_df.apply(row_display_high, axis=1).sum()) if not week_df.empty else 0
+            _n_high = int(week_df.apply(_public_high, axis=1).sum()) if not week_df.empty else 0
             st.metric(
                 "HIGH picks", _n_high, f"{HIGH_GAP:g}+ points vs Tuesday",
                 delta_color="green", delta_arrow="off", border=True,
@@ -359,7 +372,7 @@ def render():
 
         if live:
             filtered_df = filtered_df.copy()
-            filtered_df["_live_high"] = filtered_df.apply(row_display_high, axis=1)
+            filtered_df["_live_high"] = filtered_df.apply(_public_high, axis=1)
             _sort_cols = ["_live_high"]
             _asc = [False]
             if "gameday" in filtered_df.columns:
@@ -459,7 +472,7 @@ def render():
             result_label = ("✅ WIN" if _row_correct else "❌ LOSS") if results_available else ""
 
             if live:
-                is_high = bool(row_display_high(row))
+                is_high = bool(_public_high(row))
                 dropped = bool(row_high_dropped(row))
                 if is_high:
                     tier_html = "&nbsp;&nbsp;<span style='background:#1a3a1a;border:1px solid #00c853;border-radius:4px;padding:1px 6px;font-size:11px;color:#00c853;font-weight:700'>HIGH PICK</span>"
