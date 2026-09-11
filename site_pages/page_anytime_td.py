@@ -256,6 +256,15 @@ def _odds_probability(american, probability) -> str:
     return f"{american_text} · {probability_text}" if american_text else probability_text
 
 
+def _implied_probability(american):
+    if pd.isna(american):
+        return None
+    value = float(american)
+    if value == 0:
+        return None
+    return 100 / (value + 100) if value > 0 else 100 / (100 + abs(value))
+
+
 def _value_gap(model_american, book_american, model_probability, book_probability) -> str:
     if pd.isna(model_probability) or pd.isna(book_probability):
         return ""
@@ -317,6 +326,13 @@ def _display(df: pd.DataFrame) -> pd.DataFrame:
 def _two_plus_display(df: pd.DataFrame) -> pd.DataFrame:
     ranked = df.copy()
     ranked["p_ge2"] = pd.to_numeric(ranked.get("p_ge2"), errors="coerce")
+    if "two_plus_amer" in ranked:
+        ranked["_book_2plus"] = pd.to_numeric(ranked["two_plus_amer"], errors="coerce")
+        # A live sportsbook quote is only meaningful for players the book
+        # actually offered in this market. If the release has no 2+ market at
+        # all, retain the model-only placeholder behavior for older releases.
+        if ranked["_book_2plus"].notna().any():
+            ranked = ranked[ranked["_book_2plus"].notna()].copy()
     ranked = ranked.sort_values(
         ["p_ge2", "player_display_name"],
         ascending=[False, True],
@@ -326,14 +342,30 @@ def _two_plus_display(df: pd.DataFrame) -> pd.DataFrame:
         _odds_probability(_fair_amer_from_probability(probability), probability)
         for probability in ranked.p_ge2
     ]
+    if "_book_2plus" in ranked:
+        book_american = ranked["_book_2plus"]
+    else:
+        book_american = pd.Series(pd.NA, index=ranked.index, dtype="Float64")
+    book_probability = book_american.map(_implied_probability)
+    book_odds = [
+        _odds_probability(american, probability)
+        for american, probability in zip(book_american, book_probability)
+    ]
+    model_american = ranked.p_ge2.map(_fair_amer_from_probability)
+    value_gap = [
+        _value_gap(model, book, model_p, book_p)
+        for model, book, model_p, book_p in zip(
+            model_american, book_american, ranked.p_ge2, book_probability
+        )
+    ]
     return pd.DataFrame({
         "#": range(1, len(ranked) + 1),
         "Player": ranked.player_display_name + " · " + ranked.team.astype(str),
         "Pos": ranked.position,
         "Opp": ranked.opponent_team,
         "Model 2+ TD Odds": [value or "Not implemented yet" for value in model_odds],
-        "Book 2+ TD Odds": ["Not implemented yet"] * len(ranked),
-        "2+ TD Value Gap": ["Not implemented yet"] * len(ranked),
+        "Book 2+ TD Odds": [value or "Not implemented yet" for value in book_odds],
+        "2+ TD Value Gap": [value or "Not implemented yet" for value in value_gap],
     })
 
 
@@ -432,11 +464,11 @@ def _two_plus_column_config() -> dict:
         ),
         "Book 2+ TD Odds": st.column_config.TextColumn(
             "Book 2+ TD Odds",
-            help="Two-plus touchdown sportsbook odds; this market is not implemented yet.",
+            help="DraftKings American odds and implied probability for two or more touchdowns.",
         ),
         "2+ TD Value Gap": st.column_config.TextColumn(
             "2+ TD Value Gap",
-            help="Two-plus touchdown value comparison; this market is not implemented yet.",
+            help="Book-minus-model American-odds gap and model-minus-book probability differential.",
         ),
     }
 
@@ -457,11 +489,11 @@ def _two_plus_phone_column_config() -> dict:
     )
     cfg["Book 2+ TD Odds"] = st.column_config.TextColumn(
         "Book", width=PHONE_WIDTHS["Book ATTD Odds"], pinned=True,
-        help="Two-plus touchdown sportsbook odds; not implemented yet.",
+        help="DraftKings two-plus touchdown odds and implied probability.",
     )
     cfg["2+ TD Value Gap"] = st.column_config.TextColumn(
         "Value", width=PHONE_WIDTHS["ATTD Value Gap"], pinned=True,
-        help="Two-plus touchdown value comparison; not implemented yet.",
+        help="Two-plus book-minus-model odds gap and probability differential.",
     )
     return cfg
 
@@ -520,9 +552,12 @@ American-odds gap with the model-minus-book percentage differential, such as
 are available in each column's help text. The list is sorted by ATTD Value Gap,
 highest first.
 
-Use **Show 2+ TD view** for the expanded two-plus layout. The current release
-has model 2+ probabilities, but does not yet publish 2+ sportsbook prices or a
-2+ value gap, so those columns are marked as not implemented.
+Use **Show 2+ TD view** for the expanded two-plus layout. When the pasted
+release includes that market, the view shows model odds, current DraftKings
+odds, and the value gap for players with a listed 2+ price. Older releases
+without that market show a clear not-implemented placeholder.
+The original First TD prices are retained in the release data but are not part
+of this model view.
 Week 1 is organized by matchup, then by team (for example, NE vs SEA with
 separate NE and SEA boards).
         """)
@@ -624,13 +659,16 @@ def render() -> None:
     show_two_plus = st.toggle(
         "Show 2+ TD view",
         key=f"atd_two_plus_{season}_{week}",
-        help="Show model 2+ TD odds. Book 2+ odds and the 2+ value gap are not implemented yet.",
+        help="Show model 2+ TD odds, DraftKings 2+ TD odds, and the 2+ value gap when the release includes that market.",
     )
     if show_two_plus:
-        st.info(
-            "2+ TD sportsbook prices and value-gap grading are not implemented yet. "
-            "The model probability is shown where this release has one."
-        )
+        if "two_plus_amer" in raw and pd.to_numeric(raw["two_plus_amer"], errors="coerce").notna().any():
+            st.caption("2+ TD view: model probability, current DraftKings price, and value gap. First-TD prices are retained in the release data but are not part of this model.")
+        else:
+            st.info(
+                "2+ TD sportsbook prices are not available for this release yet. "
+                "The model probability is shown where this release has one."
+            )
     matchups = list(_matchup_groups(priced))
     if not matchups:
         st.info("No matchups match this search.")

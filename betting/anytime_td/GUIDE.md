@@ -27,9 +27,12 @@ On a phone the grid keeps #, Player, Model, Book, Value, and Hit. Position tabs 
 Live boards are grouped by matchup and then team (for example, NE vs SEA,
 with separate NE and SEA sections).
 
-The **Show 2+ TD view** exposes the model's two-plus probability as American
-odds plus percentage where available. Two-plus sportsbook prices and the
-two-plus value gap are not implemented yet, so those cells are marked clearly.
+The **Show 2+ TD view** exposes model 2+ TD odds, the current DraftKings 2+ TD
+price, and the 2+ TD value gap when those prices are included in the pasted
+release; players without a listed 2+ price are omitted from that market view.
+Older releases without the market show a clear not-implemented placeholder.
+The original First TD prices are retained in the release data but are not part
+of the model display.
 
 ## How it scored in 2025
 
@@ -52,8 +55,9 @@ and labeled with their actual lead time; only a post-kickoff timestamp blocks a
 row. For Sunday slates, the expected handoff is early Sunday morning before the
 slate. The canonical input is `td_count_model_beta/live/2026_week01_<slate>.csv`
 with `season`, `week`, `kickoff_et`, `snapped_at_et`, `book`, `player`, `team`,
-`opponent`, and `yes_amer`. `yes_amer` is an American-odds Yes price. No Odds
-API is called.
+`opponent`, and `yes_amer`. The parser/publisher also preserves the optional
+`first_amer` and `two_plus_amer` DraftKings prices. All three are American
+odds. No Odds API is called.
 
 The publisher normalizes names using the explicit alias file when needed,
 checks the Week 1 schedule, timestamps, odds, duplicates, and player-game

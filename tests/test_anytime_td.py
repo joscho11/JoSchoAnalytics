@@ -68,16 +68,18 @@ def test_anytime_td_renders_and_owns_controls(tmp_path):
     )
 
 
-def test_two_plus_toggle_shows_honest_placeholder(tmp_path):
+def test_two_plus_toggle_shows_book_market_when_available(tmp_path):
     at = _render(tmp_path)
     at.toggle(key="atd_two_plus_2026_1").set_value(True).run()
     assert not at.exception, at.exception
     assert not at.error, [e.value for e in at.error]
-    assert any("not implemented yet" in str(item.value) for item in at.info)
+    assert any("2+ TD view" in str(item.value) for item in at.caption)
     assert set(at.dataframe[0].value.columns) == set([
         "#", "Player", "Pos", "Opp", "Model 2+ TD Odds",
         "Book 2+ TD Odds", "2+ TD Value Gap",
     ])
+    assert at.dataframe[0].value["Book 2+ TD Odds"].ne("Not implemented yet").any()
+    assert at.dataframe[0].value["2+ TD Value Gap"].ne("Not implemented yet").any()
 
 
 def test_year_and_week_selectors_keep_2025_available(tmp_path):
