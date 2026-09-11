@@ -456,15 +456,22 @@ def grade_anytime_td_file(
             pending_games.append(game_id)
             continue
 
-        def scored_player(row):
+        def player_touchdowns(row):
             touchdowns = stat_info["td_by_alias"].get(row["_player_id"])
             if touchdowns is None and "player_display_name" in row and "team" in row:
                 key = (_normal_team(row["team"]), _normal_name(row["player_display_name"]))
                 touchdowns = stat_info["td_by_name_team"].get(key, 0.0)
-            return int(float(touchdowns or 0.0) > 0)
+            return float(touchdowns or 0.0)
 
-        scored = game_rows.apply(scored_player, axis=1)
-        board.loc[game_rows.index, "scored_anytime"] = scored.to_numpy()
+        touchdowns = game_rows.apply(player_touchdowns, axis=1)
+        board.loc[game_rows.index, "scored_anytime"] = touchdowns.gt(0).astype(int).to_numpy()
+        if "scored_two_plus" not in board:
+            board["scored_two_plus"] = pd.Series(
+                pd.NA, index=board.index, dtype="Float64"
+            )
+        board.loc[game_rows.index, "scored_two_plus"] = (
+            touchdowns.ge(2).astype(int).to_numpy()
+        )
         if "status" in board:
             board.loc[game_rows.index, "status"] = "final"
         updated_games.append(game_id)
@@ -477,6 +484,11 @@ def grade_anytime_td_file(
         source.write_bytes(encoded)
 
     graded = pd.to_numeric(board["scored_anytime"], errors="coerce").notna()
+    graded_two_plus = (
+        pd.to_numeric(board["scored_two_plus"], errors="coerce").notna()
+        if "scored_two_plus" in board
+        else pd.Series(False, index=board.index)
+    )
     board_games_final = board_game_ids <= final_game_ids
     return {
         "status": "graded" if updated_games else "pending",
@@ -485,6 +497,7 @@ def grade_anytime_td_file(
         "week": int(week),
         "final_games": int(len(board_game_ids & final_game_ids)),
         "graded_rows": int(graded.sum()),
+        "graded_two_plus_rows": int(graded_two_plus.sum()),
         "updated_games": updated_games,
         "updated_rows": int(updated_rows),
         "pending_games": pending_games,

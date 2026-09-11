@@ -505,18 +505,21 @@ def _anytime_board(tmp_path: Path) -> Path:
             "season": 2026, "week": 1, "game_id": "2026_01_NE_SEA",
             "player_id": "SEA-RB", "player_display_name": "Sea RB", "team": "SEA",
             "opponent_team": "NE", "p_ge1": 0.40, "p_book": 0.30,
+            "p_ge2": 0.20, "two_plus_amer": 400,
             "scored_anytime": None, "status": "pregame",
         },
         {
             "season": 2026, "week": 1, "game_id": "2026_01_NE_SEA",
             "player_id": "NE-RB", "player_display_name": "Ne RB", "team": "NE",
             "opponent_team": "SEA", "p_ge1": 0.35, "p_book": 0.30,
+            "p_ge2": 0.15, "two_plus_amer": 566,
             "scored_anytime": None, "status": "pregame",
         },
         {
             "season": 2026, "week": 1, "game_id": "2026_01_SF_LA",
             "player_id": "SF-RB", "player_display_name": "Sf RB", "team": "SF",
             "opponent_team": "LA", "p_ge1": 0.30, "p_book": 0.25,
+            "p_ge2": 0.10, "two_plus_amer": 900,
             "scored_anytime": None, "status": "pregame",
         },
     ]).to_csv(path, index=False)
@@ -538,7 +541,7 @@ def test_anytime_td_grading_updates_final_games_and_leaves_partial_slate_pending
     actuals = pd.DataFrame([
         {
             "season": 2026, "week": 1, "season_type": "REG", "player_id": "SEA-RB",
-            "team": "SEA", "rushing_tds": 1, "receiving_tds": 0,
+            "team": "SEA", "rushing_tds": 2, "receiving_tds": 0,
         },
         {
             "season": 2026, "week": 1, "season_type": "REG", "player_id": "NE-COVERAGE",
@@ -553,6 +556,7 @@ def test_anytime_td_grading_updates_final_games_and_leaves_partial_slate_pending
     assert first["pending_games"] == ["2026_01_SF_LA"]
     graded = pd.read_csv(path)
     assert list(graded.loc[graded.game_id.eq("2026_01_NE_SEA"), "scored_anytime"]) == [1, 0]
+    assert list(graded.loc[graded.game_id.eq("2026_01_NE_SEA"), "scored_two_plus"]) == [1, 0]
     assert graded.loc[graded.game_id.eq("2026_01_NE_SEA"), "status"].eq("final").all()
     assert pd.isna(graded.loc[graded.game_id.eq("2026_01_SF_LA"), "scored_anytime"]).all()
 
