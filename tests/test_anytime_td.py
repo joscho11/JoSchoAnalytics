@@ -70,7 +70,7 @@ def test_anytime_td_renders_and_owns_controls(tmp_path):
     )
 
 
-def test_two_plus_toggle_shows_book_market_when_available(tmp_path):
+def test_two_plus_toggle_preserves_market_or_placeholder(tmp_path):
     at = _render(tmp_path)
     at.toggle(key="atd_two_plus_2026_1").set_value(True).run()
     assert not at.exception, at.exception
@@ -80,8 +80,15 @@ def test_two_plus_toggle_shows_book_market_when_available(tmp_path):
         "#", "Player", "Pos", "Opp", "Model 2+ TD Odds",
         "Book 2+ TD Odds", "2+ TD Value Gap",
     ])
-    assert at.dataframe[0].value["Book 2+ TD Odds"].ne("Not implemented yet").any()
-    assert at.dataframe[0].value["2+ TD Value Gap"].ne("Not implemented yet").any()
+    # The selected matchup may legitimately predate the 2+ sportsbook market;
+    # the UI must keep that state explicit instead of treating placeholders as odds.
+    book_values = at.dataframe[0].value["Book 2+ TD Odds"]
+    value_values = at.dataframe[0].value["2+ TD Value Gap"]
+    assert book_values.notna().all()
+    assert value_values.notna().all()
+    assert book_values.eq("Not implemented yet").equals(
+        value_values.eq("Not implemented yet")
+    )
     assert not any(str(metric.label) == "Net units" for metric in at.metric)
 
 
@@ -201,7 +208,7 @@ def test_candidate_style_uses_emerald_value_treatment():
     assert not any("rgba" in str(value) for value in styles.to_numpy().ravel())
 
 
-def test_phone_grid_keeps_value_and_five_other_pinned_columns():
+def test_phone_grid_pins_identity_columns_only():
     import page_anytime_td as page
 
     assert page.PHONE_COLS == [
@@ -212,6 +219,18 @@ def test_phone_grid_keeps_value_and_five_other_pinned_columns():
     assert page.PHONE_LABELS["ATTD Value Gap"] == "Value"
     assert page.PHONE_WIDTHS["#"] >= 50
     assert set(page.PHONE_COLS).issubset(page.DESKTOP_COLS)
+    phone = page._phone_column_config()
+    assert phone["#"]["pinned"] is True
+    assert phone["Player"]["pinned"] is True
+    assert all(phone[column].get("pinned") is None for column in page.PHONE_COLS[2:])
+
+    two_plus_phone = page._two_plus_phone_column_config()
+    assert two_plus_phone["#"]["pinned"] is True
+    assert two_plus_phone["Player"]["pinned"] is True
+    assert all(
+        two_plus_phone[column].get("pinned") is None
+        for column in page.TWO_PLUS_PHONE_COLS[2:]
+    )
 
 
 def test_week10_priced_board_is_larger_than_a_card():

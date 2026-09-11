@@ -61,10 +61,10 @@ _CSS = """
    leaves it whole rather than half-applied. This file is the page-CONTENT layer. */
 
 /* ── 2. Page frame ────────────────────────────────────────────────────────
-   4rem of top padding is tuned to the desktop nav band; the mobile header is
-   60px and the content only needs to clear it. Side padding buys usable width. */
+   The mobile header is 60px and the content only needs to clear it. Side
+   padding buys usable width. */
 [data-testid="stMainBlockContainer"]{
-  padding-top:4.25rem !important;
+  padding-top:3.25rem !important;
   padding-left:.85rem !important;
   padding-right:.85rem !important;
   padding-bottom:2rem !important;
@@ -855,6 +855,16 @@ details summary{
     max-width:none !important;
     width:auto !important;
     padding:0 !important;
+  }
+  /* Year and Week stay paired; Search gets a full-width row so the player
+     finder remains comfortable to use on a narrow phone. */
+  [class*="st-key-jsa-filter-bar"] [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:nth-child(3){
+    grid-column:1 / -1 !important;
+  }
+  [class*="st-key-jsa-filter-bar"] [data-testid="stTextInput"],
+  [class*="st-key-jsa-filter-bar"] [data-testid="stTextInput"] > div{
+    width:100% !important;
+    max-width:none !important;
   }
   [class*="st-key-jsa-metric-even"] [data-testid="stHorizontalBlock"]:has([data-testid="stMetric"]),
   [class*="st-key-jsa-metric-even"] [data-testid="stHorizontalBlock"]:has(.jsa-mcard){

@@ -526,21 +526,21 @@ def _phone_column_config() -> dict:
     )
     cfg["Model ATTD Odds"] = st.column_config.TextColumn(
         PHONE_LABELS["Model ATTD Odds"],
-        width=PHONE_WIDTHS["Model ATTD Odds"], pinned=True,
+        width=PHONE_WIDTHS["Model ATTD Odds"],
         help="Model American odds and percentage chance of a rushing or receiving TD.",
     )
     cfg["Book ATTD Odds"] = st.column_config.TextColumn(
         PHONE_LABELS["Book ATTD Odds"],
-        width=PHONE_WIDTHS["Book ATTD Odds"], pinned=True,
+        width=PHONE_WIDTHS["Book ATTD Odds"],
         help="Book American odds and implied percentage chance of a rushing or receiving TD.",
     )
     cfg["ATTD Value Gap"] = st.column_config.TextColumn(
         PHONE_LABELS["ATTD Value Gap"],
-        width=PHONE_WIDTHS["ATTD Value Gap"], pinned=True,
+        width=PHONE_WIDTHS["ATTD Value Gap"],
         help="Book-minus-model American-odds gap and model-minus-book percentage differential.",
     )
     cfg["Hit"] = st.column_config.TextColumn(
-        "Hit", width=PHONE_WIDTHS["Hit"], pinned=True,
+        "Hit", width=PHONE_WIDTHS["Hit"],
         help="Did they score a rushing or receiving TD?",
     )
     return cfg
@@ -581,15 +581,15 @@ def _two_plus_phone_column_config() -> dict:
         help="Name and NFL team.",
     )
     cfg["Model 2+ TD Odds"] = st.column_config.TextColumn(
-        "Model", width=PHONE_WIDTHS["Model ATTD Odds"], pinned=True,
+        "Model", width=PHONE_WIDTHS["Model ATTD Odds"],
         help="Model American odds and percentage chance of two or more TDs.",
     )
     cfg["Book 2+ TD Odds"] = st.column_config.TextColumn(
-        "Book", width=PHONE_WIDTHS["Book ATTD Odds"], pinned=True,
+        "Book", width=PHONE_WIDTHS["Book ATTD Odds"],
         help="DraftKings two-plus touchdown odds and implied probability.",
     )
     cfg["2+ TD Value Gap"] = st.column_config.TextColumn(
-        "Value", width=PHONE_WIDTHS["ATTD Value Gap"], pinned=True,
+        "Value", width=PHONE_WIDTHS["ATTD Value Gap"],
         help="Two-plus book-minus-model odds gap and probability differential.",
     )
     return cfg
@@ -657,8 +657,8 @@ without that market show a clear not-implemented placeholder.
 The original First TD prices are retained in the release data but are not part
 of this model view.
 The live cards track those 1U candidates across the 2026 season: settled/open
-paper bets, wins-losses, net units, and settled ROI. Open bets stay out of the
-P&L. After five settled games and 20 settled bets, the board also shows an
+paper bets, net units, settled ROI, and an uncertainty range. Open bets stay out
+of the P&L. After five settled games and 20 settled bets, the board also shows an
 approximate 95% ROI range from a deterministic game-block bootstrap. It is an
 empirical uncertainty range, not a guarantee. The 2+ TD view is display-only;
 it does not inherit the 1U signals or cards.
@@ -705,9 +705,10 @@ def render() -> None:
         search = controls[2].text_input("Search player", placeholder="Barkley, Jefferson", key="atd_search")
     available = releases | {(DEMO_SEASON, w): p for w, p in demo.items()}
     if season == LIVE_SEASON:
-        st.info("Live 2026 prices are copied manually from the sportsbook when available. "
-                "Early preparation captures are accepted and labeled; additional games appear as they are frozen. "
-                "No odds API is used.")
+        st.caption(
+            "Live 2026 prices are manually copied from DraftKings when available. "
+            "No odds API is used."
+        )
         meta = _live_metadata(season, week)
         if meta:
             book_value = meta.get("book", [])
@@ -744,6 +745,30 @@ def render() -> None:
     if priced.empty:
         st.warning("No book Yes prices for this week.")
         st.stop()
+
+    board_priced = priced
+    if search:
+        board_priced = priced[priced.player_display_name.str.contains(
+            search, case=False, na=False, regex=False,
+        )]
+
+    st.caption(f"{len(board_priced)} priced · all positions")
+    matchups = list(_matchup_groups(board_priced))
+    if not matchups:
+        st.info("No matchups match this search.")
+        return
+    matchup_labels = [item[0] for item in matchups]
+    matchup_key = f"atd_matchup_{season}_{week}"
+    _seed_matchup_default(matchups, matchup_key)
+    selected_label = st.selectbox(
+        "Matchup", matchup_labels,
+        key=matchup_key,
+        on_change=_mark_matchup_manual,
+        args=(f"{matchup_key}__manual",),
+        help="Choose a game to view both teams' anytime touchdown boards.",
+    )
+    label, teams, matchup = next(item for item in matchups if item[0] == selected_label)
+
     show_two_plus = st.toggle(
         "Show 2+ TD view",
         key=f"atd_two_plus_{season}_{week}",
@@ -764,27 +789,6 @@ def render() -> None:
             "of at least +1.0 percentage point."
         )
 
-    if search:
-        priced = priced[priced.player_display_name.str.contains(
-            search, case=False, na=False, regex=False,
-        )]
-
-    st.caption(f"{len(priced)} priced · all positions")
-    matchups = list(_matchup_groups(priced))
-    if not matchups:
-        st.info("No matchups match this search.")
-        return
-    matchup_labels = [item[0] for item in matchups]
-    matchup_key = f"atd_matchup_{season}_{week}"
-    _seed_matchup_default(matchups, matchup_key)
-    selected_label = st.selectbox(
-        "Matchup", matchup_labels,
-        key=matchup_key,
-        on_change=_mark_matchup_manual,
-        args=(f"{matchup_key}__manual",),
-        help="Choose a game to view both teams' anytime touchdown boards.",
-    )
-    label, teams, matchup = next(item for item in matchups if item[0] == selected_label)
     st.markdown(f"#### {label}")
     for team in teams:
         team_view = matchup[matchup.team.astype(str).eq(team)]
