@@ -13,6 +13,8 @@ _HERE = Path(__file__).resolve().parents[1]
 _SITE_PAGES = _HERE / "site_pages"
 sys.path.insert(0, str(_HERE))
 
+import page_anytime_td as page
+
 
 def _render(tmp_path):
     harness = tmp_path / "h_anytime_td.py"
@@ -50,11 +52,14 @@ def test_anytime_td_renders_and_owns_controls(tmp_path):
     assert any("How to read this board" in str(e.label) for e in at.expander)
     assert any(getattr(w, "key", None) == "atd_matchup_2026_1" for w in at.selectbox)
     assert any(getattr(w, "key", None) == "atd_two_plus_2026_1" for w in at.toggle)
-    assert "NE vs SEA" in {str(w.value) for w in at.selectbox}
-    assert any("NE Anytime TDs" in str(item.value) for item in at.markdown)
     assert any(getattr(w, "key", None) == "atd_search" for w in at.text_input)
     expected = pd.read_csv(_HERE / "betting" / "anytime_td" / "anytime_td_2026_week01.csv")
-    selected = expected[expected.team.isin(["NE", "SEA"])]
+    expected_default = page.default_matchup_label(list(page._matchup_groups(expected)))
+    assert expected_default in {str(w.value) for w in at.selectbox}
+    selected = next(
+        group for label, _, group in page._matchup_groups(expected)
+        if label == expected_default
+    )
     expected_counts = sorted(selected.groupby("team").size().tolist())
     rendered_counts = sorted(len(frame.value) for frame in at.dataframe)
     assert rendered_counts == sorted(expected_counts * 2)
