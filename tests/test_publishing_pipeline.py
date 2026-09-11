@@ -578,6 +578,30 @@ def test_anytime_td_grading_does_not_zero_fill_an_incomplete_feed(tmp_path):
     assert pd.read_csv(path)["scored_anytime"].isna().all()
 
 
+def test_anytime_td_grading_matches_player_name_when_feed_id_differs(tmp_path):
+    path = _anytime_board(tmp_path)
+    schedule = pd.DataFrame([{
+        "season": 2026, "week": 1, "game_id": "2026_01_NE_SEA",
+        "home_team": "SEA", "away_team": "NE", "home_score": 27, "away_score": 20,
+    }])
+    actuals = pd.DataFrame([
+        {
+            "season": 2026, "week": 1, "season_type": "REG", "player_id": "00-0041395",
+            "player_display_name": "Sea RB", "team": "SEA", "rushing_tds": 0, "receiving_tds": 1,
+        },
+        {
+            "season": 2026, "week": 1, "season_type": "REG", "player_id": "00-0041396",
+            "player_display_name": "Ne RB", "team": "NE", "rushing_tds": 0, "receiving_tds": 0,
+        },
+    ])
+
+    result = grade_anytime_td_file(path, schedule, actuals, season=2026, week=1)
+
+    assert result["status"] == "graded"
+    graded = pd.read_csv(path)
+    assert list(graded.loc[graded.game_id.eq("2026_01_NE_SEA"), "scored_anytime"]) == [1, 0]
+
+
 def test_scheduled_grader_dispatches_anytime_td(monkeypatch, tmp_path):
     site = tmp_path / "site"
     site.mkdir()

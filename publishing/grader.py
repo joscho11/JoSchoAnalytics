@@ -301,6 +301,13 @@ def _normal_team(value) -> str | None:
     return _normal_identifier(value)
 
 
+def _normal_name(value) -> str | None:
+    if pd.isna(value):
+        return None
+    text = re.sub(r"[^a-z0-9]+", "", str(value).strip().casefold())
+    return text or None
+
+
 def _prepare_anytime_stats(actuals: pd.DataFrame, season: int, week: int) -> dict:
     stats = actuals.copy()
     if "season" in stats:
@@ -332,14 +339,28 @@ def _prepare_anytime_stats(actuals: pd.DataFrame, season: int, week: int) -> dic
     stats["_anytime_tds"] = touchdowns
 
     td_by_alias: dict[str, float] = {}
+    td_by_name_team: dict[tuple[str, str], float] = {}
+    team_column = "team" if "team" in stats else "recent_team" if "recent_team" in stats else None
+    name_column = (
+        "player_display_name"
+        if "player_display_name" in stats
+        else "player_name"
+        if "player_name" in stats
+        else None
+    )
     for row in stats.to_dict(orient="records"):
         touchdowns = float(row["_anytime_tds"])
         for col in aliases:
             key = row.get(col)
             if key is not None:
                 td_by_alias[key] = max(td_by_alias.get(key, 0.0), touchdowns)
+        if team_column and name_column:
+            team = _normal_team(row.get(team_column))
+            name = _normal_name(row.get(name_column))
+            if team and name:
+                key = (team, name)
+                td_by_name_team[key] = max(td_by_name_team.get(key, 0.0), touchdowns)
 
-    team_column = "team" if "team" in stats else "recent_team" if "recent_team" in stats else None
     teams = set()
     if team_column:
         teams = {
@@ -352,6 +373,7 @@ def _prepare_anytime_stats(actuals: pd.DataFrame, season: int, week: int) -> dic
         }
     return {
         "td_by_alias": td_by_alias,
+        "td_by_name_team": td_by_name_team,
         "teams": teams,
         "game_ids": game_ids,
         "has_team": team_column is not None,
@@ -434,9 +456,14 @@ def grade_anytime_td_file(
             pending_games.append(game_id)
             continue
 
-        scored = game_rows["_player_id"].map(
-            lambda player_id: int(stat_info["td_by_alias"].get(player_id, 0.0) > 0)
-        )
+        def scored_player(row):
+            touchdowns = stat_info["td_by_alias"].get(row["_player_id"])
+            if touchdowns is None and "player_display_name" in row and "team" in row:
+                key = (_normal_team(row["team"]), _normal_name(row["player_display_name"]))
+                touchdowns = stat_info["td_by_name_team"].get(key, 0.0)
+            return int(float(touchdowns or 0.0) > 0)
+
+        scored = game_rows.apply(scored_player, axis=1)
         board.loc[game_rows.index, "scored_anytime"] = scored.to_numpy()
         if "status" in board:
             board.loc[game_rows.index, "status"] = "final"
