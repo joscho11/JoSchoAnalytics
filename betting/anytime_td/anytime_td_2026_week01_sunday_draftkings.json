@@ -8,7 +8,7 @@
   "model": "34 locked features + Sleeper half-PPR; fit through 2025",
   "forward_source": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\weekly_projections_v2_prod\\independent_model\\outputs\\forward\\forward_2026_week01.parquet",
   "historical_source": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\td_count_model_beta\\artifacts\\td_features_2019_2025.parquet",
-  "n_rows": 327,
+  "n_rows": 328,
   "n_cumulative": 383,
   "capture_min": "2026-09-11T15:46:00",
   "capture_max": "2026-09-11T15:46:00",
@@ -32,7 +32,6 @@
     "unresolved pasted player 'Eli Heidenreich' (ATL@PIT)",
     "unresolved pasted player 'Cooper Rush' (ATL@PIT)",
     "unresolved pasted player 'Chris Blair' (ATL@PIT)",
-    "unresolved pasted player 'Joshua Palmer' (BUF@HOU)",
     "unresolved pasted player 'Brevin Jordan' (BUF@HOU)",
     "unresolved pasted player 'Keleki Latu' (BUF@HOU)",
     "unresolved pasted player 'British Brooks' (BUF@HOU)",
@@ -110,5 +109,5 @@
     "unresolved": []
   },
   "network_odds_api": false,
-  "row_hash": "4996f32127283b8bf3aa92ed3f9beecfdbe012b8615727083c95417641e7ebe0"
+  "row_hash": "91fb6fa9063909154e546f6d088f8a8f22e352aa71907beaa084a89928c0128a"
 }
