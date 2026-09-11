@@ -169,6 +169,31 @@ def test_display_sorts_highest_value_vs_book_first():
     assert page._value_gap(144, 150, 0.411, 0.400) == "+6 · +1.1%"
 
 
+def test_candidate_style_uses_emerald_value_treatment():
+    rows = pd.DataFrame({
+        "player_display_name": ["Candidate", "Other"],
+        "position": ["RB", "WR"],
+        "team": ["KC", "SF"],
+        "opponent_team": ["LV", "SEA"],
+        "p_ge1": [0.40, 0.35],
+        "p_ge2": [0.10, 0.02],
+        "p_book": [0.30, 0.35],
+        "fair_amer": [150, 186],
+        "book_amer": [233, 186],
+        "scored_anytime": [None, None],
+    })
+    display = page._display(page.priced_rows(rows))
+    styles = page._style(display)(display[page.DESKTOP_COLS])
+
+    assert styles.iloc[0]["Player"] == (
+        "background-color: #1A4A3B; color: #B7F7D0; font-weight: 700; "
+        "border-left: 3px solid #35D08A"
+    )
+    assert "background-color: #123229" in styles.iloc[0]["Pos"]
+    assert "background-color: #1A4A3B" in styles.iloc[0]["ATTD Value Gap"]
+    assert not any("rgba" in str(value) for value in styles.to_numpy().ravel())
+
+
 def test_phone_grid_keeps_value_and_five_other_pinned_columns():
     import page_anytime_td as page
 

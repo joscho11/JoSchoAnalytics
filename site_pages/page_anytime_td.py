@@ -443,27 +443,45 @@ def _two_plus_display(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def _style(view: pd.DataFrame):
+    # Use an opaque, dark emerald treatment instead of a translucent tint. The
+    # latter can be composited as gray by the dataframe grid on dark themes.
+    candidate_row_bg = "background-color: #123229"
+    candidate_focus = (
+        "background-color: #1A4A3B; color: #B7F7D0; font-weight: 700"
+    )
+
     def _apply(df: pd.DataFrame) -> pd.DataFrame:
         styles = pd.DataFrame("", index=df.index, columns=df.columns)
         for i, candidate in enumerate(view["_candidate"]):
             if candidate:
-                styles.iloc[i, :] = "background-color: rgba(53, 208, 138, 0.12)"
+                styles.iloc[i, :] = candidate_row_bg
         if "Model ATTD Odds" in df.columns:
             for i, val in enumerate(view["_p"]):
-                styles.iloc[i, df.columns.get_loc("Model ATTD Odds")] = _p_color(val)
+                style = _p_color(val)
+                if view["_candidate"].iloc[i]:
+                    style = f"{style}; {candidate_row_bg}"
+                styles.iloc[i, df.columns.get_loc("Model ATTD Odds")] = style
         if "ATTD Value Gap" in df.columns:
             for i, value in enumerate(view["_value"]):
                 if pd.isna(value):
                     continue
                 color = "#35D08A" if value > 0 else "#F08A8A" if value < 0 else "#B8C0CC"
-                styles.iloc[i, df.columns.get_loc("ATTD Value Gap")] = (
-                    f"color: {color}; font-weight: 700"
-                )
+                style = f"color: {color}; font-weight: 700"
+                if view["_candidate"].iloc[i]:
+                    style = candidate_focus
+                styles.iloc[i, df.columns.get_loc("ATTD Value Gap")] = style
         if "Hit" in df.columns:
             for i, mark in enumerate(view["Hit"]):
                 if mark == "Yes":
-                    styles.iloc[i, df.columns.get_loc("Hit")] = (
-                        "color: #35D08A; font-weight: 700"
+                    style = "color: #35D08A; font-weight: 700"
+                    if view["_candidate"].iloc[i]:
+                        style = f"{style}; background-color: #1A4A3B"
+                    styles.iloc[i, df.columns.get_loc("Hit")] = style
+        if "Player" in df.columns:
+            for i, candidate in enumerate(view["_candidate"]):
+                if candidate:
+                    styles.iloc[i, df.columns.get_loc("Player")] = (
+                        f"{candidate_focus}; border-left: 3px solid #35D08A"
                     )
         return styles
     return _apply
