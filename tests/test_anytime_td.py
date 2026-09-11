@@ -54,7 +54,7 @@ def test_anytime_td_renders_and_owns_controls(tmp_path):
     assert any(getattr(w, "key", None) == "atd_two_plus_2026_1" for w in at.toggle)
     assert any(getattr(w, "key", None) == "atd_search" for w in at.text_input)
     metric_labels = {str(metric.label) for metric in at.metric}
-    assert {"Net units", "ROI", "Paper bets", "Record"} <= metric_labels
+    assert {"Net units", "ROI", "Paper bets", "Settled games"} <= metric_labels
     expected = pd.read_csv(_HERE / "betting" / "anytime_td" / "anytime_td_2026_week01.csv")
     expected_default = page.default_matchup_label(list(page._matchup_groups(expected)))
     assert expected_default in {str(w.value) for w in at.selectbox}

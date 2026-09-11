@@ -238,7 +238,7 @@ def _render_scorecards(priced: pd.DataFrame, season: int, releases: dict[tuple[i
                     f"{result['settled_bets']} settled / {result['open_bets']} open",
                     border=True,
                 )
-                st.metric("Record", f"{result['wins']}-{result['losses']}", border=True)
+                st.metric("Settled games", result["settled_games"], border=True)
             ci = paper["ci"]
             if ci["available"]:
                 st.caption(
