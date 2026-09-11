@@ -53,6 +53,8 @@ def test_anytime_td_renders_and_owns_controls(tmp_path):
     assert any(getattr(w, "key", None) == "atd_matchup_2026_1" for w in at.selectbox)
     assert any(getattr(w, "key", None) == "atd_two_plus_2026_1" for w in at.toggle)
     assert any(getattr(w, "key", None) == "atd_search" for w in at.text_input)
+    metric_labels = {str(metric.label) for metric in at.metric}
+    assert {"Net units", "ROI", "Paper bets", "Record"} <= metric_labels
     expected = pd.read_csv(_HERE / "betting" / "anytime_td" / "anytime_td_2026_week01.csv")
     expected_default = page.default_matchup_label(list(page._matchup_groups(expected)))
     assert expected_default in {str(w.value) for w in at.selectbox}
@@ -80,6 +82,7 @@ def test_two_plus_toggle_shows_book_market_when_available(tmp_path):
     ])
     assert at.dataframe[0].value["Book 2+ TD Odds"].ne("Not implemented yet").any()
     assert at.dataframe[0].value["2+ TD Value Gap"].ne("Not implemented yet").any()
+    assert not any(str(metric.label) == "Net units" for metric in at.metric)
 
 
 def test_year_and_week_selectors_keep_2025_available(tmp_path):
@@ -99,6 +102,19 @@ def test_anytime_td_files_cover_weeks_10_17():
 
     weeks = page.available_weeks()
     assert list(weeks) == list(range(10, 18)), weeks
+
+
+def test_audited_strategy_artifact_has_fixed_rule_and_bootstrap_contract():
+    import json
+
+    path = _HERE / "betting" / "anytime_td" / "strategy_backtest_2025_draftkings.json"
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    betting = payload["betting_profitability"]
+    assert betting["fixed_gap"]["threshold"] == 0.01
+    assert betting["fixed_gap"]["settled_bets"] > 0
+    assert betting["fixed_gap_bootstrap"]["resamples"] == 10_000
+    assert betting["fixed_gap_bootstrap"]["seed"] == 20260911
+    assert len(betting["gap_scan"]) == 301
 
 
 def test_priced_rows_drop_unpriced_and_keep_rb_fb():
@@ -149,6 +165,7 @@ def test_display_sorts_highest_value_vs_book_first():
     assert list(display["Model ATTD Odds"]) == ["+150 · 40.0%", "+186 · 35.0%", "-100 · 50.0%"]
     assert list(display["Book ATTD Odds"]) == ["+400 · 20.0%", "+233 · 30.0%", "-150 · 60.0%"]
     assert list(display["ATTD Value Gap"]) == ["+250 · +20.0%", "+47 · +5.0%", "-50 · -10.0%"]
+    assert list(display["_candidate"]) == [True, True, False]
     assert page._value_gap(144, 150, 0.411, 0.400) == "+6 · +1.1%"
 
 
@@ -247,3 +264,53 @@ def test_default_matchup_skips_fully_graded_games():
 
     matchups = list(page._matchup_groups(rows))
     assert page.default_matchup_label(matchups) == "SF vs LA"
+
+
+def test_live_tracker_uses_raw_inclusive_gap_and_separates_open_bets():
+    import attd_tracker as tracker
+
+    rows = pd.DataFrame({
+        "season": [2026] * 4,
+        "week": [1, 1, 2, 2],
+        "game_id": ["g1", "g1", "g2", "g2"],
+        "player_id": ["p1", "p2", "p3", "p3"],
+        "p_ge1": [0.41, 0.31, 0.50, 0.50],
+        "p_book": [0.40, 0.30, 0.40, 0.40],
+        "book_amer": [150, 200, 150, 150],
+        "scored_anytime": [1, None, 0, 0],
+    })
+    # The duplicate player-game row represents a later weekly release and
+    # must not create a second paper bet.
+    deduped = tracker.deduplicate_player_games([rows.iloc[:3], rows.iloc[3:]])
+    result = tracker.season_tracker(deduped)
+    summary = result["summary"]
+    assert summary["bets"] == 3
+    assert summary["settled_bets"] == 2
+    assert summary["open_bets"] == 1
+    assert summary["wins"] == 1
+    assert summary["losses"] == 1
+    assert summary["net_units"] == 0.5
+    assert result["ci"]["available"] is False
+
+
+def test_live_tracker_american_settlement_math_and_ci_is_deterministic():
+    import attd_tracker as tracker
+
+    assert tracker.american_to_decimal(-110) == 1 + 100 / 110
+    assert tracker.american_to_decimal(150) == 2.5
+    frame = pd.DataFrame({
+        "season": [2026] * 20,
+        "week": list(range(1, 21)),
+        "game_id": [f"g{i}" for i in range(20)],
+        "player_id": [f"p{i}" for i in range(20)],
+        "p_ge1": [0.51] * 20,
+        "p_book": [0.50] * 20,
+        "book_amer": [150] * 20,
+        "scored_anytime": [1, 0] * 10,
+    })
+    prepared = tracker.prepare_paper_bets(frame)
+    first = tracker.block_bootstrap_roi(prepared)
+    second = tracker.block_bootstrap_roi(prepared)
+    assert first == second
+    assert first["available"] is True
+    assert first["resamples"] == 10_000

@@ -11,6 +11,7 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
+import attd_tracker as tracker
 import page_common
 from dashboard_chrome import dataframe_phone_desktop, exact_table_height
 
@@ -198,6 +199,75 @@ def week_summary(df: pd.DataFrame) -> dict:
     }
 
 
+@st.cache_data(ttl=900)
+def _load_season_tracker(
+    paths: tuple[str, ...], modified_at: tuple[int, ...]
+) -> dict:
+    """Load the newest published file for each live week and score its paper bets."""
+    del modified_at  # cache key; the files themselves are read below
+    frame = tracker.aggregate_published_csvs(paths)
+    return tracker.season_tracker(frame)
+
+
+def _published_live_paths(releases: dict[tuple[int, int], Path]) -> tuple[tuple[str, ...], tuple[int, ...]]:
+    paths = tuple(
+        str(releases[key])
+        for key in sorted(releases)
+        if key[0] == LIVE_SEASON
+    )
+    modified_at = tuple(Path(path).stat().st_mtime_ns for path in paths)
+    return paths, modified_at
+
+
+def _pct(value) -> str:
+    return "—" if value is None or pd.isna(value) else f"{100 * float(value):+.1f}%"
+
+
+def _render_scorecards(priced: pd.DataFrame, season: int, releases: dict[tuple[int, int], Path]) -> None:
+    summary = week_summary(priced)
+    if season == LIVE_SEASON:
+        paths, modified_at = _published_live_paths(releases)
+        if paths:
+            paper = _load_season_tracker(paths, modified_at)
+            result = paper["summary"]
+            with st.container(horizontal=True, key="jsa-metric-even-atd"):
+                st.metric("Net units", f"{result['net_units']:+.1f}U", border=True)
+                st.metric("ROI", _pct(result["roi"]), border=True)
+                st.metric(
+                    "Paper bets",
+                    f"{result['settled_bets']} settled / {result['open_bets']} open",
+                    border=True,
+                )
+                st.metric("Record", f"{result['wins']}-{result['losses']}", border=True)
+            ci = paper["ci"]
+            if ci["available"]:
+                st.caption(
+                    f"Approx. 95% ROI range: {100 * ci['lower']:.1f}% to "
+                    f"{100 * ci['upper']:.1f}%. Empirical uncertainty range, not a guarantee."
+                )
+            else:
+                st.caption(
+                    "Approx. 95% ROI range is hidden until at least 5 settled games "
+                    "and 20 settled paper bets are available."
+                )
+        else:
+            st.info("2026 paper-betting tracker is waiting for a published release.")
+    else:
+        with st.container(horizontal=True, key="jsa-metric-even-atd"):
+            st.metric("Priced", summary["n"], border=True)
+            if summary["graded"]:
+                hit_pct = 100 * summary["hit_rate"]
+                st.metric(
+                    "Scored", f"{summary['hits']}/{summary['graded']}", f"{hit_pct:.0f}%",
+                    delta_arrow="off", border=True,
+                )
+    st.caption(
+        f"Supporting context · Model P {100 * summary['mean_p']:.1f}% · "
+        f"Book P {100 * summary['mean_book']:.1f}% · "
+        "Model P and Book P are shown here for context; the table carries the odds."
+    )
+
+
 @st.cache_data(ttl=3600)
 def _load_csv(path: str, modified_at: int | None = None) -> pd.DataFrame:
     return pd.read_csv(path)
@@ -320,6 +390,9 @@ def _display(df: pd.DataFrame) -> pd.DataFrame:
         "Hit": hit,
         "_p": ranked.p_ge1.astype(float),
         "_value": ranked["_value"].astype(float),
+        "_candidate": tracker.qualifies_probability_gap(
+            ranked["_value"], tracker.ATTD_VALUE_THRESHOLD
+        ),
     })
 
 
@@ -372,6 +445,9 @@ def _two_plus_display(df: pd.DataFrame) -> pd.DataFrame:
 def _style(view: pd.DataFrame):
     def _apply(df: pd.DataFrame) -> pd.DataFrame:
         styles = pd.DataFrame("", index=df.index, columns=df.columns)
+        for i, candidate in enumerate(view["_candidate"]):
+            if candidate:
+                styles.iloc[i, :] = "background-color: rgba(53, 208, 138, 0.12)"
         if "Model ATTD Odds" in df.columns:
             for i, val in enumerate(view["_p"]):
                 styles.iloc[i, df.columns.get_loc("Model ATTD Odds")] = _p_color(val)
@@ -401,7 +477,7 @@ def _desktop_column_config() -> dict:
         "Opp": st.column_config.TextColumn("Opp", help="Opponent this week."),
         "Model ATTD Odds": st.column_config.TextColumn(
             "Model ATTD Odds",
-            help="Our fair American odds and percentage chance of a rushing or receiving TD.",
+            help="Our model American odds and percentage chance of a rushing or receiving TD.",
         ),
         "Book ATTD Odds": st.column_config.TextColumn(
             "Book ATTD Odds",
@@ -546,7 +622,8 @@ betting record. For fun, not a proven edge. Bet responsibly.
 Book ATTD Odds, ATTD Value Gap, Hit. The odds columns combine American odds
 with the implied percentage chance. Value Gap combines the book-minus-model
 American-odds gap with the model-minus-book percentage differential, such as
-`+1.1%`.
+`+1.1%`. On live 2026 boards, highlighted rows meet the raw `>= +1.0pp`
+paper-bet rule and represent 1U candidates.
 
 **Phone columns.** #, Player, Model, Book, Value, Hit. The full column meanings
 are available in each column's help text. The list is sorted by ATTD Value Gap,
@@ -558,6 +635,12 @@ odds, and the value gap for players with a listed 2+ price. Older releases
 without that market show a clear not-implemented placeholder.
 The original First TD prices are retained in the release data but are not part
 of this model view.
+The live cards track those 1U candidates across the 2026 season: settled/open
+paper bets, wins-losses, net units, and settled ROI. Open bets stay out of the
+P&L. After five settled games and 20 settled bets, the board also shows an
+approximate 95% ROI range from a deterministic game-block bootstrap. It is an
+empirical uncertainty range, not a guarantee. The 2+ TD view is display-only;
+it does not inherit the 1U signals or cards.
 Week 1 is organized by matchup, then by team (for example, NE vs SEA with
 separate NE and SEA boards).
         """)
@@ -640,22 +723,6 @@ def render() -> None:
     if priced.empty:
         st.warning("No book Yes prices for this week.")
         st.stop()
-    summary = week_summary(priced)
-    hit_pct = 100 * summary["hit_rate"] if summary["hit_rate"] is not None else 0
-    with st.container(horizontal=True, key="jsa-metric-even-atd"):
-        st.metric("Priced", summary["n"], border=True)
-        if summary["graded"]:
-            st.metric("Scored", f"{summary['hits']}/{summary['graded']}", f"{hit_pct:.0f}%",
-                      delta_arrow="off", border=True)
-        st.metric("Model P", f"{100 * summary['mean_p']:.0f}%", border=True)
-        st.metric("Book P", f"{100 * summary['mean_book']:.0f}%", border=True)
-
-    if search:
-        priced = priced[priced.player_display_name.str.contains(
-            search, case=False, na=False, regex=False,
-        )]
-
-    st.caption(f"{len(priced)} priced · all positions")
     show_two_plus = st.toggle(
         "Show 2+ TD view",
         key=f"atd_two_plus_{season}_{week}",
@@ -669,6 +736,19 @@ def render() -> None:
                 "2+ TD sportsbook prices are not available for this release yet. "
                 "The model probability is shown where this release has one."
             )
+    else:
+        _render_scorecards(priced, season, releases)
+        st.caption(
+            "Highlighted rows are 1U paper-bet candidates: raw ATTD Value Gap "
+            "of at least +1.0 percentage point."
+        )
+
+    if search:
+        priced = priced[priced.player_display_name.str.contains(
+            search, case=False, na=False, regex=False,
+        )]
+
+    st.caption(f"{len(priced)} priced · all positions")
     matchups = list(_matchup_groups(priced))
     if not matchups:
         st.info("No matchups match this search.")

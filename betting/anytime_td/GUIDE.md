@@ -18,9 +18,9 @@ five, so misses will outnumber hits. That is the bet, not a broken model.
 
 | Column | Meaning |
 |---|---|
-| Model ATTD Odds | Our fair American odds plus percentage chance of a rushing or receiving TD |
+| Model ATTD Odds | Our model American odds plus percentage chance of a rushing or receiving TD |
 | Book ATTD Odds | The book's American odds plus implied percentage chance of a rushing or receiving TD |
-| ATTD Value Gap | Book-minus-model American-odds gap plus model-minus-book percentage differential. Not a bet |
+| ATTD Value Gap | Book-minus-model American-odds gap plus model-minus-book percentage differential |
 | Hit | Did they score a rushing or receiving TD? |
 
 On a phone the grid keeps #, Player, Model, Book, Value, and Hit. Position tabs swipe.
@@ -34,6 +34,25 @@ Older releases without the market show a clear not-implemented placeholder.
 The original First TD prices are retained in the release data but are not part
 of the model display.
 
+## 2026 paper-betting tracker
+
+The live board highlights a row when the raw probability gap is at least +1.0
+percentage point. That is a transparent 1U paper-bet candidate, not a
+recommendation. The season-to-date cards aggregate the newest published file
+for each 2026 week, deduplicate player-game rows, settle only final
+`scored_anytime` outcomes, and use the stored DraftKings American price for
+profit. Open bets remain visible but do not enter Net units or ROI.
+
+When there are at least five settled games and 20 settled bets, the page shows
+an **Approx. 95% ROI range** from 10,000 deterministic game-block bootstrap
+resamples. This is an empirical uncertainty range, not a guarantee. The 2+
+TD toggle is display-only until historical 2+ sportsbook prices and settlement
+data exist.
+
+The audited 2025 DraftKings strategy artifact is
+`strategy_backtest_2025_draftkings.json`. It records the fixed +1pp result,
+threshold scan, controls, drawdown, and bootstrap settings.
+
 ## How it scored in 2025
 
 Product arm: 34 locked usage features plus that week's Sleeper half-PPR
@@ -43,7 +62,7 @@ projection. The anytime price is not an input.
 |---|---:|---|
 | Full 2025 overlap | 5,310 | Books about 0.08% more accurate (0.13985 vs 0.13996 on the season score) |
 | Demo weeks 10-17 | 2,524 | Our numbers were closer in 5 of 8 weeks. Books still won the eight-week total |
-| Yes-edge cut | 960 | Lost vs the book. Not a betting record |
+| Audited +1pp DraftKings rule | 1,861 | +266.4U, 14.3% ROI; bootstrap range -1.8% to +30.9%, so the interval still crosses zero |
 
 Week 18 is out (rest and backups). Sleeper's dump has no freeze timestamp.
 
@@ -98,6 +117,7 @@ order, with alphabetical ordering for simultaneous games.
 | Path | Role |
 |---|---|
 | `anytime_td/` | Frozen 2025 week CSVs plus `meta.json` |
+| `anytime_td/strategy_backtest_2025_draftkings.json` | Audited historical +1pp DraftKings strategy result |
 | `../site_pages/page_anytime_td.py` | Comparison board |
 | `../tests/test_anytime_td.py` | Offline AppTest |
 
