@@ -49,6 +49,7 @@ def test_anytime_td_renders_and_owns_controls(tmp_path):
     assert "Eight players" not in blob
     assert any("How to read this board" in str(e.label) for e in at.expander)
     assert any(getattr(w, "key", None) == "atd_matchup_2026_1" for w in at.selectbox)
+    assert any(getattr(w, "key", None) == "atd_two_plus_2026_1" for w in at.toggle)
     assert "NE vs SEA" in {str(w.value) for w in at.selectbox}
     assert any("NE Anytime TDs" in str(item.value) for item in at.markdown)
     assert any(getattr(w, "key", None) == "atd_search" for w in at.text_input)
@@ -57,6 +58,21 @@ def test_anytime_td_renders_and_owns_controls(tmp_path):
     expected_counts = sorted(selected.groupby("team").size().tolist())
     rendered_counts = sorted(len(frame.value) for frame in at.dataframe)
     assert rendered_counts == sorted(expected_counts * 2)
+    assert set(at.dataframe[0].value.columns) == set(
+        ["#", "Player", "Pos", "Opp", "Model ATTD Odds", "Book ATTD Odds", "ATTD Value Gap"]
+    )
+
+
+def test_two_plus_toggle_shows_honest_placeholder(tmp_path):
+    at = _render(tmp_path)
+    at.toggle(key="atd_two_plus_2026_1").set_value(True).run()
+    assert not at.exception, at.exception
+    assert not at.error, [e.value for e in at.error]
+    assert any("not implemented yet" in str(item.value) for item in at.info)
+    assert set(at.dataframe[0].value.columns) == set([
+        "#", "Player", "Pos", "Opp", "Model 2+ TD Odds",
+        "Book 2+ TD Odds", "2+ TD Value Gap",
+    ])
 
 
 def test_year_and_week_selectors_keep_2025_available(tmp_path):
@@ -90,6 +106,7 @@ def test_priced_rows_drop_unpriced_and_keep_rb_fb():
         "p_ge2": [0.10, 0.02, 0.05],
         "p_book": [0.35, None, 0.28],
         "fair_amer": [150, 400, 250],
+        "book_amer": [-154, None, 257],
         "scored_anytime": [1, 0, 0],
     })
     priced = page.priced_rows(hit)
@@ -115,21 +132,28 @@ def test_display_sorts_highest_value_vs_book_first():
         "p_ge1": [0.50, 0.35, 0.40],
         "p_ge2": [0.10, 0.02, 0.05],
         "p_book": [0.60, 0.30, 0.20],
-        "fair_amer": [100, 185, 300],
+        "fair_amer": [-100, 186, 150],
+        "book_amer": [-150, 233, 400],
         "scored_anytime": [None, None, None],
     })
 
     display = page._display(page.priced_rows(rows))
     assert list(display["Player"]) == ["Largest · PHI", "Small · SF", "Negative · KC"]
-    assert list(display["vs book"]) == [20.0, 5.0, -10.0]
+    assert list(display["Model ATTD Odds"]) == ["+150 · 40.0%", "+186 · 35.0%", "-100 · 50.0%"]
+    assert list(display["Book ATTD Odds"]) == ["+400 · 20.0%", "+233 · 30.0%", "-150 · 60.0%"]
+    assert list(display["ATTD Value Gap"]) == ["+250 · +20.0%", "+47 · +5.0%", "-50 · -10.0%"]
+    assert page._value_gap(144, 150, 0.411, 0.400) == "+6 · +1.1%"
 
 
 def test_phone_grid_keeps_value_and_five_other_pinned_columns():
     import page_anytime_td as page
 
-    assert page.PHONE_COLS == ["#", "Player", "vs book", "Our P(TD)", "Book", "Hit"]
-    assert page.PHONE_LABELS["vs book"] == "Value"
-    assert page.PHONE_LABELS["Our P(TD)"] == "Ours"
+    assert page.PHONE_COLS == [
+        "#", "Player", "Model ATTD Odds", "Book ATTD Odds", "ATTD Value Gap", "Hit",
+    ]
+    assert page.PHONE_LABELS["Model ATTD Odds"] == "Model"
+    assert page.PHONE_LABELS["Book ATTD Odds"] == "Book"
+    assert page.PHONE_LABELS["ATTD Value Gap"] == "Value"
     assert page.PHONE_WIDTHS["#"] >= 50
     assert set(page.PHONE_COLS).issubset(page.DESKTOP_COLS)
 
@@ -150,7 +174,8 @@ def test_live_release_discovery_and_pending_hit_is_blank(tmp_path, monkeypatch):
     pd.DataFrame([{
         "season": 2026, "week": 1, "player_id": "p1", "player_display_name": "Player One",
         "position": "RB", "team": "SF", "opponent_team": "LA", "p_ge1": .4,
-        "p_ge2": .1, "p_book": .375, "fair_amer": 150, "scored_anytime": None,
+        "p_ge2": .1, "p_book": .375, "fair_amer": 150, "book_amer": 167,
+        "scored_anytime": None,
     }]).to_csv(live, index=False)
     monkeypatch.setattr(page, "_DIR", tmp_path)
     assert page.available_releases()[(2026, 1)] == live

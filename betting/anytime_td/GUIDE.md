@@ -11,23 +11,25 @@ ships CSV.
 
 ## What the board is
 
-Every skill player the books quoted that week, sorted by `vs book` value
+Every skill player the books quoted that week, sorted by `ATTD Value Gap`
 (our P(TD) minus the book probability, highest first). It is not a pick list.
 A short "we like these" card lost on 2025, and a typical quote is around one in
 five, so misses will outnumber hits. That is the bet, not a broken model.
 
 | Column | Meaning |
 |---|---|
-| Our P(TD) | Our chance of a rushing or receiving TD |
-| Book | Implied Yes from the one manually pasted US sportsbook price |
-| vs book | Our probability minus the book, in percentage points. Not a bet |
-| Our fair | American odds implied by our P(TD) |
-| P(2+) | Chance of two or more rushing or receiving TDs |
+| Model ATTD Odds | Our fair American odds plus percentage chance of a rushing or receiving TD |
+| Book ATTD Odds | The book's American odds plus implied percentage chance of a rushing or receiving TD |
+| ATTD Value Gap | Book-minus-model American-odds gap plus model-minus-book percentage differential. Not a bet |
 | Hit | Did they score a rushing or receiving TD? |
 
-On a phone the grid keeps #, Player, Value, Ours, Book, and Hit. Position tabs swipe.
+On a phone the grid keeps #, Player, Model, Book, Value, and Hit. Position tabs swipe.
 Live boards are grouped by matchup and then team (for example, NE vs SEA,
 with separate NE and SEA sections).
+
+The **Show 2+ TD view** exposes the model's two-plus probability as American
+odds plus percentage where available. Two-plus sportsbook prices and the
+two-plus value gap are not implemented yet, so those cells are marked clearly.
 
 ## How it scored in 2025
 

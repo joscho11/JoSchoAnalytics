@@ -1,7 +1,7 @@
 """Proof for the multipage navigation and shared chrome (app.py).
 
-Asserts: the default landing page is Home, Fantasy sits left of
-Betting in the top nav, the sidebar renders EMPTY (nav is top, footer is in page
+Asserts: the default landing page is Home, Betting sits left of
+Fantasy in the top nav, the sidebar renders EMPTY (nav is top, footer is in page
 flow), the shared footer is present, and the shared modules are import-safe.
 Hermetic: APP_OFFLINE=1 so no network. Run: pytest test_site_nav.py
 """
@@ -62,10 +62,10 @@ def test_default_is_home():
     assert "DFS Optimizer" in links
 
 
-def test_nav_groups_fantasy_then_betting():
+def test_nav_groups_betting_then_fantasy():
     src = Path(ENTRY).read_text(encoding="utf-8")
-    assert src.index('"Fantasy"') < src.index('"Betting"'), \
-        "Fantasy must sit left of Betting in the top nav"
+    assert src.index('"Betting"') < src.index('"Fantasy"'), \
+        "Betting must sit left of Fantasy in the top nav"
     assert 'title="Home"' in src
     assert 'url_path="", default=True' in src
     assert "url_path=\"draft-board\", default=True" not in src
@@ -213,10 +213,10 @@ def test_every_page_renders_offline_clean(tmp_path):
 
 if __name__ == "__main__":
     test_default_is_home()
-    test_nav_groups_fantasy_then_betting()
+    test_nav_groups_betting_then_fantasy()
     test_sidebar_is_empty_and_footer_present()
     test_header_has_brand_and_venmo_link()
     test_phone_nav_button_is_three_bars()
     test_shared_modules_import_safe()
     test_nonselected_pages_are_lazy_imported()
-    print("OK  nav: Home default, Fantasy then Betting, empty sidebar, Venmo header, footer actions")
+    print("OK  nav: Home default, Betting then Fantasy, empty sidebar, Venmo header, footer actions")

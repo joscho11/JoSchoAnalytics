@@ -120,10 +120,12 @@ chrome.render_header()
 # Revertible: delete this line and the `import mobile` above. No-op above 640px.
 mobile.inject()
 
+# Keep Betting ahead of Fantasy in both the desktop top bar and Streamlit's mobile
+# navigation drawer; st.navigation preserves this group order on both surfaces.
 nav = st.navigation(
     {"": [home_pg, tw_pg],
-     "Fantasy": [wf_pg, dfs_pg, board_pg, rb_pg],
      "Betting": [wp_pg, atd_pg, tr_pg, fut_pg],
+     "Fantasy": [wf_pg, dfs_pg, board_pg, rb_pg],
      "More": [film_pg, lh_pg, help_pg]},
     position="top",
 )

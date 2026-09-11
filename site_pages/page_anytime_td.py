@@ -1,7 +1,7 @@
 """Anytime TD comparison boards from the frozen td_count_model_beta releases.
 
 Rushing and receiving TDs only. Passing TDs are out. CSV only. No model code.
-A priced comparison board: our P(TD) next to the pasted book, not a pick list.
+A priced comparison board: model and book ATTD odds plus a value gap, not a pick list.
 """
 from __future__ import annotations
 
@@ -21,22 +21,32 @@ LIVE_SEASON = 2026
 DEFAULT_RELEASE = (LIVE_SEASON, 1)
 DEFAULT_WEEK = 10
 DESKTOP_COLS = [
-    "#", "Player", "Pos", "Opp", "Our P(TD)", "Book", "vs book",
-    "Our fair", "P(2+)", "Hit",
+    "#", "Player", "Pos", "Opp", "Model ATTD Odds", "Book ATTD Odds",
+    "ATTD Value Gap", "Hit",
 ]
-PHONE_COLS = ["#", "Player", "vs book", "Our P(TD)", "Book", "Hit"]
+PHONE_COLS = [
+    "#", "Player", "Model ATTD Odds", "Book ATTD Odds", "ATTD Value Gap", "Hit",
+]
 PHONE_LABELS = {
-    "vs book": "Value",
-    "Our P(TD)": "Ours",
+    "Model ATTD Odds": "Model",
+    "Book ATTD Odds": "Book",
+    "ATTD Value Gap": "Value",
 }
 PHONE_WIDTHS = {
     "#": 50,
     "Player": 148,
-    "vs book": 58,
-    "Our P(TD)": 58,
-    "Book": 54,
+    "Model ATTD Odds": 110,
+    "Book ATTD Odds": 110,
+    "ATTD Value Gap": 100,
     "Hit": 50,
 }
+TWO_PLUS_DESKTOP_COLS = [
+    "#", "Player", "Pos", "Opp", "Model 2+ TD Odds", "Book 2+ TD Odds",
+    "2+ TD Value Gap",
+]
+TWO_PLUS_PHONE_COLS = [
+    "#", "Player", "Model 2+ TD Odds", "Book 2+ TD Odds", "2+ TD Value Gap",
+]
 
 
 def _parse_week(name: str) -> int | None:
@@ -97,7 +107,10 @@ def priced_rows(df: pd.DataFrame) -> pd.DataFrame:
     out = df.copy()
     out["p_book"] = pd.to_numeric(out["p_book"], errors="coerce")
     out["p_ge1"] = pd.to_numeric(out["p_ge1"], errors="coerce")
-    out["p_ge2"] = pd.to_numeric(out.get("p_ge2"), errors="coerce")
+    if "p_ge2" in out:
+        out["p_ge2"] = pd.to_numeric(out["p_ge2"], errors="coerce")
+    else:
+        out["p_ge2"] = pd.Series(pd.NA, index=out.index, dtype="Float64")
     return out[out.p_book.notna() & out.p_ge1.notna()].copy()
 
 
@@ -217,6 +230,44 @@ def _amer(value) -> str:
     return f"+{n}" if n > 0 else str(n)
 
 
+def _signed_int(value) -> str:
+    if pd.isna(value):
+        return ""
+    n = int(round(float(value)))
+    return f"{n:+d}" if n else "0"
+
+
+def _fair_amer_from_probability(value):
+    if pd.isna(value):
+        return None
+    probability = float(value)
+    if not 0 < probability < 1:
+        return None
+    if probability >= 0.5:
+        return -100 * probability / (1 - probability)
+    return 100 * (1 - probability) / probability
+
+
+def _odds_probability(american, probability) -> str:
+    if pd.isna(probability):
+        return ""
+    probability_text = f"{100 * float(probability):.1f}%"
+    american_text = _amer(american)
+    return f"{american_text} · {probability_text}" if american_text else probability_text
+
+
+def _value_gap(model_american, book_american, model_probability, book_probability) -> str:
+    if pd.isna(model_probability) or pd.isna(book_probability):
+        return ""
+    probability_gap = 100 * (float(model_probability) - float(book_probability))
+    if pd.isna(model_american) or pd.isna(book_american):
+        return f"{probability_gap:+.1f}%"
+    # Positive American-odds gap means the book is offering longer odds than
+    # our fair price, matching the direction of a positive probability gap.
+    odds_gap = float(book_american) - float(model_american)
+    return f"{_signed_int(odds_gap)} · {probability_gap:+.1f}%"
+
+
 def _p_color(val, lo: float = 0.08, hi: float = 0.55) -> str:
     if pd.isna(val):
         return ""
@@ -234,30 +285,72 @@ def _display(df: pd.DataFrame) -> pd.DataFrame:
         ascending=[False, False, True],
         na_position="last",
     ).reset_index(drop=True)
-    vs = 100 * ranked["_value"]
     outcome = pd.to_numeric(ranked.scored_anytime, errors="coerce")
     hit = outcome.map(lambda value: "Yes" if value == 1 else ("No" if pd.notna(value) else ""))
+    model_american = ranked["fair_amer"] if "fair_amer" in ranked else pd.Series(pd.NA, index=ranked.index)
+    book_american = ranked["book_amer"] if "book_amer" in ranked else pd.Series(pd.NA, index=ranked.index)
     return pd.DataFrame({
         "#": range(1, len(ranked) + 1),
         "Player": ranked.player_display_name + " · " + ranked.team.astype(str),
         "Pos": ranked.position,
         "Opp": ranked.opponent_team,
-        "Our P(TD)": ranked.p_ge1.astype(float),
-        "Book": ranked.p_book.astype(float),
-        "vs book": vs.round(1),
-        "Our fair": ranked.fair_amer.map(_amer),
-        "P(2+)": ranked.p_ge2.astype(float),
+        "Model ATTD Odds": [
+            _odds_probability(american, probability)
+            for american, probability in zip(model_american, ranked.p_ge1)
+        ],
+        "Book ATTD Odds": [
+            _odds_probability(american, probability)
+            for american, probability in zip(book_american, ranked.p_book)
+        ],
+        "ATTD Value Gap": [
+            _value_gap(model, book, model_p, book_p)
+            for model, book, model_p, book_p in zip(
+                model_american, book_american, ranked.p_ge1, ranked.p_book
+            )
+        ],
         "Hit": hit,
         "_p": ranked.p_ge1.astype(float),
+        "_value": ranked["_value"].astype(float),
+    })
+
+
+def _two_plus_display(df: pd.DataFrame) -> pd.DataFrame:
+    ranked = df.copy()
+    ranked["p_ge2"] = pd.to_numeric(ranked.get("p_ge2"), errors="coerce")
+    ranked = ranked.sort_values(
+        ["p_ge2", "player_display_name"],
+        ascending=[False, True],
+        na_position="last",
+    ).reset_index(drop=True)
+    model_odds = [
+        _odds_probability(_fair_amer_from_probability(probability), probability)
+        for probability in ranked.p_ge2
+    ]
+    return pd.DataFrame({
+        "#": range(1, len(ranked) + 1),
+        "Player": ranked.player_display_name + " · " + ranked.team.astype(str),
+        "Pos": ranked.position,
+        "Opp": ranked.opponent_team,
+        "Model 2+ TD Odds": [value or "Not implemented yet" for value in model_odds],
+        "Book 2+ TD Odds": ["Not implemented yet"] * len(ranked),
+        "2+ TD Value Gap": ["Not implemented yet"] * len(ranked),
     })
 
 
 def _style(view: pd.DataFrame):
     def _apply(df: pd.DataFrame) -> pd.DataFrame:
         styles = pd.DataFrame("", index=df.index, columns=df.columns)
-        if "Our P(TD)" in df.columns:
+        if "Model ATTD Odds" in df.columns:
             for i, val in enumerate(view["_p"]):
-                styles.iloc[i, df.columns.get_loc("Our P(TD)")] = _p_color(val)
+                styles.iloc[i, df.columns.get_loc("Model ATTD Odds")] = _p_color(val)
+        if "ATTD Value Gap" in df.columns:
+            for i, value in enumerate(view["_value"]):
+                if pd.isna(value):
+                    continue
+                color = "#35D08A" if value > 0 else "#F08A8A" if value < 0 else "#B8C0CC"
+                styles.iloc[i, df.columns.get_loc("ATTD Value Gap")] = (
+                    f"color: {color}; font-weight: 700"
+                )
         if "Hit" in df.columns:
             for i, mark in enumerate(view["Hit"]):
                 if mark == "Yes":
@@ -274,24 +367,17 @@ def _desktop_column_config() -> dict:
                                            help="Row number in this list as currently sorted."),
         "Player": st.column_config.TextColumn("Player", help="Name and NFL team."),
         "Opp": st.column_config.TextColumn("Opp", help="Opponent this week."),
-        "Our P(TD)": st.column_config.NumberColumn(
-            "Our P(TD)", format="percent",
-            help="Our chance the player scores a rushing or receiving TD.",
+        "Model ATTD Odds": st.column_config.TextColumn(
+            "Model ATTD Odds",
+            help="Our fair American odds and percentage chance of a rushing or receiving TD.",
         ),
-        "Book": st.column_config.NumberColumn(
-            "Book", format="percent",
-            help="Implied Yes from the manually pasted US sportsbook price.",
+        "Book ATTD Odds": st.column_config.TextColumn(
+            "Book ATTD Odds",
+            help="The book's American odds and implied percentage chance of a rushing or receiving TD.",
         ),
-        "vs book": st.column_config.NumberColumn(
-            "vs book", format="%+.1f",
-            help="Our probability minus the book, in percentage points. Not a bet.",
-        ),
-        "Our fair": st.column_config.TextColumn(
-            "Our fair", help="American odds implied by our P(TD).",
-        ),
-        "P(2+)": st.column_config.NumberColumn(
-            "P(2+)", format="percent",
-            help="Chance of two or more rushing or receiving TDs.",
+        "ATTD Value Gap": st.column_config.TextColumn(
+            "ATTD Value Gap",
+            help="Book-minus-model American-odds gap and model-minus-book probability differential. Positive means more value in our model.",
         ),
         "Hit": st.column_config.TextColumn(
             "Hit", help="Did they score a rushing or receiving TD?",
@@ -309,19 +395,20 @@ def _phone_column_config() -> dict:
         "Player", width=PHONE_WIDTHS["Player"], pinned=True,
         help="Name and NFL team.",
     )
-    cfg["Our P(TD)"] = st.column_config.NumberColumn(
-        PHONE_LABELS["Our P(TD)"], format="percent",
-        width=PHONE_WIDTHS["Our P(TD)"], pinned=True,
-        help="Our chance the player scores a rushing or receiving TD.",
+    cfg["Model ATTD Odds"] = st.column_config.TextColumn(
+        PHONE_LABELS["Model ATTD Odds"],
+        width=PHONE_WIDTHS["Model ATTD Odds"], pinned=True,
+        help="Model American odds and percentage chance of a rushing or receiving TD.",
     )
-    cfg["vs book"] = st.column_config.NumberColumn(
-        PHONE_LABELS["vs book"], format="%+.1f",
-        width=PHONE_WIDTHS["vs book"], pinned=True,
-        help="Our probability minus the book, in percentage points. Highest value first.",
+    cfg["Book ATTD Odds"] = st.column_config.TextColumn(
+        PHONE_LABELS["Book ATTD Odds"],
+        width=PHONE_WIDTHS["Book ATTD Odds"], pinned=True,
+        help="Book American odds and implied percentage chance of a rushing or receiving TD.",
     )
-    cfg["Book"] = st.column_config.NumberColumn(
-        "Book", format="percent", width=PHONE_WIDTHS["Book"], pinned=True,
-        help="Implied Yes from the manually pasted US sportsbook price.",
+    cfg["ATTD Value Gap"] = st.column_config.TextColumn(
+        PHONE_LABELS["ATTD Value Gap"],
+        width=PHONE_WIDTHS["ATTD Value Gap"], pinned=True,
+        help="Book-minus-model American-odds gap and model-minus-book percentage differential.",
     )
     cfg["Hit"] = st.column_config.TextColumn(
         "Hit", width=PHONE_WIDTHS["Hit"], pinned=True,
@@ -330,23 +417,86 @@ def _phone_column_config() -> dict:
     return cfg
 
 
-def _board(view: pd.DataFrame, slug: str, search: str) -> None:
-    table = _display(view)
-    style_fn = _style(table)
-    graded = pd.to_numeric(view.scored_anytime, errors="coerce").notna().any()
-    desktop_cols = DESKTOP_COLS if graded else [c for c in DESKTOP_COLS if c != "Hit"]
-    phone_cols = PHONE_COLS if graded else [c for c in PHONE_COLS if c != "Hit"]
-    show = table[desktop_cols]
-    phone = table[phone_cols]
+def _two_plus_column_config() -> dict:
+    return {
+        "#": st.column_config.NumberColumn(
+            "#", format="%d", width=50, pinned=True,
+            help="Row number in this list as currently sorted.",
+        ),
+        "Player": st.column_config.TextColumn(
+            "Player", help="Name and NFL team.",
+        ),
+        "Model 2+ TD Odds": st.column_config.TextColumn(
+            "Model 2+ TD Odds",
+            help="Model American odds and percentage chance of two or more rushing or receiving TDs.",
+        ),
+        "Book 2+ TD Odds": st.column_config.TextColumn(
+            "Book 2+ TD Odds",
+            help="Two-plus touchdown sportsbook odds; this market is not implemented yet.",
+        ),
+        "2+ TD Value Gap": st.column_config.TextColumn(
+            "2+ TD Value Gap",
+            help="Two-plus touchdown value comparison; this market is not implemented yet.",
+        ),
+    }
+
+
+def _two_plus_phone_column_config() -> dict:
+    cfg = _two_plus_column_config()
+    cfg["#"] = st.column_config.NumberColumn(
+        "#", format="%d", width=PHONE_WIDTHS["#"], pinned=True,
+        help="Row number in this list as currently sorted.",
+    )
+    cfg["Player"] = st.column_config.TextColumn(
+        "Player", width=PHONE_WIDTHS["Player"], pinned=True,
+        help="Name and NFL team.",
+    )
+    cfg["Model 2+ TD Odds"] = st.column_config.TextColumn(
+        "Model", width=PHONE_WIDTHS["Model ATTD Odds"], pinned=True,
+        help="Model American odds and percentage chance of two or more TDs.",
+    )
+    cfg["Book 2+ TD Odds"] = st.column_config.TextColumn(
+        "Book", width=PHONE_WIDTHS["Book ATTD Odds"], pinned=True,
+        help="Two-plus touchdown sportsbook odds; not implemented yet.",
+    )
+    cfg["2+ TD Value Gap"] = st.column_config.TextColumn(
+        "Value", width=PHONE_WIDTHS["ATTD Value Gap"], pinned=True,
+        help="Two-plus touchdown value comparison; not implemented yet.",
+    )
+    return cfg
+
+
+def _board(view: pd.DataFrame, slug: str, search: str, *, show_two_plus: bool = False) -> None:
+    if show_two_plus:
+        table = _two_plus_display(view)
+        desktop_cols = TWO_PLUS_DESKTOP_COLS
+        phone_cols = TWO_PLUS_PHONE_COLS
+        desktop_config = _two_plus_column_config()
+        phone_config = _two_plus_phone_column_config()
+        style = table[desktop_cols]
+        phone = table[phone_cols]
+        style_fn = None
+    else:
+        table = _display(view)
+        style_fn = _style(table)
+        graded = pd.to_numeric(view.scored_anytime, errors="coerce").notna().any()
+        desktop_cols = DESKTOP_COLS if graded else [c for c in DESKTOP_COLS if c != "Hit"]
+        phone_cols = PHONE_COLS if graded else [c for c in PHONE_COLS if c != "Hit"]
+        style = table[desktop_cols]
+        phone = table[phone_cols]
+        desktop_config = _desktop_column_config()
+        phone_config = _phone_column_config()
+    desktop_data = style.style.apply(style_fn, axis=None) if style_fn else style
+    phone_data = phone.style.apply(style_fn, axis=None) if style_fn else phone
     dataframe_phone_desktop(
-        show.style.apply(style_fn, axis=None),
-        phone.style.apply(style_fn, axis=None),
+        desktop_data,
+        phone_data,
         slug=slug,
         hide_index=True,
         width="stretch",
         height=exact_table_height(len(view)),
-        column_config=_desktop_column_config(),
-        phone_column_config=_phone_column_config(),
+        column_config=desktop_config,
+        phone_column_config=phone_config,
         key=f"atd_grid_{slug}_{search}_{len(table)}",
     )
 
@@ -360,11 +510,19 @@ will outnumber hits. Over full 2025 the sportsbooks were still about 0.08% more
 accurate. On these eight demo weeks our numbers were closer in 5; that is not a
 betting record. For fun, not a proven edge. Bet responsibly.
 
-**Desktop columns.** #, Player (name and team), Pos, Opp, Our P(TD), Book,
-vs book (percentage points, sorted highest first; not a pick), Our fair, P(2+), Hit.
+**Desktop columns.** #, Player (name and team), Pos, Opp, Model ATTD Odds,
+Book ATTD Odds, ATTD Value Gap, Hit. The odds columns combine American odds
+with the implied percentage chance. Value Gap combines the book-minus-model
+American-odds gap with the model-minus-book percentage differential, such as
+`+1.1%`.
 
-**Phone columns.** #, Player, Value, Ours, Book, Hit. Value is our probability
-minus the book, in percentage points, with the highest value first.
+**Phone columns.** #, Player, Model, Book, Value, Hit. The full column meanings
+are available in each column's help text. The list is sorted by ATTD Value Gap,
+highest first.
+
+Use **Show 2+ TD view** for the expanded two-plus layout. The current release
+has model 2+ probabilities, but does not yet publish 2+ sportsbook prices or a
+2+ value gap, so those columns are marked as not implemented.
 Week 1 is organized by matchup, then by team (for example, NE vs SEA with
 separate NE and SEA boards).
         """)
@@ -420,7 +578,7 @@ def render() -> None:
         is_live = season == LIVE_SEASON
         st.badge("Live" if is_live else "Demo", icon=":material/live_tv:" if is_live else ":material/science:",
                  color="green" if is_live else "orange")
-        st.caption("Priced players only. Sorted by value vs book (highest first). " +
+        st.caption("Priced players only. Sorted by ATTD Value Gap (highest first). " +
                    ("Cumulative 2026 Week 1 release." if is_live else "2025 weeks 10-17 demo."))
     _reading_guide()
 
@@ -436,7 +594,7 @@ def render() -> None:
     raw = _load_csv(str(source), source.stat().st_mtime_ns)
     need = [
         "player_display_name", "position", "team", "opponent_team",
-        "p_ge1", "p_ge2", "p_book", "fair_amer", "scored_anytime",
+        "p_ge1", "p_book", "fair_amer", "book_amer", "scored_anytime",
     ]
     missing = [c for c in need if c not in raw.columns]
     if missing:
@@ -454,7 +612,7 @@ def render() -> None:
         if summary["graded"]:
             st.metric("Scored", f"{summary['hits']}/{summary['graded']}", f"{hit_pct:.0f}%",
                       delta_arrow="off", border=True)
-        st.metric("Our P", f"{100 * summary['mean_p']:.0f}%", border=True)
+        st.metric("Model P", f"{100 * summary['mean_p']:.0f}%", border=True)
         st.metric("Book P", f"{100 * summary['mean_book']:.0f}%", border=True)
 
     if search:
@@ -463,6 +621,16 @@ def render() -> None:
         )]
 
     st.caption(f"{len(priced)} priced · all positions")
+    show_two_plus = st.toggle(
+        "Show 2+ TD view",
+        key=f"atd_two_plus_{season}_{week}",
+        help="Show model 2+ TD odds. Book 2+ odds and the 2+ value gap are not implemented yet.",
+    )
+    if show_two_plus:
+        st.info(
+            "2+ TD sportsbook prices and value-gap grading are not implemented yet. "
+            "The model probability is shown where this release has one."
+        )
     matchups = list(_matchup_groups(priced))
     if not matchups:
         st.info("No matchups match this search.")
@@ -484,4 +652,9 @@ def render() -> None:
         if team_view.empty:
             continue
         st.markdown(f"**{team} Anytime TDs**")
-        _board(team_view, f"atd-{team.lower()}-{label.replace(' ', '-')}", search or "")
+        _board(
+            team_view,
+            f"atd-{team.lower()}-{label.replace(' ', '-')}",
+            search or "",
+            show_two_plus=show_two_plus,
+        )

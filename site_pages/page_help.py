@@ -246,8 +246,8 @@ How the file contract works sits in **How the DFS optimizer works** below.
         st.markdown("""
 A live 2026 Week 1 board of rushing and receiving anytime-TD probabilities
 versus one manually pasted US-book price, plus a 2025 weeks 10-17 historical
-demo. Priced players only, sorted by value versus the book (our probability
-minus the book probability, highest first). Passing TDs are out. Not even
+demo. Priced players only, shown as Model ATTD Odds, Book ATTD Odds, and ATTD
+Value Gap (our probability minus the book probability, highest first). Passing TDs are out. Not even
 money: a typical quote is around one in five, so misses will outnumber hits.
 For fun. Not a proven edge. Bet responsibly.
 
