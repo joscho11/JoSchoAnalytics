@@ -11,7 +11,9 @@ import numpy as np
 import pandas as pd
 
 
-ATTD_VALUE_THRESHOLD = 0.01
+# Published paper-bet cutoff: model probability must exceed DraftKings'
+# implied probability by at least half a percentage point.
+ATTD_VALUE_THRESHOLD = 0.005
 BOOTSTRAP_RESAMPLES = 10_000
 BOOTSTRAP_SEED = 20260911
 MIN_SETTLED_GAMES_FOR_CI = 5
@@ -66,21 +68,33 @@ def aggregate_published_csvs(paths: list[str | Path] | tuple[str | Path, ...]) -
     return deduplicate_player_games(frames)
 
 
+def _numeric_series(frame: pd.DataFrame, column: str | None) -> pd.Series:
+    """Return a numeric column aligned to ``frame`` or an all-missing series."""
+    if column and column in frame:
+        return pd.to_numeric(frame[column], errors="coerce")
+    return pd.Series(np.nan, index=frame.index, dtype="float64")
+
+
 def prepare_paper_bets(
     frame: pd.DataFrame,
     *,
     threshold: float = ATTD_VALUE_THRESHOLD,
     model_probability_col: str = "p_ge1",
-    book_probability_col: str = "p_book",
+    book_probability_col: str | None = "p_book",
     book_price_col: str = "book_amer",
     outcome_col: str = "scored_anytime",
 ) -> pd.DataFrame:
-    """Add raw value-gap, candidate, settlement, and profit fields to a board."""
+    """Add value-gap, candidate, settlement, and profit fields to one market."""
     out = frame.copy()
-    model_probability = pd.to_numeric(out.get(model_probability_col), errors="coerce")
-    book_probability = pd.to_numeric(out.get(book_probability_col), errors="coerce")
-    book_price = pd.to_numeric(out.get(book_price_col), errors="coerce")
-    outcome = pd.to_numeric(out.get(outcome_col), errors="coerce")
+    model_probability = _numeric_series(out, model_probability_col)
+    book_price = _numeric_series(out, book_price_col)
+    if book_probability_col and book_probability_col in out:
+        book_probability = _numeric_series(out, book_probability_col)
+    else:
+        # The 2+ release schema stores the DraftKings price but does not need a
+        # second implied-probability column; derive it from that price.
+        book_probability = book_price.map(implied_probability)
+    outcome = _numeric_series(out, outcome_col)
 
     out["_model_probability"] = model_probability
     out["_book_probability"] = book_probability
@@ -213,9 +227,22 @@ def block_bootstrap_roi(
     return result
 
 
-def season_tracker(frame: pd.DataFrame) -> dict:
-    """Return 2026 fixed-rule cards and its suppressed-or-available ROI interval."""
-    prepared = prepare_paper_bets(frame)
+def season_tracker(
+    frame: pd.DataFrame,
+    *,
+    model_probability_col: str = "p_ge1",
+    book_probability_col: str | None = "p_book",
+    book_price_col: str = "book_amer",
+    outcome_col: str = "scored_anytime",
+) -> dict:
+    """Return fixed-rule cards and its suppressed-or-available ROI interval."""
+    prepared = prepare_paper_bets(
+        frame,
+        model_probability_col=model_probability_col,
+        book_probability_col=book_probability_col,
+        book_price_col=book_price_col,
+        outcome_col=outcome_col,
+    )
     fixed = strategy_summary(prepared, threshold=ATTD_VALUE_THRESHOLD)
     ci = block_bootstrap_roi(prepared)
     return {"summary": fixed, "ci": ci, "rows": prepared}

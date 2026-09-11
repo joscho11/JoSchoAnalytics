@@ -89,7 +89,8 @@ def test_two_plus_toggle_preserves_market_or_placeholder(tmp_path):
     assert book_values.eq("Not implemented yet").equals(
         value_values.eq("Not implemented yet")
     )
-    assert not any(str(metric.label) == "Net units" for metric in at.metric)
+    assert any(str(metric.label) == "Net units" for metric in at.metric)
+    assert any("2+ TD paper tracker" in str(item.value) for item in at.caption)
 
 
 def test_year_and_week_selectors_keep_2025_available(tmp_path):
@@ -117,7 +118,7 @@ def test_audited_strategy_artifact_has_fixed_rule_and_bootstrap_contract():
     path = _HERE / "betting" / "anytime_td" / "strategy_backtest_2025_draftkings.json"
     payload = json.loads(path.read_text(encoding="utf-8"))
     betting = payload["betting_profitability"]
-    assert betting["fixed_gap"]["threshold"] == 0.01
+    assert betting["fixed_gap"]["threshold"] == 0.005
     assert betting["fixed_gap"]["settled_bets"] > 0
     assert betting["fixed_gap_bootstrap"]["resamples"] == 10_000
     assert betting["fixed_gap_bootstrap"]["seed"] == 20260911
@@ -206,6 +207,36 @@ def test_candidate_style_uses_emerald_value_treatment():
     assert "background-color: #123229" in styles.iloc[0]["Pos"]
     assert "background-color: #1A4A3B" in styles.iloc[0]["ATTD Value Gap"]
     assert not any("rgba" in str(value) for value in styles.to_numpy().ravel())
+
+
+def test_two_plus_candidate_uses_same_gap_highlight():
+    import page_anytime_td as page
+
+    rows = pd.DataFrame({
+        "player_display_name": ["Boundary", "Other"],
+        "position": ["RB", "WR"],
+        "team": ["KC", "SF"],
+        "opponent_team": ["LV", "SEA"],
+        "p_ge1": [0.40, 0.35],
+        "p_ge2": [0.205, 0.20],
+        "p_book": [0.30, 0.35],
+        "fair_amer": [150, 186],
+        "book_amer": [233, 186],
+        "two_plus_amer": [400, 400],
+        "scored_anytime": [None, None],
+        "scored_two_plus": [None, None],
+    })
+    display = page._two_plus_display(page.priced_rows(rows))
+    assert list(display["Player"]) == ["Boundary · KC", "Other · SF"]
+    assert list(display["_candidate"]) == [True, False]
+    styles = page._two_plus_style(display)(display[page.TWO_PLUS_DESKTOP_COLS])
+    assert styles.iloc[0]["Player"] == (
+        "background-color: #1A4A3B; color: #B7F7D0; font-weight: 700; "
+        "border-left: 3px solid #35D08A"
+    )
+    assert styles.iloc[0]["2+ TD Value Gap"] == (
+        "background-color: #1A4A3B; color: #B7F7D0; font-weight: 700"
+    )
 
 
 def test_phone_grid_pins_identity_columns_only():
@@ -341,6 +372,36 @@ def test_live_tracker_uses_raw_inclusive_gap_and_separates_open_bets():
     assert summary["wins"] == 1
     assert summary["losses"] == 1
     assert summary["net_units"] == 0.5
+    assert result["ci"]["available"] is False
+
+
+def test_two_plus_tracker_uses_two_plus_price_and_outcome_columns():
+    import attd_tracker as tracker
+
+    rows = pd.DataFrame({
+        "season": [2026] * 3,
+        "week": [1, 1, 1],
+        "game_id": ["g1", "g2", "g3"],
+        "player_id": ["p1", "p2", "p3"],
+        "p_ge2": [0.205, 0.30, 0.21],
+        "two_plus_amer": [400, 300, 400],
+        "scored_two_plus": [1, 0, None],
+    })
+    result = tracker.season_tracker(
+        rows,
+        model_probability_col="p_ge2",
+        book_probability_col=None,
+        book_price_col="two_plus_amer",
+        outcome_col="scored_two_plus",
+    )
+    summary = result["summary"]
+    assert summary["bets"] == 3
+    assert summary["settled_bets"] == 2
+    assert summary["open_bets"] == 1
+    assert summary["wins"] == 1
+    assert summary["losses"] == 1
+    assert summary["net_units"] == 3.0
+    assert summary["roi"] == 1.5
     assert result["ci"]["available"] is False
 
 

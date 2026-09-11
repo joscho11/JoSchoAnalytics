@@ -249,11 +249,12 @@ versus one manually pasted US-book price, plus a 2025 weeks 10-17 historical
 demo. Priced players only, shown as Model ATTD Odds, Book ATTD Odds, and ATTD
 Value Gap (our probability minus the book probability, highest first). Passing TDs are out. Not even
 money: a typical quote is around one in five, so misses will outnumber hits.
-Rows at least +1.0 percentage point above the DraftKings implied probability
+Rows at least +0.5 percentage point above the DraftKings implied probability
 are highlighted as 1U paper-bet candidates. The 2026 cards track settled/open
 bets, wins-losses, net units, settled ROI, and—once the minimum sample exists—
-an approximate 95% game-block-bootstrap ROI range. Open bets stay out of P&L;
-the 2+ TD view is display-only. For fun. Not a proven edge. Bet responsibly.
+an approximate 95% game-block-bootstrap ROI range. Open bets stay out of P&L.
+The 2+ TD view uses the same rule and has its own cards once 2+ prices and
+graded outcomes exist. For fun. Not a proven edge. Bet responsibly.
 
 Over full 2025 the sportsbooks were still about 0.08% more accurate. On these
 eight demo weeks our numbers were closer in 5; that is not a betting record.

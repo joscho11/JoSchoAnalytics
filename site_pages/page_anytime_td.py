@@ -185,8 +185,38 @@ def _seed_matchup_default(
 
 
 def week_summary(df: pd.DataFrame) -> dict:
-    n = int(len(df))
-    outcomes = pd.to_numeric(df["scored_anytime"], errors="coerce")
+    return _market_summary(
+        df,
+        model_probability_col="p_ge1",
+        book_probability_col="p_book",
+        book_price_col="book_amer",
+        outcome_col="scored_anytime",
+    )
+
+
+def _numeric_column(df: pd.DataFrame, column: str | None) -> pd.Series:
+    if column and column in df:
+        return pd.to_numeric(df[column], errors="coerce")
+    return pd.Series(float("nan"), index=df.index, dtype="float64")
+
+
+def _market_summary(
+    df: pd.DataFrame,
+    *,
+    model_probability_col: str,
+    book_probability_col: str | None,
+    book_price_col: str,
+    outcome_col: str,
+) -> dict:
+    model_probability = _numeric_column(df, model_probability_col)
+    book_price = _numeric_column(df, book_price_col)
+    if book_probability_col and book_probability_col in df:
+        book_probability = _numeric_column(df, book_probability_col)
+    else:
+        book_probability = book_price.map(tracker.implied_probability)
+    market_rows = model_probability.notna() & book_probability.notna()
+    n = int(market_rows.sum())
+    outcomes = _numeric_column(df, outcome_col)
     hits = int(outcomes.eq(1).sum())
     graded = int(outcomes.notna().sum())
     return {
@@ -194,18 +224,26 @@ def week_summary(df: pd.DataFrame) -> dict:
         "hits": hits,
         "graded": graded,
         "hit_rate": (hits / graded) if graded else None,
-        "mean_p": float(df.p_ge1.mean()) if n else None,
-        "mean_book": float(df.p_book.mean()) if n else None,
+        "mean_p": float(model_probability[market_rows].mean()) if n else None,
+        "mean_book": float(book_probability[market_rows].mean()) if n else None,
     }
 
 
 @st.cache_data(ttl=900)
 def _load_season_tracker(
-    paths: tuple[str, ...], modified_at: tuple[int, ...]
+    paths: tuple[str, ...], modified_at: tuple[int, ...], market: str = "anytime"
 ) -> dict:
     """Load the newest published file for each live week and score its paper bets."""
     del modified_at  # cache key; the files themselves are read below
     frame = tracker.aggregate_published_csvs(paths)
+    if market == "two_plus":
+        return tracker.season_tracker(
+            frame,
+            model_probability_col="p_ge2",
+            book_probability_col=None,
+            book_price_col="two_plus_amer",
+            outcome_col="scored_two_plus",
+        )
     return tracker.season_tracker(frame)
 
 
@@ -229,14 +267,31 @@ def _roi_range_value(ci: dict) -> str:
     return f"{100 * ci['lower']:.1f}% to {100 * ci['upper']:.1f}%"
 
 
-def _render_scorecards(priced: pd.DataFrame, season: int, releases: dict[tuple[int, int], Path]) -> None:
-    summary = week_summary(priced)
+def _render_scorecards(
+    priced: pd.DataFrame,
+    season: int,
+    releases: dict[tuple[int, int], Path],
+    *,
+    market: str = "anytime",
+) -> None:
+    is_two_plus = market == "two_plus"
+    summary = _market_summary(
+        priced,
+        model_probability_col="p_ge2" if is_two_plus else "p_ge1",
+        book_probability_col=None if is_two_plus else "p_book",
+        book_price_col="two_plus_amer" if is_two_plus else "book_amer",
+        outcome_col="scored_two_plus" if is_two_plus else "scored_anytime",
+    )
     if season == LIVE_SEASON:
         paths, modified_at = _published_live_paths(releases)
         if paths:
-            paper = _load_season_tracker(paths, modified_at)
+            paper = _load_season_tracker(paths, modified_at, market)
             result = paper["summary"]
             ci = paper["ci"]
+            st.caption(
+                f"{'2+ TD' if is_two_plus else 'Anytime TD'} paper tracker · "
+                f"same +{100 * tracker.ATTD_VALUE_THRESHOLD:.1f}pp gap rule · 1U per candidate."
+            )
             with st.container(horizontal=True, key="jsa-metric-even-atd"):
                 st.metric("Net units", f"{result['net_units']:+.1f}U", border=True)
                 st.metric("ROI", _pct(result["roi"]), border=True)
@@ -253,8 +308,13 @@ def _render_scorecards(priced: pd.DataFrame, season: int, releases: dict[tuple[i
                     "Approx. 95% ROI range is pending until at least 5 settled games "
                     "and 20 settled paper bets are available."
                 )
+            if is_two_plus and result["bets"] == 0:
+                st.caption("No quoted 2+ TD candidates meet the gap rule yet.")
         else:
-            st.info("2026 paper-betting tracker is waiting for a published release.")
+            st.info(
+                f"2026 {'2+ TD' if is_two_plus else 'Anytime TD'} paper-betting "
+                "tracker is waiting for a published release."
+            )
     else:
         with st.container(horizontal=True, key="jsa-metric-even-atd"):
             st.metric("Priced", summary["n"], border=True)
@@ -264,10 +324,12 @@ def _render_scorecards(priced: pd.DataFrame, season: int, releases: dict[tuple[i
                     "Scored", f"{summary['hits']}/{summary['graded']}", f"{hit_pct:.0f}%",
                     delta_arrow="off", border=True,
                 )
+    model_context = "—" if summary["mean_p"] is None else f"{100 * summary['mean_p']:.1f}%"
+    book_context = "—" if summary["mean_book"] is None else f"{100 * summary['mean_book']:.1f}%"
     st.caption(
-        f"Supporting context · Model P {100 * summary['mean_p']:.1f}% · "
-        f"Book P {100 * summary['mean_book']:.1f}% · "
-        "Model P and Book P are shown here for context; the table carries the odds."
+        f"Supporting context · {'Model 2+ P' if is_two_plus else 'Model P'} "
+        f"{model_context} · {'Book 2+ P' if is_two_plus else 'Book P'} {book_context} · "
+        "Model and book probabilities are shown here for context; the table carries the odds."
     )
 
 
@@ -434,6 +496,7 @@ def _two_plus_display(df: pd.DataFrame) -> pd.DataFrame:
             model_american, book_american, ranked.p_ge2, book_probability
         )
     ]
+    raw_gap = ranked.p_ge2 - book_probability
     return pd.DataFrame({
         "#": range(1, len(ranked) + 1),
         "Player": ranked.player_display_name + " · " + ranked.team.astype(str),
@@ -442,6 +505,10 @@ def _two_plus_display(df: pd.DataFrame) -> pd.DataFrame:
         "Model 2+ TD Odds": [value or "Not implemented yet" for value in model_odds],
         "Book 2+ TD Odds": [value or "Not implemented yet" for value in book_odds],
         "2+ TD Value Gap": [value or "Not implemented yet" for value in value_gap],
+        "_value": raw_gap.astype(float),
+        "_candidate": tracker.qualifies_probability_gap(
+            raw_gap, tracker.ATTD_VALUE_THRESHOLD
+        ),
     })
 
 
@@ -487,6 +554,37 @@ def _style(view: pd.DataFrame):
                         f"{candidate_focus}; border-left: 3px solid #35D08A"
                     )
         return styles
+    return _apply
+
+
+def _two_plus_style(view: pd.DataFrame):
+    """Apply the same opaque candidate treatment to the 2+ market."""
+    candidate_row_bg = "background-color: #123229"
+    candidate_focus = (
+        "background-color: #1A4A3B; color: #B7F7D0; font-weight: 700"
+    )
+
+    def _apply(df: pd.DataFrame) -> pd.DataFrame:
+        styles = pd.DataFrame("", index=df.index, columns=df.columns)
+        for i, candidate in enumerate(view["_candidate"]):
+            if candidate:
+                styles.iloc[i, :] = candidate_row_bg
+                if "Player" in df.columns:
+                    styles.iloc[i, df.columns.get_loc("Player")] = (
+                        f"{candidate_focus}; border-left: 3px solid #35D08A"
+                    )
+                if "2+ TD Value Gap" in df.columns:
+                    styles.iloc[i, df.columns.get_loc("2+ TD Value Gap")] = candidate_focus
+        if "2+ TD Value Gap" in df.columns:
+            for i, value in enumerate(view["_value"]):
+                if pd.isna(value) or view["_candidate"].iloc[i]:
+                    continue
+                color = "#35D08A" if value > 0 else "#F08A8A" if value < 0 else "#B8C0CC"
+                styles.iloc[i, df.columns.get_loc("2+ TD Value Gap")] = (
+                    f"color: {color}; font-weight: 700"
+                )
+        return styles
+
     return _apply
 
 
@@ -604,7 +702,7 @@ def _board(view: pd.DataFrame, slug: str, search: str, *, show_two_plus: bool = 
         phone_config = _two_plus_phone_column_config()
         style = table[desktop_cols]
         phone = table[phone_cols]
-        style_fn = None
+        style_fn = _two_plus_style(table)
     else:
         table = _display(view)
         style_fn = _style(table)
@@ -643,7 +741,7 @@ betting record. For fun, not a proven edge. Bet responsibly.
 Book ATTD Odds, ATTD Value Gap, Hit. The odds columns combine American odds
 with the implied percentage chance. Value Gap combines the book-minus-model
 American-odds gap with the model-minus-book percentage differential, such as
-`+1.1%`. On live 2026 boards, highlighted rows meet the raw `>= +1.0pp`
+`+1.1%`. On live 2026 boards, highlighted rows meet the raw `>= +0.5pp`
 paper-bet rule and represent 1U candidates.
 
 **Phone columns.** #, Player, Model, Book, Value, Hit. The full column meanings
@@ -660,8 +758,8 @@ The live cards track those 1U candidates across the 2026 season: settled/open
 paper bets, net units, settled ROI, and an uncertainty range. Open bets stay out
 of the P&L. After five settled games and 20 settled bets, the board also shows an
 approximate 95% ROI range from a deterministic game-block bootstrap. It is an
-empirical uncertainty range, not a guarantee. The 2+ TD view is display-only;
-it does not inherit the 1U signals or cards.
+empirical uncertainty range, not a guarantee. The 2+ TD view uses the same
+1U rule and shows its own cards when 2+ prices and graded outcomes are available.
 Week 1 is organized by matchup, then by team (for example, NE vs SEA with
 separate NE and SEA boards).
         """)
@@ -776,17 +874,18 @@ def render() -> None:
     )
     if show_two_plus:
         if "two_plus_amer" in raw and pd.to_numeric(raw["two_plus_amer"], errors="coerce").notna().any():
-            st.caption("2+ TD view: model probability, current DraftKings price, and value gap. First-TD prices are retained in the release data but are not part of this model.")
+            st.caption("2+ TD view: model probability, current DraftKings price, and value gap. The same +0.5pp gap rule powers the 1U paper tracker below. First-TD prices are retained in the release data but are not part of this model.")
         else:
             st.info(
                 "2+ TD sportsbook prices are not available for this release yet. "
                 "The model probability is shown where this release has one."
             )
+        _render_scorecards(priced, season, releases, market="two_plus")
     else:
         _render_scorecards(priced, season, releases)
         st.caption(
             "Highlighted rows are 1U paper-bet candidates: raw ATTD Value Gap "
-            "of at least +1.0 percentage point."
+            "of at least +0.5 percentage point."
         )
 
     st.markdown(f"#### {label}")

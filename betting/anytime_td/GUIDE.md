@@ -36,7 +36,7 @@ of the model display.
 
 ## 2026 paper-betting tracker
 
-The live board highlights a row when the raw probability gap is at least +1.0
+The live board highlights a row when the raw probability gap is at least +0.5
 percentage point. That is a transparent 1U paper-bet candidate, not a
 recommendation. The season-to-date cards aggregate the newest published file
 for each 2026 week, deduplicate player-game rows, settle only final
@@ -46,11 +46,12 @@ profit. Open bets remain visible but do not enter Net units or ROI.
 When there are at least five settled games and 20 settled bets, the page shows
 an **Approx. 95% ROI range** from 10,000 deterministic game-block bootstrap
 resamples. This is an empirical uncertainty range, not a guarantee. The 2+
-TD toggle is display-only until historical 2+ sportsbook prices and settlement
-data exist.
+TD toggle uses the same +0.5pp candidate rule and has its own Net units, ROI,
+paper-bet, and uncertainty cards. Those cards remain pending until 2+
+DraftKings prices and graded `scored_two_plus` outcomes exist.
 
 The audited 2025 DraftKings strategy artifact is
-`strategy_backtest_2025_draftkings.json`. It records the fixed +1pp result,
+`strategy_backtest_2025_draftkings.json`. It records the fixed +0.5pp result,
 threshold scan, controls, drawdown, and bootstrap settings.
 
 ## How it scored in 2025
@@ -62,7 +63,7 @@ projection. The anytime price is not an input.
 |---|---:|---|
 | Full 2025 overlap | 5,310 | Books about 0.08% more accurate (0.13985 vs 0.13996 on the season score) |
 | Demo weeks 10-17 | 2,524 | Our numbers were closer in 5 of 8 weeks. Books still won the eight-week total |
-| Audited +1pp DraftKings rule | 1,861 | +266.4U, 14.3% ROI; bootstrap range -1.8% to +30.9%, so the interval still crosses zero |
+| Audited +0.5pp DraftKings rule | 2,055 | +225.0U, 10.9% ROI; bootstrap range -3.9% to +26.3%, so the interval still crosses zero |
 
 Week 18 is out (rest and backups). Sleeper's dump has no freeze timestamp.
 
@@ -117,7 +118,7 @@ order, with alphabetical ordering for simultaneous games.
 | Path | Role |
 |---|---|
 | `anytime_td/` | Frozen 2025 week CSVs plus `meta.json` |
-| `anytime_td/strategy_backtest_2025_draftkings.json` | Audited historical +1pp DraftKings strategy result |
+| `anytime_td/strategy_backtest_2025_draftkings.json` | Audited historical +0.5pp DraftKings strategy result |
 | `../site_pages/page_anytime_td.py` | Comparison board |
 | `../tests/test_anytime_td.py` | Offline AppTest |
 
