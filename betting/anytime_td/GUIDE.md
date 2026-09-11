@@ -49,7 +49,8 @@ Week 18 is out (rest and backups). Sleeper's dump has no freeze timestamp.
 Joseph pastes one US sportsbook's Yes prices whenever practical. About three
 hours before kickoff is preferred, but early preparation captures are accepted
 and labeled with their actual lead time; only a post-kickoff timestamp blocks a
-row. The canonical input is `td_count_model_beta/live/2026_week01_<slate>.csv`
+row. For Sunday slates, the expected handoff is early Sunday morning before the
+slate. The canonical input is `td_count_model_beta/live/2026_week01_<slate>.csv`
 with `season`, `week`, `kickoff_et`, `snapped_at_et`, `book`, `player`, `team`,
 `opponent`, and `yes_amer`. `yes_amer` is an American-odds Yes price. No Odds
 API is called.
