@@ -14,6 +14,7 @@ from .contract import PublicationError, utc_now_iso
 from .grader import (
     fetch_nfl_schedule,
     fetch_player_stats,
+    grade_anytime_td_releases,
     grade_fantasy,
     grade_predictions,
 )
@@ -107,7 +108,9 @@ def _live_candidate_schedule(metadata, supplied):
 
 
 def _grade_published(root: Path, product: str = "all") -> dict:
-    products = ("predictions", "fantasy") if product == "all" else (product,)
+    products = ("predictions", "fantasy") if product == "all" else (
+        () if product == "anytime_td" else (product,)
+    )
     results = {}
     schedules = {}
     actuals_by_season = {}
@@ -154,6 +157,8 @@ def _grade_published(root: Path, product: str = "all") -> dict:
                     season, week, actuals_by_season[season], schedule=schedule, root=root
                 )
         results[selected] = product_results
+    if product in ("all", "anytime_td"):
+        results["anytime_td"] = grade_anytime_td_releases(root)
     return results
 
 
@@ -207,7 +212,7 @@ def parser() -> argparse.ArgumentParser:
         help="grade published 2026 releases when final games exist"
     )
     grade_active.add_argument(
-        "--product", choices=("all", "predictions", "fantasy"), default="all"
+        "--product", choices=("all", "predictions", "fantasy", "anytime_td"), default="all"
     )
 
     commands.add_parser("bootstrap", help="register immutable 2025 demo baselines")

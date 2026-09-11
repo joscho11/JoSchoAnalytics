@@ -24,13 +24,15 @@ DESKTOP_COLS = [
     "#", "Player", "Pos", "Opp", "Our P(TD)", "Book", "vs book",
     "Our fair", "P(2+)", "Hit",
 ]
-PHONE_COLS = ["#", "Player", "Our P(TD)", "Book", "Hit"]
+PHONE_COLS = ["#", "Player", "vs book", "Our P(TD)", "Book", "Hit"]
 PHONE_LABELS = {
+    "vs book": "Value",
     "Our P(TD)": "Ours",
 }
 PHONE_WIDTHS = {
     "#": 50,
     "Player": 148,
+    "vs book": 58,
     "Our P(TD)": 58,
     "Book": 54,
     "Hit": 50,
@@ -132,6 +134,42 @@ def _matchup_groups(df: pd.DataFrame):
         yield label, teams, group
 
 
+def _matchup_is_graded(group: pd.DataFrame) -> bool:
+    if group.empty or "scored_anytime" not in group:
+        return False
+    return bool(pd.to_numeric(group["scored_anytime"], errors="coerce").notna().all())
+
+
+def default_matchup_label(matchups: list[tuple[str, list[str], pd.DataFrame]]) -> str:
+    """Return the first unplayed matchup, or the last matchup once the slate is complete."""
+    if not matchups:
+        raise ValueError("at least one matchup is required")
+    for label, _, group in matchups:
+        if not _matchup_is_graded(group):
+            return label
+    return matchups[-1][0]
+
+
+def _mark_matchup_manual(key: str) -> None:
+    st.session_state[key] = True
+
+
+def _seed_matchup_default(
+    matchups: list[tuple[str, list[str], pd.DataFrame]], key: str
+) -> None:
+    labels = {label for label, _, _ in matchups}
+    manual_key = f"{key}__manual"
+    default = default_matchup_label(matchups)
+    current = st.session_state.get(key)
+    if current not in labels:
+        st.session_state[key] = default
+        st.session_state[manual_key] = False
+    elif not st.session_state.get(manual_key, False):
+        selected = next(item for item in matchups if item[0] == current)
+        if _matchup_is_graded(selected[2]):
+            st.session_state[key] = default
+
+
 def week_summary(df: pd.DataFrame) -> dict:
     n = int(len(df))
     outcomes = pd.to_numeric(df["scored_anytime"], errors="coerce")
@@ -148,7 +186,7 @@ def week_summary(df: pd.DataFrame) -> dict:
 
 
 @st.cache_data(ttl=3600)
-def _load_csv(path: str) -> pd.DataFrame:
+def _load_csv(path: str, modified_at: int | None = None) -> pd.DataFrame:
     return pd.read_csv(path)
 
 
@@ -189,8 +227,14 @@ def _p_color(val, lo: float = 0.08, hi: float = 0.55) -> str:
 
 
 def _display(df: pd.DataFrame) -> pd.DataFrame:
-    ranked = df.sort_values("p_ge1", ascending=False).reset_index(drop=True)
-    vs = 100 * (ranked.p_ge1 - ranked.p_book)
+    ranked = df.copy()
+    ranked["_value"] = ranked.p_ge1 - ranked.p_book
+    ranked = ranked.sort_values(
+        ["_value", "p_ge1", "player_display_name"],
+        ascending=[False, False, True],
+        na_position="last",
+    ).reset_index(drop=True)
+    vs = 100 * ranked["_value"]
     outcome = pd.to_numeric(ranked.scored_anytime, errors="coerce")
     hit = outcome.map(lambda value: "Yes" if value == 1 else ("No" if pd.notna(value) else ""))
     return pd.DataFrame({
@@ -270,6 +314,11 @@ def _phone_column_config() -> dict:
         width=PHONE_WIDTHS["Our P(TD)"], pinned=True,
         help="Our chance the player scores a rushing or receiving TD.",
     )
+    cfg["vs book"] = st.column_config.NumberColumn(
+        PHONE_LABELS["vs book"], format="%+.1f",
+        width=PHONE_WIDTHS["vs book"], pinned=True,
+        help="Our probability minus the book, in percentage points. Highest value first.",
+    )
     cfg["Book"] = st.column_config.NumberColumn(
         "Book", format="percent", width=PHONE_WIDTHS["Book"], pinned=True,
         help="Implied Yes from the manually pasted US sportsbook price.",
@@ -312,9 +361,10 @@ accurate. On these eight demo weeks our numbers were closer in 5; that is not a
 betting record. For fun, not a proven edge. Bet responsibly.
 
 **Desktop columns.** #, Player (name and team), Pos, Opp, Our P(TD), Book,
-vs book (percentage points, not a pick), Our fair, P(2+), Hit.
+vs book (percentage points, sorted highest first; not a pick), Our fair, P(2+), Hit.
 
-**Phone columns.** #, Player, Ours, Book, Hit.
+**Phone columns.** #, Player, Value, Ours, Book, Hit. Value is our probability
+minus the book, in percentage points, with the highest value first.
 Week 1 is organized by matchup, then by team (for example, NE vs SEA with
 separate NE and SEA boards).
         """)
@@ -370,7 +420,7 @@ def render() -> None:
         is_live = season == LIVE_SEASON
         st.badge("Live" if is_live else "Demo", icon=":material/live_tv:" if is_live else ":material/science:",
                  color="green" if is_live else "orange")
-        st.caption("Priced players only. Sorted by our P(TD). " +
+        st.caption("Priced players only. Sorted by value vs book (highest first). " +
                    ("Cumulative 2026 Week 1 release." if is_live else "2025 weeks 10-17 demo."))
     _reading_guide()
 
@@ -382,7 +432,8 @@ def render() -> None:
             st.info(f"{season} Week {week} does not have a published board yet.")
         return
 
-    raw = _load_csv(str(available[(season, week)]))
+    source = available[(season, week)]
+    raw = _load_csv(str(source), source.stat().st_mtime_ns)
     need = [
         "player_display_name", "position", "team", "opponent_team",
         "p_ge1", "p_ge2", "p_book", "fair_amer", "scored_anytime",
@@ -417,9 +468,13 @@ def render() -> None:
         st.info("No matchups match this search.")
         return
     matchup_labels = [item[0] for item in matchups]
+    matchup_key = f"atd_matchup_{season}_{week}"
+    _seed_matchup_default(matchups, matchup_key)
     selected_label = st.selectbox(
         "Matchup", matchup_labels,
-        key=f"atd_matchup_{season}_{week}",
+        key=matchup_key,
+        on_change=_mark_matchup_manual,
+        args=(f"{matchup_key}__manual",),
         help="Choose a game to view both teams' anytime touchdown boards.",
     )
     label, teams, matchup = next(item for item in matchups if item[0] == selected_label)

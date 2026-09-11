@@ -11,7 +11,7 @@ import pytest
 
 from publishing.candidate import build_candidate_metadata
 from publishing.contract import PublicationError, sha256_file
-from publishing.grader import grade_fantasy, grade_predictions
+from publishing.grader import grade_anytime_td_file, grade_fantasy, grade_predictions
 from publishing.manifest import (
     default_selection,
     load_manifest,
@@ -496,3 +496,93 @@ def test_scheduled_grader_catches_incomplete_prior_published_weeks(tmp_path, mon
     assert set(result["predictions"]) == {"2026w01", "2026w02"}
     assert result["predictions"]["2026w01"]["final_games"] == 2
     assert result["predictions"]["2026w02"]["final_games"] == 2
+
+
+def _anytime_board(tmp_path: Path) -> Path:
+    path = tmp_path / "anytime_td_2026_week01.csv"
+    pd.DataFrame([
+        {
+            "season": 2026, "week": 1, "game_id": "2026_01_NE_SEA",
+            "player_id": "SEA-RB", "player_display_name": "Sea RB", "team": "SEA",
+            "opponent_team": "NE", "p_ge1": 0.40, "p_book": 0.30,
+            "scored_anytime": None, "status": "pregame",
+        },
+        {
+            "season": 2026, "week": 1, "game_id": "2026_01_NE_SEA",
+            "player_id": "NE-RB", "player_display_name": "Ne RB", "team": "NE",
+            "opponent_team": "SEA", "p_ge1": 0.35, "p_book": 0.30,
+            "scored_anytime": None, "status": "pregame",
+        },
+        {
+            "season": 2026, "week": 1, "game_id": "2026_01_SF_LA",
+            "player_id": "SF-RB", "player_display_name": "Sf RB", "team": "SF",
+            "opponent_team": "LA", "p_ge1": 0.30, "p_book": 0.25,
+            "scored_anytime": None, "status": "pregame",
+        },
+    ]).to_csv(path, index=False)
+    return path
+
+
+def test_anytime_td_grading_updates_final_games_and_leaves_partial_slate_pending(tmp_path):
+    path = _anytime_board(tmp_path)
+    schedule = pd.DataFrame([
+        {
+            "season": 2026, "week": 1, "game_id": "2026_01_NE_SEA",
+            "home_team": "SEA", "away_team": "NE", "home_score": 27, "away_score": 20,
+        },
+        {
+            "season": 2026, "week": 1, "game_id": "2026_01_SF_LA",
+            "home_team": "LA", "away_team": "SF", "home_score": None, "away_score": None,
+        },
+    ])
+    actuals = pd.DataFrame([
+        {
+            "season": 2026, "week": 1, "season_type": "REG", "player_id": "SEA-RB",
+            "team": "SEA", "rushing_tds": 1, "receiving_tds": 0,
+        },
+        {
+            "season": 2026, "week": 1, "season_type": "REG", "player_id": "NE-COVERAGE",
+            "team": "NE", "rushing_tds": 0, "receiving_tds": 0,
+        },
+    ])
+
+    first = grade_anytime_td_file(path, schedule, actuals, season=2026, week=1)
+    assert first["status"] == "graded"
+    assert first["final_games"] == 1
+    assert first["updated_games"] == ["2026_01_NE_SEA"]
+    assert first["pending_games"] == ["2026_01_SF_LA"]
+    graded = pd.read_csv(path)
+    assert list(graded.loc[graded.game_id.eq("2026_01_NE_SEA"), "scored_anytime"]) == [1, 0]
+    assert graded.loc[graded.game_id.eq("2026_01_NE_SEA"), "status"].eq("final").all()
+    assert pd.isna(graded.loc[graded.game_id.eq("2026_01_SF_LA"), "scored_anytime"]).all()
+
+    second = grade_anytime_td_file(path, schedule, actuals, season=2026, week=1)
+    assert second["changed"] is False
+
+
+def test_anytime_td_grading_does_not_zero_fill_an_incomplete_feed(tmp_path):
+    path = _anytime_board(tmp_path)
+    schedule = pd.DataFrame([{
+        "season": 2026, "week": 1, "game_id": "2026_01_NE_SEA",
+        "home_team": "SEA", "away_team": "NE", "home_score": 27, "away_score": 20,
+    }])
+    actuals = pd.DataFrame([{
+        "season": 2026, "week": 1, "season_type": "REG", "player_id": "SEA-RB",
+        "team": "SEA", "rushing_tds": 1, "receiving_tds": 0,
+    }])
+
+    result = grade_anytime_td_file(path, schedule, actuals, season=2026, week=1)
+    assert result["status"] == "pending"
+    assert result["changed"] is False
+    assert result["graded_rows"] == 0
+    assert pd.read_csv(path)["scored_anytime"].isna().all()
+
+
+def test_scheduled_grader_dispatches_anytime_td(monkeypatch, tmp_path):
+    site = tmp_path / "site"
+    site.mkdir()
+    expected = {"status": "skipped", "reason": "test"}
+    monkeypatch.setattr("publishing.cli.grade_anytime_td_releases", lambda root: expected)
+
+    result = _grade_published(site, "anytime_td")
+    assert result["anytime_td"] == expected

@@ -99,13 +99,36 @@ def test_priced_rows_drop_unpriced_and_keep_rb_fb():
     summary = page.week_summary(priced)
     assert summary["n"] == 2
     assert summary["hits"] == 1
-    assert len(page._display(priced)) == len(priced)
+    display = page._display(priced)
+    assert len(display) == len(priced)
+    assert list(display["Player"]) == ["A · KC", "C · PHI"]
 
 
-def test_phone_grid_keeps_five_pinned_columns():
+def test_display_sorts_highest_value_vs_book_first():
     import page_anytime_td as page
 
-    assert page.PHONE_COLS == ["#", "Player", "Our P(TD)", "Book", "Hit"]
+    rows = pd.DataFrame({
+        "player_display_name": ["Negative", "Small", "Largest"],
+        "position": ["WR", "RB", "TE"],
+        "team": ["KC", "SF", "PHI"],
+        "opponent_team": ["LV", "SEA", "DAL"],
+        "p_ge1": [0.50, 0.35, 0.40],
+        "p_ge2": [0.10, 0.02, 0.05],
+        "p_book": [0.60, 0.30, 0.20],
+        "fair_amer": [100, 185, 300],
+        "scored_anytime": [None, None, None],
+    })
+
+    display = page._display(page.priced_rows(rows))
+    assert list(display["Player"]) == ["Largest · PHI", "Small · SF", "Negative · KC"]
+    assert list(display["vs book"]) == [20.0, 5.0, -10.0]
+
+
+def test_phone_grid_keeps_value_and_five_other_pinned_columns():
+    import page_anytime_td as page
+
+    assert page.PHONE_COLS == ["#", "Player", "vs book", "Our P(TD)", "Book", "Hit"]
+    assert page.PHONE_LABELS["vs book"] == "Value"
     assert page.PHONE_LABELS["Our P(TD)"] == "Ours"
     assert page.PHONE_WIDTHS["#"] >= 50
     assert set(page.PHONE_COLS).issubset(page.DESKTOP_COLS)
@@ -166,3 +189,29 @@ def test_matchups_are_grouped_then_split_by_team():
         kickoff_et=["2026-09-10 20:20", "2026-09-10 20:20"]
     )], ignore_index=True)))
     assert [item[0] for item in ordered] == ["NE vs SEA", "ARI vs LAC"]
+
+
+def test_default_matchup_skips_fully_graded_games():
+    import page_anytime_td as page
+
+    rows = pd.DataFrame([
+        {
+            "game_id": "2026_01_NE_SEA", "team": "NE", "opponent_team": "SEA",
+            "kickoff_et": "2026-09-09 20:20", "scored_anytime": 0,
+        },
+        {
+            "game_id": "2026_01_NE_SEA", "team": "SEA", "opponent_team": "NE",
+            "kickoff_et": "2026-09-09 20:20", "scored_anytime": 1,
+        },
+        {
+            "game_id": "2026_01_SF_LA", "team": "SF", "opponent_team": "LA",
+            "kickoff_et": "2026-09-10 20:35", "scored_anytime": None,
+        },
+        {
+            "game_id": "2026_01_SF_LA", "team": "LA", "opponent_team": "SF",
+            "kickoff_et": "2026-09-10 20:35", "scored_anytime": None,
+        },
+    ])
+
+    matchups = list(page._matchup_groups(rows))
+    assert page.default_matchup_label(matchups) == "SF vs LA"

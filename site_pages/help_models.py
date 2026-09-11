@@ -326,8 +326,9 @@ On the full 2025 overlap (n=5,310) the book still wins: Brier **0.13985** vs our
 because those box scores are rest and backups.
 
 The page is a **priced comparison board**: every skill player the books quoted
-that week, our P(TD) next to the book, sorted by our probability. This is not
-even money. About one in five hits. It is not a pick list. A cut of the biggest
+that week, our P(TD) next to the book, sorted by value versus the book (our
+probability minus the book probability, highest first). This is not even money.
+About one in five hits. It is not a pick list. A cut of the biggest
 disagreements lost on 2025. Full 2025: the books were about 0.08% more accurate.
 Demo weeks 10-17: closer in 5 of 8 weeks. That is not a betting record.
         """)

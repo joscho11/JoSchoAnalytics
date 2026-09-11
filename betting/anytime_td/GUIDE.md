@@ -11,10 +11,10 @@ ships CSV.
 
 ## What the board is
 
-Every skill player the books quoted that week, sorted by our P(TD). It is not a
-pick list. A short "we like these" card lost on 2025, and a typical quote is
-around one in five, so misses will outnumber hits. That is the bet, not a broken
-model.
+Every skill player the books quoted that week, sorted by `vs book` value
+(our P(TD) minus the book probability, highest first). It is not a pick list.
+A short "we like these" card lost on 2025, and a typical quote is around one in
+five, so misses will outnumber hits. That is the bet, not a broken model.
 
 | Column | Meaning |
 |---|---|
@@ -25,7 +25,7 @@ model.
 | P(2+) | Chance of two or more rushing or receiving TDs |
 | Hit | Did they score a rushing or receiving TD? |
 
-On a phone the grid keeps #, Player, Ours, Book, and Hit. Position tabs swipe.
+On a phone the grid keeps #, Player, Value, Ours, Book, and Hit. Position tabs swipe.
 Live boards are grouped by matchup and then team (for example, NE vs SEA,
 with separate NE and SEA sections).
 
@@ -60,11 +60,11 @@ fuzzy-matched. Defense and the synthetic "No Touchdown Scorer" row are not
 skill-player predictions.
 
 Each successful slate is appended to
-`betting/anytime_td/anytime_td_2026_week01.csv`. Existing game rows remain
-byte-for-byte frozen; changing a frozen price requires the explicit replacement
-flag and creates `replacement_audit.jsonl`. A missing paste leaves that slate
-off the board. Pregame `Hit` and scored totals stay blank until outcomes are
-attached; null outcomes never render as “No”.
+`betting/anytime_td/anytime_td_2026_week01.csv`. Existing game prediction and
+price fields remain byte-for-byte frozen; changing a frozen price requires the
+explicit replacement flag and creates `replacement_audit.jsonl`. A missing
+paste leaves that slate off the board. Pregame `Hit` and scored totals stay
+blank until outcomes are attached; null outcomes never render as “No”.
 
 ## Rebuild and publish
 
@@ -79,8 +79,12 @@ python scripts/publish_live_week.py live/2026_week01_<slate>.csv <slate>
 The publisher fits the live product arm on the rebuilt historical artifact
 (the 34 locked features plus the current-week Sleeper half-PPR projection),
 scores only players quoted by that paste, and copies the cumulative CSV into
-this public directory. Attach results later through the grading workflow; do
-not backfill an ungraded game with zeros.
+this public directory. Attach results later through the grading workflow. The
+workflow marks a game final only after the schedule has final scores and the
+player-stat feed covers both teams (or every quoted player); otherwise its rows
+remain pending rather than being backfilled with zeros. After a matchup is
+fully graded, the page's default moves to the next unplayed matchup in kickoff
+order, with alphabetical ordering for simultaneous games.
 
 ## Public files
 
