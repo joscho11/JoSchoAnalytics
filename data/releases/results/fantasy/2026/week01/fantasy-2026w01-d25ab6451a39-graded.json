@@ -1,0 +1,15 @@
+{
+  "artifact": "data/releases/results/fantasy/2026/week01/fantasy-2026w01-d25ab6451a39-graded.csv",
+  "artifact_sha256": "4c55e748fb53a46e49f9a19f3428f8881630dd61fc5c63d4db11f7874857e84c",
+  "complete": false,
+  "final_games": 2,
+  "graded_at": "2026-09-11T04:40:35Z",
+  "graded_rows": 17,
+  "missing_actuals": 382,
+  "product": "fantasy",
+  "schema_version": 1,
+  "season": 2026,
+  "source_build": "fantasy-2026w01-d25ab6451a39",
+  "week": 1,
+  "zero_filled_after_complete_feed": false
+}
