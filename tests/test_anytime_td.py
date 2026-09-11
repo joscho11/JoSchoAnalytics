@@ -54,7 +54,7 @@ def test_anytime_td_renders_and_owns_controls(tmp_path):
     assert any(getattr(w, "key", None) == "atd_two_plus_2026_1" for w in at.toggle)
     assert any(getattr(w, "key", None) == "atd_search" for w in at.text_input)
     metric_labels = {str(metric.label) for metric in at.metric}
-    assert {"Net units", "ROI", "Paper bets", "Settled games"} <= metric_labels
+    assert {"Net units", "ROI", "Paper bets", "Approx. 95% ROI range"} <= metric_labels
     expected = pd.read_csv(_HERE / "betting" / "anytime_td" / "anytime_td_2026_week01.csv")
     expected_default = page.default_matchup_label(list(page._matchup_groups(expected)))
     assert expected_default in {str(w.value) for w in at.selectbox}
@@ -115,6 +115,13 @@ def test_audited_strategy_artifact_has_fixed_rule_and_bootstrap_contract():
     assert betting["fixed_gap_bootstrap"]["resamples"] == 10_000
     assert betting["fixed_gap_bootstrap"]["seed"] == 20260911
     assert len(betting["gap_scan"]) == 301
+
+
+def test_roi_range_card_is_pending_until_ci_is_available():
+    assert page._roi_range_value({"available": False}) == "Pending"
+    assert page._roi_range_value({"available": True, "lower": -0.125, "upper": 0.275}) == (
+        "-12.5% to 27.5%"
+    )
 
 
 def test_priced_rows_drop_unpriced_and_keep_rb_fb():

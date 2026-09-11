@@ -223,6 +223,12 @@ def _pct(value) -> str:
     return "—" if value is None or pd.isna(value) else f"{100 * float(value):+.1f}%"
 
 
+def _roi_range_value(ci: dict) -> str:
+    if not ci.get("available") or ci.get("lower") is None or ci.get("upper") is None:
+        return "Pending"
+    return f"{100 * ci['lower']:.1f}% to {100 * ci['upper']:.1f}%"
+
+
 def _render_scorecards(priced: pd.DataFrame, season: int, releases: dict[tuple[int, int], Path]) -> None:
     summary = week_summary(priced)
     if season == LIVE_SEASON:
@@ -230,6 +236,7 @@ def _render_scorecards(priced: pd.DataFrame, season: int, releases: dict[tuple[i
         if paths:
             paper = _load_season_tracker(paths, modified_at)
             result = paper["summary"]
+            ci = paper["ci"]
             with st.container(horizontal=True, key="jsa-metric-even-atd"):
                 st.metric("Net units", f"{result['net_units']:+.1f}U", border=True)
                 st.metric("ROI", _pct(result["roi"]), border=True)
@@ -238,16 +245,12 @@ def _render_scorecards(priced: pd.DataFrame, season: int, releases: dict[tuple[i
                     f"{result['settled_bets']} settled / {result['open_bets']} open",
                     border=True,
                 )
-                st.metric("Settled games", result["settled_games"], border=True)
-            ci = paper["ci"]
+                st.metric("Approx. 95% ROI range", _roi_range_value(ci), border=True)
             if ci["available"]:
-                st.caption(
-                    f"Approx. 95% ROI range: {100 * ci['lower']:.1f}% to "
-                    f"{100 * ci['upper']:.1f}%. Empirical uncertainty range, not a guarantee."
-                )
+                st.caption("Empirical uncertainty range, not a guarantee.")
             else:
                 st.caption(
-                    "Approx. 95% ROI range is hidden until at least 5 settled games "
+                    "Approx. 95% ROI range is pending until at least 5 settled games "
                     "and 20 settled paper bets are available."
                 )
         else:
