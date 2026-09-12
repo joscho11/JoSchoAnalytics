@@ -260,6 +260,10 @@ def test_candidate_style_uses_emerald_value_treatment():
     )
     assert "background-color: #123229" in styles.iloc[0]["Pos"]
     assert "background-color: #1A4A3B" in styles.iloc[0]["ATTD Value Gap"]
+    assert styles.iloc[0]["Model ATTD Odds"] == (
+        "color: #FFFFFF; background-color: #123229"
+    )
+    assert styles.iloc[1]["Model ATTD Odds"] == "color: #FFFFFF"
     assert not any("rgba" in str(value) for value in styles.to_numpy().ravel())
 
 
@@ -287,6 +291,9 @@ def test_settled_candidate_miss_uses_muted_red_value_treatment():
     )
     assert styles.iloc[0]["ATTD Value Gap"] == (
         "background-color: #BA797A; color: #3F2024; font-weight: 700"
+    )
+    assert styles.iloc[0]["Model ATTD Odds"] == (
+        "color: #FFFFFF; background-color: #BA797A"
     )
     assert styles.iloc[0]["Hit"] == (
         "background-color: #BA797A; color: #3F2024; font-weight: 700"

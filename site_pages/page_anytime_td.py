@@ -484,15 +484,6 @@ def _value_gap(model_american, book_american, model_probability, book_probabilit
     return f"{_signed_int(odds_gap)} · {probability_gap:+.1f}%"
 
 
-def _p_color(val, lo: float = 0.08, hi: float = 0.55) -> str:
-    if pd.isna(val):
-        return ""
-    ratio = max(0.0, min(1.0, (float(val) - lo) / (hi - lo)))
-    r = int(255 * (1 - ratio))
-    g = int(82 + 118 * ratio)
-    return f"color: rgb({r},{g},82); font-weight: 600"
-
-
 def _display(df: pd.DataFrame) -> pd.DataFrame:
     ranked = df.copy()
     ranked["_value"] = ranked.p_ge1 - ranked.p_book
@@ -629,8 +620,8 @@ def _style(view: pd.DataFrame):
                     missed_candidate_row_bg if _missed_candidate(i) else candidate_row_bg
                 )
         if "Model ATTD Odds" in df.columns:
-            for i, val in enumerate(view["_p"]):
-                style = _p_color(val)
+            for i, _ in enumerate(view["_p"]):
+                style = "color: #FFFFFF"
                 if view["_candidate"].iloc[i]:
                     row_bg = missed_candidate_row_bg if _missed_candidate(i) else candidate_row_bg
                     style = f"{style}; {row_bg}"
