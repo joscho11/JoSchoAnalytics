@@ -57,7 +57,7 @@ def test_embed_uses_dark_player_not_white_card():
 
 
 def test_catalog_size_and_expected_slugs():
-    assert len(VIDEOS) == 26
+    assert len(VIDEOS) == 27
     slugs = {item["slug"] for item in VIDEOS}
     assert "brian-thomas-jr" not in slugs
     assert "site-walkthrough" in slugs
@@ -84,7 +84,7 @@ def test_default_is_league_history_guide(tmp_path):
     newest = _newest()
     md = _md(at)
     assert default["title"] in md
-    assert newest["slug"] == "lamar-jackson"
+    assert newest["slug"] == "latest-video-2026-09-11"
     assert newest["title"] not in md
     assert "Welcome to JoScho Analytics" not in md
     assert "A walk through the JoScho Analytics site" not in md
@@ -146,6 +146,7 @@ def test_catalog_sections():
         "how-to-leverage-adp-guide",
     ]
     assert grouped["Player breakdowns"] == [
+        "latest-video-2026-09-11",
         "lamar-jackson",
         "garrett-wilson",
         "jadarian-price",
@@ -164,7 +165,7 @@ def test_catalog_sections():
         "makai-lemon",
     ]
     assert "Archive" not in grouped
-    assert newest_first[0]["slug"] == "lamar-jackson"
+    assert newest_first[0]["slug"] == "latest-video-2026-09-11"
 
 
 def test_every_episode_has_a_known_content_section():
@@ -234,9 +235,9 @@ def test_latest_league_history_guide_constant_still_points_at_the_walkthrough():
 
 def test_newest_episode_is_lamar_jackson():
     newest = _newest()
-    assert newest["slug"] == "lamar-jackson"
-    assert newest["video_id"] == "7682196431578582303"
-    assert newest["date"] == "2026-09-06"
+    assert newest["slug"] == "latest-video-2026-09-11"
+    assert newest["video_id"] == "7684391966548774174"
+    assert newest["date"] == "2026-09-11"
 
 
 def test_breakdowns_and_registry_do_not_disclose_sleeper_mix():
