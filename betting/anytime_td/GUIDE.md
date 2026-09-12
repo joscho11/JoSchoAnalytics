@@ -101,7 +101,11 @@ Each successful slate is appended to
 price fields remain byte-for-byte frozen; changing a frozen price requires the
 explicit replacement flag and creates `replacement_audit.jsonl`. A missing
 paste leaves that slate off the board. Pregame `Hit` and scored totals stay
-blank until outcomes are attached; null outcomes never render as “No”.
+blank until outcomes are attached; null outcomes never render as “No”. A
+verified lineup replacement may appear with DraftKings odds while its model
+fields say `Pending` if the current-week model input is absent; that row is
+excluded from value-gap and paper-bet accounting until the model input is
+available.
 
 ## Rebuild and publish
 

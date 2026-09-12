@@ -376,6 +376,49 @@ def test_live_release_discovery_and_pending_hit_is_blank(tmp_path, monkeypatch):
     assert display.loc[0, "Hit"] == ""
 
 
+def test_verified_replacement_can_display_book_odds_while_model_is_pending():
+    import page_anytime_td as page
+
+    rows = pd.DataFrame([{
+        "player_display_name": "Cooper Rush", "position": "QB",
+        "team": "ATL", "opponent_team": "PIT", "p_ge1": None,
+        "p_ge2": None, "p_book": 0.0625, "fair_amer": None,
+        "book_amer": 1500, "two_plus_amer": 17000,
+        "scored_anytime": None, "scored_two_plus": None,
+    }])
+
+    priced = page.priced_rows(rows)
+    assert list(priced.player_display_name) == ["Cooper Rush"]
+    display = page._display(priced)
+    assert display.loc[0, "Model ATTD Odds"] == "Pending"
+    assert display.loc[0, "Book ATTD Odds"] == "+1500 · 6.2%"
+    assert display.loc[0, "ATTD Value Gap"] == "Pending"
+
+    two_plus = page._two_plus_display(priced)
+    assert two_plus.loc[0, "Model 2+ TD Odds"] == "Pending"
+    assert two_plus.loc[0, "Book 2+ TD Odds"] == "+17000 · 0.6%"
+    assert two_plus.loc[0, "2+ TD Value Gap"] == "Pending"
+
+
+def test_live_week1_reconciles_tua_out_and_updated_atl_pit_prices():
+    live = pd.read_csv(
+        _HERE / "betting" / "anytime_td" / "anytime_td_2026_week01.csv"
+    )
+    matchup = live[live.game_id.eq("2026_01_ATL_PIT")]
+
+    assert not live.player_display_name.eq("Tua Tagovailoa").any()
+    cooper = matchup[matchup.player_id.eq("00-0033662")].iloc[0]
+    assert cooper.player_display_name == "Cooper Rush"
+    assert (cooper.book_amer, cooper.first_amer, cooper.two_plus_amer) == (
+        1500, 6000, 17000,
+    )
+    bijan = matchup[matchup.player_id.eq("00-0038542")].iloc[0]
+    assert (bijan.book_amer, bijan.first_amer, bijan.two_plus_amer) == (
+        -145, 390, 425,
+    )
+    assert matchup.book.eq("DraftKings").all()
+
+
 def test_2026_week1_is_default_release_when_present():
     import page_anytime_td as page
 
