@@ -106,13 +106,18 @@ def available_weeks() -> dict[int, Path]:
 
 def priced_rows(df: pd.DataFrame) -> pd.DataFrame:
     out = df.copy()
+    out["book_amer"] = pd.to_numeric(out["book_amer"], errors="coerce")
     out["p_book"] = pd.to_numeric(out["p_book"], errors="coerce")
     out["p_ge1"] = pd.to_numeric(out["p_ge1"], errors="coerce")
     if "p_ge2" in out:
         out["p_ge2"] = pd.to_numeric(out["p_ge2"], errors="coerce")
     else:
         out["p_ge2"] = pd.Series(pd.NA, index=out.index, dtype="Float64")
-    return out[out.p_book.notna() & out.p_ge1.notna()].copy()
+    # A verified replacement can be quoted by DraftKings before the upstream
+    # fantasy projection feed contains a current-week row. Keep that quote on
+    # the board, but leave model fields missing so it cannot become a value bet
+    # or enter the tracker until model inputs exist.
+    return out[out.p_book.notna() & out.book_amer.notna()].copy()
 
 
 def by_position(df: pd.DataFrame, position: str) -> pd.DataFrame:
@@ -439,6 +444,12 @@ def _odds_probability(american, probability) -> str:
     return f"{american_text} · {probability_text}" if american_text else probability_text
 
 
+def _model_odds_probability(american, probability) -> str:
+    if pd.isna(probability):
+        return "Pending"
+    return _odds_probability(american, probability)
+
+
 def _implied_probability(american):
     if pd.isna(american):
         return None
@@ -487,7 +498,7 @@ def _display(df: pd.DataFrame) -> pd.DataFrame:
         "Pos": ranked.position,
         "Opp": ranked.opponent_team,
         "Model ATTD Odds": [
-            _odds_probability(american, probability)
+            _model_odds_probability(american, probability)
             for american, probability in zip(model_american, ranked.p_ge1)
         ],
         "Book ATTD Odds": [
@@ -495,7 +506,9 @@ def _display(df: pd.DataFrame) -> pd.DataFrame:
             for american, probability in zip(book_american, ranked.p_book)
         ],
         "ATTD Value Gap": [
-            _value_gap(model, book, model_p, book_p)
+            _value_gap(model, book, model_p, book_p) or (
+                "Pending" if pd.isna(model_p) else ""
+            )
             for model, book, model_p, book_p in zip(
                 model_american, book_american, ranked.p_ge1, ranked.p_book
             )
@@ -544,7 +557,9 @@ def _two_plus_display(df: pd.DataFrame) -> pd.DataFrame:
     ]
     model_american = ranked.p_ge2.map(_fair_amer_from_probability)
     value_gap = [
-        _value_gap(model, book, model_p, book_p)
+        _value_gap(model, book, model_p, book_p) or (
+            "Pending" if pd.isna(model_p) and pd.notna(book_p) else ""
+        )
         for model, book, model_p, book_p in zip(
             model_american, book_american, ranked.p_ge2, book_probability
         )
@@ -554,9 +569,19 @@ def _two_plus_display(df: pd.DataFrame) -> pd.DataFrame:
         "Player": ranked.player_display_name + " · " + ranked.team.astype(str),
         "Pos": ranked.position,
         "Opp": ranked.opponent_team,
-        "Model 2+ TD Odds": [value or "Not implemented yet" for value in model_odds],
+        "Model 2+ TD Odds": [
+            value or ("Pending" if pd.isna(probability) else "Not implemented yet")
+            for value, probability in zip(model_odds, ranked.p_ge2)
+        ],
         "Book 2+ TD Odds": [value or "Not implemented yet" for value in book_odds],
-        "2+ TD Value Gap": [value or "Not implemented yet" for value in value_gap],
+        "2+ TD Value Gap": [
+            value or (
+                "Pending"
+                if pd.isna(model_p) and pd.notna(book_p)
+                else "Not implemented yet"
+            )
+            for value, model_p, book_p in zip(value_gap, ranked.p_ge2, book_probability)
+        ],
         "_value": ranked["_value"].astype(float),
         "_candidate": tracker.qualifies_probability_gap(
             ranked["_value"], tracker.ATTD_VALUE_THRESHOLD
@@ -827,7 +852,9 @@ model odds; once grading supplies final outcomes, they contribute only to a
 results-only tally and never to a betting W-L, units, ROI, or backtest result.
 The 2+ TD probabilities have no historical backtest or published 2+ test
 results yet, so that view is forward-looking tracking only—not evidence of
-model accuracy or profitability.
+model accuracy or profitability. A verified replacement can appear with Book
+odds while its Model and Value cells say Pending when the current-week model
+input is not available; it is excluded from value-bet tracking until then.
 The original First TD prices are retained in the release data but are not part
 of this model view.
 The live cards track those 1U candidates across the 2026 season: settled/open
@@ -926,7 +953,13 @@ def render() -> None:
             search, case=False, na=False, regex=False,
         )]
 
+    model_pending = int(board_priced.p_ge1.isna().sum())
     st.caption(f"{len(board_priced)} priced · all positions")
+    if model_pending:
+        st.caption(
+            f"{model_pending} quoted replacement row{'s' if model_pending != 1 else ''} "
+            "await model inputs; Pending rows are excluded from value-bet tracking."
+        )
     matchups = list(_matchup_groups(board_priced))
     if not matchups:
         st.info("No matchups match this search.")
