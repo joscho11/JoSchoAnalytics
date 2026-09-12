@@ -113,6 +113,26 @@ def test_completed_matchup_without_two_plus_market_is_not_shown_retroactively(tm
     assert len(at.dataframe) == 0
 
 
+def test_sf_la_display_only_two_plus_model_view_is_shown(tmp_path):
+    at = _render(tmp_path)
+    at.selectbox(key="atd_matchup_2026_1").set_value("SF vs LA").run()
+    at.toggle(key="atd_two_plus_2026_1").set_value(True).run()
+    assert not at.exception, at.exception
+    assert not at.error, [e.value for e in at.error]
+    info = " ".join(str(item.value) for item in at.info)
+    assert "Display-only historical 2+ TD model view for SF vs LA" in info
+    rendered = list(at.dataframe)[-2:]
+    assert len(rendered) == 2
+    assert all(
+        frame.value["Model 2+ TD Odds"].ne("Not implemented yet").all()
+        for frame in rendered
+    )
+    assert all(
+        frame.value["Book 2+ TD Odds"].eq("Not implemented yet").all()
+        for frame in rendered
+    )
+
+
 def test_two_plus_results_tally_is_results_only():
     rows = pd.DataFrame({"scored_two_plus": [1, 0, None, 1]})
     assert page._two_plus_results_tally(rows) == {"graded": 3, "hits": 2}

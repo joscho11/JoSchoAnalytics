@@ -21,6 +21,10 @@ DEMO_SEASON = 2025
 LIVE_SEASON = 2026
 DEFAULT_RELEASE = (LIVE_SEASON, 1)
 DEFAULT_WEEK = 10
+# SF-LA was intentionally retained as a fun, display-only 2+ TD model view
+# after the game. It has model probabilities and graded outcomes, but no
+# historical DraftKings 2+ prices, so it must never create value bets or P&L.
+DISPLAY_ONLY_TWO_PLUS_GAME_IDS = {"2026_01_SF_LA"}
 DESKTOP_COLS = [
     "#", "Player", "Pos", "Opp", "Model ATTD Odds", "Book ATTD Odds",
     "ATTD Value Gap", "Hit",
@@ -290,6 +294,15 @@ def _has_two_plus_prices(frame: pd.DataFrame) -> bool:
     if "two_plus_amer" not in frame:
         return False
     return bool(pd.to_numeric(frame["two_plus_amer"], errors="coerce").notna().any())
+
+
+def _is_display_only_two_plus_matchup(frame: pd.DataFrame) -> bool:
+    if "game_id" not in frame:
+        return False
+    return bool(
+        set(frame["game_id"].astype(str).dropna())
+        & DISPLAY_ONLY_TWO_PLUS_GAME_IDS
+    )
 
 
 def _two_plus_results_tally(frame: pd.DataFrame) -> dict[str, int]:
@@ -982,8 +995,11 @@ def render() -> None:
         help="Show model 2+ TD odds, DraftKings 2+ TD odds, and the 2+ value gap when the release includes that market.",
     )
     two_plus_prices_available = _has_two_plus_prices(matchup)
+    display_only_two_plus = _is_display_only_two_plus_matchup(matchup)
     completed_without_two_plus_market = (
-        _matchup_is_started(matchup) and not two_plus_prices_available
+        _matchup_is_started(matchup)
+        and not two_plus_prices_available
+        and not display_only_two_plus
     )
     if show_two_plus:
         st.info(
@@ -1000,6 +1016,13 @@ def render() -> None:
             )
         elif two_plus_prices_available:
             st.caption("2+ TD view: model probability, current DraftKings price, and value gap. The same +0.5pp gap rule powers the 1U paper tracker below. First-TD prices are retained in the release data but are not part of this model.")
+        elif display_only_two_plus:
+            st.info(
+                "Display-only historical 2+ TD model view for SF vs LA. "
+                "No DraftKings 2+ prices were captured, so Book 2+ TD Odds "
+                "and the value gap are unavailable; this matchup is excluded "
+                "from 2+ betting and P&L."
+            )
         else:
             st.info(
                 "2+ TD sportsbook prices are not available for this release yet. "
