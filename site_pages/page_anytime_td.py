@@ -309,8 +309,10 @@ def _render_scorecards(
                 st.metric("Net units", f"{result['net_units']:+.1f}U", border=True)
                 st.metric("ROI", _pct(result["roi"]), border=True)
                 st.metric(
-                    "Paper bets",
-                    f"{result['settled_bets']} settled / {result['open_bets']} open",
+                    "Record",
+                    f"{result['wins']}-{result['losses']}",
+                    delta=f"{result['open_bets']} open",
+                    delta_color="off",
                     border=True,
                 )
                 st.metric("Approx. 95% ROI range", _roi_range_value(ci), border=True)
@@ -536,17 +538,31 @@ def _style(view: pd.DataFrame):
     candidate_focus = (
         "background-color: #1A4A3B; color: #B7F7D0; font-weight: 700"
     )
+    missed_candidate_row_bg = "background-color: #4A2028"
+    missed_candidate_focus = (
+        "background-color: #5A2730; color: #FFD0D6; font-weight: 700"
+    )
+
+    def _missed_candidate(index: int) -> bool:
+        return bool(
+            view["_candidate"].iloc[index]
+            and "Hit" in view
+            and view["Hit"].iloc[index] == "No"
+        )
 
     def _apply(df: pd.DataFrame) -> pd.DataFrame:
         styles = pd.DataFrame("", index=df.index, columns=df.columns)
         for i, candidate in enumerate(view["_candidate"]):
             if candidate:
-                styles.iloc[i, :] = candidate_row_bg
+                styles.iloc[i, :] = (
+                    missed_candidate_row_bg if _missed_candidate(i) else candidate_row_bg
+                )
         if "Model ATTD Odds" in df.columns:
             for i, val in enumerate(view["_p"]):
                 style = _p_color(val)
                 if view["_candidate"].iloc[i]:
-                    style = f"{style}; {candidate_row_bg}"
+                    row_bg = missed_candidate_row_bg if _missed_candidate(i) else candidate_row_bg
+                    style = f"{style}; {row_bg}"
                 styles.iloc[i, df.columns.get_loc("Model ATTD Odds")] = style
         if "ATTD Value Gap" in df.columns:
             for i, value in enumerate(view["_value"]):
@@ -555,7 +571,7 @@ def _style(view: pd.DataFrame):
                 color = "#35D08A" if value > 0 else "#F08A8A" if value < 0 else "#B8C0CC"
                 style = f"color: {color}; font-weight: 700"
                 if view["_candidate"].iloc[i]:
-                    style = candidate_focus
+                    style = missed_candidate_focus if _missed_candidate(i) else candidate_focus
                 styles.iloc[i, df.columns.get_loc("ATTD Value Gap")] = style
         if "Hit" in df.columns:
             for i, mark in enumerate(view["Hit"]):
@@ -564,11 +580,15 @@ def _style(view: pd.DataFrame):
                     if view["_candidate"].iloc[i]:
                         style = f"{style}; background-color: #1A4A3B"
                     styles.iloc[i, df.columns.get_loc("Hit")] = style
+                elif mark == "No" and view["_candidate"].iloc[i]:
+                    styles.iloc[i, df.columns.get_loc("Hit")] = missed_candidate_focus
         if "Player" in df.columns:
             for i, candidate in enumerate(view["_candidate"]):
                 if candidate:
+                    focus = missed_candidate_focus if _missed_candidate(i) else candidate_focus
+                    border = "#F37D87" if _missed_candidate(i) else "#35D08A"
                     styles.iloc[i, df.columns.get_loc("Player")] = (
-                        f"{candidate_focus}; border-left: 3px solid #35D08A"
+                        f"{focus}; border-left: 3px solid {border}"
                     )
         return styles
     return _apply

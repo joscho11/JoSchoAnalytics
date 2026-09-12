@@ -54,7 +54,7 @@ def test_anytime_td_renders_and_owns_controls(tmp_path):
     assert any(getattr(w, "key", None) == "atd_two_plus_2026_1" for w in at.toggle)
     assert any(getattr(w, "key", None) == "atd_search" for w in at.text_input)
     metric_labels = {str(metric.label) for metric in at.metric}
-    assert {"Net units", "ROI", "Paper bets", "Approx. 95% ROI range"} <= metric_labels
+    assert {"Net units", "ROI", "Record", "Approx. 95% ROI range"} <= metric_labels
     expected = pd.read_csv(_HERE / "betting" / "anytime_td" / "anytime_td_2026_week01.csv")
     expected_default = page.default_matchup_label(list(page._matchup_groups(expected)))
     assert expected_default in {str(w.value) for w in at.selectbox}
@@ -89,7 +89,7 @@ def test_two_plus_toggle_preserves_market_or_placeholder(tmp_path):
     assert book_values.eq("Not implemented yet").equals(
         value_values.eq("Not implemented yet")
     )
-    assert any(str(metric.label) == "Net units" for metric in at.metric)
+    assert any(str(metric.label) == "Record" for metric in at.metric)
     assert any("2+ TD paper tracker" in str(item.value) for item in at.caption)
 
 
@@ -207,6 +207,36 @@ def test_candidate_style_uses_emerald_value_treatment():
     assert "background-color: #123229" in styles.iloc[0]["Pos"]
     assert "background-color: #1A4A3B" in styles.iloc[0]["ATTD Value Gap"]
     assert not any("rgba" in str(value) for value in styles.to_numpy().ravel())
+
+
+def test_settled_candidate_miss_uses_red_value_treatment():
+    import page_anytime_td as page
+
+    rows = pd.DataFrame({
+        "player_display_name": ["Missed Candidate"],
+        "position": ["RB"],
+        "team": ["KC"],
+        "opponent_team": ["LV"],
+        "p_ge1": [0.40],
+        "p_ge2": [0.10],
+        "p_book": [0.30],
+        "fair_amer": [150],
+        "book_amer": [233],
+        "scored_anytime": [0],
+    })
+    display = page._display(page.priced_rows(rows))
+    styles = page._style(display)(display[page.DESKTOP_COLS])
+
+    assert styles.iloc[0]["Player"] == (
+        "background-color: #5A2730; color: #FFD0D6; font-weight: 700; "
+        "border-left: 3px solid #F37D87"
+    )
+    assert styles.iloc[0]["ATTD Value Gap"] == (
+        "background-color: #5A2730; color: #FFD0D6; font-weight: 700"
+    )
+    assert styles.iloc[0]["Hit"] == (
+        "background-color: #5A2730; color: #FFD0D6; font-weight: 700"
+    )
 
 
 def test_two_plus_candidate_uses_same_gap_highlight():
