@@ -27,6 +27,7 @@ DEFAULT_VIDEO_SLUG = "league-history-guide"
 # Picker order is intentional; videos remain newest-first within each section.
 VIDEO_SECTIONS = (
     ("site-walkthroughs", "Site walkthroughs"),
+    ("predictions", "Predictions & weekly"),
     ("draft-strategy", "Draft strategy & research"),
     ("player-breakdowns", "Player breakdowns"),
 )
@@ -298,7 +299,7 @@ VIDEOS = [
         "title": "Latest JoScho Analytics video",
         "subtitle": "2026 · New Film Room episode",
         "date": "2026-09-11",
-        "section": "player-breakdowns",
+        "section": "predictions",
         "tiktok_url": "https://www.tiktok.com/@joschoanalytics/video/7684391966548774174",
         "video_id": "7684391966548774174",
         "breakdown_file": "latest_video_2026_09_11.md",

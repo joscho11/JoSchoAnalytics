@@ -118,7 +118,7 @@ def test_picker_lists_every_episode_and_no_retired_intro(tmp_path):
                   or "What is this?" in str(b.label)]
     assert len(breakdowns) == 1
     captions = {str(c.value) for c in at.caption}
-    assert _section_control(at).options == ["Walkthroughs", "Draft", "Players"]
+    assert _section_control(at).options == ["Walkthroughs", "Predictions", "Draft", "Players"]
     assert "Archive" not in captions
     assert not any(label in captions for _key, label in VIDEO_SECTIONS)
 
@@ -135,6 +135,9 @@ def test_catalog_sections():
         "site-walkthrough",
         LATEST_LEAGUE_HISTORY_VIDEO_SLUG,
     ]
+    assert grouped["Predictions & weekly"] == [
+        "latest-video-2026-09-11",
+    ]
     assert grouped["Draft strategy & research"] == [
         "rb-wr-draft-strategy",
         "qb-te-draft-timing",
@@ -146,7 +149,6 @@ def test_catalog_sections():
         "how-to-leverage-adp-guide",
     ]
     assert grouped["Player breakdowns"] == [
-        "latest-video-2026-09-11",
         "lamar-jackson",
         "garrett-wilson",
         "jadarian-price",

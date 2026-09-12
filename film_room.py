@@ -29,6 +29,7 @@ _SEC_KEY = "film_room_section"
 _EP_KEY_PREFIX = "fr_ep_"
 _SECTION_SHORT = {
     "site-walkthroughs": "Walkthroughs",
+    "predictions": "Predictions",
     "draft-strategy": "Draft",
     "player-breakdowns": "Players",
 }
