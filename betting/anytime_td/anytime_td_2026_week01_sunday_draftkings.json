@@ -11,7 +11,7 @@
   "model_bundle": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\td_count_model_beta\\artifacts\\td_lgbm_poisson_product.pkl",
   "model_bundle_sha256": "6cb5874db5278e8306cf8d06e67f5fe7a10262d7dc5a8e59a26fa568c8081819",
   "input_hashes": {
-    "paste": "92fdfa5b866bec1374efdd84f41ba800f337e1fddd72b9467ac4c4ec0ecffb17",
+    "paste": "cb9dfe3f04aa2fd4206e77084789053edb169c2454186b8911731d5c2493a0ce",
     "forward": "f688645a3175573a9dfec044be580d6c6eaa4d821ea5a41c7e1d40a13ee7ebbe",
     "history": "58495f19d2cd3cfbaa824e6d462f0c68fc497237cdde3d8bfb130e19c4cb3a15"
   },
