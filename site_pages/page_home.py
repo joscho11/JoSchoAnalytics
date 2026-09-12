@@ -46,12 +46,11 @@ def render() -> None:
     with st.container(key="jsa-home-start"):
         with st.container(horizontal=True, gap="medium"):
             with st.container(border=True, height="stretch"):
-                st.markdown("### Build a draft plan")
+                st.markdown("### Set your weekly lineup")
                 st.caption(
-                    "Compare the frozen independent projection with daily Sleeper, ESPN, or Yahoo ADP "
-                    "across the 180-player board."
+                    "Review half-PPR player projections and per-stat outlooks for the current NFL week."
                 )
-                _page_link("draft-board", "Open the Draft Board", ":material/list_alt:")
+                _page_link("weekly-fantasy", "Open Weekly Fantasy", ":material/trophy:")
 
             with st.container(border=True, height="stretch"):
                 st.markdown("### Check the NFL slate")
