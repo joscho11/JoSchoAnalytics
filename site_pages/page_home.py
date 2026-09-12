@@ -101,8 +101,8 @@ def render() -> None:
 
     st.subheader("Explore the rest")
     with st.container(horizontal=True, gap="small", key="jsa-home-explore"):
+        _page_link("draft-board", "Draft Board", ":material/list_alt:")
         _page_link("rookie-board", "Rookie Board", ":material/biotech:")
-        _page_link("weekly-fantasy", "Weekly Fantasy", ":material/trophy:")
         _page_link("dfs-optimizer", "DFS Optimizer", ":material/target:")
         _page_link("season-totals", "Season Totals", ":material/bar_chart:")
         _page_link("league-history", "League History", ":material/history:")
