@@ -58,6 +58,7 @@ def test_weekly_actuals_cache_one_season_across_week_filters(monkeypatch):
     import page_weekly_fantasy as weekly
 
     calls = []
+    schedule_calls = []
     raw = pd.DataFrame([
         {
             "season_type": "REG", "week": 1, "position": "QB", "player_id": "qb1",
@@ -79,17 +80,31 @@ def test_weekly_actuals_cache_one_season_across_week_filters(monkeypatch):
         calls.append(tuple(seasons))
         return raw.copy()
 
+    def _load_schedules(seasons):
+        schedule_calls.append(tuple(seasons))
+        season = int(seasons[0])
+        return pd.DataFrame({
+            "season": [season, season],
+            "season_type": ["REG", "REG"],
+            "week": [1, 2],
+            "home_score": [24, 21],
+            "away_score": [20, 17],
+        })
+
     monkeypatch.setattr(weekly, "_OFFLINE", False)
     monkeypatch.setattr(nfl, "load_player_stats", _load_player_stats)
+    monkeypatch.setattr(nfl, "load_schedules", _load_schedules)
     weekly._load_actual_stats_season.clear()
+    weekly._load_schedule_season.clear()
     try:
         week_one = weekly.load_actual_stats(2025, 1)
         week_two = weekly.load_actual_stats(2025, 2)
 
         assert calls == [(2025,)]
+        assert schedule_calls == [(2025,)]
         assert set(week_one) == {
             "half_ppr", "qb_pass_yds", "qb_rush_yds", "rb_rush_yds", "rb_rec_yds",
-            "wr_rec_yds", "wr_recs", "te_rec_yds", "te_recs",
+            "wr_rec_yds", "wr_recs", "te_rec_yds", "te_recs", "qb_recs", "rb_recs",
         }
         assert week_one["half_ppr"] == {"qb1": 18.0}
         assert week_one["qb_pass_yds"] == {"qb1": 250}
@@ -107,6 +122,7 @@ def test_weekly_actuals_cache_one_season_across_week_filters(monkeypatch):
         assert calls == [(2025,)]
     finally:
         weekly._load_actual_stats_season.clear()
+        weekly._load_schedule_season.clear()
 
 
 def test_league_history_renders_and_lands_empty(tmp_path):

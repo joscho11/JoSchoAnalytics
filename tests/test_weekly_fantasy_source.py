@@ -386,3 +386,26 @@ def test_week_one_phone_grid_keeps_sleeper_beside_model_projection():
     assert page._preview_phone_columns(available, show_sleeper=False) == [
         "#", "Player", "Opponent", "Proj Pts", "Health", "Actual Pts",
     ]
+
+
+def test_actuals_wait_for_every_game_in_the_week():
+    schedule = pd.DataFrame({
+        "season": [2026, 2026, 2026, 2026],
+        "season_type": ["REG", "REG", "REG", "POST"],
+        "week": [1, 1, 2, 1],
+        "home_score": [24, None, 17, 30],
+        "away_score": [20, None, 14, 27],
+    })
+
+    assert weekly._week_is_complete(schedule, 2026, 1) is False
+
+    schedule.loc[1, ["home_score", "away_score"]] = [21, 10]
+    assert weekly._week_is_complete(schedule, 2026, 1) is True
+
+
+def test_actuals_fail_closed_when_week_schedule_is_missing():
+    assert weekly._week_is_complete(None, 2026, 1) is False
+    assert weekly._week_is_complete(pd.DataFrame(), 2026, 1) is False
+    assert weekly._week_is_complete(
+        pd.DataFrame({"season": [2026], "week": [1]}), 2026, 1
+    ) is False

@@ -370,6 +370,41 @@ _ACTUAL_STAT_COLUMNS = [
     'receiving_tds', 'rushing_fumbles_lost', 'receiving_fumbles_lost',
 ]
 
+_SCHEDULE_RESULT_COLUMNS = [
+    "season", "season_type", "week", "home_score", "away_score",
+]
+
+
+def _week_is_complete(schedule: pd.DataFrame | None, season: int, week: int) -> bool:
+    """Return true only after every scheduled regular-season game has a score."""
+    if schedule is None or schedule.empty:
+        return False
+    if not set(_SCHEDULE_RESULT_COLUMNS).issubset(schedule.columns):
+        return False
+    games = schedule.loc[
+        pd.to_numeric(schedule["season"], errors="coerce").eq(int(season))
+        & schedule["season_type"].astype("string").str.upper().eq("REG")
+        & pd.to_numeric(schedule["week"], errors="coerce").eq(int(week))
+    ]
+    if games.empty:
+        return False
+    return bool(games[["home_score", "away_score"]].notna().all(axis=None))
+
+
+@st.cache_data(ttl=3600, max_entries=4)
+def _load_schedule_season(season: int) -> pd.DataFrame | None:
+    """Fetch the season schedule used to gate week-level result visibility."""
+    try:
+        import nflreadpy as nfl
+        raw = nfl.load_schedules([int(season)])
+        if hasattr(raw, "to_pandas"):
+            raw = raw.to_pandas()
+        return raw.loc[:, _SCHEDULE_RESULT_COLUMNS].copy()
+    except Exception as _e:
+        import logging as _logging
+        _logging.warning(f"_load_schedule_season({season}) failed: {_e}")
+        return None
+
 
 @st.cache_data(ttl=3600, max_entries=4)
 def _load_actual_stats_season(season: int) -> pd.DataFrame | None:
@@ -391,8 +426,10 @@ def _load_actual_stats_season(season: int) -> pd.DataFrame | None:
 
 
 def load_actual_stats(season: int, week: int) -> dict:
-    """Build the existing weekly lookup schema from a cached season pull."""
+    """Build weekly actuals only once every game in the week is complete."""
     if _OFFLINE:
+        return {}
+    if not _week_is_complete(_load_schedule_season(season), season, week):
         return {}
     raw = _load_actual_stats_season(season)
     if raw is None:
