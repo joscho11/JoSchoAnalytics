@@ -596,9 +596,9 @@ def _style(view: pd.DataFrame):
     candidate_focus = (
         "background-color: #1A4A3B; color: #B7F7D0; font-weight: 700"
     )
-    missed_candidate_row_bg = "background-color: #FEE2E2"
+    missed_candidate_row_bg = "background-color: #BA797A"
     missed_candidate_focus = (
-        "background-color: #FECACA; color: #991B1B; font-weight: 700"
+        "background-color: #BA797A; color: #3F2024; font-weight: 700"
     )
 
     def _missed_candidate(index: int) -> bool:
@@ -644,7 +644,7 @@ def _style(view: pd.DataFrame):
             for i, candidate in enumerate(view["_candidate"]):
                 if candidate:
                     focus = missed_candidate_focus if _missed_candidate(i) else candidate_focus
-                    border = "#F37D87" if _missed_candidate(i) else "#35D08A"
+                    border = "#8F525A" if _missed_candidate(i) else "#35D08A"
                     styles.iloc[i, df.columns.get_loc("Player")] = (
                         f"{focus}; border-left: 3px solid {border}"
                     )

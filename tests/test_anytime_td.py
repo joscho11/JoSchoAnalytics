@@ -238,7 +238,7 @@ def test_candidate_style_uses_emerald_value_treatment():
     assert not any("rgba" in str(value) for value in styles.to_numpy().ravel())
 
 
-def test_settled_candidate_miss_uses_red_value_treatment():
+def test_settled_candidate_miss_uses_muted_red_value_treatment():
     import page_anytime_td as page
 
     rows = pd.DataFrame({
@@ -257,14 +257,14 @@ def test_settled_candidate_miss_uses_red_value_treatment():
     styles = page._style(display)(display[page.DESKTOP_COLS])
 
     assert styles.iloc[0]["Player"] == (
-        "background-color: #FECACA; color: #991B1B; font-weight: 700; "
-        "border-left: 3px solid #F37D87"
+        "background-color: #BA797A; color: #3F2024; font-weight: 700; "
+        "border-left: 3px solid #8F525A"
     )
     assert styles.iloc[0]["ATTD Value Gap"] == (
-        "background-color: #FECACA; color: #991B1B; font-weight: 700"
+        "background-color: #BA797A; color: #3F2024; font-weight: 700"
     )
     assert styles.iloc[0]["Hit"] == (
-        "background-color: #FECACA; color: #991B1B; font-weight: 700"
+        "background-color: #BA797A; color: #3F2024; font-weight: 700"
     )
 
 
