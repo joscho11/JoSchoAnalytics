@@ -571,9 +571,9 @@ def _style(view: pd.DataFrame):
     candidate_focus = (
         "background-color: #1A4A3B; color: #B7F7D0; font-weight: 700"
     )
-    missed_candidate_row_bg = "background-color: #4A2028"
+    missed_candidate_row_bg = "background-color: #FEE2E2"
     missed_candidate_focus = (
-        "background-color: #5A2730; color: #FFD0D6; font-weight: 700"
+        "background-color: #FECACA; color: #991B1B; font-weight: 700"
     )
 
     def _missed_candidate(index: int) -> bool:

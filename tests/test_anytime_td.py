@@ -257,14 +257,14 @@ def test_settled_candidate_miss_uses_red_value_treatment():
     styles = page._style(display)(display[page.DESKTOP_COLS])
 
     assert styles.iloc[0]["Player"] == (
-        "background-color: #5A2730; color: #FFD0D6; font-weight: 700; "
+        "background-color: #FECACA; color: #991B1B; font-weight: 700; "
         "border-left: 3px solid #F37D87"
     )
     assert styles.iloc[0]["ATTD Value Gap"] == (
-        "background-color: #5A2730; color: #FFD0D6; font-weight: 700"
+        "background-color: #FECACA; color: #991B1B; font-weight: 700"
     )
     assert styles.iloc[0]["Hit"] == (
-        "background-color: #5A2730; color: #FFD0D6; font-weight: 700"
+        "background-color: #FECACA; color: #991B1B; font-weight: 700"
     )
 
 
