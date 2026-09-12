@@ -21,10 +21,10 @@ DEMO_SEASON = 2025
 LIVE_SEASON = 2026
 DEFAULT_RELEASE = (LIVE_SEASON, 1)
 DEFAULT_WEEK = 10
-# SF-LA was intentionally retained as a fun, display-only 2+ TD model view
-# after the game. It has model probabilities and graded outcomes, but no
-# historical DraftKings 2+ prices, so it must never create value bets or P&L.
-DISPLAY_ONLY_TWO_PLUS_GAME_IDS = {"2026_01_SF_LA"}
+# These completed games were intentionally retained as fun, display-only 2+
+# TD model views. They have model probabilities and graded outcomes, but no
+# historical DraftKings 2+ prices, so they must never create value bets or P&L.
+DISPLAY_ONLY_TWO_PLUS_GAME_IDS = {"2026_01_NE_SEA", "2026_01_SF_LA"}
 DESKTOP_COLS = [
     "#", "Player", "Pos", "Opp", "Model ATTD Odds", "Book ATTD Odds",
     "ATTD Value Gap", "Hit",
@@ -1018,7 +1018,7 @@ def render() -> None:
             st.caption("2+ TD view: model probability, current DraftKings price, and value gap. The same +0.5pp gap rule powers the 1U paper tracker below. First-TD prices are retained in the release data but are not part of this model.")
         elif display_only_two_plus:
             st.info(
-                "Display-only historical 2+ TD model view for SF vs LA. "
+                f"Display-only historical 2+ TD model view for {label}. "
                 "No DraftKings 2+ prices were captured, so Book 2+ TD Odds "
                 "and the value gap are unavailable; this matchup is excluded "
                 "from 2+ betting and P&L."

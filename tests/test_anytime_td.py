@@ -93,24 +93,29 @@ def test_two_plus_toggle_preserves_market_or_placeholder(tmp_path):
     assert any("2+ TD paper tracker" in str(item.value) for item in at.caption)
 
 
-def test_completed_matchup_without_two_plus_market_is_not_shown_retroactively(tmp_path):
+def test_ne_sea_display_only_two_plus_model_view_is_shown(tmp_path):
     at = _render(tmp_path)
     at.selectbox(key="atd_matchup_2026_1").set_value("NE vs SEA").run()
     at.toggle(key="atd_two_plus_2026_1").set_value(True).run()
     assert not at.exception, at.exception
     assert not at.error, [e.value for e in at.error]
     info = " ".join(str(item.value) for item in at.info)
-    assert "not shown retroactively" in info
-    assert any(
-        "No retroactive 2+ TD prediction table" in str(item.value)
-        for item in at.caption
+    assert "Display-only historical 2+ TD model view for NE vs SEA" in info
+    rendered = list(at.dataframe)[-2:]
+    assert len(rendered) == 2
+    assert all(
+        frame.value["Model 2+ TD Odds"].ne("Not implemented yet").all()
+        for frame in rendered
+    )
+    assert all(
+        frame.value["Book 2+ TD Odds"].eq("Not implemented yet").all()
+        for frame in rendered
     )
     assert any(
         "Results-only 2+ TD tally" in str(item.value)
         and "0 hits / 48 graded player-games" in str(item.value)
         for item in at.caption
     )
-    assert len(at.dataframe) == 0
 
 
 def test_sf_la_display_only_two_plus_model_view_is_shown(tmp_path):
