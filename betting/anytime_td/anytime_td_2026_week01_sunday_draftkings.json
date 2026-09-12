@@ -11,15 +11,16 @@
   "model_bundle": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\td_count_model_beta\\artifacts\\td_lgbm_poisson_product.pkl",
   "model_bundle_sha256": "6cb5874db5278e8306cf8d06e67f5fe7a10262d7dc5a8e59a26fa568c8081819",
   "input_hashes": {
-    "paste": "4b8d458972abf86042c17d09239b0d3293906072164f24a762e2134e1ba4d013",
+    "paste": "92fdfa5b866bec1374efdd84f41ba800f337e1fddd72b9467ac4c4ec0ecffb17",
     "forward": "f688645a3175573a9dfec044be580d6c6eaa4d821ea5a41c7e1d40a13ee7ebbe",
     "history": "58495f19d2cd3cfbaa824e6d462f0c68fc497237cdde3d8bfb130e19c4cb3a15"
   },
-  "n_rows": 328,
-  "n_cumulative": 383,
+  "n_rows": 329,
+  "n_cumulative": 382,
   "capture_min": "2026-09-11T15:46:00",
-  "capture_max": "2026-09-11T15:46:00",
+  "capture_max": "2026-09-11T22:53:00",
   "capture_lead_minutes": [
+    2287.0,
     2714.0,
     2919.0,
     3154.0,
@@ -37,7 +38,6 @@
     "unresolved pasted player 'Matthew Hibner' (BAL@IND)",
     "unresolved pasted player 'Ben Skowronek' (ATL@PIT)",
     "unresolved pasted player 'Eli Heidenreich' (ATL@PIT)",
-    "unresolved pasted player 'Cooper Rush' (ATL@PIT)",
     "unresolved pasted player 'Chris Blair' (ATL@PIT)",
     "unresolved pasted player 'Brevin Jordan' (BUF@HOU)",
     "unresolved pasted player 'Keleki Latu' (BUF@HOU)",
@@ -74,7 +74,37 @@
     "unresolved pasted player 'Jake Briningstool' (DEN@KC)",
     "unresolved pasted player 'Dallen Bentley' (DEN@KC)"
   ],
-  "unresolved_player_count": 46,
+  "unresolved_player_count": 45,
+  "model_pending_paste_rows": [
+    "Cooper Rush (ATL@PIT)"
+  ],
+  "model_pending_count": 1,
+  "lineup_overrides": {
+    "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\news\\2026_w01_lineup_overrides.csv",
+    "sha256": "ac112345cd34615d97bb6c072a55eda40b6a9f66bbaaed2e4397eebaff093c7d",
+    "out_player_ids": [
+      "00-0036212",
+      "00-0039338"
+    ],
+    "out_player_game_keys": [
+      [
+        "00-0036212",
+        "2026_01_ATL_PIT"
+      ],
+      [
+        "00-0039338",
+        "2026_01_MIA_LV"
+      ]
+    ],
+    "replacement_player_ids": [
+      "00-0033662"
+    ],
+    "replacement_sleeper_ids": [
+      "4574"
+    ],
+    "removed_out_players": [],
+    "removed_out_player_game_keys": []
+  },
   "coverage": {
     "copied": [
       "implied_team_total",
@@ -288,5 +318,5 @@
     }
   },
   "network_odds_api": false,
-  "row_hash": "6c796f5955cf111abbf6072339bf3d8af9df52fc5e403d3ef08015a5b3c68039"
+  "row_hash": "4cf3ce0a459e44822064b8b5035751563697d0bc967a68cf6ec8a235b1844cf2"
 }
