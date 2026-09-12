@@ -18,7 +18,7 @@ from video_content import LATEST_LEAGUE_HISTORY_VIDEO_SLUG
 
 def render():
     st.title("Help & guide")
-    st.caption("New to the site, or to betting the spread? Start here.")
+    st.caption("Reference for the site's models, pages, and data.")
     try:
         df = dashboard_data.load_predictions()
     except FileNotFoundError:
@@ -38,21 +38,6 @@ def render():
     _hc_correct      = _stats["hc_correct"]
     _hc_total        = _stats["hc_total"]
     _hc_pct          = _stats["hc_pct"]
-    st.subheader("Start here")
-    with st.container(horizontal=True, gap="small", key="jsa-help-start"):
-        for slug, label, icon in (
-            ("draft-board", "Build a draft plan", ":material/list_alt:"),
-            ("weekly-predictions", "Read this week's slate", ":material/query_stats:"),
-            ("anytime-tds", "Compare anytime TDs", ":material/sports_score:"),
-            ("dfs-optimizer", "Build a DK lineup", ":material/target:"),
-            ("track-record", "Audit the results", ":material/monitoring:"),
-        ):
-            page = nav_registry.PAGES.get(slug)
-            if page is not None:
-                st.page_link(page, label=label, icon=icon, width="stretch")
-            else:
-                st.markdown(f"**{label}**")
-
     st.subheader("🏈 Betting Basics")
 
     with st.expander("What is ATS (Against The Spread)?"):

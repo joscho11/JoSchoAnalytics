@@ -30,6 +30,8 @@ def test_help_renders_offline_clean(tmp_path):
     assert any("Help & guide" in str(t.value) for t in at.title), "Help title missing"
     assert len(list(at.markdown)) > 10, "Help body (expanders/markdown) did not render"
     assert any("How the models work" in str(s.value) for s in at.subheader)
+    assert not any("Start here" in str(s.value) for s in at.subheader)
+    assert not any("Start here" in str(c.value) for c in at.caption)
     assert any(
         "How Model Proj is built" in str(e.label)
         for e in at.expander
