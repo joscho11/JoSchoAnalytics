@@ -93,6 +93,35 @@ def test_two_plus_toggle_preserves_market_or_placeholder(tmp_path):
     assert any("2+ TD paper tracker" in str(item.value) for item in at.caption)
 
 
+def test_completed_matchup_without_two_plus_market_is_not_shown_retroactively(tmp_path):
+    at = _render(tmp_path)
+    at.selectbox(key="atd_matchup_2026_1").set_value("NE vs SEA").run()
+    at.toggle(key="atd_two_plus_2026_1").set_value(True).run()
+    assert not at.exception, at.exception
+    assert not at.error, [e.value for e in at.error]
+    info = " ".join(str(item.value) for item in at.info)
+    assert "not shown retroactively" in info
+    assert any(
+        "No retroactive 2+ TD prediction table" in str(item.value)
+        for item in at.caption
+    )
+    assert any(
+        "Results-only 2+ TD tally" in str(item.value)
+        and "0 hits / 48 graded player-games" in str(item.value)
+        for item in at.caption
+    )
+    assert len(at.dataframe) == 0
+
+
+def test_two_plus_results_tally_is_results_only():
+    rows = pd.DataFrame({"scored_two_plus": [1, 0, None, 1]})
+    assert page._two_plus_results_tally(rows) == {"graded": 3, "hits": 2}
+    assert page._two_plus_results_tally(pd.DataFrame({"p_ge2": [0.2]})) == {
+        "graded": 0,
+        "hits": 0,
+    }
+
+
 def test_year_and_week_selectors_keep_2025_available(tmp_path):
     at = _render(tmp_path)
     at.selectbox(key="atd_year").set_value(2025).run()

@@ -280,6 +280,26 @@ def _roi_range_value(ci: dict) -> str:
     return f"{100 * ci['lower']:.1f}% to {100 * ci['upper']:.1f}%"
 
 
+def _has_two_plus_prices(frame: pd.DataFrame) -> bool:
+    """Return whether this specific matchup has a published 2+ TD market."""
+    if "two_plus_amer" not in frame:
+        return False
+    return bool(pd.to_numeric(frame["two_plus_amer"], errors="coerce").notna().any())
+
+
+def _two_plus_results_tally(frame: pd.DataFrame) -> dict[str, int]:
+    """Count graded 2+ TD outcomes without treating them as historical bets."""
+    outcome_col = "_outcome" if "_outcome" in frame else "scored_two_plus"
+    if outcome_col not in frame:
+        return {"graded": 0, "hits": 0}
+    outcomes = pd.to_numeric(frame[outcome_col], errors="coerce")
+    graded = outcomes.isin([0, 1])
+    return {
+        "graded": int(graded.sum()),
+        "hits": int(outcomes[graded].eq(1).sum()),
+    }
+
+
 def _render_scorecards(
     priced: pd.DataFrame,
     season: int,
@@ -323,6 +343,19 @@ def _render_scorecards(
                     "Approx. 95% ROI range is pending until at least 5 settled games "
                     "and 20 settled paper bets are available."
                 )
+            if is_two_plus:
+                tally = _two_plus_results_tally(paper["rows"])
+                if tally["graded"]:
+                    st.caption(
+                        "Results-only 2+ TD tally · "
+                        f"{tally['hits']} hits / {tally['graded']} graded player-games. "
+                        "This is not a betting record."
+                    )
+                else:
+                    st.caption(
+                        "Results-only 2+ TD tally is pending final outcome grading; "
+                        "it is separate from the betting record."
+                    )
             if is_two_plus and result["bets"] == 0:
                 st.caption("No quoted 2+ TD candidates meet the gap rule yet.")
         else:
@@ -788,7 +821,10 @@ highest first.
 Use **Show 2+ TD view** for the expanded two-plus layout. When the pasted
 release includes that market, the view shows model odds, current DraftKings
 odds, and the value gap for players with a listed 2+ price. Older releases
-without that market show a clear not-implemented placeholder.
+without that market show a clear not-implemented placeholder before games begin.
+Completed matchups without a published 2+ market do not receive retroactive
+model odds; once grading supplies final outcomes, they contribute only to a
+results-only tally and never to a betting W-L, units, ROI, or backtest result.
 The 2+ TD probabilities have no historical backtest or published 2+ test
 results yet, so that view is forward-looking tracking only—not evidence of
 model accuracy or profitability.
@@ -912,13 +948,24 @@ def render() -> None:
         key=f"atd_two_plus_{season}_{week}",
         help="Show model 2+ TD odds, DraftKings 2+ TD odds, and the 2+ value gap when the release includes that market.",
     )
+    two_plus_prices_available = _has_two_plus_prices(matchup)
+    completed_without_two_plus_market = (
+        _matchup_is_started(matchup) and not two_plus_prices_available
+    )
     if show_two_plus:
         st.info(
             "Important: 2+ TD predictions have no historical backtest yet. "
             "No 2+ test results are available, so this view is forward-looking "
             "tracking only—not evidence of accuracy or profitability."
         )
-        if "two_plus_amer" in raw and pd.to_numeric(raw["two_plus_amer"], errors="coerce").notna().any():
+        if completed_without_two_plus_market:
+            st.info(
+                "This matchup was completed before 2+ TD prices were published, "
+                "so model 2+ odds are not shown retroactively. Once grading supplies "
+                "the final 2+ outcomes, they are counted only in the results-only "
+                "tally—not in betting W-L, units, ROI, or backtest results."
+            )
+        elif two_plus_prices_available:
             st.caption("2+ TD view: model probability, current DraftKings price, and value gap. The same +0.5pp gap rule powers the 1U paper tracker below. First-TD prices are retained in the release data but are not part of this model.")
         else:
             st.info(
@@ -934,14 +981,17 @@ def render() -> None:
         )
 
     st.markdown(f"#### {label}")
-    for team in teams:
-        team_view = matchup[matchup.team.astype(str).eq(team)]
-        if team_view.empty:
-            continue
-        st.markdown(f"**{team} Anytime TDs**")
-        _board(
-            team_view,
-            f"atd-{team.lower()}-{label.replace(' ', '-')}",
-            search or "",
-            show_two_plus=show_two_plus,
-        )
+    if completed_without_two_plus_market and show_two_plus:
+        st.caption("No retroactive 2+ TD prediction table for this completed matchup.")
+    else:
+        for team in teams:
+            team_view = matchup[matchup.team.astype(str).eq(team)]
+            if team_view.empty:
+                continue
+            st.markdown(f"**{team} Anytime TDs**")
+            _board(
+                team_view,
+                f"atd-{team.lower()}-{label.replace(' ', '-')}",
+                search or "",
+                show_two_plus=show_two_plus,
+            )

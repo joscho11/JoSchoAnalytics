@@ -30,7 +30,11 @@ with separate NE and SEA sections).
 The **Show 2+ TD view** exposes model 2+ TD odds, the current DraftKings 2+ TD
 price, and the 2+ TD value gap when those prices are included in the pasted
 release; players without a listed 2+ price are omitted from that market view.
-Older releases without the market show a clear not-implemented placeholder.
+Before games begin, releases without the market show a clear not-implemented
+placeholder. Completed matchups without a published 2+ market do not receive
+retroactive model odds. Once grading supplies their final outcomes, they are
+counted only in a results-only tally—not in betting W-L, units, ROI, or a
+backtest.
 The original First TD prices are retained in the release data but are not part
 of the model display.
 
@@ -51,8 +55,9 @@ When there are at least five settled games and 20 settled bets, the page shows
 an **Approx. 95% ROI range** from 10,000 deterministic game-block bootstrap
 resamples. This is an empirical uncertainty range, not a guarantee. The 2+
 TD toggle uses the same +0.5pp candidate rule and has its own Net units, ROI,
-paper-bet, and uncertainty cards. Those cards remain pending until 2+
-DraftKings prices and graded `scored_two_plus` outcomes exist.
+record, and uncertainty cards. Those cards remain pending until 2+ DraftKings
+prices and graded `scored_two_plus` outcomes exist. Results-only outcomes are
+shown separately and are never treated as historical bets.
 
 The audited 2025 DraftKings strategy artifact is
 `strategy_backtest_2025_draftkings.json`. It records the fixed +0.5pp result,
