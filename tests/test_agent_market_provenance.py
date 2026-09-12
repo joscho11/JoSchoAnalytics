@@ -203,7 +203,12 @@ def test_the_weekly_workflow_cannot_regenerate_or_commit_the_artifact():
 
 
 def test_help_page_no_longer_claims_market_inputs():
-    src = (_HERE / "site_pages" / "page_help.py").read_text(encoding="utf-8")
+    src = "\n".join(
+        (
+            (_HERE / "site_pages" / "page_help.py").read_text(encoding="utf-8"),
+            (_HERE / "site_pages" / "help_content.py").read_text(encoding="utf-8"),
+        )
+    )
     banned = ["sharp money likes that team", "sharp money is going the other way",
               "line movement data,", "Maybe sharp money is split",
               "the agent will flag it in the matchup analysis",

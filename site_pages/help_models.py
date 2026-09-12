@@ -107,7 +107,7 @@ separately and used for grading, matching the benchmark's execution rule. Bettin
 game is not the claim. No 2026 games are graded yet.
 This is Tuesday line value, not closing-line value.
 
-The public spread release uses the first valid Tuesday market capture from 09:00–15:30 ET. Matchups for weeks 1-18 are on Weekly Predictions now.
+The public spread release uses the first valid Tuesday market capture from 09:00–15:30 ET. Published matchups appear on Weekly Predictions as releases become available.
         """)
         rows = me.spread_high_season_rows()
         _bar(
@@ -243,9 +243,10 @@ It is **not live-validated**. The first live test is the 2026 season.
 def _weekly_fantasy():
     with st.expander("How weekly fantasy projections are built"):
         st.markdown("""
-**2026 Week 1 is live.** The 399-player release covers every scheduled QB, RB, WR,
-and TE in the captured Sleeper projection payload with a numeric half-PPR benchmark.
-The independent model supplies the score; Sleeper's projection is not an input.
+**The current 2026 release is live.** Each published release covers the scheduled
+QB, RB, WR, and TE universe in the captured Sleeper projection payload with a
+numeric half-PPR benchmark. The independent model supplies the score; Sleeper's
+projection is not an input.
 
 **What you can read today** is the **2025 demo** (weeks 10-17). Those files came from
 four per-position XGBoost models trained on 2020-2024, with 2025 held out. Scoring is
@@ -253,11 +254,12 @@ half-PPR: 0.5 per reception, yards and touchdowns as usual. Demo weeks also carr
 stat columns (pass/rush/rec yards, receptions) from eight smaller models. Those extras
 will not appear on a 2026 live week unless that file has them.
 
-**2026 live model** (Week 1 onward). One LightGBM across QB, RB, WR,
+**2026 live model.** One LightGBM across QB, RB, WR,
 and TE. It predicts this week's half-PPR points. Form is the last four played games,
 most recent weighted 40/25/20/15. Early in the year it blends prior-season games.
-Missed games are skipped, not zeroed. Week 1 uses history only through 2025, the current
-roster and depth chart, reviewed venue context, and the captured Tuesday market. Missing
+Missed games are skipped, not zeroed. Early-season releases use history through the
+prior season, the current roster and depth chart, reviewed venue context, and the
+captured Tuesday market. Missing
 rookie history stays missing rather than becoming zero. Sleeper's weekly projection is
 the benchmark and universe definition, not an input.
 
@@ -297,8 +299,8 @@ Classic points-allowed buckets plus a locked league-mean bonus. No line: DraftKi
 average, labeled on the page. Injured and unmatched skill players are dropped.
 Questionable stays in.
 
-No projection-edge claim. The 2026 Week 1 direct-DK artifact is published; a real lineup
-still requires the DraftKings salary CSV for the contest.
+No projection-edge claim. A current direct-DK artifact may be published; a real
+lineup still requires the DraftKings salary CSV for the contest.
         """)
         st.caption(
             "This page does not prove a Classic lineup will beat the field. It is a "
@@ -309,11 +311,11 @@ still requires the DraftKings salary CSV for the contest.
 def _anytime_td():
     with st.expander("How the Anytime TD demo works"):
         st.markdown("""
-**Status: live 2026 Week 1 plus historical demo. For fun. Do not bet this.**
+**Status: current live release plus historical demo. For fun. Do not bet this.**
 
 The live board is built from manually pasted US-book Yes prices. The page
-defaults to 2026 Week 1 and keeps 2025 weeks 10-17 selectable for context.
-New Week 1 slates are appended as Joseph supplies them; started-game rows are
+defaults to the current published 2026 release and keeps the historical demo
+selectable for context. New live slates are appended as Joseph supplies them; started-game rows are
 frozen, and no odds API is used.
 
 The number is the chance a skill player scores a **rushing or receiving** touchdown
