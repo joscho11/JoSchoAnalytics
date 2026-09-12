@@ -325,6 +325,16 @@ def test_2026_week1_is_default_release_when_present():
     assert page.default_release([(2025, 10), (2025, 17)]) == (2025, 10)
 
 
+def test_current_week1_keeps_published_past_game_results():
+    expected = pd.read_csv(_HERE / "betting" / "anytime_td" / "anytime_td_2026_week01.csv")
+    past = expected[expected.game_id.isin(["2026_01_NE_SEA", "2026_01_SF_LA"])]
+
+    assert len(past) == 48
+    assert pd.to_numeric(past.scored_anytime, errors="coerce").notna().all()
+    assert set(past.status) == {"final"}
+    assert list(past.loc[past.player_display_name.eq("Eli Raridon"), "scored_anytime"]) == [1]
+
+
 def test_matchups_are_grouped_then_split_by_team():
     import page_anytime_td as page
 
@@ -374,6 +384,24 @@ def test_default_matchup_skips_fully_graded_games():
 
     matchups = list(page._matchup_groups(rows))
     assert page.default_matchup_label(matchups) == "SF vs LA"
+
+
+def test_default_matchup_skips_started_games_before_grading():
+    import page_anytime_td as page
+
+    rows = pd.DataFrame([
+        {
+            "game_id": "2026_01_NE_SEA", "team": "NE", "opponent_team": "SEA",
+            "kickoff_et": "2020-09-09 20:20", "scored_anytime": None,
+        },
+        {
+            "game_id": "2026_01_ATL_PIT", "team": "ATL", "opponent_team": "PIT",
+            "kickoff_et": "2099-09-13 13:00", "scored_anytime": None,
+        },
+    ])
+
+    matchups = list(page._matchup_groups(rows))
+    assert page.default_matchup_label(matchups) == "ATL vs PIT"
 
 
 def test_live_tracker_uses_raw_inclusive_gap_and_separates_open_bets():

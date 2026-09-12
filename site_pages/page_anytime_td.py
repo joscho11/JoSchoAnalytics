@@ -154,12 +154,25 @@ def _matchup_is_graded(group: pd.DataFrame) -> bool:
     return bool(pd.to_numeric(group["scored_anytime"], errors="coerce").notna().all())
 
 
+def _matchup_is_started(group: pd.DataFrame) -> bool:
+    """Return whether kickoff has passed, including before grading commits."""
+    if group.empty or "kickoff_et" not in group:
+        return False
+    kickoff = pd.to_datetime(group["kickoff_et"], errors="coerce")
+    if kickoff.empty or kickoff.notna().sum() == 0:
+        return False
+    if kickoff.dt.tz is not None:
+        kickoff = kickoff.dt.tz_convert("America/New_York").dt.tz_localize(None)
+    now_et = pd.Timestamp.now(tz="America/New_York").tz_localize(None)
+    return bool(kickoff.min() <= now_et)
+
+
 def default_matchup_label(matchups: list[tuple[str, list[str], pd.DataFrame]]) -> str:
-    """Return the first unplayed matchup, or the last matchup once the slate is complete."""
+    """Return the first unstarted matchup, or the last matchup once the slate is complete."""
     if not matchups:
         raise ValueError("at least one matchup is required")
     for label, _, group in matchups:
-        if not _matchup_is_graded(group):
+        if not _matchup_is_graded(group) and not _matchup_is_started(group):
             return label
     return matchups[-1][0]
 
@@ -180,7 +193,7 @@ def _seed_matchup_default(
         st.session_state[manual_key] = False
     elif not st.session_state.get(manual_key, False):
         selected = next(item for item in matchups if item[0] == current)
-        if _matchup_is_graded(selected[2]):
+        if _matchup_is_graded(selected[2]) or _matchup_is_started(selected[2]):
             st.session_state[key] = default
 
 
