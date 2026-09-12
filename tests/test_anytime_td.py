@@ -239,6 +239,34 @@ def test_two_plus_candidate_uses_same_gap_highlight():
     )
 
 
+def test_two_plus_rows_sort_by_raw_value_gap_then_player():
+    import page_anytime_td as page
+
+    rows = pd.DataFrame({
+        "player_display_name": ["Higher Probability", "Higher Value", "Tie Z", "Tie A"],
+        "position": ["RB", "WR", "TE", "RB"],
+        "team": ["KC", "SF", "PHI", "DAL"],
+        "opponent_team": ["LV", "SEA", "NYG", "NYG"],
+        "p_ge1": [0.40, 0.35, 0.25, 0.20],
+        "p_ge2": [0.30, 0.20, 0.25, 0.20],
+        "p_book": [0.30, 0.35, 0.30, 0.25],
+        "fair_amer": [150, 400, 300, 400],
+        "book_amer": [233, 186, 233, 300],
+        "two_plus_amer": [100, 400, 300, 400],
+        "scored_anytime": [None, None, None, None],
+        "scored_two_plus": [None, None, None, None],
+    })
+
+    display = page._two_plus_display(page.priced_rows(rows))
+
+    assert list(display["Player"]) == [
+        "Higher Value · SF",
+        "Tie A · DAL",
+        "Tie Z · PHI",
+        "Higher Probability · KC",
+    ]
+
+
 def test_phone_grid_pins_identity_columns_only():
     import page_anytime_td as page
 

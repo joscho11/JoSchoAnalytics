@@ -331,6 +331,10 @@ that week, with Model ATTD Odds beside Book ATTD Odds, sorted by ATTD Value Gap
 About one in five hits. It is not a pick list. A cut of the biggest
 disagreements lost on 2025. Full 2025: the books were about 0.08% more accurate.
 Demo weeks 10-17: closer in 5 of 8 weeks. That is not a betting record.
+
+The 2+ TD toggle is not backtested: no historical 2+ model-quality or betting
+test results are published yet. Its probabilities and cards are forward-looking
+paper tracking only, not evidence of accuracy or profitability.
         """)
         st.caption(
             "The live board is a comparison, not a claim it beats the book. "

@@ -254,7 +254,9 @@ are highlighted as 1U paper-bet candidates. The 2026 cards track settled/open
 bets, wins-losses, net units, settled ROI, and—once the minimum sample exists—
 an approximate 95% game-block-bootstrap ROI range. Open bets stay out of P&L.
 The 2+ TD view uses the same rule and has its own cards once 2+ prices and
-graded outcomes exist. For fun. Not a proven edge. Bet responsibly.
+graded outcomes exist. There is no historical 2+ TD backtest or published 2+
+TD test results yet, so it is forward-looking tracking only—not evidence of
+accuracy or profitability. For fun. Not a proven edge. Bet responsibly.
 
 Over full 2025 the sportsbooks were still about 0.08% more accurate. On these
 eight demo weeks our numbers were closer in 5; that is not a betting record.

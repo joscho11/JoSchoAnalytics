@@ -34,6 +34,10 @@ Older releases without the market show a clear not-implemented placeholder.
 The original First TD prices are retained in the release data but are not part
 of the model display.
 
+There is no historical 2+ TD backtest and no published 2+ TD test results yet.
+Treat the 2+ probabilities and paper-betting cards as forward-looking tracking
+only, not evidence of model accuracy or profitability.
+
 ## 2026 paper-betting tracker
 
 The live board highlights a row when the raw probability gap is at least +0.5
@@ -52,7 +56,8 @@ DraftKings prices and graded `scored_two_plus` outcomes exist.
 
 The audited 2025 DraftKings strategy artifact is
 `strategy_backtest_2025_draftkings.json`. It records the fixed +0.5pp result,
-threshold scan, controls, drawdown, and bootstrap settings.
+threshold scan, controls, drawdown, and bootstrap settings for the anytime-TD
+market; it does not contain a 2+ TD backtest.
 
 ## How it scored in 2025
 

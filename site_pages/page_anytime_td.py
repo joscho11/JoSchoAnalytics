@@ -471,8 +471,13 @@ def _two_plus_display(df: pd.DataFrame) -> pd.DataFrame:
         # all, retain the model-only placeholder behavior for older releases.
         if ranked["_book_2plus"].notna().any():
             ranked = ranked[ranked["_book_2plus"].notna()].copy()
+    if "_book_2plus" in ranked:
+        book_probability = ranked["_book_2plus"].map(_implied_probability)
+    else:
+        book_probability = pd.Series(pd.NA, index=ranked.index, dtype="Float64")
+    ranked["_value"] = ranked["p_ge2"] - book_probability
     ranked = ranked.sort_values(
-        ["p_ge2", "player_display_name"],
+        ["_value", "player_display_name"],
         ascending=[False, True],
         na_position="last",
     ).reset_index(drop=True)
@@ -496,7 +501,6 @@ def _two_plus_display(df: pd.DataFrame) -> pd.DataFrame:
             model_american, book_american, ranked.p_ge2, book_probability
         )
     ]
-    raw_gap = ranked.p_ge2 - book_probability
     return pd.DataFrame({
         "#": range(1, len(ranked) + 1),
         "Player": ranked.player_display_name + " · " + ranked.team.astype(str),
@@ -505,9 +509,9 @@ def _two_plus_display(df: pd.DataFrame) -> pd.DataFrame:
         "Model 2+ TD Odds": [value or "Not implemented yet" for value in model_odds],
         "Book 2+ TD Odds": [value or "Not implemented yet" for value in book_odds],
         "2+ TD Value Gap": [value or "Not implemented yet" for value in value_gap],
-        "_value": raw_gap.astype(float),
+        "_value": ranked["_value"].astype(float),
         "_candidate": tracker.qualifies_probability_gap(
-            raw_gap, tracker.ATTD_VALUE_THRESHOLD
+            ranked["_value"], tracker.ATTD_VALUE_THRESHOLD
         ),
     })
 
@@ -752,6 +756,9 @@ Use **Show 2+ TD view** for the expanded two-plus layout. When the pasted
 release includes that market, the view shows model odds, current DraftKings
 odds, and the value gap for players with a listed 2+ price. Older releases
 without that market show a clear not-implemented placeholder.
+The 2+ TD probabilities have no historical backtest or published 2+ test
+results yet, so that view is forward-looking tracking only—not evidence of
+model accuracy or profitability.
 The original First TD prices are retained in the release data but are not part
 of this model view.
 The live cards track those 1U candidates across the 2026 season: settled/open
@@ -873,6 +880,11 @@ def render() -> None:
         help="Show model 2+ TD odds, DraftKings 2+ TD odds, and the 2+ value gap when the release includes that market.",
     )
     if show_two_plus:
+        st.info(
+            "Important: 2+ TD predictions have no historical backtest yet. "
+            "No 2+ test results are available, so this view is forward-looking "
+            "tracking only—not evidence of accuracy or profitability."
+        )
         if "two_plus_amer" in raw and pd.to_numeric(raw["two_plus_amer"], errors="coerce").notna().any():
             st.caption("2+ TD view: model probability, current DraftKings price, and value gap. The same +0.5pp gap rule powers the 1U paper tracker below. First-TD prices are retained in the release data but are not part of this model.")
         else:
