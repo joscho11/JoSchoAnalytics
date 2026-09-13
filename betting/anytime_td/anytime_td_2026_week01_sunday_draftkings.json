@@ -11,70 +11,86 @@
   "model_bundle": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\td_count_model_beta\\artifacts\\td_lgbm_poisson_product.pkl",
   "model_bundle_sha256": "6cb5874db5278e8306cf8d06e67f5fe7a10262d7dc5a8e59a26fa568c8081819",
   "input_hashes": {
-    "paste": "cb9dfe3f04aa2fd4206e77084789053edb169c2454186b8911731d5c2493a0ce",
-    "forward": "f688645a3175573a9dfec044be580d6c6eaa4d821ea5a41c7e1d40a13ee7ebbe",
+    "paste": "72cc8d6422ca3b89e526f9b72eab9d55c9728ef52d288793833fa07a58543ecc",
+    "forward": "3aa509913bb61a2f16604f02d80e20ac8ace3692caafd5b8be0b320feaa75b47",
     "history": "58495f19d2cd3cfbaa824e6d462f0c68fc497237cdde3d8bfb130e19c4cb3a15"
   },
-  "n_rows": 329,
-  "n_cumulative": 382,
-  "capture_min": "2026-09-11T15:46:00",
-  "capture_max": "2026-09-11T22:53:00",
+  "n_rows": 328,
+  "n_cumulative": 384,
+  "capture_min": "2026-09-13T09:50:00",
+  "capture_max": "2026-09-13T09:50:00",
   "capture_lead_minutes": [
-    2287.0,
-    2714.0,
-    2919.0,
-    3154.0,
-    4589.0
+    190.0,
+    395.0,
+    630.0,
+    2065.0
   ],
   "capture_window_warning": true,
   "unresolved_paste_rows": [
+    "unresolved pasted player 'CJ Donaldson' (NO@DET)",
     "unresolved pasted player 'Tyler Conklin' (NO@DET)",
+    "unresolved pasted player 'Kevin Austin Jr.' (NO@DET)",
     "unresolved pasted player 'Jackson Meeks' (NO@DET)",
+    "unresolved pasted player 'Tom Kennedy' (NO@DET)",
+    "unresolved pasted player 'Treyton Welch' (NO@DET)",
     "unresolved pasted player 'CJ Williams' (CLE@JAX)",
     "unresolved pasted player 'Carsen Ryan' (CLE@JAX)",
     "unresolved pasted player 'Michael Burton' (CLE@JAX)",
-    "unresolved pasted player 'Laquon Treadwell' (BAL@IND)",
-    "unresolved pasted player 'Andrew Ogletree' (BAL@IND)",
-    "unresolved pasted player 'Matthew Hibner' (BAL@IND)",
-    "unresolved pasted player 'Ben Skowronek' (ATL@PIT)",
     "unresolved pasted player 'Eli Heidenreich' (ATL@PIT)",
+    "unresolved pasted player 'Ben Skowronek' (ATL@PIT)",
     "unresolved pasted player 'Chris Blair' (ATL@PIT)",
+    "unresolved pasted player 'Nick Muse' (ATL@PIT)",
+    "unresolved pasted player 'Matthew Hibner' (BAL@IND)",
+    "unresolved pasted player 'Andrew Ogletree' (BAL@IND)",
+    "unresolved pasted player 'Laquon Treadwell' (BAL@IND)",
+    "unresolved pasted player 'Chris Moore' (BAL@IND)",
+    "unresolved pasted player 'AJ Dillon' (CHI@CAR)",
+    "unresolved pasted player 'Kaden Davis' (CHI@CAR)",
     "unresolved pasted player 'Brevin Jordan' (BUF@HOU)",
     "unresolved pasted player 'Keleki Latu' (BUF@HOU)",
+    "unresolved pasted player 'Greg Dortch' (BUF@HOU)",
     "unresolved pasted player 'British Brooks' (BUF@HOU)",
     "unresolved pasted player 'Jared Wayne' (BUF@HOU)",
+    "unresolved pasted player 'Frank Gore Jr.' (BUF@HOU)",
     "unresolved pasted player 'Kenneth Gainwell' (TB@CIN)",
     "unresolved pasted player 'Dohnte Meyers' (TB@CIN)",
-    "unresolved pasted player 'Bauer Sharp' (TB@CIN)",
+    "unresolved pasted player 'Tanner Hudson' (TB@CIN)",
+    "unresolved pasted player 'Josh Williams' (TB@CIN)",
     "unresolved pasted player \"Ke'Shawn Williams\" (TB@CIN)",
+    "unresolved pasted player 'Bauer Sharp' (TB@CIN)",
     "unresolved pasted player 'Cameron Ward' (NYJ@TEN)",
     "unresolved pasted player 'Jelani Woods' (NYJ@TEN)",
     "unresolved pasted player 'David Martin-Robinson' (NYJ@TEN)",
     "unresolved pasted player 'Andrew Beck' (NYJ@TEN)",
-    "unresolved pasted player 'Elijah Moore' (WAS@PHI)",
     "unresolved pasted player 'Luke McCaffrey' (WAS@PHI)",
     "unresolved pasted player 'Dyami Brown' (WAS@PHI)",
+    "unresolved pasted player 'Elijah Moore' (WAS@PHI)",
     "unresolved pasted player 'E.J. Jenkins' (WAS@PHI)",
+    "unresolved pasted player 'Britain Covey' (WAS@PHI)",
     "unresolved pasted player 'Colson Yankoff' (WAS@PHI)",
     "unresolved pasted player 'Simi Fehoko' (ARI@LAC)",
     "unresolved pasted player 'Zonovan Knight' (ARI@LAC)",
     "unresolved pasted player 'Hunter Long' (ARI@LAC)",
+    "unresolved pasted player 'Myles Price' (GB@MIN)",
+    "unresolved pasted player 'J. Michael Sturdivant' (GB@MIN)",
+    "unresolved pasted player 'Gavin Bartholomew' (GB@MIN)",
+    "unresolved pasted player 'Mark Redman' (GB@MIN)",
     "unresolved pasted player 'Ryan Miller' (MIA@LV)",
     "unresolved pasted player 'Justin Joly' (MIA@LV)",
-    "unresolved pasted player 'Myles Price' (GB@MIN)",
-    "unresolved pasted player 'Gavin Bartholomew' (GB@MIN)",
-    "unresolved pasted player 'J. Michael Sturdivant' (GB@MIN)",
-    "unresolved pasted player 'Mark Redman' (GB@MIN)",
+    "unresolved pasted player 'Chris Myarick' (MIA@LV)",
     "unresolved pasted player 'Cameron Skattebo' (DAL@NYG)",
     "unresolved pasted player 'Emari Demercado' (DAL@NYG)",
-    "unresolved pasted player 'Jonathan Mingo' (DAL@NYG)",
     "unresolved pasted player 'Camden Brown' (DAL@NYG)",
+    "unresolved pasted player 'Jonathan Mingo' (DAL@NYG)",
+    "unresolved pasted player 'Israel Abanikanda' (DAL@NYG)",
+    "unresolved pasted player 'Braxton Berrios' (DAL@NYG)",
+    "unresolved pasted player 'Dalen Cambre' (DAL@NYG)",
     "unresolved pasted player 'Thomas Fidone II' (DAL@NYG)",
     "unresolved pasted player 'Jared Wiley' (DEN@KC)",
     "unresolved pasted player 'Jake Briningstool' (DEN@KC)",
     "unresolved pasted player 'Dallen Bentley' (DEN@KC)"
   ],
-  "unresolved_player_count": 45,
+  "unresolved_player_count": 62,
   "model_pending_paste_rows": [
     "Cooper Rush (ATL@PIT)"
   ],
@@ -148,22 +164,6 @@
     ],
     "historical_asof": [
       {
-        "column": "team_plays_l4w",
-        "keys": [
-          "team"
-        ],
-        "source": "team_plays_l4w",
-        "filled_rows": 56
-      },
-      {
-        "column": "team_pass_rate_l4w",
-        "keys": [
-          "team"
-        ],
-        "source": "team_pass_rate_l4w",
-        "filled_rows": 56
-      },
-      {
         "column": "team_rz_trips_l4w",
         "keys": [
           "team"
@@ -188,12 +188,36 @@
         "filled_rows": 399
       },
       {
+        "column": "rush_share_l4w",
+        "keys": [
+          "player_id"
+        ],
+        "source": "rush_share_l4w",
+        "filled_rows": 3
+      },
+      {
         "column": "i10_target_share_l4w",
         "keys": [
           "player_id"
         ],
         "source": "i10_target_share_l4w",
         "filled_rows": 272
+      },
+      {
+        "column": "rush_td_exp_l4w",
+        "keys": [
+          "player_id"
+        ],
+        "source": "rush_td_exp_l4w",
+        "filled_rows": 1
+      },
+      {
+        "column": "rec_td_exp_l4w",
+        "keys": [
+          "player_id"
+        ],
+        "source": "rec_td_exp_l4w",
+        "filled_rows": 1
       },
       {
         "column": "opp_rz_td_rate_allowed_l4w",
@@ -218,7 +242,7 @@
           "player_id"
         ],
         "source": "qb_cpoe_l4w",
-        "filled_rows": 37
+        "filled_rows": 332
       },
       {
         "column": "height",
@@ -240,20 +264,19 @@
     "historical_fallback": [],
     "unresolved": [],
     "unresolved_rows": {
-      "snap_pct_l4w": 56,
-      "rush_share_l4w": 56,
-      "target_share_l4w": 56,
-      "rz_carry_share_l4w": 56,
-      "rz_target_share_l4w": 56,
-      "i10_carry_share_l4w": 56,
+      "snap_pct_l4w": 58,
+      "rush_share_l4w": 58,
+      "target_share_l4w": 58,
+      "rz_carry_share_l4w": 58,
+      "rz_target_share_l4w": 58,
+      "i10_carry_share_l4w": 58,
       "i10_target_share_l4w": 127,
-      "rush_td_exp_l4w": 56,
-      "rec_td_exp_l4w": 56,
-      "qb_out": 60,
-      "qb_is_backup": 60,
+      "rush_td_exp_l4w": 60,
+      "rec_td_exp_l4w": 60,
       "qb_cpoe_l4w": 57,
       "height": 58,
-      "weight": 58
+      "weight": 58,
+      "changed_team_offseason": 58
     }
   },
   "feature_provenance": {
@@ -296,27 +319,26 @@
     ],
     "source": "forward canonical columns + exact prior-season canonical feature rows",
     "source_hashes": {
-      "forward": "f688645a3175573a9dfec044be580d6c6eaa4d821ea5a41c7e1d40a13ee7ebbe",
+      "forward": "3aa509913bb61a2f16604f02d80e20ac8ace3692caafd5b8be0b320feaa75b47",
       "history": "58495f19d2cd3cfbaa824e6d462f0c68fc497237cdde3d8bfb130e19c4cb3a15"
     },
     "historical_fallback": [],
     "missingness_counts": {
-      "snap_pct_l4w": 56,
-      "rush_share_l4w": 56,
-      "target_share_l4w": 56,
-      "rz_carry_share_l4w": 56,
-      "rz_target_share_l4w": 56,
-      "i10_carry_share_l4w": 56,
+      "snap_pct_l4w": 58,
+      "rush_share_l4w": 58,
+      "target_share_l4w": 58,
+      "rz_carry_share_l4w": 58,
+      "rz_target_share_l4w": 58,
+      "i10_carry_share_l4w": 58,
       "i10_target_share_l4w": 127,
-      "rush_td_exp_l4w": 56,
-      "rec_td_exp_l4w": 56,
-      "qb_out": 60,
-      "qb_is_backup": 60,
+      "rush_td_exp_l4w": 60,
+      "rec_td_exp_l4w": 60,
       "qb_cpoe_l4w": 57,
       "height": 58,
-      "weight": 58
+      "weight": 58,
+      "changed_team_offseason": 58
     }
   },
   "network_odds_api": false,
-  "row_hash": "4cf3ce0a459e44822064b8b5035751563697d0bc967a68cf6ec8a235b1844cf2"
+  "row_hash": "437bd55fcc1603be29d33922d716249be4db70d5197e86d0c28b49896d294341"
 }
