@@ -105,7 +105,7 @@ season-total products are separate systems; their numbers should not be mixed.
         """
     )
     pages = (
-        ("this-week", "This Week", "A compact hub for the current spread, fantasy, and anytime-TD releases."),
+        ("this-week", "This Week", "A compact hub for the current spread, fantasy, and touchdown-props releases."),
         ("weekly-predictions", "Weekly Predictions", "NFL matchup margins, Tuesday HIGH qualification, and graded picks."),
         ("track-record", "Track Record", "Graded ATS results and the historical record by season and confidence tier."),
         ("season-totals", "Season Totals", "Team win projections compared with posted regular-season totals."),
@@ -113,7 +113,7 @@ season-total products are separate systems; their numbers should not be mixed.
         ("dfs-optimizer", "DFS Optimizer", "DraftKings Classic lineup construction from checked direct-DK projections."),
         ("draft-board", "Draft Board", "Preseason season-total projections beside current Sleeper, ESPN, and Yahoo ADP sources."),
         ("rookie-board", "Rookie Board", "Rookie hit probabilities and season-total projection context."),
-        ("anytime-tds", "Anytime TDs", "Rushing and receiving touchdown probabilities beside book prices."),
+        ("anytime-tds", "Touchdown Props", "Anytime, 2+, and First TD scorer probabilities beside book prices."),
         ("film-room", "Film Room", "Short analysis videos, walkthroughs, and written context."),
         ("league-history", "League History", "Sleeper, ESPN, Yahoo, and CBS league imports and history views."),
     )

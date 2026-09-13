@@ -74,12 +74,12 @@ def render() -> None:
                 _page_link("track-record", "Open the Track Record", ":material/monitoring:")
 
             with st.container(border=True, height="stretch"):
-                st.markdown("### Compare anytime TDs")
+                st.markdown("### Compare touchdown props")
                 st.caption(
-                    "2025 demo of rushing and receiving TD chances next to the book. "
+                    "Anytime, 2+, and First TD scorer chances next to the book. "
                     "Not even money. For fun. Not a proven edge."
                 )
-                _page_link("anytime-tds", "Open Anytime TDs", ":material/sports_score:")
+                _page_link("anytime-tds", "Open Touchdown Props", ":material/sports_score:")
 
     _rec = _live_record_line()
     if _rec:
@@ -90,7 +90,7 @@ def render() -> None:
         st.info(
             "The site is in preseason mode. The Draft Board, Week 1 matchups, weekly fantasy rankings, and DFS projections are live. "
             "The DFS Optimizer still needs the DraftKings salary CSV for the contest. "
-            "Anytime TDs is a 2025 demo. "
+            "Touchdown Props' Anytime TD market is a 2025 demo; 2+ TD and First TD are live 2026. "
             f"The next planned Draft Board model snapshot is before {season_start:%B %d}."
         )
     else:
