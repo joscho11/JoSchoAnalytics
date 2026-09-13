@@ -1,4 +1,5 @@
-"""Paper-betting accounting for the public Anytime TD board.
+"""Paper-betting accounting for the public Touchdown Props board (Anytime,
+2+, and First TD markets).
 
 This module intentionally contains no Streamlit code.  The page and its tests
 share the same odds settlement, deduplication, and game-block bootstrap rules.
