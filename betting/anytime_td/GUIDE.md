@@ -30,7 +30,8 @@ On a phone the grid keeps #, Player, Model, Book, Value, and Hit. Position tabs 
 Live boards are grouped by matchup and then team (for example, NE vs SEA,
 with separate NE and SEA sections).
 
-The **Show 2+ TD view** exposes model 2+ TD odds, the current DraftKings 2+ TD
+The **Market** control switches between Anytime TD, 2+ TD, and First TD; only
+one renders at a time. **2+ TD** exposes model 2+ TD odds, the current DraftKings 2+ TD
 price, and the 2+ TD value gap when those prices are included in the pasted
 release; players without a listed 2+ price are omitted from that market view.
 Before games begin, releases without the market show a clear not-implemented
@@ -43,7 +44,7 @@ There is no historical 2+ TD backtest and no published 2+ TD test results yet.
 Treat the 2+ probabilities and paper-betting cards as forward-looking tracking
 only, not evidence of model accuracy or profitability.
 
-The **Show First TD view** exposes model First TD odds, DraftKings' First TD
+**First TD** exposes model First TD odds, DraftKings' First TD
 price (de-vigged within the game), and the First TD value gap for players
 with a listed First TD price. First TD is a fundamentally different kind of
 probability than Anytime or 2+ TD: exactly one player can score a game's

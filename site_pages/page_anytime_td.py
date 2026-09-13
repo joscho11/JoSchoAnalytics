@@ -1102,30 +1102,33 @@ paper-bet rule and represent 1U candidates.
 are available in each column's help text. The list is sorted by ATTD Value Gap,
 highest first.
 
-Use **Show 2+ TD view** for the expanded two-plus layout. When the pasted
-release includes that market, the view shows model odds, current DraftKings
-odds, and the value gap for players with a listed 2+ price. Older releases
-without that market show a clear not-implemented placeholder before games begin.
-Completed matchups without a published 2+ market do not receive retroactive
-model odds; once grading supplies final outcomes, they contribute only to a
-results-only tally and never to a betting W-L, units, ROI, or backtest result.
-The 2+ TD probabilities have no historical backtest or published 2+ test
-results yet, so that view is forward-looking tracking only—not evidence of
-model accuracy or profitability. A verified replacement can appear with Book
-odds while its Model and Value cells say Pending when the current-week model
-input is not available; it is excluded from value-bet tracking until then.
-Use **Show First TD view** for the first-touchdown-scorer layout. This is a
-different kind of probability than Anytime or 2+: exactly one player can
-score a game's first touchdown, so it is a competing-risk allocation across
-both rosters, not a per-player marginal chance. Our model splits each game's
-mass proportionally to each player's Anytime TD rate, scaled by the
-historical rate an offensive skill player scores first at all (roughly 94%
-of games; the rest go to defense, special teams, or no score). DraftKings'
-First TD price is de-vigged within the game, since first touchdown is a
-genuine one-winner market (unlike the Yes-only Anytime quote). There is no
-historical First TD backtest anywhere in this project for any season, only
-a forward Week 1 board, so treat this view as entertainment, not a proven
-edge, even more so than 2+ TD.
+Use the **Market** control to switch between Anytime TD, 2+ TD, and First TD.
+Only one market renders at a time.
+
+**2+ TD.** When the pasted release includes that market, the view shows model
+odds, current DraftKings odds, and the value gap for players with a listed 2+
+price. Older releases without that market show a clear not-implemented
+placeholder before games begin. Completed matchups without a published 2+
+market do not receive retroactive model odds; once grading supplies final
+outcomes, they contribute only to a results-only tally and never to a betting
+W-L, units, ROI, or backtest result. The 2+ TD probabilities have no
+historical backtest or published 2+ test results yet, so that view is
+forward-looking tracking only—not evidence of model accuracy or
+profitability. A verified replacement can appear with Book odds while its
+Model and Value cells say Pending when the current-week model input is not
+available; it is excluded from value-bet tracking until then.
+
+**First TD.** This is a different kind of probability than Anytime or 2+:
+exactly one player can score a game's first touchdown, so it is a
+competing-risk allocation across both rosters, not a per-player marginal
+chance. Our model splits each game's mass proportionally to each player's
+Anytime TD rate, scaled by the historical rate an offensive skill player
+scores first at all (roughly 94% of games; the rest go to defense, special
+teams, or no score). DraftKings' First TD price is de-vigged within the
+game, since first touchdown is a genuine one-winner market (unlike the
+Yes-only Anytime quote). There is no historical First TD backtest anywhere
+in this project for any season, only a forward Week 1 board, so treat this
+view as entertainment, not a proven edge, even more so than 2+ TD.
 
 The live cards track those 1U candidates across the 2026 season: settled/open
 paper bets, net units, settled ROI, and an uncertainty range. Open bets stay out
@@ -1247,21 +1250,21 @@ def render() -> None:
     )
     label, teams, matchup = next(item for item in matchups if item[0] == selected_label)
 
-    toggle_cols = st.columns(2)
-    show_two_plus = toggle_cols[0].toggle(
-        "Show 2+ TD view",
-        key=f"atd_two_plus_{season}_{week}",
-        help="Show model 2+ TD odds, DraftKings 2+ TD odds, and the 2+ value gap when the release includes that market.",
+    view = st.segmented_control(
+        "Market",
+        options=["Anytime TD", "2+ TD", "First TD"],
+        default="Anytime TD",
+        key=f"atd_view_{season}_{week}",
+        help="Anytime TD is our chance a skill player scores a rushing or "
+             "receiving TD. 2+ TD and First TD are separate, less-tested markets.",
     )
-    show_first_td = toggle_cols[1].toggle(
-        "Show First TD view",
-        key=f"atd_first_td_{season}_{week}",
-        help="Show model First TD odds, DraftKings' de-vigged First TD odds, and the value gap when the release includes that market.",
-    )
-    if show_first_td and show_two_plus:
-        # Only one alternate view renders at a time; First TD wins ties since
-        # it was toggled most recently by construction of this layout.
-        show_two_plus = False
+    if view is None:
+        # A segmented_control can be deselected back to no selection; treat
+        # that the same as the base Anytime TD view rather than crashing on
+        # a None market label below.
+        view = "Anytime TD"
+    show_two_plus = view == "2+ TD"
+    show_first_td = view == "First TD"
     two_plus_prices_available = _has_two_plus_prices(matchup)
     display_only_two_plus = _is_display_only_two_plus_matchup(matchup)
     completed_without_two_plus_market = (
@@ -1347,7 +1350,7 @@ def render() -> None:
             team_view = matchup[matchup.team.astype(str).eq(team)]
             if team_view.empty:
                 continue
-            st.markdown(f"**{team} Anytime TDs**")
+            st.markdown(f"**{team} {view}s**")
             _board(
                 team_view,
                 f"atd-{team.lower()}-{label.replace(' ', '-')}",
