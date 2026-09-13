@@ -73,6 +73,7 @@ def test_anytime_td_renders_and_owns_controls(tmp_path):
 def test_two_plus_toggle_preserves_market_or_placeholder(tmp_path):
     at = _render(tmp_path)
     at.segmented_control(key="atd_view_2026_1").set_value("2+ TD").run()
+    at.toggle(key="atd_rec_2026_1_2+ TD").set_value(False).run()
     assert not at.exception, at.exception
     assert not at.error, [e.value for e in at.error]
     assert any("2+ TD view" in str(item.value) for item in at.caption)
@@ -152,8 +153,8 @@ def test_two_plus_results_tally_is_results_only():
 def test_first_td_toggle_renders_priced_matchup(tmp_path):
     at = _render(tmp_path)
     at.segmented_control(key="atd_view_2026_1").set_value("First TD").run()
-    at.selectbox(key="atd_matchup_2026_1").set_value("NO vs DET").run()
     at.toggle(key="atd_rec_2026_1_First TD").set_value(False).run()
+    at.selectbox(key="atd_matchup_2026_1").set_value("NO vs DET").run()
     assert not at.exception, at.exception
     assert not at.error, [e.value for e in at.error]
     assert any("First TD" in str(item.value) for item in at.info)
@@ -200,12 +201,14 @@ def test_team_header_matches_active_market(tmp_path):
     assert "First TDs**" not in md
 
     at.segmented_control(key="atd_view_2026_1").set_value("First TD").run()
+    at.toggle(key="atd_rec_2026_1_First TD").set_value(False).run()
     at.selectbox(key="atd_matchup_2026_1").set_value("NO vs DET").run()
     md = " ".join(str(item.value) for item in at.markdown)
     assert "First TDs**" in md
     assert "Anytime TDs**" not in md
 
     at.segmented_control(key="atd_view_2026_1").set_value("2+ TD").run()
+    at.toggle(key="atd_rec_2026_1_2+ TD").set_value(False).run()
     md = " ".join(str(item.value) for item in at.markdown)
     assert "2+ TDs**" in md
 
@@ -213,8 +216,8 @@ def test_team_header_matches_active_market(tmp_path):
 def test_ne_sea_display_only_first_td_model_view_is_shown(tmp_path):
     at = _render(tmp_path)
     at.segmented_control(key="atd_view_2026_1").set_value("First TD").run()
-    at.selectbox(key="atd_matchup_2026_1").set_value("NE vs SEA").run()
     at.toggle(key="atd_rec_2026_1_First TD").set_value(False).run()
+    at.selectbox(key="atd_matchup_2026_1").set_value("NE vs SEA").run()
     assert not at.exception, at.exception
     assert not at.error, [e.value for e in at.error]
     info = " ".join(str(item.value) for item in at.info)
@@ -238,8 +241,8 @@ def test_ne_sea_display_only_first_td_model_view_is_shown(tmp_path):
 def test_sf_la_display_only_first_td_model_view_is_shown(tmp_path):
     at = _render(tmp_path)
     at.segmented_control(key="atd_view_2026_1").set_value("First TD").run()
-    at.selectbox(key="atd_matchup_2026_1").set_value("SF vs LA").run()
     at.toggle(key="atd_rec_2026_1_First TD").set_value(False).run()
+    at.selectbox(key="atd_matchup_2026_1").set_value("SF vs LA").run()
     assert not at.exception, at.exception
     assert not at.error, [e.value for e in at.error]
     info = " ".join(str(item.value) for item in at.info)

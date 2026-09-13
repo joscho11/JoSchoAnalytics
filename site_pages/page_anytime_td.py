@@ -1100,10 +1100,43 @@ def _first_td_phone_column_config() -> dict:
     return cfg
 
 
+def _render_week_recommended(
+    board_priced: pd.DataFrame, season: int, releases: dict, *, show_first_td: bool,
+) -> None:
+    """2+ TD and First TD candidates are rare enough that 'recommended only'
+    pools every matchup in the week into one board instead of filtering
+    one game at a time -- a per-matchup view would mostly show nothing."""
+    market = "first" if show_first_td else "two_plus"
+    market_label = "First TD" if show_first_td else "2+ TD"
+    threshold = tracker.FIRST_TD_VALUE_THRESHOLD if show_first_td else tracker.ATTD_VALUE_THRESHOLD
+    st.info(
+        f"Important: {market_label} predictions have no historical backtest"
+        + (" of any kind" if show_first_td else " yet")
+        + f". This view is forward-looking tracking only, not evidence of "
+        "accuracy or profitability."
+    )
+    st.caption(
+        f"Every {market_label} candidate across this week's matchups: raw "
+        f"value gap of at least +{100 * threshold:.1f} percentage point. "
+        "Sorted by value gap, highest first."
+    )
+    _render_scorecards(board_priced, season, releases, market=market)
+    st.markdown(f"#### Recommended {market_label} players this week")
+    shown = _board(
+        board_priced, f"atd-week-recommended-{market}", "",
+        show_two_plus=not show_first_td, show_first_td=show_first_td,
+        recommended_only=True, phone_show_opp=True,
+    )
+    if not shown:
+        st.info(
+            f"No players clear the {market_label} value-gap threshold this week."
+        )
+
+
 def _board(
     view: pd.DataFrame, slug: str, search: str, *,
     show_two_plus: bool = False, show_first_td: bool = False,
-    recommended_only: bool = False,
+    recommended_only: bool = False, phone_show_opp: bool = False,
 ) -> int:
     if show_first_td:
         table = _first_td_display(view)
@@ -1129,6 +1162,9 @@ def _board(
         table = table[table["_candidate"]].reset_index(drop=True)
     if table.empty:
         return 0
+    if phone_show_opp and "Opp" not in phone_cols:
+        insert_at = phone_cols.index("Player") + 1
+        phone_cols = phone_cols[:insert_at] + ["Opp"] + phone_cols[insert_at:]
     style_fn = (
         _first_td_style(table) if show_first_td
         else _two_plus_style(table) if show_two_plus
@@ -1316,17 +1352,7 @@ def render() -> None:
     if not matchups:
         st.info("No matchups match this search.")
         return
-    matchup_labels = [item[0] for item in matchups]
     matchup_key = f"atd_matchup_{season}_{week}"
-    _seed_matchup_default(matchups, matchup_key)
-    selected_label = st.selectbox(
-        "Matchup", matchup_labels,
-        key=matchup_key,
-        on_change=_mark_matchup_manual,
-        args=(f"{matchup_key}__manual",),
-        help="Choose a game to view both teams' touchdown prop boards.",
-    )
-    label, teams, matchup = next(item for item in matchups if item[0] == selected_label)
 
     view = st.segmented_control(
         "Market",
@@ -1348,9 +1374,43 @@ def render() -> None:
         "Recommended only",
         value=st.session_state.get(f"atd_rec_{season}_{week}_{view}", recommended_default),
         key=f"atd_rec_{season}_{week}_{view}",
-        help="Show only rows that clear the paper-bet value-gap threshold "
-             "for this market.",
+        help="2+ TD and First TD show every recommended player across the "
+             "full week's matchups, since so few clear the bar. Anytime TD "
+             "still filters within the selected matchup.",
     )
+    pooled_view = recommended_only and (show_two_plus or show_first_td)
+    shadow_key = f"{matchup_key}__shadow"
+
+    if pooled_view:
+        # The Matchup selectbox is not rendered in the pooled week view.
+        # Streamlit drops a widget's session_state entry once its widget is
+        # skipped for a run, which would otherwise erase both the selection
+        # and the manual-pick flag. Stash the last selection in a plain
+        # (non-widget) key so it can be restored once the selectbox returns.
+        if matchup_key in st.session_state:
+            st.session_state[shadow_key] = st.session_state[matchup_key]
+        _render_week_recommended(
+            board_priced, season, releases, show_first_td=show_first_td,
+        )
+        return
+
+    matchup_labels = [item[0] for item in matchups]
+    if matchup_key not in st.session_state and shadow_key in st.session_state:
+        shadow_value = st.session_state[shadow_key]
+        if shadow_value in matchup_labels:
+            st.session_state[matchup_key] = shadow_value
+            st.session_state[f"{matchup_key}__manual"] = True
+    _seed_matchup_default(matchups, matchup_key)
+
+    selected_label = st.selectbox(
+        "Matchup", matchup_labels,
+        key=matchup_key,
+        on_change=_mark_matchup_manual,
+        args=(f"{matchup_key}__manual",),
+        help="Choose a game to view both teams' touchdown prop boards.",
+    )
+    label, teams, matchup = next(item for item in matchups if item[0] == selected_label)
+
     two_plus_prices_available = _has_two_plus_prices(matchup)
     display_only_two_plus = _is_display_only_two_plus_matchup(matchup)
     completed_without_two_plus_market = (
