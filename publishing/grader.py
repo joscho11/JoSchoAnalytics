@@ -506,6 +506,225 @@ def grade_anytime_td_file(
     }
 
 
+def fetch_nfl_pbp(season: int) -> pd.DataFrame:
+    import nflreadpy as nfl
+    frame = nfl.load_pbp([int(season)])
+    return frame.to_pandas() if hasattr(frame, "to_pandas") else frame
+
+
+_SKILL_POSITIONS = {"QB", "RB", "WR", "TE", "FB"}
+
+
+def _first_td_position_lookup(actuals: pd.DataFrame) -> dict:
+    """player_id -> position, from the same-week player-stats feed.
+
+    Mirrors first_td/src/labels.py's _position_lookup, which reads the
+    parent lambda model's training panel; the live grading path has no
+    panel parquet to read, so it builds the same lookup from the weekly
+    stats feed already fetched for anytime-TD grading instead.
+    """
+    stats = actuals.copy()
+    if "player_id" not in stats:
+        for alias in ("gsis_id", "sleeper_id"):
+            if alias in stats:
+                stats["player_id"] = stats[alias]
+                break
+    if "player_id" not in stats or "position" not in stats:
+        return {}
+    stats["player_id"] = stats["player_id"].map(_normal_identifier)
+    stats = stats[stats["player_id"].notna()].drop_duplicates("player_id")
+    return dict(zip(stats["player_id"], stats["position"]))
+
+
+def _classify_first_td_row(row, pos_lookup: dict) -> str:
+    """Same classification as first_td/src/labels.py::_classify_first_td.
+
+    offense_skill requires td_team == posteam (the team with the ball
+    scored, ruling out defensive/return scores) AND the scorer's position
+    resolves to a skill position. Everything else is defense or
+    special_teams; a punting/kicking team's own returner recovering a
+    muffed return has td_team == posteam but return_touchdown == 1, which
+    is special_teams, not offense_skill, even though the team matches.
+    """
+    if row["td_team"] != row["posteam"]:
+        return "defense" if row["td_team"] == row["defteam"] else "special_teams"
+    scorer_pos = pos_lookup.get(row["td_player_id"])
+    if scorer_pos in _SKILL_POSITIONS:
+        return "offense_skill"
+    return "special_teams" if row.get("return_touchdown") == 1 else "defense"
+
+
+def _first_td_by_game(pbp: pd.DataFrame, game_ids: set, pos_lookup: dict) -> dict:
+    """game_id -> (first_td_player_id, first_td_kind) for every game with a TD."""
+    work = pbp[pbp["game_id"].isin(game_ids) & pbp["touchdown"].eq(1)].copy()
+    if work.empty:
+        return {}
+    work = work.sort_values(["game_id", "qtr", "play_id"])
+    first = work.groupby("game_id", as_index=False).first()
+    result = {}
+    for row in first.to_dict(orient="records"):
+        kind = _classify_first_td_row(row, pos_lookup)
+        result[row["game_id"]] = (row.get("td_player_id"), kind)
+    return result
+
+
+def grade_first_td_file(
+    path: str | Path,
+    schedule: pd.DataFrame,
+    pbp: pd.DataFrame,
+    actuals: pd.DataFrame,
+    *,
+    season: int,
+    week: int,
+) -> dict:
+    """Attach the game's first-TD scorer outcome to one live board.
+
+    Unlike grade_anytime_td_file (season/weekly stat TOTALS), first-TD needs
+    WHO scored first, by play order -- a fact that only exists in
+    play-by-play, never in a weekly stats total. A final game is left
+    pending until pbp actually contains touchdown rows for it. The source
+    CSV is updated in place; frozen prediction/price columns are untouched.
+    """
+    source = Path(path)
+    if not source.is_file():
+        raise PublicationError(f"Anytime TD release is missing: {source}")
+    original_board = read_table(source).copy()
+    board = original_board.copy()
+    required = {"game_id", "player_id"}
+    missing = sorted(required - set(board.columns))
+    if missing:
+        raise PublicationError(
+            f"Anytime TD release is missing grading columns: {', '.join(missing)}"
+        )
+    if "scored_first" not in board:
+        board["scored_first"] = pd.Series(pd.NA, index=board.index, dtype="Float64")
+    board["_game_id"] = board["game_id"].map(_normal_identifier)
+    board["_player_id"] = board["player_id"].map(_normal_identifier)
+
+    sched = _schedule_week(schedule.copy(), season, week)
+    needed = {"game_id", "home_team", "away_team", "home_score", "away_score"}
+    missing = sorted(needed - set(sched.columns))
+    if missing:
+        raise PublicationError(
+            f"schedule is missing Anytime TD grading columns: {', '.join(missing)}"
+        )
+    if sched["game_id"].duplicated().any():
+        raise PublicationError("schedule contains duplicate game_id values")
+    sched = sched.copy()
+    sched["_game_id"] = sched["game_id"].map(_normal_identifier)
+    sched["home_score"] = pd.to_numeric(sched["home_score"], errors="coerce")
+    sched["away_score"] = pd.to_numeric(sched["away_score"], errors="coerce")
+    sched["_is_final"] = sched["home_score"].notna() & sched["away_score"].notna()
+    final_schedule = sched[sched["_is_final"]].copy()
+    final_game_ids = set(final_schedule["_game_id"].dropna().tolist())
+
+    pbp_work = pbp.copy()
+    if "game_id" in pbp_work:
+        pbp_work["game_id"] = pbp_work["game_id"].map(_normal_identifier)
+    pos_lookup = _first_td_position_lookup(actuals)
+    board_game_ids = set(board["_game_id"].dropna().tolist())
+    first_td_by_game = _first_td_by_game(pbp_work, board_game_ids & final_game_ids, pos_lookup)
+
+    pending_games = []
+    updated_games = []
+    updated_rows = 0
+    for game_id in sorted(board_game_ids):
+        if game_id not in final_game_ids:
+            pending_games.append(game_id)
+            continue
+        game_rows = board[board["_game_id"].eq(game_id)]
+        if game_id not in first_td_by_game:
+            # A final game with no resolvable TD row yet (pbp not caught up,
+            # or a genuine no-TD game) stays pending rather than guessing.
+            pending_games.append(game_id)
+            continue
+        first_scorer_id, kind = first_td_by_game[game_id]
+        outcome = pd.Series(0.0, index=game_rows.index)
+        if kind == "offense_skill" and first_scorer_id is not None:
+            match = game_rows["_player_id"].eq(_normal_identifier(first_scorer_id))
+            outcome.loc[match] = 1.0
+        board.loc[game_rows.index, "scored_first"] = outcome.to_numpy()
+        if "status" in board:
+            board.loc[game_rows.index, "status"] = "final"
+        updated_games.append(game_id)
+        updated_rows += len(game_rows)
+
+    board = board.drop(columns=["_game_id", "_player_id"])
+    changed = not board.equals(original_board)
+    if changed:
+        encoded = board.to_csv(index=False, lineterminator="\n").encode("utf-8")
+        source.write_bytes(encoded)
+
+    graded = pd.to_numeric(board["scored_first"], errors="coerce").notna()
+    board_games_final = board_game_ids <= final_game_ids
+    return {
+        "status": "graded" if updated_games else "pending",
+        "file": str(source),
+        "season": int(season),
+        "week": int(week),
+        "final_games": int(len(board_game_ids & final_game_ids)),
+        "graded_rows": int(graded.sum()),
+        "updated_games": updated_games,
+        "updated_rows": int(updated_rows),
+        "pending_games": pending_games,
+        "complete": bool(board_games_final and not pending_games and graded.all()),
+        "changed": changed,
+    }
+
+
+def grade_first_td_releases(root=None) -> dict:
+    """Grade all published 2026 Anytime TD boards' first-TD column that have final games."""
+    site_root = Path(root) if root is not None else Path(__file__).resolve().parents[1]
+    directory = site_root / "betting" / "anytime_td"
+    releases = []
+    for source in sorted(directory.glob("anytime_td_*_week*.csv")):
+        match = _ANYTIME_TD_RELEASE_RE.fullmatch(source.name)
+        if match is None:
+            continue
+        season, week = int(match.group("season")), int(match.group("week"))
+        if season >= 2026:
+            releases.append((source, season, week))
+    if not releases:
+        return {"status": "skipped", "reason": "no published 2026 Anytime TD releases"}
+
+    schedules = {}
+    actuals_by_season = {}
+    pbp_by_season = {}
+    results = {}
+    for source, season, week in releases:
+        if season not in schedules:
+            schedules[season] = fetch_nfl_schedule(season)
+        schedule = schedules[season]
+        slate = _schedule_week(schedule, season, week)
+        if {"home_score", "away_score"} - set(slate.columns):
+            raise PublicationError("schedule is missing score columns for Anytime TD grading")
+        finals = slate["home_score"].notna() & slate["away_score"].notna()
+        board = read_table(source)
+        board_game_ids = {
+            game_id for game_id in board["game_id"].map(_normal_identifier).dropna().tolist()
+        }
+        final_ids = {
+            game_id for game_id in slate.loc[finals, "game_id"].map(_normal_identifier).dropna().tolist()
+        }
+        label = f"{season}w{week:02d}"
+        if not board_game_ids & final_ids:
+            results[label] = {"status": "skipped", "reason": "no final games"}
+            continue
+        if season not in actuals_by_season:
+            actuals_by_season[season] = fetch_player_stats(season)
+        if season not in pbp_by_season:
+            pbp_by_season[season] = fetch_nfl_pbp(season)
+        results[label] = grade_first_td_file(
+            source,
+            schedule,
+            pbp_by_season[season],
+            actuals_by_season[season],
+            season=season,
+            week=week,
+        )
+    return results
+
+
 def grade_anytime_td_releases(root=None) -> dict:
     """Grade all published 2026 Anytime TD boards that have final games."""
     site_root = Path(root) if root is not None else Path(__file__).resolve().parents[1]

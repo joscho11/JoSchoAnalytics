@@ -147,6 +147,74 @@ def test_two_plus_results_tally_is_results_only():
     }
 
 
+def test_first_td_toggle_renders_priced_matchup(tmp_path):
+    at = _render(tmp_path)
+    at.toggle(key="atd_first_td_2026_1").set_value(True).run()
+    at.selectbox(key="atd_matchup_2026_1").set_value("NO vs DET").run()
+    assert not at.exception, at.exception
+    assert not at.error, [e.value for e in at.error]
+    assert any("First TD" in str(item.value) for item in at.info)
+    columns = set(at.dataframe[0].value.columns)
+    assert {
+        "#", "Player", "Pos", "Opp", "Model First TD Odds",
+        "Book First TD Odds", "First TD Value Gap",
+    } <= columns
+    book_values = at.dataframe[0].value["Book First TD Odds"]
+    assert book_values.ne("Not implemented yet").all()
+    assert any(str(metric.label) == "Record" for metric in at.metric)
+    assert any("First TD paper tracker" in str(item.value) for item in at.caption)
+
+
+def test_first_td_toggle_and_two_plus_toggle_are_mutually_exclusive(tmp_path):
+    at = _render(tmp_path)
+    at.toggle(key="atd_two_plus_2026_1").set_value(True).run()
+    at.toggle(key="atd_first_td_2026_1").set_value(True).run()
+    assert not at.exception, at.exception
+    assert not at.error, [e.value for e in at.error]
+    columns = set(at.dataframe[0].value.columns)
+    assert "Model First TD Odds" in columns
+    assert "Model 2+ TD Odds" not in columns
+
+
+def test_first_td_completed_matchup_without_market_is_retroactive_free(tmp_path):
+    at = _render(tmp_path)
+    at.toggle(key="atd_first_td_2026_1").set_value(True).run()
+    at.selectbox(key="atd_matchup_2026_1").set_value("NE vs SEA").run()
+    assert not at.exception, at.exception
+    assert not at.error, [e.value for e in at.error]
+    info = " ".join(str(item.value) for item in at.info)
+    assert "completed before First TD prices were published" in info
+    captions = " ".join(str(item.value) for item in at.caption)
+    assert "No retroactive First TD prediction table" in captions
+
+
+def test_first_td_results_tally_is_results_only():
+    rows = pd.DataFrame({"scored_first": [1, 0, None, 0]})
+    assert page._first_td_results_tally(rows) == {"graded": 3, "hits": 1}
+    assert page._first_td_results_tally(pd.DataFrame({"p_first": [0.1]})) == {
+        "graded": 0,
+        "hits": 0,
+    }
+
+
+def test_first_td_display_shape_and_ordering():
+    df = pd.DataFrame({
+        "player_display_name": ["Alpha", "Beta", "Gamma"],
+        "team": ["AAA", "AAA", "BBB"],
+        "position": ["RB", "WR", "QB"],
+        "opponent_team": ["BBB", "BBB", "AAA"],
+        "game_id": ["2026_01_AAA_BBB"] * 3,
+        "p_first": [0.20, 0.10, 0.05],
+        "book_first_p_devigged": [0.15, 0.12, 0.06],
+        "first_amer": [500, 700, 1500],
+        "scored_first": [None, None, None],
+    })
+    table = page._first_td_display(df)
+    assert list(table["Player"]) == ["Alpha · AAA", "Gamma · BBB", "Beta · AAA"]
+    assert table.loc[0, "_value"] > table.loc[1, "_value"] > table.loc[2, "_value"]
+    assert table.loc[0, "_candidate"]
+
+
 def test_year_and_week_selectors_keep_2025_available(tmp_path):
     at = _render(tmp_path)
     at.selectbox(key="atd_year").set_value(2025).run()

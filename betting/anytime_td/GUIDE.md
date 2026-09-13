@@ -23,6 +23,9 @@ five, so misses will outnumber hits. That is the bet, not a broken model.
 | ATTD Value Gap | Book-minus-model American-odds gap plus model-minus-book percentage differential |
 | Hit | Did they score a rushing or receiving TD? |
 
+First TD view columns swap in Model/Book/Value Gap for the first-touchdown
+market and keep Hit (did they score the game's first touchdown).
+
 On a phone the grid keeps #, Player, Model, Book, Value, and Hit. Position tabs swipe.
 Live boards are grouped by matchup and then team (for example, NE vs SEA,
 with separate NE and SEA sections).
@@ -35,12 +38,26 @@ placeholder. Completed matchups without a published 2+ market do not receive
 retroactive model odds. Once grading supplies their final outcomes, they are
 counted only in a results-only tally—not in betting W-L, units, ROI, or a
 backtest.
-The original First TD prices are retained in the release data but are not part
-of the model display.
 
 There is no historical 2+ TD backtest and no published 2+ TD test results yet.
 Treat the 2+ probabilities and paper-betting cards as forward-looking tracking
 only, not evidence of model accuracy or profitability.
+
+The **Show First TD view** exposes model First TD odds, DraftKings' First TD
+price (de-vigged within the game), and the First TD value gap for players
+with a listed First TD price. First TD is a fundamentally different kind of
+probability than Anytime or 2+ TD: exactly one player can score a game's
+first touchdown, so the model allocates each game's probability mass
+proportionally to Anytime TD rate across the whole candidate pool, scaled
+by the historical rate an offensive skill player scores first at all
+(pooled 2021-2025: about 94.3% of games; the rest go to defense, special
+teams, or no score in that game). The book side is genuinely de-vigged
+within each game (proportional normalization across every quoted player),
+unlike the Yes-only Anytime quote, because First TD is a real one-winner
+market. There is no historical First TD backtest of any kind anywhere in
+this project, for any season -- only a forward Week 1 board. Treat this
+view as entertainment more than the 2+ TD view, not evidence of model
+accuracy or profitability.
 
 ## 2026 paper-betting tracker
 
@@ -54,10 +71,11 @@ profit. Open bets remain visible but do not enter Net units or ROI.
 When there are at least five settled games and 20 settled bets, the page shows
 an **Approx. 95% ROI range** from 10,000 deterministic game-block bootstrap
 resamples. This is an empirical uncertainty range, not a guarantee. The 2+
-TD toggle uses the same +0.5pp candidate rule and has its own Net units, ROI,
-record, and uncertainty cards. Those cards remain pending until 2+ DraftKings
-prices and graded `scored_two_plus` outcomes exist. Results-only outcomes are
-shown separately and are never treated as historical bets.
+TD and First TD toggles use the same +0.5pp candidate rule and each have
+their own Net units, ROI, record, and uncertainty cards. Those cards remain
+pending until DraftKings prices and graded outcomes (`scored_two_plus` /
+`scored_first`) exist for that market. Results-only outcomes are shown
+separately and are never treated as historical bets.
 
 The audited 2025 DraftKings strategy artifact is
 `strategy_backtest_2025_draftkings.json`. It records the fixed +0.5pp result,
@@ -87,7 +105,11 @@ slate. The canonical input is `td_count_model_beta/live/2026_week01_<slate>.csv`
 with `season`, `week`, `kickoff_et`, `snapped_at_et`, `book`, `player`, `team`,
 `opponent`, and `yes_amer`. The parser/publisher also preserves the optional
 `first_amer` and `two_plus_amer` DraftKings prices. All three are American
-odds. No Odds API is called.
+odds. No Odds API is called. `first_amer` now also feeds the First TD view's
+lambda-share model probability and its within-game de-vig of the book price
+(`td_count_model_beta/first_td/src/publish_site_columns.py` computes
+`p_first` and `book_first_p_devigged` from the same release before it is
+copied into this public directory).
 
 The publisher normalizes names using the explicit alias file when needed,
 checks the Week 1 schedule, timestamps, odds, duplicates, and player-game

@@ -52,6 +52,17 @@ TWO_PLUS_DESKTOP_COLS = [
 TWO_PLUS_PHONE_COLS = [
     "#", "Player", "Model 2+ TD Odds", "Book 2+ TD Odds", "2+ TD Value Gap",
 ]
+FIRST_TD_DESKTOP_COLS = [
+    "#", "Player", "Pos", "Opp", "Model First TD Odds", "Book First TD Odds",
+    "First TD Value Gap", "Hit",
+]
+FIRST_TD_PHONE_COLS = [
+    "#", "Player", "Model First TD Odds", "Book First TD Odds", "First TD Value Gap", "Hit",
+]
+# No historical first-TD book prices exist anywhere in this workspace for any
+# season, unlike 2+ TD which at least has a demo comparison. There is no
+# display-only precedent list for first-TD -- every 2026 game either has a
+# published first_amer market or it doesn't.
 
 
 def _parse_week(name: str) -> int | None:
@@ -266,6 +277,14 @@ def _load_season_tracker(
             book_price_col="two_plus_amer",
             outcome_col="scored_two_plus",
         )
+    if market == "first":
+        return tracker.season_tracker(
+            frame,
+            model_probability_col="p_first",
+            book_probability_col="book_first_p_devigged",
+            book_price_col="first_amer",
+            outcome_col="scored_first",
+        )
     return tracker.season_tracker(frame)
 
 
@@ -296,6 +315,13 @@ def _has_two_plus_prices(frame: pd.DataFrame) -> bool:
     return bool(pd.to_numeric(frame["two_plus_amer"], errors="coerce").notna().any())
 
 
+def _has_first_td_prices(frame: pd.DataFrame) -> bool:
+    """Return whether this specific matchup has a published First TD market."""
+    if "first_amer" not in frame:
+        return False
+    return bool(pd.to_numeric(frame["first_amer"], errors="coerce").notna().any())
+
+
 def _is_display_only_two_plus_matchup(frame: pd.DataFrame) -> bool:
     if "game_id" not in frame:
         return False
@@ -318,6 +344,23 @@ def _two_plus_results_tally(frame: pd.DataFrame) -> dict[str, int]:
     }
 
 
+def _first_td_results_tally(frame: pd.DataFrame) -> dict[str, int]:
+    """Count graded First TD outcomes without treating them as historical bets."""
+    outcome_col = "_outcome" if "_outcome" in frame else "scored_first"
+    if outcome_col not in frame:
+        return {"graded": 0, "hits": 0}
+    outcomes = pd.to_numeric(frame[outcome_col], errors="coerce")
+    graded = outcomes.isin([0, 1])
+    return {
+        "graded": int(graded.sum()),
+        "hits": int(outcomes[graded].eq(1).sum()),
+    }
+
+
+_MARKET_LABELS = {"anytime": "Anytime TD", "two_plus": "2+ TD", "first": "First TD"}
+_MARKET_SHORT_LABELS = {"anytime": "", "two_plus": "2+ ", "first": "First "}
+
+
 def _render_scorecards(
     priced: pd.DataFrame,
     season: int,
@@ -326,12 +369,18 @@ def _render_scorecards(
     market: str = "anytime",
 ) -> None:
     is_two_plus = market == "two_plus"
+    is_first = market == "first"
+    market_label = _MARKET_LABELS[market]
     summary = _market_summary(
         priced,
-        model_probability_col="p_ge2" if is_two_plus else "p_ge1",
-        book_probability_col=None if is_two_plus else "p_book",
-        book_price_col="two_plus_amer" if is_two_plus else "book_amer",
-        outcome_col="scored_two_plus" if is_two_plus else "scored_anytime",
+        model_probability_col="p_first" if is_first else "p_ge2" if is_two_plus else "p_ge1",
+        book_probability_col=(
+            "book_first_p_devigged" if is_first
+            else None if is_two_plus
+            else "p_book"
+        ),
+        book_price_col="first_amer" if is_first else "two_plus_amer" if is_two_plus else "book_amer",
+        outcome_col="scored_first" if is_first else "scored_two_plus" if is_two_plus else "scored_anytime",
     )
     if season == LIVE_SEASON:
         paths, modified_at = _published_live_paths(releases)
@@ -340,7 +389,7 @@ def _render_scorecards(
             result = paper["summary"]
             ci = paper["ci"]
             st.caption(
-                f"{'2+ TD' if is_two_plus else 'Anytime TD'} paper tracker · "
+                f"{market_label} paper tracker · "
                 f"same +{100 * tracker.ATTD_VALUE_THRESHOLD:.1f}pp gap rule · 1U per candidate."
             )
             with st.container(horizontal=True, key="jsa-metric-even-atd"):
@@ -374,11 +423,26 @@ def _render_scorecards(
                         "Results-only 2+ TD tally is pending final outcome grading; "
                         "it is separate from the betting record."
                     )
+            if is_first:
+                tally = _first_td_results_tally(paper["rows"])
+                if tally["graded"]:
+                    st.caption(
+                        "Results-only First TD tally · "
+                        f"{tally['hits']} hits / {tally['graded']} graded games. "
+                        "This is not a betting record."
+                    )
+                else:
+                    st.caption(
+                        "Results-only First TD tally is pending final outcome grading; "
+                        "it is separate from the betting record."
+                    )
             if is_two_plus and result["bets"] == 0:
                 st.caption("No quoted 2+ TD candidates meet the gap rule yet.")
+            if is_first and result["bets"] == 0:
+                st.caption("No quoted First TD candidates meet the gap rule yet.")
         else:
             st.info(
-                f"2026 {'2+ TD' if is_two_plus else 'Anytime TD'} paper-betting "
+                f"2026 {market_label} paper-betting "
                 "tracker is waiting for a published release."
             )
     else:
@@ -392,9 +456,10 @@ def _render_scorecards(
                 )
     model_context = "—" if summary["mean_p"] is None else f"{100 * summary['mean_p']:.1f}%"
     book_context = "—" if summary["mean_book"] is None else f"{100 * summary['mean_book']:.1f}%"
+    short = _MARKET_SHORT_LABELS[market]
     st.caption(
-        f"Supporting context · {'Model 2+ P' if is_two_plus else 'Model P'} "
-        f"{model_context} · {'Book 2+ P' if is_two_plus else 'Book P'} {book_context} · "
+        f"Supporting context · Model {short}P "
+        f"{model_context} · Book {short}P {book_context} · "
         "Model and book probabilities are shown here for context; the table carries the odds."
     )
 
@@ -593,6 +658,68 @@ def _two_plus_display(df: pd.DataFrame) -> pd.DataFrame:
     })
 
 
+def _first_td_display(df: pd.DataFrame) -> pd.DataFrame:
+    """First TD is a competing-risk allocation, not a per-player marginal price.
+
+    p_first already sums to a fixed empirical constant across the whole game
+    (roughly 94%, the historical rate an offensive skill player scores
+    first), with the rest split among defense/special-teams/no-TD. book_amer
+    here is DK's first_amer, de-vigged WITHIN the game (a genuine one-winner
+    market, unlike ATTD's Yes-only quote) -- book_first_p_devigged already
+    carries that de-vig, computed upstream in first_td/build_week1_board.py
+    and first_td/publish_site_columns.py, not here.
+    """
+    ranked = df.copy()
+    ranked["p_first"] = pd.to_numeric(ranked.get("p_first"), errors="coerce")
+    ranked["_book_first"] = pd.to_numeric(ranked.get("book_first_p_devigged"), errors="coerce")
+    if "first_amer" in ranked:
+        ranked["_first_amer"] = pd.to_numeric(ranked["first_amer"], errors="coerce")
+        if ranked["_first_amer"].notna().any():
+            ranked = ranked[ranked["_first_amer"].notna()].copy()
+    else:
+        ranked["_first_amer"] = pd.Series(pd.NA, index=ranked.index, dtype="Float64")
+    ranked["_value"] = ranked["p_first"] - ranked["_book_first"]
+    ranked = ranked.sort_values(
+        ["_value", "player_display_name"],
+        ascending=[False, True],
+        na_position="last",
+    ).reset_index(drop=True)
+    outcome = pd.to_numeric(ranked.get("scored_first"), errors="coerce")
+    hit = outcome.map(lambda value: "Yes" if value == 1 else ("No" if pd.notna(value) else ""))
+    model_american = ranked["p_first"].map(_fair_amer_from_probability)
+    model_odds = [
+        _model_odds_probability(american, probability)
+        for american, probability in zip(model_american, ranked["p_first"])
+    ]
+    book_odds = [
+        _odds_probability(american, probability)
+        for american, probability in zip(ranked["_first_amer"], ranked["_book_first"])
+    ]
+    value_gap = [
+        _value_gap(model, book, model_p, book_p) or (
+            "Pending" if pd.isna(model_p) else ""
+        )
+        for model, book, model_p, book_p in zip(
+            model_american, ranked["_first_amer"], ranked["p_first"], ranked["_book_first"]
+        )
+    ]
+    return pd.DataFrame({
+        "#": range(1, len(ranked) + 1),
+        "Player": ranked.player_display_name + " · " + ranked.team.astype(str),
+        "Pos": ranked.position,
+        "Opp": ranked.opponent_team,
+        "Model First TD Odds": model_odds,
+        "Book First TD Odds": [value or "Not implemented yet" for value in book_odds],
+        "First TD Value Gap": value_gap,
+        "Hit": hit,
+        "_p": ranked["p_first"].astype(float),
+        "_value": ranked["_value"].astype(float),
+        "_candidate": tracker.qualifies_probability_gap(
+            ranked["_value"], tracker.ATTD_VALUE_THRESHOLD
+        ),
+    })
+
+
 def _style(view: pd.DataFrame):
     # Use an opaque, dark emerald treatment instead of a translucent tint. The
     # latter can be composited as gray by the dataframe grid on dark themes.
@@ -635,6 +762,68 @@ def _style(view: pd.DataFrame):
                 if view["_candidate"].iloc[i]:
                     style = missed_candidate_focus if _missed_candidate(i) else candidate_focus
                 styles.iloc[i, df.columns.get_loc("ATTD Value Gap")] = style
+        if "Hit" in df.columns:
+            for i, mark in enumerate(view["Hit"]):
+                if mark == "Yes":
+                    style = "color: #35D08A; font-weight: 700"
+                    if view["_candidate"].iloc[i]:
+                        style = f"{style}; background-color: #1A4A3B"
+                    styles.iloc[i, df.columns.get_loc("Hit")] = style
+                elif mark == "No" and view["_candidate"].iloc[i]:
+                    styles.iloc[i, df.columns.get_loc("Hit")] = missed_candidate_focus
+        if "Player" in df.columns:
+            for i, candidate in enumerate(view["_candidate"]):
+                if candidate:
+                    focus = missed_candidate_focus if _missed_candidate(i) else candidate_focus
+                    border = "#8F525A" if _missed_candidate(i) else "#35D08A"
+                    styles.iloc[i, df.columns.get_loc("Player")] = (
+                        f"{focus}; border-left: 3px solid {border}"
+                    )
+        return styles
+    return _apply
+
+
+def _first_td_style(view: pd.DataFrame):
+    """Same opaque candidate treatment as _style, targeting First TD column names."""
+    candidate_row_bg = "background-color: #123229"
+    candidate_focus = (
+        "background-color: #1A4A3B; color: #B7F7D0; font-weight: 700"
+    )
+    missed_candidate_row_bg = "background-color: #BA797A"
+    missed_candidate_focus = (
+        "background-color: #BA797A; color: #3F2024; font-weight: 700"
+    )
+
+    def _missed_candidate(index: int) -> bool:
+        return bool(
+            view["_candidate"].iloc[index]
+            and "Hit" in view
+            and view["Hit"].iloc[index] == "No"
+        )
+
+    def _apply(df: pd.DataFrame) -> pd.DataFrame:
+        styles = pd.DataFrame("", index=df.index, columns=df.columns)
+        for i, candidate in enumerate(view["_candidate"]):
+            if candidate:
+                styles.iloc[i, :] = (
+                    missed_candidate_row_bg if _missed_candidate(i) else candidate_row_bg
+                )
+        if "Model First TD Odds" in df.columns:
+            for i, _ in enumerate(view["_p"]):
+                style = "color: #FFFFFF"
+                if view["_candidate"].iloc[i]:
+                    row_bg = missed_candidate_row_bg if _missed_candidate(i) else candidate_row_bg
+                    style = f"{style}; {row_bg}"
+                styles.iloc[i, df.columns.get_loc("Model First TD Odds")] = style
+        if "First TD Value Gap" in df.columns:
+            for i, value in enumerate(view["_value"]):
+                if pd.isna(value):
+                    continue
+                color = "#35D08A" if value > 0 else "#F08A8A" if value < 0 else "#B8C0CC"
+                style = f"color: {color}; font-weight: 700"
+                if view["_candidate"].iloc[i]:
+                    style = missed_candidate_focus if _missed_candidate(i) else candidate_focus
+                styles.iloc[i, df.columns.get_loc("First TD Value Gap")] = style
         if "Hit" in df.columns:
             for i, mark in enumerate(view["Hit"]):
                 if mark == "Yes":
@@ -792,8 +981,73 @@ def _two_plus_phone_column_config() -> dict:
     return cfg
 
 
-def _board(view: pd.DataFrame, slug: str, search: str, *, show_two_plus: bool = False) -> None:
-    if show_two_plus:
+def _first_td_column_config() -> dict:
+    return {
+        "#": st.column_config.NumberColumn(
+            "#", format="%d", width=50, pinned=True,
+            help="Row number in this list as currently sorted.",
+        ),
+        "Player": st.column_config.TextColumn("Player", help="Name and NFL team."),
+        "Opp": st.column_config.TextColumn("Opp", help="Opponent this week."),
+        "Model First TD Odds": st.column_config.TextColumn(
+            "Model First TD Odds",
+            help="Our lambda-share model American odds and percentage chance of scoring the game's first touchdown.",
+        ),
+        "Book First TD Odds": st.column_config.TextColumn(
+            "Book First TD Odds",
+            help="DraftKings American odds and de-vigged (within-game) percentage chance of scoring the game's first touchdown.",
+        ),
+        "First TD Value Gap": st.column_config.TextColumn(
+            "First TD Value Gap",
+            help="Book-minus-model American-odds gap and model-minus-book probability differential. Positive means more value in our model.",
+        ),
+        "Hit": st.column_config.TextColumn(
+            "Hit", help="Did they score the game's first touchdown?",
+        ),
+    }
+
+
+def _first_td_phone_column_config() -> dict:
+    cfg = _first_td_column_config()
+    cfg["#"] = st.column_config.NumberColumn(
+        "#", format="%d", width=PHONE_WIDTHS["#"], pinned=True,
+        help="Row number in this list as currently sorted.",
+    )
+    cfg["Player"] = st.column_config.TextColumn(
+        "Player", width=PHONE_WIDTHS["Player"], pinned=True,
+        help="Name and NFL team.",
+    )
+    cfg["Model First TD Odds"] = st.column_config.TextColumn(
+        "Model", width=PHONE_WIDTHS["Model ATTD Odds"],
+        help="Model American odds and percentage chance of scoring first.",
+    )
+    cfg["Book First TD Odds"] = st.column_config.TextColumn(
+        "Book", width=PHONE_WIDTHS["Book ATTD Odds"],
+        help="DraftKings American odds and de-vigged percentage chance of scoring first.",
+    )
+    cfg["First TD Value Gap"] = st.column_config.TextColumn(
+        "Value", width=PHONE_WIDTHS["ATTD Value Gap"],
+        help="Book-minus-model American-odds gap and model-minus-book percentage differential.",
+    )
+    cfg["Hit"] = st.column_config.TextColumn(
+        "Hit", width=PHONE_WIDTHS["Hit"],
+        help="Did they score the game's first touchdown?",
+    )
+    return cfg
+
+
+def _board(view: pd.DataFrame, slug: str, search: str, *, show_two_plus: bool = False, show_first_td: bool = False) -> None:
+    if show_first_td:
+        table = _first_td_display(view)
+        graded = pd.to_numeric(view.get("scored_first"), errors="coerce").notna().any()
+        desktop_cols = FIRST_TD_DESKTOP_COLS if graded else [c for c in FIRST_TD_DESKTOP_COLS if c != "Hit"]
+        phone_cols = FIRST_TD_PHONE_COLS if graded else [c for c in FIRST_TD_PHONE_COLS if c != "Hit"]
+        desktop_config = _first_td_column_config()
+        phone_config = _first_td_phone_column_config()
+        style = table[desktop_cols]
+        phone = table[phone_cols]
+        style_fn = _first_td_style(table)
+    elif show_two_plus:
         table = _two_plus_display(view)
         desktop_cols = TWO_PLUS_DESKTOP_COLS
         phone_cols = TWO_PLUS_PHONE_COLS
@@ -823,7 +1077,8 @@ def _board(view: pd.DataFrame, slug: str, search: str, *, show_two_plus: bool = 
         height=exact_table_height(len(view)),
         column_config=desktop_config,
         phone_column_config=phone_config,
-        key=f"atd_grid_{slug}_{search}_{len(table)}",
+        key=f"atd_grid_{slug}_{search}_{len(table)}_"
+            f"{'first' if show_first_td else 'two_plus' if show_two_plus else 'anytime'}",
     )
 
 
@@ -859,14 +1114,26 @@ results yet, so that view is forward-looking tracking only—not evidence of
 model accuracy or profitability. A verified replacement can appear with Book
 odds while its Model and Value cells say Pending when the current-week model
 input is not available; it is excluded from value-bet tracking until then.
-The original First TD prices are retained in the release data but are not part
-of this model view.
+Use **Show First TD view** for the first-touchdown-scorer layout. This is a
+different kind of probability than Anytime or 2+: exactly one player can
+score a game's first touchdown, so it is a competing-risk allocation across
+both rosters, not a per-player marginal chance. Our model splits each game's
+mass proportionally to each player's Anytime TD rate, scaled by the
+historical rate an offensive skill player scores first at all (roughly 94%
+of games; the rest go to defense, special teams, or no score). DraftKings'
+First TD price is de-vigged within the game, since first touchdown is a
+genuine one-winner market (unlike the Yes-only Anytime quote). There is no
+historical First TD backtest anywhere in this project for any season, only
+a forward Week 1 board, so treat this view as entertainment, not a proven
+edge, even more so than 2+ TD.
+
 The live cards track those 1U candidates across the 2026 season: settled/open
 paper bets, net units, settled ROI, and an uncertainty range. Open bets stay out
 of the P&L. After five settled games and 20 settled bets, the board also shows an
 approximate 95% ROI range from a deterministic game-block bootstrap. It is an
-empirical uncertainty range, not a guarantee. The 2+ TD view uses the same
-1U rule and shows its own cards when 2+ prices and graded outcomes are available.
+empirical uncertainty range, not a guarantee. The 2+ TD and First TD views use
+the same 1U rule and show their own cards when prices and graded outcomes are
+available.
 Week 1 is organized by matchup, then by team (for example, NE vs SEA with
 separate NE and SEA boards).
         """)
@@ -980,11 +1247,21 @@ def render() -> None:
     )
     label, teams, matchup = next(item for item in matchups if item[0] == selected_label)
 
-    show_two_plus = st.toggle(
+    toggle_cols = st.columns(2)
+    show_two_plus = toggle_cols[0].toggle(
         "Show 2+ TD view",
         key=f"atd_two_plus_{season}_{week}",
         help="Show model 2+ TD odds, DraftKings 2+ TD odds, and the 2+ value gap when the release includes that market.",
     )
+    show_first_td = toggle_cols[1].toggle(
+        "Show First TD view",
+        key=f"atd_first_td_{season}_{week}",
+        help="Show model First TD odds, DraftKings' de-vigged First TD odds, and the value gap when the release includes that market.",
+    )
+    if show_first_td and show_two_plus:
+        # Only one alternate view renders at a time; First TD wins ties since
+        # it was toggled most recently by construction of this layout.
+        show_two_plus = False
     two_plus_prices_available = _has_two_plus_prices(matchup)
     display_only_two_plus = _is_display_only_two_plus_matchup(matchup)
     completed_without_two_plus_market = (
@@ -992,7 +1269,40 @@ def render() -> None:
         and not two_plus_prices_available
         and not display_only_two_plus
     )
-    if show_two_plus:
+    first_td_prices_available = _has_first_td_prices(matchup)
+    completed_without_first_td_market = (
+        _matchup_is_started(matchup) and not first_td_prices_available
+    )
+    if show_first_td:
+        st.info(
+            "Important: First TD predictions have no historical backtest of any "
+            "kind. There is no first-touchdown market data anywhere in this "
+            "project for any season, so this view is a forward Week 1 board "
+            "only—not evidence of accuracy or profitability, even more so than "
+            "the 2+ TD view."
+        )
+        if completed_without_first_td_market:
+            st.info(
+                "This matchup was completed before First TD prices were "
+                "published, so model First TD odds are not shown retroactively. "
+                "Once grading supplies the final outcome, it is counted only in "
+                "the results-only tally—not in betting W-L, units, ROI, or "
+                "backtest results."
+            )
+        elif first_td_prices_available:
+            st.caption(
+                "First TD view: model probability (a competing-risk allocation "
+                "across the whole game, not a per-player marginal chance), "
+                "DraftKings' price de-vigged within the game, and the value gap. "
+                "The same +0.5pp gap rule powers the 1U paper tracker below."
+            )
+        else:
+            st.info(
+                "First TD sportsbook prices are not available for this release "
+                "yet. The model probability is shown where this release has one."
+            )
+        _render_scorecards(priced, season, releases, market="first")
+    elif show_two_plus:
         st.info(
             "Important: 2+ TD predictions have no historical backtest yet. "
             "No 2+ test results are available, so this view is forward-looking "
@@ -1006,7 +1316,7 @@ def render() -> None:
                 "tally—not in betting W-L, units, ROI, or backtest results."
             )
         elif two_plus_prices_available:
-            st.caption("2+ TD view: model probability, current DraftKings price, and value gap. The same +0.5pp gap rule powers the 1U paper tracker below. First-TD prices are retained in the release data but are not part of this model.")
+            st.caption("2+ TD view: model probability, current DraftKings price, and value gap. The same +0.5pp gap rule powers the 1U paper tracker below. First-TD prices are retained in the release data and shown in the separate First TD view.")
         elif display_only_two_plus:
             st.info(
                 f"Display-only historical 2+ TD model view for {label}. "
@@ -1028,7 +1338,9 @@ def render() -> None:
         )
 
     st.markdown(f"#### {label}")
-    if completed_without_two_plus_market and show_two_plus:
+    if completed_without_first_td_market and show_first_td:
+        st.caption("No retroactive First TD prediction table for this completed matchup.")
+    elif completed_without_two_plus_market and show_two_plus:
         st.caption("No retroactive 2+ TD prediction table for this completed matchup.")
     else:
         for team in teams:
@@ -1041,4 +1353,5 @@ def render() -> None:
                 f"atd-{team.lower()}-{label.replace(' ', '-')}",
                 search or "",
                 show_two_plus=show_two_plus,
+                show_first_td=show_first_td,
             )
