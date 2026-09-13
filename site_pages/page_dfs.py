@@ -9,7 +9,7 @@ import streamlit as st
 import dfs_runtime as runtime
 from dashboard_chrome import TABLE_HEIGHT, exact_table_height, dataframe_phone_desktop
 
-_LINEUP_PHONE_COLS = ["Slot", "Player", "Pos", "Salary", "DK projection"]
+_LINEUP_PHONE_COLS = ["Slot", "Player", "Salary", "DK projection"]
 
 
 def _player_labels(pool: pd.DataFrame) -> dict[str, str]:
@@ -118,7 +118,15 @@ def render():
             "model. There is no stacking or ownership leverage yet, so the lineup "
             "ignores correlation between a quarterback and his receivers and ignores "
             "what the field will roster. Anyone we do not project is excluded, which "
-            "mostly removes minimum-salary players."
+            "mostly removes minimum-salary players.\n\n"
+            "**Projection source, when using the published artifact:** Week 1 comes "
+            "from Sleeper, mapped onto DraftKings Classic scoring with one calibration "
+            "per position — Sleeper ranked players better than our own model at a "
+            "season boundary on the 2025 check (Spearman 0.786 against 0.729), and "
+            "our model has no in-season form yet in Week 1. From Week 2 the site's own "
+            "half-PPR projections take over, calibrated the same way against actual DK "
+            "points on 2025 out-of-sample predictions. Neither source is a model "
+            "trained directly on DraftKings scoring."
         )
 
     try:
@@ -132,19 +140,19 @@ def render():
         return
 
     latest = runtime.latest_projection_path()
-    left, right = st.columns(2)
-    salary_upload = left.file_uploader(
+    salary_upload = st.file_uploader(
         "DraftKings salary CSV",
         type=["csv"],
         key="dfs_salary_upload",
         help="Use the salary export from the NFL Classic contest you want to optimize.",
     )
-    projection_upload = right.file_uploader(
-        "Direct-DK projection CSV",
-        type=["csv"],
-        key="dfs_projection_upload",
-        help="Required until a verified direct-DK artifact for the current week is published.",
-    )
+    with st.expander("Advanced: override the projection artifact", expanded=False):
+        projection_upload = st.file_uploader(
+            "Direct-DK projection CSV",
+            type=["csv"],
+            key="dfs_projection_upload",
+            help="Only needed to override the verified published artifact, or if none exists yet for this week.",
+        )
 
     if salary_upload is None:
         st.info("Upload a DraftKings NFL Classic salary CSV to inspect the slate.", icon=":material/upload_file:")
@@ -194,10 +202,10 @@ def render():
     # so most players miss their projection and a few blow past it. A winning
     # GPP lineup is roughly 4x salary per $1000, about 200 points, which the
     # mean objective cannot reach by construction.
-    objective = st.radio(
+    objective = st.segmented_control(
         "Objective",
-        ["Cash (expected points)", "Tournament (ceiling)"],
-        horizontal=True,
+        options=["Cash (expected points)", "Tournament (ceiling)"],
+        default="Tournament (ceiling)",
         key="dfs_objective",
         help=(
             "Cash builds the highest expected score. Tournament swaps in an "
@@ -205,7 +213,7 @@ def render():
             "lineup actually needs. Ceiling models neither stacking nor "
             "ownership, so it is a starting point for a GPP, not a full one."
         ),
-    )
+    ) or "Tournament (ceiling)"
     use_ceiling = objective.startswith("Tournament")
     if use_ceiling:
         _pf = pd.read_csv(BytesIO(projection_bytes))
@@ -233,26 +241,32 @@ def render():
         st.error(f"Slate validation failed: {exc}", icon=":material/error:")
         return
 
+    stale_team = pool["match"].eq("team_mismatch") & pool["optimization_eligible"]
+    n_stale = int(stale_team.sum())
+    if n_stale:
+        exclude_stale = st.checkbox(
+            f"Exclude {n_stale} player{'s' if n_stale != 1 else ''} matched on name only "
+            "with a mismatched team (possibly stale opponent context)",
+            value=True,
+            key="dfs_exclude_stale_team",
+            help="These rows matched a projection by name, but the projection's team "
+                 "disagrees with the salary slate's team (a trade or a stale artifact). "
+                 "Their opponent context may not reflect this week's actual matchup.",
+        )
+        if exclude_stale:
+            pool = pool.copy()
+            pool.loc[stale_team, "optimization_eligible"] = False
+            pool.loc[stale_team, "exclusion_reason"] = "excluded:team_mismatch"
+
     st.caption(
         f"Projection source: `{projection_label}` · "
         f"{pool.attrs['projection_season']} Week {pool.attrs['projection_week']} · direct DK points"
     )
     if projection_upload is None:
-        # Say what the shipped artifact actually is. Week 1 is a calibrated
-        # translation of Sleeper; Week 2 onward is our own half-PPR model,
-        # calibrated the same way. Neither is trained on DraftKings points.
-        st.info(
-            "Week 1 projections come from Sleeper, mapped onto DraftKings Classic "
-            "scoring with one calibration per position. Sleeper ranked players better "
-            "than our model did at a season boundary on the 2025 check (Spearman 0.786 "
-            "against 0.729), and our model has no in-season form to work from in Week 1. "
-            "From Week 2 the site's own half-PPR projections take over, calibrated the "
-            "same way against actual DK points on 2025 out-of-sample predictions. "
-            "Tournament mode uses a per-position 85th-percentile ceiling rather than the "
-            "mean. Neither mode is a model trained directly on DraftKings scoring, and "
-            "neither models ownership or correlation. Lineups are a starting point, not "
-            "a play recommendation.",
-            icon=":material/info:",
+        st.caption(
+            "Using the published artifact — see \"What this beta does — and does not "
+            "do\" above for how Week 1 vs Week 2 projections are built.",
+            help="Full methodology, including the 2025 Sleeper-vs-model check, is in the expander at the top of the page.",
         )
     _render_pool_summary(pool, summary)
     labels = _player_labels(pool)

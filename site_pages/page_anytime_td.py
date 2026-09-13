@@ -1100,7 +1100,11 @@ def _first_td_phone_column_config() -> dict:
     return cfg
 
 
-def _board(view: pd.DataFrame, slug: str, search: str, *, show_two_plus: bool = False, show_first_td: bool = False) -> None:
+def _board(
+    view: pd.DataFrame, slug: str, search: str, *,
+    show_two_plus: bool = False, show_first_td: bool = False,
+    recommended_only: bool = False,
+) -> int:
     if show_first_td:
         table = _first_td_display(view)
         graded = _numeric_column(view, "scored_first").notna().any()
@@ -1108,28 +1112,30 @@ def _board(view: pd.DataFrame, slug: str, search: str, *, show_two_plus: bool = 
         phone_cols = FIRST_TD_PHONE_COLS if graded else [c for c in FIRST_TD_PHONE_COLS if c != "Hit"]
         desktop_config = _first_td_column_config()
         phone_config = _first_td_phone_column_config()
-        style = table[desktop_cols]
-        phone = table[phone_cols]
-        style_fn = _first_td_style(table)
     elif show_two_plus:
         table = _two_plus_display(view)
         desktop_cols = TWO_PLUS_DESKTOP_COLS
         phone_cols = TWO_PLUS_PHONE_COLS
         desktop_config = _two_plus_column_config()
         phone_config = _two_plus_phone_column_config()
-        style = table[desktop_cols]
-        phone = table[phone_cols]
-        style_fn = _two_plus_style(table)
     else:
         table = _display(view)
-        style_fn = _style(table)
         graded = pd.to_numeric(view.scored_anytime, errors="coerce").notna().any()
         desktop_cols = DESKTOP_COLS if graded else [c for c in DESKTOP_COLS if c != "Hit"]
         phone_cols = PHONE_COLS if graded else [c for c in PHONE_COLS if c != "Hit"]
-        style = table[desktop_cols]
-        phone = table[phone_cols]
         desktop_config = _desktop_column_config()
         phone_config = _phone_column_config()
+    if recommended_only:
+        table = table[table["_candidate"]].reset_index(drop=True)
+    if table.empty:
+        return 0
+    style_fn = (
+        _first_td_style(table) if show_first_td
+        else _two_plus_style(table) if show_two_plus
+        else _style(table)
+    )
+    style = table[desktop_cols]
+    phone = table[phone_cols]
     desktop_data = style.style.apply(style_fn, axis=None) if style_fn else style
     phone_data = phone.style.apply(style_fn, axis=None) if style_fn else phone
     dataframe_phone_desktop(
@@ -1138,12 +1144,14 @@ def _board(view: pd.DataFrame, slug: str, search: str, *, show_two_plus: bool = 
         slug=slug,
         hide_index=True,
         width="stretch",
-        height=exact_table_height(len(view)),
+        height=exact_table_height(len(table)),
         column_config=desktop_config,
         phone_column_config=phone_config,
         key=f"atd_grid_{slug}_{search}_{len(table)}_"
-            f"{'first' if show_first_td else 'two_plus' if show_two_plus else 'anytime'}",
+            f"{'first' if show_first_td else 'two_plus' if show_two_plus else 'anytime'}_"
+            f"{'rec' if recommended_only else 'all'}",
     )
+    return len(table)
 
 
 def _reading_guide() -> None:
@@ -1335,6 +1343,14 @@ def render() -> None:
         view = "Anytime TD"
     show_two_plus = view == "2+ TD"
     show_first_td = view == "First TD"
+    recommended_default = show_two_plus or show_first_td
+    recommended_only = st.toggle(
+        "Recommended only",
+        value=st.session_state.get(f"atd_rec_{season}_{week}_{view}", recommended_default),
+        key=f"atd_rec_{season}_{week}_{view}",
+        help="Show only rows that clear the paper-bet value-gap threshold "
+             "for this market.",
+    )
     two_plus_prices_available = _has_two_plus_prices(matchup)
     display_only_two_plus = _is_display_only_two_plus_matchup(matchup)
     completed_without_two_plus_market = (
@@ -1419,8 +1435,9 @@ def render() -> None:
     else:
         _render_scorecards(priced, season, releases)
         st.caption(
-            "Highlighted rows are 1U paper-bet candidates: raw ATTD Value Gap "
-            "of at least +0.5 percentage point."
+            ("Showing only" if recommended_only else "Highlighted rows are")
+            + " 1U paper-bet candidates: raw ATTD Value Gap of at least "
+            "+0.5 percentage point."
         )
 
     st.markdown(f"#### {label}")
@@ -1429,15 +1446,19 @@ def render() -> None:
     elif completed_without_two_plus_market and show_two_plus:
         st.caption("No retroactive 2+ TD prediction table for this completed matchup.")
     else:
+        shown_total = 0
         for team in teams:
             team_view = matchup[matchup.team.astype(str).eq(team)]
             if team_view.empty:
                 continue
             st.markdown(f"**{team} {view}s**")
-            _board(
+            shown_total += _board(
                 team_view,
                 f"atd-{team.lower()}-{label.replace(' ', '-')}",
                 search or "",
                 show_two_plus=show_two_plus,
                 show_first_td=show_first_td,
+                recommended_only=recommended_only,
             )
+        if recommended_only and shown_total == 0:
+            st.caption("No players clear the value-gap threshold for this matchup and market.")

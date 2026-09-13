@@ -93,12 +93,20 @@ def test_uploaded_inputs_optimize_and_expose_dk_download():
 
 def test_tournament_mode_without_ceiling_falls_back_cleanly():
     at = _upload_inputs(_run())
-    objective = next(widget for widget in at.radio if widget.key == "dfs_objective")
+    objective = next(widget for widget in at.segmented_control if widget.key == "dfs_objective")
     assert objective.options == ["Cash (expected points)", "Tournament (ceiling)"]
-    at = objective.set_value("Tournament (ceiling)").run()
-    assert not at.exception, at.exception
+    assert objective.value == "Tournament (ceiling)"
     assert any("no `ceiling_pts` column" in item.value for item in at.warning)
     assert any(button.label == "Optimize lineup" for button in at.button)
+
+
+def test_cash_mode_is_available_and_selectable():
+    at = _upload_inputs(_run())
+    objective = next(widget for widget in at.segmented_control if widget.key == "dfs_objective")
+    assert objective.value == "Tournament (ceiling)"
+    at = objective.set_value("Cash (expected points)").run()
+    assert not at.exception, at.exception
+    assert not any("no `ceiling_pts` column" in item.value for item in at.warning)
 
 
 def test_failed_resolve_clears_the_previous_download():
@@ -114,6 +122,38 @@ def test_failed_resolve_clears_the_previous_download():
     assert any("No legal lineup" in item.value for item in at.error)
     assert not at.get("download_button")
     assert not any(sub.value == "Optimized lineup" for sub in at.subheader)
+
+
+def test_stale_team_mismatch_excluded_by_default():
+    salary = SALARY_FIXTURE.read_text(encoding="utf-8")
+    projection = PROJECTION_FIXTURE.read_text(encoding="utf-8")
+    # Re-team one projected player relative to the salary slate: same name,
+    # wrong team. matching.py resolves this as a name-unique "team_mismatch",
+    # not a hard non-match, so it stays eligible unless the page excludes it.
+    stale_projection = projection.replace(
+        "demo-qb-a,Demo QB Alpha,QB,BUF,KC,2026,1,24.8,direct_dk_points",
+        "demo-qb-a,Demo QB Alpha,QB,DAL,NYG,2026,1,24.8,direct_dk_points",
+    )
+    assert stale_projection != projection
+
+    at = _run()
+    at.file_uploader(key="dfs_salary_upload").set_value(("DKSalaries.csv", salary.encode("utf-8"), "text/csv"))
+    at.file_uploader(key="dfs_projection_upload").set_value(
+        ("projections_2026_week01.csv", stale_projection.encode("utf-8"), "text/csv")
+    )
+    at = at.run()
+    assert not at.exception, at.exception
+
+    checkbox = next(w for w in at.checkbox if w.key == "dfs_exclude_stale_team")
+    assert checkbox.value is True
+    assert "matched on name only" in checkbox.label
+    locked = next(w for w in at.multiselect if w.key == "dfs_locked")
+    n_options_excluded = len(locked.options)
+
+    at = checkbox.set_value(False).run()
+    assert not at.exception, at.exception
+    locked_after = next(w for w in at.multiselect if w.key == "dfs_locked")
+    assert len(locked_after.options) == n_options_excluded + 1
 
 
 def test_auto_discovery_requires_a_valid_candidate_sidecar(tmp_path, monkeypatch):

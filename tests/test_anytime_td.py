@@ -97,6 +97,7 @@ def test_ne_sea_display_only_two_plus_model_view_is_shown(tmp_path):
     at = _render(tmp_path)
     at.selectbox(key="atd_matchup_2026_1").set_value("NE vs SEA").run()
     at.segmented_control(key="atd_view_2026_1").set_value("2+ TD").run()
+    at.toggle(key="atd_rec_2026_1_2+ TD").set_value(False).run()
     assert not at.exception, at.exception
     assert not at.error, [e.value for e in at.error]
     info = " ".join(str(item.value) for item in at.info)
@@ -122,6 +123,7 @@ def test_sf_la_display_only_two_plus_model_view_is_shown(tmp_path):
     at = _render(tmp_path)
     at.selectbox(key="atd_matchup_2026_1").set_value("SF vs LA").run()
     at.segmented_control(key="atd_view_2026_1").set_value("2+ TD").run()
+    at.toggle(key="atd_rec_2026_1_2+ TD").set_value(False).run()
     assert not at.exception, at.exception
     assert not at.error, [e.value for e in at.error]
     info = " ".join(str(item.value) for item in at.info)
@@ -151,6 +153,7 @@ def test_first_td_toggle_renders_priced_matchup(tmp_path):
     at = _render(tmp_path)
     at.segmented_control(key="atd_view_2026_1").set_value("First TD").run()
     at.selectbox(key="atd_matchup_2026_1").set_value("NO vs DET").run()
+    at.toggle(key="atd_rec_2026_1_First TD").set_value(False).run()
     assert not at.exception, at.exception
     assert not at.error, [e.value for e in at.error]
     assert any("First TD" in str(item.value) for item in at.info)
@@ -172,10 +175,12 @@ def test_market_control_is_a_single_three_way_choice(tmp_path):
     assert control.value == "Anytime TD"
 
     at.segmented_control(key="atd_view_2026_1").set_value("2+ TD").run()
+    at.toggle(key="atd_rec_2026_1_2+ TD").set_value(False).run()
     assert not at.exception, at.exception
     assert "Model 2+ TD Odds" in set(at.dataframe[0].value.columns)
 
     at.segmented_control(key="atd_view_2026_1").set_value("First TD").run()
+    at.toggle(key="atd_rec_2026_1_First TD").set_value(False).run()
     assert not at.exception, at.exception
     columns = set(at.dataframe[0].value.columns)
     assert "Model First TD Odds" in columns
@@ -209,6 +214,7 @@ def test_ne_sea_display_only_first_td_model_view_is_shown(tmp_path):
     at = _render(tmp_path)
     at.segmented_control(key="atd_view_2026_1").set_value("First TD").run()
     at.selectbox(key="atd_matchup_2026_1").set_value("NE vs SEA").run()
+    at.toggle(key="atd_rec_2026_1_First TD").set_value(False).run()
     assert not at.exception, at.exception
     assert not at.error, [e.value for e in at.error]
     info = " ".join(str(item.value) for item in at.info)
@@ -233,6 +239,7 @@ def test_sf_la_display_only_first_td_model_view_is_shown(tmp_path):
     at = _render(tmp_path)
     at.segmented_control(key="atd_view_2026_1").set_value("First TD").run()
     at.selectbox(key="atd_matchup_2026_1").set_value("SF vs LA").run()
+    at.toggle(key="atd_rec_2026_1_First TD").set_value(False).run()
     assert not at.exception, at.exception
     assert not at.error, [e.value for e in at.error]
     info = " ".join(str(item.value) for item in at.info)
@@ -331,6 +338,8 @@ def test_two_plus_view_on_2025_demo_does_not_crash(tmp_path):
     at.selectbox(key="atd_year").set_value(2025).run()
     control = next(w for w in at.segmented_control if w.key.startswith("atd_view"))
     at.segmented_control(key=control.key).set_value("2+ TD").run()
+    rec_toggle = next(w for w in at.toggle if w.key.startswith("atd_rec"))
+    at.toggle(key=rec_toggle.key).set_value(False).run()
     assert not at.exception, at.exception
     assert not at.error, [e.value for e in at.error]
     assert len(list(at.dataframe)) > 0
@@ -347,6 +356,8 @@ def test_first_td_view_on_2025_demo_does_not_crash(tmp_path):
     at.selectbox(key="atd_year").set_value(2025).run()
     control = next(w for w in at.segmented_control if w.key.startswith("atd_view"))
     at.segmented_control(key=control.key).set_value("First TD").run()
+    rec_toggle = next(w for w in at.toggle if w.key.startswith("atd_rec"))
+    at.toggle(key=rec_toggle.key).set_value(False).run()
     assert not at.exception, at.exception
     assert not at.error, [e.value for e in at.error]
     assert len(list(at.dataframe)) > 0
