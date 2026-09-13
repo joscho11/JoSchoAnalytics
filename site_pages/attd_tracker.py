@@ -14,6 +14,19 @@ import pandas as pd
 # Published paper-bet cutoff: model probability must exceed DraftKings'
 # implied probability by at least half a percentage point.
 ATTD_VALUE_THRESHOLD = 0.005
+# First TD's threshold is wider than ATTD's. Exactly one player per game can
+# score first, so p_first is not an independent per-player probability like
+# p_ge1/p_ge2 -- it is a lambda-share allocation within a fixed per-game pool
+# (p_offense_scores_first), with no fitted role/opening-script correction.
+# Real bell-cow backs and starting QBs (Hurts, Hall, Bijan, Jeanty, Gibbs)
+# already show a consistent -5pp to -8pp gap vs DraftKings' price on the
+# 2026 Week 1 board -- a structural allocator bias, not noise. A 0.5pp bar
+# would flag that known bias as "value" every week. 3.0pp sits below the
+# observed bias band while still leaving room for a real signal to clear it
+# as graded weeks accumulate. There is no historical First TD backtest to
+# calibrate this against (see FIRST_TD note in page_anytime_td.py); treat
+# this constant as a conservative placeholder, not a validated number.
+FIRST_TD_VALUE_THRESHOLD = 0.03
 BOOTSTRAP_RESAMPLES = 10_000
 BOOTSTRAP_SEED = 20260911
 MIN_SETTLED_GAMES_FOR_CI = 5
@@ -21,8 +34,18 @@ MIN_SETTLED_BETS_FOR_CI = 20
 
 
 def qualifies_probability_gap(gap, threshold: float = ATTD_VALUE_THRESHOLD):
-    """Apply an inclusive raw gap rule without binary-float boundary misses."""
-    return pd.to_numeric(gap, errors="coerce").ge(float(threshold) - 1e-12)
+    """Apply an inclusive raw gap rule without binary-float boundary misses.
+
+    A missing gap (no book price, no model probability, or a nullable-dtype
+    NaN) never qualifies -- .ge() on a nullable Float64/boolean dtype
+    propagates pd.NA instead of False for a NaN comparison, and every
+    downstream `if candidate:` check (the three _style functions in
+    page_anytime_td.py) crashes with "boolean value of NA is ambiguous" the
+    first time it hits one. Reproduced on the 2025 demo season, which has no
+    two_plus_amer/first_amer columns at all, so every gap there is NaN.
+    """
+    result = pd.to_numeric(gap, errors="coerce").ge(float(threshold) - 1e-12)
+    return result.fillna(False).astype(bool)
 
 
 def american_to_decimal(price) -> float:
@@ -234,6 +257,7 @@ def season_tracker(
     book_probability_col: str | None = "p_book",
     book_price_col: str = "book_amer",
     outcome_col: str = "scored_anytime",
+    threshold: float = ATTD_VALUE_THRESHOLD,
 ) -> dict:
     """Return fixed-rule cards and its suppressed-or-available ROI interval."""
     prepared = prepare_paper_bets(
@@ -242,7 +266,8 @@ def season_tracker(
         book_probability_col=book_probability_col,
         book_price_col=book_price_col,
         outcome_col=outcome_col,
+        threshold=threshold,
     )
-    fixed = strategy_summary(prepared, threshold=ATTD_VALUE_THRESHOLD)
-    ci = block_bootstrap_roi(prepared)
+    fixed = strategy_summary(prepared, threshold=threshold)
+    ci = block_bootstrap_roi(prepared, threshold=threshold)
     return {"summary": fixed, "ci": ci, "rows": prepared}

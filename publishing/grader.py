@@ -539,19 +539,27 @@ def _first_td_position_lookup(actuals: pd.DataFrame) -> dict:
 def _classify_first_td_row(row, pos_lookup: dict) -> str:
     """Same classification as first_td/src/labels.py::_classify_first_td.
 
-    offense_skill requires td_team == posteam (the team with the ball
-    scored, ruling out defensive/return scores) AND the scorer's position
-    resolves to a skill position. Everything else is defense or
-    special_teams; a punting/kicking team's own returner recovering a
-    muffed return has td_team == posteam but return_touchdown == 1, which
-    is special_teams, not offense_skill, even though the team matches.
+    offense_skill requires td_team == posteam (ruling out defensive
+    scores), return_touchdown != 1 (ruling out return scores), AND the
+    scorer's position resolves to a skill position.
+
+    The return_touchdown check MUST run before the position check, not
+    just for non-skill scorers. On a kickoff/punt play, nflverse's
+    posteam/td_team follow the RECEIVING team, not the kicking team -- so a
+    receiving team's own returner taking it to the house has
+    td_team == posteam even though the score is a special-teams return, not
+    an offensive snap. Checking position first misclassifies a WR/RB who
+    also returns kicks as offense_skill. Found by independent audit 2026-09
+    as the same bug already fixed in first_td/src/labels.py::
+    _classify_first_td -- this was a second, independent copy of the same
+    logic that had not received the fix; the two must never drift again.
     """
     if row["td_team"] != row["posteam"]:
         return "defense" if row["td_team"] == row["defteam"] else "special_teams"
+    if row.get("return_touchdown") == 1:
+        return "special_teams"
     scorer_pos = pos_lookup.get(row["td_player_id"])
-    if scorer_pos in _SKILL_POSITIONS:
-        return "offense_skill"
-    return "special_teams" if row.get("return_touchdown") == 1 else "defense"
+    return "offense_skill" if scorer_pos in _SKILL_POSITIONS else "defense"
 
 
 def _first_td_by_game(pbp: pd.DataFrame, game_ids: set, pos_lookup: dict) -> dict:

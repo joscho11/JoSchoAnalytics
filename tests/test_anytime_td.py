@@ -38,7 +38,7 @@ def test_anytime_td_renders_and_owns_controls(tmp_path):
     assert controls["atd_year"] == 2026
     assert controls["atd_week"] == 1
     titles = " ".join(str(t.value) for t in at.title)
-    assert "Anytime TDs" in titles
+    assert "Touchdown Props" in titles
     captions = " ".join(str(c.value) for c in at.caption)
     md = " ".join(str(item.value) for item in at.markdown)
     blob = captions + md + " ".join(str(item.value) for item in at.info)
@@ -205,16 +205,52 @@ def test_team_header_matches_active_market(tmp_path):
     assert "2+ TDs**" in md
 
 
-def test_first_td_completed_matchup_without_market_is_retroactive_free(tmp_path):
+def test_ne_sea_display_only_first_td_model_view_is_shown(tmp_path):
     at = _render(tmp_path)
     at.segmented_control(key="atd_view_2026_1").set_value("First TD").run()
     at.selectbox(key="atd_matchup_2026_1").set_value("NE vs SEA").run()
     assert not at.exception, at.exception
     assert not at.error, [e.value for e in at.error]
     info = " ".join(str(item.value) for item in at.info)
-    assert "completed before First TD prices were published" in info
-    captions = " ".join(str(item.value) for item in at.caption)
-    assert "No retroactive First TD prediction table" in captions
+    assert "Display-only historical First TD model view for NE vs SEA" in info
+    rendered = list(at.dataframe)[-2:]
+    assert len(rendered) == 2
+    assert all(
+        frame.value["Model First TD Odds"].ne("Not implemented yet").all()
+        for frame in rendered
+    )
+    assert all(
+        frame.value["Book First TD Odds"].eq("Not implemented yet").all()
+        for frame in rendered
+    )
+    assert any(
+        "Results-only First TD tally" in str(item.value)
+        for item in at.caption
+    )
+
+
+def test_sf_la_display_only_first_td_model_view_is_shown(tmp_path):
+    at = _render(tmp_path)
+    at.segmented_control(key="atd_view_2026_1").set_value("First TD").run()
+    at.selectbox(key="atd_matchup_2026_1").set_value("SF vs LA").run()
+    assert not at.exception, at.exception
+    assert not at.error, [e.value for e in at.error]
+    info = " ".join(str(item.value) for item in at.info)
+    assert "Display-only historical First TD model view for SF vs LA" in info
+    rendered = list(at.dataframe)[-2:]
+    assert len(rendered) == 2
+    assert all(
+        frame.value["Model First TD Odds"].ne("Not implemented yet").all()
+        for frame in rendered
+    )
+    assert all(
+        frame.value["Book First TD Odds"].eq("Not implemented yet").all()
+        for frame in rendered
+    )
+    # SF vs LA was graded live: Kyren Williams scored the first TD.
+    assert any(
+        frame.value["Hit"].eq("Yes").any() for frame in rendered
+    )
 
 
 def test_first_td_results_tally_is_results_only():
@@ -244,6 +280,34 @@ def test_first_td_display_shape_and_ordering():
     assert table.loc[0, "_candidate"]
 
 
+def test_amer_display_abbreviates_only_past_ten_thousand():
+    # Below 10000, abbreviating costs precision for zero space saved.
+    assert page._amer_display(1500) == "+1500"
+    assert page._amer_display(9999) == "+9999"
+    assert page._amer_display(-1500) == "-1500"
+    # At/past 10000, k-notation is shorter and the real fix for phone overflow.
+    assert page._amer_display(10000) == "+10.0k"
+    assert page._amer_display(10805) == "+10.8k"
+    assert page._amer_display(89070) == "+89.1k"
+    assert page._amer_display(-15000) == "-15.0k"
+    assert page._amer_display(None) == ""
+
+
+def test_signed_int_display_matches_amer_display_cutoff():
+    assert page._signed_int_display(1500) == "+1500"
+    assert page._signed_int_display(-9999) == "-9999"
+    assert page._signed_int_display(10805) == "+10.8k"
+    assert page._signed_int_display(-81719) == "-81.7k"
+    assert page._signed_int_display(0) == "0"
+
+
+def test_phone_odds_column_widths_fit_the_widest_realistic_value():
+    # Worst case: 5-digit book odds combined with a 3-digit percentage, e.g.
+    # "+89.1k · 100.0%" (15 chars) must not be narrower than before the fix.
+    assert page.PHONE_WIDTHS["Model ATTD Odds"] >= 130
+    assert page.PHONE_WIDTHS["Book ATTD Odds"] >= 130
+
+
 def test_year_and_week_selectors_keep_2025_available(tmp_path):
     at = _render(tmp_path)
     at.selectbox(key="atd_year").set_value(2025).run()
@@ -254,6 +318,61 @@ def test_year_and_week_selectors_keep_2025_available(tmp_path):
     at.selectbox(key="atd_week").set_value(17).run()
     assert not at.exception, at.exception
     assert {w.key: w.value for w in at.selectbox}["atd_week"] == 17
+
+
+def test_two_plus_view_on_2025_demo_does_not_crash(tmp_path):
+    # The 2025 demo CSVs have no two_plus_amer column at all, so every gap
+    # in that market is NaN. qualifies_probability_gap used to propagate
+    # pd.NA through .ge() on a nullable dtype, and _two_plus_style's
+    # `if candidate:` raised "boolean value of NA is ambiguous" the first
+    # time it hit one -- reproducible by switching Year to 2025, then Market
+    # to 2+ TD, on any matchup.
+    at = _render(tmp_path)
+    at.selectbox(key="atd_year").set_value(2025).run()
+    control = next(w for w in at.segmented_control if w.key.startswith("atd_view"))
+    at.segmented_control(key=control.key).set_value("2+ TD").run()
+    assert not at.exception, at.exception
+    assert not at.error, [e.value for e in at.error]
+    assert len(list(at.dataframe)) > 0
+
+
+def test_first_td_view_on_2025_demo_does_not_crash(tmp_path):
+    # The 2025 demo CSVs have no p_first/book_first_p_devigged/scored_first
+    # columns at all (First TD is 2026-only). df.get(missing_column) returns
+    # None, and pd.to_numeric(None, errors="coerce") silently collapses to a
+    # bare scalar nan instead of a Series, so any later .map()/.notna() call
+    # on that "column" crashed with an AttributeError -- reproducible by
+    # switching Year to 2025, then Market to First TD.
+    at = _render(tmp_path)
+    at.selectbox(key="atd_year").set_value(2025).run()
+    control = next(w for w in at.segmented_control if w.key.startswith("atd_view"))
+    at.segmented_control(key=control.key).set_value("First TD").run()
+    assert not at.exception, at.exception
+    assert not at.error, [e.value for e in at.error]
+    assert len(list(at.dataframe)) > 0
+
+
+def test_qualifies_probability_gap_never_returns_na():
+    import attd_tracker as tracker
+
+    gap = pd.Series([0.01, float("nan"), 0.06], dtype="Float64")
+    result = tracker.qualifies_probability_gap(gap)
+    assert result.dtype == bool
+    assert list(result) == [True, False, True]
+
+
+def test_pending_replacement_caption_pluralizes_the_verb(tmp_path):
+    # "1 quoted replacement row await model inputs" is a subject-verb
+    # mismatch. Requires exactly one pending row on the live board.
+    at = _render(tmp_path)
+    raw = pd.read_csv(_HERE / "betting" / "anytime_td" / "anytime_td_2026_week01.csv")
+    pending_count = int(page.priced_rows(raw).p_ge1.isna().sum())
+    captions = " ".join(str(c.value) for c in at.caption)
+    if pending_count == 1:
+        assert "1 quoted replacement row awaits model inputs" in captions
+        assert "row await model" not in captions
+    elif pending_count > 1:
+        assert f"{pending_count} quoted replacement rows await model inputs" in captions
 
 
 def test_anytime_td_files_cover_weeks_10_17():
@@ -525,7 +644,7 @@ def test_verified_replacement_can_display_book_odds_while_model_is_pending():
 
     two_plus = page._two_plus_display(priced)
     assert two_plus.loc[0, "Model 2+ TD Odds"] == "Pending"
-    assert two_plus.loc[0, "Book 2+ TD Odds"] == "+17000 · 0.6%"
+    assert two_plus.loc[0, "Book 2+ TD Odds"] == "+17.0k · 0.6%"
     assert two_plus.loc[0, "2+ TD Value Gap"] == "Pending"
 
 

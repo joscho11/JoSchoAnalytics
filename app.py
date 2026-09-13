@@ -82,7 +82,7 @@ board_pg = st.Page(_lazy_render("page_draft_board"), title="Draft Board", icon="
                    url_path="draft-board")
 wp_pg = st.Page(_lazy_render("page_weekly_predictions"), title="Weekly Predictions", icon=":material/query_stats:",
                 url_path="weekly-predictions")
-atd_pg = st.Page(_lazy_render("page_anytime_td"), title="Anytime TDs", icon=":material/sports_score:",
+atd_pg = st.Page(_lazy_render("page_anytime_td"), title="Touchdown Props", icon=":material/sports_score:",
                  url_path="anytime-tds")
 wf_pg = st.Page(_lazy_render("page_weekly_fantasy"), title="Weekly Fantasy", icon=":material/trophy:",
                 url_path="weekly-fantasy")

@@ -60,6 +60,16 @@ this project, for any season -- only a forward Week 1 board. Treat this
 view as entertainment more than the 2+ TD view, not evidence of model
 accuracy or profitability.
 
+**Display-only games.** NE vs SEA and SF vs LA (both completed before either
+market had a published DraftKings price) are kept visible in the 2+ TD and
+First TD views as fun, model-only look-backs: Model odds and Hit show real
+values, Book odds and the value gap show "Not implemented yet," and any
+graded outcome is counted only in a results-only tally, never in betting
+W-L, units, ROI, or a backtest. This is the same treatment both markets give
+any other completed matchup without a published price for that market;
+these two are just guaranteed to hit it, since the pasted odds for both
+markets always postdated these games.
+
 ## 2026 paper-betting tracker
 
 The live board highlights a row when the raw probability gap is at least +0.5

@@ -134,6 +134,14 @@ def help_scroll_models(page) -> None:
     wait_for_app(page)
 
 
+def atd_first_td_view(page) -> None:
+    _click_segment(page, "First TD")
+
+
+def atd_two_plus_view(page) -> None:
+    _click_segment(page, "2+ TD")
+
+
 def dfs_upload_and_optimize(page) -> None:
     uploaders = page.locator('[data-testid="stFileUploader"] input[type="file"]')
     uploaders.nth(0).set_input_files(str(_DFS_SALARY))
@@ -163,6 +171,8 @@ ACTIONS = {
     "lh_insights_draft_room": lh_insights_draft_room,
     "help_open_ats": help_open_ats,
     "help_scroll_models": help_scroll_models,
+    "atd_first_td_view": atd_first_td_view,
+    "atd_two_plus_view": atd_two_plus_view,
     "dfs_upload_and_optimize": dfs_upload_and_optimize,
 }
 
