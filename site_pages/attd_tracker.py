@@ -125,10 +125,23 @@ def prepare_paper_bets(
     out["_book_price"] = book_price
     out["_outcome"] = outcome
     out["_value_gap"] = model_probability - book_probability
+    if "bet_eligible" in out:
+        raw_eligibility = out["bet_eligible"]
+        if pd.api.types.is_bool_dtype(raw_eligibility):
+            eligibility = raw_eligibility.fillna(True).astype(bool)
+        else:
+            normalized = raw_eligibility.astype("string").str.strip().str.lower()
+            eligibility = ~normalized.isin({"false", "0", "no", "n", "off"})
+            eligibility &= ~raw_eligibility.isna()
+            eligibility |= raw_eligibility.isna()
+    else:
+        # Legacy demo releases predate the serving eligibility contract.
+        eligibility = pd.Series(True, index=out.index, dtype=bool)
     out["_candidate"] = (
         model_probability.notna()
         & book_probability.notna()
         & book_price.notna()
+        & eligibility
         & qualifies_probability_gap(out["_value_gap"], threshold)
     )
     out["_settled"] = out["_candidate"] & outcome.isin([0, 1])

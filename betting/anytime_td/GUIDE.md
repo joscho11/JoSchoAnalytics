@@ -91,7 +91,11 @@ separately and are never treated as historical bets.
 The audited 2025 DraftKings strategy artifact is
 `strategy_backtest_2025_draftkings.json`. It records the fixed +0.5pp result,
 threshold scan, controls, drawdown, and bootstrap settings for the anytime-TD
-market; it does not contain a 2+ TD backtest.
+market; it does not contain a 2+ TD backtest. The research 34-feature arm and
+the deployed 35-feature product arm are separate evidence bases: the product
+holdout is 1,605 bets, +109.6U, +6.83% ROI, with a game-block interval that
+crosses zero. The older +10.95% result belongs to the research artifact and
+must not be presented as the live-product result.
 
 ## How it scored in 2025
 
@@ -104,14 +108,19 @@ projection. The anytime price is not an input.
 | Demo weeks 10-17 | 2,524 | Our numbers were closer in 5 of 8 weeks. Books still won the eight-week total |
 | Audited +0.5pp DraftKings rule | 2,055 | +225.0U, 10.9% ROI; bootstrap range -3.9% to +26.3%, so the interval still crosses zero |
 
-Week 18 is out (rest and backups). Sleeper's dump has no freeze timestamp.
+Week 18 is out (rest and backups). Legacy Sleeper dumps have no freeze
+timestamp and are therefore marked as-of-unverified. New product snapshots
+must carry a timestamped capture envelope strictly before the first slate
+kickoff; the forward builder fails closed otherwise.
 
 ## Live 2026 manual-paste contract
 
 Joseph pastes one US sportsbook's Yes prices whenever practical. About three
 hours before kickoff is preferred, but early preparation captures are accepted
-and labeled with their actual lead time; only a post-kickoff timestamp blocks a
-row. For Sunday slates, the expected handoff is early Sunday morning before the
+and labeled with their actual lead time. A live publish is refused once any
+game in the requested slate has started. Retrospective scoring is allowed only
+with an explicit isolated output directory and cannot write the public board.
+For Sunday slates, the expected handoff is early Sunday morning before the
 slate. The canonical input is `td_count_model_beta/live/2026_week01_<slate>.csv`
 with `season`, `week`, `kickoff_et`, `snapped_at_et`, `book`, `player`, `team`,
 `opponent`, and `yes_amer`. The parser/publisher also preserves the optional
@@ -138,7 +147,11 @@ blank until outcomes are attached; null outcomes never render as “No”. A
 verified lineup replacement may appear with DraftKings odds while its model
 fields say `Pending` if the current-week model input is absent; that row is
 excluded from value-gap and paper-bet accounting until the model input is
-available.
+available. Rows with synthetic identities or zero prior games are also marked
+non-bettable by default and carry an eligibility reason for review. For
+grading, an absent quoted player is not assumed to have scored zero: confirmed
+zero-snap/inactive rows are voided, participating zero-TD rows are losses, and
+rows without participation evidence remain pending.
 
 ## Rebuild and publish
 

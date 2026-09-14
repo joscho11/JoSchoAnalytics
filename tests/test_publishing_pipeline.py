@@ -541,11 +541,11 @@ def test_anytime_td_grading_updates_final_games_and_leaves_partial_slate_pending
     actuals = pd.DataFrame([
         {
             "season": 2026, "week": 1, "season_type": "REG", "player_id": "SEA-RB",
-            "team": "SEA", "rushing_tds": 2, "receiving_tds": 0,
+            "team": "SEA", "rushing_tds": 2, "receiving_tds": 0, "offense_snaps": 55,
         },
         {
-            "season": 2026, "week": 1, "season_type": "REG", "player_id": "NE-COVERAGE",
-            "team": "NE", "rushing_tds": 0, "receiving_tds": 0,
+            "season": 2026, "week": 1, "season_type": "REG", "player_id": "NE-RB",
+            "team": "NE", "rushing_tds": 0, "receiving_tds": 0, "offense_snaps": 0,
         },
     ])
 
@@ -582,6 +582,40 @@ def test_anytime_td_grading_does_not_zero_fill_an_incomplete_feed(tmp_path):
     assert pd.read_csv(path)["scored_anytime"].isna().all()
 
 
+def test_anytime_td_grading_voids_zero_snap_dnp_instead_of_false_loss(tmp_path):
+    path = _anytime_board(tmp_path)
+    schedule = pd.DataFrame([{
+        "season": 2026, "week": 1, "game_id": "2026_01_NE_SEA",
+        "home_team": "SEA", "away_team": "NE", "home_score": 27, "away_score": 20,
+    }])
+    actuals = pd.DataFrame([
+        {
+            "season": 2026, "week": 1, "season_type": "REG", "player_id": "SEA-RB",
+            "team": "SEA", "rushing_tds": 1, "receiving_tds": 0,
+        },
+        {
+            "season": 2026, "week": 1, "season_type": "REG", "player_id": "NE-COVERAGE",
+            "team": "NE", "rushing_tds": 0, "receiving_tds": 0,
+        },
+    ])
+    participation = pd.DataFrame([
+        {"season": 2026, "week": 1, "player_id": "SEA-RB", "team": "SEA", "offense_snaps": 44},
+        {"season": 2026, "week": 1, "player_id": "NE-RB", "team": "NE", "offense_snaps": 0},
+    ])
+
+    result = grade_anytime_td_file(
+        path, schedule, actuals, participation=participation, season=2026, week=1
+    )
+    graded = pd.read_csv(path)
+    # The fixture deliberately retains an unrelated pending SF game; the
+    # completed NE-SEA game is nevertheless fully resolved with one void.
+    assert result["final_games"] == 1
+    assert result["void_rows"] == 1
+    assert list(graded.loc[graded.player_id.eq("SEA-RB"), "scored_anytime"]) == [1]
+    assert pd.isna(graded.loc[graded.player_id.eq("NE-RB"), "scored_anytime"]).all()
+    assert graded.loc[graded.player_id.eq("NE-RB"), "status"].eq("void").all()
+
+
 def test_anytime_td_grading_matches_player_name_when_feed_id_differs(tmp_path):
     path = _anytime_board(tmp_path)
     schedule = pd.DataFrame([{
@@ -592,10 +626,12 @@ def test_anytime_td_grading_matches_player_name_when_feed_id_differs(tmp_path):
         {
             "season": 2026, "week": 1, "season_type": "REG", "player_id": "00-0041395",
             "player_display_name": "Sea RB", "team": "SEA", "rushing_tds": 0, "receiving_tds": 1,
+            "offense_snaps": 41,
         },
         {
             "season": 2026, "week": 1, "season_type": "REG", "player_id": "00-0041396",
             "player_display_name": "Ne RB", "team": "NE", "rushing_tds": 0, "receiving_tds": 0,
+            "offense_snaps": 32,
         },
     ])
 

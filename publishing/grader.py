@@ -285,6 +285,13 @@ def fetch_player_stats(season: int) -> pd.DataFrame:
     return frame.to_pandas() if hasattr(frame, "to_pandas") else frame
 
 
+def fetch_snap_counts(season: int) -> pd.DataFrame:
+    """Fetch offensive participation used to resolve DNP/void outcomes."""
+    import nflreadpy as nfl
+    frame = nfl.load_snap_counts([int(season)])
+    return frame.to_pandas() if hasattr(frame, "to_pandas") else frame
+
+
 _ANYTIME_TD_RELEASE_RE = re.compile(
     r"^anytime_td_(?P<season>\d{4})_week(?P<week>\d{1,2})(?:_[^.]*)?\.csv$"
 )
@@ -308,7 +315,79 @@ def _normal_name(value) -> str | None:
     return text or None
 
 
-def _prepare_anytime_stats(actuals: pd.DataFrame, season: int, week: int) -> dict:
+def _prepare_participation(participation: pd.DataFrame | None, season: int, week: int) -> dict:
+    """Build player participation lookups used to distinguish loss from void.
+
+    nflverse snap-count feeds use ``offense_snaps``/``offense_pct``.  A stats
+    feed without either field is intentionally treated as unable to resolve a
+    quoted player who is absent from the box-score rows.
+    """
+    if participation is None or participation.empty:
+        return {"available": False, "snaps_by_alias": {}, "snaps_by_name_team": {}}
+    stats = participation.copy()
+    if "season" in stats:
+        stats = stats[pd.to_numeric(stats["season"], errors="coerce").eq(int(season))]
+    if "week" in stats:
+        stats = stats[pd.to_numeric(stats["week"], errors="coerce").eq(int(week))]
+    if "season_type" in stats:
+        stats = stats[stats["season_type"].astype(str).str.upper().eq("REG")]
+    snap_column = next(
+        (column for column in ("offense_snaps", "offensive_snaps", "snap_counts", "snaps") if column in stats),
+        None,
+    )
+    pct_column = next(
+        (column for column in ("offense_pct", "offensive_pct", "snap_pct") if column in stats),
+        None,
+    )
+    if snap_column is None and pct_column is None:
+        return {"available": False, "snaps_by_alias": {}, "snaps_by_name_team": {}}
+    aliases = [column for column in ("player_id", "gsis_id", "sleeper_id", "pfr_player_id") if column in stats]
+    if not aliases:
+        return {"available": False, "snaps_by_alias": {}, "snaps_by_name_team": {}}
+    for column in aliases:
+        stats[column] = stats[column].map(_normal_identifier)
+    team_column = "team" if "team" in stats else "recent_team" if "recent_team" in stats else None
+    name_column = (
+        "player_display_name" if "player_display_name" in stats
+        else "player_name" if "player_name" in stats else "player" if "player" in stats else None
+    )
+    if snap_column is not None:
+        snaps = pd.to_numeric(stats[snap_column], errors="coerce")
+    else:
+        # A positive offensive snap percentage proves participation.  Treat a
+        # reported zero as a confirmed non-participant for void handling.
+        snaps = pd.to_numeric(stats[pct_column], errors="coerce")
+    stats = stats.assign(_participation_value=snaps)
+    by_alias: dict[str, float] = {}
+    by_name_team: dict[tuple[str, str], float] = {}
+    for row in stats.to_dict(orient="records"):
+        value = row.get("_participation_value")
+        if pd.isna(value):
+            continue
+        value = float(value)
+        for column in aliases:
+            key = row.get(column)
+            if key is not None:
+                by_alias[key] = max(by_alias.get(key, float("-inf")), value)
+        if team_column and name_column:
+            team = _normal_team(row.get(team_column))
+            name = _normal_name(row.get(name_column))
+            if team and name:
+                key = (team, name)
+                by_name_team[key] = max(by_name_team.get(key, float("-inf")), value)
+    return {
+        "available": bool(by_alias or by_name_team),
+        "snaps_by_alias": by_alias,
+        "snaps_by_name_team": by_name_team,
+    }
+
+
+def _prepare_anytime_stats(
+    actuals: pd.DataFrame,
+    season: int,
+    week: int,
+    participation: pd.DataFrame | None = None,
+) -> dict:
     stats = actuals.copy()
     if "season" in stats:
         stats = stats[pd.to_numeric(stats["season"], errors="coerce").eq(int(season))]
@@ -371,12 +450,16 @@ def _prepare_anytime_stats(actuals: pd.DataFrame, season: int, week: int) -> dic
         game_ids = {
             game_id for game_id in stats["game_id"].map(_normal_identifier).dropna().tolist()
         }
+    participation_info = _prepare_participation(
+        participation if participation is not None else actuals, season, week
+    )
     return {
         "td_by_alias": td_by_alias,
         "td_by_name_team": td_by_name_team,
         "teams": teams,
         "game_ids": game_ids,
         "has_team": team_column is not None,
+        "participation": participation_info,
     }
 
 
@@ -387,6 +470,7 @@ def grade_anytime_td_file(
     *,
     season: int,
     week: int,
+    participation: pd.DataFrame | None = None,
 ) -> dict:
     """Attach final rushing/receiving TD outcomes to one live board.
 
@@ -423,7 +507,7 @@ def grade_anytime_td_file(
     sched["away_score"] = pd.to_numeric(sched["away_score"], errors="coerce")
     sched["_is_final"] = sched["home_score"].notna() & sched["away_score"].notna()
 
-    stat_info = _prepare_anytime_stats(actuals, season, week)
+    stat_info = _prepare_anytime_stats(actuals, season, week, participation)
     board_game_ids = set(board["_game_id"].dropna().tolist())
     final_schedule = sched[sched["_is_final"]].copy()
     final_game_ids = set(final_schedule["_game_id"].dropna().tolist())
@@ -456,24 +540,51 @@ def grade_anytime_td_file(
             pending_games.append(game_id)
             continue
 
-        def player_touchdowns(row):
+        participation_info = stat_info["participation"]
+
+        def player_outcome(row):
             touchdowns = stat_info["td_by_alias"].get(row["_player_id"])
+            matched_stats = touchdowns is not None
             if touchdowns is None and "player_display_name" in row and "team" in row:
                 key = (_normal_team(row["team"]), _normal_name(row["player_display_name"]))
-                touchdowns = stat_info["td_by_name_team"].get(key, 0.0)
-            return float(touchdowns or 0.0)
+                touchdowns = stat_info["td_by_name_team"].get(key)
+                matched_stats = touchdowns is not None
+            if matched_stats:
+                touchdowns = float(touchdowns or 0.0)
+                return ("loss" if touchdowns <= 0 else "win", touchdowns)
+            if participation_info["available"]:
+                snaps = participation_info["snaps_by_alias"].get(row["_player_id"])
+                if snaps is None and "player_display_name" in row and "team" in row:
+                    key = (_normal_team(row["team"]), _normal_name(row["player_display_name"]))
+                    snaps = participation_info["snaps_by_name_team"].get(key)
+                if snaps is not None:
+                    return ("loss", 0.0) if float(snaps) > 0 else ("void", float("nan"))
+            return ("pending", float("nan"))
 
-        touchdowns = game_rows.apply(player_touchdowns, axis=1)
-        board.loc[game_rows.index, "scored_anytime"] = touchdowns.gt(0).astype(int).to_numpy()
+        outcomes = game_rows.apply(player_outcome, axis=1)
+        states = outcomes.map(lambda value: value[0])
+        touchdown_values = outcomes.map(lambda value: value[1])
+        if states.eq("pending").any():
+            pending_games.append(game_id)
+            continue
+        if "status" not in board:
+            board["status"] = "pregame"
+        win_mask = states.eq("win")
+        loss_mask = states.eq("loss")
+        void_mask = states.eq("void")
+        board.loc[game_rows.index[win_mask], "scored_anytime"] = 1
+        board.loc[game_rows.index[loss_mask], "scored_anytime"] = 0
+        board.loc[game_rows.index[void_mask], "scored_anytime"] = pd.NA
         if "scored_two_plus" not in board:
             board["scored_two_plus"] = pd.Series(
                 pd.NA, index=board.index, dtype="Float64"
             )
-        board.loc[game_rows.index, "scored_two_plus"] = (
-            touchdowns.ge(2).astype(int).to_numpy()
+        board.loc[game_rows.index[~void_mask], "scored_two_plus"] = (
+            pd.to_numeric(touchdown_values[~void_mask], errors="coerce").ge(2).astype(int).to_numpy()
         )
-        if "status" in board:
-            board.loc[game_rows.index, "status"] = "final"
+        board.loc[game_rows.index[void_mask], "scored_two_plus"] = pd.NA
+        board.loc[game_rows.index[~void_mask], "status"] = "final"
+        board.loc[game_rows.index[void_mask], "status"] = "void"
         updated_games.append(game_id)
         updated_rows += len(game_rows)
 
@@ -490,6 +601,8 @@ def grade_anytime_td_file(
         else pd.Series(False, index=board.index)
     )
     board_games_final = board_game_ids <= final_game_ids
+    void_rows = int(board.get("status", pd.Series("", index=board.index)).astype(str).str.lower().eq("void").sum())
+    resolved = graded | board.get("status", pd.Series("", index=board.index)).astype(str).str.lower().eq("void")
     return {
         "status": "graded" if updated_games else "pending",
         "file": str(source),
@@ -497,11 +610,13 @@ def grade_anytime_td_file(
         "week": int(week),
         "final_games": int(len(board_game_ids & final_game_ids)),
         "graded_rows": int(graded.sum()),
+        "void_rows": void_rows,
+        "pending_rows": int((~resolved).sum()),
         "graded_two_plus_rows": int(graded_two_plus.sum()),
         "updated_games": updated_games,
         "updated_rows": int(updated_rows),
         "pending_games": pending_games,
-        "complete": bool(board_games_final and not pending_games and graded.all()),
+        "complete": bool(board_games_final and not pending_games and resolved.all()),
         "changed": changed,
     }
 
@@ -750,6 +865,7 @@ def grade_anytime_td_releases(root=None) -> dict:
 
     schedules = {}
     actuals_by_season = {}
+    participation_by_season = {}
     results = {}
     for source, season, week in releases:
         if season not in schedules:
@@ -772,10 +888,19 @@ def grade_anytime_td_releases(root=None) -> dict:
             continue
         if season not in actuals_by_season:
             actuals_by_season[season] = fetch_player_stats(season)
+        if season not in participation_by_season:
+            try:
+                participation_by_season[season] = fetch_snap_counts(season)
+            except Exception:
+                # A stats-only feed can still grade rows that it contains. It
+                # must not, however, zero-fill quoted players absent from that
+                # feed, so a failed snap fetch safely leaves those rows pending.
+                participation_by_season[season] = None
         results[label] = grade_anytime_td_file(
             source,
             schedule,
             actuals_by_season[season],
+            participation=participation_by_season[season],
             season=season,
             week=week,
         )

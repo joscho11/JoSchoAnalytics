@@ -144,6 +144,18 @@ def priced_rows(df: pd.DataFrame) -> pd.DataFrame:
     return out[out.p_book.notna() & out.book_amer.notna()].copy()
 
 
+def _bet_eligibility(df: pd.DataFrame) -> pd.Series:
+    """Serving guard: retain legacy rows, but never bet an explicit exclusion."""
+    if "bet_eligible" not in df:
+        return pd.Series(True, index=df.index, dtype=bool)
+    raw = df["bet_eligible"]
+    if pd.api.types.is_bool_dtype(raw):
+        return raw.fillna(True).astype(bool)
+    normalized = raw.astype("string").str.strip().str.lower()
+    eligibility = ~normalized.isin({"false", "0", "no", "n", "off"})
+    return eligibility.fillna(True).astype(bool)
+
+
 def by_position(df: pd.DataFrame, position: str) -> pd.DataFrame:
     if position == "All":
         return df
@@ -180,7 +192,10 @@ def _matchup_groups(df: pd.DataFrame):
 def _matchup_is_graded(group: pd.DataFrame) -> bool:
     if group.empty or "scored_anytime" not in group:
         return False
-    return bool(pd.to_numeric(group["scored_anytime"], errors="coerce").notna().all())
+    resolved = pd.to_numeric(group["scored_anytime"], errors="coerce").notna()
+    if "status" in group:
+        resolved |= group["status"].astype(str).str.lower().eq("void")
+    return bool(resolved.all())
 
 
 def _matchup_is_started(group: pd.DataFrame) -> bool:
@@ -651,7 +666,7 @@ def _display(df: pd.DataFrame) -> pd.DataFrame:
         "_value": ranked["_value"].astype(float),
         "_candidate": tracker.qualifies_probability_gap(
             ranked["_value"], tracker.ATTD_VALUE_THRESHOLD
-        ),
+        ) & _bet_eligibility(ranked).to_numpy(),
     })
 
 
@@ -718,7 +733,7 @@ def _two_plus_display(df: pd.DataFrame) -> pd.DataFrame:
         "_value": ranked["_value"].astype(float),
         "_candidate": tracker.qualifies_probability_gap(
             ranked["_value"], tracker.ATTD_VALUE_THRESHOLD
-        ),
+        ) & _bet_eligibility(ranked).to_numpy(),
     })
 
 
@@ -780,7 +795,7 @@ def _first_td_display(df: pd.DataFrame) -> pd.DataFrame:
         "_value": ranked["_value"].astype(float),
         "_candidate": tracker.qualifies_probability_gap(
             ranked["_value"], tracker.FIRST_TD_VALUE_THRESHOLD
-        ),
+        ) & _bet_eligibility(ranked).to_numpy(),
     })
 
 
