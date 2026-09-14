@@ -4,11 +4,11 @@
   "projection_units": "direct_dk_points",
   "season": 2026,
   "week": 1,
-  "projection_csv_sha256": "01388e16d6c528cfa3424b7e8116ca6427136fa7162d55dc4fdd6a1ecaaa45ad",
-  "row_count": 398,
+  "projection_csv_sha256": "89e6e82961cd4277978a1fd7d004d107a02741e1648f15ac42f5f619bb68a60f",
+  "row_count": 397,
   "position_counts": {
     "QB": 31,
-    "RB": 103,
+    "RB": 102,
     "TE": 100,
     "WR": 164
   },
