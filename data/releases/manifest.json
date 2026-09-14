@@ -380,7 +380,7 @@
         "scheduled_for": null,
         "season": 2026,
         "status": "Awaiting projections",
-        "week": 1
+        "week": 2
       },
       "previous_build": "fantasy-2026w01-d25ab6451a39"
     },
@@ -762,5 +762,5 @@
     }
   },
   "schema_version": 1,
-  "updated_at": "2026-09-13T20:50:34Z"
+  "updated_at": "2026-09-14T02:52:10Z"
 }

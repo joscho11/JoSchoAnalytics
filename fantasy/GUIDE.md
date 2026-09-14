@@ -1,8 +1,8 @@
 # Weekly fantasy projections
 
-Status: checked against the as-of rebuild (`asof_rebuild.json`, 2026-09-01), site code, and release contract. The on-disk `prod_card.json` is the pre-fix leaky lock and is no longer the public number.
+Status: checked against the as-of rebuild (`asof_rebuild.json`, 2026-09-01), site code, and release contract. The reconciled causal bundle is promoted privately for the Week 2 launch; the public Week 1 build remains immutable.
 
-The current weekly fantasy product is built in `weekly_projections_v2_prod`, a separate private repository. This public repository owns candidate validation, immutable releases, the website, and the frozen 2025 demo.
+The current weekly fantasy product is built in `weekly_projections_v2_prod`, a separate private repository. This public repository owns candidate validation, immutable releases, the website, and the frozen 2025 demo. Week 2 is scheduled and will be published only after matching pregame snapshots pass validation.
 
 ## Current 2026 system
 
@@ -10,9 +10,9 @@ The production recipe is `l1_wipe_prior_share_ranks`. One LightGBM, 95 features:
 
 Sleeper projections are an evaluation benchmark, not a model feature. The producer can publish without Sleeper data. Benchmark coverage is reported separately so a missing market snapshot cannot change the model inputs.
 
-The producer writes a candidate CSV and SHA-256 sidecar. The public [publishing contract](../publishing/README.md) validates the schema, coverage, source metadata, and sidecar before copying the candidate into `data/releases/builds/`. The site reads the active manifest pointer. Direct writes into `fantasy/fantasy_projections/` are retired for 2026.
+The producer writes a candidate CSV and SHA-256 sidecar. The public [publishing contract](../publishing/README.md) validates the schema, coverage, source metadata, and sidecar before copying the candidate into `data/releases/builds/`. The site reads the active manifest pointer. Direct writes into `fantasy/fantasy_projections/` are retired for 2026. The promoted model version is `weekly-fantasy-v2-l1_wipe_prior_share_ranks-ad79f409f0b3`.
 
-No 2026 fantasy week has been graded yet. The manifest remains on the frozen 2025 demo baseline until a valid 2026 candidate is published.
+2026 Week 1 is the active, partially graded public release and is not revised by this promotion. The manifest now identifies 2026 Week 2 as the next expected fantasy release; no Week 2 artifact is published until its projection, directory, market, and lineup-news snapshots are available.
 
 ## Locked evaluation
 
