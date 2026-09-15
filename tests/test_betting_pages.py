@@ -200,6 +200,19 @@ def test_weekly_predictions_formats_named_shopped_quote():
     )
 
 
+def test_weekly_predictions_sort_matchups_by_largest_gap():
+    import pandas as pd
+    import page_weekly_predictions as page
+
+    frame = pd.DataFrame([
+        {"game_id": "small", "gap": -1.2, "gameday": "2026-09-20", "gametime": "13:00"},
+        {"game_id": "largest", "gap": 3.0, "gameday": "2026-09-18", "gametime": "20:15"},
+        {"game_id": "middle", "gap": -2.8, "gameday": "2026-09-19", "gametime": "13:00"},
+    ])
+    ordered = page._sort_matchups_by_gap(frame, "gap")
+    assert ordered["game_id"].tolist() == ["largest", "middle", "small"]
+
+
 if __name__ == "__main__":
     import tempfile
     with tempfile.TemporaryDirectory() as d:

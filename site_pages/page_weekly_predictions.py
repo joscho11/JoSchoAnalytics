@@ -108,6 +108,21 @@ def _best_quote_html(row, recommended_team: str | None) -> str:
     )
 
 
+def _sort_matchups_by_gap(frame: pd.DataFrame, edge_col: str) -> pd.DataFrame:
+    """Order matchup cards from the largest absolute model gap to the smallest."""
+    out = frame.copy()
+    out["_gap_abs"] = pd.to_numeric(out[edge_col], errors="coerce").abs()
+    sort_cols = ["_gap_abs"]
+    ascending = [False]
+    for column in ("gameday", "gametime", "game_id"):
+        if column in out.columns:
+            sort_cols.append(column)
+            ascending.append(True)
+    return out.sort_values(sort_cols, ascending=ascending, na_position="last", kind="mergesort").drop(
+        columns="_gap_abs"
+    )
+
+
 def render():
     st.title("Weekly predictions")
     st.caption("NFL spread projections, Tuesday HIGH picks, and graded results.")
@@ -364,18 +379,9 @@ def render():
 
         if live:
             filtered_df = filtered_df.copy()
-            filtered_df["_live_high"] = filtered_df.apply(_public_high, axis=1)
-            _sort_cols = ["_live_high"]
-            _asc = [False]
-            if "gameday" in filtered_df.columns:
-                _sort_cols.append("gameday")
-                _asc.append(True)
-            if "gametime" in filtered_df.columns:
-                _sort_cols.append("gametime")
-                _asc.append(True)
-            filtered_df = filtered_df.sort_values(_sort_cols, ascending=_asc)
+            filtered_df = _sort_matchups_by_gap(filtered_df, _primary_edge)
         else:
-            filtered_df = filtered_df.sort_values(_primary_edge, key=abs, ascending=False)
+            filtered_df = _sort_matchups_by_gap(filtered_df, _primary_edge)
 
         def fmt(val):
             if val is None or pd.isna(val):
