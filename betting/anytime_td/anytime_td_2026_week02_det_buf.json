@@ -6,7 +6,7 @@
     "DraftKings"
   ],
   "release_mode": "live",
-  "publish_now_et": "2026-09-15T11:03:32.310374",
+  "publish_now_et": "2026-09-15T11:53:55.317038",
   "model": "live_product_35 frozen bundle; 34 locked features + Sleeper half-PPR",
   "forward_source": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\weekly_projections_v2_prod\\independent_model\\outputs\\forward\\forward_2026_week02.parquet",
   "historical_source": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\td_count_model_beta\\artifacts\\td_features_2019_2025.parquet",
@@ -14,7 +14,7 @@
   "model_bundle_sha256": "6cb5874db5278e8306cf8d06e67f5fe7a10262d7dc5a8e59a26fa568c8081819",
   "input_hashes": {
     "paste": "e57f77a1b28674e977476bc9a635ad75a9b8477b764e73b6f13372d73d6159ba",
-    "forward": "c407fa7a8d548da3406a8828005d6294fa57fffbe088c8695b18c8e7acd5eee4",
+    "forward": "ff668ae96142876bdd43a29f43e26c7bf31093be1f44f11fc20c5d1b6cc1714d",
     "history": "58495f19d2cd3cfbaa824e6d462f0c68fc497237cdde3d8bfb130e19c4cb3a15"
   },
   "n_rows": 22,
@@ -33,12 +33,30 @@
   "model_pending_paste_rows": [],
   "model_pending_count": 0,
   "lineup_overrides": {
-    "path": null,
-    "sha256": null,
-    "out_player_ids": [],
-    "out_player_game_keys": [],
-    "replacement_player_ids": [],
-    "replacement_sleeper_ids": [],
+    "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\news\\2026_w02_lineup_overrides.csv",
+    "sha256": "1e1873f390b9a75127af30514da983f83528b22502e7f4cc06db53ca78c31704",
+    "out_player_ids": [
+      "00-0035228",
+      "00-0036212"
+    ],
+    "out_player_game_keys": [
+      [
+        "00-0035228",
+        "2026_02_MIN_CHI"
+      ],
+      [
+        "00-0036212",
+        "2026_02_CAR_ATL"
+      ]
+    ],
+    "replacement_player_ids": [
+      "00-0032950",
+      "00-0033662"
+    ],
+    "replacement_sleeper_ids": [
+      "3161",
+      "4574"
+    ],
     "removed_out_players": [],
     "removed_out_player_game_keys": []
   },
@@ -90,7 +108,7 @@
           "team"
         ],
         "source": "team_rz_trips_l4w",
-        "filled_rows": 410
+        "filled_rows": 24
       },
       {
         "column": "team_rz_td_rate_l4w",
@@ -98,7 +116,7 @@
           "team"
         ],
         "source": "team_rz_td_rate_l4w",
-        "filled_rows": 410
+        "filled_rows": 24
       },
       {
         "column": "team_i10_pass_rate_l4w",
@@ -106,15 +124,7 @@
           "team"
         ],
         "source": "team_i10_pass_rate_l4w",
-        "filled_rows": 410
-      },
-      {
-        "column": "rush_share_l4w",
-        "keys": [
-          "player_id"
-        ],
-        "source": "rush_share_l4w",
-        "filled_rows": 5
+        "filled_rows": 24
       },
       {
         "column": "i10_target_share_l4w",
@@ -122,23 +132,7 @@
           "player_id"
         ],
         "source": "i10_target_share_l4w",
-        "filled_rows": 281
-      },
-      {
-        "column": "rush_td_exp_l4w",
-        "keys": [
-          "player_id"
-        ],
-        "source": "rush_td_exp_l4w",
-        "filled_rows": 1
-      },
-      {
-        "column": "rec_td_exp_l4w",
-        "keys": [
-          "player_id"
-        ],
-        "source": "rec_td_exp_l4w",
-        "filled_rows": 1
+        "filled_rows": 20
       },
       {
         "column": "opp_rz_td_rate_allowed_l4w",
@@ -146,7 +140,7 @@
           "opponent_team"
         ],
         "source": "opp_rz_td_rate_allowed_l4w",
-        "filled_rows": 410
+        "filled_rows": 24
       },
       {
         "column": "opp_td_allowed_to_pos_l4w",
@@ -155,7 +149,7 @@
           "position"
         ],
         "source": "opp_td_allowed_to_pos_l4w",
-        "filled_rows": 410
+        "filled_rows": 24
       },
       {
         "column": "qb_cpoe_l4w",
@@ -163,7 +157,7 @@
           "player_id"
         ],
         "source": "qb_cpoe_l4w",
-        "filled_rows": 349
+        "filled_rows": 23
       },
       {
         "column": "height",
@@ -171,7 +165,7 @@
           "player_id"
         ],
         "source": "height",
-        "filled_rows": 349
+        "filled_rows": 23
       },
       {
         "column": "weight",
@@ -179,25 +173,25 @@
           "player_id"
         ],
         "source": "weight",
-        "filled_rows": 349
+        "filled_rows": 23
       }
     ],
     "historical_fallback": [],
     "unresolved": [],
     "unresolved_rows": {
-      "snap_pct_l4w": 61,
-      "rush_share_l4w": 61,
-      "target_share_l4w": 61,
-      "rz_carry_share_l4w": 61,
-      "rz_target_share_l4w": 61,
-      "i10_carry_share_l4w": 61,
-      "i10_target_share_l4w": 129,
-      "rush_td_exp_l4w": 65,
-      "rec_td_exp_l4w": 65,
-      "qb_cpoe_l4w": 61,
-      "height": 61,
-      "weight": 61,
-      "changed_team_offseason": 61
+      "snap_pct_l4w": 1,
+      "rush_share_l4w": 1,
+      "target_share_l4w": 1,
+      "rz_carry_share_l4w": 1,
+      "rz_target_share_l4w": 1,
+      "i10_carry_share_l4w": 1,
+      "i10_target_share_l4w": 4,
+      "rush_td_exp_l4w": 1,
+      "rec_td_exp_l4w": 1,
+      "qb_cpoe_l4w": 1,
+      "height": 1,
+      "weight": 1,
+      "changed_team_offseason": 1
     }
   },
   "feature_provenance": {
@@ -240,24 +234,24 @@
     ],
     "source": "forward canonical columns + exact prior-season canonical feature rows",
     "source_hashes": {
-      "forward": "c407fa7a8d548da3406a8828005d6294fa57fffbe088c8695b18c8e7acd5eee4",
+      "forward": "ff668ae96142876bdd43a29f43e26c7bf31093be1f44f11fc20c5d1b6cc1714d",
       "history": "58495f19d2cd3cfbaa824e6d462f0c68fc497237cdde3d8bfb130e19c4cb3a15"
     },
     "historical_fallback": [],
     "missingness_counts": {
-      "snap_pct_l4w": 61,
-      "rush_share_l4w": 61,
-      "target_share_l4w": 61,
-      "rz_carry_share_l4w": 61,
-      "rz_target_share_l4w": 61,
-      "i10_carry_share_l4w": 61,
-      "i10_target_share_l4w": 129,
-      "rush_td_exp_l4w": 65,
-      "rec_td_exp_l4w": 65,
-      "qb_cpoe_l4w": 61,
-      "height": 61,
-      "weight": 61,
-      "changed_team_offseason": 61
+      "snap_pct_l4w": 1,
+      "rush_share_l4w": 1,
+      "target_share_l4w": 1,
+      "rz_carry_share_l4w": 1,
+      "rz_target_share_l4w": 1,
+      "i10_carry_share_l4w": 1,
+      "i10_target_share_l4w": 4,
+      "rush_td_exp_l4w": 1,
+      "rec_td_exp_l4w": 1,
+      "qb_cpoe_l4w": 1,
+      "height": 1,
+      "weight": 1,
+      "changed_team_offseason": 1
     }
   },
   "network_odds_api": false,

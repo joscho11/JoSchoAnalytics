@@ -650,3 +650,19 @@ def test_scheduled_grader_dispatches_anytime_td(monkeypatch, tmp_path):
 
     result = _grade_published(site, "anytime_td")
     assert result["anytime_td"] == expected
+
+
+def test_scheduled_grader_dispatches_first_td(monkeypatch, tmp_path):
+    """grade_first_td_releases was defined but never wired into the CLI dispatch;
+    the live board's scored_first column went ungraded as a result. Regression
+    coverage for that gap, not just the anytime_td half of the same bucket."""
+    site = tmp_path / "site"
+    site.mkdir()
+    expected_anytime = {"status": "skipped", "reason": "test-anytime"}
+    expected_first = {"status": "skipped", "reason": "test-first"}
+    monkeypatch.setattr("publishing.cli.grade_anytime_td_releases", lambda root: expected_anytime)
+    monkeypatch.setattr("publishing.cli.grade_first_td_releases", lambda root: expected_first)
+
+    result = _grade_published(site, "anytime_td")
+    assert result["anytime_td"] == expected_anytime
+    assert result["first_td"] == expected_first

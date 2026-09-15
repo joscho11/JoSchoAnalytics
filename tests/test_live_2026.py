@@ -89,8 +89,9 @@ def test_attach_slate_skips_already_logged_2026_row(tmp_path):
 
 
 def test_display_high_demote_only():
-    assert tuesday_high(10, 7.5)
-    assert not tuesday_high(10, 7.6)
+    # HIGH_GAP is 3.0 (bumped from 2.5, see betting/live_2026.py history).
+    assert tuesday_high(10, 6.9)
+    assert not tuesday_high(10, 7.1)
     assert tuesday_high(10, 7)
     assert display_high(10, 7, None)
     assert display_high(10, 7, 6.5)
@@ -142,15 +143,17 @@ def test_2026_high_qualifies_off_median_and_shop_cannot_promote():
     assert not row_display_high(row)
 
     # A median-qualified game remains HIGH while its shopped execution improves.
-    row["ens_predicted_margin"] = 0.53
+    # HIGH_GAP is 3.0: median gap 3.5 qualifies, shopped gap 4.0 keeps it HIGH.
+    row["ens_predicted_margin"] = 0.0
     row["tuesday_median_spread_line"] = 3.5
     row["tuesday_spread_line"] = 4.0
     assert row_display_high(row)
 
 
 def test_one_sided_wilson_claim_matches_locked_book():
-    assert LIVE_HIGH_WINS == 295
-    assert LIVE_HIGH_N == 521
+    # Updated in ac95d21 (Publish corrected Week 1 and Week 2 spread predictions).
+    assert LIVE_HIGH_WINS == 253
+    assert LIVE_HIGH_N == 436
     lo = _wilson_one_sided_lower(LIVE_HIGH_WINS, LIVE_HIGH_N, LIVE_HIGH_WILSON_Z)
     assert round(lo, 4) == LIVE_HIGH_WILSON_LOWER
     assert lo > 0.524

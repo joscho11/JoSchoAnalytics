@@ -16,6 +16,7 @@ from .grader import (
     fetch_player_stats,
     grade_anytime_td_releases,
     grade_fantasy,
+    grade_first_td_releases,
     grade_predictions,
 )
 from .manifest import load_manifest, published_builds
@@ -159,6 +160,7 @@ def _grade_published(root: Path, product: str = "all") -> dict:
         results[selected] = product_results
     if product in ("all", "anytime_td"):
         results["anytime_td"] = grade_anytime_td_releases(root)
+        results["first_td"] = grade_first_td_releases(root)
     return results
 
 

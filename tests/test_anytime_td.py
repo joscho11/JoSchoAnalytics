@@ -1,5 +1,6 @@
 """Anytime TDs demo page. Hermetic APP_OFFLINE=1."""
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -113,11 +114,20 @@ def test_ne_sea_display_only_two_plus_model_view_is_shown(tmp_path):
         frame.value["Book 2+ TD Odds"].eq("Not implemented yet").all()
         for frame in rendered
     )
-    assert any(
-        "Results-only 2+ TD tally" in str(item.value)
-        and "0 hits / 48 graded player-games" in str(item.value)
-        for item in at.caption
-    )
+    # The tally aggregates every published live week, not just NE vs SEA, so
+    # the graded count grows as later weeks publish (48 at Week 1 launch,
+    # 358 once Week 2 joined). Check shape and internal consistency instead
+    # of a snapshot count that goes stale on every new live week.
+    tally_captions = [
+        str(item.value) for item in at.caption
+        if "Results-only 2+ TD tally" in str(item.value)
+    ]
+    assert tally_captions, [str(item.value) for item in at.caption]
+    match = re.search(r"(\d+) hits / (\d+) graded player-games", tally_captions[0])
+    assert match, tally_captions[0]
+    hits, graded = int(match.group(1)), int(match.group(2))
+    assert 0 <= hits <= graded
+    assert graded > 0
 
 
 def test_sf_la_display_only_two_plus_model_view_is_shown(tmp_path):
@@ -671,12 +681,17 @@ def test_live_week1_reconciles_tua_out_and_updated_atl_pit_prices():
     assert not live.player_display_name.eq("Tua Tagovailoa").any()
     cooper = matchup[matchup.player_id.eq("00-0033662")].iloc[0]
     assert cooper.player_display_name == "Cooper Rush"
+    # Price moved between the 09-11 pregame capture (1500/6000/17000, see
+    # anytime_td_2026_week01.csv.bak_before_first_td) and the final graded
+    # board. Cooper Rush stays model_pending (no slp_proj feature): lambda,
+    # p_ge1, p_ge2, fair_amer, p_first are NaN in the live file.
     assert (cooper.book_amer, cooper.first_amer, cooper.two_plus_amer) == (
-        1500, 6000, 17000,
+        2200, 8000, 25000,
     )
     bijan = matchup[matchup.player_id.eq("00-0038542")].iloc[0]
+    # Same 09-11-to-final drift as Cooper Rush above.
     assert (bijan.book_amer, bijan.first_amer, bijan.two_plus_amer) == (
-        -145, 390, 425,
+        -125, 425, 500,
     )
     assert matchup.book.eq("DraftKings").all()
 
