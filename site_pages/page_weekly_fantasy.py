@@ -188,8 +188,13 @@ def apply_weekly_scoring(frame: pd.DataFrame, scoring: str) -> pd.DataFrame:
     return out
 
 
-def _show_sleeper_comparison(season: int, week: int) -> bool:
-    """Show Sleeper beside our number for live week 1 only.
+def _show_sleeper_comparison(
+    season: int,
+    week: int,
+    *,
+    actuals_in: bool = False,
+) -> bool:
+    """Show Sleeper beside our number on the live Week 1 pregame board.
 
     Measured on the 2025 holdout, week 1: our MAE beats Sleeper at every
     position (3.29 vs 3.49 overall) but our rank correlation loses at every
@@ -198,7 +203,11 @@ def _show_sleeper_comparison(season: int, week: int) -> bool:
     of hiding it. From week 2 the window fills with current-season games and
     the gap closes, so the comparison column comes off.
     """
-    return int(season) >= LIVE_FROM_SEASON and int(week) == 1
+    return (
+        int(season) >= LIVE_FROM_SEASON
+        and int(week) == 1
+        and not actuals_in
+    )
 
 
 def _uses_preview_layout(season: int, week: int) -> bool:
@@ -342,6 +351,7 @@ def _preview_table_columns(
     position: str,
     show_more_info: bool,
     actuals_in: bool,
+    actual_detail: bool = True,
     show_sleeper: bool = False,
 ) -> list[str]:
     columns = list(PREVIEW_SIMPLE_COLUMNS)
@@ -352,7 +362,8 @@ def _preview_table_columns(
         columns.extend(PREVIEW_CONTEXT_COLUMNS)
     if actuals_in:
         columns.append("Actual Pts")
-        columns.extend(PREVIEW_ACTUAL_COLUMNS[position])
+        if actual_detail:
+            columns.extend(PREVIEW_ACTUAL_COLUMNS[position])
     return columns
 
 
@@ -533,9 +544,9 @@ def render():
         live_format_preview = (int(season), int(week)) == LIVE_FORMAT_PREVIEW
         if int(season) >= LIVE_FROM_SEASON:
             st.success(
-                "Live 2026. Our model scores the players; Sleeper supplies coverage and, "
-                "in Week 1 only, the comparison. Rankings lock per game at kickoff, and later "
-                "revisions change future games only."
+                "Live 2026. Our model scores the players; the pregame Week 1 board also "
+                "includes Sleeper for comparison. Completed releases show settled fantasy "
+                "points, and later revisions change future games only."
             )
         elif live_format_preview:
             st.info(
@@ -568,6 +579,14 @@ def render():
         actual_te_recs     = _actuals.get('te_recs',     {})
         actual_qb_recs     = _actuals.get('qb_recs',     {})
         actual_rb_recs     = _actuals.get('rb_recs',     {})
+        actual_detail_available = any(
+            _actuals.get(key)
+            for key in (
+                "qb_pass_yds", "qb_rush_yds", "rb_rush_yds", "rb_rec_yds",
+                "wr_rec_yds", "wr_recs", "te_rec_yds", "te_recs",
+                "qb_recs", "rb_recs",
+            )
+        )
 
         played_ids = (
             {str(pid) for pid in _half_ppr_dict} if actuals_in else None
@@ -595,11 +614,14 @@ def render():
                 fantasy_analysis = None
 
         if actuals_in:
-            st.success(f"Results are in! Actual stats are now shown alongside projections for Week {week}.")
+            st.success(
+                f"Results are in! Settled fantasy points are now shown alongside "
+                f"projections for Week {week}."
+            )
         else:
             st.caption("Games not yet played · actual stats appear after the week's results are in.")
 
-        if _show_sleeper_comparison(season, week):
+        if _show_sleeper_comparison(season, week, actuals_in=actuals_in):
             st.info(
                 "**Week 1 shows Sleeper's projection beside ours.** For start/sit "
                 "ordering, use Sleeper where the two disagree this week.",
@@ -729,7 +751,7 @@ def render():
                     mask = pos_df["player_display_name"].str.contains(player_search, case=False, na=False, regex=False)
                     pos_df = pos_df[mask]
                 elif (
-                    _show_sleeper_comparison(season, week)
+                    _show_sleeper_comparison(season, week, actuals_in=actuals_in)
                     and "_sleeper_scoring_pts" in pos_df.columns
                     and pos_df["_sleeper_scoring_pts"].notna().any()
                 ):
@@ -836,7 +858,7 @@ def render():
                     display["Team Total"] = display["implied_team_total"].round(1)
 
                 _show_slp = (
-                    _show_sleeper_comparison(season, week)
+                    _show_sleeper_comparison(season, week, actuals_in=actuals_in)
                     and "slp_proj" in display.columns
                     and display["slp_proj"].notna().any()
                 )
@@ -872,7 +894,7 @@ def render():
                     display["Actual Pts"] = points_from_half_ppr(
                         _actual_raw, display["player_id"].map(_actual_recs), scoring
                     ).round(1)
-                    if preview_layout:
+                    if preview_layout and actual_detail_available:
                         display["Actual Pass Yds"] = pd.to_numeric(
                             display["player_id"].map(actual_qb_pass_yds if pos == "QB" else {}),
                             errors="coerce",
@@ -898,21 +920,24 @@ def render():
                             display["player_id"].map(rec_actuals), errors="coerce"
                         )
                         tbl_cols = _preview_table_columns(
-                            pos, show_more_info, actuals_in=True
+                            pos,
+                            show_more_info,
+                            actuals_in=True,
+                            actual_detail=True,
                         )
-                    elif has_qb_stats:
+                    elif actual_detail_available and has_qb_stats:
                         display["Actual Pass Yds"] = pd.to_numeric(display["player_id"].map(actual_qb_pass_yds), errors="coerce")
                         display["Actual Rush Yds"] = pd.to_numeric(display["player_id"].map(actual_qb_rush_yds), errors="coerce")
                         tbl_cols = base_cols + ["Actual Pts", "Actual Pass Yds", "Actual Rush Yds"]
-                    elif has_rb_yds:
+                    elif actual_detail_available and has_rb_yds:
                         display["Actual Rush Yds"] = pd.to_numeric(display["player_id"].map(actual_rush_yds),    errors="coerce")
                         display["Actual Rec Yds"]  = pd.to_numeric(display["player_id"].map(actual_rb_rec_yds),  errors="coerce")
                         tbl_cols = base_cols + ["Actual Pts", "Actual Rush Yds", "Actual Rec Yds"]
-                    elif has_wr_stats:
+                    elif actual_detail_available and has_wr_stats:
                         display["Actual Receptions"] = pd.to_numeric(display["player_id"].map(actual_wr_recs),    errors="coerce")
                         display["Actual Rec Yds"]    = pd.to_numeric(display["player_id"].map(actual_wr_rec_yds), errors="coerce")
                         tbl_cols = base_cols + ["Actual Pts", "Actual Receptions", "Actual Rec Yds"]
-                    elif has_te_stats:
+                    elif actual_detail_available and has_te_stats:
                         display["Actual Receptions"] = pd.to_numeric(display["player_id"].map(actual_te_recs),    errors="coerce")
                         display["Actual Rec Yds"]    = pd.to_numeric(display["player_id"].map(actual_te_rec_yds), errors="coerce")
                         tbl_cols = base_cols + ["Actual Pts", "Actual Receptions", "Actual Rec Yds"]
@@ -980,14 +1005,15 @@ def render():
                 if actuals_in:
                     col_config["Actual Pts"]        = st.column_config.NumberColumn("Actual Pts",        format="%.1f",
                                       help=f"Actual half-PPR fantasy points scored in this game. {_dnp_note}")
-                    col_config["Actual Pass Yds"]   = st.column_config.NumberColumn("Actual Pass Yds",   format="%d",
-                                      help=f"Actual passing yards recorded in this game. {_dnp_note}")
-                    col_config["Actual Rush Yds"]   = st.column_config.NumberColumn("Actual Rush Yds",   format="%d",
-                                      help=f"Actual rushing yards recorded in this game. {_dnp_note}")
-                    col_config["Actual Rec Yds"]    = st.column_config.NumberColumn("Actual Rec Yds",    format="%d",
-                                      help=f"Actual receiving yards recorded in this game. {_dnp_note}")
-                    col_config["Actual Receptions"] = st.column_config.NumberColumn("Actual Receptions", format="%.1f",
-                                      help=f"Actual number of receptions recorded in this game. {_dnp_note}")
+                    if actual_detail_available:
+                        col_config["Actual Pass Yds"]   = st.column_config.NumberColumn("Actual Pass Yds",   format="%d",
+                                          help=f"Actual passing yards recorded in this game. {_dnp_note}")
+                        col_config["Actual Rush Yds"]   = st.column_config.NumberColumn("Actual Rush Yds",   format="%d",
+                                          help=f"Actual rushing yards recorded in this game. {_dnp_note}")
+                        col_config["Actual Rec Yds"]    = st.column_config.NumberColumn("Actual Rec Yds",    format="%d",
+                                          help=f"Actual receiving yards recorded in this game. {_dnp_note}")
+                        col_config["Actual Receptions"] = st.column_config.NumberColumn("Actual Receptions", format="%.1f",
+                                          help=f"Actual number of receptions recorded in this game. {_dnp_note}")
 
                 if preview_layout:
                     phone_keep = _preview_phone_columns(

@@ -117,7 +117,14 @@ def test_week1_graded_release_renders_postgame_actuals(tmp_path):
     path = weekly.available_projection_files()[(2026, 1)]
     at = _render_weekly_release(tmp_path, path)
     assert any("Results are in" in str(item.value) for item in at.success)
-    assert any("Actual Pts" in frame.value.columns for frame in at.dataframe)
+    actual_frames = [frame.value for frame in at.dataframe if "Actual Pts" in frame.value.columns]
+    assert actual_frames
+    assert any(frame["Actual Pts"].notna().any() for frame in actual_frames)
+    assert all("Sleeper" not in frame.columns for frame in actual_frames)
+    assert all(
+        not {"Actual Pass Yds", "Actual Rush Yds", "Actual Rec Yds"} & set(frame.columns)
+        for frame in actual_frames
+    )
 
 
 def test_weekly_fantasy_defaults_to_live_2026_release(tmp_path):
