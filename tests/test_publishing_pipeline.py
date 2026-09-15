@@ -666,3 +666,91 @@ def test_scheduled_grader_dispatches_first_td(monkeypatch, tmp_path):
     result = _grade_published(site, "anytime_td")
     assert result["anytime_td"] == expected_anytime
     assert result["first_td"] == expected_first
+
+
+def test_anytime_td_grading_handles_the_real_publisher_schema_end_to_end(tmp_path):
+    """Every other grading test here uses a hand-trimmed board missing most
+    of td_count_model_beta.live_publish.SITE_COLUMNS (lambda, fair_amer,
+    bet_eligible, eligibility_reason, ...). This uses the REAL column set so
+    a real cold-start row (bet_eligible=False) is proven to grade correctly
+    -- neither crashing on the extra columns nor letting eligibility fields
+    leak into the outcome. This is the seam between td_count_model_beta's
+    real publish output and JoSchoAnalytics's real grader."""
+    site_columns = (
+        "season", "week", "player_id", "player_display_name", "position", "team",
+        "opponent_team", "game_id", "kickoff_et", "snapped_at_et", "book",
+        "book_amer", "first_amer", "two_plus_amer", "p_book", "lambda", "p_ge1", "p_ge2", "fair_amer",
+        "scored_anytime", "scored_two_plus", "status", "slate",
+        "identity_source", "l4w_games_available", "forward_history_missing",
+        "bet_eligible", "eligibility_reason",
+    )
+    rows = [
+        {
+            "season": 2026, "week": 1, "player_id": "SEA-RB", "player_display_name": "Sea RB",
+            "position": "RB", "team": "SEA", "opponent_team": "NE", "game_id": "2026_01_NE_SEA",
+            "kickoff_et": "2026-09-10 20:20", "snapped_at_et": "2026-09-10 17:20",
+            "book": "DraftKings", "book_amer": 150, "first_amer": None, "two_plus_amer": 400,
+            "p_book": 0.30, "lambda": 0.55, "p_ge1": 0.40, "p_ge2": 0.20, "fair_amer": 150,
+            "scored_anytime": None, "scored_two_plus": None, "status": "pregame", "slate": "test",
+            "identity_source": "gsis", "l4w_games_available": 4, "forward_history_missing": False,
+            "bet_eligible": True, "eligibility_reason": "",
+        },
+        {
+            "season": 2026, "week": 1, "player_id": "sleeper:rookie", "player_display_name": "Rookie Nobody",
+            "position": "WR", "team": "SEA", "opponent_team": "NE", "game_id": "2026_01_NE_SEA",
+            "kickoff_et": "2026-09-10 20:20", "snapped_at_et": "2026-09-10 17:20",
+            "book": "DraftKings", "book_amer": None, "first_amer": None, "two_plus_amer": None,
+            "p_book": None, "lambda": 0.10, "p_ge1": 0.09, "p_ge2": 0.01, "fair_amer": 1000,
+            "scored_anytime": None, "scored_two_plus": None, "status": "pregame", "slate": "test",
+            "identity_source": "synthetic_sleeper", "l4w_games_available": 0, "forward_history_missing": True,
+            "bet_eligible": False, "eligibility_reason": "synthetic_or_unresolved_identity",
+        },
+    ]
+    path = tmp_path / "anytime_td_2026_week01.csv"
+    pd.DataFrame(rows, columns=list(site_columns)).to_csv(path, index=False)
+
+    schedule = pd.DataFrame([{
+        "season": 2026, "week": 1, "game_id": "2026_01_NE_SEA",
+        "home_team": "SEA", "away_team": "NE", "home_score": 27, "away_score": 20,
+    }])
+    # "sleeper:rookie" is deliberately absent from actuals (a box-score feed
+    # has no row for him at all), matching the real void scenario: he is only
+    # resolved via the separate participation feed's confirmed zero snaps.
+    # NE-COVERAGE is present so both teams clear the complete-feed check.
+    actuals = pd.DataFrame([
+        {
+            "season": 2026, "week": 1, "season_type": "REG", "player_id": "SEA-RB",
+            "team": "SEA", "rushing_tds": 2, "receiving_tds": 0, "offense_snaps": 55,
+        },
+        {
+            "season": 2026, "week": 1, "season_type": "REG", "player_id": "NE-COVERAGE",
+            "team": "NE", "rushing_tds": 0, "receiving_tds": 0, "offense_snaps": 0,
+        },
+    ])
+    participation = pd.DataFrame([
+        {"season": 2026, "week": 1, "player_id": "sleeper:rookie", "team": "SEA", "offense_snaps": 0},
+    ])
+
+    result = grade_anytime_td_file(
+        path, schedule, actuals, participation=participation, season=2026, week=1
+    )
+    assert result["status"] == "graded"
+    graded = pd.read_csv(path)
+
+    real = graded.set_index("player_id").loc["SEA-RB"]
+    assert int(real["scored_anytime"]) == 1
+    assert real["status"] == "final"
+
+    # The cold-start row's eligibility fields must survive grading untouched
+    # and must not have influenced its outcome. Absent from the box score but
+    # confirmed zero snaps in the participation feed is exactly the DNP/void
+    # case (Phase 3 of this review): void, not a loss -- being non-bettable
+    # is a separate question from having actually played.
+    cold = graded.set_index("player_id").loc["sleeper:rookie"]
+    assert bool(cold["bet_eligible"]) is False
+    assert cold["eligibility_reason"] == "synthetic_or_unresolved_identity"
+    assert pd.isna(cold["scored_anytime"])
+    assert cold["status"] == "void"
+
+    # Every real SITE_COLUMNS field must still be present after grading.
+    assert set(site_columns).issubset(graded.columns)

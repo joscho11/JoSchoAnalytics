@@ -25,7 +25,7 @@
   },
   "products": {
     "fantasy": {
-      "active_build": "fantasy-2026w02-45cbcb2767e0",
+      "active_build": "fantasy-2026w02-654dde8d0424",
       "builds": {
         "fantasy-2025w10-33a7de4ef33f": {
           "artifact": "data/releases/builds/fantasy/2025/week10/fantasy-2025w10-33a7de4ef33f/artifact.csv",
@@ -403,6 +403,35 @@
             ]
           },
           "week": 2
+        },
+        "fantasy-2026w02-654dde8d0424": {
+          "artifact": "data/releases/builds/fantasy/2026/week02/fantasy-2026w02-654dde8d0424/artifact.csv",
+          "build_id": "fantasy-2026w02-654dde8d0424",
+          "metadata": "data/releases/builds/fantasy/2026/week02/fantasy-2026w02-654dde8d0424/metadata.json",
+          "model_version": "weekly-fantasy-v2-l1_wipe_prior_share_ranks-ad79f409f0b3",
+          "produced_at": "2026-09-15T17:42:56Z",
+          "product": "fantasy",
+          "published_at": "2026-09-15T17:46:40Z",
+          "row_count": 374,
+          "season": 2026,
+          "sha256": "654dde8d04247dca473c6dde976ed499bb77162f08f538a5bbdb94c21aa2d204",
+          "status": "Published",
+          "validation": {
+            "checks": {
+              "artifact_sha256": "654dde8d04247dca473c6dde976ed499bb77162f08f538a5bbdb94c21aa2d204",
+              "produced_at_utc": "2026-09-15T17:42:56Z",
+              "scheduled_teams": 32,
+              "team_position_cells": 128
+            },
+            "errors": [],
+            "ok": true,
+            "product": "fantasy",
+            "row_count": 374,
+            "warnings": [
+              "31 projections are below zero; retained as a model diagnostic"
+            ]
+          },
+          "week": 2
         }
       },
       "next_release": {
@@ -411,7 +440,7 @@
         "status": "Awaiting projections",
         "week": 2
       },
-      "previous_build": "fantasy-2026w01-b3a4a2914ba3"
+      "previous_build": "fantasy-2026w02-45cbcb2767e0"
     },
     "predictions": {
       "active_build": "predictions-2026w02-dadc771d9ed0",
@@ -868,5 +897,5 @@
     }
   },
   "schema_version": 1,
-  "updated_at": "2026-09-15T15:52:31Z"
+  "updated_at": "2026-09-15T17:46:40Z"
 }
