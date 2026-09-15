@@ -12,8 +12,7 @@ import streamlit as st
 import page_common
 from fantasy_scoring import DEFAULT_SCORING, SCORING_MODES, points_from_half_ppr
 from dashboard_chrome import TABLE_HEIGHT, dataframe_phone_desktop, _OFFLINE
-from publishing.manifest import published_builds
-from publishing.paths import resolve_site_path
+from publishing.manifest import published_builds, resolve_build_artifact
 
 _HERE = Path(__file__).resolve().parents[1]
 DEMO_SEASON = 2025
@@ -83,10 +82,15 @@ def available_projection_files() -> dict[tuple[int, int], Path]:
     for build in published_builds("fantasy", manifest=manifest, root=_HERE):
         try:
             key = (int(build["season"]), int(build["week"]))
-            path = resolve_site_path(build["artifact"], _HERE)
+            grading = build.get("grading") or {}
+            path = resolve_build_artifact(
+                build,
+                root=_HERE,
+                prefer_graded=bool(grading.get("complete")),
+            )
         except (KeyError, TypeError, ValueError):
             continue
-        if path.is_file():
+        if path is not None and path.is_file():
             available[key] = path
     return available
 
@@ -473,6 +477,22 @@ def load_actual_stats(season: int, week: int) -> dict:
         return {}
 
 
+def _actuals_from_graded_projection(frame: pd.DataFrame) -> dict:
+    """Read settled fantasy points embedded in a complete graded artifact."""
+    if "actual_half_ppr" not in frame or "player_id" not in frame:
+        return {}
+    actual = pd.to_numeric(frame["actual_half_ppr"], errors="coerce")
+    valid = actual.notna() & frame["player_id"].notna()
+    if not valid.any():
+        return {}
+    return {
+        "half_ppr": dict(zip(
+            frame.loc[valid, "player_id"].astype(str),
+            actual.loc[valid].astype(float),
+        )),
+    }
+
+
 def render():
     st.title("Weekly fantasy projections")
     st.caption(
@@ -528,8 +548,14 @@ def render():
             st.info(f"This is the 2025 Week {week} demo from the previous weekly model.")
         preview_layout = _uses_preview_layout(season, week)
 
-        # Actual results (available after week is played)
+        _projection_source = _load_proj_csv(str(available[(season, week)]))
+
+        # Actual results (available after week is played). Complete graded
+        # releases carry settled half-PPR points, so the public page can stay
+        # postgame even when the external stats feed is unavailable.
         _actuals       = load_actual_stats(season, week)
+        if not _actuals.get("half_ppr"):
+            _actuals = _actuals_from_graded_projection(_projection_source)
         actuals_in     = bool(_actuals.get('half_ppr'))
         _half_ppr_dict     = _actuals.get('half_ppr',    {})
         actual_qb_pass_yds = _actuals.get('qb_pass_yds', {})
@@ -550,7 +576,7 @@ def render():
             frozenset() if actuals_in else unavailable_roster_ids(season, week)
         )
         proj_df = eligible_board_rows(
-            _load_proj_csv(str(available[(season, week)])),
+            _projection_source,
             season,
             week,
             played_ids=played_ids,

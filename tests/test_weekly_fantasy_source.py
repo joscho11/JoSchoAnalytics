@@ -64,6 +64,16 @@ def test_unvalidated_2026_files_are_not_public(tmp_path, monkeypatch):
     assert (2026, 1) not in got
 
 
+def test_complete_week1_release_prefers_graded_postgame_artifact():
+    path = weekly.available_projection_files()[(2026, 1)]
+    assert path.name.endswith("-graded.csv")
+    frame = pd.read_csv(path)
+    assert "actual_half_ppr" in frame.columns
+    assert frame["actual_half_ppr"].notna().all()
+    actuals = weekly._actuals_from_graded_projection(frame)
+    assert len(actuals["half_ppr"]) == len(frame)
+
+
 def _render_weekly(tmp_path):
     h = tmp_path / "h_weekly.py"
     h.write_text(
@@ -103,6 +113,13 @@ def _render_weekly_release(tmp_path, projection_path, season=2026, week=1):
     return at
 
 
+def test_week1_graded_release_renders_postgame_actuals(tmp_path):
+    path = weekly.available_projection_files()[(2026, 1)]
+    at = _render_weekly_release(tmp_path, path)
+    assert any("Results are in" in str(item.value) for item in at.success)
+    assert any("Actual Pts" in frame.value.columns for frame in at.dataframe)
+
+
 def test_weekly_fantasy_defaults_to_live_2026_release(tmp_path):
     at = _render_weekly(tmp_path)
     blob = " ".join(
@@ -114,18 +131,18 @@ def test_weekly_fantasy_defaults_to_live_2026_release(tmp_path):
     assert "weekly fantasy projections" in blob
 
 
-def test_weekly_fantasy_defaults_to_2026_week1(tmp_path):
+def test_weekly_fantasy_defaults_to_2026_week2(tmp_path):
     at = _render_weekly(tmp_path)
     by_key = {getattr(w, "key", None): w.value for w in at.selectbox}
     assert int(by_key["wf_season"]) == 2026
-    assert int(by_key["wf_week"]) == 1
+    assert int(by_key["wf_week"]) == 2
     markdown = " ".join(str(item.value) for item in at.markdown)
     assert "green-badge" in markdown and "Published" in markdown
     assert "Published" in markdown
     infos = " ".join(str(w.value) for w in at.info).lower()
     assert "no agent notes for this week" not in infos
-    assert "sleeper's projection beside ours" in infos
-    assert any(exp.label == "Why Sleeper is included for Week 1" for exp in at.expander)
+    assert "sleeper's projection beside ours" not in infos
+    assert not any(exp.label == "Why Sleeper is included for Week 1" for exp in at.expander)
 
 
 def test_coming_soon_copy_points_at_2025_demo():

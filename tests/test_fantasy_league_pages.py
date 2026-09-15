@@ -47,7 +47,7 @@ def test_weekly_fantasy_renders_and_owns_controls(tmp_path):
     assert {"wf_season", "wf_week"} <= keys, f"Weekly Fantasy must own Season+Week; got {keys}"
     controls = {w.key: w.value for w in at.selectbox}
     assert controls["wf_season"] == 2026
-    assert controls["wf_week"] == 1
+    assert controls["wf_week"] == 2
     assert not any(str(k).startswith(("wp_", "tr_")) for k in keys), \
         "Weekly Fantasy must not carry another page's controls"
 
