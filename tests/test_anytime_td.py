@@ -17,11 +17,12 @@ sys.path.insert(0, str(_HERE))
 import page_anytime_td as page
 
 
-def _render(tmp_path):
+def _render(tmp_path, week=None):
+    seed_week = "" if week is None else f"import streamlit as st; st.session_state['atd_week'] = {week}\n"
     harness = tmp_path / "h_anytime_td.py"
     harness.write_text(
         f"import sys; sys.path[:0] = [r'{_HERE}', r'{_SITE_PAGES}']\n"
-        "import page_anytime_td as p\np.render()\n",
+        f"{seed_week}import page_anytime_td as p\np.render()\n",
         encoding="utf-8",
     )
     at = AppTest.from_file(str(harness), default_timeout=180).run()
@@ -37,7 +38,7 @@ def test_anytime_td_renders_and_owns_controls(tmp_path):
     assert len(at.tabs) == 0
     controls = {w.key: w.value for w in at.selectbox}
     assert controls["atd_year"] == 2026
-    assert controls["atd_week"] == 1
+    assert controls["atd_week"] == 2
     titles = " ".join(str(t.value) for t in at.title)
     assert "Touchdown Props" in titles
     captions = " ".join(str(c.value) for c in at.caption)
@@ -51,12 +52,12 @@ def test_anytime_td_renders_and_owns_controls(tmp_path):
     assert "DraftKings" in blob
     assert "Eight players" not in blob
     assert any("How to read this board" in str(e.label) for e in at.expander)
-    assert any(getattr(w, "key", None) == "atd_matchup_2026_1" for w in at.selectbox)
-    assert any(getattr(w, "key", None) == "atd_view_2026_1" for w in at.segmented_control)
+    assert any(getattr(w, "key", None) == "atd_matchup_2026_2" for w in at.selectbox)
+    assert any(getattr(w, "key", None) == "atd_view_2026_2" for w in at.segmented_control)
     assert any(getattr(w, "key", None) == "atd_search" for w in at.text_input)
     metric_labels = {str(metric.label) for metric in at.metric}
     assert {"Net units", "ROI", "Record", "Approx. 95% ROI range"} <= metric_labels
-    expected = pd.read_csv(_HERE / "betting" / "anytime_td" / "anytime_td_2026_week01.csv")
+    expected = pd.read_csv(_HERE / "betting" / "anytime_td" / "anytime_td_2026_week02.csv")
     expected_default = page.default_matchup_label(list(page._matchup_groups(expected)))
     assert expected_default in {str(w.value) for w in at.selectbox}
     selected = next(
@@ -72,7 +73,7 @@ def test_anytime_td_renders_and_owns_controls(tmp_path):
 
 
 def test_two_plus_toggle_preserves_market_or_placeholder(tmp_path):
-    at = _render(tmp_path)
+    at = _render(tmp_path, week=1)
     at.segmented_control(key="atd_view_2026_1").set_value("2+ TD").run()
     at.toggle(key="atd_rec_2026_1_2+ TD").set_value(False).run()
     assert not at.exception, at.exception
@@ -96,7 +97,7 @@ def test_two_plus_toggle_preserves_market_or_placeholder(tmp_path):
 
 
 def test_ne_sea_display_only_two_plus_model_view_is_shown(tmp_path):
-    at = _render(tmp_path)
+    at = _render(tmp_path, week=1)
     at.selectbox(key="atd_matchup_2026_1").set_value("NE vs SEA").run()
     at.segmented_control(key="atd_view_2026_1").set_value("2+ TD").run()
     at.toggle(key="atd_rec_2026_1_2+ TD").set_value(False).run()
@@ -131,7 +132,7 @@ def test_ne_sea_display_only_two_plus_model_view_is_shown(tmp_path):
 
 
 def test_sf_la_display_only_two_plus_model_view_is_shown(tmp_path):
-    at = _render(tmp_path)
+    at = _render(tmp_path, week=1)
     at.selectbox(key="atd_matchup_2026_1").set_value("SF vs LA").run()
     at.segmented_control(key="atd_view_2026_1").set_value("2+ TD").run()
     at.toggle(key="atd_rec_2026_1_2+ TD").set_value(False).run()
@@ -161,7 +162,7 @@ def test_two_plus_results_tally_is_results_only():
 
 
 def test_first_td_toggle_renders_priced_matchup(tmp_path):
-    at = _render(tmp_path)
+    at = _render(tmp_path, week=1)
     at.segmented_control(key="atd_view_2026_1").set_value("First TD").run()
     at.toggle(key="atd_rec_2026_1_First TD").set_value(False).run()
     at.selectbox(key="atd_matchup_2026_1").set_value("NO vs DET").run()
@@ -180,7 +181,7 @@ def test_first_td_toggle_renders_priced_matchup(tmp_path):
 
 
 def test_market_control_is_a_single_three_way_choice(tmp_path):
-    at = _render(tmp_path)
+    at = _render(tmp_path, week=1)
     control = next(w for w in at.segmented_control if w.key == "atd_view_2026_1")
     assert set(control.options) == {"Anytime TD", "2+ TD", "First TD"}
     assert control.value == "Anytime TD"
@@ -205,7 +206,7 @@ def test_market_control_is_a_single_three_way_choice(tmp_path):
 
 
 def test_team_header_matches_active_market(tmp_path):
-    at = _render(tmp_path)
+    at = _render(tmp_path, week=1)
     md = " ".join(str(item.value) for item in at.markdown)
     assert "Anytime TDs**" in md
     assert "First TDs**" not in md
@@ -224,7 +225,7 @@ def test_team_header_matches_active_market(tmp_path):
 
 
 def test_ne_sea_display_only_first_td_model_view_is_shown(tmp_path):
-    at = _render(tmp_path)
+    at = _render(tmp_path, week=1)
     at.segmented_control(key="atd_view_2026_1").set_value("First TD").run()
     at.toggle(key="atd_rec_2026_1_First TD").set_value(False).run()
     at.selectbox(key="atd_matchup_2026_1").set_value("NE vs SEA").run()
@@ -249,7 +250,7 @@ def test_ne_sea_display_only_first_td_model_view_is_shown(tmp_path):
 
 
 def test_sf_la_display_only_first_td_model_view_is_shown(tmp_path):
-    at = _render(tmp_path)
+    at = _render(tmp_path, week=1)
     at.segmented_control(key="atd_view_2026_1").set_value("First TD").run()
     at.toggle(key="atd_rec_2026_1_First TD").set_value(False).run()
     at.selectbox(key="atd_matchup_2026_1").set_value("SF vs LA").run()
@@ -388,7 +389,7 @@ def test_qualifies_probability_gap_never_returns_na():
 def test_pending_replacement_caption_pluralizes_the_verb(tmp_path):
     # "1 quoted replacement row await model inputs" is a subject-verb
     # mismatch. Requires exactly one pending row on the live board.
-    at = _render(tmp_path)
+    at = _render(tmp_path, week=1)
     raw = pd.read_csv(_HERE / "betting" / "anytime_td" / "anytime_td_2026_week01.csv")
     pending_count = int(page.priced_rows(raw).p_ge1.isna().sum())
     captions = " ".join(str(c.value) for c in at.caption)
@@ -696,11 +697,11 @@ def test_live_week1_reconciles_tua_out_and_updated_atl_pit_prices():
     assert matchup.book.eq("DraftKings").all()
 
 
-def test_2026_week1_is_default_release_when_present():
+def test_latest_2026_week_is_default_release_when_present():
     import page_anytime_td as page
 
     assert page.default_release([(2025, 17), (2026, 1)]) == (2026, 1)
-    assert page.default_release([(2026, 1), (2026, 2)]) == (2026, 1)
+    assert page.default_release([(2026, 1), (2026, 2)]) == (2026, 2)
     assert page.default_release([(2025, 10), (2025, 17)]) == (2025, 10)
 
 
@@ -712,6 +713,13 @@ def test_current_week1_keeps_published_past_game_results():
     assert pd.to_numeric(past.scored_anytime, errors="coerce").notna().all()
     assert set(past.status) == {"final"}
     assert list(past.loc[past.player_display_name.eq("Eli Raridon"), "scored_anytime"]) == [1]
+
+    den_kc = expected[expected.game_id.eq("2026_01_DEN_KC")]
+    assert len(den_kc) == 25
+    assert pd.to_numeric(den_kc.scored_anytime, errors="coerce").notna().all()
+    assert pd.to_numeric(den_kc.scored_two_plus, errors="coerce").notna().all()
+    assert set(den_kc.status) == {"final"}
+    assert list(den_kc.loc[den_kc.player_display_name.eq("Kenneth Walker"), "scored_two_plus"]) == [1]
 
 
 def test_matchups_are_grouped_then_split_by_team():

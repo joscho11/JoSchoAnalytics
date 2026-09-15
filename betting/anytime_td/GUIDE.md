@@ -1,7 +1,8 @@
 # Anytime TDs
 
-The tab defaults to the published 2026 Week 1 live comparison board. It also
-keeps the 2025 Weeks 10-17 demo selectable from the Year and Week controls.
+The tab defaults to the latest published 2026 live comparison board (currently
+Week 2). It also keeps the 2025 Weeks 10-17 demo selectable from the Year and
+Week controls.
 The model compares our chance a skill player scores a rushing or receiving
 touchdown with a sportsbook Yes price. Passing touchdowns are out. The page is
 for fun, not a proven edge. Bet responsibly.
@@ -56,7 +57,7 @@ teams, or no score in that game). The book side is genuinely de-vigged
 within each game (proportional normalization across every quoted player),
 unlike the Yes-only Anytime quote, because First TD is a real one-winner
 market. There is no historical First TD backtest of any kind anywhere in
-this project, for any season -- only a forward Week 1 board. Treat this
+this project, for any season -- only a forward live-week board. Treat this
 view as entertainment more than the 2+ TD view, not evidence of model
 accuracy or profitability.
 

@@ -77,7 +77,7 @@ Training code for the live spread is in the private `spread_v3_prod` repository.
 
 ## Anytime TDs
 
-The live 2026 Week 1 board compares rushing and receiving TD chances against a
+The latest live 2026 board compares rushing and receiving TD chances against a
 manually pasted US-book Yes price. The 2025 weeks 10-17 demo remains selectable
 for historical context. Full manual-paste and cumulative-freeze contract:
 [anytime_td/GUIDE.md](anytime_td/GUIDE.md).

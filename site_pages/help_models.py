@@ -347,7 +347,7 @@ player can score a game's first touchdown, so it is a competing-risk
 allocation across both rosters (each player's share of the game's
 Anytime-TD rate), not a per-player marginal chance. There is no historical
 First TD backtest of any kind, for any season, anywhere in this project --
-only a forward Week 1 board. Treat it as entertainment even more than 2+ TD.
+only a forward live-week board. Treat it as entertainment even more than 2+ TD.
 Its paper-bet gap rule is wider than the other two markets' (+3.0pp instead
 of +0.5pp), because the allocation method has a known bias toward
 underweighting bell-cow backs and starting QBs that a narrow gap rule would

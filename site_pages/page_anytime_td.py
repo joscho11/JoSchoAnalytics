@@ -23,7 +23,6 @@ _HERE = Path(__file__).resolve().parents[1]
 _DIR = _HERE / "betting" / "anytime_td"
 DEMO_SEASON = 2025
 LIVE_SEASON = 2026
-DEFAULT_RELEASE = (LIVE_SEASON, 1)
 DEFAULT_WEEK = 10
 # These completed games were intentionally retained as fun, display-only 2+
 # TD model views. They have model probabilities and graded outcomes, but no
@@ -108,12 +107,13 @@ def available_releases() -> dict[tuple[int, int], Path]:
 
 
 def default_release(options: list[tuple[int, int]]) -> tuple[int, int]:
-    """Prefer the live 2026 Week 1 board whenever it has been published."""
+    """Prefer the latest published live 2026 board when one is available."""
     if not options:
         raise ValueError("at least one release is required")
-    if DEFAULT_RELEASE in options:
-        return DEFAULT_RELEASE
-    live = sorted(key for key in options if key[0] == LIVE_SEASON)
+    live = sorted(
+        (key for key in options if key[0] == LIVE_SEASON),
+        reverse=True,
+    )
     return live[0] if live else sorted(options)[0]
 
 
@@ -1250,7 +1250,7 @@ scores first at all (roughly 94% of games; the rest go to defense, special
 teams, or no score). DraftKings' First TD price is de-vigged within the
 game, since first touchdown is a genuine one-winner market (unlike the
 Yes-only Anytime quote). There is no historical First TD backtest anywhere
-in this project for any season, only a forward Week 1 board, so treat this
+in this project for any season, only a forward live-week board, so treat this
 view as entertainment, not a proven edge, even more so than 2+ TD. Because
 p_first values within a game are not independent (they split a fixed pool,
 not separate coin flips) and real bell-cow players already show a
@@ -1264,7 +1264,7 @@ approximate 95% ROI range from a deterministic game-block bootstrap. It is an
 empirical uncertainty range, not a guarantee. The 2+ TD view uses the same
 +0.5pp rule as Anytime; First TD uses its own wider +3.0pp rule. Each shows
 its own cards when prices and graded outcomes are available.
-Week 1 is organized by matchup, then by team (for example, NE vs SEA with
+Live weeks are organized by matchup, then by team (for example, NE vs SEA with
 separate NE and SEA boards).
         """)
 
@@ -1280,6 +1280,7 @@ def render() -> None:
         st.error("Anytime TD demo files are missing.")
         st.stop()
     live_keys = sorted((key for key in releases if key[0] == LIVE_SEASON), reverse=True)
+    live_default = default_release(live_keys) if live_keys else None
     demo = available_weeks()
     year_weeks = {
         DEMO_SEASON: sorted(demo),
@@ -1299,7 +1300,11 @@ def render() -> None:
             del st.session_state["atd_week"]
         seeded_week = page_common.seed_widget_from_query("atd_week", "atd_week", weeks)
         week_kwargs = {"key": "atd_week"}
-        default_week = 1 if season == LIVE_SEASON else (DEFAULT_WEEK if DEFAULT_WEEK in weeks else weeks[0])
+        default_week = (
+            live_default[1]
+            if season == LIVE_SEASON and live_default is not None
+            else (DEFAULT_WEEK if DEFAULT_WEEK in weeks else weeks[0])
+        )
         if not seeded_week and "atd_week" not in st.session_state:
             week_kwargs["index"] = weeks.index(default_week)
         week = int(controls[1].selectbox("Week", weeks, **week_kwargs))
@@ -1321,7 +1326,7 @@ def render() -> None:
         st.badge("Live" if is_live else "Demo", icon=":material/live_tv:" if is_live else ":material/science:",
                  color="green" if is_live else "orange")
         st.caption("Priced players only. Sorted by the active market's Value Gap (highest first). " +
-                   ("Cumulative 2026 Week 1 release." if is_live else "2025 weeks 10-17 demo."))
+                   (f"Cumulative 2026 Week {week} release." if is_live else "2025 weeks 10-17 demo."))
     _reading_guide()
 
     if (season, week) not in available:
@@ -1444,7 +1449,7 @@ def render() -> None:
         st.info(
             "Important: First TD predictions have no historical backtest of any "
             "kind. There is no first-touchdown market data anywhere in this "
-            "project for any season, so this view is a forward Week 1 board "
+            "project for any season, so this view is a forward live-week board "
             "only—not evidence of accuracy or profitability, even more so than "
             "the 2+ TD view."
         )

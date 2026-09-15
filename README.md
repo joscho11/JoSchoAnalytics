@@ -45,7 +45,7 @@ The site covers five published product families:
 - **Game and season totals:** a 2025 experimental game-total demo plus a separate 32-team season-win product.
 - **Weekly fantasy:** 2026 Week 1 is live from one half-PPR LightGBM and locks at each game's kickoff. Later immutable revisions preserve every started game's rows exactly. The 2025 weeks 10-17 on the page are a prior-model demo.
 - **DFS optimizer:** DraftKings Classic lineups from checked direct-DK projection files. No published projection edge.
-- **Anytime TDs:** a live 2026 Week 1 board plus the 2025 demo, using manually pasted US-book Yes prices. For fun. Not a proven edge.
+- **Anytime TDs:** the latest live 2026 board (currently Week 2) plus the 2025 demo, using manually pasted US-book Yes prices. For fun. Not a proven edge.
 - **Draft and rookie analysis:** season projections, market ranks, rookie hit probabilities, and descriptive NFL and college talent scores.
 
 Live spread and weekly-fantasy producers submit candidate files to this repository. The code in `publishing/` validates schemas, coverage, timestamps, hashes, and model versions before it creates an immutable release. The site reads those releases. The grading workflow writes results without changing the original prediction.
