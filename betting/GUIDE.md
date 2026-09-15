@@ -1,6 +1,6 @@
 # Betting models
 
-Status: checked against the current code and release contract on 2026-09-08.
+Status: checked against the current code and release contract on 2026-09-15.
 
 The betting area contains the 2026 spread product, a frozen 2025 demo, and an experimental totals model. These systems do not share the same claim or lifecycle.
 
@@ -18,7 +18,7 @@ The 2026 display logic lives in `live_2026.py`:
 - There is no `MEDIUM` tier and no all-bets performance claim.
 - Every game remains visible, including `PASS` games.
 
-The current leakage-fixed historical evaluation contains 436 qualifying picks from 2021 through 2025. It went 253-183 ATS, or 58.03%, scored at the best US Tuesday number on the same HIGH tickets. The one-sided lower confidence bound is 54.10%, above the declared 52.4% break-even threshold. Those historical tickets were selected against the Tuesday US median; the median grade was 249/437, Wilson 53.05%. This is the current benchmark, not a substitute for graded 2026 results. No 2026 games have been graded yet. The superseded 2.5-point benchmark was 295/526, 56.08%, Wilson 52.50%. The withdrawn 192/336 = 57.14% figure used same-week injury reports that postdate Tuesday.
+The current leakage-fixed historical evaluation contains 436 qualifying picks from 2021 through 2025. It went 253-183 ATS, or 58.03%, scored at the best US Tuesday number on the same HIGH tickets. The one-sided lower confidence bound is 54.10%, above the declared 52.4% break-even threshold. Those historical tickets were selected against the Tuesday US median; the median grade was 249/437, Wilson 53.05%. This is the current benchmark, not a substitute for graded 2026 results. The completed 2026 Week 1 release is now 9-7 ATS overall (9/16), with HIGH 2-0 (2/2). The superseded 2.5-point benchmark was 295/526, 56.08%, Wilson 52.50%. The withdrawn 192/336 = 57.14% figure used same-week injury reports that postdate Tuesday.
 
 ## What appears on the site
 
@@ -30,7 +30,7 @@ The frozen 2025 demo remains available for reproducibility. It used a three-vote
 
 | System | Evaluation | Result | Current interpretation |
 |---|---:|---:|---|
-| Current clean spread benchmark | 2021-2025 locked historical evaluation | 295/521, 56.62% ATS | Median-triggered tickets; Wilson lower 53.03%, above 52.4%; graded at best US Tuesday number |
+| Current leakage-fixed spread benchmark | 2021-2025 locked historical evaluation | 253/436, 58.03% ATS | Median-triggered tickets; Wilson lower 54.10%, above 52.4%; graded at best US Tuesday number |
 | Archived in-repo spread model | Corrected 2018-2025 audit | 129/238, 54.20% ATS | No demonstrated edge; 95% Wilson lower bound is 47.86% |
 | Totals model | Walk-forward cross-validation | 55.7% UNDER accuracy, n=575 | Research result, not a deployed performance claim |
 | Totals model | 2025 live tracking, Weeks 10-17 | 52.2%, n=46 | Too small and too close to chance for an edge claim |

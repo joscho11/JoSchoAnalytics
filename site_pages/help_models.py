@@ -104,7 +104,8 @@ ATS, one-sided 95% Wilson lower bound **{LIVE_HIGH_WILSON_LOWER * 100:.2f}%**, w
 2021-2025. {live_high_bar_sentence()} Starting with 2026 releases, the model, pick,
 edge, and HIGH flag use the Tuesday US median. The selected shopped quote is displayed
 separately and used for grading, matching the benchmark's execution rule. Betting every
-game is not the claim. No 2026 games are graded yet.
+game is not the claim. Week 1 is now graded on the Track Record page; the live 2026
+sample is still early and should not be read as a long-run performance claim.
 This is Tuesday line value, not closing-line value.
 
 The public spread release uses the first valid Tuesday market capture from 09:00–15:30 ET. Published matchups appear on Weekly Predictions as releases become available.

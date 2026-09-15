@@ -38,7 +38,7 @@ def test_weekly_predictions_renders_and_owns_controls(tmp_path):
     assert "wp_edge" not in keys, "the live 2026 card does not expose the 2025 demo edge slider"
     controls = {w.key: w.value for w in at.selectbox}
     assert controls["wp_season"] == 2026
-    assert controls["wp_week"] == 1
+    assert controls["wp_week"] == 2
     markdown = " ".join(str(item.value) for item in at.markdown)
     assert "green-badge" in markdown and "Published" in markdown
     assert not any(str(k).startswith("tr_") for k in keys), \
@@ -76,12 +76,29 @@ def test_weekly_predictions_reads_shared_season_week_url(tmp_path):
     assert "Published" in markdown
 
 
+def test_week1_scorecard_and_track_record_use_graded_corrected_release(tmp_path):
+    weekly = _render_page(tmp_path, "page_weekly_predictions")
+    week = next(w for w in weekly.selectbox if getattr(w, "key", None) == "wp_week")
+    week.set_value(1)
+    weekly.run()
+    assert not weekly.exception, weekly.exception
+    metrics = {str(m.label): str(m.value) for m in weekly.metric}
+    assert metrics["ATS record"] == "9/16"
+    assert any("Week 1 ATS record: **9-7**" in str(s.value) for s in weekly.success)
+
+    track = _render_page(tmp_path, "page_track_record")
+    assert next(w for w in track.selectbox if w.key == "tr_season").value == 2026
+    track_metrics = {str(m.label): str(m.value) for m in track.metric}
+    assert track_metrics["Season ATS"] == "9/16"
+    assert track_metrics["HIGH (Tuesday 3+ points)"] == "2/2"
+
+
 def test_track_record_renders_and_owns_controls(tmp_path):
     at = _render_page(tmp_path, "page_track_record")
     keys = _control_keys(at)
     assert "tr_season" in keys, f"Track Record must own its Season control; got {keys}"
     season = next(w for w in at.selectbox if getattr(w, "key", None) == "tr_season")
-    assert season.value == 2025
+    assert season.value == 2026
     assert not any(str(k).startswith("wp_") for k in keys), \
         "Track Record must not carry Weekly Predictions' controls"
 
@@ -124,17 +141,17 @@ def test_weekly_predictions_hides_paused_agent_chrome(tmp_path):
         " ".join(str(s.value) for s in at.success) + " " + md
     )
     assert "jsa-tot-badge" not in md
-    assert "NE @ SEA" in md
+    assert "DET @ BUF" in md
     assert "Published" in md
     captions = " ".join(str(c.value) for c in at.caption)
     # The best-available quote renders as white markdown, not a muted caption.
     assert "Best available for <b style='color:#fff'>TB</b>" in md
-    assert "+4.0" in md and "(-109)" in md and "BetRivers" in md
+    assert "-8.0" in md and "(-110)" in md and "BetRivers" in md
     assert "TUESDAY LINE" in md
     assert "TUE MODEL LINE" not in md
     metrics = {str(m.label): str(m.value) for m in at.metric}
-    # The active clean Week 1 artifact has four HIGH picks.
-    assert metrics["HIGH picks"] == "4"
+    # The active Week 2 artifact has one HIGH pick.
+    assert metrics["HIGH picks"] == "1"
 
 
 def test_weekly_predictions_live_2026_banner(tmp_path):
@@ -147,9 +164,9 @@ def test_weekly_predictions_live_2026_banner(tmp_path):
     notice_copy = successes + " " + " ".join(str(m.value) for m in at.markdown)
     assert "Live 2026" in notice_copy
     assert "one-sided 95%" in notice_copy and "Wilson lower bound" in notice_copy
-    assert "295/521" in notice_copy
-    assert "56.62%" in notice_copy
-    assert "53.03%" in notice_copy
+    assert "253/436" in notice_copy
+    assert "58.03%" in notice_copy
+    assert "54.10%" in notice_copy
     assert "above 52.4%" in notice_copy
     assert "best US Tuesday" in notice_copy
     assert "57.14%" not in notice_copy
@@ -161,7 +178,7 @@ def test_weekly_predictions_live_2026_banner(tmp_path):
     )
     headings = " ".join(str(t.value) for t in [*at.title, *at.subheader])
     assert "2026" in headings
-    assert "Week 1" in headings
+    assert "Week 2" in headings
     for module in ("page_weekly_predictions", "page_track_record"):
         at = _render_page(tmp_path, module)
         md = " ".join(str(m.value) for m in at.markdown)

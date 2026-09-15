@@ -69,6 +69,7 @@ pytest tests/test_visual_regression.py --update-visual
 - Keep the public DFS page on the reviewed vendored runtime and direct-DK CSV contract.
 - Keep HIGH at a 3.0-point Tuesday leftover. Do not claim CLV. Do not cite the retracted 64.2% or 192/336 as current.
 - The current leakage-fixed 2021-2025 benchmark is 253/436 = 58.03% ATS, Wilson 54.10%, above 52.4%: median-triggered tickets graded at the best US Tuesday number. Starting in 2026, the Tuesday US median drives model input, pick, edge, and HIGH qualification; the chosen best quote drives display, execution, and grading. Do not move qualification onto the shopped quote. The superseded 2.5-point benchmark was 295/526 = 56.08%, Wilson 52.50%. The current median grade at 3.0 is 249/437 = 56.98%, Wilson 53.05%. Never claim CLV.
+- The archived corrected in-repo spread audit is 129/238 = 54.20%; it is not the live 2026 claim.
 - Draft Board copy must not name the 75/25 Sleeper mix.
 - After any page change, run AppTest on the affected pages with `APP_OFFLINE=1`.
 - After a layout or copy change on a public page, run `pytest tests/test_visual_regression.py`. Use `--update-visual` only for an intentional screenshot change.
