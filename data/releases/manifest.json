@@ -385,7 +385,7 @@
       "previous_build": "fantasy-2026w01-d25ab6451a39"
     },
     "predictions": {
-      "active_build": "predictions-2026w01-8b4b1f89c595",
+      "active_build": "predictions-2026w02-dadc771d9ed0",
       "builds": {
         "predictions-2025w10-8f1701d7a6db": {
           "artifact": "data/releases/builds/predictions/2025/week10/predictions-2025w10-8f1701d7a6db/artifact.csv",
@@ -725,6 +725,42 @@
           },
           "week": 1
         },
+        "predictions-2026w01-8cc18502d1af": {
+          "artifact": "data/releases/builds/predictions/2026/week01/predictions-2026w01-8cc18502d1af/artifact.csv",
+          "build_id": "predictions-2026w01-8cc18502d1af",
+          "correction": {
+            "model_update": true,
+            "reason": "Reissue Week 1 after promoting leakage-fixed availability features and the 3.0-point HIGH threshold.",
+            "source_snapshot_captured_at": "2026-09-08T11:23:16-04:00",
+            "source_snapshot_sha256": "dd15bf1fba268e21ee1f241924ebae49a950aac023bb4135ba7ec20dba09b5f0",
+            "supersedes_build_id": "predictions-2026w01-8b4b1f89c595"
+          },
+          "metadata": "data/releases/builds/predictions/2026/week01/predictions-2026w01-8cc18502d1af/metadata.json",
+          "model_version": "spread-v3-prod-ridge-only-c976e11119a9",
+          "produced_at": "2026-09-15T15:23:31Z",
+          "product": "predictions",
+          "published_at": "2026-09-15T15:23:54Z",
+          "row_count": 16,
+          "season": 2026,
+          "sha256": "8cc18502d1af67ab43ced640fcda2e20f8ce5b4e6bc7a12270ebb0893a44fff2",
+          "status": "Published",
+          "validation": {
+            "checks": {
+              "artifact_sha256": "8cc18502d1af67ab43ced640fcda2e20f8ce5b4e6bc7a12270ebb0893a44fff2",
+              "post_kickoff_correction": true,
+              "produced_at_utc": "2026-09-15T15:23:31Z",
+              "scheduled_games": 16
+            },
+            "errors": [],
+            "ok": true,
+            "product": "predictions",
+            "row_count": 16,
+            "warnings": [
+              "correction was produced after the first kickoff; correction controls verified"
+            ]
+          },
+          "week": 1
+        },
         "predictions-2026w01-f620ec646e0e": {
           "artifact": "data/releases/builds/predictions/2026/week01/predictions-2026w01-f620ec646e0e/artifact.csv",
           "build_id": "predictions-2026w01-f620ec646e0e",
@@ -750,6 +786,32 @@
             "warnings": []
           },
           "week": 1
+        },
+        "predictions-2026w02-dadc771d9ed0": {
+          "artifact": "data/releases/builds/predictions/2026/week02/predictions-2026w02-dadc771d9ed0/artifact.csv",
+          "build_id": "predictions-2026w02-dadc771d9ed0",
+          "metadata": "data/releases/builds/predictions/2026/week02/predictions-2026w02-dadc771d9ed0/metadata.json",
+          "model_version": "spread-v3-prod-ridge-only-c976e11119a9",
+          "produced_at": "2026-09-15T15:23:34Z",
+          "product": "predictions",
+          "published_at": "2026-09-15T15:23:55Z",
+          "row_count": 16,
+          "season": 2026,
+          "sha256": "dadc771d9ed03397e3494bbe5ea6e2b8dd9a31e7d457069b83a6ae0b01522653",
+          "status": "Published",
+          "validation": {
+            "checks": {
+              "artifact_sha256": "dadc771d9ed03397e3494bbe5ea6e2b8dd9a31e7d457069b83a6ae0b01522653",
+              "produced_at_utc": "2026-09-15T15:23:34Z",
+              "scheduled_games": 16
+            },
+            "errors": [],
+            "ok": true,
+            "product": "predictions",
+            "row_count": 16,
+            "warnings": []
+          },
+          "week": 2
         }
       },
       "next_release": {
@@ -758,9 +820,9 @@
         "status": "Scheduled",
         "week": 1
       },
-      "previous_build": "predictions-2026w01-57d4781adbd7"
+      "previous_build": "predictions-2026w01-8cc18502d1af"
     }
   },
   "schema_version": 1,
-  "updated_at": "2026-09-14T04:56:36Z"
+  "updated_at": "2026-09-15T15:23:55Z"
 }

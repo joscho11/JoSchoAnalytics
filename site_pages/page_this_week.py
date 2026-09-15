@@ -98,7 +98,7 @@ def render() -> None:
         if n_high > 0:
             plural = "s" if n_high != 1 else ""
             st.markdown(f"**{n_high} HIGH pick{plural} this week:** " + ", ".join(games))
-            st.caption("HIGH = a 2.5+ point disagreement with the Tuesday number. Open "
+            st.caption("HIGH = a 3.0+ point disagreement with the Tuesday number. Open "
                        "Weekly Predictions for each pick and the full slate.")
         else:
             st.caption("No HIGH picks flagged yet this week - the full slate and every "

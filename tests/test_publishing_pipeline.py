@@ -40,7 +40,7 @@ def _prediction_candidate(tmp_path: Path, *, shift: float = 0.0, week: int = 1):
         {
             "game_id": f"2026_{week:02d}_SF_LA", "home_team": "LA", "away_team": "SF",
             "season": 2026, "week": week, "gameday": f"2026-09-{second_day:02d}", "gametime": "20:35",
-            "predicted_margin": -1.0 + shift, "model_edge": -2.5 + shift,
+            "predicted_margin": -1.5 + shift, "model_edge": -3.0 + shift,
             "recommendation": "AWAY (SF)", "logged_at": "2026-09-08T13:00:00Z",
             "tuesday_spread_line": 2.0, "tuesday_spread_book": "BetRivers",
             "tuesday_spread_price": -108, "tuesday_median_spread_line": 1.5,

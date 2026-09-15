@@ -511,7 +511,7 @@ FAQS = (
     FAQItem("Betting", "What do spread, favorite, underdog, cover, and push mean?", ("ats", "margin", "handicap"), _render_spread_terms),
     FAQItem("Betting", "What are moneylines, totals, odds, juice, and break-even?", ("american odds", "implied probability", "over", "under", "52.4"), _render_market_terms),
     FAQItem("Betting", "What win rate is needed to break even?", ("profit", "rate", "benchmark", "wilson", "record"), _render_break_even),
-    FAQItem("Betting", "What are model edge and HIGH?", ("edge", "threshold", "tuesday", "2.5", "confidence"), _render_edge_and_high),
+    FAQItem("Betting", "What are model edge and HIGH?", ("edge", "threshold", "tuesday", "3.0", "confidence"), _render_edge_and_high),
     FAQItem("Betting", "What moves a betting line, and what does this site track?", ("sharp money", "public money", "line movement", "market", "provenance"), _render_line_movement),
     FAQItem("Betting", "Why can a good projection still lose?", ("variance", "uncertainty", "sample size", "backtest", "chance"), _render_uncertainty),
     FAQItem("Fantasy", "What is half-PPR scoring?", ("ppr", "points per reception", "standard", "full ppr"), _render_half_ppr),

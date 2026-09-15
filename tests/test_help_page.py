@@ -116,9 +116,9 @@ def test_help_site_org_and_paused_copy(tmp_path):
 def test_help_states_live_high_wilson_claim(tmp_path):
     at = _render(tmp_path, topic="Betting", open_question="What win rate is needed")
     md = " ".join(str(m.value) for m in at.markdown)
-    assert "295/521" in md
-    assert "56.62%" in md
-    assert "53.03%" in md
+    assert "253/436" in md
+    assert "58.03%" in md
+    assert "54.10%" in md
     assert "above 52.4%" in md
     assert "best US Tuesday" in md
     assert "192/336" not in md

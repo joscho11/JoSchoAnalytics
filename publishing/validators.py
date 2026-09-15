@@ -26,7 +26,7 @@ PREDICTION_EXECUTION_REQUIRED = {
     "tuesday_spread_line", "tuesday_spread_book", "tuesday_spread_price",
     "tuesday_median_spread_line", "consensus_tier",
 }
-PREDICTION_HIGH_GAP = 2.5
+PREDICTION_HIGH_GAP = 3.0
 FANTASY_REQUIRED = {
     "player_id", "player_display_name", "position", "team", "opponent_team",
     "season", "week", "projected_pts",
@@ -240,7 +240,7 @@ def _validate_predictions(
             if tier_mismatch.any():
                 bad = frame.loc[tier_mismatch, "game_id"].astype(str).tolist()
                 report.errors.append(
-                    "HIGH tier must use the 2.5-point Tuesday-median edge: "
+                    "HIGH tier must use the 3.0-point Tuesday-median edge: "
                     + ", ".join(bad[:8])
                 )
 

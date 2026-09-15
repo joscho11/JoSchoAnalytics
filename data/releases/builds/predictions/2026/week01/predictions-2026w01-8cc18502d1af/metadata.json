@@ -1,0 +1,69 @@
+{
+  "artifact_name": "predictions_2026_week01.csv",
+  "artifact_sha256": "8cc18502d1af67ab43ced640fcda2e20f8ce5b4e6bc7a12270ebb0893a44fff2",
+  "correction": {
+    "model_update": true,
+    "reason": "Reissue Week 1 after promoting leakage-fixed availability features and the 3.0-point HIGH threshold.",
+    "source_snapshot_captured_at": "2026-09-08T11:23:16-04:00",
+    "source_snapshot_sha256": "dd15bf1fba268e21ee1f241924ebae49a950aac023bb4135ba7ec20dba09b5f0",
+    "supersedes_build_id": "predictions-2026w01-8b4b1f89c595"
+  },
+  "expected_game_ids_sha256": "2eca943853669c2e4c0beb4782851c9c6919cd0093b5b6ae3ad15c143cfc6e84",
+  "expected_rows": 16,
+  "expected_teams": [
+    "ARI",
+    "ATL",
+    "BAL",
+    "BUF",
+    "CAR",
+    "CHI",
+    "CIN",
+    "CLE",
+    "DAL",
+    "DEN",
+    "DET",
+    "GB",
+    "HOU",
+    "IND",
+    "JAX",
+    "KC",
+    "LA",
+    "LAC",
+    "LV",
+    "MIA",
+    "MIN",
+    "NE",
+    "NO",
+    "NYG",
+    "NYJ",
+    "PHI",
+    "PIT",
+    "SEA",
+    "SF",
+    "TB",
+    "TEN",
+    "WAS"
+  ],
+  "legacy_bootstrap": false,
+  "model_version": "spread-v3-prod-ridge-only-c976e11119a9",
+  "produced_at": "2026-09-15T15:23:31Z",
+  "product": "predictions",
+  "schema_version": 1,
+  "season": 2026,
+  "validation": {
+    "checks": {
+      "artifact_sha256": "8cc18502d1af67ab43ced640fcda2e20f8ce5b4e6bc7a12270ebb0893a44fff2",
+      "post_kickoff_correction": true,
+      "produced_at_utc": "2026-09-15T15:23:31Z",
+      "scheduled_games": 16
+    },
+    "errors": [],
+    "ok": true,
+    "product": "predictions",
+    "row_count": 16,
+    "warnings": [
+      "correction was produced after the first kickoff; correction controls verified"
+    ]
+  },
+  "week": 1
+}
