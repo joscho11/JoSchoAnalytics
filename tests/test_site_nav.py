@@ -55,7 +55,8 @@ def test_default_is_home():
     assert "Weekly predictions" not in titles, \
         f"Weekly Predictions must not be the default; titles={titles!r}"
     md = " ".join(str(m.value) for m in at.markdown)
-    assert "Compare anytime TDs" in md
+    # Copy widened from "anytime TDs" once 2+ TD and First TD markets shipped.
+    assert "Compare touchdown props" in md
     links = " ".join(
         str(getattr(link, "label", "")) for link in at.get("page_link")
     )
