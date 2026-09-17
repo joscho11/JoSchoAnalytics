@@ -1,0 +1,44 @@
+{
+  "product": "dfs_optimizer_v1",
+  "scoring": "draftkings_classic",
+  "projection_units": "direct_dk_points",
+  "generated_at_utc": "2026-09-17T15:15:38.974716+00:00",
+  "season": 2026,
+  "week": 2,
+  "source": "model",
+  "row_count": 374,
+  "position_counts": {
+    "QB": 32,
+    "RB": 94,
+    "TE": 98,
+    "WR": 150
+  },
+  "source_artifact": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\JoSchoAnalytics\\data\\releases\\builds\\fantasy\\2026\\week02\\fantasy-2026w02-654dde8d0424\\artifact.csv",
+  "source_artifact_sha256": "654dde8d04247dca473c6dde976ed499bb77162f08f538a5bbdb94c21aa2d204",
+  "projection_csv_sha256": "52832160d33253997576b60adbf9f92a5df364696b2ce9f2c3864ad842a3624c",
+  "calibration": {
+    "QB": [
+      4.9315,
+      0.8072
+    ],
+    "RB": [
+      1.1044,
+      1.1639
+    ],
+    "WR": [
+      1.3809,
+      1.237
+    ],
+    "TE": [
+      0.9123,
+      1.3261
+    ]
+  },
+  "ceiling_p85": {
+    "QB": 8.41,
+    "RB": 5.22,
+    "WR": 5.31,
+    "TE": 3.85
+  },
+  "method": "Interim per-position affine calibration onto DraftKings Classic points, not the trained direct-DK model. See module docstring for the fit and its limits."
+}
