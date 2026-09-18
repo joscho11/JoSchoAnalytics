@@ -33,6 +33,7 @@ DISPLAY_ONLY_TWO_PLUS_GAME_IDS = {"2026_01_NE_SEA", "2026_01_SF_LA"}
 # probabilities and graded first-scorer outcomes exist, so they are kept as
 # fun, display-only views rather than hidden entirely.
 DISPLAY_ONLY_FIRST_TD_GAME_IDS = {"2026_01_NE_SEA", "2026_01_SF_LA"}
+RECOMMENDED_LABEL = "Recommended"
 DESKTOP_COLS = [
     "#", "Player", "Pos", "Opp", "Model ATTD Odds", "Book ATTD Odds",
     "ATTD Value Gap", "Hit",
@@ -1389,47 +1390,42 @@ def render() -> None:
         view = "Anytime TD"
     show_two_plus = view == "2+ TD"
     show_first_td = view == "First TD"
-    recommended_default = show_two_plus or show_first_td
-    recommended_only = st.toggle(
-        "Recommended only",
-        value=st.session_state.get(f"atd_rec_{season}_{week}_{view}", recommended_default),
-        key=f"atd_rec_{season}_{week}_{view}",
-        help="Filters to players clearing the value-gap threshold. Pick "
-             "\"All matchups\" from the Matchup dropdown to pool every game "
-             "in the week instead of one matchup at a time.",
-    )
-    ALL_MATCHUPS = "All matchups"
     pool_eligible = show_two_plus or show_first_td
 
-    matchup_labels = [item[0] for item in matchups]
     if pool_eligible:
-        matchup_labels = [ALL_MATCHUPS] + matchup_labels
-    if matchup_key in st.session_state and st.session_state[matchup_key] not in matchup_labels:
-        del st.session_state[matchup_key]
-    manual_key = f"{matchup_key}__manual"
-    if pool_eligible and recommended_only and not st.session_state.get(manual_key, False):
-        # No manual matchup pick yet for this season/week: default to pooling
-        # the whole week, same as landing fresh on 2+ TD / First TD.
-        st.session_state[matchup_key] = ALL_MATCHUPS
-    else:
-        # ALL_MATCHUPS never enters the auto-pick pool: it should only be
-        # selected when recommended_only sets it explicitly above, never as
-        # the "first unstarted matchup" fallback below.
-        _seed_matchup_default(matchups, matchup_key)
-
-    selected_label = st.selectbox(
-        "Matchup", matchup_labels,
-        key=matchup_key,
-        on_change=_mark_matchup_manual,
-        args=(f"{matchup_key}__manual",),
-        help="Choose a game to view both teams' touchdown prop boards, or "
-             "\"All matchups\" to pool every game in the week.",
-    )
-    if selected_label == ALL_MATCHUPS:
-        _render_week_recommended(
-            board_priced, season, releases, show_first_td=show_first_td,
+        # 2+ TD and First TD: "Recommended" (every candidate across the week)
+        # is the first and default dropdown entry. Any real matchup shows all
+        # of its priced players with the candidates highlighted, like ATTD.
+        # Own widget key so each visit to these markets lands on Recommended.
+        recommended_only = False
+        selected_label = st.selectbox(
+            "Matchup", [RECOMMENDED_LABEL] + [item[0] for item in matchups],
+            key=f"atd_props_matchup_{season}_{week}",
+            help="Recommended lists every player who clears the value-gap "
+                 "threshold across the week. Pick a game to see all of its "
+                 "priced players, with qualifying players highlighted.",
         )
-        return
+        if selected_label == RECOMMENDED_LABEL:
+            _render_week_recommended(
+                board_priced, season, releases, show_first_td=show_first_td,
+            )
+            return
+    else:
+        recommended_only = st.toggle(
+            "Recommended only",
+            value=False,
+            key=f"atd_rec_{season}_{week}_{view}",
+            help="Show only players clearing the value-gap threshold in the "
+                 "selected matchup.",
+        )
+        _seed_matchup_default(matchups, matchup_key)
+        selected_label = st.selectbox(
+            "Matchup", [item[0] for item in matchups],
+            key=matchup_key,
+            on_change=_mark_matchup_manual,
+            args=(f"{matchup_key}__manual",),
+            help="Choose a game to view both teams' touchdown prop boards.",
+        )
     label, teams, matchup = next(item for item in matchups if item[0] == selected_label)
 
     two_plus_prices_available = _has_two_plus_prices(matchup)
@@ -1543,3 +1539,20 @@ def render() -> None:
             )
         if recommended_only and shown_total == 0:
             st.caption("No players clear the value-gap threshold for this matchup and market.")
+        if pool_eligible and shown_total:
+            threshold = (
+                tracker.FIRST_TD_VALUE_THRESHOLD if show_first_td
+                else tracker.ATTD_VALUE_THRESHOLD
+            )
+            display = _first_td_display(matchup) if show_first_td else _two_plus_display(matchup)
+            n_recommended = int(display["_candidate"].sum())
+            if n_recommended:
+                st.caption(
+                    f"Highlighted rows clear the +{100 * threshold:.1f}pp gap rule "
+                    f"({n_recommended} in this matchup)."
+                )
+            else:
+                st.caption(
+                    f"No players clear the {view} value-gap threshold "
+                    "(+" f"{100 * threshold:.1f}pp) in this matchup."
+                )

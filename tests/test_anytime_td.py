@@ -31,6 +31,12 @@ def _render(tmp_path, week=None):
     return at
 
 
+def _pick_props_matchup(at, matchup, week=1):
+    """Select a game in the 2+ TD / First TD dropdown (default is Recommended)."""
+    at.selectbox(key=f"atd_props_matchup_2026_{week}").set_value(matchup).run()
+    return at
+
+
 def test_anytime_td_renders_and_owns_controls(tmp_path):
     at = _render(tmp_path)
     keys = {getattr(w, "key", None) for w in list(at.selectbox)}
@@ -75,7 +81,7 @@ def test_anytime_td_renders_and_owns_controls(tmp_path):
 def test_two_plus_toggle_preserves_market_or_placeholder(tmp_path):
     at = _render(tmp_path, week=1)
     at.segmented_control(key="atd_view_2026_1").set_value("2+ TD").run()
-    at.toggle(key="atd_rec_2026_1_2+ TD").set_value(False).run()
+    _pick_props_matchup(at, "NO vs DET")
     assert not at.exception, at.exception
     assert not at.error, [e.value for e in at.error]
     assert any("2+ TD view" in str(item.value) for item in at.caption)
@@ -96,37 +102,39 @@ def test_two_plus_toggle_preserves_market_or_placeholder(tmp_path):
     assert any("2+ TD paper tracker" in str(item.value) for item in at.caption)
 
 
-def test_two_plus_recommended_default_keeps_matchup_dropdown(tmp_path):
-    at = _render(tmp_path, week=1)
-    at.segmented_control(key="atd_view_2026_1").set_value("2+ TD").run()
-    assert not at.exception, at.exception
-    # Recommended only is on by default for 2+ TD, and defaults the Matchup
-    # dropdown to "All matchups" -- but the dropdown itself must still render.
-    matchup_box = next(w for w in at.selectbox if w.key == "atd_matchup_2026_1")
-    assert matchup_box.value == "All matchups"
-    assert "All matchups" in matchup_box.options
-    real_matchups = [o for o in matchup_box.options if o != "All matchups"]
-    assert real_matchups
+def test_props_markets_default_to_recommended_and_list_every_game(tmp_path):
+    for market in ("2+ TD", "First TD"):
+        at = _render(tmp_path, week=1)
+        at.segmented_control(key="atd_view_2026_1").set_value(market).run()
+        assert not at.exception, at.exception
+        # No "Recommended only" toggle here: Recommended is a dropdown entry.
+        assert not any(w.key == f"atd_rec_2026_1_{market}" for w in at.toggle)
+        box = next(w for w in at.selectbox if w.key == "atd_props_matchup_2026_1")
+        assert box.value == "Recommended"
+        assert box.options[0] == "Recommended"
+        games = [o for o in box.options if o != "Recommended"]
+        assert games
+        assert any(
+            f"Recommended {market} players this week" in str(m.value)
+            for m in at.markdown
+        )
 
-    # Picking a real matchup filters to just that game instead of pooling.
-    matchup_box.set_value(real_matchups[0]).run()
-    assert not at.exception, at.exception
-    picked = next(w for w in at.selectbox if w.key == "atd_matchup_2026_1")
-    assert picked.value == real_matchups[0]
-    # Either recommended players show up for this matchup, or the page says
-    # plainly that none clear the threshold -- it must never render nothing.
-    reported_empty = any(
-        "No players clear the" in str(c.value) for c in at.caption
-    )
-    has_rows = bool(at.dataframe) and len(at.dataframe[0].value) > 0
-    assert reported_empty or has_rows
+        # A real game lists every priced player, not only the recommended ones.
+        at.selectbox(key="atd_props_matchup_2026_1").set_value("NO vs DET").run()
+        assert not at.exception, at.exception
+        assert not at.error, [e.value for e in at.error]
+        assert at.selectbox(key="atd_props_matchup_2026_1").value == "NO vs DET"
+        assert len(at.dataframe) >= 1
+        assert any(
+            "clear the" in str(c.value) or "Highlighted rows" in str(c.value)
+            for c in at.caption
+        )
 
 
 def test_ne_sea_display_only_two_plus_model_view_is_shown(tmp_path):
     at = _render(tmp_path, week=1)
-    at.selectbox(key="atd_matchup_2026_1").set_value("NE vs SEA").run()
     at.segmented_control(key="atd_view_2026_1").set_value("2+ TD").run()
-    at.toggle(key="atd_rec_2026_1_2+ TD").set_value(False).run()
+    _pick_props_matchup(at, "NE vs SEA")
     assert not at.exception, at.exception
     assert not at.error, [e.value for e in at.error]
     info = " ".join(str(item.value) for item in at.info)
@@ -159,9 +167,8 @@ def test_ne_sea_display_only_two_plus_model_view_is_shown(tmp_path):
 
 def test_sf_la_display_only_two_plus_model_view_is_shown(tmp_path):
     at = _render(tmp_path, week=1)
-    at.selectbox(key="atd_matchup_2026_1").set_value("SF vs LA").run()
     at.segmented_control(key="atd_view_2026_1").set_value("2+ TD").run()
-    at.toggle(key="atd_rec_2026_1_2+ TD").set_value(False).run()
+    _pick_props_matchup(at, "SF vs LA")
     assert not at.exception, at.exception
     assert not at.error, [e.value for e in at.error]
     info = " ".join(str(item.value) for item in at.info)
@@ -190,8 +197,7 @@ def test_two_plus_results_tally_is_results_only():
 def test_first_td_toggle_renders_priced_matchup(tmp_path):
     at = _render(tmp_path, week=1)
     at.segmented_control(key="atd_view_2026_1").set_value("First TD").run()
-    at.toggle(key="atd_rec_2026_1_First TD").set_value(False).run()
-    at.selectbox(key="atd_matchup_2026_1").set_value("NO vs DET").run()
+    _pick_props_matchup(at, "NO vs DET")
     assert not at.exception, at.exception
     assert not at.error, [e.value for e in at.error]
     assert any("First TD" in str(item.value) for item in at.info)
@@ -213,12 +219,11 @@ def test_market_control_is_a_single_three_way_choice(tmp_path):
     assert control.value == "Anytime TD"
 
     at.segmented_control(key="atd_view_2026_1").set_value("2+ TD").run()
-    at.toggle(key="atd_rec_2026_1_2+ TD").set_value(False).run()
+    _pick_props_matchup(at, "NO vs DET")
     assert not at.exception, at.exception
     assert "Model 2+ TD Odds" in set(at.dataframe[0].value.columns)
 
     at.segmented_control(key="atd_view_2026_1").set_value("First TD").run()
-    at.toggle(key="atd_rec_2026_1_First TD").set_value(False).run()
     assert not at.exception, at.exception
     columns = set(at.dataframe[0].value.columns)
     assert "Model First TD Odds" in columns
@@ -238,14 +243,12 @@ def test_team_header_matches_active_market(tmp_path):
     assert "First TDs**" not in md
 
     at.segmented_control(key="atd_view_2026_1").set_value("First TD").run()
-    at.toggle(key="atd_rec_2026_1_First TD").set_value(False).run()
-    at.selectbox(key="atd_matchup_2026_1").set_value("NO vs DET").run()
+    _pick_props_matchup(at, "NO vs DET")
     md = " ".join(str(item.value) for item in at.markdown)
     assert "First TDs**" in md
     assert "Anytime TDs**" not in md
 
     at.segmented_control(key="atd_view_2026_1").set_value("2+ TD").run()
-    at.toggle(key="atd_rec_2026_1_2+ TD").set_value(False).run()
     md = " ".join(str(item.value) for item in at.markdown)
     assert "2+ TDs**" in md
 
@@ -253,8 +256,7 @@ def test_team_header_matches_active_market(tmp_path):
 def test_ne_sea_display_only_first_td_model_view_is_shown(tmp_path):
     at = _render(tmp_path, week=1)
     at.segmented_control(key="atd_view_2026_1").set_value("First TD").run()
-    at.toggle(key="atd_rec_2026_1_First TD").set_value(False).run()
-    at.selectbox(key="atd_matchup_2026_1").set_value("NE vs SEA").run()
+    _pick_props_matchup(at, "NE vs SEA")
     assert not at.exception, at.exception
     assert not at.error, [e.value for e in at.error]
     info = " ".join(str(item.value) for item in at.info)
@@ -278,8 +280,7 @@ def test_ne_sea_display_only_first_td_model_view_is_shown(tmp_path):
 def test_sf_la_display_only_first_td_model_view_is_shown(tmp_path):
     at = _render(tmp_path, week=1)
     at.segmented_control(key="atd_view_2026_1").set_value("First TD").run()
-    at.toggle(key="atd_rec_2026_1_First TD").set_value(False).run()
-    at.selectbox(key="atd_matchup_2026_1").set_value("SF vs LA").run()
+    _pick_props_matchup(at, "SF vs LA")
     assert not at.exception, at.exception
     assert not at.error, [e.value for e in at.error]
     info = " ".join(str(item.value) for item in at.info)
@@ -378,8 +379,8 @@ def test_two_plus_view_on_2025_demo_does_not_crash(tmp_path):
     at.selectbox(key="atd_year").set_value(2025).run()
     control = next(w for w in at.segmented_control if w.key.startswith("atd_view"))
     at.segmented_control(key=control.key).set_value("2+ TD").run()
-    rec_toggle = next(w for w in at.toggle if w.key.startswith("atd_rec"))
-    at.toggle(key=rec_toggle.key).set_value(False).run()
+    props = next(w for w in at.selectbox if w.key.startswith("atd_props_matchup"))
+    at.selectbox(key=props.key).set_value(props.options[1]).run()
     assert not at.exception, at.exception
     assert not at.error, [e.value for e in at.error]
     assert len(list(at.dataframe)) > 0
@@ -396,8 +397,8 @@ def test_first_td_view_on_2025_demo_does_not_crash(tmp_path):
     at.selectbox(key="atd_year").set_value(2025).run()
     control = next(w for w in at.segmented_control if w.key.startswith("atd_view"))
     at.segmented_control(key=control.key).set_value("First TD").run()
-    rec_toggle = next(w for w in at.toggle if w.key.startswith("atd_rec"))
-    at.toggle(key=rec_toggle.key).set_value(False).run()
+    props = next(w for w in at.selectbox if w.key.startswith("atd_props_matchup"))
+    at.selectbox(key=props.key).set_value(props.options[1]).run()
     assert not at.exception, at.exception
     assert not at.error, [e.value for e in at.error]
     assert len(list(at.dataframe)) > 0
