@@ -96,6 +96,32 @@ def test_two_plus_toggle_preserves_market_or_placeholder(tmp_path):
     assert any("2+ TD paper tracker" in str(item.value) for item in at.caption)
 
 
+def test_two_plus_recommended_default_keeps_matchup_dropdown(tmp_path):
+    at = _render(tmp_path, week=1)
+    at.segmented_control(key="atd_view_2026_1").set_value("2+ TD").run()
+    assert not at.exception, at.exception
+    # Recommended only is on by default for 2+ TD, and defaults the Matchup
+    # dropdown to "All matchups" -- but the dropdown itself must still render.
+    matchup_box = next(w for w in at.selectbox if w.key == "atd_matchup_2026_1")
+    assert matchup_box.value == "All matchups"
+    assert "All matchups" in matchup_box.options
+    real_matchups = [o for o in matchup_box.options if o != "All matchups"]
+    assert real_matchups
+
+    # Picking a real matchup filters to just that game instead of pooling.
+    matchup_box.set_value(real_matchups[0]).run()
+    assert not at.exception, at.exception
+    picked = next(w for w in at.selectbox if w.key == "atd_matchup_2026_1")
+    assert picked.value == real_matchups[0]
+    # Either recommended players show up for this matchup, or the page says
+    # plainly that none clear the threshold -- it must never render nothing.
+    reported_empty = any(
+        "No players clear the" in str(c.value) for c in at.caption
+    )
+    has_rows = bool(at.dataframe) and len(at.dataframe[0].value) > 0
+    assert reported_empty or has_rows
+
+
 def test_ne_sea_display_only_two_plus_model_view_is_shown(tmp_path):
     at = _render(tmp_path, week=1)
     at.selectbox(key="atd_matchup_2026_1").set_value("NE vs SEA").run()

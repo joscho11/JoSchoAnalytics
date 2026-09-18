@@ -1394,41 +1394,42 @@ def render() -> None:
         "Recommended only",
         value=st.session_state.get(f"atd_rec_{season}_{week}_{view}", recommended_default),
         key=f"atd_rec_{season}_{week}_{view}",
-        help="2+ TD and First TD show every recommended player across the "
-             "full week's matchups, since so few clear the bar. Anytime TD "
-             "still filters within the selected matchup.",
+        help="Filters to players clearing the value-gap threshold. Pick "
+             "\"All matchups\" from the Matchup dropdown to pool every game "
+             "in the week instead of one matchup at a time.",
     )
-    pooled_view = recommended_only and (show_two_plus or show_first_td)
-    shadow_key = f"{matchup_key}__shadow"
-
-    if pooled_view:
-        # The Matchup selectbox is not rendered in the pooled week view.
-        # Streamlit drops a widget's session_state entry once its widget is
-        # skipped for a run, which would otherwise erase both the selection
-        # and the manual-pick flag. Stash the last selection in a plain
-        # (non-widget) key so it can be restored once the selectbox returns.
-        if matchup_key in st.session_state:
-            st.session_state[shadow_key] = st.session_state[matchup_key]
-        _render_week_recommended(
-            board_priced, season, releases, show_first_td=show_first_td,
-        )
-        return
+    ALL_MATCHUPS = "All matchups"
+    pool_eligible = show_two_plus or show_first_td
 
     matchup_labels = [item[0] for item in matchups]
-    if matchup_key not in st.session_state and shadow_key in st.session_state:
-        shadow_value = st.session_state[shadow_key]
-        if shadow_value in matchup_labels:
-            st.session_state[matchup_key] = shadow_value
-            st.session_state[f"{matchup_key}__manual"] = True
-    _seed_matchup_default(matchups, matchup_key)
+    if pool_eligible:
+        matchup_labels = [ALL_MATCHUPS] + matchup_labels
+    if matchup_key in st.session_state and st.session_state[matchup_key] not in matchup_labels:
+        del st.session_state[matchup_key]
+    manual_key = f"{matchup_key}__manual"
+    if pool_eligible and recommended_only and not st.session_state.get(manual_key, False):
+        # No manual matchup pick yet for this season/week: default to pooling
+        # the whole week, same as landing fresh on 2+ TD / First TD.
+        st.session_state[matchup_key] = ALL_MATCHUPS
+    else:
+        # ALL_MATCHUPS never enters the auto-pick pool: it should only be
+        # selected when recommended_only sets it explicitly above, never as
+        # the "first unstarted matchup" fallback below.
+        _seed_matchup_default(matchups, matchup_key)
 
     selected_label = st.selectbox(
         "Matchup", matchup_labels,
         key=matchup_key,
         on_change=_mark_matchup_manual,
         args=(f"{matchup_key}__manual",),
-        help="Choose a game to view both teams' touchdown prop boards.",
+        help="Choose a game to view both teams' touchdown prop boards, or "
+             "\"All matchups\" to pool every game in the week.",
     )
+    if selected_label == ALL_MATCHUPS:
+        _render_week_recommended(
+            board_priced, season, releases, show_first_td=show_first_td,
+        )
+        return
     label, teams, matchup = next(item for item in matchups if item[0] == selected_label)
 
     two_plus_prices_available = _has_two_plus_prices(matchup)
