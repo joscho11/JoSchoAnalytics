@@ -22,7 +22,10 @@ def _format_tip(value: object) -> str:
     parsed = pd.to_datetime(value, utc=True, errors="coerce")
     if pd.isna(parsed):
         return "Tip time unavailable"
-    return parsed.tz_convert(ET).strftime("%a %b %-d · %-I:%M %p ET")
+    local = parsed.tz_convert(ET)
+    day = str(local.day)
+    hour = str(local.hour % 12 or 12)
+    return local.strftime("%a %b ") + day + " · " + hour + local.strftime(":%M %p ET")
 
 
 def _history(result_frames: list[pd.DataFrame]) -> pd.DataFrame:
