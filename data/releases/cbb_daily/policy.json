@@ -1,0 +1,14 @@
+{
+  "schema_version": "cbb_ats_policy_v1",
+  "season": 2027,
+  "threshold_points": 8.5,
+  "decision_clock": "09:00 America/New_York",
+  "official_line_window": "08:45-09:00 America/New_York",
+  "model_hash": "f83da7ac2015f8c23dfa41d52d5a2b1325ec0a7cad3e3b03e53bc2c957d27800",
+  "feature_hash": "c08adcfed32f497bf98dbea61b203bb2df5d5a5b0554f02b135cd7b3eb1bf89f",
+  "benchmark_hash": "7b038b0e82196fe88d5bd4c57b5834f7c7d3f3d3df5d50a31f5c7ac4284b2930",
+  "policy_hash": "79f5b87a552e2fbfd72e0578e500a1525cd492542e39d04850cb40da1d60a66d",
+  "status": "exploratory_shadow_only",
+  "market_source": "CollegeBasketballData.com median spread",
+  "line_timing_disclosure": "Historical CBBD lines are descriptive; live cards require genuine timestamped snapshots."
+}

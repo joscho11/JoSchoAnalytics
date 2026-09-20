@@ -33,6 +33,7 @@ PAGE_MODULES = (
     "page_league_history",
     "page_help",
     "page_futures",
+    "page_cbb_daily",
 )
 
 
@@ -71,6 +72,15 @@ def test_nav_groups_betting_then_fantasy():
     assert 'url_path="", default=True' in src
     assert "url_path=\"draft-board\", default=True" not in src
     assert "url_path=\"weekly-predictions\", default=True" not in src
+    assert 'url_path="college-basketball"' in src
+    assert src.index('"Betting"') < src.index('"College Basketball"') < src.index('"Fantasy"')
+
+
+def test_college_basketball_has_exactly_one_page():
+    src = Path(ENTRY).read_text(encoding="utf-8")
+    group = src.split('"College Basketball":', 1)[1].split('],', 1)[0]
+    assert group.count("cbb_pg") == 1
+    assert '_lazy_render("page_cbb_daily")' in src
 
 
 def test_sidebar_is_empty_and_footer_present():

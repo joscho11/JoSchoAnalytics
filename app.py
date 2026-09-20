@@ -68,8 +68,8 @@ def _lazy_render(module_name: str):
     render.__name__ = f"render_{module_name}"
     return render
 
-st.set_page_config(page_title="JoScho Analytics | NFL predictions",
-                   page_icon="🏈", layout="wide")
+st.set_page_config(page_title="JoScho Analytics | Sports analytics",
+                   page_icon="📊", layout="wide")
 chrome.inject_css()
 theme_redesign.inject()  # redesign preview skin (revertible) — remove this line to restore the stock look
 
@@ -100,11 +100,14 @@ rb_pg = st.Page(_lazy_render("page_rookie_board"), title="Rookie Board", icon=":
                 url_path="rookie-board")
 fut_pg = st.Page(_lazy_render("page_futures"), title="Season Totals", icon=":material/bar_chart:",
                  url_path="season-totals")
+cbb_pg = st.Page(_lazy_render("page_cbb_daily"), title="Daily spreads (Beta)", icon=":material/sports_basketball:",
+                 url_path="college-basketball")
 
 # cross-link registry (design 4g) — populated before nav.run() so pages can link
 nav_registry.PAGES = {
     "home": home_pg, "this-week": tw_pg, "draft-board": board_pg, "weekly-predictions": wp_pg, "anytime-tds": atd_pg,
     "weekly-fantasy": wf_pg, "dfs-optimizer": dfs_pg,
+    "college-basketball": cbb_pg,
     "track-record": tr_pg, "film-room": film_pg, "league-history": lh_pg, "help": help_pg,
     "rookie-board": rb_pg, "season-totals": fut_pg,
 }
@@ -125,6 +128,7 @@ mobile.inject()
 nav = st.navigation(
     {"": [home_pg, tw_pg],
      "Betting": [wp_pg, atd_pg, tr_pg, fut_pg],
+     "College Basketball": [cbb_pg],
      "Fantasy": [wf_pg, dfs_pg, board_pg, rb_pg],
      "More": [film_pg, lh_pg, help_pg]},
     position="top",
