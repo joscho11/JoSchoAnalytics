@@ -308,6 +308,10 @@ def publish_result_candidate(artifact: str | Path, metadata: str | Path | dict, 
     card = pd.read_csv(card_path, dtype={"game_id": "string"})
     if set(result["game_id"].astype(str)) - set(card["game_id"].astype(str)):
         raise PublicationError("CBB result contains a game not present on the source card")
+    if result["source_card_build_id"].astype(str).ne(str(meta["source_card_build_id"])).any():
+        raise PublicationError("CBB result rows do not bind to the declared source card build")
+    card = card.set_index(card["game_id"].astype(str), drop=False)
+    result["game_id"] = result["game_id"].astype(str)
     allowed_results = {"win", "loss", "push", "no_play", "ungraded"}
     if result["ats_result"].astype(str).isin(allowed_results).eq(False).any():
         raise PublicationError("CBB result contains an invalid ATS result")
@@ -320,6 +324,28 @@ def publish_result_candidate(artifact: str | Path, metadata: str | Path | dict, 
         raise PublicationError("finalized CBB result scores and margins must be finite and nonnegative scores")
     if not np.allclose(scores.loc[finalized, "home_score"] - scores.loc[finalized, "away_score"], margins.loc[finalized, "actual_home_margin"], atol=1e-6):
         raise PublicationError("CBB result actual margin is incoherent")
+    for idx in result.index[finalized]:
+        game_id = str(result.at[idx, "game_id"])
+        source = card.loc[game_id]
+        if str(result.at[idx, "game_date_et"]) != str(source["game_date_et"]):
+            raise PublicationError("CBB result game date does not match source card")
+        pick = str(source.get("ats_pick", ""))
+        market_margin = pd.to_numeric(pd.Series([source.get("market_home_margin")]), errors="coerce").iloc[0]
+        actual_margin = float(result.at[idx, "actual_home_margin"])
+        expected_cover = actual_margin - float(market_margin) if pd.notna(market_margin) else np.nan
+        supplied_cover = pd.to_numeric(pd.Series([result.at[idx, "actual_cover_margin"]]), errors="coerce").iloc[0]
+        if pick in {"home", "away"}:
+            if not np.isfinite(expected_cover) or not np.isclose(float(supplied_cover), expected_cover, atol=1e-6):
+                raise PublicationError("CBB result actual cover margin is incoherent with source spread")
+            expected_result = "push" if np.isclose(expected_cover, 0.0, atol=1e-9) else (
+                "win" if ((pick == "home" and expected_cover > 0) or (pick == "away" and expected_cover < 0)) else "loss"
+            )
+        else:
+            expected_result = "no_play"
+            if pd.notna(supplied_cover) and pd.notna(market_margin) and not np.isclose(float(supplied_cover), expected_cover, atol=1e-6):
+                raise PublicationError("CBB non-play cover margin is incoherent with source spread")
+        if str(result.at[idx, "ats_result"]) != expected_result:
+            raise PublicationError("CBB ATS result does not match the source card pick and final score")
     build_id = f"cbb-results-{meta['game_date_et']}-{str(meta['artifact_sha256'])[:12]}"
     build_dir = cbb_release_root(root_path) / "results" / str(meta["game_date_et"]) / build_id
     build_dir.mkdir(parents=True, exist_ok=True)
@@ -334,9 +360,52 @@ def publish_result_candidate(artifact: str | Path, metadata: str | Path | dict, 
     if not stored_meta.exists():
         stored_meta.write_text(json.dumps(normalized, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     state = manifest["dates"][str(meta["game_date_et"])]
-    state["results"] = {"build_id": build_id, "artifact": str(stored_artifact.relative_to(root_path)).replace("\\", "/"), "metadata": str(stored_meta.relative_to(root_path)).replace("\\", "/"), "sha256": meta["artifact_sha256"], "published_at": utc_now_iso()}
+    entry = {"build_id": build_id, "artifact": str(stored_artifact.relative_to(root_path)).replace("\\", "/"), "metadata": str(stored_meta.relative_to(root_path)).replace("\\", "/"), "sha256": meta["artifact_sha256"], "published_at": utc_now_iso()}
+    state.setdefault("result_builds", {})[build_id] = entry
+    prior = state.get("results")
+    if prior and prior.get("build_id") != build_id:
+        state["previous_results"] = prior
+    state["results"] = entry
+    state["result_status"] = meta.get("status", "graded")
     _write_manifest(manifest, root_path)
     return state["results"]
+
+
+def rollback_cbb_card(day: str, build_id: str | None = None, *, root: str | Path | None = None) -> dict:
+    """Move the active card pointer to an existing immutable build."""
+    root_path = _root(root)
+    manifest = load_cbb_manifest(root_path, strict=True)
+    state = manifest.get("dates", {}).get(str(day))
+    if not isinstance(state, dict):
+        raise PublicationError(f"no CBB card state for {day}")
+    target = build_id or state.get("previous_build")
+    if not target or target not in state.get("builds", {}):
+        raise PublicationError(f"unknown CBB card build for {day}: {target}")
+    prior = state.get("active_build")
+    state["previous_build"] = prior
+    state["active_build"] = target
+    state["status"] = state["builds"][target].get("status")
+    _write_manifest(manifest, root_path)
+    return state["builds"][target]
+
+
+def rollback_cbb_results(day: str, build_id: str | None = None, *, root: str | Path | None = None) -> dict:
+    """Move the active result pointer to an existing immutable result build."""
+    root_path = _root(root)
+    manifest = load_cbb_manifest(root_path, strict=True)
+    state = manifest.get("dates", {}).get(str(day))
+    if not isinstance(state, dict):
+        raise PublicationError(f"no CBB result state for {day}")
+    builds = state.get("result_builds", {})
+    target = build_id or (state.get("previous_results") or {}).get("build_id")
+    if not target or target not in builds:
+        raise PublicationError(f"unknown CBB result build for {day}: {target}")
+    prior = state.get("results")
+    if prior and prior.get("build_id") != target:
+        state["previous_results"] = prior
+    state["results"] = builds[target]
+    _write_manifest(manifest, root_path)
+    return builds[target]
 
 
 def load_cbb_card(day: str, *, root: str | Path | None = None) -> tuple[pd.DataFrame, dict, dict]:
@@ -369,5 +438,5 @@ def cbb_status(*, root: str | Path | None = None) -> dict:
 
 __all__ = [
     "CARD_COLUMNS", "RESULT_COLUMNS", "cbb_release_root", "load_cbb_manifest", "load_cbb_card", "load_cbb_results", "cbb_status",
-    "validate_card_candidate", "publish_card_candidate", "publish_result_candidate",
+    "validate_card_candidate", "publish_card_candidate", "publish_result_candidate", "rollback_cbb_card", "rollback_cbb_results",
 ]

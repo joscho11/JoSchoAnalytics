@@ -6,7 +6,13 @@ import json
 import sys
 from pathlib import Path
 
-from .cbb_daily import cbb_status, publish_card_candidate, publish_result_candidate
+from .cbb_daily import (
+    cbb_status,
+    publish_card_candidate,
+    publish_result_candidate,
+    rollback_cbb_card,
+    rollback_cbb_results,
+)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -18,6 +24,11 @@ def _parser() -> argparse.ArgumentParser:
         cmd.add_argument("--artifact", required=True)
         cmd.add_argument("--metadata", required=True)
         cmd.set_defaults(handler=fn)
+    for name, fn in (("rollback-card", rollback_cbb_card), ("rollback-results", rollback_cbb_results)):
+        cmd = sub.add_parser(name)
+        cmd.add_argument("--date", required=True)
+        cmd.add_argument("--build-id", default=None)
+        cmd.set_defaults(handler=fn)
     sub.add_parser("status").set_defaults(handler=None)
     return parser
 
@@ -27,6 +38,8 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.command == "status":
             result = cbb_status(root=args.root)
+        elif args.command in {"rollback-card", "rollback-results"}:
+            result = args.handler(args.date, args.build_id, root=args.root)
         else:
             result = args.handler(args.artifact, args.metadata, root=args.root)
         print(json.dumps(result, indent=2, sort_keys=True, default=str))

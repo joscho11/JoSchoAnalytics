@@ -89,7 +89,10 @@ def test_week1_scorecard_and_track_record_use_graded_corrected_release(tmp_path)
     track = _render_page(tmp_path, "page_track_record")
     assert next(w for w in track.selectbox if w.key == "tr_season").value == 2026
     track_metrics = {str(m.label): str(m.value) for m in track.metric}
-    assert track_metrics["Season ATS"] == "9/16"
+    # The committed Week 2 result is now included in the season summary; keep
+    # this expectation aligned with the published release rather than freezing
+    # the page at the earlier Week 1-only denominator.
+    assert track_metrics["Season ATS"] == "9/17"
     assert track_metrics["HIGH (Tuesday 3+ points)"] == "2/2"
 
 

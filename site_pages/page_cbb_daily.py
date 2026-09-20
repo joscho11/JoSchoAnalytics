@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from zoneinfo import ZoneInfo
+import math
 
 import pandas as pd
 import streamlit as st
@@ -11,6 +12,19 @@ import cbb_daily_data
 
 
 ET = ZoneInfo("America/New_York")
+BREAK_EVEN = 0.5238
+
+
+def _wilson(wins: int, losses: int) -> tuple[float | None, float | None]:
+    trials = int(wins) + int(losses)
+    if trials <= 0:
+        return None, None
+    z = 1.959963984540054
+    rate = wins / trials
+    denominator = 1 + z * z / trials
+    center = (rate + z * z / (2 * trials)) / denominator
+    half = z * math.sqrt(rate * (1 - rate) / trials + z * z / (4 * trials * trials)) / denominator
+    return center - half, center + half
 
 
 def _date_options(manifest: dict) -> list[str]:
@@ -45,7 +59,8 @@ def _render_card_row(row: pd.Series, result_map: dict[str, str]) -> None:
         status = str(row.get("market_status") or "missing_line")
         st.markdown(f"**{away} at {home}**")
         st.caption(f"{_format_tip(row.get('tipoff_utc'))} · {'Neutral site' if bool(row.get('neutral_site')) else 'Home court'}")
-        cols = st.columns(4)
+        with st.container(horizontal=True, horizontal_alignment="left", gap="small"):
+            cols = st.columns(4)
         cols[0].metric("Predicted score", f"{float(row['predicted_away_score']):.1f}–{float(row['predicted_home_score']):.1f}")
         cols[1].metric("Margin / total", f"{float(row['predicted_margin']):+.1f} / {float(row['predicted_total']):.1f}")
         if status == "available" and pd.notna(row.get("market_home_spread")):
@@ -116,7 +131,8 @@ def render():
     st.badge(str(metadata.get("status", state.get("status", "published"))).replace("_", " ").title(), icon=":material/verified:", color="green")
     available = card["market_status"].astype(str).eq("available") if not card.empty else pd.Series(dtype=bool)
     qualified = card["ats_pick"].astype(str).isin({"home", "away"}) if not card.empty else pd.Series(dtype=bool)
-    metric_cols = st.columns(4)
+    with st.container(horizontal=True, horizontal_alignment="left", gap="small"):
+        metric_cols = st.columns(4)
     metric_cols[0].metric("Games modeled", int(len(card)))
     metric_cols[1].metric("Market lines", int(available.sum()))
     metric_cols[2].metric("8.5-point selections", int(qualified.sum()))
@@ -126,6 +142,7 @@ def render():
         wins = int((graded_history["ats_result"] == "win").sum())
         losses = int((graded_history["ats_result"] == "loss").sum())
         pushes = int((graded_history["ats_result"] == "push").sum())
+        lower, upper = _wilson(wins, losses)
         metric_cols[3].metric("Live ATS record", f"{wins}-{losses}-{pushes}")
 
     view = st.segmented_control("Show", ["All games", "Qualified plays"], default="All games", key="cbb_view")
@@ -154,11 +171,23 @@ def render():
         rate = wins / denominator if denominator else None
         st.write(f"{wins} wins · {losses} losses · {pushes} pushes · ATS rate {rate:.1%}" if rate is not None else "No graded wins/losses yet.")
         if denominator:
+            lower, upper = _wilson(wins, losses)
+            st.caption(f"Wilson 95% interval: {lower:.1%}–{upper:.1%} · 52.38% is an illustrative -110 break-even reference, not a profitability claim.")
             timeline = graded.assign(win=(graded["ats_result"] == "win").astype(int)).sort_values("game_date_et")
             timeline["ats_rate"] = timeline["win"].cumsum() / timeline["win"].where(timeline["ats_result"].ne("push")).notna().cumsum()
             chart = timeline.set_index("game_date_et")[["ats_rate"]].rename(columns={"ats_rate": "ATS win rate"})
-            st.line_chart(chart, y="ATS win rate")
-            st.caption("The horizontal reference is the illustrative 52.38% -110 break-even rate; no ROI, CLV, or guaranteed-success claim is made.")
+            chart["Illustrative -110 break-even"] = BREAK_EVEN
+            st.line_chart(chart, y=["ATS win rate", "Illustrative -110 break-even"])
+            st.caption("Practical implication: the interval and reference line show whether the current live sample is distinguishable from break-even. This does not establish tradability because sample size is small and historical lines were not point-in-time verified.")
+
+    st.subheader("Historical benchmark context")
+    st.caption("These historical results are descriptive/post-hoc because CBBD does not prove when each historical line became available; they are not live performance claims.")
+    history_table = pd.DataFrame([
+        {"Period": "2022–2025 OOF", "Record": "344–267–0", "Graded": 611, "ATS rate": 0.5630, "Wilson 95%": "52.34%–60.18%"},
+        {"Period": "Season 2026", "Record": "87–64–0", "Graded": 151, "ATS rate": 0.5762, "Wilson 95%": "49.64%–65.21%"},
+    ])
+    st.dataframe(history_table, hide_index=True, use_container_width=True)
+    st.caption("The 2026 descriptive interval includes 50%, so it did not clear the historical confidence gate; the frozen policy remains exploratory shadow-only.")
 
 
 __all__ = ["render"]

@@ -10,5 +10,9 @@
   "policy_hash": "79f5b87a552e2fbfd72e0578e500a1525cd492542e39d04850cb40da1d60a66d",
   "status": "exploratory_shadow_only",
   "market_source": "CollegeBasketballData.com median spread",
-  "line_timing_disclosure": "Historical CBBD lines are descriptive; live cards require genuine timestamped snapshots."
+  "line_timing_disclosure": "Historical CBBD lines are descriptive; live cards require genuine timestamped snapshots.",
+  "historical_context": {
+    "oof_2022_2025": {"wins": 344, "losses": 267, "pushes": 0, "graded": 611, "ats_rate": 0.563, "wilson_95": [0.5234, 0.6018]},
+    "season_2026_posthoc": {"wins": 87, "losses": 64, "pushes": 0, "graded": 151, "ats_rate": 0.5762, "wilson_95": [0.4964, 0.6521]}
+  }
 }
