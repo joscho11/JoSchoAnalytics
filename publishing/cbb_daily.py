@@ -176,7 +176,7 @@ def validate_card_candidate(artifact: str | Path, metadata: str | Path | dict) -
         raise PublicationError("CBB daily card contains private/raw columns: " + ", ".join(forbidden))
     if frame["game_id"].isna().any() or frame["game_id"].astype(str).str.strip().eq("").any() or frame["game_id"].duplicated().any():
         raise PublicationError("CBB daily card game IDs must be unique and nonempty")
-    if frame["home_team_id"].isna().any() or frame["away_team_id"].isna().any() or frame["home_team"].astype(str).str.strip().eq("").any() or frame["away_team"].astype(str).str.strip().eq("").any():
+    if frame["home_team_id"].isna().any() or frame["away_team_id"].isna().any() or frame["home_team"].isna().any() or frame["away_team"].isna().any() or frame["home_team"].astype(str).str.strip().eq("").any() or frame["away_team"].astype(str).str.strip().eq("").any():
         raise PublicationError("CBB daily card team identities and names are required")
     if len(frame) == 0:
         if meta["status"] != "no_games_scheduled":
