@@ -311,6 +311,10 @@ def _load_season_tracker(
             book_probability_col=None,
             book_price_col="two_plus_amer",
             outcome_col="scored_two_plus",
+            threshold=tracker.TWO_PLUS_RATIO_THRESHOLD,
+            qualifies=lambda f: tracker.qualifies_two_plus_ratio(
+                f["_model_probability"], f["_book_probability"],
+            ),
         )
     if market == "first":
         return tracker.season_tracker(
@@ -320,6 +324,9 @@ def _load_season_tracker(
             book_price_col="first_amer",
             outcome_col="scored_first",
             threshold=tracker.FIRST_TD_VALUE_THRESHOLD,
+            qualifies=lambda f: tracker.qualifies_first_td_ev(
+                f["_model_probability"], f["_book_price"], f["_value_gap"],
+            ),
         )
     return tracker.season_tracker(frame)
 
@@ -427,17 +434,16 @@ def _render_scorecards(
         book_price_col="first_amer" if is_first else "two_plus_amer" if is_two_plus else "book_amer",
         outcome_col="scored_first" if is_first else "scored_two_plus" if is_two_plus else "scored_anytime",
     )
-    gap_threshold = tracker.FIRST_TD_VALUE_THRESHOLD if is_first else tracker.ATTD_VALUE_THRESHOLD
+    rule_text = tracker.rule_description(market)
     if season == LIVE_SEASON:
         paths, modified_at = _published_live_paths(releases)
         if paths:
             paper = _load_season_tracker(paths, modified_at, market)
             result = paper["summary"]
             ci = paper["ci"]
-            rule_note = " (wider than Anytime/2+ TD's)" if is_first else ""
             st.caption(
                 f"{market_label} paper tracker · "
-                f"+{100 * gap_threshold:.1f}pp gap rule{rule_note} · 1U per candidate."
+                f"candidate rule: {rule_text} · 1U per candidate."
             )
             with st.container(horizontal=True, key="jsa-metric-even-atd"):
                 st.metric("Net units", f"{result['net_units']:+.1f}U", border=True)
@@ -484,9 +490,9 @@ def _render_scorecards(
                         "it is separate from the betting record."
                     )
             if is_two_plus and result["bets"] == 0:
-                st.caption("No quoted 2+ TD candidates meet the gap rule yet.")
+                st.caption("No quoted 2+ TD candidates meet the rule yet.")
             if is_first and result["bets"] == 0:
-                st.caption("No quoted First TD candidates meet the gap rule yet.")
+                st.caption("No quoted First TD candidates meet the rule yet.")
         else:
             st.info(
                 f"2026 {market_label} paper-betting "
@@ -732,8 +738,8 @@ def _two_plus_display(df: pd.DataFrame) -> pd.DataFrame:
             for value, model_p, book_p in zip(value_gap, ranked.p_ge2, book_probability)
         ],
         "_value": ranked["_value"].astype(float),
-        "_candidate": tracker.qualifies_probability_gap(
-            ranked["_value"], tracker.ATTD_VALUE_THRESHOLD
+        "_candidate": tracker.qualifies_two_plus_ratio(
+            ranked["p_ge2"], book_probability
         ) & _bet_eligibility(ranked).to_numpy(),
     })
 
@@ -794,8 +800,8 @@ def _first_td_display(df: pd.DataFrame) -> pd.DataFrame:
         "Hit": hit,
         "_p": ranked["p_first"].astype(float),
         "_value": ranked["_value"].astype(float),
-        "_candidate": tracker.qualifies_probability_gap(
-            ranked["_value"], tracker.FIRST_TD_VALUE_THRESHOLD
+        "_candidate": tracker.qualifies_first_td_ev(
+            ranked["p_first"], ranked["_first_amer"], ranked["_value"]
         ) & _bet_eligibility(ranked).to_numpy(),
     })
 
@@ -1124,7 +1130,7 @@ def _render_week_recommended(
     one game at a time -- a per-matchup view would mostly show nothing."""
     market = "first" if show_first_td else "two_plus"
     market_label = "First TD" if show_first_td else "2+ TD"
-    threshold = tracker.FIRST_TD_VALUE_THRESHOLD if show_first_td else tracker.ATTD_VALUE_THRESHOLD
+    rule_text = tracker.rule_description(market)
     st.info(
         f"Important: {market_label} predictions have no historical backtest"
         + (" of any kind" if show_first_td else " yet")
@@ -1132,8 +1138,7 @@ def _render_week_recommended(
         "accuracy or profitability."
     )
     st.caption(
-        f"Every {market_label} candidate across this week's matchups: raw "
-        f"value gap of at least +{100 * threshold:.1f} percentage point. "
+        f"Every {market_label} candidate across this week's matchups: {rule_text}. "
         "Sorted by value gap, highest first."
     )
     _render_scorecards(board_priced, season, releases, market=market)
@@ -1145,7 +1150,7 @@ def _render_week_recommended(
     )
     if not shown:
         st.info(
-            f"No players clear the {market_label} value-gap threshold this week."
+            f"No players clear the {market_label} candidate rule this week."
         )
 
 
@@ -1219,8 +1224,8 @@ betting record. For fun, not a proven edge. Bet responsibly.
 Book ATTD Odds, ATTD Value Gap, Hit. The odds columns combine American odds
 with the implied percentage chance. Value Gap combines the book-minus-model
 American-odds gap with the model-minus-book percentage differential, such as
-`+1.1%`. On live 2026 boards, highlighted rows meet the raw `>= +0.5pp`
-paper-bet rule and represent 1U candidates.
+`+1.1%`. On live 2026 boards, highlighted Anytime rows meet the raw
+`>= +1.0pp` paper-bet rule and represent 1U candidates.
 
 **Phone columns.** #, Player, Model, Book, Value, Hit. The full column meanings
 are available in each column's help text. The list is sorted by ATTD Value Gap,
@@ -1240,7 +1245,12 @@ historical backtest or published 2+ test results yet, so that view is
 forward-looking tracking only—not evidence of model accuracy or
 profitability. A verified replacement can appear with Book odds while its
 Model and Value cells say Pending when the current-week model input is not
-available; it is excluded from value-bet tracking until then.
+available; it is excluded from value-bet tracking until then. Since
+2026-09-19, a 2+ TD candidate needs the model probability at least 1.25x
+DraftKings' price, with that price at least 2%. A flat percentage-point gap
+rewarded long shots: the same gap is a far bigger relative edge on a 1% price
+than a 15% one, so it mostly flagged players where a small model error reads
+as a huge edge.
 
 **First TD.** This is a different kind of probability than Anytime or 2+:
 exactly one player can score a game's first touchdown, so it is a
@@ -1255,16 +1265,21 @@ in this project for any season, only a forward live-week board, so treat this
 view as entertainment, not a proven edge, even more so than 2+ TD. Because
 p_first values within a game are not independent (they split a fixed pool,
 not separate coin flips) and real bell-cow players already show a
-persistent -5pp to -8pp gap vs DraftKings' price, First TD candidates use a
-wider +3.0pp gap rule instead of Anytime/2+ TD's +0.5pp.
+persistent -5pp to -8pp gap vs DraftKings' price, First TD keeps a wider
++3.0pp gap rule. Since 2026-09-19 it also requires a positive expected
+return at DraftKings' actual, vigged price: the de-vigged gap alone can
+still clear on a bet that loses money at the real price, since First TD's
+raw prices sum to about 121% per game, not 100%.
 
 The live cards track those 1U candidates across the 2026 season: settled/open
 paper bets, net units, settled ROI, and an uncertainty range. Open bets stay out
 of the P&L. After five settled games and 20 settled bets, the board also shows an
 approximate 95% ROI range from a deterministic game-block bootstrap. It is an
-empirical uncertainty range, not a guarantee. The 2+ TD view uses the same
-+0.5pp rule as Anytime; First TD uses its own wider +3.0pp rule. Each shows
-its own cards when prices and graded outcomes are available.
+empirical uncertainty range, not a guarantee. Anytime uses a +1.0pp value-gap
+rule, 2+ TD needs the model at least 1.25x the price with the price at least
+2%, and First TD needs a +3.0pp gap AND a positive expected return at the
+real price. Each shows its own cards when prices and graded outcomes are
+available.
 Live weeks are organized by matchup, then by team (for example, NE vs SEA with
 separate NE and SEA boards).
         """)
@@ -1401,9 +1416,9 @@ def render() -> None:
         selected_label = st.selectbox(
             "Matchup", [RECOMMENDED_LABEL] + [item[0] for item in matchups],
             key=f"atd_props_matchup_{season}_{week}",
-            help="Recommended lists every player who clears the value-gap "
-                 "threshold across the week. Pick a game to see all of its "
-                 "priced players, with qualifying players highlighted.",
+            help="Recommended lists every player who clears the market's "
+                 "candidate rule across the week. Pick a game to see all of "
+                 "its priced players, with qualifying players highlighted.",
         )
         if selected_label == RECOMMENDED_LABEL:
             _render_week_recommended(
@@ -1463,10 +1478,11 @@ def render() -> None:
                 "First TD view: model probability (a competing-risk allocation "
                 "across the whole game, not a per-player marginal chance), "
                 "DraftKings' price de-vigged within the game, and the value gap. "
-                f"A wider +{100 * tracker.FIRST_TD_VALUE_THRESHOLD:.1f}pp gap rule "
-                "(vs Anytime/2+ TD's +0.5pp) powers the 1U paper tracker below, "
+                f"The rule powering the 1U paper tracker below is {tracker.rule_description('first')}, "
                 "since real bell-cow players already show a persistent -5pp to "
-                "-8pp gap here that a narrower rule would misread as value."
+                "-8pp gap here that a narrower rule would misread as value, and "
+                "the de-vigged gap alone can still pass on a bet that loses "
+                "money at DraftKings' real, vigged price."
             )
         elif display_only_first_td:
             st.info(
@@ -1495,7 +1511,12 @@ def render() -> None:
                 "tally—not in betting W-L, units, ROI, or backtest results."
             )
         elif two_plus_prices_available:
-            st.caption("2+ TD view: model probability, current DraftKings price, and value gap. The same +0.5pp gap rule powers the 1U paper tracker below. First-TD prices are retained in the release data and shown in the separate First TD view.")
+            st.caption(
+                "2+ TD view: model probability, current DraftKings price, and "
+                f"value gap. The rule powering the 1U paper tracker below is "
+                f"{tracker.rule_description('two_plus')}. First-TD prices are "
+                "retained in the release data and shown in the separate First TD view."
+            )
         elif display_only_two_plus:
             st.info(
                 f"Display-only historical 2+ TD model view for {label}. "
@@ -1514,7 +1535,7 @@ def render() -> None:
         st.caption(
             ("Showing only" if recommended_only else "Highlighted rows are")
             + " 1U paper-bet candidates: raw ATTD Value Gap of at least "
-            "+0.5 percentage point."
+            f"+{100 * tracker.ATTD_VALUE_THRESHOLD:.1f} percentage point."
         )
 
     st.markdown(f"#### {label}")
@@ -1538,21 +1559,19 @@ def render() -> None:
                 recommended_only=recommended_only,
             )
         if recommended_only and shown_total == 0:
-            st.caption("No players clear the value-gap threshold for this matchup and market.")
+            st.caption("No players clear the candidate rule for this matchup and market.")
         if pool_eligible and shown_total:
-            threshold = (
-                tracker.FIRST_TD_VALUE_THRESHOLD if show_first_td
-                else tracker.ATTD_VALUE_THRESHOLD
-            )
+            pool_market = "first" if show_first_td else "two_plus"
+            rule_text = tracker.rule_description(pool_market)
             display = _first_td_display(matchup) if show_first_td else _two_plus_display(matchup)
             n_recommended = int(display["_candidate"].sum())
             if n_recommended:
                 st.caption(
-                    f"Highlighted rows clear the +{100 * threshold:.1f}pp gap rule "
-                    f"({n_recommended} in this matchup)."
+                    f"Highlighted rows clear the rule ({rule_text}); "
+                    f"{n_recommended} in this matchup."
                 )
             else:
                 st.caption(
-                    f"No players clear the {view} value-gap threshold "
-                    "(+" f"{100 * threshold:.1f}pp) in this matchup."
+                    f"No players clear the {view} candidate rule "
+                    f"({rule_text}) in this matchup."
                 )

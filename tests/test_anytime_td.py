@@ -568,7 +568,12 @@ def test_settled_candidate_miss_uses_muted_red_value_treatment():
     )
 
 
-def test_two_plus_candidate_uses_same_gap_highlight():
+def test_two_plus_candidate_uses_ratio_and_price_floor_highlight():
+    """2+ TD candidate rule since 2026-09-19: model >= 1.25x DraftKings'
+    price, with that price >= 2% (attd_tracker.qualifies_two_plus_ratio).
+    Both rows share the same two_plus_amer (400 -> 20% implied), which
+    clears the price floor for both; only Boundary's 1.5x ratio clears the
+    ratio bar, Other's 1.0x does not."""
     import page_anytime_td as page
 
     rows = pd.DataFrame({
@@ -577,7 +582,7 @@ def test_two_plus_candidate_uses_same_gap_highlight():
         "team": ["KC", "SF"],
         "opponent_team": ["LV", "SEA"],
         "p_ge1": [0.40, 0.35],
-        "p_ge2": [0.205, 0.20],
+        "p_ge2": [0.30, 0.20],
         "p_book": [0.30, 0.35],
         "fair_amer": [150, 186],
         "book_amer": [233, 186],
@@ -863,6 +868,7 @@ def test_two_plus_tracker_uses_two_plus_price_and_outcome_columns():
         book_probability_col=None,
         book_price_col="two_plus_amer",
         outcome_col="scored_two_plus",
+        threshold=tracker.TWO_PLUS_VALUE_THRESHOLD,
     )
     summary = result["summary"]
     assert summary["bets"] == 3
@@ -896,3 +902,140 @@ def test_live_tracker_american_settlement_math_and_ci_is_deterministic():
     assert first == second
     assert first["available"] is True
     assert first["resamples"] == 10_000
+
+
+def test_each_market_uses_its_own_candidate_rule():
+    """Anytime: flat +1.0pp gap. 2+ TD (since 2026-09-19): model >= 1.25x
+    DraftKings' price AND that price >= 2%. First TD: +3.0pp gap AND positive
+    expected return at DraftKings' real price (see test_first_td_ev_rule_*
+    below for that market's own cases)."""
+    import attd_tracker as tracker
+
+    assert tracker.ATTD_VALUE_THRESHOLD == 0.01
+    assert tracker.TWO_PLUS_VALUE_THRESHOLD == 0.005
+    assert tracker.TWO_PLUS_RATIO_THRESHOLD == 1.25
+    assert tracker.TWO_PLUS_PRICE_FLOOR == 0.02
+    assert tracker.FIRST_TD_VALUE_THRESHOLD == 0.03
+
+    # A 0.7pp gap is below the Anytime +1.0pp rule.
+    frame = pd.DataFrame([{
+        "player_display_name": "A Player", "team": "X", "position": "WR", "opponent_team": "Y",
+        "p_ge1": 0.207, "p_book": 0.200, "fair_amer": 283, "book_amer": 400,
+        "scored_anytime": None, "bet_eligible": True,
+    }])
+    assert not bool(page._display(frame)["_candidate"].iloc[0])
+    # A 1.2pp Anytime gap clears the rule.
+    frame.loc[0, "p_ge1"] = 0.212
+    assert bool(page._display(frame)["_candidate"].iloc[0])
+
+    # 2+ TD: three rows sharing the same base structure, each isolating one
+    # side of the ratio-plus-floor rule.
+    two_plus = pd.DataFrame([{
+        "player_display_name": "Ratio Candidate", "team": "X", "position": "WR",
+        "opponent_team": "Y", "p_ge2": 0.075, "two_plus_amer": 1900,  # implied 5%, ratio 1.5
+        "scored_two_plus": None, "bet_eligible": True,
+    }, {
+        "player_display_name": "Ratio Too Low", "team": "X", "position": "WR",
+        "opponent_team": "Y", "p_ge2": 0.06, "two_plus_amer": 1900,  # implied 5%, ratio 1.2
+        "scored_two_plus": None, "bet_eligible": True,
+    }, {
+        "player_display_name": "Below Price Floor", "team": "X", "position": "WR",
+        "opponent_team": "Y", "p_ge2": 0.02, "two_plus_amer": 9900,  # implied 1%, ratio 2.0
+        "scored_two_plus": None, "bet_eligible": True,
+    }])
+    result = page._two_plus_display(two_plus).set_index("Player")
+    assert bool(result.loc["Ratio Candidate · X", "_candidate"])
+    assert not bool(result.loc["Ratio Too Low · X", "_candidate"])
+    assert not bool(result.loc["Below Price Floor · X", "_candidate"])
+
+
+def test_qualifies_two_plus_ratio_handles_nan_and_boundary():
+    import attd_tracker as tracker
+
+    model = pd.Series([0.075, 0.075, float("nan"), 0.02])
+    book = pd.Series([0.05, float("nan"), 0.05, 0.01])
+    result = tracker.qualifies_two_plus_ratio(model, book)
+    assert list(result) == [True, False, False, False]
+    # Exactly at the 1.25x ratio and exactly at the 2% price floor both qualify.
+    boundary = tracker.qualifies_two_plus_ratio(pd.Series([0.025]), pd.Series([0.02]))
+    assert bool(boundary.iloc[0])
+
+
+def test_qualifies_first_td_ev_requires_both_gap_and_positive_ev():
+    import attd_tracker as tracker
+
+    # Row 0: 5.0pp gap and +10.5% EV at +750 -- clears both.
+    # Row 1: 1.0pp gap -- fails the gap alone, regardless of EV.
+    # Row 2: McCaffrey's confirmed 2026 Week 2 case -- 3.5pp gap clears the
+    # gap rule, but +295's real price implies a -2.8% expected return.
+    model = pd.Series([0.13, 0.09, 0.246])
+    book_price = pd.Series([750, 750, 295])
+    gap = pd.Series([0.05, 0.01, 0.035])
+    result = tracker.qualifies_first_td_ev(model, book_price, gap)
+    assert list(result) == [True, False, False]
+    assert not tracker.qualifies_first_td_ev(
+        pd.Series([float("nan")]), pd.Series([750.0]), pd.Series([0.05])
+    ).iloc[0]
+    assert not tracker.qualifies_first_td_ev(
+        pd.Series([0.13]), pd.Series([float("nan")]), pd.Series([0.05])
+    ).iloc[0]
+
+
+def test_rule_description_for_each_market():
+    import attd_tracker as tracker
+
+    assert tracker.rule_description("anytime") == "+1.0pp value gap"
+    two_plus_text = tracker.rule_description("two_plus")
+    assert "1.25x" in two_plus_text and "2%" in two_plus_text
+    first_text = tracker.rule_description("first")
+    assert "3.0pp" in first_text and "expected return" in first_text
+
+
+def test_first_td_display_candidate_requires_positive_ev_not_just_the_gap():
+    """Mirrors the confirmed 2026 Week 2 McCaffrey case: clears the +3.0pp
+    de-vigged gap but the real, vigged price implies a negative expected
+    return, so it must not be highlighted as a candidate."""
+    import page_anytime_td as page
+
+    rows = pd.DataFrame([{
+        "player_display_name": "Losing At Real Price", "team": "X", "position": "RB",
+        "opponent_team": "Y", "p_first": 0.246, "book_first_p_devigged": 0.211,
+        "first_amer": 295, "scored_first": None,
+    }, {
+        "player_display_name": "Real Candidate", "team": "X", "position": "WR",
+        "opponent_team": "Y", "p_first": 0.13, "book_first_p_devigged": 0.08,
+        "first_amer": 750, "scored_first": None,
+    }])
+    display = page._first_td_display(rows).set_index("Player")
+    assert not bool(display.loc["Losing At Real Price · X", "_candidate"])
+    assert bool(display.loc["Real Candidate · X", "_candidate"])
+
+
+def test_two_plus_season_tracker_uses_ratio_qualifier_not_flat_gap():
+    """The season-tracker cards must narrow the same way the display does:
+    both rows clear the legacy flat +0.5pp gap, but only the 1.5pp-gap row
+    clears the 1.25x ratio rule (the 1pp-gap row is only a 1.2x ratio)."""
+    import attd_tracker as tracker
+
+    frame = pd.DataFrame({
+        "season": [2026, 2026], "week": [1, 1],
+        "game_id": ["g1", "g2"], "player_id": ["p1", "p2"],
+        "p_ge2": [0.06, 0.065],
+        "two_plus_amer": [1900, 1900],
+        "scored_two_plus": [1, 1],
+    })
+    flat = tracker.season_tracker(
+        frame, model_probability_col="p_ge2", book_probability_col=None,
+        book_price_col="two_plus_amer", outcome_col="scored_two_plus",
+        threshold=tracker.TWO_PLUS_VALUE_THRESHOLD,
+    )
+    ratio = tracker.season_tracker(
+        frame, model_probability_col="p_ge2", book_probability_col=None,
+        book_price_col="two_plus_amer", outcome_col="scored_two_plus",
+        threshold=tracker.TWO_PLUS_RATIO_THRESHOLD,
+        qualifies=lambda f: tracker.qualifies_two_plus_ratio(
+            f["_model_probability"], f["_book_probability"],
+        ),
+    )
+    assert flat["summary"]["bets"] == 2
+    assert ratio["summary"]["bets"] == 1

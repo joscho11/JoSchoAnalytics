@@ -73,8 +73,8 @@ markets always postdated these games.
 
 ## 2026 paper-betting tracker
 
-The live board highlights a row when the raw probability gap is at least +0.5
-percentage point. That is a transparent 1U paper-bet candidate, not a
+The live board highlights a row when the raw probability gap is at least +1.0
+percentage point (raised from +0.5pp on 2026-09-19). That is a transparent 1U paper-bet candidate, not a
 recommendation. The season-to-date cards aggregate the newest published file
 for each 2026 week, deduplicate player-game rows, settle only final
 `scored_anytime` outcomes, and use the stored DraftKings American price for
@@ -82,12 +82,41 @@ profit. Open bets remain visible but do not enter Net units or ROI.
 
 When there are at least five settled games and 20 settled bets, the page shows
 an **Approx. 95% ROI range** from 10,000 deterministic game-block bootstrap
-resamples. This is an empirical uncertainty range, not a guarantee. The 2+
-TD and First TD toggles use the same +0.5pp candidate rule and each have
-their own Net units, ROI, record, and uncertainty cards. Those cards remain
-pending until DraftKings prices and graded outcomes (`scored_two_plus` /
-`scored_first`) exist for that market. Results-only outcomes are shown
-separately and are never treated as historical bets.
+resamples. This is an empirical uncertainty range, not a guarantee.
+
+The 2+ TD and First TD candidate rules changed on 2026-09-19 (Joseph's
+direction), each has its own Net units, ROI, record, and uncertainty cards,
+and those cards remain pending until DraftKings prices and graded outcomes
+(`scored_two_plus` / `scored_first`) exist for that market. Results-only
+outcomes are shown separately and are never treated as historical bets.
+
+- **2+ TD** was a flat +0.5pp gap; it now requires the model probability to
+  be at least 1.25x DraftKings' implied probability, with that implied
+  probability at least 2%. A flat gap rewards long shots (the same 0.5pp gap
+  is a 50% relative edge on a 1% price and a 3% relative edge on a 15%
+  price), and the 2026-09-19 board's 37 flagged players under the old rule
+  skewed almost entirely to long shots. `attd_tracker.qualifies_two_plus_ratio`.
+- **First TD** keeps its wider +3.0pp gap but now also requires a positive
+  expected return at DraftKings' actual, vigged price (model probability x
+  decimal odds - 1 > 0). The gap alone compares to the price with DraftKings'
+  vig stripped out, but a real bet pays the vigged price -- First TD's raw
+  implied probabilities sum to about 121% per game, not 100%. Confirmed
+  example: Christian McCaffrey cleared the +3.0pp de-vigged gap on the 2026
+  Week 2 board (24.6% model vs 21.1% de-vigged) but the real +295 price
+  implies 25.3%, a -3% expected return by the model's own number.
+  `attd_tracker.qualifies_first_td_ev`.
+
+Neither 2+ TD nor First TD has a price-history backtest to validate its rule
+against (no 2+ or First TD price archive exists anywhere in this project for
+any season), so both rules are a design choice, not a demonstrated edge.
+
+Why +1.0pp: +0.5pp and +1.0pp were the two thresholds fixed before the 2025
+holdout was scored. On the deployed product model +1.0pp was 1,428 bets, +117.31U,
++8.21% ROI (-8.51% to +25.49%), against +0.5pp at 1,605 bets, +6.83% (-9.12% to
++23.61%). Both intervals cross zero, so this is a choice between two
+indistinguishable rules, not a demonstrated edge. The season-to-date cards
+re-score every published 2026 week under the current rule, so Week 1 is now
+counted at +1.0pp.
 
 The audited 2025 DraftKings strategy artifact is
 `strategy_backtest_2025_draftkings.json`. It records the fixed +0.5pp result,

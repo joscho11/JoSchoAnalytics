@@ -6,7 +6,7 @@
     "DraftKings"
   ],
   "release_mode": "live",
-  "publish_now_et": "2026-09-17T10:48:15.276587",
+  "publish_now_et": "2026-09-18T19:24:43.854944",
   "model": "live_product_35 frozen bundle; 34 locked features + Sleeper half-PPR",
   "forward_source": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\weekly_projections_v2_prod\\independent_model\\outputs\\forward\\forward_2026_week02.parquet",
   "historical_source": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\td_count_model_beta\\artifacts\\td_features_2019_2025.parquet",
@@ -17,8 +17,8 @@
     "forward": "ff668ae96142876bdd43a29f43e26c7bf31093be1f44f11fc20c5d1b6cc1714d",
     "history": "58495f19d2cd3cfbaa824e6d462f0c68fc497237cdde3d8bfb130e19c4cb3a15"
   },
-  "n_rows": 38,
-  "n_cumulative": 239,
+  "n_rows": 37,
+  "n_cumulative": 361,
   "capture_min": "2026-09-17T14:35:00",
   "capture_max": "2026-09-17T14:35:00",
   "capture_lead_minutes": [
@@ -31,6 +31,219 @@
     "unresolved pasted player 'Dallen Bentley' (DEN@JAX)"
   ],
   "unresolved_player_count": 3,
+  "possible_nickname_matches": [],
+  "sleeper_snapshot": {
+    "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\sleeper\\paste_time\\2026_w02_rule2_run_20260918T232439Z.json",
+    "sha256": "c571bb99b9d7af3dfc76dca8c06b761f91e02047e24b80745f3ea9a40f54a4c5",
+    "requested_utc": "2026-09-18T23:24:39Z",
+    "n_players": 12228
+  },
+  "assumed_out": [
+    {
+      "game_id": "2026_02_JAX_DEN",
+      "player_id": "sleeper:13345",
+      "sleeper_id": "13345",
+      "player_display_name": "Jonah Coleman",
+      "team": "DEN",
+      "position": "RB",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": null,
+      "rz_target_share_l4w": null,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_02_LV_LAC",
+      "player_id": "sleeper:13305",
+      "sleeper_id": "13305",
+      "player_display_name": "Mike Washington",
+      "team": "LV",
+      "position": "RB",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": null,
+      "rz_target_share_l4w": null,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_02_LV_LAC",
+      "player_id": "00-0037304",
+      "sleeper_id": "8181",
+      "player_display_name": "Connor Heyward",
+      "team": "LV",
+      "position": "RB",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.1083333333,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_02_LV_LAC",
+      "player_id": "00-0039407",
+      "sleeper_id": "11574",
+      "player_display_name": "Dylan Laube",
+      "team": "LV",
+      "position": "RB",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_02_LV_LAC",
+      "player_id": "00-0039338",
+      "sleeper_id": "11604",
+      "player_display_name": "Brock Bowers",
+      "team": "LV",
+      "position": "TE",
+      "tuesday_status": "Out",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.375,
+      "sleeper_status": "Doubtful",
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_02_LV_LAC",
+      "player_id": "00-0039066",
+      "sleeper_id": "9482",
+      "player_display_name": "Michael Mayer",
+      "team": "LV",
+      "position": "TE",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.1,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_02_LV_LAC",
+      "player_id": "00-0034365",
+      "sleeper_id": "4995",
+      "player_display_name": "Ian Thomas",
+      "team": "LV",
+      "position": "TE",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_02_JAX_DEN",
+      "player_id": "00-0038976",
+      "sleeper_id": "9494",
+      "player_display_name": "Marvin Mims",
+      "team": "DEN",
+      "position": "WR",
+      "tuesday_status": "Questionable",
+      "rz_carry_share_l4w": 0.01875,
+      "rz_target_share_l4w": 0.0444444444,
+      "sleeper_status": "Out",
+      "reason": "sleeper_out"
+    },
+    {
+      "game_id": "2026_02_LV_LAC",
+      "player_id": "00-0039915",
+      "sleeper_id": "11635",
+      "player_display_name": "Ladd McConkey",
+      "team": "LAC",
+      "position": "WR",
+      "tuesday_status": "Questionable",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.1277777778,
+      "sleeper_status": "Questionable",
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_02_LV_LAC",
+      "player_id": "00-0038573",
+      "sleeper_id": "10234",
+      "player_display_name": "Derius Davis",
+      "team": "LAC",
+      "position": "WR",
+      "tuesday_status": "Questionable",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_02_LV_LAC",
+      "player_id": "00-0038563",
+      "sleeper_id": "10213",
+      "player_display_name": "Tre Tucker",
+      "team": "LV",
+      "position": "WR",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.1,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_02_LV_LAC",
+      "player_id": "00-0037291",
+      "sleeper_id": "8180",
+      "player_display_name": "Jalen Nailor",
+      "team": "LV",
+      "position": "WR",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.0571428571,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_02_LV_LAC",
+      "player_id": "00-0040729",
+      "sleeper_id": "12483",
+      "player_display_name": "Jack Bech",
+      "team": "LV",
+      "position": "WR",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.1041666667,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_02_LV_LAC",
+      "player_id": "00-0037093",
+      "sleeper_id": "8527",
+      "player_display_name": "Dareke Young",
+      "team": "LV",
+      "position": "WR",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_02_LV_LAC",
+      "player_id": "sleeper:13329",
+      "sleeper_id": "13329",
+      "player_display_name": "Malik Benson",
+      "team": "LV",
+      "position": "WR",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": null,
+      "rz_target_share_l4w": null,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    }
+  ],
+  "assumed_out_count": 15,
+  "sleeper_out_rule_active": true,
+  "dropped_sleeper_out": [
+    "Marvin Mims (DEN) Out"
+  ],
+  "pasted_but_sleeper_doubtful": [
+    "RJ Harvey (DEN) Questionable"
+  ],
+  "assumed_out_qb_unhandled": [],
   "model_pending_paste_rows": [],
   "model_pending_count": 0,
   "lineup_overrides": {
@@ -80,6 +293,8 @@
       "injury_status",
       "practice_status",
       "depth_chart_rank",
+      "teammate_rz_carry_share_out",
+      "teammate_rz_target_share_out",
       "qb_out",
       "qb_is_backup",
       "qb_cpoe_l4w",
@@ -92,14 +307,6 @@
       {
         "target": "i10_carry_share_l4w",
         "source": "inside10_carry_share_l4w"
-      },
-      {
-        "target": "teammate_rz_carry_share_out",
-        "source": "teammate_rush_share_out"
-      },
-      {
-        "target": "teammate_rz_target_share_out",
-        "source": "teammate_target_share_out"
       }
     ],
     "historical_asof": [
@@ -109,7 +316,7 @@
           "team"
         ],
         "source": "team_rz_trips_l4w",
-        "filled_rows": 38
+        "filled_rows": 37
       },
       {
         "column": "team_rz_td_rate_l4w",
@@ -117,7 +324,7 @@
           "team"
         ],
         "source": "team_rz_td_rate_l4w",
-        "filled_rows": 38
+        "filled_rows": 37
       },
       {
         "column": "team_i10_pass_rate_l4w",
@@ -125,7 +332,7 @@
           "team"
         ],
         "source": "team_i10_pass_rate_l4w",
-        "filled_rows": 38
+        "filled_rows": 37
       },
       {
         "column": "i10_target_share_l4w",
@@ -133,7 +340,7 @@
           "player_id"
         ],
         "source": "i10_target_share_l4w",
-        "filled_rows": 29
+        "filled_rows": 28
       },
       {
         "column": "opp_rz_td_rate_allowed_l4w",
@@ -141,7 +348,7 @@
           "opponent_team"
         ],
         "source": "opp_rz_td_rate_allowed_l4w",
-        "filled_rows": 38
+        "filled_rows": 37
       },
       {
         "column": "opp_td_allowed_to_pos_l4w",
@@ -150,7 +357,7 @@
           "position"
         ],
         "source": "opp_td_allowed_to_pos_l4w",
-        "filled_rows": 38
+        "filled_rows": 37
       },
       {
         "column": "qb_cpoe_l4w",
@@ -158,7 +365,7 @@
           "player_id"
         ],
         "source": "qb_cpoe_l4w",
-        "filled_rows": 34
+        "filled_rows": 33
       },
       {
         "column": "height",
@@ -166,7 +373,7 @@
           "player_id"
         ],
         "source": "height",
-        "filled_rows": 34
+        "filled_rows": 33
       },
       {
         "column": "weight",
@@ -174,7 +381,7 @@
           "player_id"
         ],
         "source": "weight",
-        "filled_rows": 34
+        "filled_rows": 33
       }
     ],
     "historical_fallback": [],
@@ -260,11 +467,11 @@
     }
   },
   "network_odds_api": false,
-  "row_hash": "fcbe2f3f96bc74346b418f5c67d7540d08be4736dca14829134eac3e6e3cd694",
+  "row_hash": "ccf4f8068cbe9b4fb405a8c4d42a8d6472799417aaea77b64275f9fe0a3b5b26",
   "first_td_enrichment_coverage": {
-    "p_first": 0,
-    "book_first_p_devigged": 0,
-    "unquoted_lambda_remainder": 0,
-    "scored_first": 0
+    "p_first": 121,
+    "book_first_p_devigged": 135,
+    "unquoted_lambda_remainder": 143,
+    "scored_first": 22
   }
 }

@@ -6,7 +6,7 @@
     "DraftKings"
   ],
   "release_mode": "live",
-  "publish_now_et": "2026-09-17T10:48:39.490006",
+  "publish_now_et": "2026-09-18T19:24:53.196463",
   "model": "live_product_35 frozen bundle; 34 locked features + Sleeper half-PPR",
   "forward_source": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\weekly_projections_v2_prod\\independent_model\\outputs\\forward\\forward_2026_week02.parquet",
   "historical_source": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\td_count_model_beta\\artifacts\\td_features_2019_2025.parquet",
@@ -17,8 +17,8 @@
     "forward": "ff668ae96142876bdd43a29f43e26c7bf31093be1f44f11fc20c5d1b6cc1714d",
     "history": "58495f19d2cd3cfbaa824e6d462f0c68fc497237cdde3d8bfb130e19c4cb3a15"
   },
-  "n_rows": 24,
-  "n_cumulative": 358,
+  "n_rows": 25,
+  "n_cumulative": 360,
   "capture_min": "2026-09-17T14:35:00",
   "capture_max": "2026-09-17T14:35:00",
   "capture_lead_minutes": [
@@ -26,11 +26,79 @@
   ],
   "capture_window_warning": true,
   "unresolved_paste_rows": [
-    "unresolved pasted player 'Cameron Skattebo' (NYG@LA)",
     "unresolved pasted player 'Braxton Berrios' (NYG@LA)",
     "unresolved pasted player 'Thomas Fidone II' (NYG@LA)"
   ],
-  "unresolved_player_count": 3,
+  "unresolved_player_count": 2,
+  "possible_nickname_matches": [],
+  "sleeper_snapshot": {
+    "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\sleeper\\paste_time\\2026_w02_rule2_run_20260918T232439Z.json",
+    "sha256": "c571bb99b9d7af3dfc76dca8c06b761f91e02047e24b80745f3ea9a40f54a4c5",
+    "requested_utc": "2026-09-18T23:24:39Z",
+    "n_players": 12228
+  },
+  "assumed_out": [
+    {
+      "game_id": "2026_02_NYG_LA",
+      "player_id": "00-0036893",
+      "sleeper_id": "7528",
+      "player_display_name": "Najee Harris",
+      "team": "NYG",
+      "position": "RB",
+      "tuesday_status": "Out",
+      "rz_carry_share_l4w": 0.0420168067,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_02_NYG_LA",
+      "player_id": "sleeper:13278",
+      "sleeper_id": "13278",
+      "player_display_name": "Max Klare",
+      "team": "LA",
+      "position": "TE",
+      "tuesday_status": "Out",
+      "rz_carry_share_l4w": null,
+      "rz_target_share_l4w": null,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_02_NYG_LA",
+      "player_id": "sleeper:13270",
+      "sleeper_id": "13270",
+      "player_display_name": "CJ Daniels",
+      "team": "LA",
+      "position": "WR",
+      "tuesday_status": "Out",
+      "rz_carry_share_l4w": null,
+      "rz_target_share_l4w": null,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_02_NYG_LA",
+      "player_id": "00-0036849",
+      "sleeper_id": "7562",
+      "player_display_name": "Tutu Atwell",
+      "team": "LA",
+      "position": "WR",
+      "tuesday_status": "Out",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.0222222222,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    }
+  ],
+  "assumed_out_count": 4,
+  "sleeper_out_rule_active": true,
+  "dropped_sleeper_out": [],
+  "pasted_but_sleeper_doubtful": [
+    "Puka Nacua (LA) Questionable",
+    "Jordan Whittington (LA) Questionable"
+  ],
+  "assumed_out_qb_unhandled": [],
   "model_pending_paste_rows": [],
   "model_pending_count": 0,
   "lineup_overrides": {
@@ -80,6 +148,8 @@
       "injury_status",
       "practice_status",
       "depth_chart_rank",
+      "teammate_rz_carry_share_out",
+      "teammate_rz_target_share_out",
       "qb_out",
       "qb_is_backup",
       "qb_cpoe_l4w",
@@ -92,14 +162,6 @@
       {
         "target": "i10_carry_share_l4w",
         "source": "inside10_carry_share_l4w"
-      },
-      {
-        "target": "teammate_rz_carry_share_out",
-        "source": "teammate_rush_share_out"
-      },
-      {
-        "target": "teammate_rz_target_share_out",
-        "source": "teammate_target_share_out"
       }
     ],
     "historical_asof": [
@@ -109,7 +171,7 @@
           "team"
         ],
         "source": "team_rz_trips_l4w",
-        "filled_rows": 24
+        "filled_rows": 25
       },
       {
         "column": "team_rz_td_rate_l4w",
@@ -117,7 +179,7 @@
           "team"
         ],
         "source": "team_rz_td_rate_l4w",
-        "filled_rows": 24
+        "filled_rows": 25
       },
       {
         "column": "team_i10_pass_rate_l4w",
@@ -125,7 +187,7 @@
           "team"
         ],
         "source": "team_i10_pass_rate_l4w",
-        "filled_rows": 24
+        "filled_rows": 25
       },
       {
         "column": "i10_target_share_l4w",
@@ -133,7 +195,7 @@
           "player_id"
         ],
         "source": "i10_target_share_l4w",
-        "filled_rows": 19
+        "filled_rows": 20
       },
       {
         "column": "opp_rz_td_rate_allowed_l4w",
@@ -141,7 +203,7 @@
           "opponent_team"
         ],
         "source": "opp_rz_td_rate_allowed_l4w",
-        "filled_rows": 24
+        "filled_rows": 25
       },
       {
         "column": "opp_td_allowed_to_pos_l4w",
@@ -150,7 +212,7 @@
           "position"
         ],
         "source": "opp_td_allowed_to_pos_l4w",
-        "filled_rows": 24
+        "filled_rows": 25
       },
       {
         "column": "qb_cpoe_l4w",
@@ -158,7 +220,7 @@
           "player_id"
         ],
         "source": "qb_cpoe_l4w",
-        "filled_rows": 23
+        "filled_rows": 24
       },
       {
         "column": "height",
@@ -166,7 +228,7 @@
           "player_id"
         ],
         "source": "height",
-        "filled_rows": 23
+        "filled_rows": 24
       },
       {
         "column": "weight",
@@ -174,7 +236,7 @@
           "player_id"
         ],
         "source": "weight",
-        "filled_rows": 23
+        "filled_rows": 24
       }
     ],
     "historical_fallback": [],
@@ -260,11 +322,11 @@
     }
   },
   "network_odds_api": false,
-  "row_hash": "055c892d4fe1883915eb45426573846965185fcbcf18e36b90cd738386b98e78",
+  "row_hash": "10c4e2fe98ae78f872e14011133194827ca644ce233d6f053be6bec131f17235",
   "first_td_enrichment_coverage": {
     "p_first": 0,
-    "book_first_p_devigged": 0,
-    "unquoted_lambda_remainder": 0,
-    "scored_first": 0
+    "book_first_p_devigged": 21,
+    "unquoted_lambda_remainder": 22,
+    "scored_first": 22
   }
 }

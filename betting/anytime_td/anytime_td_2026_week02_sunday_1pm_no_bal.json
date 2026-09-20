@@ -1,45 +1,35 @@
 {
   "season": 2026,
   "week": 2,
-  "slate": "sunday_425pm",
+  "slate": "sunday_1pm_no_bal",
   "book": [
     "DraftKings"
   ],
   "release_mode": "live",
-  "publish_now_et": "2026-09-18T19:24:46.783725",
+  "publish_now_et": "2026-09-18T19:24:59.462554",
   "model": "live_product_35 frozen bundle; 34 locked features + Sleeper half-PPR",
   "forward_source": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\weekly_projections_v2_prod\\independent_model\\outputs\\forward\\forward_2026_week02.parquet",
   "historical_source": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\td_count_model_beta\\artifacts\\td_features_2019_2025.parquet",
   "model_bundle": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\td_count_model_beta\\artifacts\\td_lgbm_poisson_product.pkl",
   "model_bundle_sha256": "6cb5874db5278e8306cf8d06e67f5fe7a10262d7dc5a8e59a26fa568c8081819",
   "input_hashes": {
-    "paste": "9568fc06c26ad5f971f29b181447bd8a3784096ca50fbb752a381ad7937a6488",
+    "paste": "d4063a1f319d6c1d1ee0e80c9d891ef4ed00b7f09a57160b889e227b0843a7e4",
     "forward": "ff668ae96142876bdd43a29f43e26c7bf31093be1f44f11fc20c5d1b6cc1714d",
     "history": "58495f19d2cd3cfbaa824e6d462f0c68fc497237cdde3d8bfb130e19c4cb3a15"
   },
-  "n_rows": 71,
-  "n_cumulative": 361,
-  "capture_min": "2026-09-17T14:35:00",
-  "capture_max": "2026-09-17T14:35:00",
+  "n_rows": 23,
+  "n_cumulative": 372,
+  "capture_min": "2026-09-18T19:24:00",
+  "capture_max": "2026-09-18T19:24:00",
   "capture_lead_minutes": [
-    4430.0
+    2496.0
   ],
   "capture_window_warning": true,
   "unresolved_paste_rows": [
-    "unresolved pasted player 'DJ Herman' (MIA@SF)",
-    "unresolved pasted player 'KhaDarel Hodge' (MIA@SF)",
-    "unresolved pasted player 'Brayden Willis' (SF@MIA)",
-    "unresolved pasted player 'Ryan Miller' (MIA@SF)",
-    "unresolved pasted player 'Hunter Long' (ARI@SEA)",
-    "unresolved pasted player 'Nick Kallerup' (SEA@ARI)",
-    "unresolved pasted player 'Zonovan Knight' (ARI@SEA)",
-    "unresolved pasted player 'Simi Fehoko' (ARI@SEA)",
-    "unresolved pasted player 'Brady Russell' (SEA@ARI)",
-    "unresolved pasted player 'Camden Brown' (DAL@WAS)",
-    "unresolved pasted player 'Tyler Goodson' (DAL@WAS)",
-    "unresolved pasted player 'Colson Yankoff' (WAS@DAL)"
+    "unresolved pasted player 'Treyton Welch' (BAL@NO)",
+    "unresolved pasted player 'Kevin Austin Jr.' (BAL@NO)"
   ],
-  "unresolved_player_count": 12,
+  "unresolved_player_count": 2,
   "possible_nickname_matches": [],
   "sleeper_snapshot": {
     "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\sleeper\\paste_time\\2026_w02_rule2_run_20260918T232439Z.json",
@@ -49,76 +39,37 @@
   },
   "assumed_out": [
     {
-      "game_id": "2026_02_WAS_DAL",
-      "player_id": "00-0038389",
-      "sleeper_id": "9227",
-      "player_display_name": "Israel Abanikanda",
-      "team": "DAL",
-      "position": "RB",
-      "tuesday_status": "Out",
-      "rz_carry_share_l4w": 0.0,
-      "rz_target_share_l4w": 0.0,
-      "sleeper_status": null,
-      "reason": "unpasted"
-    },
-    {
-      "game_id": "2026_02_MIA_SF",
-      "player_id": "sleeper:13300",
-      "sleeper_id": "13300",
-      "player_display_name": "Le'Veon Moss",
-      "team": "MIA",
-      "position": "RB",
-      "tuesday_status": "none",
-      "rz_carry_share_l4w": null,
-      "rz_target_share_l4w": null,
-      "sleeper_status": "NA",
-      "reason": "unpasted"
-    },
-    {
-      "game_id": "2026_02_MIA_SF",
-      "player_id": "00-0037112",
-      "sleeper_id": "8698",
-      "player_display_name": "Jake Tonges",
-      "team": "SF",
-      "position": "TE",
-      "tuesday_status": "Questionable",
-      "rz_carry_share_l4w": 0.0,
-      "rz_target_share_l4w": 0.1577777778,
-      "sleeper_status": "IR",
-      "reason": "unpasted"
-    },
-    {
-      "game_id": "2026_02_WAS_DAL",
-      "player_id": "00-0037809",
-      "sleeper_id": "8210",
-      "player_display_name": "Chig Okonkwo",
-      "team": "WAS",
-      "position": "TE",
-      "tuesday_status": "Questionable",
-      "rz_carry_share_l4w": 0.0,
-      "rz_target_share_l4w": 0.1535714286,
-      "sleeper_status": "Out",
-      "reason": "unpasted"
-    },
-    {
-      "game_id": "2026_02_MIA_SF",
-      "player_id": "00-0040172",
-      "sleeper_id": "12634",
-      "player_display_name": "Jordan Watkins",
-      "team": "SF",
+      "game_id": "2026_02_NO_BAL",
+      "player_id": "00-0039064",
+      "sleeper_id": "9997",
+      "player_display_name": "Zay Flowers",
+      "team": "BAL",
       "position": "WR",
       "tuesday_status": "Out",
-      "rz_carry_share_l4w": 0.0,
-      "rz_target_share_l4w": 0.0,
+      "rz_carry_share_l4w": 0.0625,
+      "rz_target_share_l4w": 0.4136363636,
+      "sleeper_status": "Doubtful",
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_02_NO_BAL",
+      "player_id": "sleeper:13268",
+      "sleeper_id": "13268",
+      "player_display_name": "Elijah Sarratt",
+      "team": "BAL",
+      "position": "WR",
+      "tuesday_status": "Out",
+      "rz_carry_share_l4w": null,
+      "rz_target_share_l4w": null,
       "sleeper_status": null,
       "reason": "unpasted"
     }
   ],
-  "assumed_out_count": 5,
+  "assumed_out_count": 2,
   "sleeper_out_rule_active": true,
   "dropped_sleeper_out": [],
   "pasted_but_sleeper_doubtful": [
-    "Kaelon Black (SF) Questionable"
+    "Chris Olave (NO) Questionable"
   ],
   "assumed_out_qb_unhandled": [],
   "model_pending_paste_rows": [],
@@ -193,7 +144,7 @@
           "team"
         ],
         "source": "team_rz_trips_l4w",
-        "filled_rows": 71
+        "filled_rows": 23
       },
       {
         "column": "team_rz_td_rate_l4w",
@@ -201,7 +152,7 @@
           "team"
         ],
         "source": "team_rz_td_rate_l4w",
-        "filled_rows": 71
+        "filled_rows": 23
       },
       {
         "column": "team_i10_pass_rate_l4w",
@@ -209,7 +160,15 @@
           "team"
         ],
         "source": "team_i10_pass_rate_l4w",
-        "filled_rows": 71
+        "filled_rows": 23
+      },
+      {
+        "column": "rush_share_l4w",
+        "keys": [
+          "player_id"
+        ],
+        "source": "rush_share_l4w",
+        "filled_rows": 1
       },
       {
         "column": "i10_target_share_l4w",
@@ -217,7 +176,7 @@
           "player_id"
         ],
         "source": "i10_target_share_l4w",
-        "filled_rows": 50
+        "filled_rows": 13
       },
       {
         "column": "opp_rz_td_rate_allowed_l4w",
@@ -225,7 +184,7 @@
           "opponent_team"
         ],
         "source": "opp_rz_td_rate_allowed_l4w",
-        "filled_rows": 71
+        "filled_rows": 23
       },
       {
         "column": "opp_td_allowed_to_pos_l4w",
@@ -234,7 +193,7 @@
           "position"
         ],
         "source": "opp_td_allowed_to_pos_l4w",
-        "filled_rows": 71
+        "filled_rows": 23
       },
       {
         "column": "qb_cpoe_l4w",
@@ -242,7 +201,7 @@
           "player_id"
         ],
         "source": "qb_cpoe_l4w",
-        "filled_rows": 58
+        "filled_rows": 18
       },
       {
         "column": "height",
@@ -250,7 +209,7 @@
           "player_id"
         ],
         "source": "height",
-        "filled_rows": 58
+        "filled_rows": 18
       },
       {
         "column": "weight",
@@ -258,25 +217,25 @@
           "player_id"
         ],
         "source": "weight",
-        "filled_rows": 58
+        "filled_rows": 18
       }
     ],
     "historical_fallback": [],
     "unresolved": [],
     "unresolved_rows": {
-      "snap_pct_l4w": 13,
-      "rush_share_l4w": 13,
-      "target_share_l4w": 13,
-      "rz_carry_share_l4w": 13,
-      "rz_target_share_l4w": 13,
-      "i10_carry_share_l4w": 13,
-      "i10_target_share_l4w": 21,
-      "rush_td_exp_l4w": 13,
-      "rec_td_exp_l4w": 13,
-      "qb_cpoe_l4w": 13,
-      "height": 13,
-      "weight": 13,
-      "changed_team_offseason": 13
+      "snap_pct_l4w": 5,
+      "rush_share_l4w": 5,
+      "target_share_l4w": 5,
+      "rz_carry_share_l4w": 5,
+      "rz_target_share_l4w": 5,
+      "i10_carry_share_l4w": 5,
+      "i10_target_share_l4w": 10,
+      "rush_td_exp_l4w": 6,
+      "rec_td_exp_l4w": 6,
+      "qb_cpoe_l4w": 5,
+      "height": 5,
+      "weight": 5,
+      "changed_team_offseason": 5
     }
   },
   "feature_provenance": {
@@ -324,19 +283,19 @@
     },
     "historical_fallback": [],
     "missingness_counts": {
-      "snap_pct_l4w": 13,
-      "rush_share_l4w": 13,
-      "target_share_l4w": 13,
-      "rz_carry_share_l4w": 13,
-      "rz_target_share_l4w": 13,
-      "i10_carry_share_l4w": 13,
-      "i10_target_share_l4w": 21,
-      "rush_td_exp_l4w": 13,
-      "rec_td_exp_l4w": 13,
-      "qb_cpoe_l4w": 13,
-      "height": 13,
-      "weight": 13,
-      "changed_team_offseason": 13
+      "snap_pct_l4w": 5,
+      "rush_share_l4w": 5,
+      "target_share_l4w": 5,
+      "rz_carry_share_l4w": 5,
+      "rz_target_share_l4w": 5,
+      "i10_carry_share_l4w": 5,
+      "i10_target_share_l4w": 10,
+      "rush_td_exp_l4w": 6,
+      "rec_td_exp_l4w": 6,
+      "qb_cpoe_l4w": 5,
+      "height": 5,
+      "weight": 5,
+      "changed_team_offseason": 5
     },
     "forward_sleeper_asof": {
       "coverage_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\weekly_projections_v2_prod\\independent_model\\outputs\\forward\\forward_2026_week02_coverage.json",
@@ -344,11 +303,11 @@
     }
   },
   "network_odds_api": false,
-  "row_hash": "044d576755a87d49f4340ba8aa006a1f410bd5e1b572aea24b969630cde587fa",
+  "row_hash": "9f365c714c856e23ab7e918324e53aad8683f149500b6806edd6d08162be906c",
   "first_td_enrichment_coverage": {
-    "p_first": 50,
-    "book_first_p_devigged": 64,
-    "unquoted_lambda_remainder": 72,
+    "p_first": 0,
+    "book_first_p_devigged": 21,
+    "unquoted_lambda_remainder": 22,
     "scored_first": 22
   }
 }

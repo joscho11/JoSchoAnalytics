@@ -12,9 +12,27 @@ import numpy as np
 import pandas as pd
 
 
-# Published paper-bet cutoff: model probability must exceed DraftKings'
-# implied probability by at least half a percentage point.
-ATTD_VALUE_THRESHOLD = 0.005
+# Published Anytime TD paper-bet cutoff: model probability must exceed
+# DraftKings' implied probability by at least one percentage point (raised from
+# half a point on 2026-09-19 at Joseph's direction). +0.5pp and +1.0pp were the
+# two thresholds fixed before the 2025 holdout was scored; on the deployed
+# product model +1.0pp was +8.21% on 1,428 bets vs +6.83% on 1,605 at +0.5pp,
+# both intervals crossing zero (td_count_model_beta/README.md).
+ATTD_VALUE_THRESHOLD = 0.01
+# 2+ TD candidate rule (Joseph approved 2026-09-19, replaces the flat +0.5pp
+# gap kept above for legacy reference only -- see qualifies_two_plus_ratio).
+# A flat percentage-point gap rewards long shots: the same 0.5pp gap is a 50%
+# relative edge on a 1% DraftKings price and a 3% relative edge on a 15%
+# price, so it mostly flagged players where a small model error reads as a
+# huge edge (2026-09-19 Week 2 board: 37 of 37 flagged players skewed long
+# shot). The model's probability must be at least TWO_PLUS_RATIO_THRESHOLD
+# times DraftKings' implied probability, and that implied probability must be
+# at least TWO_PLUS_PRICE_FLOOR (screens out the longest shots, where the
+# ratio is easiest to clear by accident). No 2+ TD price history exists to
+# backtest either rule; this is a design choice, not a validated threshold.
+TWO_PLUS_VALUE_THRESHOLD = 0.005
+TWO_PLUS_RATIO_THRESHOLD = 1.25
+TWO_PLUS_PRICE_FLOOR = 0.02
 # First TD's threshold is wider than ATTD's. Exactly one player per game can
 # score first, so p_first is not an independent per-player probability like
 # p_ge1/p_ge2 -- it is a lambda-share allocation within a fixed per-game pool
@@ -26,7 +44,9 @@ ATTD_VALUE_THRESHOLD = 0.005
 # observed bias band while still leaving room for a real signal to clear it
 # as graded weeks accumulate. There is no historical First TD backtest to
 # calibrate this against (see FIRST_TD note in page_anytime_td.py); treat
-# this constant as a conservative placeholder, not a validated number.
+# this constant as a conservative placeholder, not a validated number. Since
+# 2026-09-19 the live rule also requires a positive expected return at
+# DraftKings' actual (vigged) price -- see qualifies_first_td_ev.
 FIRST_TD_VALUE_THRESHOLD = 0.03
 BOOTSTRAP_RESAMPLES = 10_000
 BOOTSTRAP_SEED = 20260911
@@ -47,6 +67,70 @@ def qualifies_probability_gap(gap, threshold: float = ATTD_VALUE_THRESHOLD):
     """
     result = pd.to_numeric(gap, errors="coerce").ge(float(threshold) - 1e-12)
     return result.fillna(False).astype(bool)
+
+
+def qualifies_two_plus_ratio(
+    model_probability,
+    book_probability,
+    *,
+    ratio_threshold: float = TWO_PLUS_RATIO_THRESHOLD,
+    price_floor: float = TWO_PLUS_PRICE_FLOOR,
+):
+    """2+ TD candidate rule: model probability >= ratio_threshold x book
+    probability, AND book probability >= price_floor. See the
+    TWO_PLUS_RATIO_THRESHOLD comment for why a ratio-plus-floor replaced the
+    flat gap. Coerced to plain float64 before comparing, same discipline as
+    qualifies_probability_gap, so a nullable-dtype NaN can never propagate
+    pd.NA through the boolean result.
+    """
+    model = pd.to_numeric(model_probability, errors="coerce").astype("float64")
+    book = pd.to_numeric(book_probability, errors="coerce").astype("float64")
+    ratio_ok = model.ge(book * ratio_threshold - 1e-12)
+    price_ok = book.ge(price_floor - 1e-12)
+    return (ratio_ok & price_ok).fillna(False).astype(bool)
+
+
+def qualifies_first_td_ev(
+    model_probability,
+    book_price,
+    gap,
+    *,
+    gap_threshold: float = FIRST_TD_VALUE_THRESHOLD,
+):
+    """First TD candidate rule: the raw value gap (model minus DraftKings'
+    de-vigged price) clears gap_threshold, AND the model shows a positive
+    expected return at DraftKings' real, vigged price.
+
+    The gap alone compares to a de-vigged price nobody actually pays --
+    First TD raw implied probabilities sum to about 121% per game, not 100%
+    (see FIRST_TD_VALUE_THRESHOLD). A player can clear the de-vigged gap and
+    still lose money at the real price: confirmed on the 2026 Week 2 board,
+    Christian McCaffrey cleared +3.5pp (24.6% model vs a 21.1% de-vigged
+    price) but the real +295 price implies 25.3%, an expected return of -3%.
+    Expected value = model probability x decimal odds - 1.
+    """
+    model = pd.to_numeric(model_probability, errors="coerce").astype("float64")
+    price = pd.to_numeric(book_price, errors="coerce").astype("float64")
+    gap_ok = qualifies_probability_gap(gap, gap_threshold)
+    decimal = price.map(lambda value: american_to_decimal(value) if pd.notna(value) else np.nan)
+    ev = model * decimal - 1.0
+    ev_ok = pd.Series(ev, index=model.index).gt(0.0)
+    return (gap_ok & ev_ok).fillna(False).astype(bool)
+
+
+def rule_description(market: str) -> str:
+    """Plain-language description of the paper-bet qualifying rule for `market`."""
+    if market == "two_plus":
+        return (
+            f"model probability at least {TWO_PLUS_RATIO_THRESHOLD:.2f}x DraftKings' "
+            f"price, with that price at least {100 * TWO_PLUS_PRICE_FLOOR:.0f}%"
+        )
+    if market == "first":
+        return (
+            f"+{100 * FIRST_TD_VALUE_THRESHOLD:.1f}pp value gap AND a positive "
+            "expected return at DraftKings' actual price"
+        )
+    return f"+{100 * ATTD_VALUE_THRESHOLD:.1f}pp value gap"
 
 
 def american_to_decimal(price) -> float:
@@ -107,8 +191,17 @@ def prepare_paper_bets(
     book_probability_col: str | None = "p_book",
     book_price_col: str = "book_amer",
     outcome_col: str = "scored_anytime",
+    qualifies=None,
 ) -> pd.DataFrame:
-    """Add value-gap, candidate, settlement, and profit fields to one market."""
+    """Add value-gap, candidate, settlement, and profit fields to one market.
+
+    `qualifies`, when given, is a callable taking the frame after
+    `_model_probability`/`_book_probability`/`_book_price`/`_value_gap` are
+    attached and returning a boolean mask -- this is how 2+ TD's ratio rule
+    and First TD's expected-value rule plug in without duplicating the
+    settlement/profit/bootstrap machinery below. `threshold` alone (the
+    default) reproduces the flat percentage-point gap rule.
+    """
     out = frame.copy()
     model_probability = _numeric_series(out, model_probability_col)
     book_price = _numeric_series(out, book_price_col)
@@ -137,12 +230,16 @@ def prepare_paper_bets(
     else:
         # Legacy demo releases predate the serving eligibility contract.
         eligibility = pd.Series(True, index=out.index, dtype=bool)
+    qualifying = (
+        qualifies(out) if qualifies is not None
+        else qualifies_probability_gap(out["_value_gap"], threshold)
+    )
     out["_candidate"] = (
         model_probability.notna()
         & book_probability.notna()
         & book_price.notna()
         & eligibility
-        & qualifies_probability_gap(out["_value_gap"], threshold)
+        & qualifying
     )
     out["_settled"] = out["_candidate"] & outcome.isin([0, 1])
     out["_win"] = out["_settled"] & outcome.eq(1)
@@ -180,15 +277,21 @@ def _max_drawdown(frame: pd.DataFrame) -> float:
     return float(drawdown.min())
 
 
-def strategy_summary(frame: pd.DataFrame, *, threshold: float | None) -> dict:
-    """Summarize one paper-betting rule using settled bets only for P&L."""
-    if threshold is None:
+def strategy_summary(frame: pd.DataFrame, *, threshold: float | None, qualifies=None) -> dict:
+    """Summarize one paper-betting rule using settled bets only for P&L.
+
+    `qualifies`, when given, replaces the flat-gap re-derivation below with
+    the same callable `prepare_paper_bets` used to build `_candidate` --
+    2+ TD's ratio rule or First TD's expected-value rule, most often.
+    """
+    if threshold is None and qualifies is None:
         bets = frame[frame["_book_price"].notna()].copy()
     else:
-        bets = frame[
-            qualifies_probability_gap(frame["_value_gap"], float(threshold))
-            & frame["_book_price"].notna()
-        ].copy()
+        mask = (
+            qualifies(frame) if qualifies is not None
+            else qualifies_probability_gap(frame["_value_gap"], float(threshold))
+        )
+        bets = frame[mask & frame["_book_price"].notna()].copy()
     settled = bets[bets["_outcome"].isin([0, 1])].copy()
     wins = int(settled["_win"].sum())
     losses = int(settled["_loss"].sum())
@@ -272,8 +375,16 @@ def season_tracker(
     book_price_col: str = "book_amer",
     outcome_col: str = "scored_anytime",
     threshold: float = ATTD_VALUE_THRESHOLD,
+    qualifies=None,
 ) -> dict:
-    """Return fixed-rule cards and its suppressed-or-available ROI interval."""
+    """Return fixed-rule cards and its suppressed-or-available ROI interval.
+
+    `qualifies` overrides the flat-gap rule end to end (candidate flagging,
+    the tracker cards, and the bootstrap all read the same `_candidate`
+    column or re-derive from the same callable). `threshold` is still passed
+    through for the reported metadata even when `qualifies` does the actual
+    gatekeeping.
+    """
     prepared = prepare_paper_bets(
         frame,
         model_probability_col=model_probability_col,
@@ -281,7 +392,8 @@ def season_tracker(
         book_price_col=book_price_col,
         outcome_col=outcome_col,
         threshold=threshold,
+        qualifies=qualifies,
     )
-    fixed = strategy_summary(prepared, threshold=threshold)
+    fixed = strategy_summary(prepared, threshold=threshold, qualifies=qualifies)
     ci = block_bootstrap_roi(prepared, threshold=threshold)
     return {"summary": fixed, "ci": ci, "rows": prepared}

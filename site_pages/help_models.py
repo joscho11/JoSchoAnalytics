@@ -340,7 +340,10 @@ Demo weeks 10-17: closer in 5 of 8 weeks. That is not a betting record.
 
 **2+ TD.** Not backtested: no historical 2+ model-quality or betting
 test results are published yet. Its probabilities and cards are forward-looking
-paper tracking only, not evidence of accuracy or profitability.
+paper tracking only, not evidence of accuracy or profitability. Since
+2026-09-19 its candidate rule is model probability at least 1.25x DraftKings'
+price, with that price at least 2% (replaces a flat +0.5pp gap, which mostly
+flagged long shots where a small model error reads as a huge relative edge).
 
 **First TD.** A different kind of probability than the other two: exactly one
 player can score a game's first touchdown, so it is a competing-risk
@@ -348,10 +351,12 @@ allocation across both rosters (each player's share of the game's
 Anytime-TD rate), not a per-player marginal chance. There is no historical
 First TD backtest of any kind, for any season, anywhere in this project --
 only a forward live-week board. Treat it as entertainment even more than 2+ TD.
-Its paper-bet gap rule is wider than the other two markets' (+3.0pp instead
-of +0.5pp), because the allocation method has a known bias toward
-underweighting bell-cow backs and starting QBs that a narrow gap rule would
-misread as value.
+Its paper-bet rule is a wider +3.0pp gap than Anytime's +1.0pp, because the
+allocation method has a known bias toward underweighting bell-cow backs and
+starting QBs that a narrow gap rule would misread as value. Since 2026-09-19
+it also requires a positive expected return at DraftKings' actual, vigged
+price, since the de-vigged gap alone can still pass on a bet that loses
+money once the real price (which sums to about 121% per game) is paid.
         """)
         st.caption(
             "The live board is a comparison, not a claim it beats the book. "
