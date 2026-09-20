@@ -128,8 +128,8 @@ mobile.inject()
 nav = st.navigation(
     {"": [home_pg, tw_pg],
      "Betting": [wp_pg, atd_pg, tr_pg, fut_pg],
-     "College Basketball": [cbb_pg],
      "Fantasy": [wf_pg, dfs_pg, board_pg, rb_pg],
+     "College Basketball": [cbb_pg],
      "More": [film_pg, lh_pg, help_pg]},
     position="top",
 )

@@ -73,7 +73,7 @@ def test_nav_groups_betting_then_fantasy():
     assert "url_path=\"draft-board\", default=True" not in src
     assert "url_path=\"weekly-predictions\", default=True" not in src
     assert 'url_path="college-basketball"' in src
-    assert src.index('"Betting"') < src.index('"College Basketball"') < src.index('"Fantasy"')
+    assert src.index('"Fantasy"') < src.index('"College Basketball"') < src.index('"More"')
 
 
 def test_college_basketball_has_exactly_one_page():
