@@ -1393,6 +1393,7 @@ separate NE and SEA boards).
 
 def render() -> None:
     st.title("Touchdown Props")
+    st.badge("Beta", icon=":material/science:", color="orange")
     st.caption(
         "Anytime, 2+, and First TD scorer odds vs DraftKings. Passing TDs are "
         "out of every market. Live 2026 releases plus a 2025 demo. For fun. Bet responsibly."
