@@ -533,7 +533,7 @@
       "previous_build": "fantasy-2026w02-f2f703e88cf5"
     },
     "predictions": {
-      "active_build": "predictions-2026w03-5632d9f17ca4",
+      "active_build": "predictions-2026w03-21c5ccf85ec3",
       "builds": {
         "predictions-2025w10-8f1701d7a6db": {
           "artifact": "data/releases/builds/predictions/2025/week10/predictions-2025w10-8f1701d7a6db/artifact.csv",
@@ -991,6 +991,38 @@
           },
           "week": 2
         },
+        "predictions-2026w03-21c5ccf85ec3": {
+          "artifact": "data/releases/builds/predictions/2026/week03/predictions-2026w03-21c5ccf85ec3/artifact.csv",
+          "build_id": "predictions-2026w03-21c5ccf85ec3",
+          "correction": {
+            "reason": "Apply the explicit ATL/MIN/CHI QB inputs and correct meta_games_played_min to include Weeks 1-2",
+            "source_snapshot_captured_at": "2026-09-22T10:50:38-04:00",
+            "source_snapshot_sha256": "0ceed2364ea23e12bd493cbbe389c19e15bb3eba3876d812e00a13c57dc91d4f",
+            "supersedes_build_id": "predictions-2026w03-5632d9f17ca4"
+          },
+          "metadata": "data/releases/builds/predictions/2026/week03/predictions-2026w03-21c5ccf85ec3/metadata.json",
+          "model_version": "spread-v3-prod-ridge-only-c976e11119a9",
+          "produced_at": "2026-09-22T21:07:41Z",
+          "product": "predictions",
+          "published_at": "2026-09-22T21:10:02Z",
+          "row_count": 16,
+          "season": 2026,
+          "sha256": "21c5ccf85ec3adcf8de8e8291409939fe0f42e265dd19c93e2f650a0ae6c7521",
+          "status": "Published",
+          "validation": {
+            "checks": {
+              "artifact_sha256": "21c5ccf85ec3adcf8de8e8291409939fe0f42e265dd19c93e2f650a0ae6c7521",
+              "produced_at_utc": "2026-09-22T21:07:41Z",
+              "scheduled_games": 16
+            },
+            "errors": [],
+            "ok": true,
+            "product": "predictions",
+            "row_count": 16,
+            "warnings": []
+          },
+          "week": 3
+        },
         "predictions-2026w03-5632d9f17ca4": {
           "artifact": "data/releases/builds/predictions/2026/week03/predictions-2026w03-5632d9f17ca4/artifact.csv",
           "build_id": "predictions-2026w03-5632d9f17ca4",
@@ -998,7 +1030,7 @@
           "model_version": "spread-v3-prod-ridge-only-c976e11119a9",
           "produced_at": "2026-09-22T15:33:44Z",
           "product": "predictions",
-          "published_at": "2026-09-22T15:33:58Z",
+          "published_at": "2026-09-22T21:09:57Z",
           "row_count": 16,
           "season": 2026,
           "sha256": "5632d9f17ca42e47753012c41b159f38720179598a098853a3855a8052ebd168",
@@ -1024,9 +1056,9 @@
         "status": "Scheduled",
         "week": 1
       },
-      "previous_build": "predictions-2026w02-dadc771d9ed0"
+      "previous_build": "predictions-2026w03-5632d9f17ca4"
     }
   },
   "schema_version": 1,
-  "updated_at": "2026-09-22T15:40:24Z"
+  "updated_at": "2026-09-22T21:10:02Z"
 }
