@@ -151,11 +151,11 @@ def test_2026_high_qualifies_off_median_and_shop_cannot_promote():
 
 
 def test_one_sided_wilson_claim_matches_locked_book():
-    # Updated in ac95d21 (Publish corrected Week 1 and Week 2 spread predictions).
+    # Values load from betting/high_fire_rate_audit_v1.json.
     assert LIVE_HIGH_WINS == 253
     assert LIVE_HIGH_N == 436
     lo = _wilson_one_sided_lower(LIVE_HIGH_WINS, LIVE_HIGH_N, LIVE_HIGH_WILSON_Z)
-    assert round(lo, 4) == LIVE_HIGH_WILSON_LOWER
+    assert round(lo, 4) == round(LIVE_HIGH_WILSON_LOWER, 4)
     assert lo > 0.524
 
 

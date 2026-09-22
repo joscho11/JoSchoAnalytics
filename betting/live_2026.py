@@ -11,6 +11,7 @@ immutable; a corrected Week 1 release is published as a new build.
 """
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pandas as pd
@@ -20,24 +21,23 @@ HIGH_GAP = 3.0
 LAST_REG_WEEK = 18
 SLATE_NAME = "slate_2026.csv"
 
-# spread_v3_prod causal-cleanup Tuesday HIGH book, 2021-2025, last REG week skipped.
-# Injury reports as-of Tuesday 9:00 ET (legal_injury_reports).
-# Clean Ridge, 49 columns, seed 7, with point-in-time HFA, coach, vacated-snaps,
-# and QB1 inputs. HIGH flags use the Tuesday US median.
-# The current historical book scores those tickets at the best US Tuesday number.
-# One-sided 95% Wilson 0.5410 clears 52.4%. All-bets is diagnostic.
-# Median grade on the same tickets: 249/437, Wilson 0.5305.
-# Withdrawn: 192/336 used same-week injury reports that postdate Tuesday.
-# Prior as-of 75/25 was 155/290. See spread_v3_prod/LEAKAGE_AUDIT.md.
-LIVE_HIGH_WINS = 253
-LIVE_HIGH_N = 436
-LIVE_HIGH_ATS = LIVE_HIGH_WINS / LIVE_HIGH_N
+# The producer's versioned audit JSON is the source of public benchmark values
+# and per-season splits. Keeping the renderer data-only avoids loading training
+# code or a serialized model in the public app.
+HIGH_AUDIT_PATH = Path(__file__).with_name("high_fire_rate_audit_v1.json")
+_HIGH_AUDIT = json.loads(HIGH_AUDIT_PATH.read_text(encoding="utf-8"))
+if _HIGH_AUDIT.get("schema_version") != 1 or _HIGH_AUDIT.get("report_id") != "high_fire_rate_audit_v1":
+    raise ValueError(f"unsupported HIGH audit artifact: {HIGH_AUDIT_PATH}")
+_HIGH_BENCHMARK = _HIGH_AUDIT["baseline"]["historical_high"]
+LIVE_HIGH_WINS = int(_HIGH_BENCHMARK["wins"])
+LIVE_HIGH_N = int(_HIGH_BENCHMARK["n"])
+LIVE_HIGH_ATS = float(_HIGH_BENCHMARK["ats"])
 LIVE_HIGH_WILSON_Z = 1.64485
-LIVE_HIGH_WILSON_LOWER = 0.5410
-LIVE_HIGH_WILSON_CLEARS = True
+LIVE_HIGH_WILSON_LOWER = float(_HIGH_BENCHMARK["wilson_lower"])
 LIVE_ALL_BETS_WINS = 681
 LIVE_ALL_BETS_N = 1286
 BREAKEVEN = 0.524
+LIVE_HIGH_WILSON_CLEARS = LIVE_HIGH_WILSON_LOWER > BREAKEVEN
 TRACKER_2025_MD5 = "88d526ca46e8cbb9f1eea77a3d96fa08"
 
 

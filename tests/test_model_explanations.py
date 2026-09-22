@@ -39,12 +39,27 @@ def test_live_eval_numbers_match_published_books():
     import sys
 
     sys.path.insert(0, str(me.HERE / "betting"))
-    from live_2026 import LIVE_HIGH_N, LIVE_HIGH_WINS
+    from live_2026 import LIVE_HIGH_N, LIVE_HIGH_WILSON_LOWER, LIVE_HIGH_WINS
 
     wins = sum(row["wins"] for row in me.SPREAD_HIGH_BY_SEASON)
     n = sum(row["n"] for row in me.SPREAD_HIGH_BY_SEASON)
     assert wins == LIVE_HIGH_WINS
     assert n == LIVE_HIGH_N
+
+    audit = json.loads(me._HIGH_AUDIT_PATH.read_text(encoding="utf-8"))
+    benchmark = audit["baseline"]["historical_high"]
+    assert benchmark["gap"] == 3.0
+    assert benchmark["pick_rows"] == 446
+    assert benchmark["wins"] == 253
+    assert benchmark["n"] == 436
+    assert benchmark["wilson_lower"] == LIVE_HIGH_WILSON_LOWER
+    assert [(r["season"], r["wins"], r["n"]) for r in me.SPREAD_HIGH_BY_SEASON] == [
+        (2021, 85, 136),
+        (2022, 53, 94),
+        (2023, 52, 96),
+        (2024, 25, 45),
+        (2025, 38, 65),
+    ]
 
     evidence = json.loads(
         (me.HERE / "futures" / "published" / "evidence.json").read_text(encoding="utf-8")

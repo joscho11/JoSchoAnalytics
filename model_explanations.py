@@ -25,16 +25,13 @@ VETERAN_CALIBRATION_AUDIT = [
     {"position": "TE", "n": 558, "overall_bias": -2.57, "top_n": 112, "top_bias": -1.58},
 ]
 
-# Live-product charts on Help. Frozen from the current clean published book, not
-# computed at render time. Tests lock the load-bearing totals against the active
-# model constants and the published/evidence snapshot
-# and the HIGH season splits against LIVE_HIGH_WINS / LIVE_HIGH_N.
+# The spread season chart reads the same versioned audit artifact as the live
+# HIGH headline. Do not copy season splits into this module.
+_HIGH_AUDIT_PATH = HERE / "betting" / "high_fire_rate_audit_v1.json"
+_HIGH_AUDIT = json.loads(_HIGH_AUDIT_PATH.read_text(encoding="utf-8"))
 SPREAD_HIGH_BY_SEASON = [
-    {"season": 2021, "wins": 93, "n": 153},
-    {"season": 2022, "wins": 55, "n": 103},
-    {"season": 2023, "wins": 66, "n": 125},
-    {"season": 2024, "wins": 37, "n": 66},
-    {"season": 2025, "wins": 44, "n": 74},
+    {"season": int(row["season"]), "wins": int(row["wins"]), "n": int(row["n"])}
+    for row in _HIGH_AUDIT["baseline"]["historical_high"]["high_by_season"]
 ]
 
 # Absolute ridge coefficients from season_totals_v2_prod artifacts/prod_card.json
