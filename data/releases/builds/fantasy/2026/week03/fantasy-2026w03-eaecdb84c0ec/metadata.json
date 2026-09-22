@@ -1,0 +1,268 @@
+{
+  "artifact_name": "projections_2026_week03.csv",
+  "artifact_sha256": "eaecdb84c0ecc09a5dea453f10e0c6e3d0970fd8e46a8dfcae26140f7ff5dc7b",
+  "expected_gsis_id_sha256": "04a7102bc33de569412c4d0fce6445f51ce994377e1255342a3c081a327db7ca",
+  "expected_player_ids_sha256": "5345e707ee9d40bd5048ff91e3e9061dab2ee5f46591cbdb89db4f0b39a8e110",
+  "expected_rows": 380,
+  "expected_sleeper_id_sha256": "ef1ea58f1a8e9e2c0c312660c8bebd42a990ea2f02cc66c72a1cb95ecc5a1ce9",
+  "expected_teams": [
+    "ARI",
+    "ATL",
+    "BAL",
+    "BUF",
+    "CAR",
+    "CHI",
+    "CIN",
+    "CLE",
+    "DAL",
+    "DEN",
+    "DET",
+    "GB",
+    "HOU",
+    "IND",
+    "JAX",
+    "KC",
+    "LA",
+    "LAC",
+    "LV",
+    "MIA",
+    "MIN",
+    "NE",
+    "NO",
+    "NYG",
+    "NYJ",
+    "PHI",
+    "PIT",
+    "SEA",
+    "SF",
+    "TB",
+    "TEN",
+    "WAS"
+  ],
+  "identity_aliases": [
+    "gsis_id",
+    "sleeper_id"
+  ],
+  "legacy_bootstrap": false,
+  "model_version": "weekly-fantasy-v2-l1_wipe_prior_share_ranks-ad79f409f0b3",
+  "position_counts": {
+    "QB": 32,
+    "RB": 100,
+    "TE": 96,
+    "WR": 152
+  },
+  "produced_at": "2026-09-22T15:40:18Z",
+  "product": "fantasy",
+  "schema_version": 1,
+  "season": 2026,
+  "team_position_counts": {
+    "ARI": {
+      "QB": 1,
+      "RB": 2,
+      "TE": 2,
+      "WR": 5
+    },
+    "ATL": {
+      "QB": 1,
+      "RB": 2,
+      "TE": 3,
+      "WR": 4
+    },
+    "BAL": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 4,
+      "WR": 5
+    },
+    "BUF": {
+      "QB": 1,
+      "RB": 2,
+      "TE": 3,
+      "WR": 3
+    },
+    "CAR": {
+      "QB": 1,
+      "RB": 2,
+      "TE": 4,
+      "WR": 5
+    },
+    "CHI": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 5
+    },
+    "CIN": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 4,
+      "WR": 5
+    },
+    "CLE": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 6
+    },
+    "DAL": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 5
+    },
+    "DEN": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 5
+    },
+    "DET": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 5
+    },
+    "GB": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 4
+    },
+    "HOU": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 4,
+      "WR": 4
+    },
+    "IND": {
+      "QB": 1,
+      "RB": 2,
+      "TE": 3,
+      "WR": 5
+    },
+    "JAX": {
+      "QB": 1,
+      "RB": 4,
+      "TE": 3,
+      "WR": 5
+    },
+    "KC": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 6
+    },
+    "LA": {
+      "QB": 1,
+      "RB": 2,
+      "TE": 5,
+      "WR": 4
+    },
+    "LAC": {
+      "QB": 1,
+      "RB": 4,
+      "TE": 1,
+      "WR": 5
+    },
+    "LV": {
+      "QB": 1,
+      "RB": 4,
+      "TE": 2,
+      "WR": 6
+    },
+    "MIA": {
+      "QB": 1,
+      "RB": 4,
+      "TE": 3,
+      "WR": 4
+    },
+    "MIN": {
+      "QB": 1,
+      "RB": 4,
+      "TE": 2,
+      "WR": 4
+    },
+    "NE": {
+      "QB": 1,
+      "RB": 4,
+      "TE": 3,
+      "WR": 5
+    },
+    "NO": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 4
+    },
+    "NYG": {
+      "QB": 1,
+      "RB": 5,
+      "TE": 3,
+      "WR": 4
+    },
+    "NYJ": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 4,
+      "WR": 4
+    },
+    "PHI": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 2,
+      "WR": 6
+    },
+    "PIT": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 4,
+      "WR": 5
+    },
+    "SEA": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 4
+    },
+    "SF": {
+      "QB": 1,
+      "RB": 4,
+      "TE": 2,
+      "WR": 3
+    },
+    "TB": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 4,
+      "WR": 6
+    },
+    "TEN": {
+      "QB": 1,
+      "RB": 4,
+      "TE": 2,
+      "WR": 5
+    },
+    "WAS": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 2,
+      "WR": 6
+    }
+  },
+  "validation": {
+    "checks": {
+      "artifact_sha256": "eaecdb84c0ecc09a5dea453f10e0c6e3d0970fd8e46a8dfcae26140f7ff5dc7b",
+      "produced_at_utc": "2026-09-22T15:40:18Z",
+      "scheduled_teams": 32,
+      "team_position_cells": 128
+    },
+    "errors": [],
+    "ok": true,
+    "product": "fantasy",
+    "row_count": 380,
+    "warnings": [
+      "24 projections are below zero; retained as a model diagnostic"
+    ]
+  },
+  "week": 3
+}

@@ -45,9 +45,13 @@ def test_weekly_fantasy_renders_and_owns_controls(tmp_path):
     at = _render_page(tmp_path, "page_weekly_fantasy")
     keys = _control_keys(at)
     assert {"wf_season", "wf_week"} <= keys, f"Weekly Fantasy must own Season+Week; got {keys}"
+    import page_common
+    default_season, default_week = page_common.release_default_selection("fantasy", (2025, 10))
     controls = {w.key: w.value for w in at.selectbox}
-    assert controls["wf_season"] == 2026
-    assert controls["wf_week"] == 2
+    assert controls["wf_season"] == 2026 == default_season
+    # The page follows the newest published week; pinning a number here breaks
+    # every time a new week ships.
+    assert int(controls["wf_week"]) == int(default_week)
     assert not any(str(k).startswith(("wp_", "tr_")) for k in keys), \
         "Weekly Fantasy must not carry another page's controls"
 

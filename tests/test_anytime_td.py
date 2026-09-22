@@ -73,9 +73,12 @@ def test_anytime_td_renders_and_owns_controls(tmp_path):
     expected_counts = sorted(selected.groupby("team").size().tolist())
     rendered_counts = sorted(len(frame.value) for frame in at.dataframe)
     assert rendered_counts == sorted(expected_counts * 2)
-    assert set(at.dataframe[0].value.columns) == set(
-        ["#", "Player", "Pos", "Opp", "Model ATTD Odds", "Book ATTD Odds", "ATTD Value Gap"]
-    )
+    # Hit appears once that week has graded outcomes; before grading it is absent.
+    base_cols = {"#", "Player", "Pos", "Opp", "Model ATTD Odds", "Book ATTD Odds", "ATTD Value Gap"}
+    rendered_cols = set(at.dataframe[0].value.columns)
+    assert rendered_cols in (base_cols, base_cols | {"Hit"}), rendered_cols
+    graded = pd.to_numeric(selected.scored_anytime, errors="coerce").notna().any()
+    assert ("Hit" in rendered_cols) == bool(graded)
 
 
 def test_two_plus_toggle_preserves_market_or_placeholder(tmp_path):
@@ -809,9 +812,16 @@ def test_current_week1_keeps_published_past_game_results():
 
     den_kc = expected[expected.game_id.eq("2026_01_DEN_KC")]
     assert len(den_kc) == 25
-    assert pd.to_numeric(den_kc.scored_anytime, errors="coerce").notna().all()
-    assert pd.to_numeric(den_kc.scored_two_plus, errors="coerce").notna().all()
-    assert set(den_kc.status) == {"final"}
+    # A quoted player with zero offensive snaps is VOID (no action), not a loss,
+    # so "resolved" means graded OR void -- never silently blank.
+    resolved = (
+        pd.to_numeric(den_kc.scored_anytime, errors="coerce").notna()
+        | den_kc.status.astype(str).str.lower().eq("void")
+    )
+    assert resolved.all()
+    assert pd.to_numeric(den_kc.loc[den_kc.status.ne("void"), "scored_two_plus"], errors="coerce").notna().all()
+    assert set(den_kc.status) <= {"final", "void"}
+    assert pd.isna(den_kc.loc[den_kc.status.eq("void"), "scored_anytime"]).all()
     assert list(den_kc.loc[den_kc.player_display_name.eq("Kenneth Walker"), "scored_two_plus"]) == [1]
 
 

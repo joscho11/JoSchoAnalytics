@@ -138,11 +138,15 @@ def test_weekly_fantasy_defaults_to_live_2026_release(tmp_path):
     assert "weekly fantasy projections" in blob
 
 
-def test_weekly_fantasy_defaults_to_2026_week2(tmp_path):
+def test_weekly_fantasy_defaults_to_latest_published_week(tmp_path):
+    """The default follows the newest published release, so it must not be pinned to a week."""
+    import page_common
+
+    season, week = page_common.release_default_selection("fantasy", (2025, 10))
     at = _render_weekly(tmp_path)
     by_key = {getattr(w, "key", None): w.value for w in at.selectbox}
-    assert int(by_key["wf_season"]) == 2026
-    assert int(by_key["wf_week"]) == 2
+    assert int(by_key["wf_season"]) == 2026 == int(season)
+    assert int(by_key["wf_week"]) == int(week)
     markdown = " ".join(str(item.value) for item in at.markdown)
     assert "green-badge" in markdown and "Published" in markdown
     assert "Published" in markdown
