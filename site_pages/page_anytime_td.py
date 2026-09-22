@@ -56,10 +56,10 @@ PHONE_WIDTHS = {
 }
 TWO_PLUS_DESKTOP_COLS = [
     "#", "Player", "Pos", "Opp", "Model 2+ TD Odds", "Book 2+ TD Odds",
-    "2+ TD Value Gap",
+    "2+ TD Value Gap", "Hit",
 ]
 TWO_PLUS_PHONE_COLS = [
-    "#", "Player", "Model 2+ TD Odds", "Book 2+ TD Odds", "2+ TD Value Gap",
+    "#", "Player", "Model 2+ TD Odds", "Book 2+ TD Odds", "2+ TD Value Gap", "Hit",
 ]
 FIRST_TD_DESKTOP_COLS = [
     "#", "Player", "Pos", "Opp", "Model First TD Odds", "Book First TD Odds",
@@ -574,6 +574,34 @@ def _live_metadata(season: int = LIVE_SEASON, week: int = 1) -> dict:
     return _load_meta(str(files[-1]))
 
 
+def _grading_stamp_caption(season: int, week: int) -> str:
+    """One line saying when Anytime, 2+ TD and First TD results were last refreshed.
+
+    The three markets are graded in a single pass, so they share one stamp
+    (written by publishing.grader.write_td_grading_stamps). Empty when no
+    grading has run for the week yet.
+    """
+    path = _DIR / f"grading_{season}_week{week:02d}.json"
+    try:
+        stamp = json.loads(path.read_text(encoding="utf-8"))
+        moment = pd.Timestamp(stamp["graded_at"]).tz_convert("America/New_York")
+    except (OSError, ValueError, KeyError, TypeError):
+        return ""
+    text = (
+        f"Results last updated {moment.strftime('%a %b')} {moment.day}, "
+        f"{moment.strftime('%I:%M %p').lstrip('0')} ET. Anytime TD, 2+ TD and First TD "
+        f"are graded together. {int(stamp.get('final_games', 0))} final games in this week."
+    )
+    waiting = int(stamp.get("awaiting_stat_rows", 0) or 0)
+    if waiting:
+        noun = "player" if waiting == 1 else "players"
+        text += (
+            f" {waiting} quoted {noun} on final games "
+            "not yet in the stat feed, left blank until they appear."
+        )
+    return text
+
+
 def _amer(value) -> str:
     if pd.isna(value):
         return ""
@@ -755,6 +783,8 @@ def _two_plus_display(df: pd.DataFrame) -> pd.DataFrame:
             model_american, book_american, ranked.p_ge2, book_probability
         )
     ]
+    outcome = _numeric_column(ranked, "scored_two_plus")
+    hit = outcome.map(lambda value: "Yes" if value == 1 else ("No" if pd.notna(value) else ""))
     return pd.DataFrame({
         "#": range(1, len(ranked) + 1),
         "Player": ranked.player_display_name + " · " + ranked.team.astype(str),
@@ -778,6 +808,7 @@ def _two_plus_display(df: pd.DataFrame) -> pd.DataFrame:
                 value_gap, ranked.p_ge2, book_probability, _eligibility_tags(ranked)
             )
         ],
+        "Hit": hit,
         "_value": ranked["_value"].astype(float),
         "_candidate": tracker.qualifies_two_plus_ratio(
             ranked["p_ge2"], book_probability
@@ -976,23 +1007,37 @@ def _first_td_style(view: pd.DataFrame):
 
 
 def _two_plus_style(view: pd.DataFrame):
-    """Apply the same opaque candidate treatment to the 2+ market."""
+    """Same opaque candidate treatment as First TD, including the missed-candidate row."""
     candidate_row_bg = "background-color: #123229"
     candidate_focus = (
         "background-color: #1A4A3B; color: #B7F7D0; font-weight: 700"
     )
+    missed_candidate_row_bg = "background-color: #BA797A"
+    missed_candidate_focus = (
+        "background-color: #BA797A; color: #3F2024; font-weight: 700"
+    )
+
+    def _missed_candidate(index: int) -> bool:
+        return bool(
+            view["_candidate"].iloc[index]
+            and "Hit" in view
+            and view["Hit"].iloc[index] == "No"
+        )
 
     def _apply(df: pd.DataFrame) -> pd.DataFrame:
         styles = pd.DataFrame("", index=df.index, columns=df.columns)
         for i, candidate in enumerate(view["_candidate"]):
             if candidate:
-                styles.iloc[i, :] = candidate_row_bg
+                missed = _missed_candidate(i)
+                focus = missed_candidate_focus if missed else candidate_focus
+                styles.iloc[i, :] = missed_candidate_row_bg if missed else candidate_row_bg
                 if "Player" in df.columns:
+                    border = "#8F525A" if missed else "#35D08A"
                     styles.iloc[i, df.columns.get_loc("Player")] = (
-                        f"{candidate_focus}; border-left: 3px solid #35D08A"
+                        f"{focus}; border-left: 3px solid {border}"
                     )
                 if "2+ TD Value Gap" in df.columns:
-                    styles.iloc[i, df.columns.get_loc("2+ TD Value Gap")] = candidate_focus
+                    styles.iloc[i, df.columns.get_loc("2+ TD Value Gap")] = focus
         if "2+ TD Value Gap" in df.columns:
             for i, value in enumerate(view["_value"]):
                 if pd.isna(value) or view["_candidate"].iloc[i]:
@@ -1001,6 +1046,15 @@ def _two_plus_style(view: pd.DataFrame):
                 styles.iloc[i, df.columns.get_loc("2+ TD Value Gap")] = (
                     f"color: {color}; font-weight: 700"
                 )
+        if "Hit" in df.columns:
+            for i, mark in enumerate(view["Hit"]):
+                if mark == "Yes":
+                    style = "color: #35D08A; font-weight: 700"
+                    if view["_candidate"].iloc[i]:
+                        style = f"{style}; background-color: #1A4A3B"
+                    styles.iloc[i, df.columns.get_loc("Hit")] = style
+                elif mark == "No" and view["_candidate"].iloc[i]:
+                    styles.iloc[i, df.columns.get_loc("Hit")] = missed_candidate_focus
         return styles
 
     return _apply
@@ -1083,6 +1137,9 @@ def _two_plus_column_config() -> dict:
             "2+ TD Value Gap",
             help="Book-minus-model American-odds gap and model-minus-book probability differential.",
         ),
+        "Hit": st.column_config.TextColumn(
+            "Hit", help="Did they score two or more rushing or receiving TDs?",
+        ),
     }
 
 
@@ -1107,6 +1164,10 @@ def _two_plus_phone_column_config() -> dict:
     cfg["2+ TD Value Gap"] = st.column_config.TextColumn(
         "Value", width=PHONE_WIDTHS["ATTD Value Gap"],
         help="Two-plus book-minus-model odds gap and probability differential.",
+    )
+    cfg["Hit"] = st.column_config.TextColumn(
+        "Hit", width=PHONE_WIDTHS["Hit"],
+        help="Did they score two or more rushing or receiving TDs?",
     )
     return cfg
 
@@ -1212,8 +1273,9 @@ def _board(
         phone_config = _first_td_phone_column_config()
     elif show_two_plus:
         table = _two_plus_display(view)
-        desktop_cols = TWO_PLUS_DESKTOP_COLS
-        phone_cols = TWO_PLUS_PHONE_COLS
+        graded = _numeric_column(view, "scored_two_plus").notna().any()
+        desktop_cols = TWO_PLUS_DESKTOP_COLS if graded else [c for c in TWO_PLUS_DESKTOP_COLS if c != "Hit"]
+        phone_cols = TWO_PLUS_PHONE_COLS if graded else [c for c in TWO_PLUS_PHONE_COLS if c != "Hit"]
         desktop_config = _two_plus_column_config()
         phone_config = _two_plus_phone_column_config()
     else:
@@ -1381,6 +1443,9 @@ def render() -> None:
             book_value = meta.get("book", [])
             books = ", ".join(book_value) if isinstance(book_value, list) else str(book_value)
             st.caption(f"Book: {books or 'manual paste'} · Last capture: {meta.get('capture_max', 'unknown')}")
+        graded_line = _grading_stamp_caption(season, week)
+        if graded_line:
+            st.caption(graded_line)
     with st.container(horizontal=True, vertical_alignment="center"):
         is_live = season == LIVE_SEASON
         st.badge("Live" if is_live else "Demo", icon=":material/live_tv:" if is_live else ":material/science:",

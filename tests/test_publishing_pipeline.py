@@ -582,6 +582,53 @@ def test_anytime_td_grading_does_not_zero_fill_an_incomplete_feed(tmp_path):
     assert pd.read_csv(path)["scored_anytime"].isna().all()
 
 
+def test_anytime_td_grading_one_unmatched_player_does_not_hold_back_the_game(tmp_path):
+    """Every other quoted player grades now; only the row with no stat and no snap row waits."""
+    path = _anytime_board(tmp_path)
+    schedule = pd.DataFrame([{
+        "season": 2026, "week": 1, "game_id": "2026_01_NE_SEA",
+        "home_team": "SEA", "away_team": "NE", "home_score": 27, "away_score": 20,
+    }])
+    actuals = pd.DataFrame([
+        {"season": 2026, "week": 1, "season_type": "REG", "player_id": "SEA-RB",
+         "team": "SEA", "rushing_tds": 2, "receiving_tds": 0},
+        # NE is in the feed (through a different player), but NE-RB has no row and no snaps.
+        {"season": 2026, "week": 1, "season_type": "REG", "player_id": "NE-WR",
+         "team": "NE", "rushing_tds": 0, "receiving_tds": 0},
+    ])
+
+    result = grade_anytime_td_file(path, schedule, actuals, season=2026, week=1)
+    graded = pd.read_csv(path).set_index("player_id")
+    assert result["status"] == "graded" and result["complete"] is False
+    assert result["updated_games"] == ["2026_01_NE_SEA"]
+    assert "2026_01_NE_SEA" in result["pending_games"]  # partial: one row still waiting
+    assert result["awaiting_stat_rows"] == 1
+    assert graded.loc["SEA-RB", "scored_anytime"] == 1
+    assert graded.loc["SEA-RB", "scored_two_plus"] == 1
+    assert graded.loc["SEA-RB", "status"] == "final"
+    assert pd.isna(graded.loc["NE-RB", "scored_anytime"])
+    assert graded.loc["NE-RB", "status"] == "pregame"
+
+
+def test_td_grading_stamp_written_only_when_a_grader_changed_the_week(tmp_path):
+    from publishing.grader import write_td_grading_stamps
+
+    (tmp_path / "betting" / "anytime_td").mkdir(parents=True)
+    changed = {"2026w02": {"season": 2026, "week": 2, "changed": True, "final_games": 15,
+                           "graded_rows": 185, "graded_two_plus_rows": 185,
+                           "awaiting_stat_rows": 10}}
+    first = {"2026w02": {"season": 2026, "week": 2, "changed": False, "graded_rows": 356}}
+    written = write_td_grading_stamps(changed, first, tmp_path)
+    stamp = json.loads(Path(written[0]).read_text(encoding="utf-8"))
+    assert Path(written[0]).name == "grading_2026_week02.json"
+    assert stamp["graded_at"].endswith("Z") and stamp["awaiting_stat_rows"] == 10
+    assert stamp["anytime_graded_rows"] == 185 and stamp["first_td_graded_rows"] == 356
+
+    quiet = {"2026w02": {**changed["2026w02"], "changed": False}}
+    assert write_td_grading_stamps(quiet, first, tmp_path) == []
+    assert write_td_grading_stamps({"status": "skipped", "reason": "x"}, {}, tmp_path) == []
+
+
 def test_anytime_td_grading_voids_zero_snap_dnp_instead_of_false_loss(tmp_path):
     path = _anytime_board(tmp_path)
     schedule = pd.DataFrame([{

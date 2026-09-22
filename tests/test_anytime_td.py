@@ -85,10 +85,12 @@ def test_two_plus_toggle_preserves_market_or_placeholder(tmp_path):
     assert not at.exception, at.exception
     assert not at.error, [e.value for e in at.error]
     assert any("2+ TD view" in str(item.value) for item in at.caption)
+    # Week 1 is graded, so the 2+ board now carries a Hit column like the other markets.
     assert set(at.dataframe[0].value.columns) == set([
         "#", "Player", "Pos", "Opp", "Model 2+ TD Odds",
-        "Book 2+ TD Odds", "2+ TD Value Gap",
+        "Book 2+ TD Odds", "2+ TD Value Gap", "Hit",
     ])
+    assert set(at.dataframe[0].value["Hit"]) <= {"Yes", "No", ""}
     # The selected matchup may legitimately predate the 2+ sportsbook market;
     # the UI must keep that state explicit instead of treating placeholders as odds.
     book_values = at.dataframe[0].value["Book 2+ TD Odds"]
@@ -100,6 +102,25 @@ def test_two_plus_toggle_preserves_market_or_placeholder(tmp_path):
     )
     assert any(str(metric.label) == "Record" for metric in at.metric)
     assert any("2+ TD paper tracker" in str(item.value) for item in at.caption)
+
+
+def test_results_updated_caption_reads_the_shared_grading_stamp(tmp_path, monkeypatch):
+    import json
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "site_pages"))
+    import page_anytime_td as page
+
+    monkeypatch.setattr(page, "_DIR", tmp_path)
+    assert page._grading_stamp_caption(2026, 2) == ""  # never graded: no line, no crash
+    (tmp_path / "grading_2026_week02.json").write_text(json.dumps({
+        "graded_at": "2026-09-22T00:13:44Z", "final_games": 15, "awaiting_stat_rows": 10,
+    }), encoding="utf-8")
+    text = page._grading_stamp_caption(2026, 2)
+    assert text.startswith("Results last updated Mon Sep 21, 8:13 PM ET.")
+    assert "Anytime TD, 2+ TD and First TD are graded together" in text
+    assert "15 final games" in text and "10 quoted players" in text
+    (tmp_path / "grading_2026_week02.json").write_text("{not json", encoding="utf-8")
+    assert page._grading_stamp_caption(2026, 2) == ""
 
 
 def test_props_markets_default_to_recommended_and_list_every_game(tmp_path):

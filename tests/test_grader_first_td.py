@@ -108,6 +108,24 @@ def test_touchdown_game_still_grades_the_scorer(tmp_path):
     assert graded["scored_first"].tolist() == [1.0, 0.0]
 
 
+def test_first_td_grading_keeps_void_status_set_by_the_anytime_grader(tmp_path):
+    import pandas as pd
+    from publishing.grader import grade_first_td_file
+
+    csv = tmp_path / "anytime_td_2026_week02.csv"
+    pd.DataFrame({
+        "game_id": ["2026_02_MIN_CHI"] * 2, "player_id": ["JJ", "CW"],
+        "scored_first": [float("nan")] * 2, "status": ["void", "scheduled"],
+    }).to_csv(csv, index=False)
+    schedule = pd.DataFrame([{
+        "season": 2026, "week": 2, "game_id": "2026_02_MIN_CHI",
+        "home_team": "CHI", "away_team": "MIN", "home_score": 3, "away_score": 9,
+    }])
+    actuals = pd.DataFrame({"player_id": ["JJ", "CW"], "position": ["WR", "QB"]})
+    grade_first_td_file(csv, schedule, pd.DataFrame(_plays(3, 9)), actuals, season=2026, week=2)
+    assert pd.read_csv(csv)["status"].tolist() == ["void", "final"]
+
+
 if __name__ == "__main__":
     import pytest
     raise SystemExit(pytest.main([__file__, "-v"]))

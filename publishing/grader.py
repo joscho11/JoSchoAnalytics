@@ -564,14 +564,22 @@ def grade_anytime_td_file(
         outcomes = game_rows.apply(player_outcome, axis=1)
         states = outcomes.map(lambda value: value[0])
         touchdown_values = outcomes.map(lambda value: value[1])
-        if states.eq("pending").any():
+        pending_mask = states.eq("pending")
+        if pending_mask.all():
             pending_games.append(game_id)
             continue
+        if pending_mask.any():
+            # A quoted player with no stat row and no snap row cannot be told
+            # apart from a not-yet-ingested zero, so that row stays blank. It
+            # must not hold back the rest of the game: every other row grades
+            # now, together with First TD, instead of waiting on one long shot.
+            pending_games.append(game_id)
         if "status" not in board:
             board["status"] = "pregame"
         win_mask = states.eq("win")
         loss_mask = states.eq("loss")
         void_mask = states.eq("void")
+        played_mask = win_mask | loss_mask
         board.loc[game_rows.index[win_mask], "scored_anytime"] = 1
         board.loc[game_rows.index[loss_mask], "scored_anytime"] = 0
         board.loc[game_rows.index[void_mask], "scored_anytime"] = pd.NA
@@ -579,14 +587,14 @@ def grade_anytime_td_file(
             board["scored_two_plus"] = pd.Series(
                 pd.NA, index=board.index, dtype="Float64"
             )
-        board.loc[game_rows.index[~void_mask], "scored_two_plus"] = (
-            pd.to_numeric(touchdown_values[~void_mask], errors="coerce").ge(2).astype(int).to_numpy()
+        board.loc[game_rows.index[played_mask], "scored_two_plus"] = (
+            pd.to_numeric(touchdown_values[played_mask], errors="coerce").ge(2).astype(int).to_numpy()
         )
         board.loc[game_rows.index[void_mask], "scored_two_plus"] = pd.NA
-        board.loc[game_rows.index[~void_mask], "status"] = "final"
+        board.loc[game_rows.index[played_mask], "status"] = "final"
         board.loc[game_rows.index[void_mask], "status"] = "void"
         updated_games.append(game_id)
-        updated_rows += len(game_rows)
+        updated_rows += int((~pending_mask).sum())
 
     board = board.drop(columns=["_game_id", "_player_id"])
     changed = not board.equals(original_board)
@@ -612,6 +620,9 @@ def grade_anytime_td_file(
         "graded_rows": int(graded.sum()),
         "void_rows": void_rows,
         "pending_rows": int((~resolved).sum()),
+        "awaiting_stat_rows": int(
+            (board["game_id"].map(_normal_identifier).isin(final_game_ids) & ~resolved).sum()
+        ),
         "graded_two_plus_rows": int(graded_two_plus.sum()),
         "updated_games": updated_games,
         "updated_rows": int(updated_rows),
@@ -798,7 +809,10 @@ def grade_first_td_file(
             outcome.loc[match] = 1.0
         board.loc[game_rows.index, "scored_first"] = outcome.to_numpy()
         if "status" in board:
-            board.loc[game_rows.index, "status"] = "final"
+            # Keep "void" (did not play): the Anytime grader owns that status
+            # and this grader used to overwrite it with "final".
+            keep_void = board.loc[game_rows.index, "status"].astype(str).str.lower().eq("void")
+            board.loc[game_rows.index[~keep_void.to_numpy()], "status"] = "final"
         updated_games.append(game_id)
         updated_rows += len(game_rows)
 
@@ -876,6 +890,44 @@ def grade_first_td_releases(root=None) -> dict:
             week=week,
         )
     return results
+
+
+def write_td_grading_stamps(anytime: dict, first_td: dict, root=None) -> list[str]:
+    """Record ONE shared "results updated" time for all three TD markets.
+
+    Anytime, 2+ TD and First TD are graded in the same pass, so a single stamp
+    per week tells the page when they were last refreshed together. A stamp is
+    only rewritten when a grader actually changed that week's CSV, so idle
+    scheduled runs do not create commits.
+    """
+    site_root = Path(root) if root is not None else Path(__file__).resolve().parents[1]
+    directory = site_root / "betting" / "anytime_td"
+    written = []
+    for label, a in anytime.items():
+        if not isinstance(a, dict) or "season" not in a:
+            continue
+        f = first_td.get(label) if isinstance(first_td, dict) else None
+        f = f if isinstance(f, dict) else {}
+        if not (a.get("changed") or f.get("changed")):
+            continue
+        season, week = int(a["season"]), int(a["week"])
+        payload = {
+            "schema_version": 1,
+            "season": season,
+            "week": week,
+            "graded_at": utc_now_iso(),
+            "final_games": int(a.get("final_games", 0)),
+            "anytime_graded_rows": int(a.get("graded_rows", 0)),
+            "two_plus_graded_rows": int(a.get("graded_two_plus_rows", 0)),
+            "first_td_graded_rows": int(f.get("graded_rows", 0)),
+            "awaiting_stat_rows": int(a.get("awaiting_stat_rows", 0)),
+        }
+        target = directory / f"grading_{season}_week{week:02d}.json"
+        target.write_text(
+            json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
+        written.append(str(target))
+    return written
 
 
 def grade_anytime_td_releases(root=None) -> dict:
