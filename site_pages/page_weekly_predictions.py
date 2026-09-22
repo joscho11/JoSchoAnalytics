@@ -496,7 +496,10 @@ def render():
                 is_high = False
                 tier_html = ''
 
-            _gc_meta = "jsa-gc-meta jsa-gc-scored" if results_available else "jsa-gc-meta"
+            # Column layout is decided per WEEK (results_in), not per game, so a game that
+            # has not kicked off yet keeps the same SCORE column (showing a dash) as its
+            # finished neighbours instead of collapsing to the narrower 4-column grid.
+            _gc_meta = "jsa-gc-meta jsa-gc-scored" if results_in else "jsa-gc-meta"
             if is_high:
                 _gc_meta += " jsa-gc-high"
             _meta_box = (
@@ -519,7 +522,7 @@ def render():
                     if _quote_html:
                         st.markdown(_quote_html, unsafe_allow_html=True)
 
-                if results_available:
+                if results_in:
                     h0, h1, h2, h3, h4 = st.columns([2.2, 1.2, 1.2, 1.2, 1.8])
                     h3.markdown("<div class='jsa-gc-hdr' style='text-align:center;font-size:11px;color:#aaa;letter-spacing:1px'>SCORE</div>", unsafe_allow_html=True)
                 else:
@@ -530,7 +533,7 @@ def render():
                 h2.markdown("<div class='jsa-gc-hdr' style='text-align:center;font-size:11px;color:#aaa;letter-spacing:1px'>PREDICTED</div>", unsafe_allow_html=True)
                 h4.markdown("<div class='jsa-gc-hdr jsa-gc-pick'></div>", unsafe_allow_html=True)
 
-                if results_available:
+                if results_in:
                     a0, a1, a2, a3, a4 = st.columns([2.2, 1.2, 1.2, 1.2, 1.8])
                     a3.markdown(stat_box(top_score, is_result=True), unsafe_allow_html=True)
                 else:
@@ -548,7 +551,7 @@ def render():
 
                 st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
 
-                if results_available:
+                if results_in:
                     b0, b1, b2, b3, b4 = st.columns([2.2, 1.2, 1.2, 1.2, 1.8])
                     b3.markdown(stat_box(bot_score, is_result=True), unsafe_allow_html=True)
                 else:

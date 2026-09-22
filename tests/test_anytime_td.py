@@ -506,6 +506,46 @@ def test_display_sorts_highest_value_vs_book_first():
     assert page._value_gap(144, 150, 0.411, 0.400) == "+6 · +1.1%"
 
 
+def test_ineligible_rows_carry_no_history_tag_on_every_market():
+    import page_anytime_td as page
+
+    rows = pd.DataFrame({
+        "player_display_name": ["Rookie", "Vet", "Unconfirmed"],
+        "position": ["TE", "RB", "WR"],
+        "team": ["LA", "LA", "LA"],
+        "opponent_team": ["NYG", "NYG", "NYG"],
+        "p_ge1": [0.0855, 0.0428, 0.06],
+        "p_ge2": [0.01, 0.003, 0.004],
+        "p_first": [0.0157, 0.0077, 0.01],
+        "p_book": [0.0588, 0.0323, 0.04],
+        "book_first_p_devigged": [0.0112, 0.0088, 0.009],
+        "fair_amer": [1069, 2234, 1567],
+        "book_amer": [1600, 3000, 2400],
+        "first_amer": [7000, 9000, 8000],
+        "two_plus_amer": [20000, 20000, 20000],
+        "scored_anytime": [None, None, None],
+        "bet_eligible": [False, True, False],
+        "eligibility_reason": [
+            "synthetic_or_unresolved_identity", "", "participation_status_unresolved",
+        ],
+    })
+    priced = page.priced_rows(rows)
+    attd = page._display(priced).set_index(page._display(priced)["Player"].str.split(" · ").str[0])
+    assert attd.loc["Rookie", "ATTD Value Gap"].endswith(" · no history")
+    assert attd.loc["Unconfirmed", "ATTD Value Gap"].endswith(" · not eligible")
+    assert "·" in attd.loc["Vet", "ATTD Value Gap"]
+    assert not attd.loc["Vet", "ATTD Value Gap"].endswith(("no history", "not eligible"))
+    assert not attd.loc["Rookie", "_candidate"]
+    for frame, col in (
+        (page._two_plus_display(priced), "2+ TD Value Gap"),
+        (page._first_td_display(priced), "First TD Value Gap"),
+    ):
+        by_name = frame.set_index(frame["Player"].str.split(" · ").str[0])
+        assert by_name.loc["Rookie", col].endswith(" · no history")
+        assert not by_name.loc["Vet", col].endswith(("no history", "not eligible"))
+    assert page._with_tag("Pending", " · no history") == "Pending"
+
+
 def test_candidate_style_uses_emerald_value_treatment():
     rows = pd.DataFrame({
         "player_display_name": ["Candidate", "Other"],

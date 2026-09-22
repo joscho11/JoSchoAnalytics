@@ -216,6 +216,46 @@ def test_weekly_predictions_sort_matchups_by_largest_gap():
     assert ordered["game_id"].tolist() == ["largest", "middle", "small"]
 
 
+def test_weekly_predictions_unplayed_game_keeps_score_column(tmp_path):
+    """A week with some results in must lay out every card on the same 5-column grid.
+
+    Regression: an unplayed game in a partly-played week fell back to the 4-column
+    grid (no SCORE column), so its TUESDAY LINE / PREDICTED boxes sat wider and out
+    of line with the finished games above and below it.
+    """
+    h = tmp_path / "h_weekly_partial.py"
+    h.write_text(
+        f"import sys; sys.path[:0] = [r'{_HERE}', r'{_SITE_PAGES}']\n"
+        "import numpy as np\n"
+        "import dashboard_data\n"
+        "_real = dashboard_data.load_predictions()\n"
+        "_df = _real.copy()\n"
+        "_wk = _df[(_df['season'] == 2026) & (_df['week'] == 2)].index\n"
+        "_unplayed = _wk[::2]\n"
+        "for _c in ('actual_margin', 'home_score', 'away_score', 'model_correct', 'ens_model_correct'):\n"
+        "    if _c in _df.columns:\n"
+        "        _df.loc[_unplayed, _c] = np.nan\n"
+        "_df.loc[_wk[1::2], 'actual_margin'] = _df.loc[_wk[1::2], 'actual_margin'].fillna(3.0)\n"
+        "dashboard_data.load_predictions = lambda: _df\n"
+        "import page_weekly_predictions as p\n"
+        "p.render()\n",
+        encoding="utf-8",
+    )
+    at = AppTest.from_file(str(h), default_timeout=180).run()
+    assert not at.exception, at.exception
+    assert not at.error, [e.value for e in at.error]
+    markdown = [str(m.value) for m in at.markdown]
+    cards = [m for m in markdown if "jsa-gc-meta" in m]
+    score_headers = [m for m in markdown if "jsa-gc-hdr" in m and ">SCORE<" in m]
+    assert len(cards) >= 2, "expected a full Week 2 card list"
+    played = [m for m in cards if "WIN" in m or "LOSS" in m]
+    assert 0 < len(played) < len(cards), "fixture must mix played and unplayed games"
+    assert all("jsa-gc-scored" in m for m in cards), \
+        "unplayed cards must carry the scored-grid class so mobile aligns too"
+    assert len(score_headers) == len(cards), \
+        "every card in a partly-played week needs a SCORE column, played or not"
+
+
 if __name__ == "__main__":
     import tempfile
     with tempfile.TemporaryDirectory() as d:

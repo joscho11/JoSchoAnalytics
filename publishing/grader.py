@@ -691,6 +691,29 @@ def _first_td_by_game(pbp: pd.DataFrame, game_ids: set, pos_lookup: dict) -> dic
     return result
 
 
+def _no_touchdown_games(pbp: pd.DataFrame, game_ids: set, final_schedule: pd.DataFrame) -> set:
+    """Final games whose complete play-by-play holds zero touchdowns.
+
+    Nobody scored first in these, so every listed player is a real "No", not a
+    pending row. Completeness is proved, not assumed: the running score on the
+    game's plays must reach the schedule's final score, otherwise pbp may simply
+    not have caught up and the game stays pending.
+    """
+    needed = {"game_id", "touchdown", "total_home_score", "total_away_score"}
+    if not game_ids or not needed <= set(pbp.columns):
+        return set()
+    finals = final_schedule.set_index("_game_id")[["home_score", "away_score"]]
+    plays = pbp[pbp["game_id"].isin(game_ids)]
+    confirmed = set()
+    for game_id, game in plays.groupby("game_id"):
+        if game_id not in finals.index or game["touchdown"].eq(1).any():
+            continue
+        home, away = finals.loc[game_id, "home_score"], finals.loc[game_id, "away_score"]
+        if (game["total_home_score"].max(), game["total_away_score"].max()) == (home, away):
+            confirmed.add(game_id)
+    return confirmed
+
+
 def grade_first_td_file(
     path: str | Path,
     schedule: pd.DataFrame,
@@ -746,7 +769,11 @@ def grade_first_td_file(
         pbp_work["game_id"] = pbp_work["game_id"].map(_normal_identifier)
     pos_lookup = _first_td_position_lookup(actuals)
     board_game_ids = set(board["_game_id"].dropna().tolist())
-    first_td_by_game = _first_td_by_game(pbp_work, board_game_ids & final_game_ids, pos_lookup)
+    board_final_ids = board_game_ids & final_game_ids
+    first_td_by_game = _first_td_by_game(pbp_work, board_final_ids, pos_lookup)
+    no_td_games = _no_touchdown_games(
+        pbp_work, board_final_ids - set(first_td_by_game), final_schedule
+    )
 
     pending_games = []
     updated_games = []
@@ -756,12 +783,15 @@ def grade_first_td_file(
             pending_games.append(game_id)
             continue
         game_rows = board[board["_game_id"].eq(game_id)]
-        if game_id not in first_td_by_game:
-            # A final game with no resolvable TD row yet (pbp not caught up,
-            # or a genuine no-TD game) stays pending rather than guessing.
+        if game_id in first_td_by_game:
+            first_scorer_id, kind = first_td_by_game[game_id]
+        elif game_id in no_td_games:
+            first_scorer_id, kind = None, "no_touchdown"
+        else:
+            # A final game whose pbp is missing or has not reached the final
+            # score yet stays pending rather than guessing.
             pending_games.append(game_id)
             continue
-        first_scorer_id, kind = first_td_by_game[game_id]
         outcome = pd.Series(0.0, index=game_rows.index)
         if kind == "offense_skill" and first_scorer_id is not None:
             match = game_rows["_player_id"].eq(_normal_identifier(first_scorer_id))

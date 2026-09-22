@@ -1,0 +1,315 @@
+{
+  "season": 2026,
+  "week": 2,
+  "slate": "monday_mnf_1955",
+  "book": [
+    "DraftKings"
+  ],
+  "release_mode": "live",
+  "publish_now_et": "2026-09-21T19:52:43.654100",
+  "model": "live_product_35 frozen bundle; 34 locked features + Sleeper half-PPR",
+  "forward_source": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\weekly_projections_v2_prod\\independent_model\\outputs\\forward\\forward_2026_week02.parquet",
+  "historical_source": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\td_count_model_beta\\artifacts\\td_features_2019_2025.parquet",
+  "model_bundle": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\td_count_model_beta\\artifacts\\td_lgbm_poisson_product.pkl",
+  "model_bundle_sha256": "6cb5874db5278e8306cf8d06e67f5fe7a10262d7dc5a8e59a26fa568c8081819",
+  "input_hashes": {
+    "paste": "619b132665586631b42dadf2f295a523cba77ae319a3f3ace7645107ab1cb677",
+    "forward": "88f245912f219c694f29cc7594aed77989f4a18e158da66824c4777f9d2963de",
+    "history": "58495f19d2cd3cfbaa824e6d462f0c68fc497237cdde3d8bfb130e19c4cb3a15"
+  },
+  "n_rows": 26,
+  "n_cumulative": 382,
+  "capture_min": "2026-09-21T19:52:38",
+  "capture_max": "2026-09-21T19:52:38",
+  "capture_lead_minutes": [
+    22.4
+  ],
+  "capture_window_warning": false,
+  "unresolved_paste_rows": [
+    "unresolved pasted player 'Braxton Berrios' (NYG@LA)"
+  ],
+  "unresolved_player_count": 1,
+  "possible_nickname_matches": [],
+  "sleeper_snapshot": {
+    "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\sleeper\\paste_time\\2026_w02_monday_mnf_1955_20260921T235243Z.json",
+    "sha256": "f524154d2a77b8900062c685933c9cdf9a728a9b6c5f0fbb7b28c95c46123a6d",
+    "requested_utc": "2026-09-21T23:52:43Z",
+    "n_players": 12228
+  },
+  "assumed_out": [
+    {
+      "game_id": "2026_02_NYG_LA",
+      "player_id": "00-0039075",
+      "sleeper_id": "9493",
+      "player_display_name": "Puka Nacua",
+      "team": "LA",
+      "position": "WR",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.18,
+      "sleeper_status": "Out",
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_02_NYG_LA",
+      "player_id": "00-0039751",
+      "sleeper_id": "11623",
+      "player_display_name": "Jordan Whittington",
+      "team": "LA",
+      "position": "WR",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": "Out",
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_02_NYG_LA",
+      "player_id": "sleeper:13270",
+      "sleeper_id": "13270",
+      "player_display_name": "CJ Daniels",
+      "team": "LA",
+      "position": "WR",
+      "tuesday_status": "Out",
+      "rz_carry_share_l4w": null,
+      "rz_target_share_l4w": null,
+      "sleeper_status": "Out",
+      "reason": "unpasted"
+    }
+  ],
+  "assumed_out_count": 3,
+  "sleeper_out_rule_active": true,
+  "dropped_sleeper_out": [],
+  "pasted_but_sleeper_doubtful": [],
+  "assumed_out_qb_unhandled": [],
+  "model_pending_paste_rows": [],
+  "model_pending_count": 0,
+  "lineup_overrides": {
+    "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\news\\2026_w02_lineup_overrides.csv",
+    "sha256": "1e1873f390b9a75127af30514da983f83528b22502e7f4cc06db53ca78c31704",
+    "out_player_ids": [
+      "00-0035228",
+      "00-0036212"
+    ],
+    "out_player_game_keys": [
+      [
+        "00-0035228",
+        "2026_02_MIN_CHI"
+      ],
+      [
+        "00-0036212",
+        "2026_02_CAR_ATL"
+      ]
+    ],
+    "replacement_player_ids": [
+      "00-0032950",
+      "00-0033662"
+    ],
+    "replacement_sleeper_ids": [
+      "3161",
+      "4574"
+    ],
+    "removed_out_players": [],
+    "removed_out_player_game_keys": []
+  },
+  "coverage": {
+    "copied": [
+      "implied_team_total",
+      "team_spread",
+      "is_home",
+      "is_dome",
+      "week",
+      "team_plays_l4w",
+      "team_pass_rate_l4w",
+      "snap_pct_l4w",
+      "rush_share_l4w",
+      "target_share_l4w",
+      "rz_carry_share_l4w",
+      "rz_target_share_l4w",
+      "rush_td_exp_l4w",
+      "rec_td_exp_l4w",
+      "injury_status",
+      "practice_status",
+      "depth_chart_rank",
+      "teammate_rz_carry_share_out",
+      "teammate_rz_target_share_out",
+      "qb_out",
+      "qb_is_backup",
+      "qb_cpoe_l4w",
+      "position",
+      "l4w_games_available",
+      "changed_team_offseason",
+      "slp_proj"
+    ],
+    "aliases": [
+      {
+        "target": "i10_carry_share_l4w",
+        "source": "inside10_carry_share_l4w"
+      }
+    ],
+    "historical_asof": [
+      {
+        "column": "team_rz_trips_l4w",
+        "keys": [
+          "team"
+        ],
+        "source": "team_rz_trips_l4w",
+        "filled_rows": 26
+      },
+      {
+        "column": "team_rz_td_rate_l4w",
+        "keys": [
+          "team"
+        ],
+        "source": "team_rz_td_rate_l4w",
+        "filled_rows": 26
+      },
+      {
+        "column": "team_i10_pass_rate_l4w",
+        "keys": [
+          "team"
+        ],
+        "source": "team_i10_pass_rate_l4w",
+        "filled_rows": 26
+      },
+      {
+        "column": "i10_target_share_l4w",
+        "keys": [
+          "player_id"
+        ],
+        "source": "i10_target_share_l4w",
+        "filled_rows": 20
+      },
+      {
+        "column": "opp_rz_td_rate_allowed_l4w",
+        "keys": [
+          "opponent_team"
+        ],
+        "source": "opp_rz_td_rate_allowed_l4w",
+        "filled_rows": 26
+      },
+      {
+        "column": "opp_td_allowed_to_pos_l4w",
+        "keys": [
+          "opponent_team",
+          "position"
+        ],
+        "source": "opp_td_allowed_to_pos_l4w",
+        "filled_rows": 26
+      },
+      {
+        "column": "qb_cpoe_l4w",
+        "keys": [
+          "player_id"
+        ],
+        "source": "qb_cpoe_l4w",
+        "filled_rows": 24
+      },
+      {
+        "column": "height",
+        "keys": [
+          "player_id"
+        ],
+        "source": "height",
+        "filled_rows": 24
+      },
+      {
+        "column": "weight",
+        "keys": [
+          "player_id"
+        ],
+        "source": "weight",
+        "filled_rows": 24
+      }
+    ],
+    "historical_fallback": [],
+    "unresolved": [],
+    "unresolved_rows": {
+      "snap_pct_l4w": 2,
+      "rush_share_l4w": 2,
+      "target_share_l4w": 2,
+      "rz_carry_share_l4w": 2,
+      "rz_target_share_l4w": 2,
+      "i10_carry_share_l4w": 2,
+      "i10_target_share_l4w": 6,
+      "rush_td_exp_l4w": 2,
+      "rec_td_exp_l4w": 2,
+      "qb_cpoe_l4w": 2,
+      "height": 2,
+      "weight": 2,
+      "changed_team_offseason": 2
+    }
+  },
+  "feature_provenance": {
+    "required_columns": [
+      "implied_team_total",
+      "team_spread",
+      "is_home",
+      "is_dome",
+      "week",
+      "team_plays_l4w",
+      "team_pass_rate_l4w",
+      "team_rz_trips_l4w",
+      "team_rz_td_rate_l4w",
+      "team_i10_pass_rate_l4w",
+      "snap_pct_l4w",
+      "rush_share_l4w",
+      "target_share_l4w",
+      "rz_carry_share_l4w",
+      "rz_target_share_l4w",
+      "i10_carry_share_l4w",
+      "i10_target_share_l4w",
+      "rush_td_exp_l4w",
+      "rec_td_exp_l4w",
+      "injury_status",
+      "practice_status",
+      "depth_chart_rank",
+      "teammate_rz_carry_share_out",
+      "teammate_rz_target_share_out",
+      "qb_out",
+      "qb_is_backup",
+      "qb_cpoe_l4w",
+      "opp_rz_td_rate_allowed_l4w",
+      "opp_td_allowed_to_pos_l4w",
+      "position",
+      "height",
+      "weight",
+      "l4w_games_available",
+      "changed_team_offseason",
+      "slp_proj"
+    ],
+    "source": "forward canonical columns + exact prior-season canonical feature rows",
+    "source_hashes": {
+      "forward": "88f245912f219c694f29cc7594aed77989f4a18e158da66824c4777f9d2963de",
+      "history": "58495f19d2cd3cfbaa824e6d462f0c68fc497237cdde3d8bfb130e19c4cb3a15"
+    },
+    "historical_fallback": [],
+    "missingness_counts": {
+      "snap_pct_l4w": 2,
+      "rush_share_l4w": 2,
+      "target_share_l4w": 2,
+      "rz_carry_share_l4w": 2,
+      "rz_target_share_l4w": 2,
+      "i10_carry_share_l4w": 2,
+      "i10_target_share_l4w": 6,
+      "rush_td_exp_l4w": 2,
+      "rec_td_exp_l4w": 2,
+      "qb_cpoe_l4w": 2,
+      "height": 2,
+      "weight": 2,
+      "changed_team_offseason": 2
+    },
+    "forward_sleeper_asof": {
+      "coverage_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\weekly_projections_v2_prod\\independent_model\\outputs\\forward\\forward_2026_week02_coverage.json",
+      "as_of_status": "verified_pre_kickoff"
+    }
+  },
+  "network_odds_api": false,
+  "row_hash": "2f40bed8e0614bd066934887f03652aa8d27d48f7c5bc95e02fbff7ad1a3474b",
+  "first_td_enrichment_coverage": {
+    "p_first": 332,
+    "book_first_p_devigged": 355,
+    "unquoted_lambda_remainder": 356,
+    "scored_first": 22
+  }
+}

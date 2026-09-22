@@ -51,7 +51,7 @@ PHONE_WIDTHS = {
     "Player": 128,
     "Model ATTD Odds": 132,
     "Book ATTD Odds": 132,
-    "ATTD Value Gap": 118,
+    "ATTD Value Gap": 190,
     "Hit": 44,
 }
 TWO_PLUS_DESKTOP_COLS = [
@@ -155,6 +155,38 @@ def _bet_eligibility(df: pd.DataFrame) -> pd.Series:
     normalized = raw.astype("string").str.strip().str.lower()
     eligibility = ~normalized.isin({"false", "0", "no", "n", "off"})
     return eligibility.fillna(True).astype(bool)
+
+
+NO_HISTORY_REASONS = {"synthetic_or_unresolved_identity", "zero_prior_games", "missing_history"}
+
+
+def _eligibility_tags(df: pd.DataFrame) -> list[str]:
+    """Suffix explaining why a row with a real-looking gap is never highlighted.
+
+    A rookie or unmatched player is priced by the model with no NFL form
+    history, so the gap is a guess and the row is barred from candidates.
+    """
+    eligible = _bet_eligibility(df).to_numpy()
+    if "eligibility_reason" in df:
+        reasons = df["eligibility_reason"].astype("string").fillna("").to_numpy()
+    else:
+        reasons = [""] * len(df)
+    tags = []
+    for ok, reason in zip(eligible, reasons):
+        if ok:
+            tags.append("")
+        elif reason in NO_HISTORY_REASONS or not reason:
+            tags.append(" · no history")
+        else:
+            tags.append(" · not eligible")
+    return tags
+
+
+def _with_tag(value: str, tag: str) -> str:
+    """Attach a tag only to a real gap, never to Pending or a placeholder."""
+    if not tag or not value or value in {"Pending", "Not implemented yet"}:
+        return value
+    return value + tag
 
 
 def by_position(df: pd.DataFrame, position: str) -> pd.DataFrame:
@@ -661,11 +693,15 @@ def _display(df: pd.DataFrame) -> pd.DataFrame:
             for american, probability in zip(book_american, ranked.p_book)
         ],
         "ATTD Value Gap": [
-            _value_gap(model, book, model_p, book_p) or (
-                "Pending" if pd.isna(model_p) else ""
+            _with_tag(
+                _value_gap(model, book, model_p, book_p) or (
+                    "Pending" if pd.isna(model_p) else ""
+                ),
+                tag,
             )
-            for model, book, model_p, book_p in zip(
-                model_american, book_american, ranked.p_ge1, ranked.p_book
+            for model, book, model_p, book_p, tag in zip(
+                model_american, book_american, ranked.p_ge1, ranked.p_book,
+                _eligibility_tags(ranked),
             )
         ],
         "Hit": hit,
@@ -730,12 +766,17 @@ def _two_plus_display(df: pd.DataFrame) -> pd.DataFrame:
         ],
         "Book 2+ TD Odds": [value or "Not implemented yet" for value in book_odds],
         "2+ TD Value Gap": [
-            value or (
-                "Pending"
-                if pd.isna(model_p) and pd.notna(book_p)
-                else "Not implemented yet"
+            _with_tag(
+                value or (
+                    "Pending"
+                    if pd.isna(model_p) and pd.notna(book_p)
+                    else "Not implemented yet"
+                ),
+                tag,
             )
-            for value, model_p, book_p in zip(value_gap, ranked.p_ge2, book_probability)
+            for value, model_p, book_p, tag in zip(
+                value_gap, ranked.p_ge2, book_probability, _eligibility_tags(ranked)
+            )
         ],
         "_value": ranked["_value"].astype(float),
         "_candidate": tracker.qualifies_two_plus_ratio(
@@ -796,7 +837,10 @@ def _first_td_display(df: pd.DataFrame) -> pd.DataFrame:
         "Opp": ranked.opponent_team,
         "Model First TD Odds": model_odds,
         "Book First TD Odds": [value or "Not implemented yet" for value in book_odds],
-        "First TD Value Gap": value_gap,
+        "First TD Value Gap": [
+            _with_tag(value, tag)
+            for value, tag in zip(value_gap, _eligibility_tags(ranked))
+        ],
         "Hit": hit,
         "_p": ranked["p_first"].astype(float),
         "_value": ranked["_value"].astype(float),
@@ -1377,6 +1421,11 @@ def render() -> None:
 
     model_pending = int(board_priced.p_ge1.isna().sum())
     st.caption(f"{len(board_priced)} priced · all positions")
+    if (~_bet_eligibility(board_priced)).any():
+        st.caption(
+            "\"no history\" rows have no prior NFL form for the model to read, so their "
+            "gap is a guess and they are never highlighted."
+        )
     if model_pending:
         row_word = "row" if model_pending == 1 else "rows"
         verb = "awaits" if model_pending == 1 else "await"
