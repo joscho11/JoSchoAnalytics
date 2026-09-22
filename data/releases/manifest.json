@@ -4,9 +4,9 @@
       "fantasy": {
         "latest": {
           "build_id": "fantasy-2026w02-f2f703e88cf5",
-          "final_games": 15,
-          "graded_at": "2026-09-21T04:55:53Z",
-          "graded_rows": 269,
+          "final_games": 16,
+          "graded_at": "2026-09-22T04:56:34Z",
+          "graded_rows": 374,
           "season": 2026,
           "week": 2
         }
@@ -14,9 +14,9 @@
       "predictions": {
         "latest": {
           "build_id": "predictions-2026w02-dadc771d9ed0",
-          "final_games": 15,
-          "graded_at": "2026-09-21T04:55:53Z",
-          "graded_rows": 15,
+          "final_games": 16,
+          "graded_at": "2026-09-22T04:56:33Z",
+          "graded_rows": 16,
           "season": 2026,
           "week": 2
         }
@@ -454,19 +454,19 @@
           "build_id": "fantasy-2026w02-f2f703e88cf5",
           "grading": {
             "artifact": "data/releases/results/fantasy/2026/week02/fantasy-2026w02-f2f703e88cf5-graded.csv",
-            "artifact_sha256": "b634352df8244fe5c02445f442a443b544de46048cfba79df699227c0a4a8fa3",
-            "complete": false,
-            "final_games": 15,
-            "graded_at": "2026-09-21T04:55:53Z",
-            "graded_rows": 269,
+            "artifact_sha256": "d323abf259a1930e3132aa8a474d650d79fd12656ab6b5f2eaf8be30379206a6",
+            "complete": true,
+            "final_games": 16,
+            "graded_at": "2026-09-22T04:56:34Z",
+            "graded_rows": 374,
             "metadata": "data/releases/results/fantasy/2026/week02/fantasy-2026w02-f2f703e88cf5-graded.json",
-            "missing_actuals": 105,
+            "missing_actuals": 0,
             "product": "fantasy",
             "schema_version": 1,
             "season": 2026,
             "source_build": "fantasy-2026w02-f2f703e88cf5",
             "week": 2,
-            "zero_filled_after_complete_feed": false
+            "zero_filled_after_complete_feed": true
           },
           "metadata": "data/releases/builds/fantasy/2026/week02/fantasy-2026w02-f2f703e88cf5/metadata.json",
           "model_version": "weekly-fantasy-v2-l1_wipe_prior_share_ranks-ad79f409f0b3",
@@ -926,11 +926,11 @@
           "build_id": "predictions-2026w02-dadc771d9ed0",
           "grading": {
             "artifact": "data/releases/results/predictions/2026/week02/predictions-2026w02-dadc771d9ed0-graded.csv",
-            "artifact_sha256": "1ae960a2f9d54695ed66e7b26dcd482a512ee48c89164c37a42b6bb7a0f9c90f",
-            "complete": false,
-            "final_games": 15,
-            "graded_at": "2026-09-21T04:55:53Z",
-            "graded_rows": 15,
+            "artifact_sha256": "bcac9918ce219265c78e3989c9119640fcf2db783b75ba960102fcc71ea93fb3",
+            "complete": true,
+            "final_games": 16,
+            "graded_at": "2026-09-22T04:56:33Z",
+            "graded_rows": 16,
             "metadata": "data/releases/results/predictions/2026/week02/predictions-2026w02-dadc771d9ed0-graded.json",
             "product": "predictions",
             "pushes": 0,
@@ -973,5 +973,5 @@
     }
   },
   "schema_version": 1,
-  "updated_at": "2026-09-21T04:55:53Z"
+  "updated_at": "2026-09-22T04:56:34Z"
 }
