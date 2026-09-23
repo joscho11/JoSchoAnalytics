@@ -345,6 +345,50 @@ def test_audited_model_update_can_promote_high_without_changing_tuesday_lines(tm
     assert load_manifest(site)["products"]["predictions"]["active_build"] == entry["build_id"]
 
 
+def test_historical_week_correction_can_publish_without_moving_active_week(tmp_path):
+    site = tmp_path / "site"
+    site.mkdir()
+    week1_artifact, week1_metadata, week1_schedule = _prediction_candidate(tmp_path, week=1)
+    week1 = publish_candidate(
+        week1_artifact, week1_metadata, schedule=week1_schedule, root=site
+    )
+    week2_artifact, week2_metadata, week2_schedule = _prediction_candidate(tmp_path, week=2)
+    week2 = publish_candidate(
+        week2_artifact, week2_metadata, schedule=week2_schedule, root=site
+    )
+
+    corrected_artifact, corrected_metadata, schedule = _prediction_candidate(
+        tmp_path, shift=0.1, week=1
+    )
+    corrected_metadata = build_candidate_metadata(
+        "predictions", corrected_artifact, season=2026, week=1,
+        model_version="spread-v3-retrospective-correction",
+        produced_at="2026-09-23T17:00:00Z",
+    ) | {"correction": {
+        "supersedes_build_id": week1["build_id"],
+        "reason": "Republish Week 1 using the reviewed spread model after final scores.",
+        "source_snapshot_captured_at": "2026-09-08T11:23:16-04:00",
+        "source_snapshot_sha256": "b" * 64,
+        "model_update": True,
+        "retrospective": True,
+    }}
+    corrected = publish_candidate(
+        corrected_artifact,
+        corrected_metadata,
+        schedule=schedule,
+        root=site,
+        activate=False,
+    )
+
+    manifest = load_manifest(site)
+    assert manifest["products"]["predictions"]["active_build"] == week2["build_id"]
+    assert release_status("predictions", 2026, 1, root=site)["build_id"] == corrected["build_id"]
+    assert release_status("predictions", 2026, 2, root=site)["build_id"] == week2["build_id"]
+    overlay = overlay_published_predictions(pd.DataFrame(columns=["game_id"]), site)
+    assert len(overlay) == 4
+    assert float(overlay.loc[overlay["game_id"].str.endswith("NE_SEA"), "model_edge"].iloc[0]) == 0.6
+
+
 def test_correction_cannot_change_frozen_tuesday_lines(tmp_path):
     site = tmp_path / "site"
     site.mkdir()

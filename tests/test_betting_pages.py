@@ -96,8 +96,17 @@ def test_week1_scorecard_and_track_record_use_graded_corrected_release(tmp_path)
     assert not weekly.exception, weekly.exception
     metrics = {str(m.label): str(m.value) for m in weekly.metric}
     assert metrics["ATS record"] == "9/16"
-    assert any("Weeks 1–2 remain immutable releases from the previous model" in str(c.value) for c in weekly.caption)
+    assert any("Retrospective model correction" in str(w.value) for w in weekly.warning)
     assert any("Week 1 ATS record: **9-7**" in str(s.value) for s in weekly.success)
+    week2 = next(w for w in weekly.selectbox if getattr(w, "key", None) == "wp_week")
+    week2.set_value(2)
+    weekly.run()
+    assert not weekly.exception, weekly.exception
+    assert next(w for w in weekly.selectbox if w.key == "wp_week").value == 2
+    week2_metrics = {str(m.label): str(m.value) for m in weekly.metric}
+    assert week2_metrics["ATS record"] == "9/16"
+    assert week2_metrics["HIGH picks"] == "1"
+    assert any("Retrospective model correction" in str(w.value) for w in weekly.warning)
 
     track = _render_page(tmp_path, "page_track_record")
     assert next(w for w in track.selectbox if w.key == "tr_season").value == 2026
@@ -106,12 +115,15 @@ def test_week1_scorecard_and_track_record_use_graded_corrected_release(tmp_path)
     # one week's denominator. Week 1 contributed 9 wins from 16 settled games.
     season_ats = track_metrics["Season ATS"]
     wins, settled = (int(part) for part in season_ats.split("/"))
-    assert settled >= 16 and wins >= 9, season_ats
+    assert season_ats == "18/32", season_ats
+    track_warnings = " ".join(str(w.value) for w in track.warning)
+    assert "Week 1, Week 2" in track_warnings
+    assert "not the pregame betting record" in track_warnings
     # HIGH tickets accumulate as weeks settle, so assert the shape, not a frozen count.
     high_wins, high_settled = (
         int(part) for part in track_metrics["HIGH (Tuesday 3+ points)"].split("/")
     )
-    assert high_settled >= 2 and 0 <= high_wins <= high_settled
+    assert (high_wins, high_settled) == (3, 6)
 
 
 def test_track_record_renders_and_owns_controls(tmp_path):

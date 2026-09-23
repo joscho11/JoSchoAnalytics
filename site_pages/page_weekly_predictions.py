@@ -83,6 +83,12 @@ def _live_model_context(release_state: dict) -> None:
     correction = build.get("correction") or {}
     if correction.get("model_update") is not True:
         return
+    if correction.get("retrospective") is True:
+        st.warning(
+            "Retrospective model correction: these predictions were republished after the "
+            "games were final. They update the model-performance record; they were not "
+            "pregame picks."
+        )
     current_qbs = correction.get("qb_selection_details") or {}
     current_ids = correction.get("qb_selections") or {}
     previous_id = correction.get("supersedes_build_id")
@@ -220,11 +226,6 @@ def render():
     if live:
         _live_notice()
         _live_model_context(release_state)
-        if int(week) in (1, 2):
-            st.caption(
-                "Weeks 1–2 remain immutable releases from the previous model; their original "
-                "predictions and results are not rewritten by the Week 3 model update."
-            )
     else:
         _demo_2025_notice()
 

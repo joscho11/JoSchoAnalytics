@@ -13,9 +13,9 @@
       },
       "predictions": {
         "latest": {
-          "build_id": "predictions-2026w02-dadc771d9ed0",
+          "build_id": "predictions-2026w02-a7e371863ffb",
           "final_games": 16,
-          "graded_at": "2026-09-22T04:56:33Z",
+          "graded_at": "2026-09-23T18:40:21Z",
           "graded_rows": 16,
           "season": 2026,
           "week": 2
@@ -735,6 +735,68 @@
           },
           "week": 17
         },
+        "predictions-2026w01-20acf64ec2d4": {
+          "artifact": "data/releases/builds/predictions/2026/week01/predictions-2026w01-20acf64ec2d4/artifact.csv",
+          "build_id": "predictions-2026w01-20acf64ec2d4",
+          "correction": {
+            "audit_report_sha256": "4610d763f53505c5e60f3c0043d349739af8a083ccc854c787ba440c55ad4c2f",
+            "grade_source_sha256": "8a997e72036600a4a52508d03a101ac7ccea5c78e47719163622e1084bdbbe26",
+            "input_as_of_utc": "2026-09-08T15:23:16+00:00",
+            "input_cutoff_policy": "frozen local Tuesday provider snapshot; no later-than-cutoff information used",
+            "market_line_agreement_verified": true,
+            "model_bundle_sha256": "9baf4dd899a3ef501515887a9e1a0a61d6b62bdf4250cd4dbf3745b3300a6705",
+            "model_update": true,
+            "outcomes_known_at_publication": true,
+            "outcomes_used_for_predictions": false,
+            "reason": "Retrospectively republish the reviewed QB-retaining Sunday-to-Tuesday model for performance accounting; predictions use only frozen as-of inputs, not game outcomes.",
+            "retrospective": true,
+            "source_snapshot_captured_at": "2026-09-08T15:23:16+00:00",
+            "source_snapshot_sha256": "dd15bf1fba268e21ee1f241924ebae49a950aac023bb4135ba7ec20dba09b5f0",
+            "sunday_snapshot_sha256": "4584eb8017bb216c0f3080838003e99435d1cf24fa1e318dd86d92f02530458f",
+            "supersedes_build_id": "predictions-2026w01-8cc18502d1af",
+            "tuesday_snapshot_sha256": "dd15bf1fba268e21ee1f241924ebae49a950aac023bb4135ba7ec20dba09b5f0"
+          },
+          "grading": {
+            "artifact": "data/releases/results/predictions/2026/week01/predictions-2026w01-20acf64ec2d4-graded.csv",
+            "artifact_sha256": "c50f43b85351fa0fcb88a1e2991a741a9c29cff97a3b5294aac599fe05d7f2ff",
+            "complete": true,
+            "final_games": 16,
+            "graded_at": "2026-09-23T18:40:21Z",
+            "graded_rows": 16,
+            "metadata": "data/releases/results/predictions/2026/week01/predictions-2026w01-20acf64ec2d4-graded.json",
+            "product": "predictions",
+            "pushes": 0,
+            "schema_version": 1,
+            "season": 2026,
+            "source_build": "predictions-2026w01-20acf64ec2d4",
+            "week": 1
+          },
+          "metadata": "data/releases/builds/predictions/2026/week01/predictions-2026w01-20acf64ec2d4/metadata.json",
+          "model_version": "spread-v3-prod-sunday-tuesday-market-43-qb-retaining-9baf4dd899a3",
+          "produced_at": "2026-09-23T18:39:24Z",
+          "product": "predictions",
+          "published_at": "2026-09-23T18:39:55Z",
+          "row_count": 16,
+          "season": 2026,
+          "sha256": "20acf64ec2d4cf552f0443fe57bc5224ed9fc5987d1b0f2be570a8c3c69d8f72",
+          "status": "Published",
+          "validation": {
+            "checks": {
+              "artifact_sha256": "20acf64ec2d4cf552f0443fe57bc5224ed9fc5987d1b0f2be570a8c3c69d8f72",
+              "post_kickoff_correction": true,
+              "produced_at_utc": "2026-09-23T18:39:24Z",
+              "scheduled_games": 16
+            },
+            "errors": [],
+            "ok": true,
+            "product": "predictions",
+            "row_count": 16,
+            "warnings": [
+              "correction was produced after the first kickoff; correction controls verified"
+            ]
+          },
+          "week": 1
+        },
         "predictions-2026w01-57d4781adbd7": {
           "artifact": "data/releases/builds/predictions/2026/week01/predictions-2026w01-57d4781adbd7/artifact.csv",
           "build_id": "predictions-2026w01-57d4781adbd7",
@@ -949,6 +1011,68 @@
             "warnings": []
           },
           "week": 1
+        },
+        "predictions-2026w02-a7e371863ffb": {
+          "artifact": "data/releases/builds/predictions/2026/week02/predictions-2026w02-a7e371863ffb/artifact.csv",
+          "build_id": "predictions-2026w02-a7e371863ffb",
+          "correction": {
+            "audit_report_sha256": "4610d763f53505c5e60f3c0043d349739af8a083ccc854c787ba440c55ad4c2f",
+            "grade_source_sha256": "bcac9918ce219265c78e3989c9119640fcf2db783b75ba960102fcc71ea93fb3",
+            "input_as_of_utc": "2026-09-15T14:23:10+00:00",
+            "input_cutoff_policy": "frozen local Tuesday provider snapshot; no later-than-cutoff information used",
+            "market_line_agreement_verified": true,
+            "model_bundle_sha256": "9baf4dd899a3ef501515887a9e1a0a61d6b62bdf4250cd4dbf3745b3300a6705",
+            "model_update": true,
+            "outcomes_known_at_publication": true,
+            "outcomes_used_for_predictions": false,
+            "reason": "Retrospectively republish the reviewed QB-retaining Sunday-to-Tuesday model for performance accounting; predictions use only frozen as-of inputs, not game outcomes.",
+            "retrospective": true,
+            "source_snapshot_captured_at": "2026-09-15T14:23:10+00:00",
+            "source_snapshot_sha256": "5b295fd53d3a41dbfc94a2223bfedeb5850db8e2acd51b5162b52c0e4a08375f",
+            "sunday_snapshot_sha256": "9c05fe80dee5785646ae70b75bfae77411b5ee2b304a6759254ceb4038ecb0b7",
+            "supersedes_build_id": "predictions-2026w02-dadc771d9ed0",
+            "tuesday_snapshot_sha256": "5b295fd53d3a41dbfc94a2223bfedeb5850db8e2acd51b5162b52c0e4a08375f"
+          },
+          "grading": {
+            "artifact": "data/releases/results/predictions/2026/week02/predictions-2026w02-a7e371863ffb-graded.csv",
+            "artifact_sha256": "767c8a1ecc3d9eb737cca0bfdba4ce3dc510028ef5de44d4b0b4370b0164e256",
+            "complete": true,
+            "final_games": 16,
+            "graded_at": "2026-09-23T18:40:21Z",
+            "graded_rows": 16,
+            "metadata": "data/releases/results/predictions/2026/week02/predictions-2026w02-a7e371863ffb-graded.json",
+            "product": "predictions",
+            "pushes": 0,
+            "schema_version": 1,
+            "season": 2026,
+            "source_build": "predictions-2026w02-a7e371863ffb",
+            "week": 2
+          },
+          "metadata": "data/releases/builds/predictions/2026/week02/predictions-2026w02-a7e371863ffb/metadata.json",
+          "model_version": "spread-v3-prod-sunday-tuesday-market-43-qb-retaining-9baf4dd899a3",
+          "produced_at": "2026-09-23T18:39:27Z",
+          "product": "predictions",
+          "published_at": "2026-09-23T18:39:55Z",
+          "row_count": 16,
+          "season": 2026,
+          "sha256": "a7e371863ffb9e249d94faa448ccfde3dcf3fd6fbdf975146445a85f490b6497",
+          "status": "Published",
+          "validation": {
+            "checks": {
+              "artifact_sha256": "a7e371863ffb9e249d94faa448ccfde3dcf3fd6fbdf975146445a85f490b6497",
+              "post_kickoff_correction": true,
+              "produced_at_utc": "2026-09-23T18:39:27Z",
+              "scheduled_games": 16
+            },
+            "errors": [],
+            "ok": true,
+            "product": "predictions",
+            "row_count": 16,
+            "warnings": [
+              "correction was produced after the first kickoff; correction controls verified"
+            ]
+          },
+          "week": 2
         },
         "predictions-2026w02-dadc771d9ed0": {
           "artifact": "data/releases/builds/predictions/2026/week02/predictions-2026w02-dadc771d9ed0/artifact.csv",
@@ -1617,5 +1741,5 @@
     }
   },
   "schema_version": 1,
-  "updated_at": "2026-09-23T16:33:50Z"
+  "updated_at": "2026-09-23T18:40:21Z"
 }

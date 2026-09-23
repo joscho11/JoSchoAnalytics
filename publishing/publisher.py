@@ -62,16 +62,7 @@ def _validated_correction(source: Path, metadata: dict, root) -> dict | None:
 
     manifest = load_manifest(root, strict=True)
     state = manifest["products"]["predictions"]
-    active_build = state.get("active_build")
     candidate_build = _build_id(metadata)
-    existing_candidate = state.get("builds", {}).get(candidate_build)
-    is_idempotent_retry = (
-        active_build == candidate_build
-        and isinstance(existing_candidate, dict)
-        and existing_candidate.get("correction", {}).get("supersedes_build_id") == supersedes
-    )
-    if active_build != supersedes and not is_idempotent_retry:
-        raise PublicationError("correction must supersede the active prediction build")
     prior = state.get("builds", {}).get(supersedes)
     if not isinstance(prior, dict):
         raise PublicationError(f"correction references unknown build {supersedes!r}")
@@ -80,6 +71,25 @@ def _validated_correction(source: Path, metadata: dict, root) -> dict | None:
         or int(prior.get("week", -1)) != int(metadata["week"])
     ):
         raise PublicationError("correction season/week differs from the superseded build")
+    same_week = [
+        build for build_id, build in state.get("builds", {}).items()
+        if build_id != candidate_build
+        and isinstance(build, dict)
+        and build.get("status") == "Published"
+        and int(build.get("season", -1)) == int(metadata["season"])
+        and int(build.get("week", -1)) == int(metadata["week"])
+    ]
+    if not same_week:
+        raise PublicationError("correction has no previously published build for its week")
+    latest_same_week = max(
+        same_week,
+        key=lambda build: (str(build.get("published_at", "")), str(build.get("build_id", ""))),
+    )
+    if str(latest_same_week.get("build_id")) != supersedes:
+        raise PublicationError("correction must supersede the latest published build for its week")
+    # The global active pointer tracks the current/default slate, not the latest
+    # release for every historical week. Corrections may be registered with
+    # activate=False while another week remains the site default.
     model_update = correction.get("model_update") is True
     if not model_update and str(prior.get("model_version")) != str(metadata.get("model_version")):
         raise PublicationError("correction must use the superseded build's frozen model")
