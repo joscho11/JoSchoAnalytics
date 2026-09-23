@@ -96,7 +96,7 @@ def test_week1_scorecard_and_track_record_use_graded_corrected_release(tmp_path)
     assert not weekly.exception, weekly.exception
     metrics = {str(m.label): str(m.value) for m in weekly.metric}
     assert metrics["ATS record"] == "9/16"
-    assert any("Retrospective model correction" in str(w.value) for w in weekly.warning)
+    assert not any("Retrospective model correction" in str(w.value) for w in weekly.warning)
     assert any("Week 1 ATS record: **9-7**" in str(s.value) for s in weekly.success)
     week2 = next(w for w in weekly.selectbox if getattr(w, "key", None) == "wp_week")
     week2.set_value(2)
@@ -106,7 +106,7 @@ def test_week1_scorecard_and_track_record_use_graded_corrected_release(tmp_path)
     week2_metrics = {str(m.label): str(m.value) for m in weekly.metric}
     assert week2_metrics["ATS record"] == "9/16"
     assert week2_metrics["HIGH picks"] == "1"
-    assert any("Retrospective model correction" in str(w.value) for w in weekly.warning)
+    assert not any("Retrospective model correction" in str(w.value) for w in weekly.warning)
 
     track = _render_page(tmp_path, "page_track_record")
     assert next(w for w in track.selectbox if w.key == "tr_season").value == 2026
@@ -117,8 +117,7 @@ def test_week1_scorecard_and_track_record_use_graded_corrected_release(tmp_path)
     wins, settled = (int(part) for part in season_ats.split("/"))
     assert season_ats == "18/32", season_ats
     track_warnings = " ".join(str(w.value) for w in track.warning)
-    assert "Week 1, Week 2" in track_warnings
-    assert "not the pregame betting record" in track_warnings
+    assert "Retrospective model corrections are included" not in track_warnings
     # HIGH tickets accumulate as weeks settle, so assert the shape, not a frozen count.
     high_wins, high_settled = (
         int(part) for part in track_metrics["HIGH (Tuesday 3+ points)"].split("/")

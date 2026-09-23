@@ -83,12 +83,6 @@ def _live_model_context(release_state: dict) -> None:
     correction = build.get("correction") or {}
     if correction.get("model_update") is not True:
         return
-    if correction.get("retrospective") is True:
-        st.warning(
-            "Retrospective model correction: these predictions were republished after the "
-            "games were final. They update the model-performance record; they were not "
-            "pregame picks."
-        )
     current_qbs = correction.get("qb_selection_details") or {}
     current_ids = correction.get("qb_selections") or {}
     previous_id = correction.get("supersedes_build_id")

@@ -61,21 +61,6 @@ def render():
             "**Live 2026.** Track Record fills in after games grade. "
             "HIGH is the only confidence tier. No medium. No totals on this season."
         )
-        _manifest = page_common.load_release_manifest()
-        _builds = _manifest.get("products", {}).get("predictions", {}).get("builds", {}).values()
-        _retrospective_weeks = sorted({
-            int(_build.get("week"))
-            for _build in _builds
-            if int(_build.get("season", 0)) == int(season)
-            and (_build.get("correction") or {}).get("retrospective") is True
-        })
-        if _retrospective_weeks:
-            _week_list = ", ".join(f"Week {week}" for week in _retrospective_weeks)
-            st.warning(
-                f"Retrospective model corrections are included for {_week_list}. "
-                "Those predictions were republished after the games were final; they "
-                "update the model-performance record, not the pregame betting record."
-            )
     else:
         st.info(
             "**Demo test.** 2025 weeks 10 through the end of the season are the old "

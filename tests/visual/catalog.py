@@ -100,8 +100,8 @@ SCENES: tuple[Scene, ...] = (
         "publishing",
         "weekly-predictions",
         query="wp_season=2026&wp_week=1",
-        must_contain=("Published", "Live 2026", "NE @ SEA", "Retrospective model correction"),
-        must_not_contain=("Agent Confidence",),
+        must_contain=("Published", "Live 2026", "NE @ SEA"),
+        must_not_contain=("Agent Confidence", "Retrospective model correction"),
     ),
     _s(
         "wf_published_2025w17",
@@ -157,7 +157,8 @@ SCENES: tuple[Scene, ...] = (
         "credibility",
         "track-record",
         query="tr_season=2026",
-        must_contain=("Live 2026", "Retrospective model corrections are included", "Week 1, Week 2"),
+        must_contain=("Live 2026",),
+        must_not_contain=("Retrospective model corrections are included",),
     ),
     _s(
         "help",
