@@ -19,7 +19,9 @@ from dashboard_utils import breakeven_verdict
 from live_2026 import (
     HIGH_GAP,
     LIVE_HIGH_ATS,
+    LIVE_HIGH_LABELS,
     LIVE_HIGH_N,
+    LIVE_HIGH_PUSHES,
     LIVE_HIGH_WILSON_LOWER,
     LIVE_HIGH_WINS,
     live_high_bar_sentence,
@@ -316,12 +318,14 @@ At standard -110 odds, 52.4% is the break-even rate before taxes, limits, or
 other costs. A historical percentage above that line is not a promise about the
 next sample. Confidence intervals, sample size, and selection rules matter.
 
-The **QB-retaining model's 2021-2025 walk-forward benchmark** is median-triggered
+The **current model's 2021-2025 walk-forward benchmark** is median-triggered
 HIGH tickets graded at the best US Tuesday number: **{LIVE_HIGH_WINS}/{LIVE_HIGH_N} =
-{LIVE_HIGH_ATS * 100:.2f}%** ATS (7 pushes among 397 HIGH labels), with a one-sided
+{LIVE_HIGH_ATS * 100:.2f}%** ATS ({LIVE_HIGH_PUSHES} pushes among {LIVE_HIGH_LABELS} HIGH labels), with a one-sided
 95% Wilson lower bound of **{LIVE_HIGH_WILSON_LOWER * 100:.2f}%**. {live_high_bar_sentence()}
-The model has 43 core features and 46 fitted inputs; its live market movements use
-the Sunday 11:20 p.m. ET and Tuesday snapshots. This is Tuesday line value, not
+The model has 44 core features and 47 fitted inputs; its live market movements use
+the Sunday 11:20 p.m. ET and Tuesday snapshots. It also counts each team's non-QB
+starters on regular injured reserve, taken from the roster for its previous game, so
+that input is known before the Tuesday prediction. This is Tuesday line value, not
 closing-line value; betting every game is not the claim.
 
 {demo_line}

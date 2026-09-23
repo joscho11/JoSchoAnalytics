@@ -19,7 +19,9 @@ import page_common
 from dashboard_utils import get_confidence, _md_to_html
 from live_2026 import (
     HIGH_GAP,
+    LIVE_HIGH_LABELS,
     LIVE_HIGH_N,
+    LIVE_HIGH_PUSHES,
     LIVE_HIGH_WILSON_LOWER,
     LIVE_HIGH_WINS,
     has_pick,
@@ -58,13 +60,16 @@ def _live_notice():
     with st.expander("Tuesday model rules and historical benchmark", expanded=False):
         st.markdown(
             "No medium tier. No totals on this season. "
-            f"The QB-retaining model's 2021–2025 walk-forward benchmark is {LIVE_HIGH_WINS}/{LIVE_HIGH_N} = "
+            f"The current model's 2021-2025 walk-forward benchmark is {LIVE_HIGH_WINS}/{LIVE_HIGH_N} = "
             f"{LIVE_HIGH_WINS / LIVE_HIGH_N * 100:.2f}% ATS, with a one-sided 95% "
-            f"Wilson lower bound of {LIVE_HIGH_WILSON_LOWER * 100:.2f}% (7 pushes among 397 HIGH labels). Median-triggered "
+            f"Wilson lower bound of {LIVE_HIGH_WILSON_LOWER * 100:.2f}% "
+            f"({LIVE_HIGH_PUSHES} pushes among {LIVE_HIGH_LABELS} HIGH labels). Median-triggered "
             "tickets are graded at the best US Tuesday number and the last regular-season "
             f"week is skipped. {live_high_bar_sentence()} The Tuesday line, pick, edge, "
             "and HIGH flag use the median; the named best-available quote is execution "
-            "and grading. Picks use the first valid Tuesday capture from 09:00–15:30 ET."
+            "and grading. Picks use the first valid Tuesday capture from 09:00-15:30 ET. "
+            "One input counts each team's non-QB starters on regular injured reserve "
+            "from its previous game's roster, so it is known before Tuesday."
         )
 
 
@@ -98,7 +103,10 @@ def _live_model_context(release_state: dict) -> None:
         team for team, details in current_qbs.items()
         if details.get("is_user_modeling_assumption") is True
     }
-    relevant = sorted(changed | manual)
+    # The selection details are small release metadata, and showing the full
+    # team map makes unchanged fallback choices (notably Chicago's Week 3
+    # dropback leader) explicit too. The expander stays collapsed by default.
+    relevant = sorted(set(current_ids) | set(current_qbs) | changed | manual)
     if not relevant:
         return
     with st.expander("QB inputs for this model correction", expanded=False):
@@ -113,10 +121,20 @@ def _live_model_context(release_state: dict) -> None:
             name = current.get("player_name") or current.get("player_id") or current_ids.get(team, "unknown")
             if team in manual:
                 note = "user modeling assumption"
+            elif current.get("tier") == "previous_game_leader":
+                note = "previous-game dropback leader"
+            elif current.get("tier") == "explicit_expected_starter":
+                note = "cutoff-eligible confirmed starter"
+            elif current.get("tier") == "replacement_for_unavailable":
+                note = "replacement for an Out/Doubtful previous leader"
+            elif current.get("tier") == "neutralized":
+                note = "no QB selected under the cutoff rules"
             else:
+                note = "cutoff-based selection"
+            if team in changed and team not in manual:
                 prior = previous_qbs.get(team, {})
                 prior_name = prior.get("player_name") or prior.get("player_id") or previous_ids.get(team, "unknown")
-                note = f"previous-game fallback; prior release used {prior_name}"
+                note += f"; previous release used {prior_name}"
             qb_notes.append(f"- **{team}:** {name} — {note}")
         st.markdown("\n".join(qb_notes))
 

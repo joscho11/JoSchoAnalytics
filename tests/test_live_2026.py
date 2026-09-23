@@ -152,11 +152,11 @@ def test_2026_high_qualifies_off_median_and_shop_cannot_promote():
 
 def test_one_sided_wilson_claim_matches_locked_book():
     # Values load from the versioned promoted-model benchmark artifact.
-    assert LIVE_HIGH_WINS == 223
-    assert LIVE_HIGH_N == 390
+    assert LIVE_HIGH_WINS == 246
+    assert LIVE_HIGH_N == 423
     lo = _wilson_one_sided_lower(LIVE_HIGH_WINS, LIVE_HIGH_N, LIVE_HIGH_WILSON_Z)
     assert round(lo, 4) == round(LIVE_HIGH_WILSON_LOWER, 4)
-    assert round(lo, 4) == 0.5302
+    assert round(lo, 4) == 0.5417
 
 
 def test_leftover_converts_to_site_home_margin():

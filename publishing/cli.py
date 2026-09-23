@@ -21,7 +21,13 @@ from .grader import (
     write_td_grading_stamps,
 )
 from .manifest import load_manifest, published_builds
-from .publisher import activate_release, publish_candidate, rollback_release, schedule_release
+from .publisher import (
+    _validated_correction,
+    activate_release,
+    publish_candidate,
+    rollback_release,
+    schedule_release,
+)
 from .validators import read_metadata, validate_candidate
 
 
@@ -243,7 +249,14 @@ def main(argv=None) -> int:
             _print({"sidecar": str(out)})
         elif args.command == "validate":
             source = _live_candidate_schedule(args.metadata, args.schedule)
-            report = validate_candidate(args.artifact, args.metadata, schedule=source)
+            metadata = read_metadata(args.metadata)
+            correction = _validated_correction(args.artifact, metadata, root)
+            report = validate_candidate(
+                args.artifact,
+                metadata,
+                schedule=source,
+                allow_post_kickoff_correction=correction is not None,
+            )
             _print(report.to_dict())
             return 0 if report.ok else 1
         elif args.command == "publish":

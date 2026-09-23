@@ -21,7 +21,7 @@ from publishing.manifest import (
 from publishing.publisher import publish_candidate, rollback_release, schedule_release
 from publishing.validators import validate_candidate
 from dashboard_data import overlay_published_predictions
-from publishing.cli import _grade_published
+from publishing.cli import _grade_published, main as publishing_cli_main
 
 
 def _prediction_candidate(tmp_path: Path, *, shift: float = 0.0, week: int = 1):
@@ -387,6 +387,47 @@ def test_historical_week_correction_can_publish_without_moving_active_week(tmp_p
     overlay = overlay_published_predictions(pd.DataFrame(columns=["game_id"]), site)
     assert len(overlay) == 4
     assert float(overlay.loc[overlay["game_id"].str.endswith("NE_SEA"), "model_edge"].iloc[0]) == 0.6
+
+
+def test_read_only_cli_validation_accepts_audited_post_kickoff_correction(tmp_path, capsys):
+    site = tmp_path / "site"
+    site.mkdir()
+    original_artifact, original_metadata, schedule = _prediction_candidate(tmp_path, week=1)
+    original = publish_candidate(
+        original_artifact, original_metadata, schedule=schedule, root=site
+    )
+
+    corrected_artifact, _metadata, _schedule = _prediction_candidate(tmp_path, shift=0.1, week=1)
+    corrected_metadata = build_candidate_metadata(
+        "predictions", corrected_artifact, season=2026, week=1,
+        model_version="spread-v3-ir-correction",
+        produced_at="2026-09-11T13:05:00Z",
+    ) | {"correction": {
+        "supersedes_build_id": original["build_id"],
+        "reason": "Validate the already-reviewed model correction without publication.",
+        "source_snapshot_captured_at": "2026-09-08T11:23:16-04:00",
+        "source_snapshot_sha256": "b" * 64,
+        "model_update": True,
+        "retrospective": True,
+        "ir_inputs": {"source_type": "structural_zero_no_prior_game"},
+        "promotion_audit": {"path": "ir_model_promotion_v1.json", "sha256": "c" * 64},
+    }}
+    metadata_path = tmp_path / "correction.metadata.json"
+    metadata_path.write_text(json.dumps(corrected_metadata), encoding="utf-8")
+    schedule_path = tmp_path / "schedule.csv"
+    schedule.to_csv(schedule_path, index=False)
+    before = (site / "data" / "releases" / "manifest.json").read_bytes()
+
+    status = publishing_cli_main([
+        "--root", str(site), "validate", "--artifact", str(corrected_artifact),
+        "--metadata", str(metadata_path), "--schedule", str(schedule_path),
+    ])
+
+    report = json.loads(capsys.readouterr().out)
+    assert status == 0
+    assert report["ok"] is True
+    assert report["checks"]["post_kickoff_correction"] is True
+    assert (site / "data" / "releases" / "manifest.json").read_bytes() == before
 
 
 def test_correction_cannot_change_frozen_tuesday_lines(tmp_path):

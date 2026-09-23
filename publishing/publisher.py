@@ -51,6 +51,12 @@ def _validated_correction(source: Path, metadata: dict, root) -> dict | None:
         raise PublicationError("correction requires supersedes_build_id and reason")
     if not re.fullmatch(r"[0-9a-f]{64}", snapshot_hash):
         raise PublicationError("correction source_snapshot_sha256 must be a SHA-256 digest")
+    if "ir_inputs" in correction:
+        audit = correction.get("promotion_audit")
+        audit_path = str((audit or {}).get("path") or "").strip()
+        audit_hash = str((audit or {}).get("sha256") or "").strip().lower()
+        if not audit_path or not re.fullmatch(r"[0-9a-f]{64}", audit_hash):
+            raise PublicationError("IR model correction must cite a promotion audit path and SHA-256")
     try:
         snapshot_at = datetime.fromisoformat(
             str(correction.get("source_snapshot_captured_at") or "").replace("Z", "+00:00")

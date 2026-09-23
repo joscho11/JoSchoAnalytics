@@ -11,14 +11,14 @@ The live spread producer is `spread_v3_prod`, a separate private repository. It 
 The 2026 display logic lives in `live_2026.py`:
 
 - The model predicts home margin from information available by Tuesday at 9:00 a.m. ET.
-- The promoted QB-retaining Sunday-to-Tuesday Ridge marks `HIGH` at an absolute 3.0-point edge from the Tuesday US median, then grades those tickets at the best US Tuesday number.
+- The promoted QB-retaining Sunday-to-Tuesday Ridge with injured-reserve starters marks `HIGH` at an absolute 3.0-point edge from the Tuesday US median, then grades those tickets at the best US Tuesday number.
 - Starting in 2026, the Tuesday US median drives the model, pick, edge, and `HIGH` flag. The best captured US quote for the recommended side is displayed separately and drives grading.
 - A later market move alone can remove a `HIGH` label, but cannot add one. A separately validated model-version correction can change edges and `HIGH` labels while retaining the frozen Tuesday line.
 - The final regular-season week is excluded from `HIGH` labels.
 - There is no `MEDIUM` tier and no all-bets performance claim.
 - Every game remains visible, including `PASS` games.
 
-The promoted model's 2021–2025 chronological walk-forward evaluation produced 397 `HIGH` labels: 223 wins, 167 losses, and 7 pushes. Excluding pushes, that is 223/390 = 57.18% ATS, with a one-sided 95% Wilson lower bound of 53.02%, graded at each pick's best captured US Tuesday quote. The model has 43 core features and 46 fitted inputs: five general injury features and vacated snaps were removed; the four QB features remain; Sunday-to-Tuesday spread/total movement and Tuesday moneyline–spread gap are included with three train-fold-fitted missingness flags. This is historical research, not a guarantee of future results. Weeks 1–2 remain immutable releases from the prior model. Week 3 is the first published release from the promoted model; its correction does not rewrite earlier cards.
+The promoted model's 2021-2025 chronological walk-forward evaluation produced 434 `HIGH` labels: 246 wins, 177 losses, and 11 pushes. Excluding pushes, that is 246/423 = 58.16% ATS, with a one-sided 95% Wilson lower bound of 54.17%, graded at each pick's best captured US Tuesday quote. The model has 44 core features and 47 fitted inputs: five general injury features and vacated snaps were removed; the four QB features remain; Sunday-to-Tuesday spread/total movement and Tuesday moneyline-spread gap are included with three train-fold-fitted missingness flags. The one added input, `ir_starters_diff`, is the home-minus-away count of non-QB starters on regular injured reserve (designated-to-return players are not counted). It reads each team's roster from its previous game, the latest roster before the Tuesday prediction, and counts a player as a starter if he played at least 50% of offensive or defensive snaps in any of his last three games (or averaged 50% last season if he has not played this season). The gain depends on that 50% cutoff; the other cutoffs tested scored lower. This is historical research, not a guarantee of future results. Each weekly release records the model version that produced it.
 
 ## What appears on the site
 
@@ -30,12 +30,12 @@ The frozen 2025 demo remains available for reproducibility. It used a three-vote
 
 | System | Evaluation | Result | Current interpretation |
 |---|---:|---:|---|
-| Promoted QB-retaining market Ridge | 2021-2025 chronological walk-forward | 223/390, 57.18% ATS; 7 pushes among 397 HIGH labels | Wilson lower 53.02%; Tuesday-median selection, best US Tuesday quote grading |
+| Promoted QB-retaining market Ridge with injured-reserve starters | 2021-2025 chronological walk-forward | 246/423, 58.16% ATS; 11 pushes among 434 HIGH labels | Wilson lower 54.17%; Tuesday-median selection, best US Tuesday quote grading |
 | Archived in-repo spread model | Corrected 2018-2025 audit | 129/238, 54.20% ATS | No demonstrated edge; 95% Wilson lower bound is 47.86% |
 | Totals model | Walk-forward cross-validation | 55.7% UNDER accuracy, n=575 | Research result, not a deployed performance claim |
 | Totals model | 2025 live tracking, Weeks 10-17 | 52.2%, n=46 | Too small and too close to chance for an edge claim |
 
-Earlier spread evaluations are historical records only. The pregame-leakage result of 64.2% was retracted; the corrected archived result was 129/238. The 192/336 figure was withdrawn because its same-week injury join postdated Tuesday. The former 253/436 benchmark is superseded for current-model claims; its archived audit remains available for provenance. The current public benchmark is generated from `market_model_benchmark_v2.json`.
+Earlier spread evaluations are historical records only. The pregame-leakage result of 64.2% was retracted; the corrected archived result was 129/238. The 192/336 figure was withdrawn because its same-week injury join postdated Tuesday. The former 253/436 benchmark is superseded for current-model claims; its archived audit remains available for provenance. The QB-retaining model without the injured-reserve input (223/390, Wilson lower 53.02%) is also superseded; `market_model_benchmark_v2.json` keeps it as history. The current public benchmark is generated from `market_model_benchmark_v3.json`.
 
 ## Totals model
 

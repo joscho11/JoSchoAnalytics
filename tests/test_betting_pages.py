@@ -46,13 +46,24 @@ def test_weekly_predictions_renders_and_owns_controls(tmp_path):
     markdown = " ".join(str(item.value) for item in at.markdown)
     assert "green-badge" in markdown and "Published" in markdown
     captions = " ".join(str(item.value) for item in at.caption)
-    assert "spread-v3-prod-sunday-tuesday-market-43-qb-retaining-9baf4dd899a3" in captions
+    # The caption names the model that produced the displayed release. A model
+    # promotion ships as a new release, so read the version from the manifest
+    # instead of pinning one model string here.
+    from publishing.manifest import release_status
+    manifest = page_common.load_release_manifest()
+    shown = release_status(
+        "predictions", default_season, int(default_week), manifest=manifest, root=_HERE
+    )
+    shown_version = manifest["products"]["predictions"]["builds"][str(shown["build_id"])]["model_version"]
+    assert shown_version.startswith("spread-v3-prod-sunday-tuesday-market-")
+    assert shown_version in captions
     qb_expander = next(exp for exp in at.expander if exp.label == "QB inputs for this model correction")
     qb_markdown = " ".join(str(item.value) for item in qb_expander.markdown)
     assert "**ATL:** Michael Penix Jr." in qb_markdown
     assert "**MIN:** Kyler Murray" in qb_markdown
     assert "**CHI:** Caleb Williams" in qb_markdown
-    assert any("remove the Chicago Case Keenum override" in str(item.value) for item in qb_expander.caption)
+    assert "**CHI:** Caleb Williams — previous-game dropback leader" in qb_markdown
+    assert "Case Keenum" not in qb_markdown
     assert not any(str(k).startswith("tr_") for k in keys), \
         "Weekly Predictions must not carry Track Record's controls"
 
@@ -104,7 +115,7 @@ def test_week1_scorecard_and_track_record_use_graded_corrected_release(tmp_path)
     assert not weekly.exception, weekly.exception
     assert next(w for w in weekly.selectbox if w.key == "wp_week").value == 2
     week2_metrics = {str(m.label): str(m.value) for m in weekly.metric}
-    assert week2_metrics["ATS record"] == "9/16"
+    assert week2_metrics["ATS record"] == "8/16"
     assert week2_metrics["HIGH picks"] == "1"
     assert not any("Retrospective model correction" in str(w.value) for w in weekly.warning)
 
@@ -115,14 +126,14 @@ def test_week1_scorecard_and_track_record_use_graded_corrected_release(tmp_path)
     # one week's denominator. Week 1 contributed 9 wins from 16 settled games.
     season_ats = track_metrics["Season ATS"]
     wins, settled = (int(part) for part in season_ats.split("/"))
-    assert season_ats == "18/32", season_ats
+    assert season_ats == "17/32", season_ats
     track_warnings = " ".join(str(w.value) for w in track.warning)
     assert "Retrospective model corrections are included" not in track_warnings
     # HIGH tickets accumulate as weeks settle, so assert the shape, not a frozen count.
     high_wins, high_settled = (
         int(part) for part in track_metrics["HIGH (Tuesday 3+ points)"].split("/")
     )
-    assert (high_wins, high_settled) == (3, 6)
+    assert (high_wins, high_settled) == (3, 5)
 
 
 def test_track_record_renders_and_owns_controls(tmp_path):
@@ -198,10 +209,12 @@ def test_weekly_predictions_live_2026_banner(tmp_path):
     notice_copy = successes + " " + " ".join(str(m.value) for m in at.markdown)
     assert "Live 2026" in notice_copy
     assert "one-sided 95%" in notice_copy and "Wilson lower bound" in notice_copy
-    assert "223/390" in notice_copy
-    assert "57.18%" in notice_copy
-    assert "53.02%" in notice_copy
-    assert "7 pushes among 397 HIGH labels" in notice_copy
+    assert "246/423" in notice_copy
+    assert "58.16%" in notice_copy
+    assert "54.17%" in notice_copy
+    assert "11 pushes among 434 HIGH labels" in notice_copy
+    assert "regular injured reserve" in notice_copy
+    assert "223/390" not in notice_copy
     assert "above 52.4%" in notice_copy
     assert "best US Tuesday" in notice_copy
     assert "57.14%" not in notice_copy
