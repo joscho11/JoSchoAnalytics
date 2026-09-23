@@ -3,7 +3,8 @@
 Production lives in the private leftover Ridge (`spread_v3_prod`). For 2026
 releases, the Tuesday US median drives the model, pick, model edge, and HIGH
 flag. The best US Tuesday quote for that side is displayed separately and used
-for grading. A later line can drop HIGH; it cannot create HIGH. No MEDIUM.
+for grading. A later market move alone cannot add HIGH; an explicitly published
+model-version correction may change the edge and HIGH labels. No MEDIUM.
 
 The 2021-2025 benchmark below is the current leakage-fixed median-triggered
 ticket set graded at the best US Tuesday number. Prior release builds remain
@@ -21,21 +22,19 @@ HIGH_GAP = 3.0
 LAST_REG_WEEK = 18
 SLATE_NAME = "slate_2026.csv"
 
-# The producer's versioned audit JSON is the source of public benchmark values
+# The producer's versioned candidate benchmark is the source of public values
 # and per-season splits. Keeping the renderer data-only avoids loading training
 # code or a serialized model in the public app.
-HIGH_AUDIT_PATH = Path(__file__).with_name("high_fire_rate_audit_v1.json")
+HIGH_AUDIT_PATH = Path(__file__).with_name("market_model_benchmark_v2.json")
 _HIGH_AUDIT = json.loads(HIGH_AUDIT_PATH.read_text(encoding="utf-8"))
-if _HIGH_AUDIT.get("schema_version") != 1 or _HIGH_AUDIT.get("report_id") != "high_fire_rate_audit_v1":
+if _HIGH_AUDIT.get("schema_version") != 1 or _HIGH_AUDIT.get("report_id") != "qb_retaining_market_ridge_v2":
     raise ValueError(f"unsupported HIGH audit artifact: {HIGH_AUDIT_PATH}")
-_HIGH_BENCHMARK = _HIGH_AUDIT["baseline"]["historical_high"]
+_HIGH_BENCHMARK = _HIGH_AUDIT["historical"]["high"]
 LIVE_HIGH_WINS = int(_HIGH_BENCHMARK["wins"])
-LIVE_HIGH_N = int(_HIGH_BENCHMARK["n"])
+LIVE_HIGH_N = int(_HIGH_BENCHMARK["graded_n"])
 LIVE_HIGH_ATS = float(_HIGH_BENCHMARK["ats"])
 LIVE_HIGH_WILSON_Z = 1.64485
-LIVE_HIGH_WILSON_LOWER = float(_HIGH_BENCHMARK["wilson_lower"])
-LIVE_ALL_BETS_WINS = 681
-LIVE_ALL_BETS_N = 1286
+LIVE_HIGH_WILSON_LOWER = float(_HIGH_BENCHMARK["wilson_lower_one_sided_95"])
 BREAKEVEN = 0.524
 LIVE_HIGH_WILSON_CLEARS = LIVE_HIGH_WILSON_LOWER > BREAKEVEN
 TRACKER_2025_MD5 = "88d526ca46e8cbb9f1eea77a3d96fa08"

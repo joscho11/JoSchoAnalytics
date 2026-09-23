@@ -87,20 +87,25 @@ def _spread_2026():
     with st.expander("How the 2026 spread model works"):
         st.markdown(f"""
 Each week the model guesses the **margin leftover versus the first valid Tuesday market capture (09:00–15:30 ET)**.
-It is a Ridge regression on 49 inputs. The Tuesday US median is its frozen market
-input; after the model produces a margin, the 2026 release shops the captured books
-and locks the best quote for the selected side as its execution line. The
-other inputs describe team form, availability, quarterbacks, coaching, rest, and venue.
+It is a Ridge regression with **43 core features and 46 fitted inputs**. It removes
+the five general injury-availability features and vacated snaps, while retaining
+the four QB features. The three market features are Sunday 11:20 p.m. ET-to-Tuesday
+spread movement, Sunday-to-Tuesday total movement, and the Tuesday moneyline–spread
+gap; three missingness flags are fitted with the model. The Tuesday US median is
+its frozen market input; the 2026 release shops the captured books and locks the
+best quote for the selected side as its execution line. Other inputs describe
+team form, quarterbacks, coaching, rest, and venue.
 
 **Every game still gets a pick.** **HIGH** (green) is the only highlighted slice: the
 model disagrees with the Tuesday US median by {HIGH_GAP:g} or more points, and the live line still
-does. If the line moves and that gap falls under {HIGH_GAP:g}, HIGH is dropped. A later line
-cannot create HIGH. There is no medium tier. The last regular-season week is skipped
+does. If the line moves and that gap falls under {HIGH_GAP:g}, HIGH is dropped. A later market
+move alone cannot add HIGH, but an explicitly published model-version correction can change
+predictions and HIGH labels at the same frozen line. There is no medium tier. The last regular-season week is skipped
 for HIGH. Totals are not on the 2026 week page.
 
-**The current clean 2021-2025 benchmark** uses median-triggered HIGH tickets scored at the best US Tuesday number:
+**The QB-retaining model's 2021-2025 walk-forward benchmark** uses median-triggered HIGH tickets scored at the best US Tuesday number:
 **{LIVE_HIGH_WINS}/{LIVE_HIGH_N} = {LIVE_HIGH_ATS * 100:.2f}%**
-ATS, one-sided 95% Wilson lower bound **{LIVE_HIGH_WILSON_LOWER * 100:.2f}%**, walk-forward
+ATS (7 pushes among 397 HIGH labels), one-sided 95% Wilson lower bound **{LIVE_HIGH_WILSON_LOWER * 100:.2f}%**, walk-forward
 2021-2025. {live_high_bar_sentence()} Starting with 2026 releases, the model, pick,
 edge, and HIGH flag use the Tuesday US median. The selected shopped quote is displayed
 separately and used for grading, matching the benchmark's execution rule. Betting every

@@ -11,14 +11,14 @@ The live spread producer is `spread_v3_prod`, a separate private repository. It 
 The 2026 display logic lives in `live_2026.py`:
 
 - The model predicts home margin from information available by Tuesday at 9:00 a.m. ET.
-- The current leakage-fixed 2021-2025 benchmark marks `HIGH` when the model differs from the Tuesday US median by at least 3.0 points, then grades those tickets at the best US Tuesday number.
+- The promoted QB-retaining Sunday-to-Tuesday Ridge marks `HIGH` at an absolute 3.0-point edge from the Tuesday US median, then grades those tickets at the best US Tuesday number.
 - Starting in 2026, the Tuesday US median drives the model, pick, edge, and `HIGH` flag. The best captured US quote for the recommended side is displayed separately and drives grading.
-- A later line can remove a `HIGH` label, but cannot create one.
+- A later market move alone can remove a `HIGH` label, but cannot add one. A separately validated model-version correction can change edges and `HIGH` labels while retaining the frozen Tuesday line.
 - The final regular-season week is excluded from `HIGH` labels.
 - There is no `MEDIUM` tier and no all-bets performance claim.
 - Every game remains visible, including `PASS` games.
 
-The current leakage-fixed historical evaluation contains 436 qualifying picks from 2021 through 2025. It went 253-183 ATS, or 58.03%, scored at the best US Tuesday number on the same HIGH tickets. The one-sided lower confidence bound is 54.10%, above the declared 52.4% break-even threshold. Those historical tickets were selected against the Tuesday US median; the median grade was 249/437, Wilson 53.05%. This is the current benchmark, not a substitute for graded 2026 results. The completed 2026 Week 1 release is now 9-7 ATS overall (9/16), with HIGH 2-0 (2/2). The superseded 2.5-point benchmark was 295/526, 56.08%, Wilson 52.50%. The withdrawn 192/336 = 57.14% figure used same-week injury reports that postdate Tuesday.
+The promoted model's 2021–2025 chronological walk-forward evaluation produced 397 `HIGH` labels: 223 wins, 167 losses, and 7 pushes. Excluding pushes, that is 223/390 = 57.18% ATS, with a one-sided 95% Wilson lower bound of 53.02%, graded at each pick's best captured US Tuesday quote. The model has 43 core features and 46 fitted inputs: five general injury features and vacated snaps were removed; the four QB features remain; Sunday-to-Tuesday spread/total movement and Tuesday moneyline–spread gap are included with three train-fold-fitted missingness flags. This is historical research, not a guarantee of future results. Weeks 1–2 remain immutable releases from the prior model. Week 3 is the first published release from the promoted model; its correction does not rewrite earlier cards.
 
 ## What appears on the site
 
@@ -30,12 +30,12 @@ The frozen 2025 demo remains available for reproducibility. It used a three-vote
 
 | System | Evaluation | Result | Current interpretation |
 |---|---:|---:|---|
-| Current leakage-fixed spread benchmark | 2021-2025 locked historical evaluation | 253/436, 58.03% ATS | Median-triggered tickets; Wilson lower 54.10%, above 52.4%; graded at best US Tuesday number |
+| Promoted QB-retaining market Ridge | 2021-2025 chronological walk-forward | 223/390, 57.18% ATS; 7 pushes among 397 HIGH labels | Wilson lower 53.02%; Tuesday-median selection, best US Tuesday quote grading |
 | Archived in-repo spread model | Corrected 2018-2025 audit | 129/238, 54.20% ATS | No demonstrated edge; 95% Wilson lower bound is 47.86% |
 | Totals model | Walk-forward cross-validation | 55.7% UNDER accuracy, n=575 | Research result, not a deployed performance claim |
 | Totals model | 2025 live tracking, Weeks 10-17 | 52.2%, n=46 | Too small and too close to chance for an edge claim |
 
-The archived spread model once showed an apparent 64.2% result. That number was retracted after a pregame feature leak and player-identity errors were found. The corrected result is 129/238. A later 192/336 = 57.14% Tuesday HIGH figure was withdrawn after the same-week injury join was found to postdate the Tuesday slot. The current leakage-fixed 3.0-point benchmark is 253/436, 58.03%, Wilson 54.10%, with best-quote grading; the Tuesday median grade is 249/437, Wilson 53.05%. The superseded 2.5-point benchmark was 295/526, 56.08%, Wilson 52.50%.
+Earlier spread evaluations are historical records only. The pregame-leakage result of 64.2% was retracted; the corrected archived result was 129/238. The 192/336 figure was withdrawn because its same-week injury join postdated Tuesday. The former 253/436 benchmark is superseded for current-model claims; its archived audit remains available for provenance. The current public benchmark is generated from `market_model_benchmark_v2.json`.
 
 ## Totals model
 

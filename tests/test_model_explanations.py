@@ -47,19 +47,24 @@ def test_live_eval_numbers_match_published_books():
     assert n == LIVE_HIGH_N
 
     audit = json.loads(me._HIGH_AUDIT_PATH.read_text(encoding="utf-8"))
-    benchmark = audit["baseline"]["historical_high"]
-    assert benchmark["gap"] == 3.0
-    assert benchmark["pick_rows"] == 446
-    assert benchmark["wins"] == 253
-    assert benchmark["n"] == 436
-    assert benchmark["wilson_lower"] == LIVE_HIGH_WILSON_LOWER
+    benchmark = audit["historical"]["high"]
+    assert audit["model"]["high_threshold_points"] == 3.0
+    assert audit["model"]["feature_contract"] == "43 core features, 46 fitted inputs"
+    assert benchmark["pick_rows"] == 397
+    assert benchmark["wins"] == 223
+    assert benchmark["graded_n"] == 390
+    assert benchmark["pushes"] == 7
+    assert benchmark["wilson_lower_one_sided_95"] == LIVE_HIGH_WILSON_LOWER
     assert [(r["season"], r["wins"], r["n"]) for r in me.SPREAD_HIGH_BY_SEASON] == [
-        (2021, 85, 136),
-        (2022, 53, 94),
-        (2023, 52, 96),
-        (2024, 25, 45),
-        (2025, 38, 65),
+        (2021, 82, 134),
+        (2022, 44, 82),
+        (2023, 37, 72),
+        (2024, 23, 44),
+        (2025, 37, 58),
     ]
+    assert sum(r["wins"] for r in me.SPREAD_HIGH_BY_SEASON) == 223
+    assert sum(r["n"] for r in me.SPREAD_HIGH_BY_SEASON) == 390
+    assert all(len(value) == 64 for value in audit["source_hashes"].values())
 
     evidence = json.loads(
         (me.HERE / "futures" / "published" / "evidence.json").read_text(encoding="utf-8")

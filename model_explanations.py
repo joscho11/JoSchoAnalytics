@@ -27,11 +27,11 @@ VETERAN_CALIBRATION_AUDIT = [
 
 # The spread season chart reads the same versioned audit artifact as the live
 # HIGH headline. Do not copy season splits into this module.
-_HIGH_AUDIT_PATH = HERE / "betting" / "high_fire_rate_audit_v1.json"
+_HIGH_AUDIT_PATH = HERE / "betting" / "market_model_benchmark_v2.json"
 _HIGH_AUDIT = json.loads(_HIGH_AUDIT_PATH.read_text(encoding="utf-8"))
 SPREAD_HIGH_BY_SEASON = [
-    {"season": int(row["season"]), "wins": int(row["wins"]), "n": int(row["n"])}
-    for row in _HIGH_AUDIT["baseline"]["historical_high"]["high_by_season"]
+    {"season": int(row["season"]), "wins": int(row["wins"]), "n": int(row["graded_n"])}
+    for row in _HIGH_AUDIT["historical"]["high_by_season"]
 ]
 
 # Absolute ridge coefficients from season_totals_v2_prod artifacts/prod_card.json

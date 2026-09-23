@@ -45,6 +45,14 @@ def test_weekly_predictions_renders_and_owns_controls(tmp_path):
     assert int(controls["wp_week"]) == int(default_week)
     markdown = " ".join(str(item.value) for item in at.markdown)
     assert "green-badge" in markdown and "Published" in markdown
+    captions = " ".join(str(item.value) for item in at.caption)
+    assert "spread-v3-prod-sunday-tuesday-market-43-qb-retaining-9baf4dd899a3" in captions
+    qb_expander = next(exp for exp in at.expander if exp.label == "QB inputs for this model correction")
+    qb_markdown = " ".join(str(item.value) for item in qb_expander.markdown)
+    assert "**ATL:** Michael Penix Jr." in qb_markdown
+    assert "**MIN:** Kyler Murray" in qb_markdown
+    assert "**CHI:** Caleb Williams" in qb_markdown
+    assert any("remove the Chicago Case Keenum override" in str(item.value) for item in qb_expander.caption)
     assert not any(str(k).startswith("tr_") for k in keys), \
         "Weekly Predictions must not carry Track Record's controls"
 
@@ -88,6 +96,7 @@ def test_week1_scorecard_and_track_record_use_graded_corrected_release(tmp_path)
     assert not weekly.exception, weekly.exception
     metrics = {str(m.label): str(m.value) for m in weekly.metric}
     assert metrics["ATS record"] == "9/16"
+    assert any("Weeks 1–2 remain immutable releases from the previous model" in str(c.value) for c in weekly.caption)
     assert any("Week 1 ATS record: **9-7**" in str(s.value) for s in weekly.success)
 
     track = _render_page(tmp_path, "page_track_record")
@@ -178,17 +187,19 @@ def test_weekly_predictions_live_2026_banner(tmp_path):
     notice_copy = successes + " " + " ".join(str(m.value) for m in at.markdown)
     assert "Live 2026" in notice_copy
     assert "one-sided 95%" in notice_copy and "Wilson lower bound" in notice_copy
-    assert "253/436" in notice_copy
-    assert "58.03%" in notice_copy
-    assert "54.10%" in notice_copy
+    assert "223/390" in notice_copy
+    assert "57.18%" in notice_copy
+    assert "53.02%" in notice_copy
+    assert "7 pushes among 397 HIGH labels" in notice_copy
     assert "above 52.4%" in notice_copy
     assert "best US Tuesday" in notice_copy
     assert "57.14%" not in notice_copy
     assert "192/336" not in notice_copy
     assert "No medium tier" in notice_copy
     assert "No totals on this season" in notice_copy
+    assert "model-version correction" in notice_copy
     assert any(
-        exp.label == "Tuesday model rules and clean benchmark" for exp in at.expander
+        exp.label == "Tuesday model rules and historical benchmark" for exp in at.expander
     )
     import page_common
     _, default_week = page_common.release_default_selection("predictions", (2025, 10))

@@ -316,11 +316,13 @@ At standard -110 odds, 52.4% is the break-even rate before taxes, limits, or
 other costs. A historical percentage above that line is not a promise about the
 next sample. Confidence intervals, sample size, and selection rules matter.
 
-The **current clean 2021-2025 benchmark** is median-triggered HIGH tickets
-graded at the best US Tuesday number: **{LIVE_HIGH_WINS}/{LIVE_HIGH_N} =
-{LIVE_HIGH_ATS * 100:.2f}%** ATS, with a one-sided 95% Wilson lower bound of
-**{LIVE_HIGH_WILSON_LOWER * 100:.2f}%**. {live_high_bar_sentence()} This is Tuesday
-line value, not closing-line value; betting every game is not the claim.
+The **QB-retaining model's 2021-2025 walk-forward benchmark** is median-triggered
+HIGH tickets graded at the best US Tuesday number: **{LIVE_HIGH_WINS}/{LIVE_HIGH_N} =
+{LIVE_HIGH_ATS * 100:.2f}%** ATS (7 pushes among 397 HIGH labels), with a one-sided
+95% Wilson lower bound of **{LIVE_HIGH_WILSON_LOWER * 100:.2f}%**. {live_high_bar_sentence()}
+The model has 43 core features and 46 fitted inputs; its live market movements use
+the Sunday 11:20 p.m. ET and Tuesday snapshots. This is Tuesday line value, not
+closing-line value; betting every game is not the claim.
 
 {demo_line}
 
@@ -338,7 +340,9 @@ For 2026, the Tuesday US median drives the model, pick, displayed edge, and HIGH
 qualification. **HIGH** is the highlighted slice when that disagreement is at
 least **{HIGH_GAP:g} points** and the live line still meets the same threshold.
 A later line can remove HIGH, but cannot create it mid-week. There is no live
-medium tier.
+medium tier. A market move alone cannot add HIGH; a separately validated and
+published model-version correction can change the model edge and HIGH label
+while retaining the frozen Tuesday line.
 
 HIGH is a documented threshold, not a confidence guarantee. The page still
 shows every game so the filter is visible rather than hiding the misses.

@@ -51,20 +51,74 @@ def _live_notice():
         "**Live 2026 · Tuesday model.** Every game gets a pick. "
         f"**HIGH** (green) is a {HIGH_GAP:g}+ point disagreement with the Tuesday US median. "
         f"If the line moves and that gap falls under {HIGH_GAP:g}, HIGH is dropped. "
-        "A line move cannot create a new HIGH. The named best-available quote is used "
-        "for execution and grading."
+        "A market move alone cannot add a HIGH label; an explicitly published model-version "
+        "correction may change predictions and HIGH labels while keeping the frozen Tuesday "
+        "line. The named best-available quote is used for execution and grading."
     )
-    with st.expander("Tuesday model rules and clean benchmark", expanded=False):
+    with st.expander("Tuesday model rules and historical benchmark", expanded=False):
         st.markdown(
             "No medium tier. No totals on this season. "
-            f"The current clean 2021–2025 benchmark is {LIVE_HIGH_WINS}/{LIVE_HIGH_N} = "
+            f"The QB-retaining model's 2021–2025 walk-forward benchmark is {LIVE_HIGH_WINS}/{LIVE_HIGH_N} = "
             f"{LIVE_HIGH_WINS / LIVE_HIGH_N * 100:.2f}% ATS, with a one-sided 95% "
-            f"Wilson lower bound of {LIVE_HIGH_WILSON_LOWER * 100:.2f}%. Median-triggered "
+            f"Wilson lower bound of {LIVE_HIGH_WILSON_LOWER * 100:.2f}% (7 pushes among 397 HIGH labels). Median-triggered "
             "tickets are graded at the best US Tuesday number and the last regular-season "
             f"week is skipped. {live_high_bar_sentence()} The Tuesday line, pick, edge, "
             "and HIGH flag use the median; the named best-available quote is execution "
             "and grading. Picks use the first valid Tuesday capture from 09:00–15:30 ET."
         )
+
+
+def _live_model_context(release_state: dict) -> None:
+    """Show the selected immutable release's model ID and material QB assumptions."""
+    build_id = release_state.get("build_id")
+    if not build_id:
+        return
+    manifest = page_common.load_release_manifest()
+    state = manifest.get("products", {}).get("predictions", {})
+    build = state.get("builds", {}).get(str(build_id), {})
+    model_version = build.get("model_version")
+    if model_version:
+        st.caption(f"Prediction model: `{model_version}`")
+
+    correction = build.get("correction") or {}
+    if correction.get("model_update") is not True:
+        return
+    current_qbs = correction.get("qb_selection_details") or {}
+    current_ids = correction.get("qb_selections") or {}
+    previous_id = correction.get("supersedes_build_id")
+    previous = state.get("builds", {}).get(str(previous_id), {})
+    previous_correction = previous.get("correction") or {}
+    previous_qbs = previous_correction.get("qb_selection_details") or {}
+    previous_ids = previous_correction.get("qb_selections") or {}
+    changed = {
+        team for team, player_id in current_ids.items()
+        if previous_ids.get(team) and previous_ids.get(team) != player_id
+    }
+    manual = {
+        team for team, details in current_qbs.items()
+        if details.get("is_user_modeling_assumption") is True
+    }
+    relevant = sorted(changed | manual)
+    if not relevant:
+        return
+    with st.expander("QB inputs for this model correction", expanded=False):
+        if correction.get("reason"):
+            st.caption(str(correction["reason"]))
+        st.caption(
+            "Manual QB choices below are modeling assumptions, not claims that the starter was confirmed."
+        )
+        qb_notes = []
+        for team in relevant:
+            current = current_qbs.get(team, {})
+            name = current.get("player_name") or current.get("player_id") or current_ids.get(team, "unknown")
+            if team in manual:
+                note = "user modeling assumption"
+            else:
+                prior = previous_qbs.get(team, {})
+                prior_name = prior.get("player_name") or prior.get("player_id") or previous_ids.get(team, "unknown")
+                note = f"previous-game fallback; prior release used {prior_name}"
+            qb_notes.append(f"- **{team}:** {name} — {note}")
+        st.markdown("\n".join(qb_notes))
 
 
 def _format_price(value) -> str:
@@ -155,7 +209,7 @@ def render():
     st.markdown(page_common.ATS_BLURB, unsafe_allow_html=True)
     season, week, edge_threshold = _season_week_controls(
         st.columns(2), "wp", with_week=True, with_edge=False)
-    page_common.render_release_status("predictions", int(season), int(week))
+    release_state = page_common.render_release_status("predictions", int(season), int(week))
     live = is_live_season(season)
     if not live:
         edge_threshold = st.slider(
@@ -165,6 +219,12 @@ def render():
         )
     if live:
         _live_notice()
+        _live_model_context(release_state)
+        if int(week) in (1, 2):
+            st.caption(
+                "Weeks 1–2 remain immutable releases from the previous model; their original "
+                "predictions and results are not rewritten by the Week 3 model update."
+            )
     else:
         _demo_2025_notice()
 
