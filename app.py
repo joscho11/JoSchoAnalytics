@@ -84,7 +84,7 @@ wp_pg = st.Page(_lazy_render("page_weekly_predictions"), title="Weekly Predictio
                 url_path="weekly-predictions")
 atd_pg = st.Page(_lazy_render("page_anytime_td"), title="Touchdown Props (Beta)", icon=":material/sports_score:",
                  url_path="anytime-tds")
-wf_pg = st.Page(_lazy_render("page_weekly_fantasy"), title="Weekly Fantasy", icon=":material/trophy:",
+wf_pg = st.Page(_lazy_render("page_weekly_fantasy"), title="Weekly Fantasy (Beta)", icon=":material/trophy:",
                 url_path="weekly-fantasy")
 dfs_pg = st.Page(_lazy_render("page_dfs"), title="DFS Optimizer (Beta)", icon=":material/target:",
                  url_path="dfs-optimizer")
@@ -98,7 +98,7 @@ help_pg = st.Page(_lazy_render("page_help"), title="Help & Guide", icon=":materi
                   url_path="help")
 rb_pg = st.Page(_lazy_render("page_rookie_board"), title="Rookie Board", icon=":material/biotech:",
                 url_path="rookie-board")
-fut_pg = st.Page(_lazy_render("page_futures"), title="Season Totals", icon=":material/bar_chart:",
+fut_pg = st.Page(_lazy_render("page_futures"), title="Season Totals (Beta)", icon=":material/bar_chart:",
                  url_path="season-totals")
 cbb_pg = st.Page(_lazy_render("page_cbb_daily"), title="Daily spreads (Beta)", icon=":material/sports_basketball:",
                  url_path="college-basketball")
