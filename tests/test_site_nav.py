@@ -183,6 +183,9 @@ def test_nonselected_pages_are_lazy_imported():
 
 def test_cloud_refresh_reloads_seasonal_config_before_pages():
     src = Path(ENTRY).read_text(encoding="utf-8")
+    assert src.index('"live_2026"') < src.index("site_pages = "), (
+        "Cloud must reload live_2026 before Weekly Predictions imports its current constants"
+    )
     assert src.index('"seasonal_config"') < src.index("site_pages = "), (
         "Cloud must reload seasonal_config before site_pages or Home "
         "ImportErrors on app_today"

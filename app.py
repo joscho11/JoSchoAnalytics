@@ -33,6 +33,10 @@ def _refresh_cloud_synced_modules() -> None:
     # that reloads page_draft_board before seasonal_config raises ImportError
     # on app_today while Home is still the selected page.
     for name in (
+        # Betting pages import these root helpers directly. Refresh them before
+        # a page that may import new names after a live Cloud file sync.
+        "live_2026",
+        "model_explanations",
         "seasonal_config",
         "draft_board_2026",
         "fantasy_scoring",
