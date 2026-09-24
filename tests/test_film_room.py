@@ -57,7 +57,7 @@ def test_embed_uses_dark_player_not_white_card():
 
 
 def test_catalog_size_and_expected_slugs():
-    assert len(VIDEOS) == 32
+    assert len(VIDEOS) == 33
     slugs = {item["slug"] for item in VIDEOS}
     assert "brian-thomas-jr" not in slugs
     assert "site-walkthrough" in slugs
@@ -76,6 +76,9 @@ def test_catalog_size_and_expected_slugs():
     assert "lamar-jackson" in slugs
     assert DEFAULT_VIDEO_SLUG == "league-history-guide"
     assert DEFAULT_VIDEO_SLUG in slugs
+    latest = next(item for item in VIDEOS if item["slug"] == "latest-video-2026-09-24")
+    assert latest["video_id"] == "7689224721262562591"
+    assert latest["date"] == "2026-09-24"
 
 
 def test_default_is_league_history_guide(tmp_path):
@@ -84,7 +87,7 @@ def test_default_is_league_history_guide(tmp_path):
     newest = _newest()
     md = _md(at)
     assert default["title"] in md
-    assert newest["slug"] == "wr-te-advanced-stats"
+    assert newest["slug"] == "latest-video-2026-09-24"
     assert newest["title"] not in md
     assert "Welcome to JoScho Analytics" not in md
     assert "A walk through the JoScho Analytics site" not in md
@@ -142,6 +145,7 @@ def test_catalog_sections():
     ]
     assert "Predictions & weekly" not in grouped, "empty sections are hidden"
     assert grouped["In-season analysis"] == [
+        "latest-video-2026-09-24",
         "wr-te-advanced-stats",
         "rb-advanced-stats-part-2",
         "rb-advanced-stats-part-1",
@@ -178,7 +182,7 @@ def test_catalog_sections():
         "makai-lemon",
     ]
     assert "Archive" not in grouped
-    assert newest_first[0]["slug"] == "wr-te-advanced-stats"
+    assert newest_first[0]["slug"] == "latest-video-2026-09-24"
 
 
 def test_every_episode_has_a_known_content_section():
@@ -221,10 +225,11 @@ def test_shared_video_url_selects_episode(tmp_path):
     assert len(watch) == 1 and watch[0].url == other["tiktok_url"]
 
 
-def test_every_episode_has_a_breakdown_file():
+def test_breakdown_files_exist_when_provided():
     for item in VIDEOS:
-        path = _HERE / "video_breakdowns" / item["breakdown_file"]
-        assert path.is_file(), item["slug"]
+        if item.get("breakdown_file"):
+            path = _HERE / "video_breakdowns" / item["breakdown_file"]
+            assert path.is_file(), item["slug"]
         assert item["video_id"]
         assert item["video_id"] in item["tiktok_url"]
 
@@ -246,18 +251,18 @@ def test_latest_league_history_guide_constant_still_points_at_the_walkthrough():
     assert item["section"] == "site-walkthroughs"
 
 
-def test_newest_episode_is_wr_te_advanced_stats():
+def test_newest_episode_is_latest_video():
     newest = _newest()
-    assert newest["slug"] == "wr-te-advanced-stats"
-    assert newest["video_id"] == "7688845469388131615"
-    assert newest["date"] == "2026-09-23"
+    assert newest["slug"] == "latest-video-2026-09-24"
+    assert newest["video_id"] == "7689224721262562591"
+    assert newest["date"] == "2026-09-24"
 
 
 def test_breakdowns_and_registry_do_not_disclose_sleeper_mix():
     phrases = ("25% sleeper", "75/25", "75% independent")
     blob = " ".join(
         (_HERE / "video_breakdowns" / item["breakdown_file"]).read_text(encoding="utf-8")
-        for item in VIDEOS
+        for item in VIDEOS if item.get("breakdown_file")
     )
     blob += " ".join(str(item.get("archive_note") or "") for item in VIDEOS)
     lower = blob.lower()

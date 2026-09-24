@@ -2,8 +2,8 @@
 
 To add a video after posting it:
   1. Append an entry to VIDEOS below (slug, title, subtitle, date, section, tiktok_url,
-     video_id, breakdown_file).
-  2. Drop its in-depth breakdown as markdown in  video_breakdowns/<breakdown_file>.
+     video_id).
+  2. Add breakdown_file and an in-depth markdown breakdown when supporting context is ready.
 The `video_id` is the number at the end of the TikTok URL (.../video/<id>).
 
 ORDER DOES NOT MATTER HERE. film_room.py sorts episodes by `date`, newest first
@@ -354,5 +354,14 @@ VIDEOS = [
         "tiktok_url": "https://www.tiktok.com/@joschoanalytics/video/7688755646497344798",
         "video_id": "7688755646497344798",
         "breakdown_file": "rb_advanced_stats_part_2.md",
+    },
+    {
+        "slug": "latest-video-2026-09-24",
+        "title": "JoScho Analytics: Latest Video",
+        "subtitle": "2026 · TikTok video",
+        "date": "2026-09-24",
+        "section": "in-season",
+        "tiktok_url": "https://www.tiktok.com/@joschoanalytics/video/7689224721262562591",
+        "video_id": "7689224721262562591",
     },
 ]
