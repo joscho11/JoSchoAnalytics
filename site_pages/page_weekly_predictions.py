@@ -137,6 +137,67 @@ def _live_model_context(release_state: dict) -> None:
                 note += f"; previous release used {prior_name}"
             qb_notes.append(f"- **{team}:** {name} — {note}")
         st.markdown("\n".join(qb_notes))
+        flagged = [
+            row for row in ((correction.get("qb_uncertainty_flags") or {}).get("teams") or []) if row.get("flag")
+        ]
+        if flagged:
+            st.caption(
+                "Automatic uncertain-QB flag: the QB the model uses did not finish a close game last week. "
+                "It is an extra model input; the QB numbers are kept."
+            )
+            st.markdown("\n".join(f"- **{row['team']}:** {row.get('reason', '')}" for row in flagged))
+        scenario_teams = (correction.get("qb_scenarios") or {}).get("teams") or []
+        if scenario_teams:
+            st.caption(
+                "QB scenarios for " + ", ".join(scenario_teams)
+                + ": each listed QB is scored as the certain starter on the matchup card. "
+                "They are shown for planning and are not part of the model's official pick."
+            )
+
+
+_SCENARIO_BADGES = {
+    "high_all_clear": ("#00c853", "#1a3a1a", "HIGH holds under every listed QB"),
+    "high_split": ("#ff9800", "#3a2a12", "QB split: pass"),
+    "scenario_high_only": ("#93A0B1", "#1e2a3a", "HIGH only if a specific QB starts, not a bet"),
+}
+
+
+def _qb_scenario_html(row) -> str:
+    """Edge under each listed QB for a game whose starter is not settled, plus one verdict badge."""
+    raw = row.get("qb_scenarios")
+    if raw is None or (isinstance(raw, float) and pd.isna(raw)) or not str(raw).strip():
+        return ""
+    try:
+        items = json.loads(str(raw))
+    except (TypeError, ValueError):
+        return ""
+    if not items:
+        return ""
+    verdict = row.get("qb_scenario_verdict")
+    verdict = "" if verdict is None or (isinstance(verdict, float) and pd.isna(verdict)) else str(verdict).strip()
+    lines = []
+    for team in dict.fromkeys(str(item.get("team", "")) for item in items):
+        parts = []
+        for item in (i for i in items if str(i.get("team", "")) == team):
+            side = str(item.get("side", ""))
+            picked = side.split("(")[1].rstrip(")") if "(" in side else side
+            edge = abs(float(item["edge"]))
+            tag = " <b style='color:#00c853'>HIGH</b>" if item.get("clears_high") else ""
+            note = " (no QB history, neutral)" if item.get("features_neutralized") else ""
+            parts.append(f"{_html.escape(str(item.get('player_name', '')))} {_html.escape(picked)} +{edge:.2f}{tag}{note}")
+        lines.append(f"<div><b style='color:#ccc'>{_html.escape(team)}</b>: " + " &nbsp;|&nbsp; ".join(parts) + "</div>")
+    badge = ""
+    if verdict in _SCENARIO_BADGES:
+        color, bg, label = _SCENARIO_BADGES[verdict]
+        badge = (
+            f"<div style='margin-top:6px'><span style='background:{bg};border:1px solid {color};border-radius:4px;"
+            f"padding:2px 8px;font-size:11px;font-weight:700;color:{color}'>{_html.escape(label)}</span></div>"
+        )
+    return (
+        "<div class='jsa-gc-scenarios' style='margin-top:8px;font-size:12px;color:#93A0B1;line-height:1.5'>"
+        "<b style='color:#ccc'>QB scenarios</b> (each QB scored as the certain starter, edge in points)"
+        + "".join(lines) + badge + "</div>"
+    )
 
 
 def _format_price(value) -> str:
@@ -639,6 +700,10 @@ def render():
                 b1.markdown(stat_box(bot_spread),                       unsafe_allow_html=True)
                 b2.markdown(stat_box(bot_predicted, is_rec=bot_is_rec), unsafe_allow_html=True)
                 b4.markdown(bet_box(bot_team, rec_color) if bot_is_rec else empty_box(), unsafe_allow_html=True)
+
+                _scenario_html = _qb_scenario_html(row) if live else ""
+                if _scenario_html:
+                    st.markdown(_scenario_html, unsafe_allow_html=True)
 
                 if _show_agent:
                     game_key  = f"{home}_{away}"

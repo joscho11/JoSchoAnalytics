@@ -25,9 +25,9 @@ SLATE_NAME = "slate_2026.csv"
 # The producer's versioned candidate benchmark is the source of public values
 # and per-season splits. Keeping the renderer data-only avoids loading training
 # code or a serialized model in the public app.
-HIGH_AUDIT_PATH = Path(__file__).with_name("market_model_benchmark_v3.json")
+HIGH_AUDIT_PATH = Path(__file__).with_name("market_model_benchmark_v4.json")
 _HIGH_AUDIT = json.loads(HIGH_AUDIT_PATH.read_text(encoding="utf-8"))
-if _HIGH_AUDIT.get("schema_version") != 1 or _HIGH_AUDIT.get("report_id") != "qb_ir_market_ridge_v3":
+if _HIGH_AUDIT.get("schema_version") != 1 or _HIGH_AUDIT.get("report_id") != "qb_ir_scoped_flag_market_ridge_v4":
     raise ValueError(f"unsupported HIGH audit artifact: {HIGH_AUDIT_PATH}")
 _HIGH_BENCHMARK = _HIGH_AUDIT["historical"]["high"]
 LIVE_HIGH_WINS = int(_HIGH_BENCHMARK["wins"])

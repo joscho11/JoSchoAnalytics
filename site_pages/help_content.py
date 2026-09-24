@@ -322,10 +322,11 @@ The **current model's 2021-2025 walk-forward benchmark** is median-triggered
 HIGH tickets graded at the best US Tuesday number: **{LIVE_HIGH_WINS}/{LIVE_HIGH_N} =
 {LIVE_HIGH_ATS * 100:.2f}%** ATS ({LIVE_HIGH_PUSHES} pushes among {LIVE_HIGH_LABELS} HIGH labels), with a one-sided
 95% Wilson lower bound of **{LIVE_HIGH_WILSON_LOWER * 100:.2f}%**. {live_high_bar_sentence()}
-The model has 44 core features and 47 fitted inputs; its live market movements use
+The model has 46 core features and 49 fitted inputs; its live market movements use
 the Sunday 11:20 p.m. ET and Tuesday snapshots. It also counts each team's non-QB
-starters on regular injured reserve, taken from the roster for its previous game, so
-that input is known before the Tuesday prediction. This is Tuesday line value, not
+starters on regular injured reserve, taken from the roster for its previous game and
+counting only snaps he played for that team, so that input is known before the Tuesday
+prediction. A flag marks a team whose QB did not finish a close game last week. This is Tuesday line value, not
 closing-line value; betting every game is not the claim.
 
 {demo_line}

@@ -96,14 +96,17 @@ def _spread_2026():
     with st.expander("How the 2026 spread model works"):
         st.markdown(f"""
 Each week the model guesses the **margin leftover versus the first valid Tuesday market capture (09:00-15:30 ET)**.
-It is a Ridge regression with **44 core features and 47 fitted inputs**. It removes
+It is a Ridge regression with **46 core features and 49 fitted inputs**. It removes
 the five general injury-availability features and vacated snaps, while retaining
 the four QB features. It adds one injured-reserve input: each team's count of
 non-QB starters on regular injured reserve, taken from the team's roster for its
 previous game, so it uses only information available before the Tuesday prediction.
 The model sees the home count minus the away count. A starter played at least 50% of offensive or
-defensive snaps in any of his last three games (or averaged 50% last season if he
-has not played this season), and designated-to-return players are not counted.
+defensive snaps for that team in any of his last three games (or averaged 50% for that team last
+season if he has not played for it this season). Snaps with another team are not counted, and
+designated-to-return players are not counted. Two more inputs mark a team whose QB did not finish
+a close game last week (another passer took a dropback after his last one while the score was
+within 16 points); only that automatic rule sets them.
 The three market features are Sunday 11:20 p.m. ET-to-Tuesday
 spread movement, Sunday-to-Tuesday total movement, and the Tuesday moneyline-spread
 gap; three missingness flags are fitted with the model. The Tuesday US median is
