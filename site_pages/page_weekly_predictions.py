@@ -4,6 +4,7 @@ The page owns its Season/Week/Min-edge controls, while shared stats/helpers come
 from dashboard_data and page_common. The 2026 card reads the active published
 spread release directly; the 2025 demo remains the older walkthrough.
 """
+import contextlib
 import glob
 import html as _html
 import itertools as _it
@@ -155,48 +156,114 @@ def _live_model_context(release_state: dict) -> None:
             )
 
 
-_SCENARIO_BADGES = {
-    "high_all_clear": ("#00c853", "#1a3a1a", "HIGH holds under every listed QB"),
-    "high_split": ("#ff9800", "#3a2a12", "QB split: pass"),
-    "scenario_high_only": ("#93A0B1", "#1e2a3a", "HIGH only if a specific QB starts, not a bet"),
+_SCENARIO_HEADERS = {
+    "high_split": (
+        "&nbsp;&nbsp;<span style='background:#3a2a12;border:1px solid #ff9800;border-radius:4px;"
+        "padding:1px 6px;font-size:11px;color:#ff9800;font-weight:700'>QB SPLIT · pass</span>"
+    ),
+    "scenario_high_only": (
+        "&nbsp;&nbsp;<span style='background:#1e2a3a;border:1px solid #93A0B1;border-radius:4px;"
+        "padding:1px 6px;font-size:11px;color:#93A0B1'>HIGH only if a listed QB starts</span>"
+    ),
 }
 
 
-def _qb_scenario_html(row) -> str:
-    """Edge under each listed QB for a game whose starter is not settled, plus one verdict badge."""
+def _signed(value) -> str:
+    return f"{float(value):+.1f}"
+
+
+def _scenario_items(row) -> tuple[list[dict], str]:
+    """QB scenarios parsed from the release row, and the verdict computed by the producer."""
     raw = row.get("qb_scenarios")
     if raw is None or (isinstance(raw, float) and pd.isna(raw)) or not str(raw).strip():
-        return ""
+        return [], ""
     try:
         items = json.loads(str(raw))
     except (TypeError, ValueError):
-        return ""
-    if not items:
-        return ""
+        return [], ""
+    if not isinstance(items, list) or not items:
+        return [], ""
     verdict = row.get("qb_scenario_verdict")
     verdict = "" if verdict is None or (isinstance(verdict, float) and pd.isna(verdict)) else str(verdict).strip()
-    lines = []
-    for team in dict.fromkeys(str(item.get("team", "")) for item in items):
-        parts = []
-        for item in (i for i in items if str(i.get("team", "")) == team):
-            side = str(item.get("side", ""))
-            picked = side.split("(")[1].rstrip(")") if "(" in side else side
-            edge = abs(float(item["edge"]))
-            tag = " <b style='color:#00c853'>HIGH</b>" if item.get("clears_high") else ""
-            note = " (no QB history, neutral)" if item.get("features_neutralized") else ""
-            parts.append(f"{_html.escape(str(item.get('player_name', '')))} {_html.escape(picked)} +{edge:.2f}{tag}{note}")
-        lines.append(f"<div><b style='color:#ccc'>{_html.escape(team)}</b>: " + " &nbsp;|&nbsp; ".join(parts) + "</div>")
-    badge = ""
-    if verdict in _SCENARIO_BADGES:
-        color, bg, label = _SCENARIO_BADGES[verdict]
-        badge = (
-            f"<div style='margin-top:6px'><span style='background:{bg};border:1px solid {color};border-radius:4px;"
-            f"padding:2px 8px;font-size:11px;font-weight:700;color:{color}'>{_html.escape(label)}</span></div>"
-        )
+    return items, verdict
+
+
+def _scenario_card_html(item: dict, home: str, spread: float) -> str:
+    """One QB, one prediction: his name, the model's line, the pick and the edge."""
+    edge = float(item["edge"])
+    side = str(item.get("side", ""))
+    picked = side.split("(")[1].rstrip(")") if "(" in side else side
+    high = bool(item.get("clears_high"))
+    color = "#00c853" if high else "#93A0B1"
+    background = "#0c1a12" if high else "#1e2a3a"
+    model_home_line = -(edge + float(spread))  # sportsbook style for the home team, like the card's PREDICTED column
+    badge = (
+        "<span style='background:#1a3a1a;border:1px solid #00c853;border-radius:4px;padding:1px 6px;"
+        "font-size:11px;color:#00c853;font-weight:700'>HIGH</span>"
+        if high else "<span style='font-size:11px;color:#93A0B1'>under 3.0, not HIGH</span>"
+    )
+    note = (
+        "<div style='font-size:11px;color:#ff9800;margin-top:4px'>no QB history, neutral</div>"
+        if item.get("features_neutralized") else ""
+    )
     return (
-        "<div class='jsa-gc-scenarios' style='margin-top:8px;font-size:12px;color:#93A0B1;line-height:1.5'>"
-        "<b style='color:#ccc'>QB scenarios</b> (each QB scored as the certain starter, edge in points)"
-        + "".join(lines) + badge + "</div>"
+        f"<div class='jsa-gc-scen' style='background:{background};border:1.5px solid {color};border-radius:8px;"
+        f"padding:10px 12px;height:100%'>"
+        f"<div style='font-weight:800;font-size:14px;color:#fff'>{_html.escape(str(item.get('player_name', '')))}</div>"
+        f"<div style='font-size:13px;color:{color};font-weight:700;margin-top:6px'>Pick: {_html.escape(picked)}</div>"
+        f"<div style='font-size:12px;color:#ccc;margin-top:2px'>Edge {abs(edge):.2f} points</div>"
+        f"<div style='font-size:12px;color:#93A0B1;margin-top:2px'>Model line: {_html.escape(str(home))} {_signed(model_home_line)}</div>"
+        f"<div style='margin-top:6px'>{badge}</div>{note}</div>"
+    )
+
+
+def _scenario_verdict_html(items: list[dict], verdict: str) -> str:
+    total = len(items)
+    clears = sum(bool(item.get("clears_high")) for item in items)
+    text = {
+        "high_all_clear": ("#00c853", "#1a3a1a", f"HIGH under all {total} QBs"),
+        "high_split": ("#ff9800", "#3a2a12", f"QB split: HIGH under {clears} of {total} QBs, pass until the starter is known"),
+        "scenario_high_only": (
+            "#93A0B1", "#1e2a3a",
+            f"HIGH under {clears} of {total} QBs, but not under the default QB, not a bet",
+        ),
+        "no_high": ("#93A0B1", "#1e2a3a", "No HIGH under any listed QB"),
+    }.get(verdict)
+    if not text:
+        return ""
+    color, background, label = text
+    return (
+        f"<div style='margin:8px 0 10px'><span style='background:{background};border:1px solid {color};"
+        f"border-radius:4px;padding:3px 10px;font-size:12px;font-weight:700;color:{color}'>{_html.escape(label)}</span></div>"
+    )
+
+
+def _render_qb_scenarios(items: list[dict], verdict: str, home: str, away: str, spread: float) -> None:
+    """Simple view for a game whose QB is not settled: one equal card per listed QB, then one verdict."""
+    st.markdown(
+        f"<div style='font-size:12px;color:#93A0B1;margin:2px 0 6px'>Tuesday line: "
+        f"<b style='color:#ccc'>{_html.escape(str(home))} {_signed(-float(spread))}</b> &nbsp;|&nbsp; "
+        f"<b style='color:#ccc'>{_html.escape(str(away))} {_signed(float(spread))}</b>. "
+        "The starter is not settled, so each card scores the game with that QB as the starter.</div>",
+        unsafe_allow_html=True,
+    )
+    for team in dict.fromkeys(str(item.get("team", "")) for item in items):
+        group = [item for item in items if str(item.get("team", "")) == team]
+        columns = st.columns(len(group))
+        for column, item in zip(columns, group):
+            column.markdown(_scenario_card_html(item, home, spread), unsafe_allow_html=True)
+    verdict_html = _scenario_verdict_html(items, verdict)
+    if verdict_html:
+        st.markdown(verdict_html, unsafe_allow_html=True)
+
+
+def _official_row_label(rec_team, edge, tier) -> str:
+    """Name for the collapsed original scorecard on a game that shows QB scenarios."""
+    if not rec_team or pd.isna(edge) or edge == 0:
+        return "Official model row (used for the season record)"
+    return (
+        f"Official model row for the season record: {rec_team} {abs(float(edge)):.2f} points"
+        f"{', HIGH' if str(tier) == 'HIGH' else ''}"
     )
 
 
@@ -630,6 +697,12 @@ def render():
                 is_high = False
                 tier_html = ''
 
+            _scen_items, _scen_verdict = _scenario_items(row) if live else ([], "")
+            if _scen_items and _scen_verdict in _SCENARIO_HEADERS:
+                # the official row can be HIGH while the listed QBs disagree; the header follows the scenarios
+                is_high = False
+                tier_html = _SCENARIO_HEADERS[_scen_verdict]
+
             # Column layout is decided per WEEK (results_in), not per game, so a game that
             # has not kicked off yet keeps the same SCORE column (showing a dash) as its
             # finished neighbours instead of collapsing to the narrower 4-column grid.
@@ -651,59 +724,62 @@ def render():
                     unsafe_allow_html=True
                 )
 
-                if live:
-                    _quote_html = _best_quote_html(row, rec_team)
-                    if _quote_html:
-                        st.markdown(_quote_html, unsafe_allow_html=True)
-
-                if results_in:
-                    h0, h1, h2, h3, h4 = st.columns([2.2, 1.2, 1.2, 1.2, 1.8])
-                    h3.markdown("<div class='jsa-gc-hdr' style='text-align:center;font-size:11px;color:#aaa;letter-spacing:1px'>SCORE</div>", unsafe_allow_html=True)
-                else:
-                    h0, h1, h2, h4 = st.columns([2.2, 1.2, 1.2, 1.8])
-
-                _spread_header = "TUESDAY LINE" if live else "SPREAD"
-                h1.markdown(f"<div class='jsa-gc-hdr' style='text-align:center;font-size:11px;color:#aaa;letter-spacing:1px'>{_spread_header}</div>", unsafe_allow_html=True)
-                h2.markdown("<div class='jsa-gc-hdr' style='text-align:center;font-size:11px;color:#aaa;letter-spacing:1px'>PREDICTED</div>", unsafe_allow_html=True)
-                h4.markdown("<div class='jsa-gc-hdr jsa-gc-pick'></div>", unsafe_allow_html=True)
-
-                if results_in:
-                    a0, a1, a2, a3, a4 = st.columns([2.2, 1.2, 1.2, 1.2, 1.8])
-                    a3.markdown(stat_box(top_score, is_result=True), unsafe_allow_html=True)
-                else:
-                    a0, a1, a2, a4 = st.columns([2.2, 1.2, 1.2, 1.8])
-
-                top_w, top_c = name_style(top_is_rec)
-                a0.markdown(
-                    f"<div class='jsa-gc-team' style='font-weight:{top_w};font-size:15px;color:{top_c};"
-                    f"padding-top:6px;height:32px'>{top_team}</div>",
-                    unsafe_allow_html=True
+                if _scen_items:
+                    _render_qb_scenarios(_scen_items, _scen_verdict, home, away, spread)
+                _official_ctx = (
+                    st.expander(_official_row_label(rec_team, edge, tier), expanded=False)
+                    if _scen_items else contextlib.nullcontext()
                 )
-                a1.markdown(stat_box(top_spread),                       unsafe_allow_html=True)
-                a2.markdown(stat_box(top_predicted, is_rec=top_is_rec), unsafe_allow_html=True)
-                a4.markdown(bet_box(top_team, rec_color) if top_is_rec else empty_box(), unsafe_allow_html=True)
+                with _official_ctx:
+                    if live:
+                        _quote_html = _best_quote_html(row, rec_team)
+                        if _quote_html:
+                            st.markdown(_quote_html, unsafe_allow_html=True)
 
-                st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
+                    if results_in:
+                        h0, h1, h2, h3, h4 = st.columns([2.2, 1.2, 1.2, 1.2, 1.8])
+                        h3.markdown("<div class='jsa-gc-hdr' style='text-align:center;font-size:11px;color:#aaa;letter-spacing:1px'>SCORE</div>", unsafe_allow_html=True)
+                    else:
+                        h0, h1, h2, h4 = st.columns([2.2, 1.2, 1.2, 1.8])
 
-                if results_in:
-                    b0, b1, b2, b3, b4 = st.columns([2.2, 1.2, 1.2, 1.2, 1.8])
-                    b3.markdown(stat_box(bot_score, is_result=True), unsafe_allow_html=True)
-                else:
-                    b0, b1, b2, b4 = st.columns([2.2, 1.2, 1.2, 1.8])
+                    _spread_header = "TUESDAY LINE" if live else "SPREAD"
+                    h1.markdown(f"<div class='jsa-gc-hdr' style='text-align:center;font-size:11px;color:#aaa;letter-spacing:1px'>{_spread_header}</div>", unsafe_allow_html=True)
+                    h2.markdown("<div class='jsa-gc-hdr' style='text-align:center;font-size:11px;color:#aaa;letter-spacing:1px'>PREDICTED</div>", unsafe_allow_html=True)
+                    h4.markdown("<div class='jsa-gc-hdr jsa-gc-pick'></div>", unsafe_allow_html=True)
 
-                bot_w, bot_c = name_style(bot_is_rec)
-                b0.markdown(
-                    f"<div class='jsa-gc-team' style='font-weight:{bot_w};font-size:15px;color:{bot_c};"
-                    f"padding-top:6px;height:32px'>{bot_team}</div>",
-                    unsafe_allow_html=True
-                )
-                b1.markdown(stat_box(bot_spread),                       unsafe_allow_html=True)
-                b2.markdown(stat_box(bot_predicted, is_rec=bot_is_rec), unsafe_allow_html=True)
-                b4.markdown(bet_box(bot_team, rec_color) if bot_is_rec else empty_box(), unsafe_allow_html=True)
+                    if results_in:
+                        a0, a1, a2, a3, a4 = st.columns([2.2, 1.2, 1.2, 1.2, 1.8])
+                        a3.markdown(stat_box(top_score, is_result=True), unsafe_allow_html=True)
+                    else:
+                        a0, a1, a2, a4 = st.columns([2.2, 1.2, 1.2, 1.8])
 
-                _scenario_html = _qb_scenario_html(row) if live else ""
-                if _scenario_html:
-                    st.markdown(_scenario_html, unsafe_allow_html=True)
+                    top_w, top_c = name_style(top_is_rec)
+                    a0.markdown(
+                        f"<div class='jsa-gc-team' style='font-weight:{top_w};font-size:15px;color:{top_c};"
+                        f"padding-top:6px;height:32px'>{top_team}</div>",
+                        unsafe_allow_html=True
+                    )
+                    a1.markdown(stat_box(top_spread),                       unsafe_allow_html=True)
+                    a2.markdown(stat_box(top_predicted, is_rec=top_is_rec), unsafe_allow_html=True)
+                    a4.markdown(bet_box(top_team, rec_color) if top_is_rec else empty_box(), unsafe_allow_html=True)
+
+                    st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
+
+                    if results_in:
+                        b0, b1, b2, b3, b4 = st.columns([2.2, 1.2, 1.2, 1.2, 1.8])
+                        b3.markdown(stat_box(bot_score, is_result=True), unsafe_allow_html=True)
+                    else:
+                        b0, b1, b2, b4 = st.columns([2.2, 1.2, 1.2, 1.8])
+
+                    bot_w, bot_c = name_style(bot_is_rec)
+                    b0.markdown(
+                        f"<div class='jsa-gc-team' style='font-weight:{bot_w};font-size:15px;color:{bot_c};"
+                        f"padding-top:6px;height:32px'>{bot_team}</div>",
+                        unsafe_allow_html=True
+                    )
+                    b1.markdown(stat_box(bot_spread),                       unsafe_allow_html=True)
+                    b2.markdown(stat_box(bot_predicted, is_rec=bot_is_rec), unsafe_allow_html=True)
+                    b4.markdown(bet_box(bot_team, rec_color) if bot_is_rec else empty_box(), unsafe_allow_html=True)
 
                 if _show_agent:
                     game_key  = f"{home}_{away}"

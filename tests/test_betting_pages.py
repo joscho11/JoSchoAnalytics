@@ -324,7 +324,7 @@ if __name__ == "__main__":
     print("OK  betting pages: render clean, own their controls, ATS blurb present")
 
 
-def test_weekly_predictions_shows_qb_scenarios_and_flag_notes(tmp_path):
+def test_weekly_predictions_shows_one_equal_card_per_listed_qb(tmp_path):
     at = _render_page(tmp_path, "page_weekly_predictions")
     season = next(w for w in at.selectbox if getattr(w, "key", None) == "wp_season")
     season.set_value(2026)
@@ -333,14 +333,37 @@ def test_weekly_predictions_shows_qb_scenarios_and_flag_notes(tmp_path):
     at.run()
     assert not at.exception, at.exception
     markdown = " ".join(str(item.value) for item in at.markdown)
-    assert "QB scenarios" in markdown
-    # SEA: Lock or Darnold. CHI: Caleb Williams, Bagent or Keenum.
+    assert "The starter is not settled" in markdown
+    # SEA: Lock or Darnold. CHI: Caleb Williams, Bagent or Keenum. One card each, all shown at once.
     for name in ("Drew Lock", "Sam Darnold", "Caleb Williams", "Tyson Bagent", "Case Keenum"):
         assert name in markdown, name
-    assert "QB split: pass" in markdown  # PHI at CHI is HIGH officially but not under every listed QB
-    assert "&mdash;" not in markdown.split("QB scenarios", 1)[1].split("</div>", 1)[0]
+    assert markdown.count("Model line:") >= 5 and "Pick:" in markdown
+    # The verdict is one plain line; which one depends on the published numbers.
+    assert ("HIGH under all 3 QBs" in markdown) or ("QB split: HIGH under" in markdown)
+    assert "&mdash;" not in markdown and "—" not in markdown.split("The starter is not settled", 1)[1][:3000]
+    # The original scorecard is still there for the record, collapsed.
+    labels = [exp.label for exp in at.expander]
+    assert any(label.startswith("Official model row for the season record") for label in labels), labels
     expander = next(exp for exp in at.expander if exp.label == "QB inputs used for this release")
     text = " ".join(str(item.value) for item in expander.markdown) + " " + " ".join(str(c.value) for c in expander.caption)
     assert "Automatic uncertain-QB flag" in text
     assert "**CHI:**" in text and "left before the end of" in text
     assert "QB scenarios for" in text
+
+
+def test_scenario_verdict_lines_are_plain_for_every_case():
+    import importlib
+
+    sys.path.insert(0, str(_SITE_PAGES))
+    page = importlib.import_module("page_weekly_predictions")
+    items = [{"clears_high": True}, {"clears_high": True}, {"clears_high": False}]
+    assert "HIGH under all 2 QBs" in page._scenario_verdict_html(items[:2], "high_all_clear")
+    assert "QB split: HIGH under 2 of 3 QBs, pass" in page._scenario_verdict_html(items, "high_split")
+    assert "HIGH under 2 of 3 QBs, but not under the default QB" in page._scenario_verdict_html(items, "scenario_high_only")
+    assert "No HIGH under any listed QB" in page._scenario_verdict_html([{"clears_high": False}] * 2, "no_high")
+    assert page._scenario_verdict_html(items, "") == ""
+    card = page._scenario_card_html(
+        {"player_name": "Caleb Williams", "side": "HOME (CHI)", "edge": 4.39, "clears_high": True}, "CHI", -3.0
+    )
+    assert "Caleb Williams" in card and "Pick: CHI" in card and "Edge 4.39 points" in card
+    assert "Model line: CHI -1.4" in card and ">HIGH<" in card

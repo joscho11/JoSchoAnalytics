@@ -2,8 +2,8 @@
   "schema_version": 1,
   "report_id": "qb_ir_scoped_flag_market_ridge_v4",
   "promotion_audit": {
-    "path": "../spread_v3_prod/artifacts/qb_uncertainty_promotion_v1.json",
-    "sha256": "0f53a90b2b6da7ea5ca8bda01bc62b476c94d177b348b9a897e9518bded040c1"
+    "path": "../spread_v3_prod/artifacts/qb_uncertainty_promotion_v2.json",
+    "sha256": "763913bfc46fcefba300d4e0afc2e65435608c3f15c47098a8f0d03dd6a7a090"
   },
   "model": {
     "name": "Sunday-to-Tuesday market Ridge with QB features, team-scoped injured-reserve starters and an automatic uncertain-QB flag",
@@ -94,7 +94,7 @@
     "candidate_bundle_sha256": "b7adc2a60b9df368e48b54bc4c7d06571d49876d46ccf046bc6997b79381bbf3",
     "candidate_comparison_report_sha256": "b1141ce0c6f965f29247bd5e00a416b17d8b02a9efe499780156cd40a8df6cf3",
     "candidate_oof_predictions_sha256": "cf2bf47b39226c06342253dd1ed0478b19a4ce38aa44e0f09c7c6a355ec889fb",
-    "promotion_audit_sha256": "0f53a90b2b6da7ea5ca8bda01bc62b476c94d177b348b9a897e9518bded040c1"
+    "promotion_audit_sha256": "763913bfc46fcefba300d4e0afc2e65435608c3f15c47098a8f0d03dd6a7a090"
   },
   "interpretation": "This is a historical walk-forward research result, not a guarantee of future returns. The uncertain-QB flag rests on about 108 past cases: random flags of the same size matched its HIGH record in 3 of 200 tries, and it pushes the edge toward the home team whichever side is flagged, so treat its effect as unproven. Manual QB scenarios on the card are not part of this benchmark."
 }
