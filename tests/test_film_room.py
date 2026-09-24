@@ -120,7 +120,6 @@ def test_picker_lists_every_episode_and_no_retired_intro(tmp_path):
     captions = {str(c.value) for c in at.caption}
     assert _section_control(at).options == [
         "Walkthroughs",
-        "Predictions",
         "In-season",
         "Draft",
         "Players",
@@ -141,15 +140,14 @@ def test_catalog_sections():
         "site-walkthrough",
         LATEST_LEAGUE_HISTORY_VIDEO_SLUG,
     ]
-    assert grouped["Predictions & weekly"] == [
-        "latest-video-2026-09-11",
-    ]
+    assert "Predictions & weekly" not in grouped, "empty sections are hidden"
     assert grouped["In-season analysis"] == [
         "wr-te-advanced-stats",
         "rb-advanced-stats-part-2",
         "rb-advanced-stats-part-1",
         "week-1-signal",
         "chargers-week-1-loss",
+        "latest-video-2026-09-11",
     ]
     assert grouped["Draft strategy & research"] == [
         "rb-wr-draft-strategy",

@@ -297,10 +297,10 @@ VIDEOS = [
     },
     {
         "slug": "latest-video-2026-09-11",
-        "title": "Latest JoScho Analytics video",
-        "subtitle": "2026 · New Film Room episode",
+        "title": "NFL Week 1 2026: Model Gaps",
+        "subtitle": "2026 · Week 1 · where my model and the Tuesday market disagree",
         "date": "2026-09-11",
-        "section": "predictions",
+        "section": "in-season",
         "tiktok_url": "https://www.tiktok.com/@joschoanalytics/video/7684391966548774174",
         "video_id": "7684391966548774174",
         "breakdown_file": "latest_video_2026_09_11.md",
