@@ -1,0 +1,1122 @@
+{
+  "season": 2026,
+  "week": 3,
+  "slate": "full_draftkings",
+  "book": [
+    "DraftKings"
+  ],
+  "release_mode": "live",
+  "publish_now_et": "2026-09-24T17:59:15.013291",
+  "model": "live_product_35 frozen bundle; 34 locked features + Sleeper half-PPR",
+  "forward_source": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\weekly_projections_v2_prod\\independent_model\\outputs\\forward\\forward_2026_week03.parquet",
+  "historical_source": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\td_count_model_beta\\artifacts\\td_features_2019_2025.parquet",
+  "model_bundle": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\td_count_model_beta\\artifacts\\td_lgbm_poisson_product.pkl",
+  "model_bundle_sha256": "6cb5874db5278e8306cf8d06e67f5fe7a10262d7dc5a8e59a26fa568c8081819",
+  "input_hashes": {
+    "paste": "701e2eb4f3ffbd5dcdd7db8a7150fd0814882d82f01fc9eb1569beb3a60e8992",
+    "forward": "e9f0d2cbe25847a3fff45ee506415db432f7db913012175bd242dae6d81f7ca7",
+    "history": "58495f19d2cd3cfbaa824e6d462f0c68fc497237cdde3d8bfb130e19c4cb3a15"
+  },
+  "n_rows": 354,
+  "n_cumulative": 354,
+  "capture_min": "2026-09-24T17:51:16",
+  "capture_max": "2026-09-24T17:51:16",
+  "capture_lead_minutes": [
+    143.7,
+    4028.7,
+    4213.7,
+    4233.7,
+    4468.7,
+    5903.7
+  ],
+  "capture_window_warning": true,
+  "unresolved_paste_rows": [
+    "unresolved pasted player 'Mark Redman' (ATL@GB)",
+    "unresolved pasted player 'Chris Blair' (ATL@GB)",
+    "unresolved pasted player 'Nick Muse' (ATL@GB)",
+    "unresolved pasted player 'Nick Kallerup' (SEA@WAS)",
+    "unresolved pasted player 'Luke McCaffrey' (SEA@WAS)",
+    "unresolved pasted player 'Colson Yankoff' (SEA@WAS)",
+    "unresolved pasted player 'Brady Russell' (SEA@WAS)",
+    "unresolved pasted player 'Marquez Valdes-Scantling' (LAC@BUF)",
+    "unresolved pasted player 'Keleki Latu' (LAC@BUF)",
+    "unresolved pasted player 'Jared Wiley' (KC@MIA)",
+    "unresolved pasted player 'Ryan Miller' (KC@MIA)",
+    "unresolved pasted player 'Michael Burton' (CAR@CLE)",
+    "unresolved pasted player \"Ke'Shawn Williams\" (CIN@PIT)",
+    "unresolved pasted player 'CJ Williams' (NE@JAX)",
+    "unresolved pasted player 'Braxton Berrios' (TEN@NYG)",
+    "unresolved pasted player 'David Martin-Robinson' (TEN@NYG)",
+    "unresolved pasted player 'Zonovan Knight' (ARI@SF)",
+    "unresolved pasted player 'Gavin Bartholomew' (MIN@TB)",
+    "unresolved pasted player 'Camden Brown' (BAL@DAL)",
+    "unresolved pasted player 'Puka Nacua' (LA@DEN)"
+  ],
+  "unresolved_player_count": 20,
+  "possible_nickname_matches": [],
+  "sleeper_snapshot": {
+    "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\sleeper\\paste_time\\2026_w03_full_draftkings_20260924T215748Z.json",
+    "sha256": "a20860b7666ed1791c7013097d69c7803fac26fcb9cac847fa30658d9bff68de",
+    "requested_utc": "2026-09-24T21:57:49Z",
+    "n_players": 12229
+  },
+  "assumed_out": [
+    {
+      "game_id": "2026_03_PHI_CHI",
+      "player_id": "00-0038416",
+      "sleeper_id": "11256",
+      "player_display_name": "Tyson Bagent",
+      "team": "CHI",
+      "position": "QB",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": "Questionable",
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_SEA_WAS",
+      "player_id": "00-0035704",
+      "sleeper_id": "5854",
+      "player_display_name": "Drew Lock",
+      "team": "SEA",
+      "position": "QB",
+      "tuesday_status": "Questionable",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_BAL_DAL",
+      "player_id": "00-0037120",
+      "sleeper_id": "8207",
+      "player_display_name": "Tyler Goodson",
+      "team": "DAL",
+      "position": "RB",
+      "tuesday_status": "Out",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_LA_DEN",
+      "player_id": "sleeper:13345",
+      "sleeper_id": "13345",
+      "player_display_name": "Jonah Coleman",
+      "team": "DEN",
+      "position": "RB",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": null,
+      "rz_target_share_l4w": null,
+      "sleeper_status": "Questionable",
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_LA_DEN",
+      "player_id": "00-0037085",
+      "sleeper_id": "8208",
+      "player_display_name": "Tyler Badie",
+      "team": "DEN",
+      "position": "RB",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.01875,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_NYJ_DET",
+      "player_id": "00-0038896",
+      "sleeper_id": "11237",
+      "player_display_name": "Jacob Saylors",
+      "team": "DET",
+      "position": "RB",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_LA_DEN",
+      "player_id": "00-0037557",
+      "sleeper_id": "8195",
+      "player_display_name": "Ronnie Rivers",
+      "team": "LA",
+      "position": "RB",
+      "tuesday_status": "Out",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": "IR",
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_LV_NO",
+      "player_id": "00-0037304",
+      "sleeper_id": "8181",
+      "player_display_name": "Connor Heyward",
+      "team": "LV",
+      "position": "RB",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.1083333333,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_LV_NO",
+      "player_id": "00-0039407",
+      "sleeper_id": "11574",
+      "player_display_name": "Dylan Laube",
+      "team": "LV",
+      "position": "RB",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_KC_MIA",
+      "player_id": "sleeper:13300",
+      "sleeper_id": "13300",
+      "player_display_name": "Le'Veon Moss",
+      "team": "MIA",
+      "position": "RB",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": null,
+      "rz_target_share_l4w": null,
+      "sleeper_status": "NA",
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_MIN_TB",
+      "player_id": "00-0036425",
+      "sleeper_id": "6931",
+      "player_display_name": "DeeJay Dallas",
+      "team": "MIN",
+      "position": "RB",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.0333333333,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": "Questionable",
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_MIN_TB",
+      "player_id": "sleeper:13347",
+      "sleeper_id": "13347",
+      "player_display_name": "Demond Claiborne",
+      "team": "MIN",
+      "position": "RB",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": null,
+      "rz_target_share_l4w": null,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_LV_NO",
+      "player_id": "sleeper:13277",
+      "sleeper_id": "13277",
+      "player_display_name": "CJ Donaldson",
+      "team": "NO",
+      "position": "RB",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": null,
+      "rz_target_share_l4w": null,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_NYJ_DET",
+      "player_id": "00-0039798",
+      "sleeper_id": "11571",
+      "player_display_name": "Isaiah Davis",
+      "team": "NYJ",
+      "position": "RB",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.325,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_NYJ_DET",
+      "player_id": "00-0036842",
+      "sleeper_id": "7720",
+      "player_display_name": "Kene Nwangwu",
+      "team": "NYJ",
+      "position": "RB",
+      "tuesday_status": "Out",
+      "rz_carry_share_l4w": 0.3,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": "Questionable",
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_PHI_CHI",
+      "player_id": "00-0038555",
+      "sleeper_id": "9225",
+      "player_display_name": "Tank Bigsby",
+      "team": "PHI",
+      "position": "RB",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.145,
+      "rz_target_share_l4w": 0.0666666667,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_PHI_CHI",
+      "player_id": "00-0039746",
+      "sleeper_id": "11577",
+      "player_display_name": "Will Shipley",
+      "team": "PHI",
+      "position": "RB",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_CIN_PIT",
+      "player_id": "00-0035594",
+      "sleeper_id": "6012",
+      "player_display_name": "Travis Homer",
+      "team": "PIT",
+      "position": "RB",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_ARI_SF",
+      "player_id": "00-0040177",
+      "sleeper_id": "12467",
+      "player_display_name": "Jordan James",
+      "team": "SF",
+      "position": "RB",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": null,
+      "rz_target_share_l4w": null,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_TEN_NYG",
+      "player_id": "00-0037594",
+      "sleeper_id": "8254",
+      "player_display_name": "Julius Chestnut",
+      "team": "TEN",
+      "position": "RB",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_LA_DEN",
+      "player_id": "00-0038783",
+      "sleeper_id": "11433",
+      "player_display_name": "Nate Adkins",
+      "team": "DEN",
+      "position": "TE",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.1,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_LA_DEN",
+      "player_id": "sleeper:13577",
+      "sleeper_id": "13577",
+      "player_display_name": "Dallen Bentley",
+      "team": "DEN",
+      "position": "TE",
+      "tuesday_status": "Out",
+      "rz_carry_share_l4w": null,
+      "rz_target_share_l4w": null,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_NYJ_DET",
+      "player_id": "00-0036754",
+      "sleeper_id": "7891",
+      "player_display_name": "Brock Wright",
+      "team": "DET",
+      "position": "TE",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_NYJ_DET",
+      "player_id": "00-0034439",
+      "sleeper_id": "5133",
+      "player_display_name": "Tyler Conklin",
+      "team": "DET",
+      "position": "TE",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_LA_DEN",
+      "player_id": "00-0033110",
+      "sleeper_id": "3271",
+      "player_display_name": "Tyler Higbee",
+      "team": "LA",
+      "position": "TE",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.1233333333,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_LA_DEN",
+      "player_id": "sleeper:13278",
+      "sleeper_id": "13278",
+      "player_display_name": "Max Klare",
+      "team": "LA",
+      "position": "TE",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": null,
+      "rz_target_share_l4w": null,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_LA_DEN",
+      "player_id": "00-0039074",
+      "sleeper_id": "10214",
+      "player_display_name": "Davis Allen",
+      "team": "LA",
+      "position": "TE",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.0966666667,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_LV_NO",
+      "player_id": "00-0034365",
+      "sleeper_id": "4995",
+      "player_display_name": "Ian Thomas",
+      "team": "LV",
+      "position": "TE",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_NYJ_DET",
+      "player_id": "00-0040736",
+      "sleeper_id": "12498",
+      "player_display_name": "Mason Taylor",
+      "team": "NYJ",
+      "position": "TE",
+      "tuesday_status": "Questionable",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": "Doubtful",
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_NYJ_DET",
+      "player_id": "00-0037805",
+      "sleeper_id": "8145",
+      "player_display_name": "Jeremy Ruckert",
+      "team": "NYJ",
+      "position": "TE",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.0666666667,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_NYJ_DET",
+      "player_id": "00-0037755",
+      "sleeper_id": "8219",
+      "player_display_name": "Jelani Woods",
+      "team": "NYJ",
+      "position": "TE",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.0961538462,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_TEN_NYG",
+      "player_id": "00-0036876",
+      "sleeper_id": "7602",
+      "player_display_name": "Kylen Granson",
+      "team": "TEN",
+      "position": "TE",
+      "tuesday_status": "Out",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_SEA_WAS",
+      "player_id": "00-0037809",
+      "sleeper_id": "8210",
+      "player_display_name": "Chig Okonkwo",
+      "team": "WAS",
+      "position": "TE",
+      "tuesday_status": "Out",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.1535714286,
+      "sleeper_status": "Questionable",
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_ARI_SF",
+      "player_id": "sleeper:13297",
+      "sleeper_id": "13297",
+      "player_display_name": "Reggie Virgil",
+      "team": "ARI",
+      "position": "WR",
+      "tuesday_status": "Out",
+      "rz_carry_share_l4w": null,
+      "rz_target_share_l4w": null,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_ARI_SF",
+      "player_id": "00-0038640",
+      "sleeper_id": "11034",
+      "player_display_name": "Jalen Brooks",
+      "team": "ARI",
+      "position": "WR",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_ARI_SF",
+      "player_id": "00-0036331",
+      "sleeper_id": "6847",
+      "player_display_name": "Devin Duvernay",
+      "team": "ARI",
+      "position": "WR",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_BAL_DAL",
+      "player_id": "00-0039064",
+      "sleeper_id": "9997",
+      "player_display_name": "Zay Flowers",
+      "team": "BAL",
+      "position": "WR",
+      "tuesday_status": "Out",
+      "rz_carry_share_l4w": 0.0625,
+      "rz_target_share_l4w": 0.4136363636,
+      "sleeper_status": "Questionable",
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_CIN_PIT",
+      "player_id": "00-0038619",
+      "sleeper_id": "10226",
+      "player_display_name": "Andrei Iosivas",
+      "team": "CIN",
+      "position": "WR",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": "Out",
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_LA_DEN",
+      "player_id": "00-0038976",
+      "sleeper_id": "9494",
+      "player_display_name": "Marvin Mims",
+      "team": "DEN",
+      "position": "WR",
+      "tuesday_status": "Out",
+      "rz_carry_share_l4w": 0.01875,
+      "rz_target_share_l4w": 0.0444444444,
+      "sleeper_status": "Questionable",
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_LA_DEN",
+      "player_id": "00-0035406",
+      "sleeper_id": "5938",
+      "player_display_name": "Lil'Jordan Humphrey",
+      "team": "DEN",
+      "position": "WR",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.0844444444,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_LA_DEN",
+      "player_id": "00-0039868",
+      "sleeper_id": "11627",
+      "player_display_name": "Troy Franklin",
+      "team": "DEN",
+      "position": "WR",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.1094444444,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_NYJ_DET",
+      "player_id": "00-0037524",
+      "sleeper_id": "8250",
+      "player_display_name": "Tay Martin",
+      "team": "DET",
+      "position": "WR",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_NYJ_DET",
+      "player_id": "00-0035544",
+      "sleeper_id": "6588",
+      "player_display_name": "Tom Kennedy",
+      "team": "DET",
+      "position": "WR",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_HOU_IND",
+      "player_id": "00-0036554",
+      "sleeper_id": "7569",
+      "player_display_name": "Nico Collins",
+      "team": "HOU",
+      "position": "WR",
+      "tuesday_status": "Out",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.0944444444,
+      "sleeper_status": "Questionable",
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_LA_DEN",
+      "player_id": "00-0038359",
+      "sleeper_id": "11168",
+      "player_display_name": "Xavier Smith",
+      "team": "LA",
+      "position": "WR",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.08,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_LA_DEN",
+      "player_id": "00-0036849",
+      "sleeper_id": "7562",
+      "player_display_name": "Tutu Atwell",
+      "team": "LA",
+      "position": "WR",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.0222222222,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_LV_NO",
+      "player_id": "00-0035891",
+      "sleeper_id": "7039",
+      "player_display_name": "Cody White",
+      "team": "LV",
+      "position": "WR",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_LV_NO",
+      "player_id": "00-0037093",
+      "sleeper_id": "8527",
+      "player_display_name": "Dareke Young",
+      "team": "LV",
+      "position": "WR",
+      "tuesday_status": "Questionable",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_KC_MIA",
+      "player_id": "sleeper:13296",
+      "sleeper_id": "13296",
+      "player_display_name": "Caleb Douglas",
+      "team": "MIA",
+      "position": "WR",
+      "tuesday_status": "Questionable",
+      "rz_carry_share_l4w": null,
+      "rz_target_share_l4w": null,
+      "sleeper_status": "Questionable",
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_NYJ_DET",
+      "player_id": "00-0040582",
+      "sleeper_id": "12539",
+      "player_display_name": "Arian Smith",
+      "team": "NYJ",
+      "position": "WR",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": "IR",
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_ARI_SF",
+      "player_id": "00-0039365",
+      "sleeper_id": "11616",
+      "player_display_name": "Jacob Cowing",
+      "team": "SF",
+      "position": "WR",
+      "tuesday_status": "none",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_ARI_SF",
+      "player_id": "00-0040172",
+      "sleeper_id": "12634",
+      "player_display_name": "Jordan Watkins",
+      "team": "SF",
+      "position": "WR",
+      "tuesday_status": "Out",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_ATL_GB",
+      "player_id": "00-0036212",
+      "sleeper_id": "6768",
+      "player_display_name": "Tua Tagovailoa",
+      "team": "ATL",
+      "position": "QB",
+      "tuesday_status": "Out",
+      "rz_carry_share_l4w": 0.0,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_MIN_TB",
+      "player_id": "00-0032950",
+      "sleeper_id": "3161",
+      "player_display_name": "Carson Wentz",
+      "team": "MIN",
+      "position": "QB",
+      "tuesday_status": "Out",
+      "rz_carry_share_l4w": 0.0416666667,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_PHI_CHI",
+      "player_id": "00-0028986",
+      "sleeper_id": "1737",
+      "player_display_name": "Case Keenum",
+      "team": "CHI",
+      "position": "QB",
+      "tuesday_status": "Out",
+      "rz_carry_share_l4w": 0.0549450549,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": null,
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_PHI_CHI",
+      "player_id": "00-0039918",
+      "sleeper_id": "11560",
+      "player_display_name": "Caleb Williams",
+      "team": "CHI",
+      "position": "QB",
+      "tuesday_status": "Questionable",
+      "rz_carry_share_l4w": 0.01875,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": "Doubtful",
+      "reason": "unpasted"
+    },
+    {
+      "game_id": "2026_03_SEA_WAS",
+      "player_id": "00-0034869",
+      "sleeper_id": "4943",
+      "player_display_name": "Sam Darnold",
+      "team": "SEA",
+      "position": "QB",
+      "tuesday_status": "Out",
+      "rz_carry_share_l4w": 0.0888888889,
+      "rz_target_share_l4w": 0.0,
+      "sleeper_status": "Questionable",
+      "reason": "unpasted"
+    }
+  ],
+  "assumed_out_count": 57,
+  "sleeper_out_rule_active": true,
+  "dropped_sleeper_out": [],
+  "pasted_but_sleeper_doubtful": [
+    "Kyle Monangai (CHI) Questionable",
+    "RJ Harvey (DEN) Questionable",
+    "J.K. Dobbins (DEN) Questionable",
+    "LeQuint Allen (JAX) Questionable",
+    "Jaylen Wright (MIA) Questionable",
+    "Aaron Jones (MIN) Questionable",
+    "Reggie Gilliam (NE) Questionable",
+    "Travis Etienne (NO) Questionable",
+    "Saquon Barkley (PHI) Questionable",
+    "Jaylen Warren (PIT) Questionable",
+    "Rico Dowdle (PIT) Questionable",
+    "Jadarian Price (SEA) Questionable",
+    "George Holani (SEA) Questionable",
+    "Tony Pollard (TEN) Questionable",
+    "Tyjae Spears (TEN) Questionable",
+    "Kaytron Allen (WAS) Questionable",
+    "Colby Parkinson (LA) Questionable",
+    "Terrance Ferguson (LA) Questionable",
+    "Brock Bowers (LV) Questionable",
+    "Eli Raridon (NE) Questionable",
+    "Daniel Bellinger (TEN) Questionable",
+    "Chris Moore (BAL) Questionable",
+    "DJ Moore (BUF) Questionable",
+    "Keon Coleman (BUF) Questionable",
+    "Jalen Coker (CAR) Questionable",
+    "Xavier Legette (CAR) Questionable",
+    "Ashton Dulin (IND) Questionable",
+    "Jakobi Meyers (JAX) Questionable",
+    "Brenen Thompson (LAC) Questionable",
+    "Chris Bell (MIA) Questionable",
+    "Barion Brown (NO) Questionable",
+    "Adonai Mitchell (NYJ) Questionable",
+    "Michael Pittman (PIT) Questionable",
+    "Cooper Kupp (SEA) Questionable",
+    "Mike Evans (SF) Questionable",
+    "Jaylin Lane (WAS) Questionable"
+  ],
+  "assumed_out_qb_unhandled": [
+    "Tyson Bagent (CHI) Questionable",
+    "Tua Tagovailoa (ATL) nan",
+    "Carson Wentz (MIN) nan",
+    "Case Keenum (CHI) nan",
+    "Caleb Williams (CHI) Doubtful"
+  ],
+  "model_pending_paste_rows": [],
+  "model_pending_count": 0,
+  "lineup_overrides": {
+    "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\news\\2026_w03_lineup_overrides.csv",
+    "sha256": "0a9b1d957ad26e7d59943669c88d48c17405e2634c60f39d1d5149375655cace",
+    "out_player_ids": [
+      "00-0028986",
+      "00-0032950",
+      "00-0034869",
+      "00-0036212"
+    ],
+    "out_player_game_keys": [
+      [
+        "00-0028986",
+        "2026_03_PHI_CHI"
+      ],
+      [
+        "00-0032950",
+        "2026_03_MIN_TB"
+      ],
+      [
+        "00-0034869",
+        "2026_03_SEA_WAS"
+      ],
+      [
+        "00-0036212",
+        "2026_03_ATL_GB"
+      ]
+    ],
+    "replacement_player_ids": [
+      "00-0035228",
+      "00-0035704",
+      "00-0039917",
+      "00-0039918"
+    ],
+    "replacement_sleeper_ids": [
+      "11559",
+      "11560",
+      "5849",
+      "5854"
+    ],
+    "removed_out_players": [],
+    "removed_out_player_game_keys": []
+  },
+  "coverage": {
+    "copied": [
+      "implied_team_total",
+      "team_spread",
+      "is_home",
+      "is_dome",
+      "week",
+      "team_plays_l4w",
+      "team_pass_rate_l4w",
+      "snap_pct_l4w",
+      "rush_share_l4w",
+      "target_share_l4w",
+      "rz_carry_share_l4w",
+      "rz_target_share_l4w",
+      "rush_td_exp_l4w",
+      "rec_td_exp_l4w",
+      "injury_status",
+      "practice_status",
+      "depth_chart_rank",
+      "teammate_rz_carry_share_out",
+      "teammate_rz_target_share_out",
+      "qb_out",
+      "qb_is_backup",
+      "qb_cpoe_l4w",
+      "position",
+      "l4w_games_available",
+      "changed_team_offseason",
+      "slp_proj"
+    ],
+    "aliases": [
+      {
+        "target": "i10_carry_share_l4w",
+        "source": "inside10_carry_share_l4w"
+      }
+    ],
+    "historical_asof": [
+      {
+        "column": "team_rz_trips_l4w",
+        "keys": [
+          "team"
+        ],
+        "source": "team_rz_trips_l4w",
+        "filled_rows": 354
+      },
+      {
+        "column": "team_rz_td_rate_l4w",
+        "keys": [
+          "team"
+        ],
+        "source": "team_rz_td_rate_l4w",
+        "filled_rows": 354
+      },
+      {
+        "column": "team_i10_pass_rate_l4w",
+        "keys": [
+          "team"
+        ],
+        "source": "team_i10_pass_rate_l4w",
+        "filled_rows": 354
+      },
+      {
+        "column": "rush_share_l4w",
+        "keys": [
+          "player_id"
+        ],
+        "source": "rush_share_l4w",
+        "filled_rows": 8
+      },
+      {
+        "column": "i10_target_share_l4w",
+        "keys": [
+          "player_id"
+        ],
+        "source": "i10_target_share_l4w",
+        "filled_rows": 248
+      },
+      {
+        "column": "rush_td_exp_l4w",
+        "keys": [
+          "player_id"
+        ],
+        "source": "rush_td_exp_l4w",
+        "filled_rows": 4
+      },
+      {
+        "column": "rec_td_exp_l4w",
+        "keys": [
+          "player_id"
+        ],
+        "source": "rec_td_exp_l4w",
+        "filled_rows": 4
+      },
+      {
+        "column": "opp_rz_td_rate_allowed_l4w",
+        "keys": [
+          "opponent_team"
+        ],
+        "source": "opp_rz_td_rate_allowed_l4w",
+        "filled_rows": 354
+      },
+      {
+        "column": "opp_td_allowed_to_pos_l4w",
+        "keys": [
+          "opponent_team",
+          "position"
+        ],
+        "source": "opp_td_allowed_to_pos_l4w",
+        "filled_rows": 354
+      },
+      {
+        "column": "qb_cpoe_l4w",
+        "keys": [
+          "player_id"
+        ],
+        "source": "qb_cpoe_l4w",
+        "filled_rows": 266
+      },
+      {
+        "column": "height",
+        "keys": [
+          "player_id"
+        ],
+        "source": "height",
+        "filled_rows": 302
+      },
+      {
+        "column": "weight",
+        "keys": [
+          "player_id"
+        ],
+        "source": "weight",
+        "filled_rows": 302
+      }
+    ],
+    "historical_fallback": [],
+    "unresolved": [],
+    "unresolved_rows": {
+      "snap_pct_l4w": 52,
+      "rush_share_l4w": 52,
+      "target_share_l4w": 52,
+      "rz_carry_share_l4w": 52,
+      "rz_target_share_l4w": 52,
+      "i10_carry_share_l4w": 52,
+      "i10_target_share_l4w": 106,
+      "rush_td_exp_l4w": 56,
+      "rec_td_exp_l4w": 56,
+      "qb_cpoe_l4w": 47,
+      "height": 52,
+      "weight": 52,
+      "changed_team_offseason": 52
+    }
+  },
+  "feature_provenance": {
+    "required_columns": [
+      "implied_team_total",
+      "team_spread",
+      "is_home",
+      "is_dome",
+      "week",
+      "team_plays_l4w",
+      "team_pass_rate_l4w",
+      "team_rz_trips_l4w",
+      "team_rz_td_rate_l4w",
+      "team_i10_pass_rate_l4w",
+      "snap_pct_l4w",
+      "rush_share_l4w",
+      "target_share_l4w",
+      "rz_carry_share_l4w",
+      "rz_target_share_l4w",
+      "i10_carry_share_l4w",
+      "i10_target_share_l4w",
+      "rush_td_exp_l4w",
+      "rec_td_exp_l4w",
+      "injury_status",
+      "practice_status",
+      "depth_chart_rank",
+      "teammate_rz_carry_share_out",
+      "teammate_rz_target_share_out",
+      "qb_out",
+      "qb_is_backup",
+      "qb_cpoe_l4w",
+      "opp_rz_td_rate_allowed_l4w",
+      "opp_td_allowed_to_pos_l4w",
+      "position",
+      "height",
+      "weight",
+      "l4w_games_available",
+      "changed_team_offseason",
+      "slp_proj"
+    ],
+    "source": "forward canonical columns + exact prior-season canonical feature rows",
+    "source_hashes": {
+      "forward": "e9f0d2cbe25847a3fff45ee506415db432f7db913012175bd242dae6d81f7ca7",
+      "history": "58495f19d2cd3cfbaa824e6d462f0c68fc497237cdde3d8bfb130e19c4cb3a15"
+    },
+    "historical_fallback": [],
+    "missingness_counts": {
+      "snap_pct_l4w": 52,
+      "rush_share_l4w": 52,
+      "target_share_l4w": 52,
+      "rz_carry_share_l4w": 52,
+      "rz_target_share_l4w": 52,
+      "i10_carry_share_l4w": 52,
+      "i10_target_share_l4w": 106,
+      "rush_td_exp_l4w": 56,
+      "rec_td_exp_l4w": 56,
+      "qb_cpoe_l4w": 47,
+      "height": 52,
+      "weight": 52,
+      "changed_team_offseason": 52
+    },
+    "forward_sleeper_asof": {
+      "coverage_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\weekly_projections_v2_prod\\independent_model\\outputs\\forward\\forward_2026_week03_coverage.json",
+      "as_of_status": "verified_pre_kickoff"
+    }
+  },
+  "network_odds_api": false,
+  "row_hash": "4d0af844116b12ef586fee40d1d22673c2b9db003ca4fc558120419401c679d0",
+  "first_td_enrichment_coverage": {
+    "p_first": 0,
+    "book_first_p_devigged": 0,
+    "unquoted_lambda_remainder": 0,
+    "scored_first": 0
+  }
+}
