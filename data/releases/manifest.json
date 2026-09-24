@@ -13,9 +13,9 @@
       },
       "predictions": {
         "latest": {
-          "build_id": "predictions-2026w02-6bce0f6f338a",
+          "build_id": "predictions-2026w02-c20991b4f068",
           "final_games": 16,
-          "graded_at": "2026-09-23T21:56:07Z",
+          "graded_at": "2026-09-24T17:46:13Z",
           "graded_rows": 16,
           "season": 2026,
           "week": 2
@@ -976,6 +976,412 @@
           },
           "week": 1
         },
+        "predictions-2026w01-6292ad057ef3": {
+          "artifact": "data/releases/builds/predictions/2026/week01/predictions-2026w01-6292ad057ef3/artifact.csv",
+          "build_id": "predictions-2026w01-6292ad057ef3",
+          "correction": {
+            "allowed_defaults": {},
+            "as_of_policy": "source evidence must precede prediction as-of; the cutoff is capped at Wednesday 00:00 ET",
+            "availability_mode": "live_asof",
+            "candidate_market_snapshots": {
+              "coverage": {
+                "mkt_ml_spread_gap": {
+                  "missing": 0,
+                  "non_null": 16,
+                  "nonzero": 16,
+                  "rows": 16,
+                  "unique_non_null": 16
+                },
+                "mkt_move_sunday_to_tuesday": {
+                  "missing": 0,
+                  "non_null": 16,
+                  "nonzero": 3,
+                  "rows": 16,
+                  "unique_non_null": 3
+                },
+                "mkt_total_move_sunday_to_tuesday": {
+                  "missing": 0,
+                  "non_null": 16,
+                  "nonzero": 1,
+                  "rows": 16,
+                  "unique_non_null": 2
+                }
+              },
+              "games": 16,
+              "line_agreement": {
+                "same_snapshot_lines_match": true,
+                "spread_median_differences": [],
+                "total_median_differences": []
+              },
+              "season": 2026,
+              "status": "ok",
+              "sunday": {
+                "actual_timestamp_utc": "2026-09-07T03:15:38+00:00",
+                "path": "..\\workspace\\nfl\\raw\\odds_api_rebuild\\sunday_1120\\2026_w01.json",
+                "quote_provenance": null,
+                "requested_snapshot_utc": "2026-09-07T03:20:00+00:00",
+                "sha256": "4584eb8017bb216c0f3080838003e99435d1cf24fa1e318dd86d92f02530458f",
+                "source": "the-odds-api-historical",
+                "window_end_et": null,
+                "window_start_et": null,
+                "windowed_supplemental_pairs": []
+              },
+              "tuesday": {
+                "actual_timestamp_utc": "2026-09-08T15:23:16+00:00",
+                "moneyline_provenance": {
+                  "ARI@LAC": {
+                    "api_timestamp_utc": "2026-09-08T15:20:36+00:00",
+                    "matching_spread_and_moneyline_books": [
+                      "betmgm",
+                      "betonlineag",
+                      "betrivers",
+                      "betus",
+                      "bovada",
+                      "draftkings",
+                      "fanduel",
+                      "lowvig",
+                      "mybookieag"
+                    ],
+                    "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\tuesday\\2026_w01.json",
+                    "source_sha256": "202594e5e852cd8541dde00def7b99b0f8cba23243741ddd9689001ac2f9f74a"
+                  },
+                  "ATL@PIT": {
+                    "api_timestamp_utc": "2026-09-08T15:20:36+00:00",
+                    "matching_spread_and_moneyline_books": [
+                      "betmgm",
+                      "betonlineag",
+                      "betrivers",
+                      "betus",
+                      "bovada",
+                      "draftkings",
+                      "fanduel",
+                      "lowvig",
+                      "mybookieag"
+                    ],
+                    "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\tuesday\\2026_w01.json",
+                    "source_sha256": "202594e5e852cd8541dde00def7b99b0f8cba23243741ddd9689001ac2f9f74a"
+                  },
+                  "BAL@IND": {
+                    "api_timestamp_utc": "2026-09-08T15:20:36+00:00",
+                    "matching_spread_and_moneyline_books": [
+                      "betmgm",
+                      "betonlineag",
+                      "betrivers",
+                      "betus",
+                      "bovada",
+                      "draftkings",
+                      "fanduel",
+                      "lowvig",
+                      "mybookieag"
+                    ],
+                    "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\tuesday\\2026_w01.json",
+                    "source_sha256": "202594e5e852cd8541dde00def7b99b0f8cba23243741ddd9689001ac2f9f74a"
+                  },
+                  "BUF@HOU": {
+                    "api_timestamp_utc": "2026-09-08T15:20:36+00:00",
+                    "matching_spread_and_moneyline_books": [
+                      "betmgm",
+                      "betonlineag",
+                      "betrivers",
+                      "bovada",
+                      "draftkings",
+                      "fanduel",
+                      "lowvig",
+                      "mybookieag"
+                    ],
+                    "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\tuesday\\2026_w01.json",
+                    "source_sha256": "202594e5e852cd8541dde00def7b99b0f8cba23243741ddd9689001ac2f9f74a"
+                  },
+                  "CHI@CAR": {
+                    "api_timestamp_utc": "2026-09-08T15:20:36+00:00",
+                    "matching_spread_and_moneyline_books": [
+                      "betmgm",
+                      "betonlineag",
+                      "betrivers",
+                      "betus",
+                      "bovada",
+                      "draftkings",
+                      "fanduel",
+                      "lowvig",
+                      "mybookieag"
+                    ],
+                    "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\tuesday\\2026_w01.json",
+                    "source_sha256": "202594e5e852cd8541dde00def7b99b0f8cba23243741ddd9689001ac2f9f74a"
+                  },
+                  "CLE@JAX": {
+                    "api_timestamp_utc": "2026-09-08T15:20:36+00:00",
+                    "matching_spread_and_moneyline_books": [
+                      "betmgm",
+                      "betonlineag",
+                      "betrivers",
+                      "betus",
+                      "bovada",
+                      "draftkings",
+                      "fanduel",
+                      "lowvig",
+                      "mybookieag"
+                    ],
+                    "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\tuesday\\2026_w01.json",
+                    "source_sha256": "202594e5e852cd8541dde00def7b99b0f8cba23243741ddd9689001ac2f9f74a"
+                  },
+                  "DAL@NYG": {
+                    "api_timestamp_utc": "2026-09-08T15:20:36+00:00",
+                    "matching_spread_and_moneyline_books": [
+                      "betmgm",
+                      "betonlineag",
+                      "betrivers",
+                      "betus",
+                      "bovada",
+                      "draftkings",
+                      "fanduel",
+                      "lowvig",
+                      "mybookieag"
+                    ],
+                    "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\tuesday\\2026_w01.json",
+                    "source_sha256": "202594e5e852cd8541dde00def7b99b0f8cba23243741ddd9689001ac2f9f74a"
+                  },
+                  "DEN@KC": {
+                    "api_timestamp_utc": "2026-09-08T15:20:36+00:00",
+                    "matching_spread_and_moneyline_books": [
+                      "betmgm",
+                      "betonlineag",
+                      "betrivers",
+                      "betus",
+                      "bovada",
+                      "draftkings",
+                      "fanduel",
+                      "lowvig",
+                      "mybookieag"
+                    ],
+                    "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\tuesday\\2026_w01.json",
+                    "source_sha256": "202594e5e852cd8541dde00def7b99b0f8cba23243741ddd9689001ac2f9f74a"
+                  },
+                  "GB@MIN": {
+                    "api_timestamp_utc": "2026-09-08T15:20:36+00:00",
+                    "matching_spread_and_moneyline_books": [
+                      "betmgm",
+                      "betonlineag",
+                      "betrivers",
+                      "bovada",
+                      "draftkings",
+                      "fanduel",
+                      "lowvig",
+                      "mybookieag"
+                    ],
+                    "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\tuesday\\2026_w01.json",
+                    "source_sha256": "202594e5e852cd8541dde00def7b99b0f8cba23243741ddd9689001ac2f9f74a"
+                  },
+                  "MIA@LV": {
+                    "api_timestamp_utc": "2026-09-08T15:20:36+00:00",
+                    "matching_spread_and_moneyline_books": [
+                      "betmgm",
+                      "betonlineag",
+                      "betrivers",
+                      "betus",
+                      "bovada",
+                      "draftkings",
+                      "fanduel",
+                      "lowvig",
+                      "mybookieag"
+                    ],
+                    "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\tuesday\\2026_w01.json",
+                    "source_sha256": "202594e5e852cd8541dde00def7b99b0f8cba23243741ddd9689001ac2f9f74a"
+                  },
+                  "NE@SEA": {
+                    "api_timestamp_utc": "2026-09-08T15:20:36+00:00",
+                    "matching_spread_and_moneyline_books": [
+                      "betmgm",
+                      "betonlineag",
+                      "betrivers",
+                      "betus",
+                      "bovada",
+                      "draftkings",
+                      "fanduel",
+                      "lowvig",
+                      "mybookieag"
+                    ],
+                    "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\tuesday\\2026_w01.json",
+                    "source_sha256": "202594e5e852cd8541dde00def7b99b0f8cba23243741ddd9689001ac2f9f74a"
+                  },
+                  "NO@DET": {
+                    "api_timestamp_utc": "2026-09-08T15:20:36+00:00",
+                    "matching_spread_and_moneyline_books": [
+                      "betmgm",
+                      "betonlineag",
+                      "betrivers",
+                      "betus",
+                      "bovada",
+                      "draftkings",
+                      "fanduel",
+                      "lowvig",
+                      "mybookieag"
+                    ],
+                    "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\tuesday\\2026_w01.json",
+                    "source_sha256": "202594e5e852cd8541dde00def7b99b0f8cba23243741ddd9689001ac2f9f74a"
+                  },
+                  "NYJ@TEN": {
+                    "api_timestamp_utc": "2026-09-08T15:20:36+00:00",
+                    "matching_spread_and_moneyline_books": [
+                      "betmgm",
+                      "betrivers",
+                      "bovada",
+                      "draftkings",
+                      "fanduel",
+                      "mybookieag"
+                    ],
+                    "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\tuesday\\2026_w01.json",
+                    "source_sha256": "202594e5e852cd8541dde00def7b99b0f8cba23243741ddd9689001ac2f9f74a"
+                  },
+                  "SF@LA": {
+                    "api_timestamp_utc": "2026-09-08T15:20:36+00:00",
+                    "matching_spread_and_moneyline_books": [
+                      "betmgm",
+                      "betonlineag",
+                      "betrivers",
+                      "betus",
+                      "bovada",
+                      "draftkings",
+                      "fanduel",
+                      "lowvig",
+                      "mybookieag"
+                    ],
+                    "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\tuesday\\2026_w01.json",
+                    "source_sha256": "202594e5e852cd8541dde00def7b99b0f8cba23243741ddd9689001ac2f9f74a"
+                  },
+                  "TB@CIN": {
+                    "api_timestamp_utc": "2026-09-08T15:20:36+00:00",
+                    "matching_spread_and_moneyline_books": [
+                      "betmgm",
+                      "betonlineag",
+                      "betrivers",
+                      "betus",
+                      "bovada",
+                      "draftkings",
+                      "fanduel",
+                      "lowvig",
+                      "mybookieag"
+                    ],
+                    "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\tuesday\\2026_w01.json",
+                    "source_sha256": "202594e5e852cd8541dde00def7b99b0f8cba23243741ddd9689001ac2f9f74a"
+                  },
+                  "WAS@PHI": {
+                    "api_timestamp_utc": "2026-09-08T15:20:36+00:00",
+                    "matching_spread_and_moneyline_books": [
+                      "betmgm",
+                      "betonlineag",
+                      "betrivers",
+                      "betus",
+                      "bovada",
+                      "draftkings",
+                      "fanduel",
+                      "lowvig",
+                      "mybookieag"
+                    ],
+                    "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\tuesday\\2026_w01.json",
+                    "source_sha256": "202594e5e852cd8541dde00def7b99b0f8cba23243741ddd9689001ac2f9f74a"
+                  }
+                },
+                "original_tuesday": {
+                  "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_tuesday\\raw\\2026_w01.json",
+                  "sha256": "dd15bf1fba268e21ee1f241924ebae49a950aac023bb4135ba7ec20dba09b5f0"
+                },
+                "path": "..\\workspace\\nfl\\raw\\odds_api_rebuild\\early_2026_market_recovery\\2026_w01_tuesday_moneylines_merged.json",
+                "provider_after_scheduled_marker_seconds": null,
+                "requested_snapshot_utc": "2026-09-08T15:23:16+00:00",
+                "sha256": "93af23b4f8b2fd0e2eb34ebcef755bdf1604646f298a1f25d2b6ad65a1db7552",
+                "source": "paid-historical-moneyline-supplement-v1"
+              },
+              "week": 1
+            },
+            "injury_snapshot_captured_at": null,
+            "injury_snapshot_path": null,
+            "injury_snapshot_sha256": null,
+            "input_as_of_utc": "2026-09-08T15:23:16+00:00",
+            "ir_inputs": {
+              "players_snapshot_path": null,
+              "players_snapshot_sha256": null,
+              "post_cutoff_finished_weeks_exception": false,
+              "roster_asset_updated_at": null,
+              "roster_parity_confirmation": null,
+              "roster_parity_status": null,
+              "roster_snapshot_captured_at": null,
+              "roster_snapshot_path": null,
+              "roster_snapshot_sha256": null,
+              "snap_snapshot_captured_at": null,
+              "snap_snapshot_path": null,
+              "snap_snapshot_sha256": null,
+              "source_type": "structural_zero_no_prior_game",
+              "warnings": []
+            },
+            "model_bundle_sha256": "985845bbf7e4df03b557856914882e1dc530d039ce678df763ff834ff2ffdea3",
+            "promotion_audit": {
+              "path": "artifacts\\market_backfill_2026_w01_w02_v1.json",
+              "sha256": "c66e68435c4658ff57776bcd7ee9f33455ce4b620004e9426cef8229f850ba50"
+            },
+            "qb_override_source_path": null,
+            "qb_override_source_sha256": null,
+            "qb_selection_details": {},
+            "qb_selection_policy": "week1_dated_depth_chart_only",
+            "qb_selections": {},
+            "qb_source_audit": {
+              "reason": "Week 1 uses the dated preseason QB1 source",
+              "status": "not_used"
+            },
+            "reason": "Recover cutoff-eligible Tuesday moneylines from saved historical Odds API snapshot while preserving frozen spreads and totals",
+            "retrospective": true,
+            "retrospective_grade_source": {
+              "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\JoSchoAnalytics\\data\\releases\\results\\predictions\\2026\\week01\\predictions-2026w01-45dc849c0659-graded.csv",
+              "purpose": "final-score grading only; not used in prediction features or model fitting",
+              "sha256": "5bf87e7756c9993db2f37478b1b46e1a2c365a19481d9f4cf1b5dc106a0c8adb"
+            },
+            "snap_snapshot_captured_at": null,
+            "snap_snapshot_path": null,
+            "snap_snapshot_sha256": null,
+            "source_snapshot_captured_at": "2026-09-08T15:23:16+00:00",
+            "source_snapshot_sha256": "dd15bf1fba268e21ee1f241924ebae49a950aac023bb4135ba7ec20dba09b5f0",
+            "supersedes_build_id": "predictions-2026w01-45dc849c0659"
+          },
+          "grading": {
+            "artifact": "data/releases/results/predictions/2026/week01/predictions-2026w01-6292ad057ef3-graded.csv",
+            "artifact_sha256": "40ced5f5021309520cab16ede312401c8879203f3bfbd16038ddf483b7a7cee7",
+            "complete": true,
+            "final_games": 16,
+            "graded_at": "2026-09-24T17:46:09Z",
+            "graded_rows": 16,
+            "metadata": "data/releases/results/predictions/2026/week01/predictions-2026w01-6292ad057ef3-graded.json",
+            "product": "predictions",
+            "pushes": 0,
+            "schema_version": 1,
+            "season": 2026,
+            "source_build": "predictions-2026w01-6292ad057ef3",
+            "week": 1
+          },
+          "metadata": "data/releases/builds/predictions/2026/week01/predictions-2026w01-6292ad057ef3/metadata.json",
+          "model_version": "spread-v3-prod-sunday-tuesday-market-44-qb-ir-985845bbf7e4",
+          "produced_at": "2026-09-24T17:43:46Z",
+          "product": "predictions",
+          "published_at": "2026-09-24T17:45:57Z",
+          "row_count": 16,
+          "season": 2026,
+          "sha256": "6292ad057ef3a09d8ca0aa7dc383503dda9dcd6678176f626c363718a09a23d5",
+          "status": "Published",
+          "validation": {
+            "checks": {
+              "artifact_sha256": "6292ad057ef3a09d8ca0aa7dc383503dda9dcd6678176f626c363718a09a23d5",
+              "post_kickoff_correction": true,
+              "produced_at_utc": "2026-09-24T17:43:46Z",
+              "scheduled_games": 16
+            },
+            "errors": [],
+            "ok": true,
+            "product": "predictions",
+            "row_count": 16,
+            "warnings": [
+              "correction was produced after the first kickoff; correction controls verified"
+            ]
+          },
+          "week": 1
+        },
         "predictions-2026w01-652c2c5fe7c9": {
           "artifact": "data/releases/builds/predictions/2026/week01/predictions-2026w01-652c2c5fe7c9/artifact.csv",
           "build_id": "predictions-2026w01-652c2c5fe7c9",
@@ -1662,6 +2068,721 @@
               "artifact_sha256": "a7e371863ffb9e249d94faa448ccfde3dcf3fd6fbdf975146445a85f490b6497",
               "post_kickoff_correction": true,
               "produced_at_utc": "2026-09-23T18:39:27Z",
+              "scheduled_games": 16
+            },
+            "errors": [],
+            "ok": true,
+            "product": "predictions",
+            "row_count": 16,
+            "warnings": [
+              "correction was produced after the first kickoff; correction controls verified"
+            ]
+          },
+          "week": 2
+        },
+        "predictions-2026w02-c20991b4f068": {
+          "artifact": "data/releases/builds/predictions/2026/week02/predictions-2026w02-c20991b4f068/artifact.csv",
+          "build_id": "predictions-2026w02-c20991b4f068",
+          "correction": {
+            "allowed_defaults": {},
+            "as_of_policy": "source evidence must precede prediction as-of; the cutoff is capped at Wednesday 00:00 ET",
+            "availability_mode": "live_asof",
+            "candidate_market_snapshots": {
+              "coverage": {
+                "mkt_ml_spread_gap": {
+                  "missing": 0,
+                  "non_null": 16,
+                  "nonzero": 16,
+                  "rows": 16,
+                  "unique_non_null": 15
+                },
+                "mkt_move_sunday_to_tuesday": {
+                  "missing": 0,
+                  "non_null": 16,
+                  "nonzero": 5,
+                  "rows": 16,
+                  "unique_non_null": 5
+                },
+                "mkt_total_move_sunday_to_tuesday": {
+                  "missing": 0,
+                  "non_null": 16,
+                  "nonzero": 9,
+                  "rows": 16,
+                  "unique_non_null": 5
+                }
+              },
+              "games": 16,
+              "line_agreement": {
+                "same_snapshot_lines_match": true,
+                "spread_median_differences": [],
+                "total_median_differences": []
+              },
+              "season": 2026,
+              "status": "ok",
+              "sunday": {
+                "actual_timestamp_utc": "2026-09-14T14:55:36+00:00",
+                "path": "..\\workspace\\nfl\\raw\\odds_api_rebuild\\early_2026_market_recovery\\2026_w02_sunday_window_merged.json",
+                "quote_provenance": {
+                  "CAR@ATL": {
+                    "spreads": {
+                      "api_timestamp_utc": "2026-09-14T03:15:36+00:00",
+                      "requested_at_et": "2026-09-13T23:20:00-04:00",
+                      "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\sunday_1120\\2026_w02.json",
+                      "source_sha256": "9c05fe80dee5785646ae70b75bfae77411b5ee2b304a6759254ceb4038ecb0b7"
+                    },
+                    "totals": {
+                      "api_timestamp_utc": "2026-09-14T03:15:36+00:00",
+                      "requested_at_et": "2026-09-13T23:20:00-04:00",
+                      "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\sunday_1120\\2026_w02.json",
+                      "source_sha256": "9c05fe80dee5785646ae70b75bfae77411b5ee2b304a6759254ceb4038ecb0b7"
+                    }
+                  },
+                  "CIN@HOU": {
+                    "spreads": {
+                      "api_timestamp_utc": "2026-09-14T03:15:36+00:00",
+                      "requested_at_et": "2026-09-13T23:20:00-04:00",
+                      "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\sunday_1120\\2026_w02.json",
+                      "source_sha256": "9c05fe80dee5785646ae70b75bfae77411b5ee2b304a6759254ceb4038ecb0b7"
+                    },
+                    "totals": {
+                      "api_timestamp_utc": "2026-09-14T03:15:36+00:00",
+                      "requested_at_et": "2026-09-13T23:20:00-04:00",
+                      "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\sunday_1120\\2026_w02.json",
+                      "source_sha256": "9c05fe80dee5785646ae70b75bfae77411b5ee2b304a6759254ceb4038ecb0b7"
+                    }
+                  },
+                  "CLE@TB": {
+                    "spreads": {
+                      "api_timestamp_utc": "2026-09-14T03:15:36+00:00",
+                      "requested_at_et": "2026-09-13T23:20:00-04:00",
+                      "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\sunday_1120\\2026_w02.json",
+                      "source_sha256": "9c05fe80dee5785646ae70b75bfae77411b5ee2b304a6759254ceb4038ecb0b7"
+                    },
+                    "totals": {
+                      "api_timestamp_utc": "2026-09-14T03:15:36+00:00",
+                      "requested_at_et": "2026-09-13T23:20:00-04:00",
+                      "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\sunday_1120\\2026_w02.json",
+                      "source_sha256": "9c05fe80dee5785646ae70b75bfae77411b5ee2b304a6759254ceb4038ecb0b7"
+                    }
+                  },
+                  "DET@BUF": {
+                    "spreads": {
+                      "api_timestamp_utc": "2026-09-14T03:15:36+00:00",
+                      "requested_at_et": "2026-09-13T23:20:00-04:00",
+                      "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\sunday_1120\\2026_w02.json",
+                      "source_sha256": "9c05fe80dee5785646ae70b75bfae77411b5ee2b304a6759254ceb4038ecb0b7"
+                    },
+                    "totals": {
+                      "api_timestamp_utc": "2026-09-14T03:15:36+00:00",
+                      "requested_at_et": "2026-09-13T23:20:00-04:00",
+                      "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\sunday_1120\\2026_w02.json",
+                      "source_sha256": "9c05fe80dee5785646ae70b75bfae77411b5ee2b304a6759254ceb4038ecb0b7"
+                    }
+                  },
+                  "GB@NYJ": {
+                    "spreads": {
+                      "api_timestamp_utc": "2026-09-14T03:15:36+00:00",
+                      "requested_at_et": "2026-09-13T23:20:00-04:00",
+                      "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\sunday_1120\\2026_w02.json",
+                      "source_sha256": "9c05fe80dee5785646ae70b75bfae77411b5ee2b304a6759254ceb4038ecb0b7"
+                    },
+                    "totals": {
+                      "api_timestamp_utc": "2026-09-14T03:15:36+00:00",
+                      "requested_at_et": "2026-09-13T23:20:00-04:00",
+                      "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\sunday_1120\\2026_w02.json",
+                      "source_sha256": "9c05fe80dee5785646ae70b75bfae77411b5ee2b304a6759254ceb4038ecb0b7"
+                    }
+                  },
+                  "IND@KC": {
+                    "spreads": {
+                      "api_timestamp_utc": "2026-09-14T03:15:36+00:00",
+                      "requested_at_et": "2026-09-13T23:20:00-04:00",
+                      "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\sunday_1120\\2026_w02.json",
+                      "source_sha256": "9c05fe80dee5785646ae70b75bfae77411b5ee2b304a6759254ceb4038ecb0b7"
+                    },
+                    "totals": {
+                      "api_timestamp_utc": "2026-09-14T03:15:36+00:00",
+                      "requested_at_et": "2026-09-13T23:20:00-04:00",
+                      "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\sunday_1120\\2026_w02.json",
+                      "source_sha256": "9c05fe80dee5785646ae70b75bfae77411b5ee2b304a6759254ceb4038ecb0b7"
+                    }
+                  },
+                  "JAX@DEN": {
+                    "spreads": {
+                      "api_timestamp_utc": "2026-09-14T03:15:36+00:00",
+                      "requested_at_et": "2026-09-13T23:20:00-04:00",
+                      "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\sunday_1120\\2026_w02.json",
+                      "source_sha256": "9c05fe80dee5785646ae70b75bfae77411b5ee2b304a6759254ceb4038ecb0b7"
+                    },
+                    "totals": {
+                      "api_timestamp_utc": "2026-09-14T03:15:36+00:00",
+                      "requested_at_et": "2026-09-13T23:20:00-04:00",
+                      "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\sunday_1120\\2026_w02.json",
+                      "source_sha256": "9c05fe80dee5785646ae70b75bfae77411b5ee2b304a6759254ceb4038ecb0b7"
+                    }
+                  },
+                  "LV@LAC": {
+                    "spreads": {
+                      "api_timestamp_utc": "2026-09-14T03:15:36+00:00",
+                      "requested_at_et": "2026-09-13T23:20:00-04:00",
+                      "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\sunday_1120\\2026_w02.json",
+                      "source_sha256": "9c05fe80dee5785646ae70b75bfae77411b5ee2b304a6759254ceb4038ecb0b7"
+                    },
+                    "totals": {
+                      "api_timestamp_utc": "2026-09-14T03:15:36+00:00",
+                      "requested_at_et": "2026-09-13T23:20:00-04:00",
+                      "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\sunday_1120\\2026_w02.json",
+                      "source_sha256": "9c05fe80dee5785646ae70b75bfae77411b5ee2b304a6759254ceb4038ecb0b7"
+                    }
+                  },
+                  "MIA@SF": {
+                    "spreads": {
+                      "api_timestamp_utc": "2026-09-14T03:15:36+00:00",
+                      "requested_at_et": "2026-09-13T23:20:00-04:00",
+                      "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\sunday_1120\\2026_w02.json",
+                      "source_sha256": "9c05fe80dee5785646ae70b75bfae77411b5ee2b304a6759254ceb4038ecb0b7"
+                    },
+                    "totals": {
+                      "api_timestamp_utc": "2026-09-14T03:15:36+00:00",
+                      "requested_at_et": "2026-09-13T23:20:00-04:00",
+                      "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\sunday_1120\\2026_w02.json",
+                      "source_sha256": "9c05fe80dee5785646ae70b75bfae77411b5ee2b304a6759254ceb4038ecb0b7"
+                    }
+                  },
+                  "MIN@CHI": {
+                    "spreads": {
+                      "api_timestamp_utc": "2026-09-14T03:15:36+00:00",
+                      "requested_at_et": "2026-09-13T23:20:00-04:00",
+                      "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\sunday_1120\\2026_w02.json",
+                      "source_sha256": "9c05fe80dee5785646ae70b75bfae77411b5ee2b304a6759254ceb4038ecb0b7"
+                    },
+                    "totals": {
+                      "api_timestamp_utc": "2026-09-14T03:15:36+00:00",
+                      "requested_at_et": "2026-09-13T23:20:00-04:00",
+                      "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\sunday_1120\\2026_w02.json",
+                      "source_sha256": "9c05fe80dee5785646ae70b75bfae77411b5ee2b304a6759254ceb4038ecb0b7"
+                    }
+                  },
+                  "NO@BAL": {
+                    "spreads": {
+                      "api_timestamp_utc": "2026-09-14T03:15:36+00:00",
+                      "requested_at_et": "2026-09-13T23:20:00-04:00",
+                      "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\sunday_1120\\2026_w02.json",
+                      "source_sha256": "9c05fe80dee5785646ae70b75bfae77411b5ee2b304a6759254ceb4038ecb0b7"
+                    },
+                    "totals": {
+                      "api_timestamp_utc": "2026-09-14T03:15:36+00:00",
+                      "requested_at_et": "2026-09-13T23:20:00-04:00",
+                      "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\sunday_1120\\2026_w02.json",
+                      "source_sha256": "9c05fe80dee5785646ae70b75bfae77411b5ee2b304a6759254ceb4038ecb0b7"
+                    }
+                  },
+                  "NYG@LA": {
+                    "spreads": {
+                      "api_timestamp_utc": "2026-09-14T14:55:36+00:00",
+                      "overlap_books": [
+                        "betmgm",
+                        "betrivers",
+                        "draftkings",
+                        "fanduel"
+                      ],
+                      "requested_at_et": "2026-09-14T11:00:00-04:00",
+                      "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\sunday_window_recovery\\2026_w02\\attempts\\20260914T110000-0400.json",
+                      "source_sha256": "68f77b73d381d1d82b44db1b46c9f1905aa6f9af61e6bcf0396327560a1561cc"
+                    },
+                    "totals": {
+                      "api_timestamp_utc": "2026-09-14T14:55:36+00:00",
+                      "overlap_books": [
+                        "betmgm",
+                        "betrivers",
+                        "draftkings",
+                        "fanduel"
+                      ],
+                      "requested_at_et": "2026-09-14T11:00:00-04:00",
+                      "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\sunday_window_recovery\\2026_w02\\attempts\\20260914T110000-0400.json",
+                      "source_sha256": "68f77b73d381d1d82b44db1b46c9f1905aa6f9af61e6bcf0396327560a1561cc"
+                    }
+                  },
+                  "PHI@TEN": {
+                    "spreads": {
+                      "api_timestamp_utc": "2026-09-14T03:15:36+00:00",
+                      "requested_at_et": "2026-09-13T23:20:00-04:00",
+                      "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\sunday_1120\\2026_w02.json",
+                      "source_sha256": "9c05fe80dee5785646ae70b75bfae77411b5ee2b304a6759254ceb4038ecb0b7"
+                    },
+                    "totals": {
+                      "api_timestamp_utc": "2026-09-14T03:15:36+00:00",
+                      "requested_at_et": "2026-09-13T23:20:00-04:00",
+                      "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\sunday_1120\\2026_w02.json",
+                      "source_sha256": "9c05fe80dee5785646ae70b75bfae77411b5ee2b304a6759254ceb4038ecb0b7"
+                    }
+                  },
+                  "PIT@NE": {
+                    "spreads": {
+                      "api_timestamp_utc": "2026-09-14T03:15:36+00:00",
+                      "requested_at_et": "2026-09-13T23:20:00-04:00",
+                      "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\sunday_1120\\2026_w02.json",
+                      "source_sha256": "9c05fe80dee5785646ae70b75bfae77411b5ee2b304a6759254ceb4038ecb0b7"
+                    },
+                    "totals": {
+                      "api_timestamp_utc": "2026-09-14T03:15:36+00:00",
+                      "requested_at_et": "2026-09-13T23:20:00-04:00",
+                      "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\sunday_1120\\2026_w02.json",
+                      "source_sha256": "9c05fe80dee5785646ae70b75bfae77411b5ee2b304a6759254ceb4038ecb0b7"
+                    }
+                  },
+                  "SEA@ARI": {
+                    "spreads": {
+                      "api_timestamp_utc": "2026-09-14T03:15:36+00:00",
+                      "requested_at_et": "2026-09-13T23:20:00-04:00",
+                      "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\sunday_1120\\2026_w02.json",
+                      "source_sha256": "9c05fe80dee5785646ae70b75bfae77411b5ee2b304a6759254ceb4038ecb0b7"
+                    },
+                    "totals": {
+                      "api_timestamp_utc": "2026-09-14T03:15:36+00:00",
+                      "requested_at_et": "2026-09-13T23:20:00-04:00",
+                      "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\sunday_1120\\2026_w02.json",
+                      "source_sha256": "9c05fe80dee5785646ae70b75bfae77411b5ee2b304a6759254ceb4038ecb0b7"
+                    }
+                  },
+                  "WAS@DAL": {
+                    "spreads": {
+                      "api_timestamp_utc": "2026-09-14T14:55:36+00:00",
+                      "overlap_books": [
+                        "betmgm",
+                        "betrivers",
+                        "draftkings",
+                        "fanduel"
+                      ],
+                      "requested_at_et": "2026-09-14T11:00:00-04:00",
+                      "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\sunday_window_recovery\\2026_w02\\attempts\\20260914T110000-0400.json",
+                      "source_sha256": "68f77b73d381d1d82b44db1b46c9f1905aa6f9af61e6bcf0396327560a1561cc"
+                    },
+                    "totals": {
+                      "api_timestamp_utc": "2026-09-14T14:55:36+00:00",
+                      "overlap_books": [
+                        "betmgm",
+                        "betrivers",
+                        "draftkings",
+                        "fanduel"
+                      ],
+                      "requested_at_et": "2026-09-14T11:00:00-04:00",
+                      "source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\sunday_window_recovery\\2026_w02\\attempts\\20260914T110000-0400.json",
+                      "source_sha256": "68f77b73d381d1d82b44db1b46c9f1905aa6f9af61e6bcf0396327560a1561cc"
+                    }
+                  }
+                },
+                "requested_snapshot_utc": "2026-09-14T03:20:00+00:00",
+                "sha256": "aec6649606bd6c29b5d2600f8e62b8ceda3e1ad213a030b59186febb2115e7eb",
+                "source": "paid-historical-window-completion-v1",
+                "window_end_et": "2026-09-14T11:00:00-04:00",
+                "window_start_et": "2026-09-13T22:30:00-04:00",
+                "windowed_supplemental_pairs": [
+                  "NYG@LA",
+                  "WAS@DAL"
+                ]
+              },
+              "tuesday": {
+                "actual_timestamp_utc": "2026-09-15T14:23:10+00:00",
+                "moneyline_provenance": null,
+                "original_tuesday": null,
+                "path": "..\\workspace\\nfl\\raw\\odds_api_tuesday\\raw\\2026_w02.json",
+                "provider_after_scheduled_marker_seconds": 3.0,
+                "requested_snapshot_utc": "2026-09-15T14:23:07+00:00",
+                "sha256": "5b295fd53d3a41dbfc94a2223bfedeb5850db8e2acd51b5162b52c0e4a08375f",
+                "source": "live"
+              },
+              "week": 2
+            },
+            "injury_snapshot_captured_at": null,
+            "injury_snapshot_path": null,
+            "injury_snapshot_sha256": null,
+            "input_as_of_utc": "2026-09-15T14:23:10+00:00",
+            "ir_inputs": {
+              "players_snapshot_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\live_2026\\players_20260923T214547.786027Z.parquet",
+              "players_snapshot_sha256": "cd1d429a2091c7df0237ab1892cb914e5082d3c59fe2f0345a581472d91bea3e",
+              "post_cutoff_finished_weeks_exception": true,
+              "roster_asset_updated_at": "2026-09-23T12:45:37Z",
+              "roster_parity_confirmation": {
+                "added": 0,
+                "captured_at_utc": "2026-09-23T21:14:29.009921+00:00",
+                "changed": 0,
+                "comparisons": 1,
+                "finished_weeks": [
+                  1,
+                  2
+                ],
+                "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\live_2026\\roster_parity_20260923T211429.009921Z.json",
+                "prior_captured_at_utc": "2026-09-23T20:00:28.494469+00:00",
+                "prior_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\live_2026\\roster_weekly_20260923T200028.494469Z.parquet",
+                "removed": 0,
+                "rows_compared_new": 5491,
+                "rows_compared_prior": 5491,
+                "sha256": "10dd462640f8c5e91888e4a377be1d76b90d61f3654bd92d43d38c85b4f32672",
+                "status": "ok"
+              },
+              "roster_parity_status": "no_prior_capture",
+              "roster_snapshot_captured_at": "2026-09-23T20:00:28.494469+00:00",
+              "roster_snapshot_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\live_2026\\roster_weekly_20260923T200028.494469Z.parquet",
+              "roster_snapshot_sha256": "ea020bd33ed3b0898bc93d2d83faa0a92ef7cf591cbc2af6dde9cc773a45cd65",
+              "snap_snapshot_captured_at": "2026-09-22T19:05:05+00:00",
+              "snap_snapshot_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\live_2026\\snap_counts_20260922T190505Z.parquet",
+              "snap_snapshot_sha256": "e12b27a318662cfb0b2f65f907e50e38a63370134176ff1f48b6337707c7cb51",
+              "source_type": "prior_game_roster_and_snap_counts",
+              "warnings": []
+            },
+            "model_bundle_sha256": "985845bbf7e4df03b557856914882e1dc530d039ce678df763ff834ff2ffdea3",
+            "promotion_audit": {
+              "path": "artifacts\\market_backfill_2026_w01_w02_v1.json",
+              "sha256": "c66e68435c4658ff57776bcd7ee9f33455ce4b620004e9426cef8229f850ba50"
+            },
+            "qb_override_source_path": null,
+            "qb_override_source_sha256": null,
+            "qb_selection_details": {
+              "ARI": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0033119",
+                "player_name": null,
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "ATL": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0033662",
+                "player_name": null,
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "BAL": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0034796",
+                "player_name": null,
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "BUF": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0034857",
+                "player_name": null,
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "CAR": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0039150",
+                "player_name": null,
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "CHI": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0039918",
+                "player_name": null,
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "CIN": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0036442",
+                "player_name": null,
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "CLE": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0033537",
+                "player_name": null,
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "DAL": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0033077",
+                "player_name": null,
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "DEN": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0039732",
+                "player_name": null,
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "DET": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0033106",
+                "player_name": null,
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "GB": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0036264",
+                "player_name": null,
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "HOU": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0039163",
+                "player_name": null,
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "IND": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0035710",
+                "player_name": null,
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "JAX": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0036971",
+                "player_name": null,
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "KC": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0033873",
+                "player_name": null,
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "LA": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0026498",
+                "player_name": null,
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "LAC": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0036355",
+                "player_name": null,
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "LV": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0029604",
+                "player_name": null,
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "MIA": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0038128",
+                "player_name": null,
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "MIN": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0032950",
+                "player_name": null,
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "NE": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0039851",
+                "player_name": null,
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "NO": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0040743",
+                "player_name": null,
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "NYG": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0040691",
+                "player_name": null,
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "NYJ": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0030565",
+                "player_name": null,
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "PHI": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0036389",
+                "player_name": null,
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "PIT": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0023459",
+                "player_name": null,
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "SEA": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0035704",
+                "player_name": null,
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "SF": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0037834",
+                "player_name": null,
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "TB": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0034855",
+                "player_name": null,
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "TEN": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0040676",
+                "player_name": null,
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "WAS": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0039910",
+                "player_name": null,
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              }
+            },
+            "qb_selection_policy": "explicit_manual_override; else timestamped_confirmed_starter_asof; else out_or_doubtful_replacement_asof; else prior_game_dropback_leader",
+            "qb_selections": {
+              "ARI": "00-0033119",
+              "ATL": "00-0033662",
+              "BAL": "00-0034796",
+              "BUF": "00-0034857",
+              "CAR": "00-0039150",
+              "CHI": "00-0039918",
+              "CIN": "00-0036442",
+              "CLE": "00-0033537",
+              "DAL": "00-0033077",
+              "DEN": "00-0039732",
+              "DET": "00-0033106",
+              "GB": "00-0036264",
+              "HOU": "00-0039163",
+              "IND": "00-0035710",
+              "JAX": "00-0036971",
+              "KC": "00-0033873",
+              "LA": "00-0026498",
+              "LAC": "00-0036355",
+              "LV": "00-0029604",
+              "MIA": "00-0038128",
+              "MIN": "00-0032950",
+              "NE": "00-0039851",
+              "NO": "00-0040743",
+              "NYG": "00-0040691",
+              "NYJ": "00-0030565",
+              "PHI": "00-0036389",
+              "PIT": "00-0023459",
+              "SEA": "00-0035704",
+              "SF": "00-0037834",
+              "TB": "00-0034855",
+              "TEN": "00-0040676",
+              "WAS": "00-0039910"
+            },
+            "qb_source_audit": {
+              "assignment_conflicts": [],
+              "cutoff_utc": "2026-09-15T14:23:10+00:00",
+              "depth_charts": {
+                "captured_at_utc": null,
+                "rows": 0,
+                "status": "no_eligible_capture"
+              },
+              "expected_starter_acceptance_policy": "confirmed_only",
+              "expected_starters": {
+                "eligible_rows": 0,
+                "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\news\\2026_w02_expected_starters.csv",
+                "post_cutoff_rows": 0,
+                "rows": 0,
+                "selected_teams": [],
+                "status": "no_file"
+              },
+              "injuries": {
+                "captured_at_utc": null,
+                "rows": 0,
+                "status": "no_eligible_capture"
+              },
+              "latest_capture_attempts": {},
+              "lineup_overrides": {
+                "eligible_rows": 0,
+                "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\news\\2026_w02_lineup_overrides.csv",
+                "post_cutoff_rows": 2,
+                "rows": 2,
+                "selected_teams": [],
+                "status": "no_eligible_rows"
+              },
+              "manual_qb_overrides": {
+                "ambiguous_teams": [],
+                "applicable_rows": 0,
+                "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\news\\2026_w02_qb_input_overrides.csv",
+                "rows": 0,
+                "rows_after_cutoff": 0,
+                "selected_teams": [],
+                "status": "no_file"
+              }
+            },
+            "reason": "Recover two one-week-out Sunday/Monday spread and total quote pairs from the paid historical Odds API window",
+            "retrospective": true,
+            "retrospective_grade_source": {
+              "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\JoSchoAnalytics\\data\\releases\\results\\predictions\\2026\\week02\\predictions-2026w02-6bce0f6f338a-graded.csv",
+              "purpose": "final-score grading only; not used in prediction features or model fitting",
+              "sha256": "5ea16905e451225f1b3db9e276c99f3f5d4190b2ed84759ad74d151d856cef2f"
+            },
+            "snap_snapshot_captured_at": null,
+            "snap_snapshot_path": null,
+            "snap_snapshot_sha256": null,
+            "source_snapshot_captured_at": "2026-09-15T14:23:10+00:00",
+            "source_snapshot_sha256": "5b295fd53d3a41dbfc94a2223bfedeb5850db8e2acd51b5162b52c0e4a08375f",
+            "supersedes_build_id": "predictions-2026w02-6bce0f6f338a"
+          },
+          "grading": {
+            "artifact": "data/releases/results/predictions/2026/week02/predictions-2026w02-c20991b4f068-graded.csv",
+            "artifact_sha256": "cd3a577dd3d4ee75aff4e0d8644be63c8935a7d0af6c607755759e622e522735",
+            "complete": true,
+            "final_games": 16,
+            "graded_at": "2026-09-24T17:46:13Z",
+            "graded_rows": 16,
+            "metadata": "data/releases/results/predictions/2026/week02/predictions-2026w02-c20991b4f068-graded.json",
+            "product": "predictions",
+            "pushes": 0,
+            "schema_version": 1,
+            "season": 2026,
+            "source_build": "predictions-2026w02-c20991b4f068",
+            "week": 2
+          },
+          "metadata": "data/releases/builds/predictions/2026/week02/predictions-2026w02-c20991b4f068/metadata.json",
+          "model_version": "spread-v3-prod-sunday-tuesday-market-44-qb-ir-985845bbf7e4",
+          "produced_at": "2026-09-24T17:43:58Z",
+          "product": "predictions",
+          "published_at": "2026-09-24T17:46:04Z",
+          "row_count": 16,
+          "season": 2026,
+          "sha256": "c20991b4f0686a7fa5f997b6a55c018d9115a3b66743f22ade2254d742637f75",
+          "status": "Published",
+          "validation": {
+            "checks": {
+              "artifact_sha256": "c20991b4f0686a7fa5f997b6a55c018d9115a3b66743f22ade2254d742637f75",
+              "post_kickoff_correction": true,
+              "produced_at_utc": "2026-09-24T17:43:58Z",
               "scheduled_games": 16
             },
             "errors": [],
@@ -3601,5 +4722,5 @@
     }
   },
   "schema_version": 1,
-  "updated_at": "2026-09-24T15:53:15Z"
+  "updated_at": "2026-09-24T17:46:13Z"
 }
