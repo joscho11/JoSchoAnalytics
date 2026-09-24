@@ -24,6 +24,26 @@ from dashboard_data import overlay_published_predictions
 from publishing.cli import _grade_published, main as publishing_cli_main
 
 
+def test_prediction_cache_key_changes_with_release_manifest(tmp_path: Path, monkeypatch):
+    import dashboard_data
+
+    manifest = tmp_path / "data" / "releases" / "manifest.json"
+    manifest.parent.mkdir(parents=True)
+    manifest.write_text('{"release": 1}', encoding="utf-8")
+    seen = []
+    monkeypatch.setattr(dashboard_data, "_HERE", tmp_path)
+    monkeypatch.setattr(dashboard_data, "_load_predictions_for_manifest", seen.append)
+
+    dashboard_data.load_predictions()
+    manifest.write_text('{"release": 2}', encoding="utf-8")
+    dashboard_data.load_predictions()
+
+    assert seen == [
+        hashlib.sha256(b'{"release": 1}').hexdigest(),
+        hashlib.sha256(b'{"release": 2}').hexdigest(),
+    ]
+
+
 def _prediction_candidate(tmp_path: Path, *, shift: float = 0.0, week: int = 1):
     artifact = tmp_path / f"predictions-w{week}-{shift}.csv"
     first_day, second_day = (9, 10) if week == 1 else (16, 17)

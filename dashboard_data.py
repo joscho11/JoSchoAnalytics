@@ -10,6 +10,7 @@ so repeated calls across pages/sessions are cheap.
 Predictions / Track Record all consume were moved here byte-identical from app.py.)
 """
 import glob
+import hashlib
 import json
 import logging
 import os
@@ -29,9 +30,19 @@ from publishing.manifest import load_manifest, published_builds, resolve_build_a
 from publishing.validators import read_table
 
 
-@st.cache_data(ttl=300)
 def load_predictions():
     """Historical tracker plus every hash-verified release and unstamped slate."""
+    manifest_path = _HERE / "data" / "releases" / "manifest.json"
+    try:
+        manifest_sha = hashlib.sha256(manifest_path.read_bytes()).hexdigest()
+    except FileNotFoundError:
+        manifest_sha = "missing"
+    return _load_predictions_for_manifest(manifest_sha)
+
+
+@st.cache_data(ttl=300)
+def _load_predictions_for_manifest(manifest_sha: str):
+    """Refresh the cached card as soon as the release manifest changes."""
     df = load_tracker(str(_HERE))
     df = overlay_published_predictions(df, _HERE)
     return attach_slate(df, _HERE)
