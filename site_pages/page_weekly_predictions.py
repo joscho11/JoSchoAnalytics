@@ -86,10 +86,10 @@ def _live_model_context(release_state: dict) -> None:
         st.caption(f"Prediction model: `{model_version}`")
 
     correction = build.get("correction") or {}
-    if correction.get("model_update") is not True:
-        return
     current_qbs = correction.get("qb_selection_details") or {}
     current_ids = correction.get("qb_selections") or {}
+    if not current_qbs and not current_ids:
+        return
     previous_id = correction.get("supersedes_build_id")
     previous = state.get("builds", {}).get(str(previous_id), {})
     previous_correction = previous.get("correction") or {}
@@ -109,7 +109,7 @@ def _live_model_context(release_state: dict) -> None:
     relevant = sorted(set(current_ids) | set(current_qbs) | changed | manual)
     if not relevant:
         return
-    with st.expander("QB inputs for this model correction", expanded=False):
+    with st.expander("QB inputs used for this release", expanded=False):
         if correction.get("reason"):
             st.caption(str(correction["reason"]))
         st.caption(

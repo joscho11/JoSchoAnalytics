@@ -57,7 +57,9 @@ def test_weekly_predictions_renders_and_owns_controls(tmp_path):
     shown_version = manifest["products"]["predictions"]["builds"][str(shown["build_id"])]["model_version"]
     assert shown_version.startswith("spread-v3-prod-sunday-tuesday-market-")
     assert shown_version in captions
-    qb_expander = next(exp for exp in at.expander if exp.label == "QB inputs for this model correction")
+    shown_build = manifest["products"]["predictions"]["builds"][str(shown["build_id"])]
+    assert shown_build["correction"].get("model_update") is not True
+    qb_expander = next(exp for exp in at.expander if exp.label == "QB inputs used for this release")
     qb_markdown = " ".join(str(item.value) for item in qb_expander.markdown)
     assert "**ATL:** Michael Penix Jr." in qb_markdown
     assert "**MIN:** Kyler Murray" in qb_markdown
