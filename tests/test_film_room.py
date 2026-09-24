@@ -118,7 +118,13 @@ def test_picker_lists_every_episode_and_no_retired_intro(tmp_path):
                   or "What is this?" in str(b.label)]
     assert len(breakdowns) == 1
     captions = {str(c.value) for c in at.caption}
-    assert _section_control(at).options == ["Walkthroughs", "Predictions", "Draft", "Players"]
+    assert _section_control(at).options == [
+        "Walkthroughs",
+        "Predictions",
+        "In-season",
+        "Draft",
+        "Players",
+    ]
     assert "Archive" not in captions
     assert not any(label in captions for _key, label in VIDEO_SECTIONS)
 
@@ -136,14 +142,16 @@ def test_catalog_sections():
         LATEST_LEAGUE_HISTORY_VIDEO_SLUG,
     ]
     assert grouped["Predictions & weekly"] == [
+        "latest-video-2026-09-11",
+    ]
+    assert grouped["In-season analysis"] == [
         "wr-te-advanced-stats",
         "rb-advanced-stats-part-2",
         "rb-advanced-stats-part-1",
+        "week-1-signal",
         "chargers-week-1-loss",
-        "latest-video-2026-09-11",
     ]
     assert grouped["Draft strategy & research"] == [
-        "week-1-signal",
         "rb-wr-draft-strategy",
         "qb-te-draft-timing",
         "draft-order",
@@ -257,3 +265,75 @@ def test_breakdowns_and_registry_do_not_disclose_sleeper_mix():
     lower = blob.lower()
     for phrase in phrases:
         assert phrase not in lower, f"Sleeper mix leaked into Film Room copy: {phrase}"
+
+
+_LIVE_SYNC_PROBE = '''
+import os, sys
+os.environ["APP_OFFLINE"] = "1"
+tmp, here, marker = sys.argv[1], sys.argv[2], sys.argv[3]
+sys.path[:0] = [tmp, here, os.path.join(here, "site_pages")]
+from pathlib import Path
+from streamlit.testing.v1 import AppTest
+
+harness = Path(tmp) / "h_probe.py"
+harness.write_text("import page_film_room as page" + chr(10) + "page.render()" + chr(10), encoding="utf-8")
+
+
+def seen_titles():
+    at = AppTest.from_file(str(harness), default_timeout=180).run()
+    assert not at.exception, at.exception
+    seg = next(w for w in at.segmented_control if w.key == "film_room_section")
+    titles = set()
+    for key in list(seg.options):
+        at = seg.set_value(key).run()
+        assert not at.exception, at.exception
+        titles.update(next(w for w in at.selectbox if w.label == "Episode").options)
+        seg = next(w for w in at.segmented_control if w.key == "film_room_section")
+    return titles
+
+
+before = seen_titles()
+vc = Path(tmp) / "video_content.py"
+text = vc.read_text(encoding="utf-8")
+entry = (
+    "    {" + chr(10)
+    + '        "slug": "live-sync-probe",' + chr(10)
+    + '        "title": "' + marker + '",' + chr(10)
+    + '        "subtitle": "probe",' + chr(10)
+    + '        "date": "2099-01-01",' + chr(10)
+    + '        "section": "player-breakdowns",' + chr(10)
+    + '        "tiktok_url": "https://www.tiktok.com/@joschoanalytics/video/1",' + chr(10)
+    + '        "video_id": "1",' + chr(10)
+    + '        "breakdown_file": "makai_lemon.md",' + chr(10)
+    + "    }," + chr(10)
+)
+vc.write_text(text.replace("VIDEOS = [" + chr(10), "VIDEOS = [" + chr(10) + entry, 1), encoding="utf-8")
+os.utime(vc, None)
+after = seen_titles()
+print("BEFORE_HAS_MARKER", marker in before)
+print("AFTER_HAS_MARKER", marker in after)
+'''
+
+
+def test_registry_edit_reaches_a_live_process(tmp_path):
+    """A registry-only push must show up in an already-running Cloud process.
+
+    Cloud copies the new video_content.py into a live interpreter. film_room
+    copies its names at import time and its own file did not change, so before
+    this was fixed the page kept serving the old list until a manual reboot.
+    """
+    import shutil
+    import subprocess
+
+    shutil.copy(_HERE / "film_room.py", tmp_path / "film_room.py")
+    shutil.copy(_HERE / "video_content.py", tmp_path / "video_content.py")
+    probe = tmp_path / "probe.py"
+    probe.write_text(_LIVE_SYNC_PROBE, encoding="utf-8")
+    marker = "Live Sync Probe Episode"
+    run = subprocess.run(
+        [sys.executable, str(probe), str(tmp_path), str(_HERE), marker],
+        capture_output=True, text=True, timeout=300,
+    )
+    assert run.returncode == 0, run.stderr[-2000:]
+    assert "BEFORE_HAS_MARKER False" in run.stdout
+    assert "AFTER_HAS_MARKER True" in run.stdout, run.stdout + run.stderr[-1000:]

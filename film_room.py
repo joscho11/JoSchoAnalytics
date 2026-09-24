@@ -30,6 +30,7 @@ _EP_KEY_PREFIX = "fr_ep_"
 _SECTION_SHORT = {
     "site-walkthroughs": "Walkthroughs",
     "predictions": "Predictions",
+    "in-season": "In-season",
     "draft-strategy": "Draft",
     "player-breakdowns": "Players",
 }
