@@ -69,7 +69,10 @@ def _live_notice():
             "tickets are graded at the best US Tuesday number and the last regular-season "
             f"week is skipped. {live_high_bar_sentence()} {live_high_refit_note()} The Tuesday line, pick, edge, "
             "and HIGH flag use the median; the named best-available quote is execution "
-            "and grading. Picks use the first valid Tuesday capture from 09:00-15:30 ET. "
+            "and grading. From Week 4 onward, a validated paid historical snapshot anchored at "
+            "Tuesday 09:00 ET is preferred; otherwise the whole slate uses the first valid free "
+            "capture from 09:00-21:00 ET. The selected source and any fallback reason are recorded "
+            "with the release. "
             "One input counts each team's non-QB starters on regular injured reserve "
             "from its previous game's roster, so it is known before Tuesday."
         )
@@ -88,6 +91,15 @@ def _live_model_context(release_state: dict) -> None:
         st.caption(f"Prediction model: `{model_version}`")
 
     correction = build.get("correction") or {}
+    if correction.get("retrospective") is True:
+        st.warning(
+            f"**Retrospective model correction · Week {int(build.get('week', 0))}.** "
+            "This corrected scorecard was published after the games were final and replaces "
+            "the original release for the displayed record. Final scores were used only for "
+            "grading; the original build remains in release history."
+        )
+        if correction.get("reason"):
+            st.caption(str(correction["reason"]))
     current_qbs = correction.get("qb_selection_details") or {}
     current_ids = correction.get("qb_selections") or {}
     if not current_qbs and not current_ids:
@@ -396,7 +408,7 @@ def render():
                 "The Week 1 card lands later this week."
             )
         else:
-            st.info("Matchups are locked. Picks use the first valid Tuesday market capture from 09:00–15:30 ET.")
+            st.info("Matchups are locked. From Week 4 onward, the validated paid Tuesday 09:00 ET snapshot is preferred; the free live capture is the fallback.")
     elif results_in:
         correct = int(week_df[_wk_correct_col].sum())
         total   = int(week_df[_wk_correct_col].notna().sum())
@@ -426,7 +438,7 @@ def render():
             'thursday': ('🟠', 'Injury Reports In', 'Updated Thursday with injury data'),
             'sunday':   ('🟢', 'Final Predictions', 'Final update, games starting soon'),
             'backfill': ('🔵', 'Backfilled',        'Historical predictions'),
-            'matchup':  ('⚪', 'Schedule',          'Matchups locked. Tuesday capture window 09:00–15:30 ET'),
+            'matchup':  ('⚪', 'Schedule',          'Paid Tuesday 09:00 ET snapshot preferred; free live capture is the fallback'),
         }
         _icon, label, desc = mode_labels.get(mode, ('⚪', 'Manual run', ''))
         _badge_colors = {

@@ -62,6 +62,13 @@ def overlay_published_predictions(df: pd.DataFrame, root: str | Path) -> pd.Data
             continue
         released = read_table(artifact)
         if not released.empty and "game_id" in released:
+            correction = build.get("correction") or {}
+            released["release_retrospective"] = correction.get("retrospective") is True
+            released["release_build_id"] = str(build.get("build_id", ""))
+            released["release_supersedes_build_id"] = str(
+                correction.get("supersedes_build_id") or ""
+            )
+            released["release_correction_reason"] = str(correction.get("reason") or "")
             released_ids = set(released["game_id"].astype(str))
             out = out.loc[~out["game_id"].astype(str).isin(released_ids)]
             out = pd.concat([out, released], ignore_index=True, sort=False)
