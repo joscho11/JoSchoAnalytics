@@ -75,6 +75,25 @@ def overlay_published_predictions(df: pd.DataFrame, root: str | Path) -> pd.Data
     return out
 
 
+def retrospective_release_weeks(season: int, root: str | Path | None = None) -> list[int]:
+    """Return published weeks whose current release is a retrospective correction.
+
+    Read this from the release manifest rather than the graded row frame: Track
+    Record must keep the disclosure visible even if a fallback tracker omits the
+    release metadata columns.
+    """
+    release_root = Path(root) if root is not None else _HERE
+    manifest = load_manifest(release_root)
+    return sorted(
+        {
+            int(build["week"])
+            for build in published_builds("predictions", manifest=manifest, root=release_root)
+            if int(build["season"]) == int(season)
+            and (build.get("correction") or {}).get("retrospective") is True
+        }
+    )
+
+
 @st.cache_data(ttl=300)
 def load_totals():
     """Totals tracker; empty DataFrame if the file is absent."""

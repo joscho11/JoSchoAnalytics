@@ -8897,12 +8897,7 @@
           "week": 3
         }
       },
-      "next_release": {
-        "scheduled_for": "2026-09-08T13:00:00Z",
-        "season": 2026,
-        "status": "Scheduled",
-        "week": 1
-      },
+      "next_release": null,
       "previous_build": "predictions-2026w03-59d415ba9b66"
     }
   },

@@ -103,7 +103,7 @@ def test_weekly_predictions_reads_shared_season_week_url(tmp_path):
     assert "Published" in markdown
 
 
-def test_week1_scorecard_and_track_record_use_graded_corrected_release(tmp_path):
+def test_week1_scorecard_and_track_record_use_graded_corrected_release(tmp_path, monkeypatch):
     weekly = _render_page(tmp_path, "page_weekly_predictions")
     week = next(w for w in weekly.selectbox if getattr(w, "key", None) == "wp_week")
     week.set_value(1)
@@ -123,6 +123,16 @@ def test_week1_scorecard_and_track_record_use_graded_corrected_release(tmp_path)
     assert week2_metrics["HIGH picks"] == "3"
     assert any("Retrospective model correction · Week 2" in str(w.value) for w in weekly.warning)
 
+    import dashboard_data
+    tracker_without_release_metadata = dashboard_data.load_predictions().drop(
+        columns=["release_retrospective", "release_build_id", "release_supersedes_build_id", "release_correction_reason"],
+        errors="ignore",
+    )
+    monkeypatch.setattr(
+        dashboard_data,
+        "load_predictions",
+        lambda: tracker_without_release_metadata.copy(),
+    )
     track = _render_page(tmp_path, "page_track_record")
     assert next(w for w in track.selectbox if w.key == "tr_season").value == 2026
     track_metrics = {str(m.label): str(m.value) for m in track.metric}

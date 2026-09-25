@@ -71,22 +71,17 @@ def render():
         (df['actual_margin'].notna())
     ].copy()
 
-    if live and "release_retrospective" in season_df:
-        retrospective_mask = (
-            season_df["release_retrospective"].astype("boolean").fillna(False).astype(bool)
+    retrospective_weeks = (
+        dashboard_data.retrospective_release_weeks(int(season)) if live else []
+    )
+    if retrospective_weeks:
+        labels = ", ".join(f"Week {week}" for week in retrospective_weeks)
+        st.warning(
+            f"**Retrospective model corrections are included in this season record: {labels}.** "
+            "These corrected releases were published after the games were final and replace "
+            "the original builds in the displayed record. Final scores were used only for "
+            "grading; the original immutable builds remain in release history."
         )
-        retrospective = season_df[retrospective_mask]
-        retrospective_weeks = sorted(
-            pd.to_numeric(retrospective["week"], errors="coerce").dropna().astype(int).unique()
-        )
-        if retrospective_weeks:
-            labels = ", ".join(f"Week {week}" for week in retrospective_weeks)
-            st.warning(
-                f"**Retrospective model corrections are included in this season record: {labels}.** "
-                "These corrected releases were published after the games were final and replace "
-                "the original builds in the displayed record. Final scores were used only for "
-                "grading; the original immutable builds remain in release history."
-            )
 
     if season_df.empty:
         if live:
