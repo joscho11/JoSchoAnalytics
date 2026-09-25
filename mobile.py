@@ -403,6 +403,34 @@ details summary{
   }
 }
 
+/* 8b. QB scenario cards stack one per row on a phone. Streamlit leaves no gap
+   between stacked columns, so the cards fused into one slab; space them and trim
+   the inline margins so three QBs do not eat two screens. */
+@media (max-width: 640px){
+  [class*="st-key-jsa-gc"] [data-testid="stHorizontalBlock"]:has(.jsa-gc-scen){
+    row-gap:.5rem !important;
+  }
+  /* Streamlit gives every markdown container margin-bottom:-1rem. Stacked, that
+     pulls the next card 16px up over this one's bottom border. */
+  [data-testid="stMarkdownContainer"]:has(> .jsa-gc-scen){
+    margin-bottom:0 !important;
+  }
+  .jsa-gc-scen{
+    padding:8px 12px !important;
+    height:auto !important;
+  }
+  /* The verdict pill is one inline span; when it wraps, the border broke into two
+     fragments and the first line ran to the screen edge. */
+  .jsa-gc-verdict{
+    display:inline-block !important;
+    box-sizing:border-box !important;
+    max-width:100% !important;
+    line-height:1.4 !important;
+  }
+  .jsa-gc-scen > div{ margin-top:2px !important; }
+  .jsa-gc-scen > div:last-child{ margin-top:4px !important; }
+}
+
 /* 9a. Keep the OUTPERFORM / UNDERPERFORM headers paired with the two-column
    card grid underneath them, which is raw CSS grid and does not stack. */
 @media (max-width: 640px){

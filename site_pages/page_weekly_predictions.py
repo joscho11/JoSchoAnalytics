@@ -237,7 +237,7 @@ def _scenario_verdict_html(items: list[dict], verdict: str) -> str:
         return ""
     color, background, label = text
     return (
-        f"<div style='margin:8px 0 10px'><span style='background:{background};border:1px solid {color};"
+        f"<div style='margin:8px 0 10px'><span class='jsa-gc-verdict' style='background:{background};border:1px solid {color};"
         f"border-radius:4px;padding:3px 10px;font-size:12px;font-weight:700;color:{color}'>{_html.escape(label)}</span></div>"
     )
 
@@ -746,6 +746,9 @@ def render():
                     else:
                         h0, h1, h2, h4 = st.columns([2.2, 1.2, 1.2, 1.8])
 
+                    # Streamlit drops a column with no content, which on a phone left the grid one
+                    # track short and slid every header a column left of its values.
+                    h0.markdown("<div class='jsa-gc-hdr'>&nbsp;</div>", unsafe_allow_html=True)
                     _spread_header = "TUESDAY LINE" if live else "SPREAD"
                     h1.markdown(f"<div class='jsa-gc-hdr' style='text-align:center;font-size:11px;color:#aaa;letter-spacing:1px'>{_spread_header}</div>", unsafe_allow_html=True)
                     h2.markdown("<div class='jsa-gc-hdr' style='text-align:center;font-size:11px;color:#aaa;letter-spacing:1px'>PREDICTED</div>", unsafe_allow_html=True)
