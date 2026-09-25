@@ -748,7 +748,7 @@ def render():
 
                     # Streamlit drops a column with no content, which on a phone left the grid one
                     # track short and slid every header a column left of its values.
-                    h0.markdown("<div class='jsa-gc-hdr'>&nbsp;</div>", unsafe_allow_html=True)
+                    h0.markdown("<div class='jsa-gc-hdr' style='font-size:11px'>&nbsp;</div>", unsafe_allow_html=True)
                     _spread_header = "TUESDAY LINE" if live else "SPREAD"
                     h1.markdown(f"<div class='jsa-gc-hdr' style='text-align:center;font-size:11px;color:#aaa;letter-spacing:1px'>{_spread_header}</div>", unsafe_allow_html=True)
                     h2.markdown("<div class='jsa-gc-hdr' style='text-align:center;font-size:11px;color:#aaa;letter-spacing:1px'>PREDICTED</div>", unsafe_allow_html=True)
