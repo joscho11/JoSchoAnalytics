@@ -111,7 +111,8 @@ def test_week1_scorecard_and_track_record_use_graded_corrected_release(tmp_path,
     assert not weekly.exception, weekly.exception
     metrics = {str(m.label): str(m.value) for m in weekly.metric}
     assert metrics["ATS record"] == "8/16"
-    assert any("Retrospective model correction · Week 1" in str(w.value) for w in weekly.warning)
+    assert not any("Retrospective model correction" in str(w.value) for w in weekly.warning)
+    assert not any("Retrospective model update" in str(c.value) for c in weekly.caption)
     assert any("Week 1 ATS record: **8-8**" in str(s.value) for s in weekly.success)
     week2 = next(w for w in weekly.selectbox if getattr(w, "key", None) == "wp_week")
     week2.set_value(2)
@@ -121,7 +122,8 @@ def test_week1_scorecard_and_track_record_use_graded_corrected_release(tmp_path,
     week2_metrics = {str(m.label): str(m.value) for m in weekly.metric}
     assert week2_metrics["ATS record"] == "9/16"
     assert week2_metrics["HIGH picks"] == "3"
-    assert any("Retrospective model correction · Week 2" in str(w.value) for w in weekly.warning)
+    assert not any("Retrospective model correction" in str(w.value) for w in weekly.warning)
+    assert not any("Retrospective model update" in str(c.value) for c in weekly.caption)
 
     import dashboard_data
     tracker_without_release_metadata = dashboard_data.load_predictions().drop(
@@ -136,17 +138,28 @@ def test_week1_scorecard_and_track_record_use_graded_corrected_release(tmp_path,
     track = _render_page(tmp_path, "page_track_record")
     assert next(w for w in track.selectbox if w.key == "tr_season").value == 2026
     track_metrics = {str(m.label): str(m.value) for m in track.metric}
-    # The corrected Week 1 and Week 2 builds contribute their recomputed results.
+    # The corrected builds contribute 17/32; later graded weeks may add games.
     season_ats = track_metrics["Season ATS"]
     wins, settled = (int(part) for part in season_ats.split("/"))
-    assert season_ats == "17/32", season_ats
+    graded_2026 = tracker_without_release_metadata[
+        (tracker_without_release_metadata["season"] == 2026)
+        & tracker_without_release_metadata["actual_margin"].notna()
+    ]
+    corrected_weeks = graded_2026[graded_2026["week"].isin([1, 2])]
+    assert (int(corrected_weeks["model_correct"].sum()), len(corrected_weeks)) == (17, 32)
+    assert (wins, settled) == (int(graded_2026["model_correct"].sum()), len(graded_2026))
     track_warnings = " ".join(str(w.value) for w in track.warning)
     assert "Retrospective model corrections are included in this season record: Week 1, Week 2" in track_warnings
-    # Week 1 and Week 2 each contribute three graded HIGH picks after correction.
+    # Week 1 and Week 2 contribute six graded HIGH picks; later weeks may add more.
     high_wins, high_settled = (
         int(part) for part in track_metrics["HIGH (Tuesday 3+ points)"].split("/")
     )
-    assert (high_wins, high_settled) == (3, 6), (high_wins, high_settled)
+    from live_2026 import row_display_high
+
+    high_rows = graded_2026[graded_2026.apply(row_display_high, axis=1)]
+    corrected_high = high_rows[high_rows["week"].isin([1, 2])]
+    assert (int(corrected_high["model_correct"].sum()), len(corrected_high)) == (3, 6)
+    assert (high_wins, high_settled) == (int(high_rows["model_correct"].sum()), len(high_rows))
 
 
 def test_track_record_renders_and_owns_controls(tmp_path):

@@ -91,15 +91,6 @@ def _live_model_context(release_state: dict) -> None:
         st.caption(f"Prediction model: `{model_version}`")
 
     correction = build.get("correction") or {}
-    if correction.get("retrospective") is True:
-        st.warning(
-            f"**Retrospective model correction · Week {int(build.get('week', 0))}.** "
-            "This corrected scorecard was published after the games were final and replaces "
-            "the original release for the displayed record. Final scores were used only for "
-            "grading; the original build remains in release history."
-        )
-        if correction.get("reason"):
-            st.caption(str(correction["reason"]))
     current_qbs = correction.get("qb_selection_details") or {}
     current_ids = correction.get("qb_selections") or {}
     if not current_qbs and not current_ids:
@@ -124,7 +115,7 @@ def _live_model_context(release_state: dict) -> None:
     if not relevant:
         return
     with st.expander("QB inputs used for this release", expanded=False):
-        if correction.get("reason"):
+        if correction.get("reason") and correction.get("retrospective") is not True:
             st.caption(str(correction["reason"]))
         st.caption(
             "Manual QB choices below are modeling assumptions, not claims that the starter was confirmed."
@@ -793,6 +784,9 @@ def render():
                     b1.markdown(stat_box(bot_spread),                       unsafe_allow_html=True)
                     b2.markdown(stat_box(bot_predicted, is_rec=bot_is_rec), unsafe_allow_html=True)
                     b4.markdown(bet_box(bot_team, rec_color) if bot_is_rec else empty_box(), unsafe_allow_html=True)
+
+                    if _scen_items:
+                        st.space(8)
 
                 if _show_agent:
                     game_key  = f"{home}_{away}"
