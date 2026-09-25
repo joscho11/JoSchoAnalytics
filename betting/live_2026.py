@@ -25,9 +25,9 @@ SLATE_NAME = "slate_2026.csv"
 # The producer's versioned candidate benchmark is the source of public values
 # and per-season splits. Keeping the renderer data-only avoids loading training
 # code or a serialized model in the public app.
-HIGH_AUDIT_PATH = Path(__file__).with_name("market_model_benchmark_v4.json")
+HIGH_AUDIT_PATH = Path(__file__).with_name("market_model_benchmark_v5.json")
 _HIGH_AUDIT = json.loads(HIGH_AUDIT_PATH.read_text(encoding="utf-8"))
-if _HIGH_AUDIT.get("schema_version") != 1 or _HIGH_AUDIT.get("report_id") != "qb_ir_scoped_flag_market_ridge_v4":
+if _HIGH_AUDIT.get("schema_version") != 1 or _HIGH_AUDIT.get("report_id") != "qb_ir_scoped_flag_market_ridge_v5":
     raise ValueError(f"unsupported HIGH audit artifact: {HIGH_AUDIT_PATH}")
 _HIGH_BENCHMARK = _HIGH_AUDIT["historical"]["high"]
 LIVE_HIGH_WINS = int(_HIGH_BENCHMARK["wins"])
@@ -39,7 +39,19 @@ LIVE_HIGH_WILSON_Z = 1.64485
 LIVE_HIGH_WILSON_LOWER = float(_HIGH_BENCHMARK["wilson_lower_one_sided_95"])
 BREAKEVEN = 0.524
 LIVE_HIGH_WILSON_CLEARS = LIVE_HIGH_WILSON_LOWER > BREAKEVEN
+# The benchmark moved when the model was refitted after the price-median units fix
+# (the previous bundle scored 256/432). Every page tells that the same way.
+LIVE_HIGH_PREVIOUS_RECORD = "256/432"
 TRACKER_2025_MD5 = "88d526ca46e8cbb9f1eea77a3d96fa08"
+
+
+def live_high_refit_note() -> str:
+    """Plain statement that the current record is lower than the previous model's and not distinguishable."""
+    return (
+        "This benchmark comes from a refit after eight training rows with impossible moneyline medians "
+        f"were corrected. The HIGH record is lower than the previous model's {LIVE_HIGH_PREVIOUS_RECORD}, "
+        "and that difference is not statistically established either way."
+    )
 
 
 def live_high_bar_sentence() -> str:

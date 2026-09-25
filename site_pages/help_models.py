@@ -23,6 +23,7 @@ from live_2026 import (
     LIVE_HIGH_WILSON_LOWER,
     LIVE_HIGH_WINS,
     live_high_bar_sentence,
+    live_high_refit_note,
 )
 
 BREAKEVEN = 52.4
@@ -124,7 +125,7 @@ for HIGH. Totals are not on the 2026 week page.
 **The current model's 2021-2025 walk-forward benchmark** uses median-triggered HIGH tickets scored at the best US Tuesday number:
 **{LIVE_HIGH_WINS}/{LIVE_HIGH_N} = {LIVE_HIGH_ATS * 100:.2f}%**
 ATS ({LIVE_HIGH_PUSHES} pushes among {LIVE_HIGH_LABELS} HIGH labels), one-sided 95% Wilson lower bound **{LIVE_HIGH_WILSON_LOWER * 100:.2f}%**, walk-forward
-2021-2025. {live_high_bar_sentence()} Starting with 2026 releases, the model, pick,
+2021-2025. {live_high_bar_sentence()} {live_high_refit_note()} Starting with 2026 releases, the model, pick,
 edge, and HIGH flag use the Tuesday US median. The selected shopped quote is displayed
 separately and used for grading, matching the benchmark's execution rule. Betting every
 game is not the claim. Week 1 is now graded on the Track Record page; the live 2026

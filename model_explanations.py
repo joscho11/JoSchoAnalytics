@@ -27,7 +27,7 @@ VETERAN_CALIBRATION_AUDIT = [
 
 # The spread season chart reads the same versioned audit artifact as the live
 # HIGH headline. Do not copy season splits into this module.
-_HIGH_AUDIT_PATH = HERE / "betting" / "market_model_benchmark_v4.json"
+_HIGH_AUDIT_PATH = HERE / "betting" / "market_model_benchmark_v5.json"
 _HIGH_AUDIT = json.loads(_HIGH_AUDIT_PATH.read_text(encoding="utf-8"))
 SPREAD_HIGH_BY_SEASON = [
     {"season": int(row["season"]), "wins": int(row["wins"]), "n": int(row["graded_n"])}

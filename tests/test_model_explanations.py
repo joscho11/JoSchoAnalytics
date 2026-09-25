@@ -49,23 +49,31 @@ def test_live_eval_numbers_match_published_books():
     audit = json.loads(me._HIGH_AUDIT_PATH.read_text(encoding="utf-8"))
     benchmark = audit["historical"]["high"]
     assert audit["model"]["high_threshold_points"] == 3.0
-    assert audit["report_id"] == "qb_ir_scoped_flag_market_ridge_v4"
+    assert audit["report_id"] == "qb_ir_scoped_flag_market_ridge_v5"
     assert audit["model"]["feature_contract"] == "46 core features, 49 fitted inputs"
-    assert benchmark["pick_rows"] == 442
-    assert benchmark["wins"] == 256
-    assert benchmark["graded_n"] == 432
-    assert benchmark["pushes"] == 10
+    assert benchmark["pick_rows"] == 441
+    assert benchmark["wins"] == 246
+    assert benchmark["graded_n"] == 430
+    assert benchmark["pushes"] == 11
     assert benchmark["wilson_lower_one_sided_95"] == LIVE_HIGH_WILSON_LOWER
     assert [(r["season"], r["wins"], r["n"]) for r in me.SPREAD_HIGH_BY_SEASON] == [
-        (2021, 81, 134),
-        (2022, 50, 86),
-        (2023, 52, 94),
-        (2024, 33, 55),
-        (2025, 40, 63),
+        (2021, 81, 132),
+        (2022, 44, 89),
+        (2023, 50, 88),
+        (2024, 34, 57),
+        (2025, 37, 64),
     ]
-    assert sum(r["wins"] for r in me.SPREAD_HIGH_BY_SEASON) == 256
-    assert sum(r["n"] for r in me.SPREAD_HIGH_BY_SEASON) == 432
+    assert sum(r["wins"] for r in me.SPREAD_HIGH_BY_SEASON) == 246
+    assert sum(r["n"] for r in me.SPREAD_HIGH_BY_SEASON) == 430
     assert all(len(value) == 64 for value in audit["source_hashes"].values())
+    # v5 is the price-median units-fix bundle; v4 (the b7adc2a6 bundle) stays on disk as history.
+    assert audit["source_hashes"]["candidate_bundle_sha256"] == (
+        "f4f09df276835e846ef7da10d76c756eb6f41fc3445beb2f9a5fb29f204a193b"
+    )
+    assert audit["model"]["model_version"].endswith("-f4f09df27683")
+    assert audit["promotion_audit"]["path"].endswith("week03_units_fix_promotion_v1.json")
+    assert round(audit["historical"]["regular_season_volume"]["fire_rate"], 4) == 0.3355
+    assert (me.HERE / "betting" / "market_model_benchmark_v4.json").is_file()
 
     evidence = json.loads(
         (me.HERE / "futures" / "published" / "evidence.json").read_text(encoding="utf-8")

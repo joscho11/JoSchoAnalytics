@@ -27,6 +27,7 @@ from live_2026 import (
     LIVE_HIGH_WINS,
     has_pick,
     live_high_bar_sentence,
+    live_high_refit_note,
     is_live_season,
     row_display_high,
     row_high_dropped,
@@ -66,7 +67,7 @@ def _live_notice():
             f"Wilson lower bound of {LIVE_HIGH_WILSON_LOWER * 100:.2f}% "
             f"({LIVE_HIGH_PUSHES} pushes among {LIVE_HIGH_LABELS} HIGH labels). Median-triggered "
             "tickets are graded at the best US Tuesday number and the last regular-season "
-            f"week is skipped. {live_high_bar_sentence()} The Tuesday line, pick, edge, "
+            f"week is skipped. {live_high_bar_sentence()} {live_high_refit_note()} The Tuesday line, pick, edge, "
             "and HIGH flag use the median; the named best-available quote is execution "
             "and grading. Picks use the first valid Tuesday capture from 09:00-15:30 ET. "
             "One input counts each team's non-QB starters on regular injured reserve "

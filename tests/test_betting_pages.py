@@ -214,10 +214,13 @@ def test_weekly_predictions_live_2026_banner(tmp_path):
     notice_copy = successes + " " + " ".join(str(m.value) for m in at.markdown)
     assert "Live 2026" in notice_copy
     assert "one-sided 95%" in notice_copy and "Wilson lower bound" in notice_copy
-    assert "256/432" in notice_copy
-    assert "59.26%" in notice_copy
-    assert "55.32%" in notice_copy
-    assert "10 pushes among 442 HIGH labels" in notice_copy
+    assert "246/430" in notice_copy
+    assert "57.21%" in notice_copy
+    assert "53.25%" in notice_copy
+    assert "11 pushes among 441 HIGH labels" in notice_copy
+    # The refit note: lower than the previous model's record, and said not to be distinguishable.
+    assert "lower than the previous model's 256/432" in notice_copy
+    assert "not statistically established either way" in notice_copy
     assert "regular injured reserve" in notice_copy
     assert "223/390" not in notice_copy
     assert "above 52.4%" in notice_copy
@@ -349,6 +352,68 @@ def test_weekly_predictions_shows_one_equal_card_per_listed_qb(tmp_path):
     assert "Automatic uncertain-QB flag" in text
     assert "**CHI:**" in text and "left before the end of" in text
     assert "QB scenarios for" in text
+
+
+def test_week3_units_fix_reissue_card_states(tmp_path):
+    """Week 3 build 78def02d9cb1 (price-median units fix): two plain HIGH cards and one QB split card.
+
+    CIN at PIT and HOU at IND clear HIGH and show as HIGH. PHI at CHI clears HIGH only under 1 of
+    3 listed QBs (Caleb Williams 3.26; Bagent and Keenum stay under 3.0), so the verdict is
+    high_split and the header reads QB SPLIT, not HIGH PICK. ATL at GB kicked off before the
+    reissue and keeps its published row (no HIGH, no scenario). If Week 3 is reissued again this
+    test must be re-read against the new build, not loosened.
+    """
+    import re
+    import page_common
+
+    at = _render_page(tmp_path, "page_weekly_predictions")
+    season = next(w for w in at.selectbox if getattr(w, "key", None) == "wp_season")
+    season.set_value(2026)
+    week = next(w for w in at.selectbox if getattr(w, "key", None) == "wp_week")
+    week.set_value(3)
+    at.run()
+    assert not at.exception, at.exception
+    assert not at.error, [e.value for e in at.error]
+
+    manifest = page_common.load_release_manifest()
+    predictions = manifest["products"]["predictions"]
+    assert predictions["active_build"] == "predictions-2026w03-78def02d9cb1"
+    build = predictions["builds"][predictions["active_build"]]
+    assert build["model_version"].endswith("-f4f09df27683")
+    assert build["correction"]["started_games_held"]["games"][0]["game_id"] == "2026_03_ATL_GB"
+
+    def plain(html_text: str) -> str:
+        return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html_text.replace("&nbsp;", " "))).strip()
+
+    markdown = [str(item.value) for item in at.markdown]
+    cards = {}
+    for html_text in markdown:
+        if "jsa-gc-meta" in html_text:
+            match = re.search(r"([A-Z]{2,3}) @ ([A-Z]{2,3})", plain(html_text))
+            cards[f"{match.group(1)} @ {match.group(2)}"] = html_text
+    assert len(cards) == 16, sorted(cards)
+
+    for game in ("CIN @ PIT", "HOU @ IND"):
+        assert "HIGH PICK" in cards[game], game
+        assert "jsa-gc-high" in cards[game], game
+    assert sum("HIGH PICK" in html_text for html_text in cards.values()) == 2
+
+    split = cards["PHI @ CHI"]
+    assert "QB SPLIT" in split and "HIGH PICK" not in split and "jsa-gc-high" not in split
+    joined = " ".join(markdown)
+    assert "QB split: HIGH under 1 of 3 QBs, pass until the starter is known" in joined
+    assert "HIGH under all 3 QBs" not in joined
+    for name in ("Caleb Williams", "Tyson Bagent", "Case Keenum"):
+        assert name in joined, name
+    assert joined.count("under 3.0, not HIGH") >= 2 + 2  # Bagent, Keenum, and both SEA quarterbacks
+    assert "No HIGH under any listed QB" in joined  # SEA at WAS
+
+    held = cards["ATL @ GB"]
+    assert "HIGH PICK" not in held and "QB SPLIT" not in held
+
+    captions = " ".join(str(c.value) for c in at.caption)
+    assert build["model_version"] in captions
+    assert "games that had kicked off keep their published rows" in captions
 
 
 def test_scenario_verdict_lines_are_plain_for_every_case():

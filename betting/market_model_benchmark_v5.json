@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "report_id": "qb_ir_scoped_flag_market_ridge_v5",
+  "promotion_audit": {
+    "path": "../spread_v3_prod/artifacts/week03_units_fix_promotion_v1.json",
+    "sha256": "da1fcadf586eda1691b51bee0d518246d14d45ca8bcff8c2c0bea051816dbc4b"
+  },
+  "model": {
+    "name": "Sunday-to-Tuesday market Ridge with QB features, team-scoped injured-reserve starters and an automatic uncertain-QB flag",
+    "model_version": "spread-v3-prod-sunday-tuesday-market-46-qb-ir-scoped-flag-f4f09df27683",
+    "feature_contract": "46 core features, 49 fitted inputs",
+    "removed_feature_groups": [
+      "five general injury availability features",
+      "vacated snaps"
+    ],
+    "retained_qb_features": 4,
+    "added_features": [
+      "ir_starters_diff: home minus away count of non-QB starters on regular injured reserve (designated-to-return not counted), read from each team's latest roster before the Tuesday prediction; a starter played 50% or more of offensive or defensive snaps for that team in any of his last three games, or averaged 50% or more for that team last season if he has not played for it this season; snaps with another team are not counted",
+      "qb_uncertain_home and qb_uncertain_away: 1 when the QB the model uses did not finish a close game last week (another passer took a dropback after his last one while the score was within 16 points); the QB numbers are kept, the flag is an extra input; only this automatic rule sets it"
+    ],
+    "market_features": [
+      "Sunday 11:20 p.m. ET to Tuesday spread movement",
+      "Sunday 11:20 p.m. ET to Tuesday total movement",
+      "Tuesday moneyline-spread gap (moneyline prices are medianed on the decimal scale)",
+      "three train-fold-fitted market missingness flags"
+    ],
+    "high_threshold_points": 3.0
+  },
+  "historical": {
+    "evaluation": "2021-2025 chronological walk-forward; Tuesday US median selects HIGH; graded at best captured US Tuesday quote",
+    "high": {
+      "pick_rows": 441,
+      "wins": 246,
+      "losses": 184,
+      "pushes": 11,
+      "graded_n": 430,
+      "ats": 0.5720930232558139,
+      "wilson_lower_one_sided_95": 0.53251603580058
+    },
+    "regular_season_volume": {
+      "pick_rows": 420,
+      "eligible_weeks": 85,
+      "picks_per_week": 4.9411764705882355,
+      "fire_rate": 0.3354632587859425
+    },
+    "high_by_season": [
+      {
+        "season": 2021,
+        "pick_rows": 132,
+        "wins": 81,
+        "losses": 51,
+        "pushes": 0,
+        "graded_n": 132,
+        "ats": 0.6136363636363636
+      },
+      {
+        "season": 2022,
+        "pick_rows": 92,
+        "wins": 44,
+        "losses": 45,
+        "pushes": 3,
+        "graded_n": 89,
+        "ats": 0.4943820224719101
+      },
+      {
+        "season": 2023,
+        "pick_rows": 90,
+        "wins": 50,
+        "losses": 38,
+        "pushes": 2,
+        "graded_n": 88,
+        "ats": 0.5681818181818182
+      },
+      {
+        "season": 2024,
+        "pick_rows": 61,
+        "wins": 34,
+        "losses": 23,
+        "pushes": 4,
+        "graded_n": 57,
+        "ats": 0.5964912280701754
+      },
+      {
+        "season": 2025,
+        "pick_rows": 66,
+        "wins": 37,
+        "losses": 27,
+        "pushes": 2,
+        "graded_n": 64,
+        "ats": 0.578125
+      }
+    ]
+  },
+  "source_hashes": {
+    "candidate_bundle_sha256": "f4f09df276835e846ef7da10d76c756eb6f41fc3445beb2f9a5fb29f204a193b",
+    "candidate_comparison_report_sha256": "47917e03982996bc51e9ac061f28052a625a2e5b3add3ff68350af8577b0f6c5",
+    "candidate_oof_predictions_sha256": "69200791bae592818833b339cef5b02c98941b6a4091646b35b2af8a016f4576",
+    "promotion_audit_sha256": "da1fcadf586eda1691b51bee0d518246d14d45ca8bcff8c2c0bea051816dbc4b"
+  },
+  "interpretation": "This is a historical walk-forward research result, not a guarantee of future returns. Eight training rows carried impossible moneyline medians (a median of American odds taken across even money), so price medians are now taken on the decimal scale and the model was refitted; the HIGH record moved from 256/432 to 246/430, and that difference is not statistically established either way. The uncertain-QB flag rests on about 108 past cases and it pushes the edge toward the home team whichever side is flagged, so treat its effect as unproven. Manual QB scenarios on the card are not part of this benchmark."
+}
