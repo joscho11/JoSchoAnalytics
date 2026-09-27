@@ -17,6 +17,7 @@ PROJECTION_FIXTURE = FIXTURES / "direct_dk_projections.csv"
 sys.path[:0] = [str(ROOT), str(SITE_PAGES)]
 
 import dfs_runtime as runtime  # noqa: E402
+from scripts.sync_optimizer_projection import _canonical_csv_bytes  # noqa: E402
 from dashboard_chrome import exact_table_height  # noqa: E402
 
 
@@ -224,6 +225,17 @@ def test_active_projection_is_bound_to_release_and_salary_slate(tmp_path, monkey
 
     projection.write_text("tampered\n", encoding="utf-8")
     assert runtime.active_projection_path(build) == older_projection
+
+
+def test_sync_csv_checksum_bytes_are_line_ending_stable():
+    import hashlib
+
+    windows_csv = b"player,team\r\nname,SF\r\n"
+    linux_csv = b"player,team\nname,SF\n"
+    canonical_windows = _canonical_csv_bytes(windows_csv)
+    canonical_linux = _canonical_csv_bytes(linux_csv)
+    assert canonical_windows == canonical_linux == linux_csv
+    assert hashlib.sha256(canonical_windows).digest() == hashlib.sha256(linux_csv).digest()
 
 
 def test_mismatched_override_still_fails_matchup_validation():

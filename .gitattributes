@@ -1,5 +1,5 @@
 # Auto detect text files and perform LF normalization
 * text=auto
-# The DFS site verifies projection_csv_sha256 against the served bytes, so
-# git must store these CSVs exactly as hashed (no line-ending rewrite).
-fantasy/optimizer_projections/*.csv -text
+# DFS sidecars hash the served bytes. Preserve every file in this nested tree
+# exactly so Git cannot rewrite CSV line endings between Windows and Linux.
+fantasy/optimizer_projections/** -text

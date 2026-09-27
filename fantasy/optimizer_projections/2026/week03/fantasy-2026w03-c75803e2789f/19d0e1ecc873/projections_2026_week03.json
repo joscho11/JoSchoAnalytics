@@ -137,7 +137,7 @@
       ]
     }
   ],
-  "generated_at_utc": "2026-09-27T13:55:29.976482+00:00",
+  "generated_at_utc": "2026-09-27T14:02:53.989992+00:00",
   "method": "Interim per-position affine calibration onto DraftKings Classic points, not the trained direct-DK model. See module docstring for the fit and its limits.",
   "position_counts": {
     "QB": 33,
@@ -147,7 +147,7 @@
   },
   "producer_revision": "19d0e1ecc8731e91910e8f85447311e383d03272",
   "product": "dfs_optimizer_v1",
-  "projection_csv_sha256": "8d0b59d8c3fee477131879dd37356273981fe71ec835012f35b7140ba038cb0b",
+  "projection_csv_sha256": "da7c12aaeb7fa05bc604abe7f1b5563d32024d139368a369839f49bdc300321a",
   "projection_units": "direct_dk_points",
   "row_count": 381,
   "scoring": "draftkings_classic",
@@ -156,6 +156,6 @@
   "source_artifact": "data/releases/builds/fantasy/2026/week03/fantasy-2026w03-c75803e2789f/artifact.csv",
   "source_artifact_sha256": "c75803e2789f43d71358cbc15bcfaa852a5f4f5a011e4165b89d5215908dd0af",
   "source_build_id": "fantasy-2026w03-c75803e2789f",
-  "synced_at_utc": "2026-09-27T13:55:30.022348+00:00",
+  "synced_at_utc": "2026-09-27T14:02:54.042056+00:00",
   "week": 3
 }

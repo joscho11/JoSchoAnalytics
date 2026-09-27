@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -56,6 +57,11 @@ def _replace_bytes(destination: Path, contents: bytes) -> None:
     os.replace(temporary, destination)
 
 
+def _canonical_csv_bytes(contents: bytes) -> bytes:
+    """Use stable LF line endings so hashes survive Windows and Linux checkouts."""
+    return contents.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+
+
 def sync_active_release(
     *,
     root: Path,
@@ -94,7 +100,8 @@ def sync_active_release(
     destination_metadata = destination.with_suffix(".json")
 
     existing = runtime.projection_metadata(destination)
-    if existing and all((
+    existing_is_canonical = destination.is_file() and b"\r" not in destination.read_bytes()
+    if existing and existing_is_canonical and all((
         str(existing.get("source_build_id", "")) == build_id,
         str(existing.get("source_artifact_sha256", "")) == source_sha256,
         str(existing.get("producer_revision", "")) == producer_revision,
@@ -140,6 +147,8 @@ def sync_active_release(
         projection_sha256 = runtime.file_sha256(temporary_csv)
         if metadata.get("projection_csv_sha256") != projection_sha256:
             raise ValueError("DFS conversion sidecar checksum does not match its CSV")
+        projection_bytes = _canonical_csv_bytes(temporary_csv.read_bytes())
+        metadata["projection_csv_sha256"] = hashlib.sha256(projection_bytes).hexdigest()
         metadata["source_build_id"] = build_id
         metadata["source_artifact"] = str(build["artifact"])
         metadata["source_artifact_sha256"] = source_sha256
@@ -147,7 +156,7 @@ def sync_active_release(
         metadata["games"] = games
         metadata["synced_at_utc"] = datetime.now(timezone.utc).isoformat()
 
-        _replace_bytes(destination, temporary_csv.read_bytes())
+        _replace_bytes(destination, projection_bytes)
         _replace_bytes(
             destination_metadata,
             (json.dumps(metadata, indent=2, sort_keys=True) + "\n").encode("utf-8"),
