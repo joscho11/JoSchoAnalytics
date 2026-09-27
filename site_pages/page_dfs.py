@@ -139,7 +139,8 @@ def render():
         st.caption(str(exc))
         return
 
-    latest = runtime.latest_projection_path()
+    active_fantasy, _active_fantasy_path = runtime.active_fantasy_source()
+    published_projection = runtime.active_projection_path(active_fantasy)
     salary_upload = st.file_uploader(
         "DraftKings salary CSV",
         type=["csv"],
@@ -156,8 +157,13 @@ def render():
 
     if salary_upload is None:
         st.info("Upload a DraftKings NFL Classic salary CSV to inspect the slate.", icon=":material/upload_file:")
-        if latest is not None:
-            st.caption(f"Verified projection artifact ready: `{latest.name}`")
+        if active_fantasy is not None:
+            season = int(active_fantasy["season"])
+            week = int(active_fantasy["week"])
+            if published_projection is not None:
+                st.caption(f"Verified DFS projections ready for {season} Week {week}.")
+            else:
+                st.caption(f"Fantasy projections are published for {season} Week {week}; DFS conversion is pending.")
         return
 
     salary_bytes = runtime.read_bytes(salary_upload)
@@ -180,21 +186,35 @@ def render():
         f"{salary_summary['n_games']} games · {dates}."
     )
 
-    if projection_upload is None and latest is None:
-        st.warning(
-            "Your salary file is valid. Direct-DK projections for this slate are not published yet, "
-            "so the optimizer cannot generate a lineup. This is a projection-data gap, not a problem "
-            "with your DraftKings CSV. Upload a compatible direct-DK projection CSV or wait for the "
-            "producer artifact."
-        )
-        return
-
     if projection_upload is not None:
         projection_bytes = runtime.read_bytes(projection_upload)
         projection_label = projection_upload.name
     else:
-        projection_bytes = latest.read_bytes()
-        projection_label = latest.name
+        if published_projection is None:
+            if active_fantasy is None:
+                pending = "Direct-DK projections for this slate are not published yet."
+            else:
+                pending = (
+                    f"{int(active_fantasy['season'])} Week {int(active_fantasy['week'])} "
+                    "DFS projections are not published yet."
+                )
+            st.warning(
+                f"Your salary file is valid. {pending} The optimizer cannot generate a lineup "
+                "until a verified projection artifact is available. Upload a compatible direct-DK "
+                "projection CSV or try again after the weekly sync completes."
+            )
+            return
+        if not runtime.projection_matches_slate(
+            published_projection, salary_frame, pipeline.norm_team
+        ):
+            st.warning(
+                "Your salary file is valid, but the published DFS projections do not match its "
+                "games and dates. Upload a compatible direct-DK projection CSV or use the salary "
+                "export for the published week."
+            )
+            return
+        projection_bytes = published_projection.read_bytes()
+        projection_label = published_projection.name
 
     # Cash maximises the expected score. Tournaments pay the right tail, so they
     # optimise an 85th-percentile OUTCOME instead. Residuals are right skewed:

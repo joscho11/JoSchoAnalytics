@@ -1,0 +1,66 @@
+name: Sync DFS optimizer projections
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "data/releases/manifest.json"
+      - "data/releases/builds/fantasy/**"
+  schedule:
+    - cron: "17 */3 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: sync-optimizer-projections
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    env:
+      DFS_OPTIMIZER_ROOT: ${{ github.workspace }}/.producer-src
+      DFS_PRODUCER_REVISION: 19d0e1ecc8731e91910e8f85447311e383d03272
+
+    steps:
+      - name: Checkout website and releases
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Checkout pinned private DFS producer
+        uses: actions/checkout@v4
+        with:
+          repository: joscho11/dfs_optimizer_v1_prod
+          ref: 19d0e1ecc8731e91910e8f85447311e383d03272
+          # Configure this repo secret with contents:read access to the private producer repo.
+          token: ${{ secrets.DFS_PRODUCER_READ_TOKEN }}
+          path: .producer-src
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install reviewed optimizer runtime
+        run: python -m pip install ./vendor/jsa_dfs_optimizer-0.2.3-py3-none-any.whl
+
+      - name: Sync active fantasy release
+        run: >-
+          python scripts/sync_optimizer_projection.py
+          --converter .producer-src/scripts/dk_from_half_ppr.py
+          --producer-revision "$DFS_PRODUCER_REVISION"
+
+      - name: Commit verified projection artifacts
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git rebase origin/main
+          git add fantasy/optimizer_projections
+          git diff --cached --quiet && exit 0
+          git commit -m "Auto: sync DFS projections for active fantasy release"
+          git push origin HEAD:main

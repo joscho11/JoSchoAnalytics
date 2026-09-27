@@ -3,6 +3,8 @@ import os
 import sys
 from pathlib import Path
 
+import pandas as pd
+
 os.environ["APP_OFFLINE"] = "1"
 
 from streamlit.testing.v1 import AppTest
@@ -70,9 +72,13 @@ def test_page_is_real_slate_upload_only():
 def test_valid_salary_explains_missing_projection(tmp_path, monkeypatch):
     monkeypatch.setenv("DFS_OPTIMIZER_ROOT", str(tmp_path / "optimizer"))
     monkeypatch.setenv("DFS_PROJECTION_ROOT", str(tmp_path / "published"))
+    monkeypatch.setattr(runtime, "active_fantasy_source", lambda root=None: (
+        {"build_id": "fantasy-2026w03-test", "season": 2026, "week": 3, "sha256": "a" * 64},
+        tmp_path / "fantasy.csv",
+    ))
     at = _upload_inputs(_run(), include_projection=False)
     assert any("Salary slate accepted" in item.value for item in at.success)
-    assert any("projection-data gap" in item.value for item in at.warning)
+    assert any("2026 Week 3 DFS projections are not published yet" in item.value for item in at.warning)
     assert not any(button.label == "Optimize lineup" for button in at.button)
 
 
@@ -156,23 +162,85 @@ def test_stale_team_mismatch_excluded_by_default():
     assert len(locked_after.options) == n_options_excluded + 1
 
 
-def test_auto_discovery_requires_a_valid_candidate_sidecar(tmp_path, monkeypatch):
-    published = tmp_path / "published"
-    published.mkdir()
-    projection = published / "projections_2026_week01.csv"
-    projection.write_text("projection_units\ndirect_dk_points\n", encoding="utf-8")
+def _write_published_projection(
+    root, *, week, build_id, source_sha, games,
+    revision="1" * 40, synced_at="2026-09-27T12:00:00+00:00",
+):
+    projection = root / f"projections_2026_week{week:02d}.csv"
+    projection.parent.mkdir(parents=True, exist_ok=True)
+    projection.write_bytes(PROJECTION_FIXTURE.read_bytes())
     metadata = {
         "product": "dfs_optimizer_v1",
         "scoring": "draftkings_classic",
         "projection_units": "direct_dk_points",
         "season": 2026,
-        "week": 1,
+        "week": week,
+        "source_build_id": build_id,
+        "source_artifact_sha256": source_sha,
+        "producer_revision": revision,
+        "synced_at_utc": synced_at,
+        "games": games,
         "projection_csv_sha256": runtime.file_sha256(projection),
     }
     projection.with_suffix(".json").write_text(json.dumps(metadata), encoding="utf-8")
+    return projection
+
+
+def test_active_projection_is_bound_to_release_and_salary_slate(tmp_path, monkeypatch):
+    published = tmp_path / "published"
+    published.mkdir()
     monkeypatch.setattr(runtime, "published_projection_root", lambda: published)
-    monkeypatch.setattr(runtime, "optimizer_root", lambda: tmp_path / "optimizer")
-    assert runtime.latest_projection_path() == projection
+    source_sha = "a" * 64
+    games = [{"date": "2026-09-13", "teams": ["BUF", "KC"]}]
+    _write_published_projection(
+        published, week=2, build_id="fantasy-2026w02-old", source_sha="b" * 64, games=games
+    )
+    older_projection = _write_published_projection(
+        published / "2026" / "week03" / "fantasy-2026w03-current" / ("f" * 12),
+        week=3, build_id="fantasy-2026w03-current", source_sha=source_sha, games=games,
+        revision="f" * 40, synced_at="2026-09-26T12:00:00+00:00",
+    )
+    projection = _write_published_projection(
+        published / "2026" / "week03" / "fantasy-2026w03-current" / ("1" * 12),
+        week=3, build_id="fantasy-2026w03-current", source_sha=source_sha, games=games,
+    )
+    build = {
+        "build_id": "fantasy-2026w03-current",
+        "sha256": source_sha,
+        "season": 2026,
+        "week": 3,
+    }
+    assert runtime.active_projection_path(build) == projection
+
+    salary = pd.DataFrame([{"away": "BUF", "home": "KC", "slate_date": "09/13/2026"}])
+    assert runtime.projection_matches_slate(projection, salary, runtime.load_pipeline().norm_team)
+    mismatched_date = salary.assign(slate_date="09/20/2026")
+    assert not runtime.projection_matches_slate(
+        projection, mismatched_date, runtime.load_pipeline().norm_team
+    )
+
+    corrected = {**build, "build_id": "fantasy-2026w03-corrected", "sha256": "c" * 64}
+    assert runtime.active_projection_path(corrected) is None
 
     projection.write_text("tampered\n", encoding="utf-8")
-    assert runtime.latest_projection_path() is None
+    assert runtime.active_projection_path(build) == older_projection
+
+
+def test_mismatched_override_still_fails_matchup_validation():
+    salary = SALARY_FIXTURE.read_text(encoding="utf-8")
+    projection = PROJECTION_FIXTURE.read_text(encoding="utf-8").replace(
+        "demo-qb-a,Demo QB Alpha,QB,BUF,KC,2026,1,24.8,direct_dk_points",
+        "demo-qb-a,Demo QB Alpha,QB,BUF,ZZZ,2026,1,24.8,direct_dk_points",
+    )
+    assert projection != PROJECTION_FIXTURE.read_text(encoding="utf-8")
+
+    at = _run()
+    at.file_uploader(key="dfs_salary_upload").set_value(
+        ("DKSalaries.csv", salary.encode("utf-8"), "text/csv")
+    )
+    at.file_uploader(key="dfs_projection_upload").set_value(
+        ("stale-projections.csv", projection.encode("utf-8"), "text/csv")
+    )
+    at = at.run()
+    assert not at.exception, at.exception
+    assert any("Slate validation failed" in item.value for item in at.error)
