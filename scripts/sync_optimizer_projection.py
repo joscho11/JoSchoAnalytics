@@ -18,6 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT), str(ROOT / "site_pages")]
 
 import dfs_runtime as runtime  # noqa: E402
+from publishing.contract import sha256_file as published_artifact_sha256  # noqa: E402
 
 
 def _release_games(frame: pd.DataFrame, norm_team) -> list[dict]:
@@ -80,8 +81,13 @@ def sync_active_release(
     if not re.fullmatch(r"[A-Za-z0-9-]+", build_id):
         raise ValueError(f"unsafe active fantasy build id: {build_id!r}")
     source_sha256 = str(build["sha256"])
-    if runtime.file_sha256(source_path) != source_sha256:
-        raise ValueError("active fantasy artifact changed after manifest validation")
+    if published_artifact_sha256(source_path) != source_sha256:
+        raise ValueError("active fantasy artifact checksum does not match its manifest")
+    # The public release contract canonicalizes text-artifact hashes so that a
+    # Windows CRLF release and a Linux LF checkout have the same identity. The
+    # producer sidecar hashes the exact bytes it read, so validate that against
+    # this checkout's raw bytes before storing the canonical manifest hash.
+    source_file_sha256 = runtime.file_sha256(source_path)
 
     source = pd.read_csv(source_path, dtype={"player_id": "string"})
     if not {"season", "week"}.issubset(source.columns):
@@ -142,8 +148,8 @@ def sync_active_release(
             raise ValueError("DFS conversion matchups differ from the active fantasy release")
 
         metadata = json.loads(temporary_metadata.read_text(encoding="utf-8"))
-        if metadata.get("source_artifact_sha256") != source_sha256:
-            raise ValueError("DFS conversion sidecar is not bound to the active fantasy artifact")
+        if metadata.get("source_artifact_sha256") != source_file_sha256:
+            raise ValueError("DFS conversion sidecar is not bound to the active fantasy artifact bytes")
         projection_sha256 = runtime.file_sha256(temporary_csv)
         if metadata.get("projection_csv_sha256") != projection_sha256:
             raise ValueError("DFS conversion sidecar checksum does not match its CSV")
