@@ -90,7 +90,7 @@ def render() -> None:
         st.info(
             "The site is in preseason mode. The Draft Board, Week 1 matchups, weekly fantasy rankings, and DFS projections are live. "
             "The DFS Optimizer still needs the DraftKings salary CSV for the contest. "
-            "Touchdown Props' Anytime TD market is a 2025 demo; 2+ TD and First TD are live 2026. "
+            "Touchdown Props has live 2026 Anytime TD, 2+ TD, and First TD markets, plus a 2025 demo. "
             f"The next planned Draft Board model snapshot is before {season_start:%B %d}."
         )
     else:

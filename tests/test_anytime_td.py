@@ -44,7 +44,7 @@ def test_anytime_td_renders_and_owns_controls(tmp_path):
     assert len(at.tabs) == 0
     controls = {w.key: w.value for w in at.selectbox}
     assert controls["atd_year"] == 2026
-    assert controls["atd_week"] == 2
+    assert controls["atd_week"] == 3
     titles = " ".join(str(t.value) for t in at.title)
     assert "Touchdown Props" in titles
     captions = " ".join(str(c.value) for c in at.caption)
@@ -58,12 +58,12 @@ def test_anytime_td_renders_and_owns_controls(tmp_path):
     assert "DraftKings" in blob
     assert "Eight players" not in blob
     assert any("How to read this board" in str(e.label) for e in at.expander)
-    assert any(getattr(w, "key", None) == "atd_matchup_2026_2" for w in at.selectbox)
-    assert any(getattr(w, "key", None) == "atd_view_2026_2" for w in at.segmented_control)
+    assert any(getattr(w, "key", None) == "atd_matchup_2026_3" for w in at.selectbox)
+    assert any(getattr(w, "key", None) == "atd_view_2026_3" for w in at.segmented_control)
     assert any(getattr(w, "key", None) == "atd_search" for w in at.text_input)
     metric_labels = {str(metric.label) for metric in at.metric}
     assert {"Net units", "ROI", "Record", "Approx. 95% ROI range"} <= metric_labels
-    expected = pd.read_csv(_HERE / "betting" / "anytime_td" / "anytime_td_2026_week02.csv")
+    expected = pd.read_csv(_HERE / "betting" / "anytime_td" / "anytime_td_2026_week03.csv")
     expected_default = page.default_matchup_label(list(page._matchup_groups(expected)))
     assert expected_default in {str(w.value) for w in at.selectbox}
     selected = next(
@@ -797,7 +797,7 @@ def test_latest_2026_week_is_default_release_when_present():
     import page_anytime_td as page
 
     assert page.default_release([(2025, 17), (2026, 1)]) == (2026, 1)
-    assert page.default_release([(2026, 1), (2026, 2)]) == (2026, 2)
+    assert page.default_release([(2026, 1), (2026, 2), (2026, 3)]) == (2026, 3)
     assert page.default_release([(2025, 10), (2025, 17)]) == (2025, 10)
 
 

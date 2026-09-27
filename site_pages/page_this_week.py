@@ -122,5 +122,5 @@ def render() -> None:
         _page_link("anytime-tds", "Open Touchdown Props", ":material/sports_score:")
 
     st.caption("Spread numbers are Tuesday line value, not closing-line value. Fantasy "
-               "numbers are projections. Touchdown Props' Anytime TD market is a 2025 demo; "
-               "2+ TD and First TD are live 2026. Full method on Help & Guide.")
+               "numbers are projections. Touchdown Props has live 2026 Anytime TD, "
+               "2+ TD, and First TD markets, plus a 2025 demo. Full method on Help & Guide.")
