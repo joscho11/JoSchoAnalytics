@@ -570,8 +570,13 @@ def _live_metadata(season: int = LIVE_SEASON, week: int = 1) -> dict:
     files = sorted(_DIR.glob(f"anytime_td_{season}_week{week:02d}_*.json"))
     if not files:
         return {}
-    # The newest slate metadata describes the most recent cumulative append.
-    return _load_meta(str(files[-1]))
+    metadata = [(path, _load_meta(str(path))) for path in files]
+    timestamped = [(path, meta) for path, meta in metadata if meta.get("publish_now_et")]
+    # Slate names sort alphabetically, not by publication time (e.g. Monday
+    # sorts before Sunday), so use the publisher's capture timestamp.
+    if timestamped:
+        return max(timestamped, key=lambda item: str(item[1]["publish_now_et"]))[1]
+    return metadata[-1][1]
 
 
 def _grading_stamp_caption(season: int, week: int) -> str:
@@ -1131,7 +1136,7 @@ def _two_plus_column_config() -> dict:
         ),
         "Book 2+ TD Odds": st.column_config.TextColumn(
             "Book 2+ TD Odds",
-            help="DraftKings American odds and implied probability for two or more touchdowns.",
+            help="Sportsbook American odds and implied probability for two or more touchdowns.",
         ),
         "2+ TD Value Gap": st.column_config.TextColumn(
             "2+ TD Value Gap",
@@ -1159,7 +1164,7 @@ def _two_plus_phone_column_config() -> dict:
     )
     cfg["Book 2+ TD Odds"] = st.column_config.TextColumn(
         "Book", width=PHONE_WIDTHS["Book ATTD Odds"],
-        help="DraftKings two-plus touchdown odds and implied probability.",
+        help="Sportsbook two-plus touchdown odds and implied probability.",
     )
     cfg["2+ TD Value Gap"] = st.column_config.TextColumn(
         "Value", width=PHONE_WIDTHS["ATTD Value Gap"],
@@ -1186,7 +1191,7 @@ def _first_td_column_config() -> dict:
         ),
         "Book First TD Odds": st.column_config.TextColumn(
             "Book First TD Odds",
-            help="DraftKings American odds and de-vigged (within-game) percentage chance of scoring the game's first touchdown.",
+            help="Sportsbook American odds and de-vigged (within-game) percentage chance of scoring the game's first touchdown.",
         ),
         "First TD Value Gap": st.column_config.TextColumn(
             "First TD Value Gap",
@@ -1214,7 +1219,7 @@ def _first_td_phone_column_config() -> dict:
     )
     cfg["Book First TD Odds"] = st.column_config.TextColumn(
         "Book", width=PHONE_WIDTHS["Book ATTD Odds"],
-        help="DraftKings American odds and de-vigged percentage chance of scoring first.",
+        help="Sportsbook American odds and de-vigged percentage chance of scoring first.",
     )
     cfg["First TD Value Gap"] = st.column_config.TextColumn(
         "Value", width=PHONE_WIDTHS["ATTD Value Gap"],
@@ -1341,7 +1346,7 @@ Use the **Market** control to switch between Anytime TD, 2+ TD, and First TD.
 Only one market renders at a time.
 
 **2+ TD.** When the pasted release includes that market, the view shows model
-odds, current DraftKings odds, and the value gap for players with a listed 2+
+odds, current sportsbook odds, and the value gap for players with a listed 2+
 price. Older releases without that market show a clear not-implemented
 placeholder before games begin. Completed matchups without a published 2+
 market do not receive retroactive model odds; once grading supplies final
@@ -1364,7 +1369,7 @@ competing-risk allocation across both rosters, not a per-player marginal
 chance. Our model splits each game's mass proportionally to each player's
 Anytime TD rate, scaled by the historical rate an offensive skill player
 scores first at all (roughly 94% of games; the rest go to defense, special
-teams, or no score). DraftKings' First TD price is de-vigged within the
+teams, or no score). The sportsbook's First TD price is de-vigged within the
 game, since first touchdown is a genuine one-winner market (unlike the
 Yes-only Anytime quote). There is no historical First TD backtest anywhere
 in this project for any season, only a forward live-week board, so treat this
@@ -1373,7 +1378,7 @@ p_first values within a game are not independent (they split a fixed pool,
 not separate coin flips) and real bell-cow players already show a
 persistent -5pp to -8pp gap vs DraftKings' price, First TD keeps a wider
 +3.0pp gap rule. Since 2026-09-19 it also requires a positive expected
-return at DraftKings' actual, vigged price: the de-vigged gap alone can
+return at the book's actual, vigged price: the de-vigged gap alone can
 still clear on a bet that loses money at the real price, since First TD's
 raw prices sum to about 121% per game, not 100%.
 
@@ -1395,7 +1400,7 @@ def render() -> None:
     st.title("Touchdown Props")
     st.badge("Beta", icon=":material/science:", color="orange")
     st.caption(
-        "Anytime, 2+, and First TD scorer odds vs DraftKings. Passing TDs are "
+        "Anytime, 2+, and First TD scorer odds compared with sportsbook prices. Passing TDs are "
         "out of every market. Live 2026 releases plus a 2025 demo. For fun. Bet responsibly."
     )
     releases = available_releases()
@@ -1436,14 +1441,14 @@ def render() -> None:
     available = releases | {(DEMO_SEASON, w): p for w, p in demo.items()}
     if season == LIVE_SEASON:
         st.caption(
-            "Live 2026 prices are manually copied from DraftKings when available. "
-            "No odds API is used."
+            "Live 2026 prices are manually copied from US sportsbook pages when available. "
+            "The source is shown for each matchup. No odds API is used."
         )
         meta = _live_metadata(season, week)
         if meta:
             book_value = meta.get("book", [])
             books = ", ".join(book_value) if isinstance(book_value, list) else str(book_value)
-            st.caption(f"Book: {books or 'manual paste'} · Last capture: {meta.get('capture_max', 'unknown')}")
+            st.caption(f"Latest paste: {books or 'manual paste'} · Captured: {meta.get('capture_max', 'unknown')}")
         graded_line = _grading_stamp_caption(season, week)
         if graded_line:
             st.caption(graded_line)
@@ -1557,6 +1562,9 @@ def render() -> None:
             help="Choose a game to view both teams' touchdown prop boards.",
         )
     label, teams, matchup = next(item for item in matchups if item[0] == selected_label)
+    matchup_books = sorted(matchup["book"].dropna().astype(str).unique()) if "book" in matchup else []
+    if matchup_books:
+        st.caption(f"{label} book: {', '.join(matchup_books)}")
 
     two_plus_prices_available = _has_two_plus_prices(matchup)
     display_only_two_plus = _is_display_only_two_plus_matchup(matchup)
@@ -1592,12 +1600,12 @@ def render() -> None:
             st.caption(
                 "First TD view: model probability (a competing-risk allocation "
                 "across the whole game, not a per-player marginal chance), "
-                "DraftKings' price de-vigged within the game, and the value gap. "
+                "the sportsbook price de-vigged within the game, and the value gap. "
                 f"The rule powering the 1U paper tracker below is {tracker.rule_description('first')}, "
                 "since real bell-cow players already show a persistent -5pp to "
                 "-8pp gap here that a narrower rule would misread as value, and "
                 "the de-vigged gap alone can still pass on a bet that loses "
-                "money at DraftKings' real, vigged price."
+                "money at the book's real, vigged price."
             )
         elif display_only_first_td:
             st.info(
@@ -1627,7 +1635,7 @@ def render() -> None:
             )
         elif two_plus_prices_available:
             st.caption(
-                "2+ TD view: model probability, current DraftKings price, and "
+                "2+ TD view: model probability, current sportsbook price, and "
                 f"value gap. The rule powering the 1U paper tracker below is "
                 f"{tracker.rule_description('two_plus')}. First-TD prices are "
                 "retained in the release data and shown in the separate First TD view."

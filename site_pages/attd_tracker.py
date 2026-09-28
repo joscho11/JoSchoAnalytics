@@ -122,13 +122,13 @@ def rule_description(market: str) -> str:
     """Plain-language description of the paper-bet qualifying rule for `market`."""
     if market == "two_plus":
         return (
-            f"model probability at least {TWO_PLUS_RATIO_THRESHOLD:.2f}x DraftKings' "
+            f"model probability at least {TWO_PLUS_RATIO_THRESHOLD:.2f}x the book's "
             f"price, with that price at least {100 * TWO_PLUS_PRICE_FLOOR:.0f}%"
         )
     if market == "first":
         return (
             f"+{100 * FIRST_TD_VALUE_THRESHOLD:.1f}pp value gap AND a positive "
-            "expected return at DraftKings' actual price"
+            "expected return at the book's actual price"
         )
     return f"+{100 * ATTD_VALUE_THRESHOLD:.1f}pp value gap"
 
