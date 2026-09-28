@@ -3,26 +3,26 @@
   "week": 3,
   "slate": "monday_mnf",
   "book": [
-    "FanDuel"
+    "DraftKings"
   ],
   "release_mode": "live",
-  "publish_now_et": "2026-09-28T19:31:20.373091",
+  "publish_now_et": "2026-09-28T19:52:11.004487",
   "model": "live_product_35 frozen bundle; 34 locked features + Sleeper half-PPR",
   "forward_source": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\weekly_projections_v2_prod\\independent_model\\outputs\\forward\\forward_2026_week03.parquet",
   "historical_source": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\td_count_model_beta\\artifacts\\td_features_2019_2025.parquet",
   "model_bundle": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\td_count_model_beta\\artifacts\\td_lgbm_poisson_product.pkl",
   "model_bundle_sha256": "6cb5874db5278e8306cf8d06e67f5fe7a10262d7dc5a8e59a26fa568c8081819",
   "input_hashes": {
-    "paste": "8e4fbc170a6012adfdf90b85a5aa0b8c6b187ff9acdb7f52645a7566b7d9035d",
+    "paste": "ccb375eabe137faaed0e746c6e02adf915ef0f7536c44721fa6168877df52974",
     "forward": "e9f0d2cbe25847a3fff45ee506415db432f7db913012175bd242dae6d81f7ca7",
     "history": "58495f19d2cd3cfbaa824e6d462f0c68fc497237cdde3d8bfb130e19c4cb3a15"
   },
   "n_rows": 23,
   "n_cumulative": 383,
-  "capture_min": "2026-09-28T19:04:32",
-  "capture_max": "2026-09-28T19:04:32",
+  "capture_min": "2026-09-28T19:50:15",
+  "capture_max": "2026-09-28T19:50:15",
   "capture_lead_minutes": [
-    70.5
+    24.8
   ],
   "capture_window_warning": false,
   "unresolved_paste_rows": [
@@ -31,9 +31,9 @@
   "unresolved_player_count": 1,
   "possible_nickname_matches": [],
   "sleeper_snapshot": {
-    "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\sleeper\\paste_time\\2026_w03_monday_mnf_20260928T233119Z.json",
-    "sha256": "206c5080b52a545d3324b394e9516597ad4b4a3a82642e37dcb89e9ef8945bd7",
-    "requested_utc": "2026-09-28T23:31:20Z",
+    "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\sleeper\\paste_time\\2026_w03_monday_mnf_20260928T235210Z.json",
+    "sha256": "6830a55439e594fb046859c815efb597adc6614e2fdd62ac1002ba9fc70ed7b7",
+    "requested_utc": "2026-09-28T23:52:10Z",
     "n_players": 12229
   },
   "assumed_out": [
@@ -360,11 +360,11 @@
     }
   },
   "network_odds_api": false,
-  "row_hash": "256d61c836f77a5f259fa8c08632d5204d6171334223c29342e29dda94dacf22",
+  "row_hash": "c81851beb8fbbf83675caefae858fa13b4f589fa9d4a025c12d378c53283d1bd",
   "first_td_enrichment_coverage": {
     "p_first": 360,
     "book_first_p_devigged": 360,
     "unquoted_lambda_remainder": 360,
-    "scored_first": 21
+    "scored_first": 360
   }
 }
