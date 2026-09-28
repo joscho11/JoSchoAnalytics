@@ -10,6 +10,7 @@ import dfs_runtime as runtime
 from dashboard_chrome import TABLE_HEIGHT, exact_table_height, dataframe_phone_desktop
 
 _LINEUP_PHONE_COLS = ["Slot", "Player", "Salary", "DK projection"]
+_HISTORY_PHONE_COLS = ["Slot", "Player", "Salary", "Actual"]
 
 
 def _player_labels(pool: pd.DataFrame) -> dict[str, str]:
@@ -95,6 +96,97 @@ def _render_lineup(pipeline, lineup: pd.DataFrame) -> None:
     )
 
 
+def _history_table(lineup: dict) -> pd.DataFrame:
+    """The lineup's nine rows plus a Total row, built from the published totals."""
+    table = pd.DataFrame(lineup["players"]).rename(columns={
+        "slot": "Slot", "player": "Player", "pos": "Pos", "team": "Team",
+        "salary": "Salary", "ceiling": "Ceiling", "mean": "Mean",
+        "actual": "Actual", "own": "Own",
+    })[["Slot", "Player", "Pos", "Team", "Salary", "Ceiling", "Mean", "Actual", "Own"]]
+    total = {
+        "Slot": "Total", "Player": "", "Pos": "", "Team": "",
+        "Salary": lineup["salary"], "Ceiling": lineup["total_ceiling"],
+        "Mean": lineup["total_mean"], "Actual": lineup["total_actual"], "Own": "",
+    }
+    return pd.concat([table, pd.DataFrame([total])], ignore_index=True)
+
+
+def _bold_last_row(frame: pd.DataFrame):
+    last = len(frame) - 1
+    return frame.style.apply(
+        lambda row: ["font-weight: 700" if row.name == last else "" for _ in row], axis=1
+    )
+
+
+def _render_history_lineup_table(lineup: dict, *, season: int, week: int) -> None:
+    table = _history_table(lineup)
+    col_config = {
+        "Salary": st.column_config.NumberColumn(format="%d"),
+        "Ceiling": st.column_config.NumberColumn(format="%.1f"),
+        "Mean": st.column_config.NumberColumn(format="%.1f"),
+        "Actual": st.column_config.NumberColumn(format="%.1f"),
+    }
+    phone_cols = [col for col in _HISTORY_PHONE_COLS if col in table.columns]
+    dataframe_phone_desktop(
+        _bold_last_row(table),
+        _bold_last_row(table[phone_cols]),
+        slug=f"dfs-history-{season}-{week}-{lineup['kind']}",
+        hide_index=True,
+        width="stretch",
+        height=exact_table_height(len(table)),
+        column_config=col_config,
+        key=f"dfs_history_grid_{season}_{week}_{lineup['kind']}",
+    )
+
+
+def _render_history_week(payload: dict, *, season: int) -> None:
+    week = int(payload["week"])
+    field = payload.get("field") or {}
+    field_parts = []
+    if "median" in field:
+        field_parts.append(f"field median {field['median']} pts")
+    if "top" in field:
+        field_parts.append(f"top score {field['top']} pts")
+    if field_parts:
+        st.caption(", ".join(field_parts).capitalize() + ".")
+    lineups = payload.get("lineups", [])
+    for lineup in lineups:
+        with st.container(border=True, key=f"jsa-dfs-history-{season}-{week}-{lineup['kind']}"):
+            if len(lineups) > 1:
+                st.markdown(f"**{lineup['label']}**")
+            with st.container(horizontal=True, key=f"jsa-metric-even-dfs-history-{lineup['kind']}"):
+                st.metric("Actual DK points", f"{lineup['total_actual']:.1f}", border=True)
+                st.metric("Finish", f"Top {lineup['top_pct']}%", border=True)
+            _render_history_lineup_table(lineup, season=season, week=week)
+
+
+def _render_history() -> None:
+    st.subheader("History")
+    st.caption(
+        "Tournament lineup built before kickoff, scored with official DraftKings points, "
+        "percentile against every lineup in one large DraftKings tournament field."
+    )
+    seasons = runtime.history_seasons()
+    if not seasons:
+        st.info("No published History weeks yet.")
+        return
+
+    pick_season, pick_week = st.columns(2)
+    season = pick_season.selectbox("Season", seasons, key="dfs_history_season")
+    by_week = {int(payload["week"]): payload for payload in runtime.load_history(season)}
+    week_numbers = sorted(by_week)
+    # Keyed by season so switching seasons resets the week to that season's latest.
+    week = pick_week.selectbox(
+        "Week",
+        week_numbers,
+        index=len(week_numbers) - 1,
+        format_func=lambda number: f"Week {number}",
+        key=f"dfs_history_week_{season}",
+    )
+    _render_history_week(by_week[week], season=season)
+    st.caption("One field per week is a small sample, not a win rate.")
+
+
 def render():
     st.title("DFS optimizer")
     with st.container(horizontal=True, vertical_alignment="center"):
@@ -128,6 +220,18 @@ def render():
             "points on 2025 out-of-sample predictions. Neither source is a model "
             "trained directly on DraftKings scoring."
         )
+
+    view = st.segmented_control(
+        "View",
+        options=["Optimizer", "History"],
+        default="Optimizer",
+        key="dfs_view",
+    )
+    if view is None:
+        view = "Optimizer"
+    if view == "History":
+        _render_history()
+        return
 
     try:
         pipeline = runtime.load_pipeline()

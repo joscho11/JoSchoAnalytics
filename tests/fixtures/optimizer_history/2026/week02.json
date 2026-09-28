@@ -1,0 +1,125 @@
+{
+  "season": 2026,
+  "week": 2,
+  "mode": "tournament_ceiling",
+  "engine_version": "0.2.3",
+  "projection_sha256": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+  "salary_sha256": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+  "field": {
+    "median": 100,
+    "top": 200
+  },
+  "lineups": [
+    {
+      "label": "Optimizer lineup",
+      "kind": "untouched",
+      "exclusions": [],
+      "total_actual": 122.08,
+      "total_ceiling": 175.6,
+      "total_mean": 131.75,
+      "salary": 50000,
+      "top_pct": 36,
+      "players": [
+        {
+          "slot": "QB",
+          "player": "Demo QB Alpha",
+          "pos": "QB",
+          "team": "SF",
+          "salary": 6200,
+          "ceiling": 29.76,
+          "mean": 21.35,
+          "actual": 28.48,
+          "own": "12%"
+        },
+        {
+          "slot": "RB",
+          "player": "Demo RB Alpha",
+          "pos": "RB",
+          "team": "SF",
+          "salary": 8000,
+          "ceiling": 27.21,
+          "mean": 21.99,
+          "actual": 22.6,
+          "own": "14%"
+        },
+        {
+          "slot": "RB",
+          "player": "Demo RB Bravo",
+          "pos": "RB",
+          "team": "BAL",
+          "salary": 7200,
+          "ceiling": 23.64,
+          "mean": 18.42,
+          "actual": 17.7,
+          "own": "34%"
+        },
+        {
+          "slot": "FLEX",
+          "player": "Demo RB Charlie",
+          "pos": "RB",
+          "team": "MIN",
+          "salary": 5100,
+          "ceiling": 19.28,
+          "mean": 14.06,
+          "actual": 13.5,
+          "own": "18%"
+        },
+        {
+          "slot": "WR",
+          "player": "Demo WR Alpha",
+          "pos": "WR",
+          "team": "CIN",
+          "salary": 7600,
+          "ceiling": 22.11,
+          "mean": 16.8,
+          "actual": 26.5,
+          "own": "10%"
+        },
+        {
+          "slot": "WR",
+          "player": "Demo WR Bravo",
+          "pos": "WR",
+          "team": "ARI",
+          "salary": 5400,
+          "ceiling": 17.5,
+          "mean": 12.19,
+          "actual": 3.8,
+          "own": "<1%"
+        },
+        {
+          "slot": "WR",
+          "player": "Demo WR Charlie",
+          "pos": "WR",
+          "team": "CLE",
+          "salary": 3900,
+          "ceiling": 13.94,
+          "mean": 8.63,
+          "actual": 0.0,
+          "own": "<1%"
+        },
+        {
+          "slot": "TE",
+          "player": "Demo TE Alpha",
+          "pos": "TE",
+          "team": "ATL",
+          "salary": 4500,
+          "ceiling": 15.91,
+          "mean": 12.06,
+          "actual": 2.5,
+          "own": "<1%"
+        },
+        {
+          "slot": "DST",
+          "player": "Demo Titans",
+          "pos": "DST",
+          "team": "TEN",
+          "salary": 2100,
+          "ceiling": 6.22,
+          "mean": 6.22,
+          "actual": 7.0,
+          "own": "2%"
+        }
+      ]
+    }
+  ]
+}

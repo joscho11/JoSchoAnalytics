@@ -8,6 +8,7 @@ from __future__ import annotations
 import hashlib
 import importlib
 import json
+import logging
 import os
 import sys
 from datetime import datetime
@@ -17,6 +18,8 @@ from pathlib import Path
 import pandas as pd
 
 from publishing.manifest import active_release, load_manifest, resolve_build_artifact
+
+_LOG = logging.getLogger(__name__)
 
 
 class DfsRuntimeUnavailable(RuntimeError):
@@ -58,6 +61,50 @@ def load_pipeline():
             f"DFS runtime version mismatch: expected {EXPECTED_ENGINE_VERSION}, loaded {version or 'unknown'}"
         )
     return module
+
+
+def history_root() -> Path:
+    configured = os.environ.get("DFS_HISTORY_ROOT", "").strip()
+    if configured:
+        return Path(configured).expanduser().resolve()
+    return SITE_ROOT / "fantasy" / "optimizer_history"
+
+
+def history_seasons() -> list[int]:
+    """Seasons with at least one loadable History week, newest first."""
+    root = history_root()
+    if not root.is_dir():
+        return []
+    seasons = [
+        int(path.name) for path in root.iterdir()
+        if path.is_dir() and path.name.isdigit() and load_history(int(path.name))
+    ]
+    return sorted(seasons, reverse=True)
+
+
+def load_history(season: int) -> list[dict]:
+    """Read published History JSON artifacts for one season, sorted by week.
+
+    A malformed file (unparsable JSON, or missing the keys the History view
+    needs) is logged and skipped rather than raising, so one bad week's file
+    can never take the whole History view down with it.
+    """
+    root = history_root() / str(season)
+    if not root.is_dir():
+        return []
+    weeks: list[dict] = []
+    for path in sorted(root.glob("week*.json")):
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as exc:
+            _LOG.warning("skipping malformed DFS history file %s: %s", path, exc)
+            continue
+        if not isinstance(payload, dict) or "week" not in payload or "lineups" not in payload:
+            _LOG.warning("skipping malformed DFS history file %s: missing required keys", path)
+            continue
+        weeks.append(payload)
+    weeks.sort(key=lambda week_payload: week_payload.get("week", 0))
+    return weeks
 
 
 def published_projection_root() -> Path:

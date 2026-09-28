@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
 os.environ["APP_OFFLINE"] = "1"
 
@@ -59,7 +60,11 @@ def test_runtime_and_test_fixtures_solve():
 
 def test_page_is_real_slate_upload_only():
     at = _run()
-    assert not at.segmented_control
+    # Only the History/Optimizer View control exists before a salary upload;
+    # the Cash/Tournament objective control only appears once a slate is in.
+    assert {widget.key for widget in at.segmented_control} == {"dfs_view"}
+    view = next(widget for widget in at.segmented_control if widget.key == "dfs_view")
+    assert view.value == "Optimizer"
     assert {widget.label for widget in at.file_uploader} == {
         "DraftKings salary CSV",
         "Direct-DK projection CSV",
@@ -256,3 +261,158 @@ def test_mismatched_override_still_fails_matchup_validation():
     at = at.run()
     assert not at.exception, at.exception
     assert any("Slate validation failed" in item.value for item in at.error)
+
+
+# ------------------------------------------------------------- History view
+HISTORY_FIXTURES = ROOT / "tests" / "fixtures" / "optimizer_history"
+
+
+def _all_rendered_text(at) -> str:
+    """Every user-visible string AppTest exposes: markdown, captions, metrics,
+    subheaders, info banners, and every rendered dataframe's own cell text
+    (both the desktop and phone copies dataframe_phone_desktop draws)."""
+    parts = []
+    for md in at.markdown:
+        parts.append(str(md.value))
+    for cap in at.caption:
+        parts.append(str(cap.value))
+    for metric in at.metric:
+        parts.append(f"{metric.label} {metric.value} {metric.delta or ''}")
+    for sub in at.subheader:
+        parts.append(str(sub.value))
+    for info in at.info:
+        parts.append(str(info.value))
+    for df_el in at.dataframe:
+        parts.append(df_el.value.to_csv(index=False))
+    return "\n".join(parts)
+
+
+def _switch_to_history(at):
+    view = next(widget for widget in at.segmented_control if widget.key == "dfs_view")
+    at = view.set_value("History").run()
+    assert not at.exception, at.exception
+    assert not at.error, [item.value for item in at.error]
+    return at
+
+
+def _render_history_only():
+    __import__("page_dfs")._render_history()
+
+
+def _history_at(monkeypatch, root=HISTORY_FIXTURES):
+    monkeypatch.setattr(runtime, "history_root", lambda: root)
+    at = AppTest.from_function(_render_history_only, default_timeout=120).run()
+    assert not at.exception, at.exception
+    assert not at.error, [item.value for item in at.error]
+    return at
+
+
+def _metrics(at) -> dict:
+    return {(metric.label, metric.value) for metric in at.metric}
+
+
+def test_history_defaults_to_latest_season_and_week_and_shows_only_that_week(monkeypatch):
+    at = _history_at(monkeypatch)
+    season = at.selectbox(key="dfs_history_season")
+    assert season.options == ["2026", "2025"] and season.value == 2026
+    week = at.selectbox(key="dfs_history_week_2026")
+    assert week.options == ["Week 2", "Week 3"] and week.value == 3
+
+    # Week 3 has two lineups: the untouched one and the one with exclusions.
+    assert _metrics(at) == {
+        ("Actual DK points", "150.9"), ("Finish", "Top 17%"),
+        ("Actual DK points", "162.5"), ("Finish", "Top 9%"),
+    }
+    assert any("With 2 exclusions made before lock" in md.value for md in at.markdown)
+    # Two lineups, each drawn as a desktop and a phone copy.
+    assert len(at.dataframe) == 4
+    # Nothing from Week 2 or from another season is on screen.
+    assert not any("122.1" in metric.value for metric in at.metric)
+    assert not any("98.5" in metric.value for metric in at.metric)
+
+
+def test_history_tables_end_in_a_total_row_not_a_caption(monkeypatch):
+    at = _history_at(monkeypatch)
+    desktop, phone = at.dataframe[0].value, at.dataframe[1].value
+    assert list(desktop.columns) == [
+        "Slot", "Player", "Pos", "Team", "Salary", "Ceiling", "Mean", "Actual", "Own",
+    ]
+    assert list(phone.columns) == ["Slot", "Player", "Salary", "Actual"]
+    assert len(desktop) == len(phone) == 10  # nine players plus the Total row
+
+    total = desktop.iloc[-1]
+    assert total["Slot"] == "Total"
+    assert total["Salary"] == 50_000
+    assert total["Actual"] == pytest.approx(150.88)
+    assert total["Ceiling"] == pytest.approx(175.6)
+    assert total["Mean"] == pytest.approx(131.75)
+    assert phone.iloc[-1]["Slot"] == "Total"
+    assert phone.iloc[-1]["Actual"] == pytest.approx(150.88)
+    # The totals used to live in a small caption under the table.
+    assert not any(cap.value.startswith("Total:") for cap in at.caption)
+
+
+def test_history_week_dropdown_switches_to_one_other_week(monkeypatch):
+    at = _history_at(monkeypatch)
+    at = at.selectbox(key="dfs_history_week_2026").set_value(2).run()
+    assert not at.exception, at.exception
+    assert _metrics(at) == {("Actual DK points", "122.1"), ("Finish", "Top 36%")}
+    assert len(at.dataframe) == 2  # one lineup: desktop and phone copies
+    assert not any("With 2 exclusions" in md.value for md in at.markdown)
+    assert any("Field median 100 pts" in cap.value for cap in at.caption)
+
+
+def test_history_season_dropdown_switches_season_and_weeks(monkeypatch):
+    at = _history_at(monkeypatch)
+    at = at.selectbox(key="dfs_history_season").set_value(2025).run()
+    assert not at.exception, at.exception
+    week = at.selectbox(key="dfs_history_week_2025")
+    assert week.options == ["Week 1"] and week.value == 1
+    assert _metrics(at) == {("Actual DK points", "98.5"), ("Finish", "Top 61%")}
+
+
+def test_history_every_season_and_week_is_free_of_forbidden_text(monkeypatch):
+    at = _history_at(monkeypatch)
+    for season, weeks in ((2026, (2, 3)), (2025, (1,))):
+        at = at.selectbox(key="dfs_history_season").set_value(season).run()
+        for week in weeks:
+            at = at.selectbox(key=f"dfs_history_week_{season}").set_value(week).run()
+            assert not at.exception, at.exception
+            # Scoped to the History section: the page header mentions Cash mode
+            # and the salary cap, which are not leakage.
+            text = _all_rendered_text(at).casefold()
+            for forbidden in ("cash", "$", "contest", "joscho"):
+                assert forbidden not in text, f"{forbidden!r} in {season} week {week}"
+
+
+def test_history_view_through_the_page_uses_the_same_dropdowns(monkeypatch):
+    monkeypatch.setattr(runtime, "history_root", lambda: HISTORY_FIXTURES)
+    at = _switch_to_history(_run())
+    assert any(sub.value == "History" for sub in at.subheader)
+    assert at.selectbox(key="dfs_history_season").value == 2026
+    assert at.selectbox(key="dfs_history_week_2026").value == 3
+
+
+def test_history_view_missing_artifacts_shows_info_not_exception(tmp_path, monkeypatch):
+    monkeypatch.setattr(runtime, "history_root", lambda: tmp_path / "no_such_history")
+    at = _switch_to_history(_run())
+    assert any("No published History weeks yet" in item.value for item in at.info)
+
+
+def test_default_view_is_optimizer_and_history_does_not_disturb_it(monkeypatch):
+    monkeypatch.setattr(runtime, "history_root", lambda: HISTORY_FIXTURES)
+    at = _run()
+    view = next(widget for widget in at.segmented_control if widget.key == "dfs_view")
+    assert view.value == "Optimizer"
+    assert any("Upload a DraftKings NFL Classic salary CSV" in item.value for item in at.info)
+
+    at = _switch_to_history(at)
+    assert any(sub.value == "History" for sub in at.subheader)
+
+    # Switching back to Optimizer restores the ordinary upload-only state.
+    view = next(widget for widget in at.segmented_control if widget.key == "dfs_view")
+    at = view.set_value("Optimizer").run()
+    assert not at.exception, at.exception
+    assert any("Upload a DraftKings NFL Classic salary CSV" in item.value for item in at.info)
+    assert not any(sub.value == "History" for sub in at.subheader)
+    assert not at.selectbox

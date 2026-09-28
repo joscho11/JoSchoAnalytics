@@ -1,0 +1,239 @@
+{
+  "season": 2026,
+  "week": 3,
+  "mode": "tournament_ceiling",
+  "engine_version": "0.2.3",
+  "projection_sha256": "da7c12aaeb7fa05bc604abe7f1b5563d32024d139368a369839f49bdc300321a",
+  "salary_sha256": "9085e030800d78f4d3588f71134e3990e7141b2ec59b1f772f5972c5503ad2e8",
+  "field": {
+    "median": 126,
+    "top": 211
+  },
+  "lineups": [
+    {
+      "label": "Optimizer lineup",
+      "kind": "untouched",
+      "exclusions": [],
+      "total_actual": 150.88,
+      "total_ceiling": 177.09,
+      "total_mean": 133.15,
+      "salary": 50000,
+      "top_pct": 17,
+      "players": [
+        {
+          "slot": "QB",
+          "player": "Trevor Lawrence",
+          "pos": "QB",
+          "team": "JAX",
+          "salary": 5700,
+          "ceiling": 28.16,
+          "mean": 19.75,
+          "actual": 20.78,
+          "own": "2%"
+        },
+        {
+          "slot": "RB",
+          "player": "Christian McCaffrey",
+          "pos": "RB",
+          "team": "SF",
+          "salary": 8300,
+          "ceiling": 26.94,
+          "mean": 21.72,
+          "actual": 21.6,
+          "own": "5%"
+        },
+        {
+          "slot": "RB",
+          "player": "James Cook III",
+          "pos": "RB",
+          "team": "BUF",
+          "salary": 6900,
+          "ceiling": 23.76,
+          "mean": 18.54,
+          "actual": 23.4,
+          "own": "9%"
+        },
+        {
+          "slot": "WR",
+          "player": "Chris Olave",
+          "pos": "WR",
+          "team": "NO",
+          "salary": 7200,
+          "ceiling": 22.29,
+          "mean": 16.98,
+          "actual": 22.7,
+          "own": "15%"
+        },
+        {
+          "slot": "WR",
+          "player": "Rashee Rice",
+          "pos": "WR",
+          "team": "KC",
+          "salary": 6400,
+          "ceiling": 20.58,
+          "mean": 15.27,
+          "actual": 15.8,
+          "own": "3%"
+        },
+        {
+          "slot": "WR",
+          "player": "Jakobi Meyers",
+          "pos": "WR",
+          "team": "JAX",
+          "salary": 4800,
+          "ceiling": 17.49,
+          "mean": 12.18,
+          "actual": 19.4,
+          "own": "<1%"
+        },
+        {
+          "slot": "FLEX",
+          "player": "Jerry Jeudy",
+          "pos": "WR",
+          "team": "CLE",
+          "salary": 3800,
+          "ceiling": 16.12,
+          "mean": 10.81,
+          "actual": 0.0,
+          "own": "<1%"
+        },
+        {
+          "slot": "TE",
+          "player": "George Kittle",
+          "pos": "TE",
+          "team": "SF",
+          "salary": 4800,
+          "ceiling": 16.46,
+          "mean": 12.61,
+          "actual": 26.2,
+          "own": "4%"
+        },
+        {
+          "slot": "DST",
+          "player": "Jets",
+          "pos": "DST",
+          "team": "NYJ",
+          "salary": 2100,
+          "ceiling": 5.28,
+          "mean": 5.28,
+          "actual": 1.0,
+          "own": "3%"
+        }
+      ]
+    },
+    {
+      "label": "With 2 exclusions made before lock",
+      "kind": "with_exclusions",
+      "exclusions": [
+        "Rashee Rice",
+        "Jerry Jeudy"
+      ],
+      "total_actual": 162.48,
+      "total_ceiling": 174.67,
+      "total_mean": 130.82,
+      "salary": 50000,
+      "top_pct": 9,
+      "players": [
+        {
+          "slot": "QB",
+          "player": "Trevor Lawrence",
+          "pos": "QB",
+          "team": "JAX",
+          "salary": 5700,
+          "ceiling": 28.16,
+          "mean": 19.75,
+          "actual": 20.78,
+          "own": "2%"
+        },
+        {
+          "slot": "RB",
+          "player": "Christian McCaffrey",
+          "pos": "RB",
+          "team": "SF",
+          "salary": 8300,
+          "ceiling": 26.94,
+          "mean": 21.72,
+          "actual": 21.6,
+          "own": "5%"
+        },
+        {
+          "slot": "RB",
+          "player": "James Cook III",
+          "pos": "RB",
+          "team": "BUF",
+          "salary": 6900,
+          "ceiling": 23.76,
+          "mean": 18.54,
+          "actual": 23.4,
+          "own": "9%"
+        },
+        {
+          "slot": "FLEX",
+          "player": "Woody Marks",
+          "pos": "RB",
+          "team": "HOU",
+          "salary": 5000,
+          "ceiling": 17.4,
+          "mean": 12.18,
+          "actual": 9.1,
+          "own": "<1%"
+        },
+        {
+          "slot": "WR",
+          "player": "Chris Olave",
+          "pos": "WR",
+          "team": "NO",
+          "salary": 7200,
+          "ceiling": 22.29,
+          "mean": 16.98,
+          "actual": 22.7,
+          "own": "15%"
+        },
+        {
+          "slot": "WR",
+          "player": "Tre Tucker",
+          "pos": "WR",
+          "team": "LV",
+          "salary": 5000,
+          "ceiling": 16.06,
+          "mean": 10.75,
+          "actual": 8.3,
+          "own": "7%"
+        },
+        {
+          "slot": "WR",
+          "player": "Jakobi Meyers",
+          "pos": "WR",
+          "team": "JAX",
+          "salary": 4800,
+          "ceiling": 17.49,
+          "mean": 12.18,
+          "actual": 19.4,
+          "own": "<1%"
+        },
+        {
+          "slot": "TE",
+          "player": "George Kittle",
+          "pos": "TE",
+          "team": "SF",
+          "salary": 4800,
+          "ceiling": 16.46,
+          "mean": 12.61,
+          "actual": 26.2,
+          "own": "4%"
+        },
+        {
+          "slot": "DST",
+          "player": "Commanders",
+          "pos": "DST",
+          "team": "WAS",
+          "salary": 2300,
+          "ceiling": 6.1,
+          "mean": 6.1,
+          "actual": 11.0,
+          "own": "<1%"
+        }
+      ]
+    }
+  ]
+}

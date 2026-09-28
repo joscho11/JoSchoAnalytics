@@ -1,0 +1,124 @@
+{
+  "season": 2026,
+  "week": 1,
+  "mode": "tournament_ceiling",
+  "engine_version": "0.2.3",
+  "projection_sha256": "01388e16d6c528cfa3424b7e8116ca6427136fa7162d55dc4fdd6a1ecaaa45ad",
+  "salary_sha256": "a3312d82ea1318097c307bd3f0c60e4ead3f37cad670fae4898600aec7741536",
+  "field": {
+    "top": 256
+  },
+  "lineups": [
+    {
+      "label": "Optimizer lineup",
+      "kind": "untouched",
+      "exclusions": [],
+      "total_actual": 189.22,
+      "total_ceiling": 183.49,
+      "total_mean": 141.67,
+      "salary": 49900,
+      "top_pct": 5,
+      "players": [
+        {
+          "slot": "QB",
+          "player": "Jalen Hurts",
+          "pos": "QB",
+          "team": "PHI",
+          "salary": 6600,
+          "ceiling": 27.8,
+          "mean": 19.5,
+          "actual": 24.72,
+          "own": "7%"
+        },
+        {
+          "slot": "RB",
+          "player": "Jahmyr Gibbs",
+          "pos": "RB",
+          "team": "DET",
+          "salary": 8000,
+          "ceiling": 28.24,
+          "mean": 23.52,
+          "actual": 37.6,
+          "own": "46%"
+        },
+        {
+          "slot": "RB",
+          "player": "Bijan Robinson",
+          "pos": "RB",
+          "team": "ATL",
+          "salary": 7700,
+          "ceiling": 26.07,
+          "mean": 21.35,
+          "actual": 31.3,
+          "own": "13%"
+        },
+        {
+          "slot": "FLEX",
+          "player": "Jonathan Taylor",
+          "pos": "RB",
+          "team": "IND",
+          "salary": 7300,
+          "ceiling": 24.28,
+          "mean": 19.56,
+          "actual": 26.1,
+          "own": "11%"
+        },
+        {
+          "slot": "WR",
+          "player": "Jayden Reed",
+          "pos": "WR",
+          "team": "GB",
+          "salary": 4900,
+          "ceiling": 17.78,
+          "mean": 12.63,
+          "actual": 5.0,
+          "own": "2%"
+        },
+        {
+          "slot": "WR",
+          "player": "Jalen Coker",
+          "pos": "WR",
+          "team": "CAR",
+          "salary": 4600,
+          "ceiling": 16.69,
+          "mean": 11.54,
+          "actual": 36.8,
+          "own": "8%"
+        },
+        {
+          "slot": "WR",
+          "player": "Devaughn Vele",
+          "pos": "WR",
+          "team": "NO",
+          "salary": 3500,
+          "ceiling": 14.49,
+          "mean": 9.34,
+          "actual": 19.9,
+          "own": "10%"
+        },
+        {
+          "slot": "TE",
+          "player": "Sam LaPorta",
+          "pos": "TE",
+          "team": "DET",
+          "salary": 4400,
+          "ceiling": 17.52,
+          "mean": 13.61,
+          "actual": 9.8,
+          "own": "6%"
+        },
+        {
+          "slot": "DST",
+          "player": "Texans",
+          "pos": "DST",
+          "team": "HOU",
+          "salary": 2900,
+          "ceiling": 10.6,
+          "mean": 10.6,
+          "actual": -2.0,
+          "own": "5%"
+        }
+      ]
+    }
+  ]
+}
