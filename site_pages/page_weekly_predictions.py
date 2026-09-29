@@ -93,6 +93,30 @@ def _live_model_context(release_state: dict) -> None:
     correction = build.get("correction") or {}
     current_qbs = correction.get("qb_selection_details") or {}
     current_ids = correction.get("qb_selections") or {}
+    # Ordinary weekly publishes stamp the same QB map on the release metadata
+    # instead of under correction.
+    if not current_qbs and not current_ids:
+        meta_rel = build.get("metadata")
+        if meta_rel:
+            from publishing.paths import resolve_site_path
+
+            try:
+                payload = json.loads(
+                    resolve_site_path(meta_rel, page_common._HERE).read_text(encoding="utf-8")
+                )
+            except Exception:
+                payload = {}
+            current_qbs = payload.get("qb_selection_details") or {}
+            current_ids = payload.get("qb_selections") or {}
+            if current_qbs or current_ids:
+                correction = {
+                    **correction,
+                    "qb_selection_details": current_qbs,
+                    "qb_selections": current_ids,
+                    "qb_uncertainty_flags": payload.get("qb_uncertainty_flags") or {},
+                    "qb_selection_policy": payload.get("qb_selection_policy"),
+                    "qb_scenarios": payload.get("qb_scenarios") or {},
+                }
     if not current_qbs and not current_ids:
         return
     previous_id = correction.get("supersedes_build_id")

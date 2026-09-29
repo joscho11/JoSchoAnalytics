@@ -607,7 +607,7 @@
       "previous_build": "fantasy-2026w03-c75803e2789f"
     },
     "predictions": {
-      "active_build": "predictions-2026w03-c98a61b8420d",
+      "active_build": "predictions-2026w04-c9b03f6bb25e",
       "builds": {
         "predictions-2025w10-8f1701d7a6db": {
           "artifact": "data/releases/builds/predictions/2025/week10/predictions-2025w10-8f1701d7a6db/artifact.csv",
@@ -10952,12 +10952,90 @@
             "warnings": []
           },
           "week": 3
+        },
+        "predictions-2026w04-387c489267a2": {
+          "artifact": "data/releases/builds/predictions/2026/week04/predictions-2026w04-387c489267a2/artifact.csv",
+          "build_id": "predictions-2026w04-387c489267a2",
+          "metadata": "data/releases/builds/predictions/2026/week04/predictions-2026w04-387c489267a2/metadata.json",
+          "model_version": "spread-v3-prod-sunday-tuesday-market-46-qb-ir-scoped-flag-b4a325000b7a",
+          "produced_at": "2026-09-29T20:52:04Z",
+          "product": "predictions",
+          "published_at": "2026-09-29T20:54:48Z",
+          "row_count": 16,
+          "season": 2026,
+          "sha256": "387c489267a280ae5bb561ac210aa2acc55b1ba036f8f4f0ae71ec10e1267ec4",
+          "status": "Published",
+          "validation": {
+            "checks": {
+              "artifact_sha256": "387c489267a280ae5bb561ac210aa2acc55b1ba036f8f4f0ae71ec10e1267ec4",
+              "produced_at_utc": "2026-09-29T20:52:04Z",
+              "scheduled_games": 16
+            },
+            "errors": [],
+            "ok": true,
+            "product": "predictions",
+            "row_count": 16,
+            "warnings": []
+          },
+          "week": 4
+        },
+        "predictions-2026w04-67094a12bf13": {
+          "artifact": "data/releases/builds/predictions/2026/week04/predictions-2026w04-67094a12bf13/artifact.csv",
+          "build_id": "predictions-2026w04-67094a12bf13",
+          "metadata": "data/releases/builds/predictions/2026/week04/predictions-2026w04-67094a12bf13/metadata.json",
+          "model_version": "spread-v3-prod-sunday-tuesday-market-46-qb-ir-scoped-flag-b4a325000b7a",
+          "produced_at": "2026-09-29T20:58:21Z",
+          "product": "predictions",
+          "published_at": "2026-09-29T20:58:45Z",
+          "row_count": 16,
+          "season": 2026,
+          "sha256": "67094a12bf138e649d64a70ed3c1c604be0d645ff8c4d8336b82c035cf1b3e46",
+          "status": "Published",
+          "validation": {
+            "checks": {
+              "artifact_sha256": "67094a12bf138e649d64a70ed3c1c604be0d645ff8c4d8336b82c035cf1b3e46",
+              "produced_at_utc": "2026-09-29T20:58:21Z",
+              "scheduled_games": 16
+            },
+            "errors": [],
+            "ok": true,
+            "product": "predictions",
+            "row_count": 16,
+            "warnings": []
+          },
+          "week": 4
+        },
+        "predictions-2026w04-c9b03f6bb25e": {
+          "artifact": "data/releases/builds/predictions/2026/week04/predictions-2026w04-c9b03f6bb25e/artifact.csv",
+          "build_id": "predictions-2026w04-c9b03f6bb25e",
+          "metadata": "data/releases/builds/predictions/2026/week04/predictions-2026w04-c9b03f6bb25e/metadata.json",
+          "model_version": "spread-v3-prod-sunday-tuesday-market-46-qb-ir-scoped-flag-b4a325000b7a",
+          "produced_at": "2026-09-29T21:33:34Z",
+          "product": "predictions",
+          "published_at": "2026-09-29T21:34:36Z",
+          "row_count": 16,
+          "season": 2026,
+          "sha256": "c9b03f6bb25ef7b5ce49d20aa5564ee20542958306442eeb333877e5adf703a4",
+          "status": "Published",
+          "validation": {
+            "checks": {
+              "artifact_sha256": "c9b03f6bb25ef7b5ce49d20aa5564ee20542958306442eeb333877e5adf703a4",
+              "produced_at_utc": "2026-09-29T21:33:34Z",
+              "scheduled_games": 16
+            },
+            "errors": [],
+            "ok": true,
+            "product": "predictions",
+            "row_count": 16,
+            "warnings": []
+          },
+          "week": 4
         }
       },
       "next_release": null,
-      "previous_build": "predictions-2026w03-78def02d9cb1"
+      "previous_build": "predictions-2026w04-67094a12bf13"
     }
   },
   "schema_version": 1,
-  "updated_at": "2026-09-29T16:04:14Z"
+  "updated_at": "2026-09-29T21:34:36Z"
 }

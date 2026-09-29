@@ -1,0 +1,106 @@
+{
+  "artifact_name": "predictions_2026_week04.csv",
+  "artifact_sha256": "387c489267a280ae5bb561ac210aa2acc55b1ba036f8f4f0ae71ec10e1267ec4",
+  "expected_game_ids_sha256": "54719fe0710b465a86c079cab2da93b8e8c2875b4770dd822233f8ac09076ddf",
+  "expected_rows": 16,
+  "expected_teams": [
+    "ARI",
+    "ATL",
+    "BAL",
+    "BUF",
+    "CAR",
+    "CHI",
+    "CIN",
+    "CLE",
+    "DAL",
+    "DEN",
+    "DET",
+    "GB",
+    "HOU",
+    "IND",
+    "JAX",
+    "KC",
+    "LA",
+    "LAC",
+    "LV",
+    "MIA",
+    "MIN",
+    "NE",
+    "NO",
+    "NYG",
+    "NYJ",
+    "PHI",
+    "PIT",
+    "SEA",
+    "SF",
+    "TB",
+    "TEN",
+    "WAS"
+  ],
+  "legacy_bootstrap": false,
+  "model_version": "spread-v3-prod-sunday-tuesday-market-46-qb-ir-scoped-flag-b4a325000b7a",
+  "produced_at": "2026-09-29T20:52:04Z",
+  "product": "predictions",
+  "schema_version": 1,
+  "season": 2026,
+  "st_definition": "net_two_sided_v1",
+  "tuesday_market_selection": {
+    "actual_provider_timestamp_utc": "2026-09-29T12:55:36Z",
+    "captured_at_et": "2026-09-29T11:20:37.372065-04:00",
+    "fallback_reason": null,
+    "policy": "paid-historical-tuesday-0900-preferred-else-free-live-v1",
+    "requested_snapshot_et": "2026-09-29T09:00:00-04:00",
+    "requested_snapshot_utc": "2026-09-29T13:00:00Z",
+    "selected_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\tuesday_0900\\2026_w04.json",
+    "selected_sha256": "551d10da2dfa80d9787835fdf7b2ddf72b18f5c155ab1624c61257cc14cacaed",
+    "selected_source": "paid_historical",
+    "snapshots": {
+      "free_live": {
+        "exists": true,
+        "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_tuesday\\raw\\2026_w04.json",
+        "sha256": "c43e8602804b71452e5cb8f618f4d59dab85b805e32036601b9ef37790310a39",
+        "valid": true,
+        "validation": {
+          "actual_provider_timestamp_utc": "2026-09-29T15:20:35Z",
+          "captured_at_et": "2026-09-29T11:20:35-04:00",
+          "event_count": 16,
+          "pair_count": 16,
+          "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_tuesday\\raw\\2026_w04.json",
+          "scheduled_games": 16,
+          "season": 2026,
+          "week": 4
+        }
+      },
+      "paid_historical": {
+        "exists": true,
+        "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\tuesday_0900\\2026_w04.json",
+        "sha256": "551d10da2dfa80d9787835fdf7b2ddf72b18f5c155ab1624c61257cc14cacaed",
+        "valid": true,
+        "validation": {
+          "actual_provider_timestamp_utc": "2026-09-29T12:55:36Z",
+          "captured_at_et": "2026-09-29T09:00:00-04:00",
+          "event_count": 16,
+          "pair_count": 16,
+          "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\tuesday_0900\\2026_w04.json",
+          "requested_snapshot_et": "2026-09-29T09:00:00-04:00",
+          "scheduled_games": 16,
+          "season": 2026,
+          "week": 4
+        }
+      }
+    }
+  },
+  "validation": {
+    "checks": {
+      "artifact_sha256": "387c489267a280ae5bb561ac210aa2acc55b1ba036f8f4f0ae71ec10e1267ec4",
+      "produced_at_utc": "2026-09-29T20:52:04Z",
+      "scheduled_games": 16
+    },
+    "errors": [],
+    "ok": true,
+    "product": "predictions",
+    "row_count": 16,
+    "warnings": []
+  },
+  "week": 4
+}

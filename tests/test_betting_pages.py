@@ -59,15 +59,20 @@ def test_weekly_predictions_renders_and_owns_controls(tmp_path):
     assert shown_version in captions
     shown_build = manifest["products"]["predictions"]["builds"][str(shown["build_id"])]
     # A model-update correction is allowed to be the displayed release, but it has to cite its audit.
-    shown_correction = shown_build["correction"]
+    # Ordinary weekly publishes have no correction block.
+    shown_correction = shown_build.get("correction") or {}
     assert shown_correction.get("model_update") is not True or shown_correction["promotion_audit"]["sha256"]
     qb_expander = next(exp for exp in at.expander if exp.label == "QB inputs used for this release")
     qb_markdown = " ".join(str(item.value) for item in qb_expander.markdown)
-    assert "**ATL:** Michael Penix Jr." in qb_markdown
-    assert "**MIN:** Kyler Murray" in qb_markdown
-    assert "**CHI:** Caleb Williams" in qb_markdown
-    assert "**CHI:** Caleb Williams — previous-game dropback leader" in qb_markdown
-    assert "Case Keenum" not in qb_markdown
+    assert "**ATL:** Michael Penix Jr. — previous-game dropback leader" in qb_markdown
+    assert "**MIN:** Kyler Murray — previous-game dropback leader" in qb_markdown
+    # Joseph's Week 4 manual inputs (2026-09-29): TB starts Jalon Daniels; WAS and CHI have pinned defaults.
+    assert "**TB:** Jalon Daniels — user modeling assumption" in qb_markdown
+    assert "**WAS:** Marcus Mariota — user modeling assumption" in qb_markdown
+    assert "**CHI:** Case Keenum — user modeling assumption" in qb_markdown
+    assert "Baker Mayfield" not in qb_markdown and "Caleb Williams" not in qb_markdown
+    scenario_caption = " ".join(str(c.value) for c in qb_expander.caption)
+    assert "QB scenarios for" in scenario_caption and "CHI" in scenario_caption and "WAS" in scenario_caption
     assert not any(str(k).startswith("tr_") for k in keys), \
         "Weekly Predictions must not carry Track Record's controls"
 
@@ -402,10 +407,16 @@ def test_week3_st_promotion_reissue_card_states(tmp_path):
     assert not at.exception, at.exception
     assert not at.error, [e.value for e in at.error]
 
+    from publishing.manifest import release_status
+
     manifest = page_common.load_release_manifest()
     predictions = manifest["products"]["predictions"]
-    assert predictions["active_build"] == "predictions-2026w03-c98a61b8420d"
-    build = predictions["builds"][predictions["active_build"]]
+    week3_build_id = "predictions-2026w03-c98a61b8420d"
+    # Week 4+ publishes move the active pointer off Week 3, so pin the build the page
+    # resolves for Week 3 instead of the active one. This is the same pin as before, by week.
+    shown = release_status("predictions", 2026, 3, manifest=manifest, root=_HERE)
+    assert shown["build_id"] == week3_build_id, shown
+    build = predictions["builds"][week3_build_id]
     assert build["model_version"].endswith("-b4a325000b7a")
     assert "started_games_held" not in build["correction"]
 
@@ -440,6 +451,53 @@ def test_week3_st_promotion_reissue_card_states(tmp_path):
     captions = " ".join(str(c.value) for c in at.caption)
     assert build["model_version"] in captions
     assert "games that had kicked off keep their published rows" not in captions
+
+
+def test_week4_qb_paths_and_card_states(tmp_path):
+    """Week 4 build c9b03f6bb25e: Joseph's 2026-09-29 QB inputs.
+
+    TB starts Jalon Daniels (manual). WAS (Mariota default, Daniels path) and CHI (Keenum default,
+    Williams and Bagent paths) carry QB scenarios. No path clears HIGH, so those games keep their
+    normal header and read "No HIGH under any listed QB". The HIGH PICK cards are DAL at HOU,
+    DEN at SF and ATL at NO. If Week 4 is reissued again this test must be re-read against the
+    new build, not loosened.
+    """
+    import re
+    import page_common
+    from publishing.manifest import release_status
+
+    at = _render_page(tmp_path, "page_weekly_predictions")
+    next(w for w in at.selectbox if getattr(w, "key", None) == "wp_season").set_value(2026)
+    next(w for w in at.selectbox if getattr(w, "key", None) == "wp_week").set_value(4)
+    at.run()
+    assert not at.exception, at.exception
+    assert not at.error, [e.value for e in at.error]
+
+    manifest = page_common.load_release_manifest()
+    shown = release_status("predictions", 2026, 4, manifest=manifest, root=_HERE)
+    assert shown["build_id"] == "predictions-2026w04-c9b03f6bb25e", shown
+    build = manifest["products"]["predictions"]["builds"][shown["build_id"]]
+    assert build["model_version"].endswith("-b4a325000b7a")
+
+    def plain(html_text: str) -> str:
+        return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html_text.replace("&nbsp;", " "))).strip()
+
+    markdown = [str(item.value) for item in at.markdown]
+    cards = {}
+    for html_text in markdown:
+        if "jsa-gc-meta" in html_text:
+            match = re.search(r"([A-Z]{2,3}) @ ([A-Z]{2,3})", plain(html_text))
+            cards[f"{match.group(1)} @ {match.group(2)}"] = html_text
+    assert len(cards) == 16, sorted(cards)
+    high = {name for name, html_text in cards.items() if "HIGH PICK" in html_text}
+    assert high == {"DAL @ HOU", "DEN @ SF", "ATL @ NO"}, sorted(high)
+    for name in ("IND @ WAS", "NYJ @ CHI", "GB @ TB"):
+        assert "HIGH PICK" not in cards[name] and "QB SPLIT" not in cards[name], name
+
+    joined = " ".join(markdown)
+    for name in ("Marcus Mariota", "Jayden Daniels", "Caleb Williams", "Tyson Bagent", "Case Keenum"):
+        assert name in joined, name
+    assert joined.count("No HIGH under any listed QB") >= 2  # IND at WAS and NYJ at CHI
 
 
 def test_scenario_verdict_lines_are_plain_for_every_case():
