@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "report_id": "qb_ir_scoped_flag_market_ridge_st_net_v1",
+  "promotion_audit": {
+    "path": "../spread_v3_prod/artifacts/st_net_reissue_week03_v1.json",
+    "sha256": "9fa2fcaf550115e4ae0a69c5d12b48f4d2a8738ace3d4d883789de6a2d07aba5"
+  },
+  "model": {
+    "name": "Sunday-to-Tuesday market Ridge with QB features, team-scoped injured-reserve starters, an automatic uncertain-QB flag, and a net two-sided special-teams EPA feature",
+    "model_version": "spread-v3-prod-sunday-tuesday-market-46-qb-ir-scoped-flag-b4a325000b7a",
+    "feature_contract": "46 core features, 49 fitted inputs",
+    "removed_feature_groups": [
+      "five general injury availability features",
+      "vacated snaps"
+    ],
+    "retained_qb_features": 4,
+    "special_teams_definition": "net_two_sided_v1",
+    "changed_feature_definitions": [
+      "st_epa_diff: was one-sided (home team's own special-teams EPA only), corrected to net two-sided (each team's own special-teams EPA minus the opponent's, in the same game); no columns were added or removed, only this feature's values changed"
+    ],
+    "added_features": [
+      "ir_starters_diff: home minus away count of non-QB starters on regular injured reserve (designated-to-return not counted), read from each team's latest roster before the Tuesday prediction; a starter played 50% or more of offensive or defensive snaps for that team in any of his last three games, or averaged 50% or more for that team last season if he has not played for it this season; snaps with another team are not counted",
+      "qb_uncertain_home and qb_uncertain_away: 1 when the QB the model uses did not finish a close game last week (another passer took a dropback after his last one while the score was within 16 points); the QB numbers are kept, the flag is an extra input; only this automatic rule sets it"
+    ],
+    "market_features": [
+      "Sunday 11:20 p.m. ET to Tuesday spread movement",
+      "Sunday 11:20 p.m. ET to Tuesday total movement",
+      "Tuesday moneyline-spread gap (moneyline prices are medianed on the decimal scale)",
+      "three train-fold-fitted market missingness flags"
+    ],
+    "high_threshold_points": 3.0
+  },
+  "historical": {
+    "evaluation": "2021-2025 chronological walk-forward; Tuesday US median selects HIGH; graded at best captured US Tuesday quote",
+    "high": {
+      "pick_rows": 459,
+      "wins": 261,
+      "losses": 188,
+      "pushes": 10,
+      "graded_n": 449,
+      "ats": 0.5812917594654788,
+      "wilson_lower_one_sided_95": 0.5426203013621139
+    },
+    "regular_season_volume": {
+      "pick_rows": 438,
+      "eligible_weeks": 85,
+      "picks_per_week": 5.152941176470589,
+      "fire_rate": 0.3498402555910543
+    },
+    "high_by_season": [
+      {
+        "season": 2021,
+        "pick_rows": 136,
+        "wins": 82,
+        "losses": 54,
+        "pushes": 0,
+        "graded_n": 136,
+        "ats": 0.6029411764705882
+      },
+      {
+        "season": 2022,
+        "pick_rows": 96,
+        "wins": 49,
+        "losses": 44,
+        "pushes": 3,
+        "graded_n": 93,
+        "ats": 0.5268817204301075
+      },
+      {
+        "season": 2023,
+        "pick_rows": 91,
+        "wins": 55,
+        "losses": 34,
+        "pushes": 2,
+        "graded_n": 89,
+        "ats": 0.6179775280898876
+      },
+      {
+        "season": 2024,
+        "pick_rows": 62,
+        "wins": 34,
+        "losses": 25,
+        "pushes": 3,
+        "graded_n": 59,
+        "ats": 0.576271186440678
+      },
+      {
+        "season": 2025,
+        "pick_rows": 74,
+        "wins": 41,
+        "losses": 31,
+        "pushes": 2,
+        "graded_n": 72,
+        "ats": 0.5694444444444444
+      }
+    ]
+  },
+  "source_hashes": {
+    "candidate_bundle_sha256": "b4a325000b7a8982f092402528e415177f64ad3193ab9e8bb392cfa28f726d61",
+    "reviewed_candidate_file_sha256": "85ee2eae55760fed69d6ec340202a67674daf7f5216a8f0c983cf19ec687f15d",
+    "candidate_comparison_report_sha256": "bb9b7aa7a3e86b796aaea6bebb643cff561c0fb9cfd6ce37f441139dd3b4d9c4",
+    "promotion_audit_sha256": "9fa2fcaf550115e4ae0a69c5d12b48f4d2a8738ace3d4d883789de6a2d07aba5"
+  },
+  "interpretation": "This is a historical walk-forward research result, not a guarantee of future returns. The special-teams EPA feature was corrected from a one-sided definition to a net two-sided one (each team's own special-teams EPA minus the opponent's, in the same game); the prior one-sided definition is data defect D76 in the workspace defects log. Refitting the production recipe with the corrected feature moved the HIGH walk-forward record from 246/430 to 261/449. This arm did not clear the special-teams experiment's own fixed rule for advancing a candidate (a shuffle test, p = 0.174), so the experiment itself did not recommend it. It does clear the project's separate production bar, the HIGH one-sided Wilson lower bound above 0.524, and Joseph decided to promote it to production on that basis, not as an endorsement from the experiment's fixed rule. Treat the move from 246/430 to 261/449 as suggestive, not statistically established either way. Manual QB scenarios on the card are not part of this benchmark."
+}

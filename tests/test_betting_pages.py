@@ -110,10 +110,10 @@ def test_week1_scorecard_and_track_record_use_graded_corrected_release(tmp_path,
     weekly.run()
     assert not weekly.exception, weekly.exception
     metrics = {str(m.label): str(m.value) for m in weekly.metric}
-    assert metrics["ATS record"] == "8/16"
+    assert metrics["ATS record"] == "6/16"
     assert not any("Retrospective model correction" in str(w.value) for w in weekly.warning)
     assert not any("Retrospective model update" in str(c.value) for c in weekly.caption)
-    assert any("Week 1 ATS record: **8-8**" in str(s.value) for s in weekly.success)
+    assert any("Week 1 ATS record: **6-10**" in str(s.value) for s in weekly.success)
     week2 = next(w for w in weekly.selectbox if getattr(w, "key", None) == "wp_week")
     week2.set_value(2)
     weekly.run()
@@ -138,19 +138,22 @@ def test_week1_scorecard_and_track_record_use_graded_corrected_release(tmp_path,
     track = _render_page(tmp_path, "page_track_record")
     assert next(w for w in track.selectbox if w.key == "tr_season").value == 2026
     track_metrics = {str(m.label): str(m.value) for m in track.metric}
-    # The corrected builds contribute 17/32; later graded weeks may add games.
+    # The corrected builds contribute 15/32; later graded weeks may add games.
     season_ats = track_metrics["Season ATS"]
     wins, settled = (int(part) for part in season_ats.split("/"))
+    # "Settled" matches the page: actual_margin.notna() alone also counts pushes,
+    # which carry no model_correct verdict and are excluded from the ATS record.
     graded_2026 = tracker_without_release_metadata[
         (tracker_without_release_metadata["season"] == 2026)
         & tracker_without_release_metadata["actual_margin"].notna()
+        & tracker_without_release_metadata["model_correct"].notna()
     ]
     corrected_weeks = graded_2026[graded_2026["week"].isin([1, 2])]
-    assert (int(corrected_weeks["model_correct"].sum()), len(corrected_weeks)) == (17, 32)
+    assert (int(corrected_weeks["model_correct"].sum()), len(corrected_weeks)) == (15, 32)
     assert (wins, settled) == (int(graded_2026["model_correct"].sum()), len(graded_2026))
     track_warnings = " ".join(str(w.value) for w in track.warning)
     assert "Retrospective model corrections are included in this season record: Week 1, Week 2" in track_warnings
-    # Week 1 and Week 2 contribute six graded HIGH picks; later weeks may add more.
+    # Week 1 and Week 2 contribute eight graded HIGH picks; later weeks may add more.
     high_wins, high_settled = (
         int(part) for part in track_metrics["HIGH (Tuesday 3+ points)"].split("/")
     )
@@ -158,7 +161,7 @@ def test_week1_scorecard_and_track_record_use_graded_corrected_release(tmp_path,
 
     high_rows = graded_2026[graded_2026.apply(row_display_high, axis=1)]
     corrected_high = high_rows[high_rows["week"].isin([1, 2])]
-    assert (int(corrected_high["model_correct"].sum()), len(corrected_high)) == (3, 6)
+    assert (int(corrected_high["model_correct"].sum()), len(corrected_high)) == (5, 8)
     assert (high_wins, high_settled) == (int(high_rows["model_correct"].sum()), len(high_rows))
 
 
@@ -235,12 +238,12 @@ def test_weekly_predictions_live_2026_banner(tmp_path):
     notice_copy = successes + " " + " ".join(str(m.value) for m in at.markdown)
     assert "Live 2026" in notice_copy
     assert "one-sided 95%" in notice_copy and "Wilson lower bound" in notice_copy
-    assert "246/430" in notice_copy
-    assert "57.21%" in notice_copy
-    assert "53.25%" in notice_copy
-    assert "11 pushes among 441 HIGH labels" in notice_copy
-    # The refit note: lower than the previous model's record, and said not to be distinguishable.
-    assert "lower than the previous model's 256/432" in notice_copy
+    assert "261/449" in notice_copy
+    assert "58.13%" in notice_copy
+    assert "54.26%" in notice_copy
+    assert "10 pushes among 459 HIGH labels" in notice_copy
+    # The refit note: record moved from the previous model's, and said not to be distinguishable.
+    assert "moved from the previous model's 246/430" in notice_copy
     assert "not statistically established either way" in notice_copy
     assert "regular injured reserve" in notice_copy
     assert "223/390" not in notice_copy
@@ -375,14 +378,17 @@ def test_weekly_predictions_shows_one_equal_card_per_listed_qb(tmp_path):
     assert "QB scenarios for" in text
 
 
-def test_week3_units_fix_reissue_card_states(tmp_path):
-    """Week 3 build 78def02d9cb1 (price-median units fix): two plain HIGH cards and one QB split card.
+def test_week3_st_promotion_reissue_card_states(tmp_path):
+    """Week 3 build c98a61b8420d (special-teams net two-sided EPA promotion): one plain HIGH
+    card and one QB split card.
 
-    CIN at PIT and HOU at IND clear HIGH and show as HIGH. PHI at CHI clears HIGH only under 1 of
-    3 listed QBs (Caleb Williams 3.26; Bagent and Keenum stay under 3.0), so the verdict is
-    high_split and the header reads QB SPLIT, not HIGH PICK. ATL at GB kicked off before the
-    reissue and keeps its published row (no HIGH, no scenario). If Week 3 is reissued again this
-    test must be re-read against the new build, not loosened.
+    CIN at PIT clears HIGH and shows as HIGH. HOU at IND no longer clears HIGH under the net
+    special-teams definition (it did under the superseded build). PHI at CHI clears HIGH only
+    under 1 of 3 listed QBs (Caleb Williams 3.36; Bagent and Keenum stay under 3.0), so the
+    verdict is high_split and the header reads QB SPLIT, not HIGH PICK. ATL at GB is scored
+    fresh by the new model this time (no --hold-started-games-from was used, unlike the prior
+    units-fix reissue), so it carries no held-row marker. If Week 3 is reissued again this test
+    must be re-read against the new build, not loosened.
     """
     import re
     import page_common
@@ -398,10 +404,10 @@ def test_week3_units_fix_reissue_card_states(tmp_path):
 
     manifest = page_common.load_release_manifest()
     predictions = manifest["products"]["predictions"]
-    assert predictions["active_build"] == "predictions-2026w03-78def02d9cb1"
+    assert predictions["active_build"] == "predictions-2026w03-c98a61b8420d"
     build = predictions["builds"][predictions["active_build"]]
-    assert build["model_version"].endswith("-f4f09df27683")
-    assert build["correction"]["started_games_held"]["games"][0]["game_id"] == "2026_03_ATL_GB"
+    assert build["model_version"].endswith("-b4a325000b7a")
+    assert "started_games_held" not in build["correction"]
 
     def plain(html_text: str) -> str:
         return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html_text.replace("&nbsp;", " "))).strip()
@@ -414,10 +420,9 @@ def test_week3_units_fix_reissue_card_states(tmp_path):
             cards[f"{match.group(1)} @ {match.group(2)}"] = html_text
     assert len(cards) == 16, sorted(cards)
 
-    for game in ("CIN @ PIT", "HOU @ IND"):
-        assert "HIGH PICK" in cards[game], game
-        assert "jsa-gc-high" in cards[game], game
-    assert sum("HIGH PICK" in html_text for html_text in cards.values()) == 2
+    assert "HIGH PICK" in cards["CIN @ PIT"] and "jsa-gc-high" in cards["CIN @ PIT"]
+    assert "HIGH PICK" not in cards["HOU @ IND"]
+    assert sum("HIGH PICK" in html_text for html_text in cards.values()) == 1
 
     split = cards["PHI @ CHI"]
     assert "QB SPLIT" in split and "HIGH PICK" not in split and "jsa-gc-high" not in split
@@ -429,12 +434,12 @@ def test_week3_units_fix_reissue_card_states(tmp_path):
     assert joined.count("under 3.0, not HIGH") >= 2 + 2  # Bagent, Keenum, and both SEA quarterbacks
     assert "No HIGH under any listed QB" in joined  # SEA at WAS
 
-    held = cards["ATL @ GB"]
-    assert "HIGH PICK" not in held and "QB SPLIT" not in held
+    fresh = cards["ATL @ GB"]
+    assert "HIGH PICK" not in fresh and "QB SPLIT" not in fresh
 
     captions = " ".join(str(c.value) for c in at.caption)
     assert build["model_version"] in captions
-    assert "games that had kicked off keep their published rows" in captions
+    assert "games that had kicked off keep their published rows" not in captions
 
 
 def test_scenario_verdict_lines_are_plain_for_every_case():
