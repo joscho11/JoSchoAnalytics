@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
 os.environ["APP_OFFLINE"] = "1"
 
@@ -827,8 +828,18 @@ def test_current_week1_keeps_published_past_game_results():
     past = expected[expected.game_id.isin(["2026_01_NE_SEA", "2026_01_SF_LA"])]
 
     assert len(past) == 48
-    assert pd.to_numeric(past.scored_anytime, errors="coerce").notna().all()
-    assert set(past.status) == {"final"}
+    # Efton Chism (NE_SEA) and Jordan James / CJ Daniels (SF_LA) took zero
+    # snaps on any unit in the complete Week 1 snap-count table (see
+    # td-settlement-proposal-v1, applied 2026-09-30, DATA_DEFECTS.md P15) and
+    # are VOID, not a graded loss -- the same resolved-or-void distinction
+    # already asserted for DEN_KC below.
+    resolved = (
+        pd.to_numeric(past.scored_anytime, errors="coerce").notna()
+        | past.status.astype(str).str.lower().eq("void")
+    )
+    assert resolved.all()
+    assert set(past.status) <= {"final", "void"}
+    assert pd.isna(past.loc[past.status.eq("void"), "scored_anytime"]).all()
     assert list(past.loc[past.player_display_name.eq("Eli Raridon"), "scored_anytime"]) == [1]
 
     den_kc = expected[expected.game_id.eq("2026_01_DEN_KC")]
@@ -940,6 +951,37 @@ def test_live_tracker_uses_raw_inclusive_gap_and_separates_open_bets():
     assert summary["losses"] == 1
     assert summary["net_units"] == 0.5
     assert result["ci"]["available"] is False
+    # Only 2 settled candidate bets -- below the same 20-bet floor the ROI
+    # interval uses, so the selected-calibration disclosure stays hidden
+    # rather than showing a percentage built on almost nothing.
+    assert result["calibration"]["available"] is False
+
+
+def test_selected_calibration_reports_mean_probabilities_and_hit_rate_on_settled_candidates():
+    import attd_tracker as tracker
+
+    # 20 settled candidate rows (the MIN_SETTLED_BETS_FOR_CI floor): 15 at
+    # model_p=0.20/book_p=0.15 with 1 win (hit_rate 1/15), 5 at
+    # model_p=0.40/book_p=0.30 with 3 wins (hit_rate 3/5). Hand-computed:
+    # mean model_p = (15*0.20 + 5*0.40)/20 = 0.25, mean book_p =
+    # (15*0.15 + 5*0.30)/20 = 0.1875, hit_rate = (1+3)/20 = 0.20.
+    rows = pd.DataFrame({
+        "season": [2026] * 20,
+        "week": [1] * 20,
+        "game_id": [f"g{i}" for i in range(20)],
+        "player_id": [f"p{i}" for i in range(20)],
+        "p_ge1": [0.20] * 15 + [0.40] * 5,
+        "p_book": [0.15] * 15 + [0.30] * 5,
+        "book_amer": [150] * 20,
+        "scored_anytime": [1] + [0] * 14 + [1, 1, 1, 0, 0],
+    })
+    result = tracker.season_tracker(rows, threshold=0.01)
+    calib = result["calibration"]
+    assert calib["available"] is True
+    assert calib["n"] == 20
+    assert calib["mean_model_probability"] == pytest.approx(0.25)
+    assert calib["mean_book_probability"] == pytest.approx(0.1875)
+    assert calib["hit_rate"] == pytest.approx(0.20)
 
 
 def test_two_plus_tracker_uses_two_plus_price_and_outcome_columns():

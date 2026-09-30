@@ -48,7 +48,11 @@ PHONE_LABELS = {
 }
 PHONE_WIDTHS = {
     "#": 50,
-    "Player": 128,
+    # Measured 2026-09-29: "{first} {last} · {team}" at 128px ellipsized the
+    # team code mid-abbreviation ("DET" -> "DE", "SEA" -> "SE") for longer names
+    # (e.g. "Amon-Ra St. Brown · DET"). Player stays pinned; the extra width
+    # is absorbed by panning the row sideways, which the plan allows.
+    "Player": 175,
     "Model ATTD Odds": 132,
     "Book ATTD Odds": 132,
     "ATTD Value Gap": 190,
@@ -494,6 +498,16 @@ def _render_scorecards(
                 st.caption(
                     "Approx. 95% ROI range is pending until at least 5 settled games "
                     "and 20 settled paper bets are available."
+                )
+            calib = paper.get("calibration")
+            if calib and calib["available"]:
+                st.caption(
+                    f"Selected-bet calibration (n={calib['n']} settled) · model averaged "
+                    f"{100 * calib['mean_model_probability']:.1f}% on these specific picks, "
+                    f"book averaged {100 * calib['mean_book_probability']:.1f}%, actual hit "
+                    f"rate was {100 * calib['hit_rate']:.1f}%. This is the paper record's own "
+                    "selection, not the model's overall accuracy -- see Supporting context below "
+                    "for that."
                 )
             if is_two_plus:
                 tally = _two_plus_results_tally(paper["rows"])

@@ -357,6 +357,40 @@ def strategy_summary(frame: pd.DataFrame, *, threshold: float | None, qualifies=
     }
 
 
+def selected_calibration(frame: pd.DataFrame, *, threshold: float | None, qualifies=None) -> dict:
+    """Mean model/book probability vs. actual hit rate on the settled selected bets.
+
+    `strategy_summary` reports whether the selection made or lost money;
+    this reports whether the selection's OWN stated probability was right
+    about itself. A selection can show a healthy Net units number purely
+    from variance while still being one where the model over- or under-
+    states its own picks -- this is the number that catches that, and the
+    reason it lives here rather than only in an offline audit
+    (validation_20260930_final_review_ranked/market_summary.json
+    `calibration_selected`).
+    """
+    if threshold is None and qualifies is None:
+        bets = frame[frame["_book_price"].notna()].copy()
+    elif "_candidate" in frame:
+        bets = frame[frame["_candidate"].fillna(False)].copy()
+    else:
+        mask = (
+            qualifies(frame) if qualifies is not None
+            else qualifies_probability_gap(frame["_value_gap"], float(threshold))
+        )
+        bets = frame[mask & frame["_book_price"].notna()].copy()
+    settled = bets[bets["_outcome"].isin([0, 1])].copy()
+    n = int(len(settled))
+    available = n >= MIN_SETTLED_BETS_FOR_CI
+    return {
+        "available": available,
+        "n": n,
+        "hit_rate": float(settled["_win"].mean()) if available else None,
+        "mean_model_probability": float(settled["_model_probability"].mean()) if available else None,
+        "mean_book_probability": float(settled["_book_probability"].mean()) if available else None,
+    }
+
+
 def _summary_for_mask(frame: pd.DataFrame, mask: pd.Series, threshold=None) -> dict:
     work = frame.copy()
     work["_candidate"] = mask.fillna(False).astype(bool)
@@ -449,4 +483,5 @@ def season_tracker(
     )
     fixed = strategy_summary(prepared, threshold=threshold, qualifies=qualifies)
     ci = block_bootstrap_roi(prepared, threshold=threshold)
-    return {"summary": fixed, "ci": ci, "rows": prepared}
+    calibration = selected_calibration(prepared, threshold=threshold, qualifies=qualifies)
+    return {"summary": fixed, "ci": ci, "rows": prepared, "calibration": calibration}
