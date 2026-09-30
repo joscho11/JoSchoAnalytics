@@ -44,7 +44,8 @@ def test_anytime_td_renders_and_owns_controls(tmp_path):
     assert len(at.tabs) == 0
     controls = {w.key: w.value for w in at.selectbox}
     assert controls["atd_year"] == 2026
-    assert controls["atd_week"] == 3
+    latest = page.default_release(list(page.available_releases()))
+    assert controls["atd_week"] == latest[1]
     titles = " ".join(str(t.value) for t in at.title)
     assert "Touchdown Props" in titles
     captions = " ".join(str(c.value) for c in at.caption)
@@ -58,12 +59,12 @@ def test_anytime_td_renders_and_owns_controls(tmp_path):
     assert "DraftKings" in blob
     assert "Eight players" not in blob
     assert any("How to read this board" in str(e.label) for e in at.expander)
-    assert any(getattr(w, "key", None) == "atd_matchup_2026_3" for w in at.selectbox)
-    assert any(getattr(w, "key", None) == "atd_view_2026_3" for w in at.segmented_control)
+    assert any(getattr(w, "key", None) == f"atd_matchup_{latest[0]}_{latest[1]}" for w in at.selectbox)
+    assert any(getattr(w, "key", None) == f"atd_view_{latest[0]}_{latest[1]}" for w in at.segmented_control)
     assert any(getattr(w, "key", None) == "atd_search" for w in at.text_input)
     metric_labels = {str(metric.label) for metric in at.metric}
     assert {"Net units", "ROI", "Record", "Approx. 95% ROI range"} <= metric_labels
-    expected = pd.read_csv(_HERE / "betting" / "anytime_td" / "anytime_td_2026_week03.csv")
+    expected = pd.read_csv(page.available_releases()[latest])
     expected_default = page.default_matchup_label(list(page._matchup_groups(expected)))
     assert expected_default in {str(w.value) for w in at.selectbox}
     selected = next(
@@ -79,6 +80,26 @@ def test_anytime_td_renders_and_owns_controls(tmp_path):
     assert rendered_cols in (base_cols, base_cols | {"Hit"}), rendered_cols
     graded = pd.to_numeric(selected.scored_anytime, errors="coerce").notna().any()
     assert ("Hit" in rendered_cols) == bool(graded)
+
+
+def test_week04_pit_cle_renders_all_three_markets(tmp_path):
+    markets = {
+        "Anytime TD": "Book ATTD Odds",
+        "2+ TD": "Book 2+ TD Odds",
+        "First TD": "Book First TD Odds",
+    }
+    for market, book_column in markets.items():
+        at = _render(tmp_path, week=4)
+        if market != "Anytime TD":
+            at.segmented_control(key="atd_view_2026_4").set_value(market).run()
+            at.selectbox(key="atd_props_matchup_2026_4").set_value("PIT vs CLE").run()
+        else:
+            assert at.selectbox(key="atd_matchup_2026_4").value == "PIT vs CLE"
+        assert not at.exception, at.exception
+        assert not at.error, [e.value for e in at.error]
+        tables = [frame.value for frame in at.dataframe]
+        assert tables
+        assert any(book_column in table.columns for table in tables)
 
 
 def test_two_plus_toggle_preserves_market_or_placeholder(tmp_path):

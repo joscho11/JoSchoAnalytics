@@ -1,7 +1,7 @@
 # Anytime TDs
 
 The tab defaults to the latest published 2026 live comparison board (currently
-Week 3). It also keeps the 2025 Weeks 10-17 demo selectable from the Year and
+Week 4). It also keeps the 2025 Weeks 10-17 demo selectable from the Year and
 Week controls.
 The model compares our chance a skill player scores a rushing or receiving
 touchdown with a sportsbook Yes price. Passing touchdowns are out. The page is
