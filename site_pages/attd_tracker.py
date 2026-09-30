@@ -257,8 +257,12 @@ def prepare_paper_bets(
         status = out[status_col].astype("string").str.strip().str.lower()
         # Only resolved market settlements enter candidate W-L and ROI.
         outcome = outcome.where(status.eq("settled"))
+        market_void = status.eq("void")
     else:
         status = None
+        legacy_status = out.get("status", pd.Series("", index=out.index)).astype("string").str.strip().str.lower()
+        market_void = legacy_status.eq("void")
+    out["_outcome"] = outcome
     qualifying = (
         qualifies(out) if qualifies is not None
         else qualifies_probability_gap(out["_value_gap"], threshold)
@@ -270,7 +274,9 @@ def prepare_paper_bets(
         & eligibility
         & qualifying
     )
-    out["_settled"] = out["_candidate"] & outcome.isin([0, 1])
+    out["_void"] = out["_candidate"] & market_void.fillna(False)
+    out["_settled"] = out["_candidate"] & ~out["_void"] & outcome.isin([0, 1])
+    out["_open"] = out["_candidate"] & ~out["_void"] & ~out["_settled"]
     out["_win"] = out["_settled"] & outcome.eq(1)
     out["_loss"] = out["_settled"] & outcome.eq(0)
     out["_stake_units"] = out["_candidate"].astype(float)
@@ -333,7 +339,9 @@ def strategy_summary(frame: pd.DataFrame, *, threshold: float | None, qualifies=
             else qualifies_probability_gap(frame["_value_gap"], float(threshold))
         )
         bets = frame[mask & frame["_book_price"].notna()].copy()
-    settled = bets[bets["_outcome"].isin([0, 1])].copy()
+    settled = bets[bets["_settled"]].copy() if "_settled" in bets else bets[bets["_outcome"].isin([0, 1])].copy()
+    void_bets = int(bets.get("_void", pd.Series(False, index=bets.index)).sum())
+    open_bets = int(bets.get("_open", pd.Series(False, index=bets.index)).sum())
     wins = int(settled["_win"].sum())
     losses = int(settled["_loss"].sum())
     stake = float(len(settled))
@@ -342,7 +350,8 @@ def strategy_summary(frame: pd.DataFrame, *, threshold: float | None, qualifies=
         "threshold": None if threshold is None else float(threshold),
         "bets": int(len(bets)),
         "settled_bets": int(len(settled)),
-        "open_bets": int(len(bets) - len(settled)),
+        "void_bets": void_bets,
+        "open_bets": open_bets if "_open" in bets else int(len(bets) - len(settled) - void_bets),
         "settled_games": int(_group_label(settled).nunique()) if not settled.empty else 0,
         "wins": wins,
         "losses": losses,
@@ -353,7 +362,10 @@ def strategy_summary(frame: pd.DataFrame, *, threshold: float | None, qualifies=
             (settled.groupby("week")["_profit_units"].sum() > 0).sum()
         ) if not settled.empty and "week" in settled else 0,
         "max_drawdown": _max_drawdown(settled.assign(_settled=True)) if not settled.empty else 0.0,
-        "accounting_invariant": bool(wins + losses == len(settled)),
+        "accounting_invariant": bool(
+            wins + losses == len(settled)
+            and int(len(settled) + void_bets + open_bets) == len(bets)
+        ),
     }
 
 
@@ -379,7 +391,7 @@ def selected_calibration(frame: pd.DataFrame, *, threshold: float | None, qualif
             else qualifies_probability_gap(frame["_value_gap"], float(threshold))
         )
         bets = frame[mask & frame["_book_price"].notna()].copy()
-    settled = bets[bets["_outcome"].isin([0, 1])].copy()
+    settled = bets[bets["_settled"]].copy() if "_settled" in bets else bets[bets["_outcome"].isin([0, 1])].copy()
     n = int(len(settled))
     available = n >= MIN_SETTLED_BETS_FOR_CI
     return {
@@ -394,9 +406,10 @@ def selected_calibration(frame: pd.DataFrame, *, threshold: float | None, qualif
 def _summary_for_mask(frame: pd.DataFrame, mask: pd.Series, threshold=None) -> dict:
     work = frame.copy()
     work["_candidate"] = mask.fillna(False).astype(bool)
-    work["_settled"] = work["_candidate"] & pd.to_numeric(
-        work.get("_outcome", pd.Series(np.nan, index=work.index)), errors="coerce"
-    ).isin([0, 1])
+    outcome = pd.to_numeric(work.get("_outcome", pd.Series(np.nan, index=work.index)), errors="coerce")
+    work["_void"] = work["_candidate"] & work.get("_void", pd.Series(False, index=work.index)).fillna(False)
+    work["_settled"] = work["_candidate"] & ~work["_void"] & outcome.isin([0, 1])
+    work["_open"] = work["_candidate"] & ~work["_void"] & ~work["_settled"]
     return strategy_summary(work, threshold=threshold)
 
 

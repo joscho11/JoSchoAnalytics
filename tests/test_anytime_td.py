@@ -65,6 +65,8 @@ def test_anytime_td_renders_and_owns_controls(tmp_path):
     assert any(getattr(w, "key", None) == "atd_search" for w in at.text_input)
     metric_labels = {str(metric.label) for metric in at.metric}
     assert {"Net units", "ROI", "Record", "Approx. 95% ROI range"} <= metric_labels
+    record_delta = next(str(metric.delta) for metric in at.metric if str(metric.label) == "Record")
+    assert "void" in record_delta
     expected = pd.read_csv(page.available_releases()[latest])
     expected_default = page.default_matchup_label(list(page._matchup_groups(expected)))
     assert expected_default in {str(w.value) for w in at.selectbox}
@@ -955,6 +957,29 @@ def test_live_tracker_uses_raw_inclusive_gap_and_separates_open_bets():
     # interval uses, so the selected-calibration disclosure stays hidden
     # rather than showing a percentage built on almost nothing.
     assert result["calibration"]["available"] is False
+
+
+def test_tracker_accounts_for_void_separately_from_open_and_settled():
+    import attd_tracker as tracker
+
+    rows = pd.DataFrame({
+        "season": [2026] * 3, "week": [1] * 3, "game_id": ["g1", "g2", "g3"],
+        "player_id": ["p1", "p2", "p3"], "p_ge1": [0.5] * 3,
+        "p_book": [0.4] * 3, "book_amer": [100] * 3,
+        "scored_anytime": [1, None, None],
+        "settlement_status_anytime": ["settled", "void", "awaiting_evidence"],
+    })
+    result = tracker.season_tracker(rows)
+    summary = result["summary"]
+    assert summary["bets"] == 3
+    assert summary["settled_bets"] == 1
+    assert summary["void_bets"] == 1
+    assert summary["open_bets"] == 1
+    assert summary["wins"] == 1 and summary["losses"] == 0
+    assert summary["net_units"] == 1.0
+    assert summary["accounting_invariant"] is True
+    assert result["calibration"]["n"] == 1
+    assert result["ci"]["settled_bets"] == 1
 
 
 def test_selected_calibration_reports_mean_probabilities_and_hit_rate_on_settled_candidates():

@@ -487,7 +487,7 @@ def _render_scorecards(
                 st.metric(
                     "Record",
                     f"{result['wins']}-{result['losses']}",
-                    delta=f"{result['open_bets']} open",
+                    delta=f"{result['open_bets']} open · {result['void_bets']} void",
                     delta_color="off",
                     border=True,
                 )

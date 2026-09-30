@@ -315,6 +315,40 @@ def _normal_name(value) -> str | None:
     return text or None
 
 
+def load_reviewed_td_settlements(root=None) -> dict[tuple[int, int, str, str, str], dict]:
+    """Load immutable, evidence-backed historical TD settlement decisions."""
+    site_root = Path(root) if root is not None else Path(__file__).resolve().parents[1]
+    path = site_root / "betting" / "anytime_td" / "reviewed_settlements_v2.json"
+    if not path.is_file():
+        return {}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise PublicationError(f"reviewed TD settlement registry is unreadable: {path}: {exc}") from exc
+    if payload.get("schema_version") != 2 or not isinstance(payload.get("settlements"), list):
+        raise PublicationError(f"reviewed TD settlement registry has an invalid schema: {path}")
+    result = {}
+    for row in payload["settlements"]:
+        try:
+            key = (
+                int(row["season"]), int(row["week"]),
+                _normal_identifier(row["game_id"]),
+                _normal_identifier(row["player_id"]), str(row["market"]).strip().lower(),
+            )
+            status = str(row["status"]).strip().lower()
+            evidence = row["evidence"]
+        except (KeyError, TypeError, ValueError) as exc:
+            raise PublicationError(f"reviewed TD settlement registry contains an invalid row: {row}") from exc
+        if not key[2] or not key[3] or key[4] not in {"anytime", "two_plus", "first"}:
+            raise PublicationError(f"reviewed TD settlement registry contains an invalid key: {row}")
+        if status != "void" or not isinstance(evidence, dict) or not evidence:
+            raise PublicationError(f"reviewed TD settlement must be an evidence-backed void: {row}")
+        if key in result:
+            raise PublicationError(f"reviewed TD settlement registry contains a duplicate key: {key}")
+        result[key] = {"status": status, "evidence": evidence}
+    return result
+
+
 def _prepare_participation(participation: pd.DataFrame | None, season: int, week: int) -> dict:
     """Build player participation lookups used to distinguish loss from void.
 
@@ -492,6 +526,7 @@ def grade_anytime_td_file(
     season: int,
     week: int,
     participation: pd.DataFrame | None = None,
+    reviewed_settlements: dict | None = None,
 ) -> dict:
     """Attach final rushing/receiving TD outcomes to one live board.
 
@@ -529,6 +564,7 @@ def grade_anytime_td_file(
     sched["_is_final"] = sched["home_score"].notna() & sched["away_score"].notna()
 
     stat_info = _prepare_anytime_stats(actuals, season, week, participation)
+    reviewed_settlements = reviewed_settlements or {}
     board_game_ids = set(board["_game_id"].dropna().tolist())
     final_schedule = sched[sched["_is_final"]].copy()
     final_game_ids = set(final_schedule["_game_id"].dropna().tolist())
@@ -564,6 +600,7 @@ def grade_anytime_td_file(
         participation_info = stat_info["participation"]
 
         def player_outcome(row):
+            player_id = row["_player_id"]
             touchdowns = stat_info["td_by_alias"].get(row["_player_id"])
             matched_stats = touchdowns is not None
             if touchdowns is None and "player_display_name" in row and "team" in row:
@@ -572,14 +609,27 @@ def grade_anytime_td_file(
                 matched_stats = touchdowns is not None
             if matched_stats:
                 touchdowns = float(touchdowns or 0.0)
-                return ("loss" if touchdowns <= 0 else "win", touchdowns)
-            if participation_info["available"]:
-                snaps = participation_info["snaps_by_alias"].get(row["_player_id"])
+            snaps = None
+            if stat_info["participation"]["available"]:
+                snaps = stat_info["participation"]["snaps_by_alias"].get(player_id)
                 if snaps is None and "player_display_name" in row and "team" in row:
                     key = (_normal_team(row["team"]), _normal_name(row["player_display_name"]))
-                    snaps = participation_info["snaps_by_name_team"].get(key)
-                if snaps is not None:
-                    return ("loss", 0.0) if float(snaps) > 0 else ("void", float("nan"))
+                    snaps = stat_info["participation"]["snaps_by_name_team"].get(key)
+            reviewed_void = all(
+                (int(season), int(week), row["_game_id"], player_id, market) in reviewed_settlements
+                for market in ("anytime", "two_plus")
+            )
+            if reviewed_void:
+                if (matched_stats and touchdowns > 0) or (snaps is not None and float(snaps) > 0):
+                    raise PublicationError(
+                        f"reviewed TD void conflicts with scoring/participation evidence: "
+                        f"{row['_game_id']}/{player_id}"
+                    )
+                return ("void", float("nan"))
+            if matched_stats:
+                return ("loss" if touchdowns <= 0 else "win", touchdowns)
+            if snaps is not None:
+                return ("loss", 0.0) if float(snaps) > 0 else ("void", float("nan"))
             return ("pending", float("nan"))
 
         outcomes = game_rows.apply(player_outcome, axis=1)
@@ -626,9 +676,9 @@ def grade_anytime_td_file(
         updated_rows += int((~pending_mask).sum())
 
     board = board.drop(columns=["_game_id", "_player_id"])
-    changed = not board.equals(original_board)
+    encoded = board.to_csv(index=False, lineterminator="\n").encode("utf-8")
+    changed = encoded != source.read_bytes()
     if changed:
-        encoded = board.to_csv(index=False, lineterminator="\n").encode("utf-8")
         source.write_bytes(encoded)
 
     graded = pd.to_numeric(board["scored_anytime"], errors="coerce").notna()
@@ -691,15 +741,23 @@ def _first_td_position_lookup(actuals: pd.DataFrame) -> dict:
     return dict(zip(stats["player_id"], stats["position"]))
 
 
-def _first_td_alias_groups(actuals: pd.DataFrame) -> dict[str, set[str]]:
-    """Map each exact stats identifier to its same-row aliases."""
+def _first_td_alias_groups(
+    actuals: pd.DataFrame, *, season: int | None = None, week: int | None = None
+) -> dict[str, set[str]]:
+    """Map only unambiguous, week-scoped stats identifiers to aliases."""
     stats = actuals.copy()
+    if season is not None and "season" in stats:
+        stats = stats[pd.to_numeric(stats["season"], errors="coerce").eq(int(season))]
+    if week is not None and "week" in stats:
+        stats = stats[pd.to_numeric(stats["week"], errors="coerce").eq(int(week))]
+    if "season_type" in stats:
+        stats = stats[stats["season_type"].astype(str).str.upper().eq("REG")]
     aliases = [column for column in ("player_id", "gsis_id", "sleeper_id") if column in stats]
     if not aliases:
         return {}
     for column in aliases:
         stats[column] = stats[column].map(_normal_identifier)
-    result: dict[str, set[str]] = {}
+    groups_by_alias: dict[str, set[frozenset[str]]] = {}
     for row in stats[aliases].to_dict(orient="records"):
         ids = {row[column] for column in aliases if row.get(column)}
         sleeper_id = row.get("sleeper_id")
@@ -708,13 +766,28 @@ def _first_td_alias_groups(actuals: pd.DataFrame) -> dict[str, set[str]]:
             # while weekly stats store the bare provider ID.
             ids.add(sleeper_id if sleeper_id.startswith("SLEEPER:") else f"SLEEPER:{sleeper_id}")
         for player_id in ids:
-            result[player_id] = ids
-    return result
+            groups_by_alias.setdefault(player_id, set()).add(frozenset(ids))
+    # A duplicated provider ID attached to different weekly identities is not
+    # safe evidence. Exact IDs remain usable only when they identify one row
+    # identity (duplicate identical rows are harmless).
+    return {
+        alias: set(next(iter(groups)))
+        for alias, groups in groups_by_alias.items()
+        if len(groups) == 1
+    }
 
 
-def _first_td_name_team(actuals: pd.DataFrame, scorer_id: str) -> tuple[str, str] | None:
+def _first_td_name_team(
+    actuals: pd.DataFrame, scorer_id: str, *, season: int | None = None, week: int | None = None
+) -> tuple[str, str] | None:
     """Resolve a scorer by a unique exact id row, returning normalized name/team."""
     stats = actuals.copy()
+    if season is not None and "season" in stats:
+        stats = stats[pd.to_numeric(stats["season"], errors="coerce").eq(int(season))]
+    if week is not None and "week" in stats:
+        stats = stats[pd.to_numeric(stats["week"], errors="coerce").eq(int(week))]
+    if "season_type" in stats:
+        stats = stats[stats["season_type"].astype(str).str.upper().eq("REG")]
     id_cols = [column for column in ("player_id", "gsis_id", "sleeper_id") if column in stats]
     if not id_cols:
         return None
@@ -771,6 +844,8 @@ def _first_td_by_game(pbp: pd.DataFrame, game_ids: set, pos_lookup: dict) -> dic
     result = {}
     for row in first.to_dict(orient="records"):
         scorer_id = row.get("td_player_id")
+        if pd.isna(scorer_id):
+            scorer_id = None
         # A null scorer on the earliest scoring row is unresolved identity,
         # not evidence that the first score was defensive or unlisted. Keep
         # the row's null intact and leave candidate settlements pending.
@@ -811,6 +886,7 @@ def grade_first_td_file(
     season: int,
     week: int,
     participation: pd.DataFrame | None = None,
+    reviewed_settlements: dict | None = None,
 ) -> dict:
     """Attach the game's first-TD scorer outcome to one live board.
 
@@ -856,11 +932,19 @@ def grade_first_td_file(
     pbp_work = pbp.copy()
     if "game_id" in pbp_work:
         pbp_work["game_id"] = pbp_work["game_id"].map(_normal_identifier)
-    pos_lookup = _first_td_position_lookup(actuals)
-    id_aliases = _first_td_alias_groups(actuals)
+    scoped_actuals = actuals.copy()
+    if "season" in scoped_actuals:
+        scoped_actuals = scoped_actuals[pd.to_numeric(scoped_actuals["season"], errors="coerce").eq(int(season))]
+    if "week" in scoped_actuals:
+        scoped_actuals = scoped_actuals[pd.to_numeric(scoped_actuals["week"], errors="coerce").eq(int(week))]
+    if "season_type" in scoped_actuals:
+        scoped_actuals = scoped_actuals[scoped_actuals["season_type"].astype(str).str.upper().eq("REG")]
+    pos_lookup = _first_td_position_lookup(scoped_actuals)
+    id_aliases = _first_td_alias_groups(actuals, season=season, week=week)
     participation_info = _prepare_participation(
         participation if participation is not None else actuals, season, week
     )
+    reviewed_settlements = reviewed_settlements or {}
     board_game_ids = set(board["_game_id"].dropna().tolist())
     board_final_ids = board_game_ids & final_game_ids
     first_td_by_game = _first_td_by_game(pbp_work, board_final_ids, pos_lookup)
@@ -905,37 +989,52 @@ def grade_first_td_file(
                 pending_games.append(game_id)
                 continue
 
+        first_scorer_id_normalized = _normal_identifier(first_scorer_id)
+        canonical_ids = id_aliases.get(first_scorer_id_normalized, {first_scorer_id_normalized})
+        scorer_identity = (
+            _first_td_name_team(scoped_actuals, first_scorer_id_normalized, season=season, week=week)
+            if first_scorer_id_normalized else None
+        )
         outcome = pd.Series(pd.NA, index=game_rows.index, dtype="Float64")
         settlement = pd.Series("awaiting_evidence", index=game_rows.index, dtype="string")
         for idx, row in game_rows.iterrows():
             player_id = row["_player_id"]
+            reviewed = reviewed_settlements.get((
+                int(season), int(week), game_id, player_id, "first",
+            ))
             snaps = participation_info["snaps_by_alias"].get(player_id)
             if snaps is None and "player_display_name" in row and "team" in row:
                 key = (_normal_team(row["team"]), _normal_name(row["player_display_name"]))
                 snaps = participation_info["snaps_by_name_team"].get(key)
-            if snaps is not None and float(snaps) <= 0:
+            is_scorer = bool(
+                first_scorer_id_normalized
+                and (player_id in canonical_ids or (
+                    scorer_identity is not None
+                    and "player_display_name" in row and "team" in row
+                    and (_normal_team(row["team"]), _normal_name(row["player_display_name"])) == scorer_identity
+                ))
+            )
+            if reviewed is not None and reviewed["status"] == "void":
+                if is_scorer or (snaps is not None and float(snaps) > 0):
+                    raise PublicationError(
+                        f"reviewed First TD void conflicts with scorer/participation evidence: {game_id}/{player_id}"
+                    )
                 settlement.loc[idx] = "void"
                 continue
-            if kind == "offense_skill" or kind == "special_teams":
-                if not first_scorer_id:
-                    continue
-                canonical_ids = id_aliases.get(_normal_identifier(first_scorer_id), {_normal_identifier(first_scorer_id)})
-                is_scorer = player_id in canonical_ids
-                if not is_scorer and "player_display_name" in row and "team" in row:
-                    exact_identity = _first_td_name_team(actuals, _normal_identifier(first_scorer_id))
-                    row_identity = (_normal_team(row["team"]), _normal_name(row["player_display_name"]))
-                    is_scorer = exact_identity is not None and row_identity == exact_identity
-                if is_scorer:
-                    outcome.loc[idx] = 1.0
-                    settlement.loc[idx] = "settled"
-                elif snaps is not None and float(snaps) > 0:
-                    outcome.loc[idx] = 0.0
-                    settlement.loc[idx] = "settled"
-            elif kind == "defense" or (kind == "no_touchdown" and no_td_offered):
+            if is_scorer:
+                # DraftKings settles to the player in possession, regardless
+                # of whether the touchdown came on offense or a return.
+                outcome.loc[idx] = 1.0
+                settlement.loc[idx] = "settled"
+            elif snaps is not None and float(snaps) <= 0:
+                settlement.loc[idx] = "void"
+            elif kind in {"offense_skill", "special_teams", "defense"} or (
+                kind == "no_touchdown" and no_td_offered
+            ):
                 if snaps is not None and float(snaps) > 0:
                     outcome.loc[idx] = 0.0
                     settlement.loc[idx] = "settled"
-            else:
+            elif kind == "no_touchdown":
                 # A verified no-TD game with no No Touchdown selection is void.
                 settlement.loc[idx] = "void"
         if settlement.eq("awaiting_evidence").any():
@@ -955,9 +1054,9 @@ def grade_first_td_file(
         updated_rows += int(settlement.ne("awaiting_evidence").sum())
 
     board = board.drop(columns=["_game_id", "_player_id"])
-    changed = not board.equals(original_board)
+    encoded = board.to_csv(index=False, lineterminator="\n").encode("utf-8")
+    changed = encoded != source.read_bytes()
     if changed:
-        encoded = board.to_csv(index=False, lineterminator="\n").encode("utf-8")
         source.write_bytes(encoded)
 
     graded = (
@@ -983,7 +1082,7 @@ def grade_first_td_file(
     }
 
 
-def grade_first_td_releases(root=None) -> dict:
+def grade_first_td_releases(root=None, *, participation_by_season: dict[int, pd.DataFrame | None] | None = None) -> dict:
     """Grade all published 2026 Anytime TD boards' first-TD column that have final games."""
     site_root = Path(root) if root is not None else Path(__file__).resolve().parents[1]
     directory = site_root / "betting" / "anytime_td"
@@ -1002,6 +1101,8 @@ def grade_first_td_releases(root=None) -> dict:
     actuals_by_season = {}
     pbp_by_season = {}
     results = {}
+    participation_by_season = participation_by_season if participation_by_season is not None else {}
+    reviewed_settlements = load_reviewed_td_settlements(site_root)
     for source, season, week in releases:
         if season not in schedules:
             schedules[season] = fetch_nfl_schedule(season)
@@ -1025,13 +1126,20 @@ def grade_first_td_releases(root=None) -> dict:
             actuals_by_season[season] = fetch_player_stats(season)
         if season not in pbp_by_season:
             pbp_by_season[season] = fetch_nfl_pbp(season)
+        if season not in participation_by_season:
+            try:
+                participation_by_season[season] = fetch_snap_counts(season)
+            except Exception:
+                participation_by_season[season] = None
         results[label] = grade_first_td_file(
             source,
             schedule,
             pbp_by_season[season],
             actuals_by_season[season],
+            participation=participation_by_season[season],
             season=season,
             week=week,
+            reviewed_settlements=reviewed_settlements,
         )
     return results
 
@@ -1074,7 +1182,9 @@ def write_td_grading_stamps(anytime: dict, first_td: dict, root=None) -> list[st
     return written
 
 
-def grade_anytime_td_releases(root=None) -> dict:
+def grade_anytime_td_releases(
+    root=None, *, participation_by_season: dict[int, pd.DataFrame | None] | None = None
+) -> dict:
     """Grade all published 2026 Anytime TD boards that have final games."""
     site_root = Path(root) if root is not None else Path(__file__).resolve().parents[1]
     directory = site_root / "betting" / "anytime_td"
@@ -1091,8 +1201,9 @@ def grade_anytime_td_releases(root=None) -> dict:
 
     schedules = {}
     actuals_by_season = {}
-    participation_by_season = {}
+    participation_by_season = participation_by_season if participation_by_season is not None else {}
     results = {}
+    reviewed_settlements = load_reviewed_td_settlements(site_root)
     for source, season, week in releases:
         if season not in schedules:
             schedules[season] = fetch_nfl_schedule(season)
@@ -1129,5 +1240,6 @@ def grade_anytime_td_releases(root=None) -> dict:
             participation=participation_by_season[season],
             season=season,
             week=week,
+            reviewed_settlements=reviewed_settlements,
         )
     return results

@@ -1,0 +1,591 @@
+{
+  "decision_basis": "reviewed historical settlements; missing evidence alone never creates a void",
+  "schema_version": 2,
+  "settlements": [
+    {
+      "evidence": {
+        "basis": "complete weekly snap-count feed confirms no participation on offense, defense, or special teams",
+        "decision_source": "td-settlement-proposal-v1",
+        "source_file": "td_count_model_beta/artifacts/reviews/td_pipeline/migration_20260930/before_after.csv",
+        "source_row": 2,
+        "source_sha256": "c2e49b0f14e430734b78f4d02918c89703647d57bd9a085bdb78e5c9002e46b1"
+      },
+      "game_id": "2026_01_ARI_LAC",
+      "market": "anytime",
+      "player_id": "sleeper:13297",
+      "season": 2026,
+      "status": "void",
+      "week": 1
+    },
+    {
+      "evidence": {
+        "basis": "complete weekly snap-count feed confirms no participation on offense, defense, or special teams",
+        "decision_source": "td-settlement-proposal-v1",
+        "source_file": "td_count_model_beta/artifacts/reviews/td_pipeline/migration_20260930/before_after.csv",
+        "source_row": 2,
+        "source_sha256": "c2e49b0f14e430734b78f4d02918c89703647d57bd9a085bdb78e5c9002e46b1"
+      },
+      "game_id": "2026_01_ARI_LAC",
+      "market": "first",
+      "player_id": "sleeper:13297",
+      "season": 2026,
+      "status": "void",
+      "week": 1
+    },
+    {
+      "evidence": {
+        "basis": "complete weekly snap-count feed confirms no participation on offense, defense, or special teams",
+        "decision_source": "td-settlement-proposal-v1",
+        "source_file": "td_count_model_beta/artifacts/reviews/td_pipeline/migration_20260930/before_after.csv",
+        "source_row": 2,
+        "source_sha256": "c2e49b0f14e430734b78f4d02918c89703647d57bd9a085bdb78e5c9002e46b1"
+      },
+      "game_id": "2026_01_ARI_LAC",
+      "market": "two_plus",
+      "player_id": "sleeper:13297",
+      "season": 2026,
+      "status": "void",
+      "week": 1
+    },
+    {
+      "evidence": {
+        "basis": "complete weekly snap-count feed confirms no participation on offense, defense, or special teams",
+        "decision_source": "td-settlement-proposal-v1",
+        "source_file": "td_count_model_beta/artifacts/reviews/td_pipeline/migration_20260930/before_after.csv",
+        "source_row": 10,
+        "source_sha256": "c2e49b0f14e430734b78f4d02918c89703647d57bd9a085bdb78e5c9002e46b1"
+      },
+      "game_id": "2026_01_BAL_IND",
+      "market": "anytime",
+      "player_id": "00-0039792",
+      "season": 2026,
+      "status": "void",
+      "week": 1
+    },
+    {
+      "evidence": {
+        "basis": "complete weekly snap-count feed confirms no participation on offense, defense, or special teams",
+        "decision_source": "td-settlement-proposal-v1",
+        "source_file": "td_count_model_beta/artifacts/reviews/td_pipeline/migration_20260930/before_after.csv",
+        "source_row": 10,
+        "source_sha256": "c2e49b0f14e430734b78f4d02918c89703647d57bd9a085bdb78e5c9002e46b1"
+      },
+      "game_id": "2026_01_BAL_IND",
+      "market": "first",
+      "player_id": "00-0039792",
+      "season": 2026,
+      "status": "void",
+      "week": 1
+    },
+    {
+      "evidence": {
+        "basis": "complete weekly snap-count feed confirms no participation on offense, defense, or special teams",
+        "decision_source": "td-settlement-proposal-v1",
+        "source_file": "td_count_model_beta/artifacts/reviews/td_pipeline/migration_20260930/before_after.csv",
+        "source_row": 10,
+        "source_sha256": "c2e49b0f14e430734b78f4d02918c89703647d57bd9a085bdb78e5c9002e46b1"
+      },
+      "game_id": "2026_01_BAL_IND",
+      "market": "two_plus",
+      "player_id": "00-0039792",
+      "season": 2026,
+      "status": "void",
+      "week": 1
+    },
+    {
+      "evidence": {
+        "basis": "complete weekly snap-count feed confirms no participation on offense, defense, or special teams",
+        "decision_source": "td-settlement-proposal-v1",
+        "source_file": "td_count_model_beta/artifacts/reviews/td_pipeline/migration_20260930/before_after.csv",
+        "source_row": 8,
+        "source_sha256": "c2e49b0f14e430734b78f4d02918c89703647d57bd9a085bdb78e5c9002e46b1"
+      },
+      "game_id": "2026_01_BAL_IND",
+      "market": "anytime",
+      "player_id": "sleeper:13268",
+      "season": 2026,
+      "status": "void",
+      "week": 1
+    },
+    {
+      "evidence": {
+        "basis": "complete weekly snap-count feed confirms no participation on offense, defense, or special teams",
+        "decision_source": "td-settlement-proposal-v1",
+        "source_file": "td_count_model_beta/artifacts/reviews/td_pipeline/migration_20260930/before_after.csv",
+        "source_row": 8,
+        "source_sha256": "c2e49b0f14e430734b78f4d02918c89703647d57bd9a085bdb78e5c9002e46b1"
+      },
+      "game_id": "2026_01_BAL_IND",
+      "market": "first",
+      "player_id": "sleeper:13268",
+      "season": 2026,
+      "status": "void",
+      "week": 1
+    },
+    {
+      "evidence": {
+        "basis": "complete weekly snap-count feed confirms no participation on offense, defense, or special teams",
+        "decision_source": "td-settlement-proposal-v1",
+        "source_file": "td_count_model_beta/artifacts/reviews/td_pipeline/migration_20260930/before_after.csv",
+        "source_row": 8,
+        "source_sha256": "c2e49b0f14e430734b78f4d02918c89703647d57bd9a085bdb78e5c9002e46b1"
+      },
+      "game_id": "2026_01_BAL_IND",
+      "market": "two_plus",
+      "player_id": "sleeper:13268",
+      "season": 2026,
+      "status": "void",
+      "week": 1
+    },
+    {
+      "evidence": {
+        "basis": "complete weekly snap-count feed confirms no participation on offense, defense, or special teams",
+        "decision_source": "td-settlement-proposal-v1",
+        "source_file": "td_count_model_beta/artifacts/reviews/td_pipeline/migration_20260930/before_after.csv",
+        "source_row": 11,
+        "source_sha256": "c2e49b0f14e430734b78f4d02918c89703647d57bd9a085bdb78e5c9002e46b1"
+      },
+      "game_id": "2026_01_CHI_CAR",
+      "market": "anytime",
+      "player_id": "00-0037614",
+      "season": 2026,
+      "status": "void",
+      "week": 1
+    },
+    {
+      "evidence": {
+        "basis": "complete weekly snap-count feed confirms no participation on offense, defense, or special teams",
+        "decision_source": "td-settlement-proposal-v1",
+        "source_file": "td_count_model_beta/artifacts/reviews/td_pipeline/migration_20260930/before_after.csv",
+        "source_row": 11,
+        "source_sha256": "c2e49b0f14e430734b78f4d02918c89703647d57bd9a085bdb78e5c9002e46b1"
+      },
+      "game_id": "2026_01_CHI_CAR",
+      "market": "first",
+      "player_id": "00-0037614",
+      "season": 2026,
+      "status": "void",
+      "week": 1
+    },
+    {
+      "evidence": {
+        "basis": "complete weekly snap-count feed confirms no participation on offense, defense, or special teams",
+        "decision_source": "td-settlement-proposal-v1",
+        "source_file": "td_count_model_beta/artifacts/reviews/td_pipeline/migration_20260930/before_after.csv",
+        "source_row": 11,
+        "source_sha256": "c2e49b0f14e430734b78f4d02918c89703647d57bd9a085bdb78e5c9002e46b1"
+      },
+      "game_id": "2026_01_CHI_CAR",
+      "market": "two_plus",
+      "player_id": "00-0037614",
+      "season": 2026,
+      "status": "void",
+      "week": 1
+    },
+    {
+      "evidence": {
+        "basis": "complete weekly snap-count feed confirms no participation on offense, defense, or special teams",
+        "decision_source": "td-settlement-proposal-v1",
+        "source_file": "td_count_model_beta/artifacts/reviews/td_pipeline/migration_20260930/before_after.csv",
+        "source_row": 12,
+        "source_sha256": "c2e49b0f14e430734b78f4d02918c89703647d57bd9a085bdb78e5c9002e46b1"
+      },
+      "game_id": "2026_01_CLE_JAX",
+      "market": "anytime",
+      "player_id": "sleeper:13408",
+      "season": 2026,
+      "status": "void",
+      "week": 1
+    },
+    {
+      "evidence": {
+        "basis": "complete weekly snap-count feed confirms no participation on offense, defense, or special teams",
+        "decision_source": "td-settlement-proposal-v1",
+        "source_file": "td_count_model_beta/artifacts/reviews/td_pipeline/migration_20260930/before_after.csv",
+        "source_row": 12,
+        "source_sha256": "c2e49b0f14e430734b78f4d02918c89703647d57bd9a085bdb78e5c9002e46b1"
+      },
+      "game_id": "2026_01_CLE_JAX",
+      "market": "first",
+      "player_id": "sleeper:13408",
+      "season": 2026,
+      "status": "void",
+      "week": 1
+    },
+    {
+      "evidence": {
+        "basis": "complete weekly snap-count feed confirms no participation on offense, defense, or special teams",
+        "decision_source": "td-settlement-proposal-v1",
+        "source_file": "td_count_model_beta/artifacts/reviews/td_pipeline/migration_20260930/before_after.csv",
+        "source_row": 12,
+        "source_sha256": "c2e49b0f14e430734b78f4d02918c89703647d57bd9a085bdb78e5c9002e46b1"
+      },
+      "game_id": "2026_01_CLE_JAX",
+      "market": "two_plus",
+      "player_id": "sleeper:13408",
+      "season": 2026,
+      "status": "void",
+      "week": 1
+    },
+    {
+      "evidence": {
+        "basis": "complete weekly snap-count feed confirms no participation on offense, defense, or special teams",
+        "decision_source": "td-settlement-proposal-v1",
+        "source_file": "td_count_model_beta/artifacts/reviews/td_pipeline/migration_20260930/before_after.csv",
+        "source_row": 9,
+        "source_sha256": "c2e49b0f14e430734b78f4d02918c89703647d57bd9a085bdb78e5c9002e46b1"
+      },
+      "game_id": "2026_01_DEN_KC",
+      "market": "anytime",
+      "player_id": "00-0035406",
+      "season": 2026,
+      "status": "void",
+      "week": 1
+    },
+    {
+      "evidence": {
+        "basis": "complete weekly snap-count feed confirms no participation on offense, defense, or special teams",
+        "decision_source": "td-settlement-proposal-v1",
+        "source_file": "td_count_model_beta/artifacts/reviews/td_pipeline/migration_20260930/before_after.csv",
+        "source_row": 9,
+        "source_sha256": "c2e49b0f14e430734b78f4d02918c89703647d57bd9a085bdb78e5c9002e46b1"
+      },
+      "game_id": "2026_01_DEN_KC",
+      "market": "first",
+      "player_id": "00-0035406",
+      "season": 2026,
+      "status": "void",
+      "week": 1
+    },
+    {
+      "evidence": {
+        "basis": "complete weekly snap-count feed confirms no participation on offense, defense, or special teams",
+        "decision_source": "td-settlement-proposal-v1",
+        "source_file": "td_count_model_beta/artifacts/reviews/td_pipeline/migration_20260930/before_after.csv",
+        "source_row": 9,
+        "source_sha256": "c2e49b0f14e430734b78f4d02918c89703647d57bd9a085bdb78e5c9002e46b1"
+      },
+      "game_id": "2026_01_DEN_KC",
+      "market": "two_plus",
+      "player_id": "00-0035406",
+      "season": 2026,
+      "status": "void",
+      "week": 1
+    },
+    {
+      "evidence": {
+        "basis": "complete weekly snap-count feed confirms no participation on offense, defense, or special teams",
+        "decision_source": "td-settlement-proposal-v1",
+        "source_file": "td_count_model_beta/artifacts/reviews/td_pipeline/migration_20260930/before_after.csv",
+        "source_row": 14,
+        "source_sha256": "c2e49b0f14e430734b78f4d02918c89703647d57bd9a085bdb78e5c9002e46b1"
+      },
+      "game_id": "2026_01_GB_MIN",
+      "market": "anytime",
+      "player_id": "00-0040509",
+      "season": 2026,
+      "status": "void",
+      "week": 1
+    },
+    {
+      "evidence": {
+        "basis": "complete weekly snap-count feed confirms no participation on offense, defense, or special teams",
+        "decision_source": "td-settlement-proposal-v1",
+        "source_file": "td_count_model_beta/artifacts/reviews/td_pipeline/migration_20260930/before_after.csv",
+        "source_row": 14,
+        "source_sha256": "c2e49b0f14e430734b78f4d02918c89703647d57bd9a085bdb78e5c9002e46b1"
+      },
+      "game_id": "2026_01_GB_MIN",
+      "market": "first",
+      "player_id": "00-0040509",
+      "season": 2026,
+      "status": "void",
+      "week": 1
+    },
+    {
+      "evidence": {
+        "basis": "complete weekly snap-count feed confirms no participation on offense, defense, or special teams",
+        "decision_source": "td-settlement-proposal-v1",
+        "source_file": "td_count_model_beta/artifacts/reviews/td_pipeline/migration_20260930/before_after.csv",
+        "source_row": 14,
+        "source_sha256": "c2e49b0f14e430734b78f4d02918c89703647d57bd9a085bdb78e5c9002e46b1"
+      },
+      "game_id": "2026_01_GB_MIN",
+      "market": "two_plus",
+      "player_id": "00-0040509",
+      "season": 2026,
+      "status": "void",
+      "week": 1
+    },
+    {
+      "evidence": {
+        "basis": "complete weekly snap-count feed confirms no participation on offense, defense, or special teams",
+        "decision_source": "td-settlement-proposal-v1",
+        "source_file": "td_count_model_beta/artifacts/reviews/td_pipeline/migration_20260930/before_after.csv",
+        "source_row": 4,
+        "source_sha256": "c2e49b0f14e430734b78f4d02918c89703647d57bd9a085bdb78e5c9002e46b1"
+      },
+      "game_id": "2026_01_NE_SEA",
+      "market": "anytime",
+      "player_id": "00-0040563",
+      "season": 2026,
+      "status": "void",
+      "week": 1
+    },
+    {
+      "evidence": {
+        "basis": "complete weekly snap-count feed confirms no participation on offense, defense, or special teams",
+        "decision_source": "td-settlement-proposal-v1",
+        "source_file": "td_count_model_beta/artifacts/reviews/td_pipeline/migration_20260930/before_after.csv",
+        "source_row": 4,
+        "source_sha256": "c2e49b0f14e430734b78f4d02918c89703647d57bd9a085bdb78e5c9002e46b1"
+      },
+      "game_id": "2026_01_NE_SEA",
+      "market": "first",
+      "player_id": "00-0040563",
+      "season": 2026,
+      "status": "void",
+      "week": 1
+    },
+    {
+      "evidence": {
+        "basis": "complete weekly snap-count feed confirms no participation on offense, defense, or special teams",
+        "decision_source": "td-settlement-proposal-v1",
+        "source_file": "td_count_model_beta/artifacts/reviews/td_pipeline/migration_20260930/before_after.csv",
+        "source_row": 4,
+        "source_sha256": "c2e49b0f14e430734b78f4d02918c89703647d57bd9a085bdb78e5c9002e46b1"
+      },
+      "game_id": "2026_01_NE_SEA",
+      "market": "two_plus",
+      "player_id": "00-0040563",
+      "season": 2026,
+      "status": "void",
+      "week": 1
+    },
+    {
+      "evidence": {
+        "basis": "complete weekly snap-count feed confirms no participation on offense, defense, or special teams",
+        "decision_source": "td-settlement-proposal-v1",
+        "source_file": "td_count_model_beta/artifacts/reviews/td_pipeline/migration_20260930/before_after.csv",
+        "source_row": 7,
+        "source_sha256": "c2e49b0f14e430734b78f4d02918c89703647d57bd9a085bdb78e5c9002e46b1"
+      },
+      "game_id": "2026_01_NO_DET",
+      "market": "anytime",
+      "player_id": "sleeper:13319",
+      "season": 2026,
+      "status": "void",
+      "week": 1
+    },
+    {
+      "evidence": {
+        "basis": "complete weekly snap-count feed confirms no participation on offense, defense, or special teams",
+        "decision_source": "td-settlement-proposal-v1",
+        "source_file": "td_count_model_beta/artifacts/reviews/td_pipeline/migration_20260930/before_after.csv",
+        "source_row": 7,
+        "source_sha256": "c2e49b0f14e430734b78f4d02918c89703647d57bd9a085bdb78e5c9002e46b1"
+      },
+      "game_id": "2026_01_NO_DET",
+      "market": "first",
+      "player_id": "sleeper:13319",
+      "season": 2026,
+      "status": "void",
+      "week": 1
+    },
+    {
+      "evidence": {
+        "basis": "complete weekly snap-count feed confirms no participation on offense, defense, or special teams",
+        "decision_source": "td-settlement-proposal-v1",
+        "source_file": "td_count_model_beta/artifacts/reviews/td_pipeline/migration_20260930/before_after.csv",
+        "source_row": 7,
+        "source_sha256": "c2e49b0f14e430734b78f4d02918c89703647d57bd9a085bdb78e5c9002e46b1"
+      },
+      "game_id": "2026_01_NO_DET",
+      "market": "two_plus",
+      "player_id": "sleeper:13319",
+      "season": 2026,
+      "status": "void",
+      "week": 1
+    },
+    {
+      "evidence": {
+        "basis": "complete weekly snap-count feed confirms no participation on offense, defense, or special teams",
+        "decision_source": "td-settlement-proposal-v1",
+        "source_file": "td_count_model_beta/artifacts/reviews/td_pipeline/migration_20260930/before_after.csv",
+        "source_row": 3,
+        "source_sha256": "c2e49b0f14e430734b78f4d02918c89703647d57bd9a085bdb78e5c9002e46b1"
+      },
+      "game_id": "2026_01_NYJ_TEN",
+      "market": "anytime",
+      "player_id": "00-0033375",
+      "season": 2026,
+      "status": "void",
+      "week": 1
+    },
+    {
+      "evidence": {
+        "basis": "complete weekly snap-count feed confirms no participation on offense, defense, or special teams",
+        "decision_source": "td-settlement-proposal-v1",
+        "source_file": "td_count_model_beta/artifacts/reviews/td_pipeline/migration_20260930/before_after.csv",
+        "source_row": 3,
+        "source_sha256": "c2e49b0f14e430734b78f4d02918c89703647d57bd9a085bdb78e5c9002e46b1"
+      },
+      "game_id": "2026_01_NYJ_TEN",
+      "market": "first",
+      "player_id": "00-0033375",
+      "season": 2026,
+      "status": "void",
+      "week": 1
+    },
+    {
+      "evidence": {
+        "basis": "complete weekly snap-count feed confirms no participation on offense, defense, or special teams",
+        "decision_source": "td-settlement-proposal-v1",
+        "source_file": "td_count_model_beta/artifacts/reviews/td_pipeline/migration_20260930/before_after.csv",
+        "source_row": 3,
+        "source_sha256": "c2e49b0f14e430734b78f4d02918c89703647d57bd9a085bdb78e5c9002e46b1"
+      },
+      "game_id": "2026_01_NYJ_TEN",
+      "market": "two_plus",
+      "player_id": "00-0033375",
+      "season": 2026,
+      "status": "void",
+      "week": 1
+    },
+    {
+      "evidence": {
+        "basis": "complete weekly snap-count feed confirms no participation on offense, defense, or special teams",
+        "decision_source": "td-settlement-proposal-v1",
+        "source_file": "td_count_model_beta/artifacts/reviews/td_pipeline/migration_20260930/before_after.csv",
+        "source_row": 6,
+        "source_sha256": "c2e49b0f14e430734b78f4d02918c89703647d57bd9a085bdb78e5c9002e46b1"
+      },
+      "game_id": "2026_01_NYJ_TEN",
+      "market": "anytime",
+      "player_id": "00-0036842",
+      "season": 2026,
+      "status": "void",
+      "week": 1
+    },
+    {
+      "evidence": {
+        "basis": "complete weekly snap-count feed confirms no participation on offense, defense, or special teams",
+        "decision_source": "td-settlement-proposal-v1",
+        "source_file": "td_count_model_beta/artifacts/reviews/td_pipeline/migration_20260930/before_after.csv",
+        "source_row": 6,
+        "source_sha256": "c2e49b0f14e430734b78f4d02918c89703647d57bd9a085bdb78e5c9002e46b1"
+      },
+      "game_id": "2026_01_NYJ_TEN",
+      "market": "first",
+      "player_id": "00-0036842",
+      "season": 2026,
+      "status": "void",
+      "week": 1
+    },
+    {
+      "evidence": {
+        "basis": "complete weekly snap-count feed confirms no participation on offense, defense, or special teams",
+        "decision_source": "td-settlement-proposal-v1",
+        "source_file": "td_count_model_beta/artifacts/reviews/td_pipeline/migration_20260930/before_after.csv",
+        "source_row": 6,
+        "source_sha256": "c2e49b0f14e430734b78f4d02918c89703647d57bd9a085bdb78e5c9002e46b1"
+      },
+      "game_id": "2026_01_NYJ_TEN",
+      "market": "two_plus",
+      "player_id": "00-0036842",
+      "season": 2026,
+      "status": "void",
+      "week": 1
+    },
+    {
+      "evidence": {
+        "basis": "complete weekly snap-count feed confirms no participation on offense, defense, or special teams",
+        "decision_source": "td-settlement-proposal-v1",
+        "source_file": "td_count_model_beta/artifacts/reviews/td_pipeline/migration_20260930/before_after.csv",
+        "source_row": 5,
+        "source_sha256": "c2e49b0f14e430734b78f4d02918c89703647d57bd9a085bdb78e5c9002e46b1"
+      },
+      "game_id": "2026_01_SF_LA",
+      "market": "anytime",
+      "player_id": "00-0040177",
+      "season": 2026,
+      "status": "void",
+      "week": 1
+    },
+    {
+      "evidence": {
+        "basis": "complete weekly snap-count feed confirms no participation on offense, defense, or special teams",
+        "decision_source": "td-settlement-proposal-v1",
+        "source_file": "td_count_model_beta/artifacts/reviews/td_pipeline/migration_20260930/before_after.csv",
+        "source_row": 5,
+        "source_sha256": "c2e49b0f14e430734b78f4d02918c89703647d57bd9a085bdb78e5c9002e46b1"
+      },
+      "game_id": "2026_01_SF_LA",
+      "market": "first",
+      "player_id": "00-0040177",
+      "season": 2026,
+      "status": "void",
+      "week": 1
+    },
+    {
+      "evidence": {
+        "basis": "complete weekly snap-count feed confirms no participation on offense, defense, or special teams",
+        "decision_source": "td-settlement-proposal-v1",
+        "source_file": "td_count_model_beta/artifacts/reviews/td_pipeline/migration_20260930/before_after.csv",
+        "source_row": 5,
+        "source_sha256": "c2e49b0f14e430734b78f4d02918c89703647d57bd9a085bdb78e5c9002e46b1"
+      },
+      "game_id": "2026_01_SF_LA",
+      "market": "two_plus",
+      "player_id": "00-0040177",
+      "season": 2026,
+      "status": "void",
+      "week": 1
+    },
+    {
+      "evidence": {
+        "basis": "complete weekly snap-count feed confirms no participation on offense, defense, or special teams",
+        "decision_source": "td-settlement-proposal-v1",
+        "source_file": "td_count_model_beta/artifacts/reviews/td_pipeline/migration_20260930/before_after.csv",
+        "source_row": 13,
+        "source_sha256": "c2e49b0f14e430734b78f4d02918c89703647d57bd9a085bdb78e5c9002e46b1"
+      },
+      "game_id": "2026_01_SF_LA",
+      "market": "anytime",
+      "player_id": "sleeper:13270",
+      "season": 2026,
+      "status": "void",
+      "week": 1
+    },
+    {
+      "evidence": {
+        "basis": "complete weekly snap-count feed confirms no participation on offense, defense, or special teams",
+        "decision_source": "td-settlement-proposal-v1",
+        "source_file": "td_count_model_beta/artifacts/reviews/td_pipeline/migration_20260930/before_after.csv",
+        "source_row": 13,
+        "source_sha256": "c2e49b0f14e430734b78f4d02918c89703647d57bd9a085bdb78e5c9002e46b1"
+      },
+      "game_id": "2026_01_SF_LA",
+      "market": "first",
+      "player_id": "sleeper:13270",
+      "season": 2026,
+      "status": "void",
+      "week": 1
+    },
+    {
+      "evidence": {
+        "basis": "complete weekly snap-count feed confirms no participation on offense, defense, or special teams",
+        "decision_source": "td-settlement-proposal-v1",
+        "source_file": "td_count_model_beta/artifacts/reviews/td_pipeline/migration_20260930/before_after.csv",
+        "source_row": 13,
+        "source_sha256": "c2e49b0f14e430734b78f4d02918c89703647d57bd9a085bdb78e5c9002e46b1"
+      },
+      "game_id": "2026_01_SF_LA",
+      "market": "two_plus",
+      "player_id": "sleeper:13270",
+      "season": 2026,
+      "status": "void",
+      "week": 1
+    }
+  ]
+}

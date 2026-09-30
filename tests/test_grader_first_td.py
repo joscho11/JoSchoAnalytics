@@ -113,6 +113,17 @@ def test_touchdown_game_still_grades_the_scorer(tmp_path):
     assert graded["scored_first"].tolist() == [1.0, 0.0]
 
 
+def test_first_td_pass_touchdown_credits_receiver_not_passer(tmp_path):
+    rows = _plays(3, 9)
+    rows[1].update({
+        "touchdown": 1, "pass_touchdown": 1, "td_player_id": "JJ",
+        "passer_player_id": "CW", "td_team": "MIN", "posteam": "MIN",
+        "defteam": "CHI", "return_touchdown": 0,
+    })
+    _, graded = _grade_fixture(tmp_path, rows, home_score=3, away_score=9)
+    assert graded["scored_first"].tolist() == [1.0, 0.0]
+
+
 def test_first_td_grading_keeps_void_status_set_by_the_anytime_grader(tmp_path):
     import pandas as pd
     from publishing.grader import grade_first_td_file
@@ -167,6 +178,37 @@ def test_first_td_handles_synthetic_site_id_through_exact_stats_alias(tmp_path):
     assert graded["scored_first"].tolist() == [1.0, 0.0]
 
 
+def test_first_td_uses_unique_weekly_team_name_when_provider_alias_is_missing(tmp_path):
+    import pandas as pd
+    from publishing.grader import grade_first_td_file
+
+    csv = tmp_path / "anytime_td_2026_week02.csv"
+    pd.DataFrame({
+        "game_id": ["2026_02_MIN_CHI", "2026_02_MIN_CHI"],
+        "player_id": ["unmapped:101", "unmapped:202"],
+        "player_display_name": ["Jeremiyah Love", "Caleb Williams"],
+        "team": ["MIN", "CHI"], "scored_first": [None, None],
+    }).to_csv(csv, index=False)
+    schedule = pd.DataFrame([{
+        "season": 2026, "week": 2, "game_id": "2026_02_MIN_CHI",
+        "home_team": "CHI", "away_team": "MIN", "home_score": 6, "away_score": 0,
+    }])
+    pbp = pd.DataFrame(_plays(6, 0))
+    pbp.loc[1, ["touchdown", "td_player_id", "td_team", "posteam", "defteam", "return_touchdown"]] = [
+        1, "GSIS1", "MIN", "MIN", "CHI", 0,
+    ]
+    actuals = pd.DataFrame({
+        "season": [2026, 2026], "week": [2, 2], "season_type": ["REG", "REG"],
+        "player_id": ["GSIS1", "GSIS2"], "position": ["RB", "QB"],
+        "team": ["MIN", "CHI"],
+        "player_display_name": ["Jeremiyah Love", "Caleb Williams"],
+        "offense_snaps": [1, 1], "defense_snaps": [0, 0], "st_snaps": [0, 0],
+    })
+    grade_first_td_file(csv, schedule, pbp, actuals, season=2026, week=2)
+    graded = pd.read_csv(csv)
+    assert graded["scored_first"].tolist() == [1.0, 0.0]
+
+
 def test_first_td_preserves_null_first_scorer_instead_of_using_later_td_id():
     import pandas as pd
     from publishing.grader import _first_td_by_game
@@ -192,6 +234,115 @@ def test_first_td_special_teams_score_is_winner_for_exact_player():
         "return_touchdown": 1,
     }])
     assert _first_td_by_game(pbp, {"g"}, {"RET": "WR"})["g"] == ("RET", "special_teams")
+
+
+def test_first_td_identity_lookup_is_week_scoped_and_rejects_ambiguous_ids():
+    import pandas as pd
+    from publishing.grader import _first_td_alias_groups, _first_td_name_team
+
+    actuals = pd.DataFrame([
+        {"season": 2026, "week": 1, "player_id": "DUP", "sleeper_id": "101",
+         "player_display_name": "Old Player", "team": "AAA", "season_type": "REG"},
+        {"season": 2026, "week": 2, "player_id": "DUP", "sleeper_id": "202",
+         "player_display_name": "Week Two Player", "team": "BBB", "season_type": "REG"},
+    ])
+    assert _first_td_name_team(actuals, "DUP", season=2026, week=2) == ("BBB", "weektwoplayer")
+    assert _first_td_name_team(actuals, "DUP", season=2026, week=3) is None
+    aliases = _first_td_alias_groups(actuals, season=2026, week=2)
+    assert aliases["DUP"] == {"DUP", "202", "SLEEPER:202"}
+
+    ambiguous = pd.concat([actuals.iloc[[0]], actuals.iloc[[1]].assign(week=1)], ignore_index=True)
+    assert "DUP" not in _first_td_alias_groups(ambiguous, season=2026, week=1)
+
+
+def test_first_td_return_touchdown_settles_carrier_without_offense_classification(tmp_path):
+    import pandas as pd
+    from publishing.grader import grade_first_td_file
+
+    csv = tmp_path / "anytime_td_2026_week03.csv"
+    pd.DataFrame({
+        "game_id": ["2026_03_MIN_TB", "2026_03_MIN_TB"],
+        "player_id": ["sleeper:100", "sleeper:200"],
+        "player_display_name": ["Myles Price", "Other Player"],
+        "team": ["MIN", "TB"], "scored_first": [None, None],
+    }).to_csv(csv, index=False)
+    schedule = pd.DataFrame([{
+        "season": 2026, "week": 3, "game_id": "2026_03_MIN_TB",
+        "home_team": "TB", "away_team": "MIN", "home_score": 0, "away_score": 6,
+    }])
+    pbp = pd.DataFrame([{
+        "game_id": "2026_03_MIN_TB", "play_id": 1, "qtr": 1,
+        "touchdown": 1, "td_player_id": "GSIS100", "td_team": "MIN",
+        "posteam": "MIN", "defteam": "TB", "return_touchdown": 1,
+    }])
+    actuals = pd.DataFrame({
+        "season": [2026, 2026], "week": [3, 3], "season_type": ["REG", "REG"],
+        "player_id": ["GSIS100", "GSIS200"], "sleeper_id": ["100", "200"],
+        "position": ["WR", "WR"], "team": ["MIN", "TB"],
+        "player_display_name": ["Myles Price", "Other Player"],
+        "offense_snaps": [0, 1], "defense_snaps": [0, 0], "st_snaps": [1, 0],
+    })
+    result = grade_first_td_file(csv, schedule, pbp, actuals, season=2026, week=3)
+    graded = pd.read_csv(csv)
+    assert result["complete"] is True
+    assert graded["scored_first"].tolist() == [1.0, 0.0]
+
+
+def test_first_td_retains_reviewed_void_when_replayed(tmp_path):
+    import pandas as pd
+    from publishing.grader import grade_first_td_file
+
+    csv = tmp_path / "anytime_td_2026_week01.csv"
+    pd.DataFrame({
+        "game_id": ["2026_01_NE_SEA"] * 2, "player_id": ["DNP", "GSIS1"],
+        "scored_first": [None, None], "settlement_status_first": ["void", "open"],
+        "first_no_td_offered": [True, True],
+    }).to_csv(csv, index=False)
+    schedule = pd.DataFrame([{
+        "season": 2026, "week": 1, "game_id": "2026_01_NE_SEA",
+        "home_team": "SEA", "away_team": "NE", "home_score": 0, "away_score": 6,
+    }])
+    pbp = pd.DataFrame([{
+        "game_id": "2026_01_NE_SEA", "play_id": 1, "qtr": 1,
+        "touchdown": 1, "td_player_id": "GSIS1", "td_team": "NE",
+        "posteam": "NE", "defteam": "SEA", "return_touchdown": 0,
+    }])
+    actuals = pd.DataFrame({
+        "player_id": ["GSIS1"], "position": ["TE"], "team": ["NE"],
+        "player_display_name": ["Scorer"],
+    })
+    reviewed = {(2026, 1, "2026_01_NE_SEA", "DNP", "first"): {
+        "status": "void", "evidence": {"review": "v1", "source_sha256": "abc"},
+    }}
+    grade_first_td_file(
+        csv, schedule, pbp, actuals, season=2026, week=1,
+        reviewed_settlements=reviewed,
+    )
+    graded = pd.read_csv(csv)
+    assert graded["settlement_status_first"].tolist() == ["void", "settled"]
+
+
+def test_first_td_missing_participation_does_not_turn_no_td_market_into_losses(tmp_path):
+    import pandas as pd
+    from publishing.grader import grade_first_td_file
+
+    csv = tmp_path / "anytime_td_2026_week02.csv"
+    pd.DataFrame({
+        "game_id": ["2026_02_MIN_CHI"] * 2, "player_id": ["JJ", "CW"],
+        "scored_first": [None, None], "first_no_td_offered": [True, True],
+    }).to_csv(csv, index=False)
+    schedule = pd.DataFrame([{
+        "season": 2026, "week": 2, "game_id": "2026_02_MIN_CHI",
+        "home_team": "CHI", "away_team": "MIN", "home_score": 3, "away_score": 9,
+    }])
+    actuals = pd.DataFrame({"player_id": ["JJ", "CW"], "team": ["MIN", "CHI"]})
+    grade_first_td_file(
+        csv, schedule, pd.DataFrame(_plays(3, 9)), actuals, season=2026, week=2,
+        participation=pd.DataFrame(),
+    )
+    graded = pd.read_csv(csv)
+    assert graded["scored_first"].isna().all()
+    assert graded["settlement_status_first"].tolist() == ["awaiting_evidence"] * 2
 
 
 if __name__ == "__main__":
