@@ -69,7 +69,12 @@ def _grade_fixture(tmp_path, pbp_rows, home_score, away_score):
         "home_score": home_score, "away_score": away_score,
     }])
     pbp = pd.DataFrame(pbp_rows)
-    actuals = pd.DataFrame({"player_id": ["JJ", "CW"], "position": ["WR", "QB"]})
+    actuals = pd.DataFrame({
+        "player_id": ["JJ", "CW"], "position": ["WR", "QB"],
+        "team": ["MIN", "CHI"],
+        "player_display_name": ["Jeremiyah Love", "Caleb Williams"],
+        "offense_snaps": [1, 1], "defense_snaps": [0, 0], "st_snaps": [0, 0],
+    })
     result = grade_first_td_file(csv, schedule, pbp, actuals, season=2026, week=2)
     return result, pd.read_csv(csv)
 
@@ -83,12 +88,12 @@ def _plays(final_home, final_away, touchdown=0):
     ]
 
 
-def test_final_game_with_no_touchdown_grades_every_player_no(tmp_path):
-    """MIN 9, CHI 3 on four field goals: nobody scored first, so every row is a real No."""
+def test_no_touchdown_game_waits_for_market_contract_and_participation(tmp_path):
+    """The no-scorer option and player participation decide settled loss vs void."""
     result, graded = _grade_fixture(tmp_path, _plays(3, 9), home_score=3, away_score=9)
-    assert result["status"] == "graded" and result["complete"] is True
-    assert graded["scored_first"].tolist() == [0.0, 0.0]
-    assert graded["status"].tolist() == ["final", "final"]
+    assert result["status"] == "pending" and result["complete"] is False
+    assert graded["scored_first"].isna().all()
+    assert graded["settlement_status_first"].tolist() == ["awaiting_evidence"] * 2
 
 
 def test_no_touchdown_game_stays_pending_until_pbp_reaches_final_score(tmp_path):
@@ -116,14 +121,77 @@ def test_first_td_grading_keeps_void_status_set_by_the_anytime_grader(tmp_path):
     pd.DataFrame({
         "game_id": ["2026_02_MIN_CHI"] * 2, "player_id": ["JJ", "CW"],
         "scored_first": [float("nan")] * 2, "status": ["void", "scheduled"],
+        "first_no_td_offered": [True, True],
     }).to_csv(csv, index=False)
     schedule = pd.DataFrame([{
         "season": 2026, "week": 2, "game_id": "2026_02_MIN_CHI",
         "home_team": "CHI", "away_team": "MIN", "home_score": 3, "away_score": 9,
     }])
-    actuals = pd.DataFrame({"player_id": ["JJ", "CW"], "position": ["WR", "QB"]})
+    actuals = pd.DataFrame({
+        "player_id": ["JJ", "CW"], "position": ["WR", "QB"],
+        "offense_snaps": [1, 1], "defense_snaps": [0, 0], "st_snaps": [0, 0],
+    })
     grade_first_td_file(csv, schedule, pd.DataFrame(_plays(3, 9)), actuals, season=2026, week=2)
     assert pd.read_csv(csv)["status"].tolist() == ["void", "final"]
+
+
+def test_first_td_handles_synthetic_site_id_through_exact_stats_alias(tmp_path):
+    import pandas as pd
+    from publishing.grader import grade_first_td_file
+
+    csv = tmp_path / "anytime_td_2026_week02.csv"
+    pd.DataFrame({
+        "game_id": ["2026_02_MIN_CHI", "2026_02_MIN_CHI"],
+        "player_id": ["sleeper:100", "GSIS2"],
+        "player_display_name": ["Jeremiyah Love", "Caleb Williams"],
+        "team": ["MIN", "CHI"], "scored_first": [None, None],
+    }).to_csv(csv, index=False)
+    schedule = pd.DataFrame([{
+        "season": 2026, "week": 2, "game_id": "2026_02_MIN_CHI",
+        "home_team": "CHI", "away_team": "MIN", "home_score": 6, "away_score": 0,
+    }])
+    pbp = pd.DataFrame(_plays(6, 0))
+    pbp.loc[1, ["touchdown", "td_player_id", "td_team", "posteam", "defteam", "return_touchdown"]] = [
+        1, "GSIS1", "MIN", "MIN", "CHI", 0,
+    ]
+    actuals = pd.DataFrame({
+        "player_id": ["GSIS1", "GSIS2"], "sleeper_id": ["100", "200"],
+        "position": ["RB", "QB"], "team": ["MIN", "CHI"],
+        "player_display_name": ["Jeremiyah Love", "Caleb Williams"],
+        "offense_snaps": [1, 1],
+        "defense_snaps": [0, 0], "st_snaps": [0, 0],
+    })
+    result = grade_first_td_file(csv, schedule, pbp, actuals, season=2026, week=2)
+    graded = pd.read_csv(csv)
+    assert result["complete"] is True
+    assert graded["scored_first"].tolist() == [1.0, 0.0]
+
+
+def test_first_td_preserves_null_first_scorer_instead_of_using_later_td_id():
+    import pandas as pd
+    from publishing.grader import _first_td_by_game
+
+    pbp = pd.DataFrame([
+        {"game_id": "g", "play_id": 1, "qtr": 1, "touchdown": 1,
+         "td_player_id": None, "td_team": "AAA", "posteam": "AAA", "defteam": "BBB",
+         "return_touchdown": 0},
+        {"game_id": "g", "play_id": 2, "qtr": 1, "touchdown": 1,
+         "td_player_id": "WR2", "td_team": "AAA", "posteam": "AAA", "defteam": "BBB",
+         "return_touchdown": 0},
+    ])
+    assert _first_td_by_game(pbp, {"g"}, {"WR2": "WR"})["g"] == (None, "unresolved")
+
+
+def test_first_td_special_teams_score_is_winner_for_exact_player():
+    import pandas as pd
+    from publishing.grader import _first_td_by_game
+
+    pbp = pd.DataFrame([{
+        "game_id": "g", "play_id": 1, "qtr": 1, "touchdown": 1,
+        "td_player_id": "RET", "td_team": "AAA", "posteam": "AAA", "defteam": "BBB",
+        "return_touchdown": 1,
+    }])
+    assert _first_td_by_game(pbp, {"g"}, {"RET": "WR"})["g"] == ("RET", "special_teams")
 
 
 if __name__ == "__main__":

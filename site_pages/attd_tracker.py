@@ -230,6 +230,35 @@ def prepare_paper_bets(
     else:
         # Legacy demo releases predate the serving eligibility contract.
         eligibility = pd.Series(True, index=out.index, dtype=bool)
+    # Versioned publishers may opt a market out independently (for example,
+    # First TD when the complete quoted pool cannot be reconstructed). A
+    # missing explicit market decision fails closed; legacy releases without
+    # this column keep their historical common-eligibility behavior.
+    eligibility_col = {
+        "scored_anytime": "bet_eligible_anytime",
+        "scored_two_plus": "bet_eligible_two_plus",
+        "scored_first": "bet_eligible_first",
+    }.get(outcome_col)
+    if eligibility_col and eligibility_col in out:
+        raw = out[eligibility_col]
+        if pd.api.types.is_bool_dtype(raw):
+            market_eligible = raw.fillna(False).astype(bool)
+        else:
+            normalized = raw.astype("string").str.strip().str.lower()
+            market_eligible = normalized.isin({"true", "1", "yes", "y", "on"})
+        eligibility &= market_eligible
+
+    status_col = {
+        "scored_anytime": "settlement_status_anytime",
+        "scored_two_plus": "settlement_status_two_plus",
+        "scored_first": "settlement_status_first",
+    }.get(outcome_col)
+    if status_col and status_col in out:
+        status = out[status_col].astype("string").str.strip().str.lower()
+        # Only resolved market settlements enter candidate W-L and ROI.
+        outcome = outcome.where(status.eq("settled"))
+    else:
+        status = None
     qualifying = (
         qualifies(out) if qualifies is not None
         else qualifies_probability_gap(out["_value_gap"], threshold)
@@ -268,11 +297,17 @@ def _max_drawdown(frame: pd.DataFrame) -> float:
     settled = frame[frame["_settled"]].copy()
     if settled.empty:
         return 0.0
-    if "week" in settled:
-        weekly = settled.groupby("week", dropna=False)["_profit_units"].sum().sort_index()
+    if {"season", "week"}.issubset(settled.columns):
+        keyed = settled.assign(
+            _year=pd.to_numeric(settled["season"], errors="coerce").fillna(-1),
+            _week=pd.to_numeric(settled["week"], errors="coerce").fillna(-1),
+        )
+        weekly = keyed.groupby(["_year", "_week"], sort=True)["_profit_units"].sum()
+        weekly_equity = weekly.cumsum()
     else:
-        weekly = pd.Series([settled["_profit_units"].sum()], index=[0])
-    equity = weekly.cumsum()
+        # Legacy single-market callers without week keys retain input order.
+        weekly_equity = settled["_profit_units"].reset_index(drop=True).cumsum()
+    equity = pd.concat([pd.Series([0.0]), weekly_equity.reset_index(drop=True)], ignore_index=True)
     drawdown = equity - equity.cummax()
     return float(drawdown.min())
 
@@ -286,6 +321,12 @@ def strategy_summary(frame: pd.DataFrame, *, threshold: float | None, qualifies=
     """
     if threshold is None and qualifies is None:
         bets = frame[frame["_book_price"].notna()].copy()
+    elif "_candidate" in frame:
+        # The prepared mask already includes model/book availability and
+        # eligibility. Re-deriving the threshold here used to put excluded
+        # rows back into the ROI denominator while leaving wins and losses
+        # unchanged.
+        bets = frame[frame["_candidate"].fillna(False)].copy()
     else:
         mask = (
             qualifies(frame) if qualifies is not None
@@ -312,6 +353,7 @@ def strategy_summary(frame: pd.DataFrame, *, threshold: float | None, qualifies=
             (settled.groupby("week")["_profit_units"].sum() > 0).sum()
         ) if not settled.empty and "week" in settled else 0,
         "max_drawdown": _max_drawdown(settled.assign(_settled=True)) if not settled.empty else 0.0,
+        "accounting_invariant": bool(wins + losses == len(settled)),
     }
 
 
@@ -356,14 +398,25 @@ def block_bootstrap_roi(
         "upper": None,
     }
     if not result["available"]:
+        result["status"] = "insufficient_settled_sample"
         return result
     rng = np.random.default_rng(seed)
     net = grouped["net"].to_numpy(dtype=float)
     stake = grouped["stake"].to_numpy(dtype=float)
     sampled = rng.integers(0, n_games, size=(int(n_resamples), n_games))
     rois = net[sampled].sum(axis=1) / stake[sampled].sum(axis=1)
+    if not np.isfinite(rois).all():
+        result["available"] = False
+        result["status"] = "invalid_bootstrap_values"
+        return result
+    if np.allclose(rois, rois[0]):
+        result["available"] = False
+        result["status"] = "degenerate_bootstrap_distribution"
+        result["reason"] = "All game-block resamples produce the same ROI."
+        return result
     result["lower"] = float(np.quantile(rois, 0.025))
     result["upper"] = float(np.quantile(rois, 0.975))
+    result["status"] = "available"
     return result
 
 

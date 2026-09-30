@@ -331,15 +331,22 @@ def _prepare_participation(participation: pd.DataFrame | None, season: int, week
         stats = stats[pd.to_numeric(stats["week"], errors="coerce").eq(int(week))]
     if "season_type" in stats:
         stats = stats[stats["season_type"].astype(str).str.upper().eq("REG")]
-    snap_column = next(
-        (column for column in ("offense_snaps", "offensive_snaps", "snap_counts", "snaps") if column in stats),
-        None,
-    )
-    pct_column = next(
-        (column for column in ("offense_pct", "offensive_pct", "snap_pct") if column in stats),
-        None,
-    )
-    if snap_column is None and pct_column is None:
+    snap_columns = [
+        column for column in ("offense_snaps", "defense_snaps", "st_snaps")
+        if column in stats
+    ]
+    if not snap_columns:
+        snap_column = next(
+            (column for column in ("offensive_snaps", "snap_counts", "snaps") if column in stats),
+            None,
+        )
+        if snap_column:
+            snap_columns = [snap_column]
+    pct_columns = [
+        column for column in ("offense_pct", "defense_pct", "st_pct")
+        if column in stats
+    ]
+    if not snap_columns and not pct_columns:
         return {"available": False, "snaps_by_alias": {}, "snaps_by_name_team": {}}
     aliases = [column for column in ("player_id", "gsis_id", "sleeper_id", "pfr_player_id") if column in stats]
     if not aliases:
@@ -351,12 +358,20 @@ def _prepare_participation(participation: pd.DataFrame | None, season: int, week
         "player_display_name" if "player_display_name" in stats
         else "player_name" if "player_name" in stats else "player" if "player" in stats else None
     )
-    if snap_column is not None:
-        snaps = pd.to_numeric(stats[snap_column], errors="coerce")
+    if snap_columns:
+        # Touchdown scorer markets require participation on any unit, not only
+        # offense. A special-teams-only player has action under the book rule.
+        snaps = sum(
+            pd.to_numeric(stats[column], errors="coerce").fillna(0.0)
+            for column in snap_columns
+        )
+        snaps = snaps.where(stats[snap_columns].notna().any(axis=1))
     else:
-        # A positive offensive snap percentage proves participation.  Treat a
-        # reported zero as a confirmed non-participant for void handling.
-        snaps = pd.to_numeric(stats[pct_column], errors="coerce")
+        snaps = sum(
+            pd.to_numeric(stats[column], errors="coerce").fillna(0.0)
+            for column in pct_columns
+        )
+        snaps = snaps.where(stats[pct_columns].notna().any(axis=1))
     stats = stats.assign(_participation_value=snaps)
     by_alias: dict[str, float] = {}
     by_name_team: dict[tuple[str, str], float] = {}
@@ -403,14 +418,20 @@ def _prepare_anytime_stats(
                 break
     if "player_id" not in stats:
         raise PublicationError("actual stats are missing player_id/gsis_id/sleeper_id")
-    if not ({"rushing_tds", "receiving_tds"} & set(stats.columns)):
+    if not ({"rushing_tds", "receiving_tds", "special_teams_tds"} & set(stats.columns)):
         raise PublicationError("actual stats are missing rushing_tds/receiving_tds")
 
     aliases = [col for col in ("player_id", "gsis_id", "sleeper_id") if col in stats]
     for col in aliases:
         stats[col] = stats[col].map(_normal_identifier)
     stats = stats[stats["player_id"].notna()].copy()
-    td_columns = [col for col in ("rushing_tds", "receiving_tds") if col in stats]
+    # DraftKings defines a touchdown scorer as the player possessing the ball
+    # in the end zone. Passing TDs stay excluded; offensive and special-teams
+    # return TDs count for player scorer markets.
+    td_columns = [
+        col for col in ("rushing_tds", "receiving_tds", "special_teams_tds")
+        if col in stats
+    ]
     touchdowns = sum(
         pd.to_numeric(stats[col], errors="coerce").fillna(0)
         for col in td_columns
@@ -579,6 +600,14 @@ def grade_anytime_td_file(
         win_mask = states.eq("win")
         loss_mask = states.eq("loss")
         void_mask = states.eq("void")
+        pending_rows = states.eq("pending")
+        for market in ("anytime", "two_plus"):
+            status_col = f"settlement_status_{market}"
+            if status_col not in board:
+                board[status_col] = "open"
+            board.loc[game_rows.index[win_mask | loss_mask], status_col] = "settled"
+            board.loc[game_rows.index[void_mask], status_col] = "void"
+            board.loc[game_rows.index[pending_rows], status_col] = "awaiting_evidence"
         played_mask = win_mask | loss_mask
         board.loc[game_rows.index[win_mask], "scored_anytime"] = 1
         board.loc[game_rows.index[loss_mask], "scored_anytime"] = 0
@@ -662,6 +691,48 @@ def _first_td_position_lookup(actuals: pd.DataFrame) -> dict:
     return dict(zip(stats["player_id"], stats["position"]))
 
 
+def _first_td_alias_groups(actuals: pd.DataFrame) -> dict[str, set[str]]:
+    """Map each exact stats identifier to its same-row aliases."""
+    stats = actuals.copy()
+    aliases = [column for column in ("player_id", "gsis_id", "sleeper_id") if column in stats]
+    if not aliases:
+        return {}
+    for column in aliases:
+        stats[column] = stats[column].map(_normal_identifier)
+    result: dict[str, set[str]] = {}
+    for row in stats[aliases].to_dict(orient="records"):
+        ids = {row[column] for column in aliases if row.get(column)}
+        sleeper_id = row.get("sleeper_id")
+        if sleeper_id:
+            # Live releases may carry Sleeper identities as ``sleeper:<id>``
+            # while weekly stats store the bare provider ID.
+            ids.add(sleeper_id if sleeper_id.startswith("SLEEPER:") else f"SLEEPER:{sleeper_id}")
+        for player_id in ids:
+            result[player_id] = ids
+    return result
+
+
+def _first_td_name_team(actuals: pd.DataFrame, scorer_id: str) -> tuple[str, str] | None:
+    """Resolve a scorer by a unique exact id row, returning normalized name/team."""
+    stats = actuals.copy()
+    id_cols = [column for column in ("player_id", "gsis_id", "sleeper_id") if column in stats]
+    if not id_cols:
+        return None
+    mask = pd.Series(False, index=stats.index)
+    for column in id_cols:
+        mask |= stats[column].map(_normal_identifier).eq(scorer_id)
+    matched = stats[mask]
+    if len(matched) != 1:
+        return None
+    row = matched.iloc[0]
+    name_col = "player_display_name" if "player_display_name" in row else "player_name" if "player_name" in row else None
+    team_col = "team" if "team" in row else "recent_team" if "recent_team" in row else None
+    if not name_col or not team_col:
+        return None
+    team, name = _normal_team(row[team_col]), _normal_name(row[name_col])
+    return (team, name) if team and name else None
+
+
 def _classify_first_td_row(row, pos_lookup: dict) -> str:
     """Same classification as first_td/src/labels.py::_classify_first_td.
 
@@ -693,12 +764,18 @@ def _first_td_by_game(pbp: pd.DataFrame, game_ids: set, pos_lookup: dict) -> dic
     work = pbp[pbp["game_id"].isin(game_ids) & pbp["touchdown"].eq(1)].copy()
     if work.empty:
         return {}
-    work = work.sort_values(["game_id", "qtr", "play_id"])
-    first = work.groupby("game_id", as_index=False).first()
+    work = work.sort_values(["game_id", "qtr", "play_id"], kind="stable")
+    # Select the first row itself. groupby.first() fills nulls field by field,
+    # which can combine the time from one touchdown with a later scorer ID.
+    first = work.drop_duplicates("game_id", keep="first")
     result = {}
     for row in first.to_dict(orient="records"):
-        kind = _classify_first_td_row(row, pos_lookup)
-        result[row["game_id"]] = (row.get("td_player_id"), kind)
+        scorer_id = row.get("td_player_id")
+        # A null scorer on the earliest scoring row is unresolved identity,
+        # not evidence that the first score was defensive or unlisted. Keep
+        # the row's null intact and leave candidate settlements pending.
+        kind = "unresolved" if _normal_identifier(scorer_id) is None else _classify_first_td_row(row, pos_lookup)
+        result[row["game_id"]] = (scorer_id, kind)
     return result
 
 
@@ -733,6 +810,7 @@ def grade_first_td_file(
     *,
     season: int,
     week: int,
+    participation: pd.DataFrame | None = None,
 ) -> dict:
     """Attach the game's first-TD scorer outcome to one live board.
 
@@ -779,6 +857,10 @@ def grade_first_td_file(
     if "game_id" in pbp_work:
         pbp_work["game_id"] = pbp_work["game_id"].map(_normal_identifier)
     pos_lookup = _first_td_position_lookup(actuals)
+    id_aliases = _first_td_alias_groups(actuals)
+    participation_info = _prepare_participation(
+        participation if participation is not None else actuals, season, week
+    )
     board_game_ids = set(board["_game_id"].dropna().tolist())
     board_final_ids = board_game_ids & final_game_ids
     first_td_by_game = _first_td_by_game(pbp_work, board_final_ids, pos_lookup)
@@ -803,18 +885,74 @@ def grade_first_td_file(
             # score yet stays pending rather than guessing.
             pending_games.append(game_id)
             continue
-        outcome = pd.Series(0.0, index=game_rows.index)
-        if kind == "offense_skill" and first_scorer_id is not None:
-            match = game_rows["_player_id"].eq(_normal_identifier(first_scorer_id))
-            outcome.loc[match] = 1.0
-        board.loc[game_rows.index, "scored_first"] = outcome.to_numpy()
+        # A no-TD result is only a loss when the source market offered the
+        # explicit no-scorer selection. Otherwise DraftKings voids the market.
+        no_td_offered = None
+        if kind == "no_touchdown":
+            for column in ("first_no_td_offered", "no_touchdown_offered"):
+                if column in game_rows:
+                    values = game_rows[column].dropna().astype("string").str.lower().unique()
+                    if len(values) == 1 and values[0] in {"true", "1", "yes"}:
+                        no_td_offered = True
+                    elif len(values) == 1 and values[0] in {"false", "0", "no"}:
+                        no_td_offered = False
+                    break
+            if no_td_offered is None:
+                if "settlement_status_first" not in board:
+                    board["settlement_status_first"] = "open"
+                board.loc[game_rows.index, "settlement_status_first"] = "awaiting_evidence"
+                board.loc[game_rows.index, "scored_first"] = pd.NA
+                pending_games.append(game_id)
+                continue
+
+        outcome = pd.Series(pd.NA, index=game_rows.index, dtype="Float64")
+        settlement = pd.Series("awaiting_evidence", index=game_rows.index, dtype="string")
+        for idx, row in game_rows.iterrows():
+            player_id = row["_player_id"]
+            snaps = participation_info["snaps_by_alias"].get(player_id)
+            if snaps is None and "player_display_name" in row and "team" in row:
+                key = (_normal_team(row["team"]), _normal_name(row["player_display_name"]))
+                snaps = participation_info["snaps_by_name_team"].get(key)
+            if snaps is not None and float(snaps) <= 0:
+                settlement.loc[idx] = "void"
+                continue
+            if kind == "offense_skill" or kind == "special_teams":
+                if not first_scorer_id:
+                    continue
+                canonical_ids = id_aliases.get(_normal_identifier(first_scorer_id), {_normal_identifier(first_scorer_id)})
+                is_scorer = player_id in canonical_ids
+                if not is_scorer and "player_display_name" in row and "team" in row:
+                    exact_identity = _first_td_name_team(actuals, _normal_identifier(first_scorer_id))
+                    row_identity = (_normal_team(row["team"]), _normal_name(row["player_display_name"]))
+                    is_scorer = exact_identity is not None and row_identity == exact_identity
+                if is_scorer:
+                    outcome.loc[idx] = 1.0
+                    settlement.loc[idx] = "settled"
+                elif snaps is not None and float(snaps) > 0:
+                    outcome.loc[idx] = 0.0
+                    settlement.loc[idx] = "settled"
+            elif kind == "defense" or (kind == "no_touchdown" and no_td_offered):
+                if snaps is not None and float(snaps) > 0:
+                    outcome.loc[idx] = 0.0
+                    settlement.loc[idx] = "settled"
+            else:
+                # A verified no-TD game with no No Touchdown selection is void.
+                settlement.loc[idx] = "void"
+        if settlement.eq("awaiting_evidence").any():
+            pending_games.append(game_id)
+        board["scored_first"] = pd.to_numeric(board["scored_first"], errors="coerce").astype("Float64")
+        board.loc[game_rows.index, "scored_first"] = outcome
+        if "settlement_status_first" not in board:
+            board["settlement_status_first"] = "open"
+        board.loc[game_rows.index, "settlement_status_first"] = settlement
         if "status" in board:
             # Keep "void" (did not play): the Anytime grader owns that status
             # and this grader used to overwrite it with "final".
-            keep_void = board.loc[game_rows.index, "status"].astype(str).str.lower().eq("void")
+            legacy_void = original_board.loc[game_rows.index, "status"].astype("string").eq("void")
+            keep_void = legacy_void | board.loc[game_rows.index, "settlement_status_first"].eq("void")
             board.loc[game_rows.index[~keep_void.to_numpy()], "status"] = "final"
         updated_games.append(game_id)
-        updated_rows += len(game_rows)
+        updated_rows += int(settlement.ne("awaiting_evidence").sum())
 
     board = board.drop(columns=["_game_id", "_player_id"])
     changed = not board.equals(original_board)
@@ -822,8 +960,14 @@ def grade_first_td_file(
         encoded = board.to_csv(index=False, lineterminator="\n").encode("utf-8")
         source.write_bytes(encoded)
 
-    graded = pd.to_numeric(board["scored_first"], errors="coerce").notna()
+    graded = (
+        pd.to_numeric(board["scored_first"], errors="coerce").notna()
+        & board.get("settlement_status_first", pd.Series("", index=board.index)).eq("settled")
+    )
     board_games_final = board_game_ids <= final_game_ids
+    resolved_first = board.get(
+        "settlement_status_first", pd.Series("", index=board.index)
+    ).isin(["settled", "void"])
     return {
         "status": "graded" if updated_games else "pending",
         "file": str(source),
@@ -834,7 +978,7 @@ def grade_first_td_file(
         "updated_games": updated_games,
         "updated_rows": int(updated_rows),
         "pending_games": pending_games,
-        "complete": bool(board_games_final and not pending_games and graded.all()),
+        "complete": bool(board_games_final and not pending_games and resolved_first.all()),
         "changed": changed,
     }
 
