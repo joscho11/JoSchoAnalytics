@@ -171,8 +171,26 @@ def deduplicate_player_games(frames: list[pd.DataFrame] | tuple[pd.DataFrame, ..
 
 
 def aggregate_published_csvs(paths: list[str | Path] | tuple[str | Path, ...]) -> pd.DataFrame:
-    """Load published weekly files and deduplicate their player-game rows."""
-    frames = [pd.read_csv(path) for path in paths]
+    """Load weekly files, preserve legacy eligibility, and deduplicate rows.
+
+    Market-specific eligibility was added after the first live releases. Fill
+    only files that predate those columns with the legacy common-eligibility
+    behavior before concatenating; otherwise pandas adds the new columns with
+    NaN for old rows and the fail-closed check below silently drops every
+    historical candidate.
+    """
+    eligibility_columns = (
+        "bet_eligible_anytime",
+        "bet_eligible_two_plus",
+        "bet_eligible_first",
+    )
+    frames = []
+    for path in paths:
+        frame = pd.read_csv(path)
+        for column in eligibility_columns:
+            if column not in frame:
+                frame[column] = True
+        frames.append(frame)
     return deduplicate_player_games(frames)
 
 

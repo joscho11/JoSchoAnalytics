@@ -959,6 +959,61 @@ def test_live_tracker_uses_raw_inclusive_gap_and_separates_open_bets():
     assert result["calibration"]["available"] is False
 
 
+def test_published_tracker_preserves_legacy_rows_when_market_eligibility_is_added(tmp_path):
+    import attd_tracker as tracker
+
+    legacy = pd.DataFrame([{
+        "season": 2026, "week": 1, "game_id": "g1", "player_id": "p1",
+        "p_ge1": 0.50, "p_book": 0.40, "book_amer": 150,
+        "scored_anytime": 1, "settlement_status_anytime": "settled",
+        "p_ge2": 0.30, "two_plus_amer": 400,
+        "scored_two_plus": 1, "settlement_status_two_plus": "settled",
+        "p_first": 0.50, "book_first_p_devigged": 0.40, "first_amer": 150,
+        "scored_first": 1, "settlement_status_first": "settled",
+    }])
+    current = legacy.copy()
+    current["week"] = 4
+    current["game_id"] = "g4"
+    current["player_id"] = "p4"
+    current["scored_anytime"] = None
+    current["settlement_status_anytime"] = "open"
+    current["scored_two_plus"] = None
+    current["settlement_status_two_plus"] = "open"
+    current["scored_first"] = None
+    current["settlement_status_first"] = "open"
+    current["bet_eligible_anytime"] = False
+    current["bet_eligible_two_plus"] = False
+    current["bet_eligible_first"] = False
+    legacy_path = tmp_path / "week01.csv"
+    current_path = tmp_path / "week04.csv"
+    legacy.to_csv(legacy_path, index=False)
+    current.to_csv(current_path, index=False)
+
+    published = tracker.aggregate_published_csvs((legacy_path, current_path))
+    summaries = (
+        tracker.season_tracker(published),
+        tracker.season_tracker(
+            published, model_probability_col="p_ge2", book_probability_col=None,
+            book_price_col="two_plus_amer", outcome_col="scored_two_plus",
+            qualifies=lambda f: tracker.qualifies_two_plus_ratio(
+                f["_model_probability"], f["_book_probability"],
+            ),
+        ),
+        tracker.season_tracker(
+            published, model_probability_col="p_first",
+            book_probability_col="book_first_p_devigged", book_price_col="first_amer",
+            outcome_col="scored_first",
+            qualifies=lambda f: tracker.qualifies_first_td_ev(
+                f["_model_probability"], f["_book_price"], f["_value_gap"],
+            ),
+        ),
+    )
+    for result in summaries:
+        assert result["summary"]["bets"] == 1
+        assert result["summary"]["settled_bets"] == 1
+        assert result["summary"]["wins"] == 1
+
+
 def test_tracker_accounts_for_void_separately_from_open_and_settled():
     import attd_tracker as tracker
 
