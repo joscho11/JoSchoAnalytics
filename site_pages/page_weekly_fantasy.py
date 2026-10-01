@@ -5,6 +5,7 @@ import json
 import os
 from datetime import datetime as dt
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import pandas as pd
 import streamlit as st
@@ -102,6 +103,22 @@ def available_projection_files() -> dict[tuple[int, int], Path]:
         if path is not None and path.is_file():
             available[key] = path
     return available
+
+
+def _format_last_updated(published_at: str | None) -> str | None:
+    """Format the selected projection release time for the US Eastern audience."""
+    if not published_at:
+        return None
+    try:
+        timestamp = dt.fromisoformat(str(published_at).replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return None
+    if timestamp.tzinfo is None or timestamp.utcoffset() is None:
+        return None
+    eastern = timestamp.astimezone(ZoneInfo("America/New_York"))
+    date = f"{eastern.strftime('%b')} {eastern.day}, {eastern.year}"
+    time = eastern.strftime("%I:%M %p").lstrip("0")
+    return f"Last updated {date} at {time} ET"
 
 
 def _weeks_by_season(available: dict[tuple[int, int], Path]) -> dict[int, list[int]]:
@@ -538,7 +555,11 @@ def render():
         "fantasy", (DEMO_SEASON, DEMO_WEEK)
     )
     season, week = _fantasy_season_week_controls(available, default)
-    page_common.render_release_status("fantasy", season, week)
+    release_state = page_common.render_release_status("fantasy", season, week)
+    published_at = release_state.get("published_at") if release_state else None
+    last_updated = _format_last_updated(published_at)
+    if last_updated:
+        st.badge(last_updated, icon=":material/update:", color="gray")
     scoring = st.segmented_control(
         "Scoring format", list(SCORING_MODES), default=DEFAULT_SCORING,
         key="wf_scoring", help="Choose how reception points are counted.",

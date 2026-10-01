@@ -43,6 +43,13 @@ def test_parse_proj_name():
     assert weekly._parse_proj_name("notes.txt") is None
 
 
+def test_last_updated_tag_formats_release_time_in_eastern_time():
+    assert weekly._format_last_updated("2026-10-01T02:40:07Z") == (
+        "Last updated Sep 30, 2026 at 10:40 PM ET"
+    )
+    assert weekly._format_last_updated("not-a-timestamp") is None
+
+
 def test_available_files_are_demo_csvs_only_without_releases(tmp_path, monkeypatch):
     jsa = tmp_path / "jsa"
     jsa.mkdir()

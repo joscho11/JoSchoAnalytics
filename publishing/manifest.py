@@ -226,6 +226,7 @@ def release_status(
             "icon": ":material/check_circle:",
             "detail": f"Validated {build.get('published_at', 'publication time unavailable')}",
             "build_id": build.get("build_id"),
+            "published_at": build.get("published_at"),
         }
     next_release = state.get("next_release") or {}
     try:
