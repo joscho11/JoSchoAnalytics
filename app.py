@@ -48,7 +48,12 @@ def _refresh_cloud_synced_modules() -> None:
     ):
         loaded = sys.modules.get(name)
         if loaded is not None:
-            sys.modules[name] = page_common.reload_if_stale(loaded)
+            required = (
+                ("ats_record_parts", "format_ats_metric_delta", "format_ats_record", "push_mask")
+                if name == "dashboard_utils"
+                else ()
+            )
+            sys.modules[name] = page_common.reload_if_stale(loaded, require=required)
     site_pages = (_HERE / "site_pages").resolve()
     for name, loaded in list(sys.modules.items()):
         path = getattr(loaded, "__file__", None)

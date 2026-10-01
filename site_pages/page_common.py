@@ -221,12 +221,14 @@ ATS_BLURB = """
     """
 
 
-def reload_if_stale(module):
+def reload_if_stale(module, *, require=()):
     """Reload a module when Streamlit Cloud copies a new file into a live process.
 
     ``_lazy_render`` already does this for the selected page. Sibling helpers
     imported from that page (``league_insights_view``, ``fantasy.league_intelligence``)
-    stay pinned in ``sys.modules`` unless they get the same mtime check.
+    stay pinned in ``sys.modules`` unless they get the same mtime check. Missing
+    required names also force a reload because synchronized files can share an
+    mtime with the version already loaded in the warm process.
     """
     path = getattr(module, "__file__", None)
     if not path:
@@ -235,7 +237,8 @@ def reload_if_stale(module):
         mtime = Path(path).stat().st_mtime_ns
     except OSError:
         return module
-    if getattr(module, "__joscho_source_mtime_ns__", None) != mtime:
+    missing_required = any(not hasattr(module, name) for name in require)
+    if getattr(module, "__joscho_source_mtime_ns__", None) != mtime or missing_required:
         importlib.invalidate_caches()
         source = Path(path)
         cache_dir = source.parent / "__pycache__"
