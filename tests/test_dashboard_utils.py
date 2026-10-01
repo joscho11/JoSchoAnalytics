@@ -10,6 +10,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from dashboard_utils import (
     load_tracker, load_totals_tracker, _md_to_html, get_confidence, metric_card,
+    push_mask, ats_record_parts, format_ats_record, format_ats_metric_delta,
 )
 
 
@@ -73,6 +74,30 @@ def test_metric_card_label_meets_wcag_aa_contrast():
     assert "background:#1e2a3a" in card and "color:#93A0B1" in card
     light, dark = sorted([luminance("#93A0B1"), luminance("#1E2A3A")], reverse=True)
     assert (light + 0.05) / (dark + 0.05) >= 4.5
+
+
+# ── ATS push / record formatting ─────────────────────────────────────────────
+def test_push_mask_uses_home_covered_null_not_pass_rows():
+    df = pd.DataFrame({
+        "actual_margin": [7.0, -3.0, 3.0, None],
+        "home_covered": [pd.NA, pd.NA, True, pd.NA],
+        "model_correct": [pd.NA, pd.NA, 1.0, pd.NA],
+    })
+    assert push_mask(df).tolist() == [True, True, False, False]
+
+
+def test_ats_record_parts_excludes_pushes_from_win_pct():
+    df = pd.DataFrame({
+        "actual_margin": [7.0, -3.0, 10.0, -7.0],
+        "home_covered": [pd.NA, pd.NA, True, False],
+        "model_correct": [pd.NA, pd.NA, 1.0, 0.0],
+    })
+    wins, losses, pushes, pct = ats_record_parts(df, "model_correct")
+    assert (wins, losses, pushes, pct) == (1, 1, 2, 50.0)
+    assert format_ats_record(wins, losses, pushes) == "1-1-2"
+    assert format_ats_metric_delta(pct, pushes) == "50.0% · 2 pushes"
+    assert format_ats_metric_delta(50.0, 0) == "50.0%"
+    assert format_ats_metric_delta(None) == "No graded picks"
 
 
 # ── load_tracker / load_totals_tracker ───────────────────────────────────────

@@ -1,30 +1,19 @@
-"""Track Record page (site revamp Batch 3b). Tab2 body moved byte-identical from
-app.py; shared data/helpers from dashboard_data / page_common; own Season control
-(filter independence) preserved. ATS blurb moved here from the retired sidebar.
+"""Track Record page (site revamp Batch 3b). Shared data/helpers from
+dashboard_data / page_common; own Season control (filter independence) preserved.
+ATS blurb moved here from the retired sidebar.
 """
-import glob
-import html as _html
-import itertools as _it
-import json
-import os
-from datetime import datetime as dt
-from pathlib import Path
-
 import pandas as pd
 import streamlit as st
 
 import dashboard_data
 import page_common
-from dashboard_utils import get_confidence, _md_to_html
+from dashboard_utils import ats_record_parts, format_ats_metric_delta, format_ats_record, push_mask
 from live_2026 import HIGH_GAP, is_live_season, row_display_high
-from page_common import load_agent_analysis, _MODE_BADGE_COLORS
-
-_HERE = Path(__file__).resolve().parents[1]
 
 
 def render():
     st.title("Track record")
-    st.caption("Graded ATS results, confidence tiers, model comparisons, and betting simulations.")
+    st.caption("Graded ATS results and flat-stake profit at -110.")
     # Plotly is only needed for this page's charts. Keeping it here avoids paying its
     # import cost when a visitor opens a different top-level navigation page.
     import plotly.graph_objects as go
@@ -94,106 +83,75 @@ def render():
         _s_edge    = 'ens_model_edge'    if ('ens_model_edge'    in season_df.columns and season_df['ens_model_edge'].notna().any())    else 'model_edge'
         _s_correct = 'ens_model_correct' if ('ens_model_correct' in season_df.columns and season_df['ens_model_correct'].notna().any()) else 'model_correct'
 
-        total_correct = int(season_df[_s_correct].sum())
-        total_games   = int(season_df[_s_correct].notna().sum())
-        total_pct     = round(total_correct / total_games * 100, 1) if total_games > 0 else 0
+        total_correct, total_losses, total_pushes, total_pct = ats_record_parts(season_df, _s_correct)
+        total_games = total_correct + total_losses
 
         if live:
             _high_mask = season_df.apply(row_display_high, axis=1)
             high_edge_df = season_df[_high_mask]
-            he_correct = int(high_edge_df[_s_correct].sum())
-            he_total = int(high_edge_df[_s_correct].notna().sum())
-            he_pct = round(he_correct / he_total * 100, 1) if he_total > 0 else 0
+            he_correct, he_losses, he_pushes, he_pct = ats_record_parts(high_edge_df, _s_correct)
+            he_total = he_correct + he_losses
             rest_df = season_df[~_high_mask]
-            re_correct = int(rest_df[_s_correct].sum())
-            re_total = int(rest_df[_s_correct].notna().sum())
-            re_pct = round(re_correct / re_total * 100, 1) if re_total > 0 else 0
-            me_correct = me_total = me_pct = 0
-            le_correct = le_total = le_pct = 0
+            re_correct, re_losses, re_pushes, re_pct = ats_record_parts(rest_df, _s_correct)
+            re_total = re_correct + re_losses
+            me_correct = me_losses = me_pushes = me_total = 0
+            me_pct = None
+            le_correct = le_losses = le_pushes = le_total = 0
+            le_pct = None
         else:
-            high_edge_df  = season_df[season_df[_s_edge].abs() >= 3]
-            he_correct    = int(high_edge_df[_s_correct].sum())
-            he_total      = int(high_edge_df[_s_correct].notna().sum())
-            he_pct        = round(he_correct / he_total * 100, 1) if he_total > 0 else 0
+            high_edge_df = season_df[season_df[_s_edge].abs() >= 3]
+            he_correct, he_losses, he_pushes, he_pct = ats_record_parts(high_edge_df, _s_correct)
+            he_total = he_correct + he_losses
 
-            med_edge_df   = season_df[(season_df[_s_edge].abs() >= 1) & (season_df[_s_edge].abs() < 3)]
-            me_correct    = int(med_edge_df[_s_correct].sum())
-            me_total      = int(med_edge_df[_s_correct].notna().sum())
-            me_pct        = round(me_correct / me_total * 100, 1) if me_total > 0 else 0
+            med_edge_df = season_df[(season_df[_s_edge].abs() >= 1) & (season_df[_s_edge].abs() < 3)]
+            me_correct, me_losses, me_pushes, me_pct = ats_record_parts(med_edge_df, _s_correct)
+            me_total = me_correct + me_losses
 
-            low_edge_df   = season_df[season_df[_s_edge].abs() < 1]
-            le_correct    = int(low_edge_df[_s_correct].sum())
-            le_total      = int(low_edge_df[_s_correct].notna().sum())
-            le_pct        = round(le_correct / le_total * 100, 1) if le_total > 0 else 0
+            low_edge_df = season_df[season_df[_s_edge].abs() < 1]
+            le_correct, le_losses, le_pushes, le_pct = ats_record_parts(low_edge_df, _s_correct)
+            le_total = le_correct + le_losses
 
-        def _record_metric(label, correct, total, pct):
+        def _record_metric(label, wins, losses, pushes, pct):
+            settled = wins + losses
             st.metric(
                 label,
-                f"{correct}/{total}",
-                f"{pct}%" if total > 0 else "No graded picks",
-                delta_color=("green" if pct >= 52.4 else "red") if total > 0 else "gray",
+                format_ats_record(wins, losses, pushes),
+                format_ats_metric_delta(pct, pushes) if settled > 0 or pushes > 0 else "No graded picks",
+                delta_color=("green" if (pct or 0) >= 52.4 else "red") if settled > 0 else "gray",
                 delta_arrow="off",
                 border=True,
             )
 
         with st.container(horizontal=True, key="jsa-metric-even-tr-ats"):
             if live:
-                _record_metric("Season ATS", total_correct, total_games, total_pct)
-                _record_metric(f"HIGH (Tuesday {HIGH_GAP:g}+ points)", he_correct, he_total, he_pct)
-                _record_metric("Other picks", re_correct, re_total, re_pct)
+                _record_metric("Season ATS", total_correct, total_losses, total_pushes, total_pct)
+                _record_metric(
+                    f"HIGH (Tuesday {HIGH_GAP:g}+ points)",
+                    he_correct, he_losses, he_pushes, he_pct,
+                )
+                _record_metric("Other picks", re_correct, re_losses, re_pushes, re_pct)
             else:
-                _record_metric("Season ATS", total_correct, total_games, total_pct)
-                _record_metric("High edge (3+ points)", he_correct, he_total, he_pct)
-                _record_metric("Medium edge (1–3 points)", me_correct, me_total, me_pct)
-                _record_metric("Low edge (<1 point)", le_correct, le_total, le_pct)
+                _record_metric("Season ATS", total_correct, total_losses, total_pushes, total_pct)
+                _record_metric("High edge (3+ points)", he_correct, he_losses, he_pushes, he_pct)
+                _record_metric("Medium edge (1–3 points)", me_correct, me_losses, me_pushes, me_pct)
+                _record_metric("Low edge (<1 point)", le_correct, le_losses, le_pushes, le_pct)
 
-        _has_ens   = 'ens_model_correct'   in season_df.columns and season_df['ens_model_correct'].notna().any()
-        _has_ridge = 'ridge_model_correct' in season_df.columns and season_df['ridge_model_correct'].notna().any()
-        _has_lgbm  = 'lgbm_model_correct'  in season_df.columns and season_df['lgbm_model_correct'].notna().any()
-        _has_ct    = 'consensus_tier'      in season_df.columns and season_df['consensus_tier'].notna().any()
-
-        _has_xgb  = 'model_correct' in season_df.columns and season_df['model_correct'].notna().any()
-
-        if _has_ens or _has_ridge or _has_lgbm or _has_xgb:
-            st.caption("Individual model ATS (direction voters)")
-            with st.container(horizontal=True, key="jsa-metric-even-tr-models"):
-                if _has_xgb:
-                    _xgb_sub = season_df[season_df['model_correct'].notna()]
-                    _xgb_c   = int(_xgb_sub['model_correct'].sum())
-                    _xgb_t   = len(_xgb_sub)
-                    _xgb_pct = round(_xgb_c / _xgb_t * 100, 1) if _xgb_t > 0 else 0
-                    _record_metric("XGBoost ATS", _xgb_c, _xgb_t, _xgb_pct)
-                if _has_ridge:
-                    _ridge_sub = season_df[season_df['ridge_model_correct'].notna()]
-                    _ridge_c   = int(_ridge_sub['ridge_model_correct'].sum())
-                    _ridge_t   = len(_ridge_sub)
-                    _ridge_pct = round(_ridge_c / _ridge_t * 100, 1) if _ridge_t > 0 else 0
-                    _record_metric("Ridge ATS", _ridge_c, _ridge_t, _ridge_pct)
-                if _has_lgbm:
-                    _lgbm_sub = season_df[season_df['lgbm_model_correct'].notna()]
-                    _lgbm_c   = int(_lgbm_sub['lgbm_model_correct'].sum())
-                    _lgbm_t   = len(_lgbm_sub)
-                    _lgbm_pct = round(_lgbm_c / _lgbm_t * 100, 1) if _lgbm_t > 0 else 0
-                    _record_metric("LightGBM ATS", _lgbm_c, _lgbm_t, _lgbm_pct)
-                if _has_ens:
-                    _ens_sub = season_df[season_df['ens_model_correct'].notna()]
-                    _ens_c   = int(_ens_sub['ens_model_correct'].sum())
-                    _ens_t   = len(_ens_sub)
-                    _ens_pct = round(_ens_c / _ens_t * 100, 1) if _ens_t > 0 else 0
-                    _record_metric("Ensemble ATS", _ens_c, _ens_t, _ens_pct)
+        _has_ct = 'consensus_tier' in season_df.columns and season_df['consensus_tier'].notna().any()
 
         st.divider()
 
         # ── Week-by-week summary ──────────────────────────────────────
+        season_df['_is_push'] = push_mask(season_df)
         weekly = season_df.groupby('week').agg(
             correct=(_s_correct, 'sum'),
-            total=(_s_correct, 'count')
+            total=(_s_correct, 'count'),
+            pushes=('_is_push', 'sum'),
         ).reset_index()
-        weekly['pct']      = (weekly['correct'] / weekly['total'] * 100).round(1)
-        weekly['record']   = (
-            weekly['correct'].astype(int).astype(str) + '-' +
-            (weekly['total'] - weekly['correct']).astype(int).astype(str)
-        )
+        weekly['pct'] = (weekly['correct'] / weekly['total'] * 100).round(1)
+        weekly['record'] = [
+            format_ats_record(int(w), int(t - w), int(p))
+            for w, t, p in zip(weekly['correct'], weekly['total'], weekly['pushes'])
+        ]
         weekly['week_lbl'] = 'Week ' + weekly['week'].astype(int).astype(str)
 
         # Cumulative win %
@@ -269,16 +227,36 @@ def render():
         if live:
             st.subheader("HIGH vs other picks")
             edge_data = pd.DataFrame([
-                {'Tier': f'HIGH (Tue {HIGH_GAP:g}+ pts)', 'Correct': he_correct, 'Total': he_total, 'Pct': he_pct},
-                {'Tier': 'Other picks', 'Correct': re_correct, 'Total': re_total, 'Pct': re_pct},
+                {
+                    'Tier': f'HIGH (Tue {HIGH_GAP:g}+ pts)',
+                    'Wins': he_correct, 'Losses': he_losses, 'Pushes': he_pushes,
+                    'Total': he_total, 'Pct': he_pct,
+                },
+                {
+                    'Tier': 'Other picks',
+                    'Wins': re_correct, 'Losses': re_losses, 'Pushes': re_pushes,
+                    'Total': re_total, 'Pct': re_pct,
+                },
             ])
             _edge_colors = ['#00c853', '#888888']
         else:
             st.subheader("Edge Tier Accuracy")
             edge_data = pd.DataFrame([
-                {'Tier': 'High Edge (3+ pts)',  'Correct': he_correct, 'Total': he_total, 'Pct': he_pct},
-                {'Tier': 'Med Edge (1-3 pts)',  'Correct': me_correct, 'Total': me_total, 'Pct': me_pct},
-                {'Tier': 'Low Edge (<1 pt)',    'Correct': le_correct, 'Total': le_total, 'Pct': le_pct},
+                {
+                    'Tier': 'High Edge (3+ pts)',
+                    'Wins': he_correct, 'Losses': he_losses, 'Pushes': he_pushes,
+                    'Total': he_total, 'Pct': he_pct,
+                },
+                {
+                    'Tier': 'Med Edge (1-3 pts)',
+                    'Wins': me_correct, 'Losses': me_losses, 'Pushes': me_pushes,
+                    'Total': me_total, 'Pct': me_pct,
+                },
+                {
+                    'Tier': 'Low Edge (<1 pt)',
+                    'Wins': le_correct, 'Losses': le_losses, 'Pushes': le_pushes,
+                    'Total': le_total, 'Pct': le_pct,
+                },
             ])
             _edge_colors = ['#00c853', '#ffd600', '#ff5252']
 
@@ -286,7 +264,10 @@ def render():
         fig_edge.add_trace(go.Bar(
             x=edge_data['Tier'],
             y=edge_data['Pct'],
-            text=[f"{r['Correct']}/{r['Total']} ({r['Pct']}%)" for _, r in edge_data.iterrows()],
+            text=[
+                f"{format_ats_record(r['Wins'], r['Losses'], r['Pushes'])} ({r['Pct']}%)"
+                for _, r in edge_data.iterrows()
+            ],
             textposition='outside',
             marker_color=_edge_colors,
             hovertemplate='%{x}<br>%{text}<extra></extra>'
@@ -307,63 +288,6 @@ def render():
             margin=dict(t=20, b=20, r=112)
         )
         st.plotly_chart(fig_edge, width="stretch")
-
-        if _has_ct and not live:
-            st.divider()
-            st.subheader("Consensus Tier Accuracy")
-            st.caption("All 3 models agree on direction · Ensemble edge ≥3 pts = HIGH, ≥1 pt = MEDIUM, else PASS")
-
-            _ct_high = season_df[season_df['consensus_tier'] == 'HIGH']
-            _ct_med  = season_df[season_df['consensus_tier'] == 'MEDIUM']
-            _ct_pass = season_df[season_df['consensus_tier'] == 'PASS']
-
-            _ch_c = int(_ct_high[_s_correct].sum()); _ch_t = int(_ct_high[_s_correct].notna().sum())
-            _cm_c = int(_ct_med[_s_correct].sum());  _cm_t = int(_ct_med[_s_correct].notna().sum())
-            _cp_c = int(_ct_pass[_s_correct].sum()); _cp_t = int(_ct_pass[_s_correct].notna().sum())
-
-            _ch_pct = round(_ch_c / _ch_t * 100, 1) if _ch_t > 0 else 0
-            _cm_pct = round(_cm_c / _cm_t * 100, 1) if _cm_t > 0 else 0
-            _cp_pct = round(_cp_c / _cp_t * 100, 1) if _cp_t > 0 else 0
-
-            with st.container(key="jsa-metric-even-tr-tiers"):
-                ct1, ct2, ct3 = st.columns(3)
-                ct1.metric("HIGH Tier",   f"{_ch_c}/{_ch_t}", f"{_ch_pct}%",
-                           help="All 3 models agree + Ensemble edge ≥3 pts.")
-                ct2.metric("MEDIUM Tier", f"{_cm_c}/{_cm_t}", f"{_cm_pct}%",
-                           help="All 3 models agree + Ensemble edge 1–3 pts.")
-                ct3.metric("PASS Tier",   f"{_cp_c}/{_cp_t}", f"{_cp_pct}%",
-                           help="Models disagree or low edge — skipped. Lower % here = better filtering.")
-
-            _ct_data = pd.DataFrame([
-                {'Tier': 'HIGH',   'Correct': _ch_c, 'Total': _ch_t, 'Pct': _ch_pct},
-                {'Tier': 'MEDIUM', 'Correct': _cm_c, 'Total': _cm_t, 'Pct': _cm_pct},
-                {'Tier': 'PASS',   'Correct': _cp_c, 'Total': _cp_t, 'Pct': _cp_pct},
-            ])
-            fig_ct = go.Figure()
-            fig_ct.add_trace(go.Bar(
-                x=_ct_data['Tier'],
-                y=_ct_data['Pct'],
-                text=[f"{r['Correct']}/{r['Total']} ({r['Pct']}%)" for _, r in _ct_data.iterrows()],
-                textposition='outside',
-                marker_color=['#00c853', '#ffd600', '#888888'],
-                hovertemplate='%{x}<br>%{text}<extra></extra>'
-            ))
-            fig_ct.add_hline(
-                y=52.4, line_dash="dash", line_color="#888",
-                annotation_text="Break even (52.4%)", annotation_position="right",
-                annotation_font=dict(size=11, color="#9aa4b2")
-            )
-            fig_ct.update_layout(
-                plot_bgcolor='rgba(0,0,0,0)',
-                paper_bgcolor='rgba(0,0,0,0)',
-                font_color='white',
-                yaxis=dict(range=[0, 100], title='ATS Win %', gridcolor='#2d3748'),
-                xaxis=dict(gridcolor='#2d3748'),
-                showlegend=False,
-                height=350,
-                margin=dict(t=20, b=20, r=112)
-            )
-            st.plotly_chart(fig_ct, width="stretch")
 
         st.divider()
 
@@ -511,10 +435,11 @@ def render():
             t_high = totals_season[totals_season['consensus_tier'] == 'HIGH']
             t_correct = int(t_high['model_correct'].sum())
             t_total   = len(t_high)
-            t_pct     = round(t_correct / t_total * 100, 1) if t_total > 0 else 0
+            t_losses  = t_total - t_correct
+            t_pct     = round(t_correct / t_total * 100, 1) if t_total > 0 else None
 
             with st.container(horizontal=True, key="jsa-metric-even-tr-totals"):
-                _record_metric("UNDER picks", t_correct, t_total, t_pct)
+                _record_metric("UNDER picks", t_correct, t_losses, 0, t_pct)
 
                 _t_over_rate = totals_season['went_over'].mean() if 'went_over' in totals_season.columns and totals_season['went_over'].notna().any() else None
                 if _t_over_rate is not None:
@@ -548,7 +473,3 @@ def render():
                         _t_weekly[['week', 'record', 'pct']].rename(
                             columns={'week': 'Week', 'record': 'Record', 'pct': 'Win %'}),
                         hide_index=True, width="stretch")
-
-# ══════════════════════════════════════════════════════════════════════════════
-# TAB 3: FANTASY PROJECTIONS
-# ══════════════════════════════════════════════════════════════════════════════

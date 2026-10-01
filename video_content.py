@@ -357,11 +357,21 @@ VIDEOS = [
     },
     {
         "slug": "latest-video-2026-09-24",
-        "title": "JoScho Analytics: Latest Video",
-        "subtitle": "2026 · TikTok video",
+        "title": "Fourth Down Analytics Deep Dive: Part 1",
+        "subtitle": "2026 · expected points and win probability",
         "date": "2026-09-24",
         "section": "in-season",
         "tiktok_url": "https://www.tiktok.com/@joschoanalytics/video/7689224721262562591",
         "video_id": "7689224721262562591",
+    },
+    {
+        "slug": "graphs-of-the-week-01",
+        "title": "Graphs of the Week 01: NFL Week 3",
+        "subtitle": "2026 · Week 3 · four stats worth a closer look",
+        "date": "2026-09-29",
+        "section": "in-season",
+        "tiktok_url": "https://www.tiktok.com/@joschoanalytics/video/7691111256488561951",
+        "video_id": "7691111256488561951",
+        "breakdown_file": "graphs_of_the_week_01.md",
     },
 ]

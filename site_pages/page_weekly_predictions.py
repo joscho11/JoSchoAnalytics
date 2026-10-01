@@ -17,7 +17,13 @@ import streamlit as st
 
 import dashboard_data
 import page_common
-from dashboard_utils import get_confidence, _md_to_html
+from dashboard_utils import (
+    _md_to_html,
+    ats_record_parts,
+    format_ats_metric_delta,
+    format_ats_record,
+    get_confidence,
+)
 from live_2026 import (
     HIGH_GAP,
     LIVE_HIGH_LABELS,
@@ -425,16 +431,16 @@ def render():
         else:
             st.info("Matchups are locked. From Week 4 onward, the validated paid Tuesday 09:00 ET snapshot is preferred; the free live capture is the fallback.")
     elif results_in:
-        correct = int(week_df[_wk_correct_col].sum())
-        total   = int(week_df[_wk_correct_col].notna().sum())
-        _n_settled = total
-        _n_total   = len(week_df)
-        _partial   = _n_settled < _n_total
-        _banner_suffix = f" ({_n_settled} of {_n_total} games settled)" if _partial else ""
-        if total > 0:
+        wins, losses, pushes, pct = ats_record_parts(week_df, _wk_correct_col)
+        _n_final = int(week_df['actual_margin'].notna().sum())
+        _n_total = len(week_df)
+        _partial = _n_final < _n_total
+        _banner_suffix = f" ({_n_final} of {_n_total} games settled)" if _partial else ""
+        if wins + losses > 0 or pushes > 0:
+            _pct_txt = f" ({pct:.0f}%)" if pct is not None else ""
             st.success(
                 f"{'Some results are in!' if _partial else 'Results are in!'} Week {week} ATS record: "
-                f"**{correct}-{total - correct}** ({correct/total*100:.0f}%){_banner_suffix}"
+                f"**{format_ats_record(wins, losses, pushes)}**{_pct_txt}{_banner_suffix}"
             )
         else:
             st.info("Games not yet played. Check back after the week's results are in.")
@@ -512,15 +518,18 @@ def render():
             st.metric("Average ensemble edge", f"{_avg_edge:.1f} points", border=True)
 
         if results_in and len(filtered_df) > 0:
-            _settled_mask = filtered_df[_correct_col].notna()
-            sc  = int(filtered_df.loc[_settled_mask, _correct_col].sum())
-            _n_settled_filt = _settled_mask.sum()
-            pct = sc / _n_settled_filt * 100 if _n_settled_filt > 0 else 0
-            st.metric(
-                "ATS record", f"{sc}/{_n_settled_filt}", f"{pct:.0f}%",
-                delta_color="green" if pct >= 52.4 else "red",
-                delta_arrow="off", border=True,
-            )
+            sc, losses, pushes, pct = ats_record_parts(filtered_df, _correct_col)
+            if sc + losses > 0 or pushes > 0:
+                st.metric(
+                    "ATS record",
+                    format_ats_record(sc, losses, pushes),
+                    format_ats_metric_delta(pct, pushes),
+                    delta_color="green" if (pct or 0) >= 52.4 else "red",
+                    delta_arrow="off",
+                    border=True,
+                )
+            else:
+                st.metric("ATS record", "Pending", border=True)
         else:
             st.metric("ATS record", "Pending", border=True)
 
@@ -679,8 +688,9 @@ def render():
             bot_is_rec = rec_team == bot_team
 
             results_available = results_in and pd.notna(row['actual_margin'])
-            _row_correct      = (row[_correct_col] == 1) if results_available else False
-            actual            = row['actual_margin'] if results_available else None
+            _row_push = bool(results_available and pd.isna(row.get('home_covered')))
+            _row_correct = bool(results_available and not _row_push and row[_correct_col] == 1)
+            actual = row['actual_margin'] if results_available else None
 
             if results_available:
                 home_score = row.get('home_score', None)
@@ -696,7 +706,14 @@ def render():
                 top_score = "—"
                 bot_score = "—"
 
-            result_label = ("✅ WIN" if _row_correct else "❌ LOSS") if results_available else ""
+            if not results_available:
+                result_label = ""
+            elif _row_push:
+                result_label = "➖ PUSH"
+            elif _row_correct:
+                result_label = "✅ WIN"
+            else:
+                result_label = "❌ LOSS"
 
             if live:
                 is_high = bool(_public_high(row))

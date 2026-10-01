@@ -35,6 +35,50 @@ def load_totals_tracker(base_dir):
     return df
 
 
+# ── ATS record helpers (pushes excluded from win %) ─────────────────────────────
+def push_mask(df: pd.DataFrame) -> pd.Series:
+    """True for finals that landed on the grading line (no cover win/loss).
+
+    Graded releases leave ``home_covered`` null only on pushes. Finals with a
+    cover verdict but null ``model_correct`` are PASS / zero-edge no-plays.
+    """
+    if df is None or len(df) == 0:
+        return pd.Series(dtype=bool)
+    final = df["actual_margin"].notna() if "actual_margin" in df.columns else pd.Series(False, index=df.index)
+    if "home_covered" not in df.columns:
+        return pd.Series(False, index=df.index)
+    return final & df["home_covered"].isna()
+
+
+def ats_record_parts(df: pd.DataFrame, correct_col: str) -> tuple[int, int, int, float | None]:
+    """Return ``(wins, losses, pushes, win_pct)``. Win % uses wins/(wins+losses)."""
+    if df is None or len(df) == 0:
+        return 0, 0, 0, None
+    pushes = int(push_mask(df).sum())
+    graded = df[correct_col].notna()
+    wins = int(df.loc[graded, correct_col].sum())
+    losses = int(graded.sum()) - wins
+    settled = wins + losses
+    pct = round(wins / settled * 100, 1) if settled > 0 else None
+    return wins, losses, pushes, pct
+
+
+def format_ats_record(wins: int, losses: int, pushes: int = 0) -> str:
+    """Sportsbook-style W-L-P string. Pushes are shown even when zero."""
+    return f"{int(wins)}-{int(losses)}-{int(pushes)}"
+
+
+def format_ats_metric_delta(pct: float | None, pushes: int = 0) -> str:
+    """Delta line under an ATS metric. Mentions pushes; % still excludes them."""
+    if pct is None:
+        return "No graded picks"
+    base = f"{pct}%"
+    if pushes <= 0:
+        return base
+    noun = "push" if pushes == 1 else "pushes"
+    return f"{base} · {pushes} {noun}"
+
+
 # ── Presentation / parsing helpers ──────────────────────────────────────────────
 def _md_to_html(text: str) -> str:
     """Convert simple agent-analysis markdown to HTML for use inside a <details> block."""
