@@ -185,6 +185,14 @@ def wait_for_app(page, timeout_ms: int = 60_000) -> None:
                 }""",
                 timeout=min(remaining, 15_000),
             )
+            # Streamlit streams elements while a page script is still running. A
+            # stable body height can therefore be an incomplete render, especially
+            # on slower Linux runners. Wait for the app-level running indicator to
+            # disappear before probing charts or capturing screenshots.
+            page.wait_for_function(
+                """() => !document.querySelector('[data-testid="stStatusWidgetRunningIcon"]')""",
+                timeout=min(remaining, 20_000),
+            )
             plots = page.locator(".js-plotly-plot")
             if plots.count():
                 page.wait_for_function(

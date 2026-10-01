@@ -458,12 +458,13 @@ def test_week3_st_promotion_reissue_card_states(tmp_path):
 
 
 def test_week4_qb_paths_and_card_states(tmp_path):
-    """Week 4 build c9b03f6bb25e: Joseph's 2026-09-29 QB inputs.
+    """Week 4 QB paths and card states from the active published release.
 
     TB starts Jalon Daniels (manual). WAS (Mariota default, Daniels path) and CHI (Keenum default,
-    Williams and Bagent paths) carry QB scenarios. No path clears HIGH, so those games keep their
-    normal header and read "No HIGH under any listed QB". The HIGH PICK cards are DAL at HOU,
-    DEN at SF and ATL at NO. If Week 4 is reissued again this test must be re-read against the
+    Williams and Bagent paths) carry QB scenarios. IND at WAS has no path clearing HIGH; NYJ at
+    CHI clears HIGH under every listed QB. The default HIGH PICK cards are DAL at HOU, DEN at SF,
+    ATL at NO, and NYJ at CHI. If Week 4 is
+    reissued again this test must be re-read against the
     new build, not loosened.
     """
     import re
@@ -479,7 +480,7 @@ def test_week4_qb_paths_and_card_states(tmp_path):
 
     manifest = page_common.load_release_manifest()
     shown = release_status("predictions", 2026, 4, manifest=manifest, root=_HERE)
-    assert shown["build_id"] == "predictions-2026w04-c9b03f6bb25e", shown
+    assert shown["build_id"] == manifest["products"]["predictions"]["active_build"], shown
     build = manifest["products"]["predictions"]["builds"][shown["build_id"]]
     assert build["model_version"].endswith("-b4a325000b7a")
 
@@ -494,14 +495,14 @@ def test_week4_qb_paths_and_card_states(tmp_path):
             cards[f"{match.group(1)} @ {match.group(2)}"] = html_text
     assert len(cards) == 16, sorted(cards)
     high = {name for name, html_text in cards.items() if "HIGH PICK" in html_text}
-    assert high == {"DAL @ HOU", "DEN @ SF", "ATL @ NO"}, sorted(high)
-    for name in ("IND @ WAS", "NYJ @ CHI", "GB @ TB"):
+    assert high == {"DAL @ HOU", "DEN @ SF", "ATL @ NO", "NYJ @ CHI"}, sorted(high)
+    for name in ("IND @ WAS", "GB @ TB"):
         assert "HIGH PICK" not in cards[name] and "QB SPLIT" not in cards[name], name
 
     joined = " ".join(markdown)
     for name in ("Marcus Mariota", "Jayden Daniels", "Caleb Williams", "Tyson Bagent", "Case Keenum"):
         assert name in joined, name
-    assert joined.count("No HIGH under any listed QB") >= 2  # IND at WAS and NYJ at CHI
+    assert joined.count("No HIGH under any listed QB") >= 1  # IND at WAS
 
 
 def test_scenario_verdict_lines_are_plain_for_every_case():

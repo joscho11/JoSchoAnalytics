@@ -6,6 +6,7 @@ so the extracted tab bodies stay byte-identical. app.py keeps its own inline cop
 the swap (3e) removes the tab layer — temporary duplication by design.
 """
 import importlib
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -238,12 +239,16 @@ def reload_if_stale(module):
         importlib.invalidate_caches()
         source = Path(path)
         cache_dir = source.parent / "__pycache__"
-        if cache_dir.is_dir():
-            for pyc in cache_dir.glob(f"{source.stem}*.pyc"):
-                try:
-                    pyc.unlink()
-                except OSError:
-                    pass
+        cache_paths = list(cache_dir.glob(f"{source.stem}*.pyc")) if cache_dir.is_dir() else []
+        try:
+            cache_paths.append(Path(importlib.util.cache_from_source(str(source))))
+        except (NotImplementedError, ValueError):
+            pass
+        for pyc in set(cache_paths):
+            try:
+                pyc.unlink()
+            except OSError:
+                pass
         module = importlib.reload(module)
     module.__joscho_source_mtime_ns__ = mtime
     return module
