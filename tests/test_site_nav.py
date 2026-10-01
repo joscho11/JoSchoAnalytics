@@ -186,10 +186,40 @@ def test_cloud_refresh_reloads_seasonal_config_before_pages():
     assert src.index('"live_2026"') < src.index("site_pages = "), (
         "Cloud must reload live_2026 before Weekly Predictions imports its current constants"
     )
+    assert src.index('"dashboard_utils"') < src.index("site_pages = "), (
+        "Cloud must reload dashboard_utils before pages import its current helpers"
+    )
     assert src.index('"seasonal_config"') < src.index("site_pages = "), (
         "Cloud must reload seasonal_config before site_pages or Home "
         "ImportErrors on app_today"
     )
+
+
+def test_cloud_refresh_recovers_new_dashboard_helpers_before_pages(tmp_path):
+    harness = tmp_path / "stale_cloud_helpers.py"
+    harness.write_text(
+        f"import sys; sys.path[:0] = [r'{_HERE}', r'{_SITE_PAGES}']\n"
+        "import app\n"
+        "import dashboard_utils as du\n"
+        "import page_weekly_predictions as weekly\n"
+        "import page_track_record as track\n"
+        "for name in ('ats_record_parts', 'format_ats_metric_delta', "
+        "'format_ats_record', 'push_mask'):\n"
+        "    if hasattr(du, name):\n"
+        "        delattr(du, name)\n"
+        "du.__joscho_source_mtime_ns__ = 0\n"
+        "weekly.__joscho_source_mtime_ns__ = 0\n"
+        "track.__joscho_source_mtime_ns__ = 0\n"
+        "app._refresh_cloud_synced_modules()\n"
+        "assert all(hasattr(du, name) for name in "
+        "('ats_record_parts', 'format_ats_metric_delta', 'format_ats_record', 'push_mask'))\n"
+        "assert weekly.ats_record_parts is du.ats_record_parts\n"
+        "assert track.ats_record_parts is du.ats_record_parts\n",
+        encoding="utf-8",
+    )
+    at = AppTest.from_file(str(harness), default_timeout=180).run()
+    assert not at.exception, at.exception
+    assert not at.error, [error.value for error in at.error]
 
 
 def test_stale_seasonal_config_reload_restores_app_today():

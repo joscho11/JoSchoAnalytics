@@ -33,6 +33,9 @@ def _refresh_cloud_synced_modules() -> None:
     # that reloads page_draft_board before seasonal_config raises ImportError
     # on app_today while Home is still the selected page.
     for name in (
+        # Keep shared presentation helpers current before pages import newly
+        # added names from them after a live Cloud file sync.
+        "dashboard_utils",
         # Betting pages import these root helpers directly. Refresh them before
         # a page that may import new names after a live Cloud file sync.
         "live_2026",
