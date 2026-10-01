@@ -59,7 +59,8 @@ def _render_card_row(row: pd.Series, result_map: dict[str, str]) -> None:
         status = str(row.get("market_status") or "missing_line")
         st.markdown(f"**{away} at {home}**")
         st.caption(f"{_format_tip(row.get('tipoff_utc'))} · {'Neutral site' if bool(row.get('neutral_site')) else 'Home court'}")
-        with st.container(horizontal=True, horizontal_alignment="left", gap="small"):
+        _game_key = str(row.get("game_id") or f"{away}-{home}")
+        with st.container(horizontal=True, horizontal_alignment="left", gap="small", key=f"jsa-metric-even-cbb-game-{_game_key}"):
             cols = st.columns(4)
         cols[0].metric("Predicted score", f"{float(row['predicted_away_score']):.1f}–{float(row['predicted_home_score']):.1f}")
         cols[1].metric("Margin / total", f"{float(row['predicted_margin']):+.1f} / {float(row['predicted_total']):.1f}")
@@ -131,7 +132,7 @@ def render():
     st.badge(str(metadata.get("status", state.get("status", "published"))).replace("_", " ").title(), icon=":material/verified:", color="green")
     available = card["market_status"].astype(str).eq("available") if not card.empty else pd.Series(dtype=bool)
     qualified = card["ats_pick"].astype(str).isin({"home", "away"}) if not card.empty else pd.Series(dtype=bool)
-    with st.container(horizontal=True, horizontal_alignment="left", gap="small"):
+    with st.container(horizontal=True, horizontal_alignment="left", gap="small", key="jsa-metric-even-cbb-summary"):
         metric_cols = st.columns(4)
     metric_cols[0].metric("Games modeled", int(len(card)))
     metric_cols[1].metric("Market lines", int(available.sum()))

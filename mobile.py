@@ -38,7 +38,7 @@ What it fixes, measured on a 390x844 phone viewport before the change:
   4. Chart annotations, the analyst-note grid, tap targets, table height and type scale
      (see the individual sections below).
   5. League History: rivalry cards stacked, tabs show a drag bar, radios wrap,
-     Plotly does not steal vertical scroll, the Load button is full-width.
+     and the Load button is full-width.
      Labeled scatters drop on-chart names on phones (tap the point). Desktop keeps names.
 
 `:has()` rules are kept in their own blocks on purpose: one unsupported selector
@@ -70,6 +70,25 @@ _CSS = """
   padding-bottom:2rem !important;
 }
 
+/* ── 2b. Header dead-band ─────────────────────────────────────────────────
+   Measured on Draft Board at 390px (2026-09-29): the header is 60px tall but
+   the page title's top sat at 116px, a 56px gap below the header instead of
+   the intended ~16-20px. Root cause is NOT padding-top (that is correctly
+   3.25rem): app.py calls four invisible style-only injectors in sequence
+   before the page ever renders anything (chrome.inject_css, theme_redesign.
+   inject, chrome.render_header, mobile.inject) and each is its own sibling
+   in the page's top-level stVerticalBlock. Every one of them collapses to
+   0px of its own height, but Streamlit's flex `gap:16px` between siblings
+   still applies four times regardless, which is the entire 64px (4 x 16px)
+   before the real first element. This is universal across every page (the
+   same four calls run for every route), not page-specific, so nth-child is
+   safe here rather than brittle. Trimming each gap to 6px (margin-bottom
+   -10px) leaves 24px of real spacing, landing the title ~16px under the
+   header - inside the target band and still clearing it at 320-430px. */
+[data-testid="stMainBlockContainer"] > [data-testid="stVerticalBlock"] > [data-testid="stElementContainer"]:nth-child(-n+4){
+  margin-bottom:-10px !important;
+}
+
 /* ── 3. Type scale — 2.75rem headings burn three lines on a 390px screen ── */
 .stApp h1{ font-size:1.65rem !important; line-height:1.2 !important; }
 .stApp h2{ font-size:1.3rem  !important; line-height:1.25 !important; }
@@ -82,17 +101,26 @@ _CSS = """
 
 /* ── 4. Tap targets ───────────────────────────────────────────────────────
    The <details> "Matchup Analysis" trigger and the dataframe toolbar buttons
-   are 28px / 22px tall by default. */
+   are 28px / 22px tall by default. Measured 2026-09-29: raised summary and the
+   dataframe toolbar to a full 40px (was 36px / 32px); segmented-control and
+   button-group pills (Sleeper/ESPN/Yahoo, Standard/Half-PPR/PPR, Ascending/
+   Descending, etc.) were 32px tall natively, also raised to 40px. All three
+   already wrap (stTabs drag bar, stButtonGroup flex-wrap, details block layout),
+   so growing height does not reflow anything sideways at 320px. */
 details summary{
-  min-height:2.25rem !important;
+  min-height:2.5rem !important;
   display:flex !important;
   align-items:center !important;
   font-size:12px !important;
   padding:6px 12px !important;
 }
-[data-testid="stBaseButton-elementToolbar"]{ min-width:2rem !important; min-height:2rem !important; }
+[data-testid="stBaseButton-elementToolbar"]{ min-width:2.5rem !important; min-height:2.5rem !important; }
 /* Streamlit's own `⋮` is deliberately left at its native 28px: growing it pushes its
    box under the tip jar, and it is app chrome rather than site navigation. */
+[data-testid="stButtonGroup"] button,
+[data-testid="stButtonGroup"] [role="radio"]{
+  min-height:2.5rem !important;
+}
 
 /* ── 5. Tabs: 4-6 tabs overflow a phone. Show a drag bar so swipe is obvious. */
 .stTabs [data-baseweb="tab-list"]{
@@ -122,11 +150,10 @@ details summary{
    The Plotly modebar is hover-only on a mouse but permanently visible on touch,
    where it lands on top of the plot and none of its tools are usable. */
 .js-plotly-plot .modebar{ display:none !important; }
-
 /* ── 7. Tables — see the :has() section below (needs sibling scoping) ───── */
 
 /* ── 8. Game cards (Weekly Predictions) — pinned back to real rows ──────── */
-.jsa-gc-hdr{ font-size:8.5px !important; letter-spacing:.3px !important; white-space:nowrap; }
+.jsa-gc-hdr{ font-size:11px !important; letter-spacing:.3px !important; white-space:nowrap; }
 .jsa-gc-stat{ font-size:13px !important; }
 .jsa-gc-team{ font-size:13px !important; }
 .jsa-gc-bet{
@@ -137,11 +164,14 @@ details summary{
 .jsa-gc-meta{ font-size:11.5px !important; line-height:1.5 !important; }
 /* The totals badge is a flex row of five spans; let it wrap instead of squeezing. */
 .jsa-tot-badge{ flex-wrap:wrap; gap:4px !important; font-size:11.5px !important; padding:6px 9px !important; }
+/* EXPERIMENTAL pill sets its own inline 10px, which wins over the inherited
+   11.5px above since it is a direct declaration on the element itself. */
+.jsa-experimental-tag{ font-size:11px !important; }
 
 /* Legend chips + the historical-cover-rate line */
 .jsa-legend{ gap:6px !important; }
-.jsa-legend span{ font-size:10.5px !important; }
-.jsa-calib{ font-size:10.5px !important; line-height:1.6 !important; }
+.jsa-legend span{ font-size:11px !important; }
+.jsa-calib{ font-size:11px !important; line-height:1.6 !important; }
 
 /* ── 9. Agent-analysis pairs (Weekly Fantasy) ───────────────────────────── */
 .jsa-ff-pair{ gap:6px !important; }
@@ -154,11 +184,45 @@ details summary{
 .jsa-ff-pair > div > span:last-child{ margin-top:6px; }
 .jsa-ff-pair b{ font-size:12.5px; }
 .jsa-ff-head{ padding:7px 9px !important; }
-.jsa-ff-head span{ font-size:10px !important; letter-spacing:.2px !important; }
+.jsa-ff-head span{ font-size:11px !important; letter-spacing:.2px !important; }
+
+/* ── 8c. Help page model-explanation bar cards ───────────────────────────
+   Measured 2026-09-29 (Models & Data topic): `.mi-name` (model_explanations.py
+   CHART_CSS) is nowrap+ellipsis with no tap alternative, so several feature
+   names clip outright ("Forward strength of schedule" 146px of text in a
+   130px cell; "Fantasy points half ppr (last 3)" 150px in 130px). Letting it
+   wrap is the fix the plan calls for; the grid row has no fixed height, so a
+   two-line name just makes that one row taller rather than breaking layout. */
+.mi-name{
+  white-space:normal !important;
+  overflow:visible !important;
+  text-overflow:unset !important;
+  overflow-wrap:break-word !important;
+  line-height:1.25 !important;
+}
+.mi-row{ align-items:center !important; }
 
 /* ── 9b. Film Room ───────────────────────────────────────────────────────
    Section pills and an episode select sit above one player. Widget chrome
-   lives in film_room.py (`jsa-filmroom-picker`). */
+   lives in film_room.py (`jsa-filmroom-picker`).
+   Measured 2026-09-29: the TikTok iframe is a fixed height=720 (film_room.py
+   `_EMBED_HEIGHT`) at every width. Its own CSS already scales width to
+   min(100%,405px) (363px at 390, 293px at 320), but height never followed,
+   so a 320px-wide player sat at a 293:720 box instead of the native 9:16 the
+   video actually is. aspect-ratio keeps the box proportional to whatever
+   width it lands at; max-height keeps a very tall phone from stretching it
+   past a sensible size. The element's own data-testid IS the iframe in this
+   Streamlit version (no wrapper div to target), so this rule needs no new
+   selector to reach it. */
+[class*="st-key-jsa-filmroom-player"] iframe{
+  display:block !important;
+  width:min(100%,405px,39.375vh) !important;
+  max-width:100% !important;
+  height:auto !important;
+  aspect-ratio:9 / 16 !important;
+  max-height:70vh !important;
+  margin-inline:auto !important;
+}
 
 /* ── 10. Metric tiles ─────────────────────────────────────────────────────
    min-height keeps a tile with a sub-line the same height as one without, so the
@@ -168,7 +232,7 @@ details summary{
    Kill truncate, drop mono, wrap the full name. Leaderboard cards also wrap on
    desktop so a long manager name or a two-name tie stays inside the tile. */
 .jsa-mcard{ padding:10px 12px !important; min-height:4.9rem; }
-.jsa-mcard .jsa-mcard-label{ font-size:9.5px !important; letter-spacing:.5px !important; }
+.jsa-mcard .jsa-mcard-label{ font-size:11px !important; letter-spacing:.5px !important; }
 .jsa-mcard .jsa-mcard-value{ font-size:18px !important; }
 .jsa-mcard .jsa-mcard-sub{ font-size:11.5px !important; }
 [data-testid="stMetric"]{
@@ -243,8 +307,14 @@ details summary{
 .jsa-lh-score > div:last-child{ font-size:24px !important; }
 .jsa-lh-card-copy > div:first-child{ font-size:16px !important; }
 .jsa-lh-legend{ gap:6px !important; }
-.jsa-lh-legend span{ font-size:10.5px !important; padding:6px 9px !important; }
+.jsa-lh-legend span{ font-size:11px !important; padding:6px 9px !important; }
 .jsa-lh-series{ font-size:1.15rem !important; }
+
+/* The 16x16 Streamlit help affordance needs a full touch target. */
+[data-testid="stWidgetLabel"] button{
+  min-width:2.5rem !important;
+  min-height:2.5rem !important;
+}
 
 [data-testid="stRadio"] [role="radiogroup"]{
   flex-wrap:wrap !important;
@@ -330,9 +400,48 @@ details summary{
 [class*="st-key-jsa-help-start"] a{
   white-space:nowrap !important;
 }
+/* Home "Explore the rest": measured 2026-09-29, flex-wrap left each link's own
+   width (auto-sized to its label) decide where the next one starts, so the
+   right-hand icons landed at three different x offsets (197 / 205 / 215px)
+   depending on how long the left-hand label on that row was ("Draft Board"
+   vs "DFS Optimizer" vs "League History"). Six links, even count, so a real
+   2-column grid replaces the organic wrap and left-aligns both columns. */
+[class*="st-key-jsa-home-explore"]{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  column-gap:.6rem !important;
+}
+[class*="st-key-jsa-home-explore"] a{
+  width:100% !important;
+  box-sizing:border-box !important;
+}
 
 }  /* end phones */
 
+/* Keep inline technical strings readable at all viewport sizes. */
+.stApp code{
+  font-size:max(11px,.85em) !important;
+  overflow-wrap:anywhere;
+}
+
+/* DFS player chips contain full salary and projection options. Let those labels
+   wrap within their own control rather than truncating them at BaseWeb's cap. */
+[class*="st-key-jsa-dfs-lock-exclude"] [data-baseweb="tag"]{
+  max-width:calc(100% - 8px) !important;
+  height:auto !important;
+  min-height:28px !important;
+  white-space:normal !important;
+}
+[class*="st-key-jsa-dfs-lock-exclude"] [data-baseweb="tag"] > span[title]{
+  display:block !important;
+  min-width:0 !important;
+  max-width:calc(100% - 20px) !important;
+  height:auto !important;
+  white-space:normal !important;
+  overflow:visible !important;
+  text-overflow:clip !important;
+  overflow-wrap:anywhere !important;
+}
 
 /* ══════════════════════════════════════════════════════════════════════════
    :has()-SCOPED LAYOUT RULES — isolated on purpose.
@@ -400,6 +509,32 @@ details summary{
     overflow:visible !important;
     white-space:normal !important;
     overflow-wrap:anywhere !important;
+  }
+}
+
+/* Draft Room's phone heatmap uses a fixed-width copy and preserves every round.
+   The scroll remains in this keyed frame, while desktop keeps its fitted chart. */
+@media (max-width: 640px){
+  [class*="st-key-jsa-scatter-phone-lh-draft-rounds"]{
+    max-width:100% !important;
+    overflow-x:auto !important;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior-x:contain;
+  }
+  [class*="st-key-jsa-scatter-phone-lh-draft-rounds"] [data-testid="stVerticalBlock"],
+  [class*="st-key-jsa-scatter-phone-lh-draft-rounds"] [data-testid="stElementContainer"],
+  [class*="st-key-jsa-scatter-phone-lh-draft-rounds"] [data-testid="stFullScreenFrame"]{
+    width:max-content !important;
+    max-width:none !important;
+    overflow:visible !important;
+  }
+  [class*="st-key-jsa-scatter-phone-lh-draft-rounds"] [data-testid="stPlotlyChart"],
+  [class*="st-key-jsa-scatter-phone-lh-draft-rounds"] .js-plotly-plot,
+  [class*="st-key-jsa-scatter-phone-lh-draft-rounds"] .plot-container,
+  [class*="st-key-jsa-scatter-phone-lh-draft-rounds"] .svg-container{
+    min-width:869px !important;
+    max-width:none !important;
+    width:max-content !important;
   }
 }
 
@@ -947,6 +1082,55 @@ details summary{
     box-sizing:border-box !important;
     margin-bottom:0 !important;
     overflow:visible !important;
+  }
+}
+
+/* 10f. Odd-count 2-up tiles: last tile spans both columns instead of sitting
+   alone at half width. :last-child:nth-child(odd) only matches when the
+   total count is odd, so an even-count row (the common case) is untouched.
+   Measured: Track Record "Other picks" (3 metrics) and the DFS lineup cap
+   row (3 metrics) both orphan today. */
+@media (max-width: 640px){
+  [class*="st-key-jsa-metric-even"] [data-testid="stHorizontalBlock"]:has([data-testid="stMetric"]) > [data-testid="stColumn"]:last-child:nth-child(odd),
+  [class*="st-key-jsa-metric-even"] [data-testid="stHorizontalBlock"]:has(.jsa-mcard) > [data-testid="stColumn"]:last-child:nth-child(odd),
+  [class*="st-key-jsa-metric-even"]:has(> [data-testid="stElementContainer"] [data-testid="stMetric"]) > [data-testid="stElementContainer"]:last-child:nth-child(odd),
+  [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"] .jsa-mcard) > [data-testid="stColumn"]:last-child:nth-child(odd){
+    grid-column:1 / -1 !important;
+  }
+}
+
+/* 10g. Draft Board's filter row is Position / Search / Sort by / Order (4
+   columns), not the 3-column Season / Week / Search shape the generic
+   nth-child(3) rule above was written for. On that generic rule, column 3
+   is "Sort by", so it was the one forced full width while Order was left
+   stranded alone in the next row. Scoped to this container's own key so the
+   shared 3-column rule elsewhere (Anytime TDs, DFS History, Rookie Board)
+   is untouched. Same specificity as the generic rule, so source order
+   (this block comes later in the file) decides the winner.
+   Order also needs its own full-width row: measured 2026-09-29, its two
+   pills ("Ascending" 94px + "Descending" 102px) need about 200px and only
+   had the ~162px half-column, so the segmented control's own internal wrap
+   kicked in and stacked Descending under Ascending. Full width gives it
+   about 340px, comfortably enough for both pills on one line. Sort by (a
+   selectbox, not a pill group) is left alone in its own half-width cell;
+   the resulting blank cell beside it is empty grid space, not a rendered
+   box, so nothing looks broken. */
+@media (max-width: 640px){
+  [class*="st-key-jsa-filter-bar-draft"] [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:nth-child(3){
+    grid-column:auto !important;
+  }
+  [class*="st-key-jsa-filter-bar-draft"] [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:nth-child(2),
+  [class*="st-key-jsa-filter-bar-draft"] [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:nth-child(4){
+    grid-column:1 / -1 !important;
+  }
+  /* Position multiselect: measured 2026-09-29, the half-width column (~162px)
+     left only ~111px for BaseWeb's tag-wrap once its own dropdown/clear
+     controls (~49px) were subtracted, and each QB/RB/WR/TE chip is ~50px,
+     so every chip landed on its own row (four stacked rows for four short
+     chips). Full width gives the tag-wrap ~290px, enough for all four chips
+     across one or two rows instead of four. */
+  [class*="st-key-jsa-filter-bar-draft"] [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:nth-child(1){
+    grid-column:1 / -1 !important;
   }
 }
 

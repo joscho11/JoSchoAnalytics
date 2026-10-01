@@ -31,17 +31,22 @@ def test_prediction_cache_key_changes_with_release_manifest(tmp_path: Path, monk
     manifest.parent.mkdir(parents=True)
     manifest.write_text('{"release": 1}', encoding="utf-8")
     seen = []
+    cached_loader = dashboard_data._load_predictions_for_manifest
+    cached_loader.clear()
     monkeypatch.setattr(dashboard_data, "_HERE", tmp_path)
     monkeypatch.setattr(dashboard_data, "_load_predictions_for_manifest", seen.append)
 
-    dashboard_data.load_predictions()
-    manifest.write_text('{"release": 2}', encoding="utf-8")
-    dashboard_data.load_predictions()
+    try:
+        dashboard_data.load_predictions()
+        manifest.write_text('{"release": 2}', encoding="utf-8")
+        dashboard_data.load_predictions()
 
-    assert seen == [
-        hashlib.sha256(b'{"release": 1}').hexdigest(),
-        hashlib.sha256(b'{"release": 2}').hexdigest(),
-    ]
+        assert seen == [
+            hashlib.sha256(b'{"release": 1}').hexdigest(),
+            hashlib.sha256(b'{"release": 2}').hexdigest(),
+        ]
+    finally:
+        cached_loader.clear()
 
 
 def _prediction_candidate(tmp_path: Path, *, shift: float = 0.0, week: int = 1):
@@ -671,6 +676,9 @@ def test_anytime_td_grading_updates_final_games_and_leaves_partial_slate_pending
 
 def test_anytime_td_grading_does_not_zero_fill_an_incomplete_feed(tmp_path):
     path = _anytime_board(tmp_path)
+    # Make this fixture byte-canonical across Windows and Linux so `changed`
+    # reports grading edits, not CRLF-to-LF normalization on write.
+    path.write_bytes(path.read_bytes().replace(b"\r\n", b"\n"))
     schedule = pd.DataFrame([{
         "season": 2026, "week": 1, "game_id": "2026_01_NE_SEA",
         "home_team": "SEA", "away_team": "NE", "home_score": 27, "away_score": 20,
@@ -798,10 +806,15 @@ def test_scheduled_grader_dispatches_anytime_td(monkeypatch, tmp_path):
     site = tmp_path / "site"
     site.mkdir()
     expected = {"status": "skipped", "reason": "test"}
-    monkeypatch.setattr("publishing.cli.grade_anytime_td_releases", lambda root: expected)
+    calls = []
+    monkeypatch.setattr(
+        "publishing.cli.grade_anytime_td_releases",
+        lambda root, participation_by_season: calls.append(participation_by_season) or expected,
+    )
 
     result = _grade_published(site, "anytime_td")
     assert result["anytime_td"] == expected
+    assert calls and calls[0] == {}
 
 
 def test_scheduled_grader_dispatches_first_td(monkeypatch, tmp_path):
@@ -812,12 +825,20 @@ def test_scheduled_grader_dispatches_first_td(monkeypatch, tmp_path):
     site.mkdir()
     expected_anytime = {"status": "skipped", "reason": "test-anytime"}
     expected_first = {"status": "skipped", "reason": "test-first"}
-    monkeypatch.setattr("publishing.cli.grade_anytime_td_releases", lambda root: expected_anytime)
-    monkeypatch.setattr("publishing.cli.grade_first_td_releases", lambda root: expected_first)
+    calls = []
+    monkeypatch.setattr(
+        "publishing.cli.grade_anytime_td_releases",
+        lambda root, participation_by_season: calls.append(("anytime", participation_by_season)) or expected_anytime,
+    )
+    monkeypatch.setattr(
+        "publishing.cli.grade_first_td_releases",
+        lambda root, participation_by_season: calls.append(("first", participation_by_season)) or expected_first,
+    )
 
     result = _grade_published(site, "anytime_td")
     assert result["anytime_td"] == expected_anytime
     assert result["first_td"] == expected_first
+    assert calls[0][1] is calls[1][1]
 
 
 def test_anytime_td_grading_handles_the_real_publisher_schema_end_to_end(tmp_path):

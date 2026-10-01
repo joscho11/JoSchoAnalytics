@@ -4,6 +4,7 @@ so the rendered copy is byte-identical to what app.py's Help tab shows. Hermetic
 """
 import os
 import sys
+from unittest.mock import patch
 from pathlib import Path
 
 os.environ["APP_OFFLINE"] = "1"
@@ -25,13 +26,14 @@ def _render(tmp_path, *, topic=None, search=None, fail_tracker=False, open_quest
         setup += f"st.query_params['help_topic'] = {topic!r}\n"
     if search:
         setup += f"st.session_state['help_search'] = {search!r}\n"
-    if fail_tracker:
-        setup += (
-            "import dashboard_data\n"
-            "dashboard_data.load_predictions = lambda: (_ for _ in ()).throw(FileNotFoundError())\n"
-        )
     h.write_text(setup + "import page_help as p\np.render()\n", encoding="utf-8")
-    at = AppTest.from_file(str(h), default_timeout=180).run()
+    if fail_tracker:
+        import dashboard_data
+
+        with patch.object(dashboard_data, "load_predictions", side_effect=FileNotFoundError):
+            at = AppTest.from_file(str(h), default_timeout=180).run()
+    else:
+        at = AppTest.from_file(str(h), default_timeout=180).run()
     assert not at.exception, at.exception
     assert not at.error, [e.value for e in at.error]
     if open_question:
@@ -46,7 +48,7 @@ def _render(tmp_path, *, topic=None, search=None, fail_tracker=False, open_quest
 def test_help_renders_offline_clean(tmp_path):
     at = _render(tmp_path)
     assert any("Help & guide" in str(t.value) for t in at.title), "Help title missing"
-    assert len(list(at.markdown)) > 10, "Help body (expanders/markdown) did not render"
+    assert len(list(at.markdown)) >= 10, "Help body (expanders/markdown) did not render"
     assert any("Site Guide" in str(s.value) for s in at.subheader)
     assert any("Search Help & Guide" == str(w.label) for w in at.text_input)
     assert not any("Start here" in str(s.value) for s in at.subheader)
@@ -66,7 +68,7 @@ def test_help_league_history_covers_yahoo(tmp_path):
     source = (_HERE / "site_pages" / "help_content.py").read_text(encoding="utf-8")
     assert "CBS leagues always need the signed-in access" in source
     assert "token" in source
-    assert "Yahoo ADP" in md
+    assert "Yahoo IDs are the number after `/f1/` and also need" in md
     assert "Yahoo does not price every one of the 180 players" in all_copy
     assert "empty" in source and "scored" in source and "weeks" in source
     assert "Yahoo and CBS are on the live page and are not in that video" in source

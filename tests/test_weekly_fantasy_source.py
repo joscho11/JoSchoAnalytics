@@ -7,6 +7,7 @@ from pathlib import Path
 os.environ["APP_OFFLINE"] = "1"
 
 import pandas as pd
+import streamlit as st
 
 _HERE = Path(__file__).resolve().parents[1]
 _SITE_PAGES = _HERE / "site_pages"
@@ -414,6 +415,27 @@ def test_week_one_phone_grid_keeps_sleeper_beside_model_projection():
     assert page._preview_phone_columns(available, show_sleeper=False) == [
         "#", "Player", "Opponent", "Proj Pts", "Health", "Actual Pts",
     ]
+
+
+def test_phone_column_config_preserves_desktop_help_and_formats():
+    row_help = "Row number in this table as currently sorted and filtered."
+    opponent_help = "The matchup label sorts alphabetically."
+    desktop = {
+        "#": st.column_config.NumberColumn("#", format="%d", help=row_help),
+        "Player": st.column_config.TextColumn("Player", help="Player name and NFL team."),
+        "Opponent": st.column_config.TextColumn("Opponent", help=opponent_help),
+        "Proj Pts": st.column_config.NumberColumn("Proj Pts", format="%.1f"),
+    }
+
+    phone = weekly._phone_column_config(["#", "Player", "Opponent", "Proj Pts"], desktop)
+
+    assert phone["#"]["help"] == row_help
+    assert phone["#"]["type_config"]["format"] == "%d"
+    assert phone["#"]["pinned"] is True
+    assert phone["Player"]["help"] == "Player name and NFL team."
+    assert phone["Player"]["pinned"] is True
+    assert phone["Opponent"]["help"] == opponent_help
+    assert phone["Proj Pts"]["type_config"]["format"] == "%.1f"
 
 
 def test_actuals_wait_for_every_game_in_the_week():

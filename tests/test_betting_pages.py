@@ -313,20 +313,24 @@ def test_weekly_predictions_unplayed_game_keeps_score_column(tmp_path):
         f"import sys; sys.path[:0] = [r'{_HERE}', r'{_SITE_PAGES}']\n"
         "import numpy as np\n"
         "import dashboard_data\n"
-        "_real = dashboard_data.load_predictions()\n"
-        "_df = _real.copy()\n"
-        "_wk = _df[(_df['season'] == 2026) & (_df['week'] == 2)].index\n"
-        "_unplayed = _wk[::2]\n"
-        "for _c in ('actual_margin', 'home_score', 'away_score', 'model_correct', 'ens_model_correct'):\n"
-        "    if _c in _df.columns:\n"
-        "        _df.loc[_unplayed, _c] = np.nan\n"
-        "_df.loc[_wk[1::2], 'actual_margin'] = _df.loc[_wk[1::2], 'actual_margin'].fillna(3.0)\n"
-        "dashboard_data.load_predictions = lambda: _df\n"
+        "_saved_loader = dashboard_data.load_predictions\n"
+        "try:\n"
+        "    _real = dashboard_data.load_predictions()\n"
+        "    _df = _real.copy()\n"
+        "    _wk = _df[(_df['season'] == 2026) & (_df['week'] == 2)].index\n"
+        "    _unplayed = _wk[::2]\n"
+        "    for _c in ('actual_margin', 'home_score', 'away_score', 'model_correct', 'ens_model_correct'):\n"
+        "        if _c in _df.columns:\n"
+        "            _df.loc[_unplayed, _c] = np.nan\n"
+        "    _df.loc[_wk[1::2], 'actual_margin'] = _df.loc[_wk[1::2], 'actual_margin'].fillna(3.0)\n"
+        "    dashboard_data.load_predictions = lambda: _df\n"
         # Week 2 is the fixture's partly-played slate. The page default moves
         # forward on every publish, so pin the week this test actually set up.
-        "import streamlit as st; st.session_state['wp_week'] = 2\n"
-        "import page_weekly_predictions as p\n"
-        "p.render()\n",
+        "    import streamlit as st; st.session_state['wp_week'] = 2\n"
+        "    import page_weekly_predictions as p\n"
+        "    p.render()\n"
+        "finally:\n"
+        "    dashboard_data.load_predictions = _saved_loader\n",
         encoding="utf-8",
     )
     at = AppTest.from_file(str(h), default_timeout=180).run()

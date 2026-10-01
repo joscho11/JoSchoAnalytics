@@ -32,12 +32,17 @@ _PHONE_LABELS = {
     HIGH_COL: "HIGH",
 }
 _PHONE_WIDTHS = {
-    "#": 50,
-    "Team": 54,
-    "Proj Wins": 54,
-    "Posted": 54,
-    "vs posted": 54,
-    HIGH_COL: 50,
+    # Measured 2026-09-29: these six pinned widths summed to 316px against a
+    # ~362px phone grid, and Streamlit's dataframe grid stretches to fill the
+    # container, so the leftover ~46px rendered as a blank trailing column
+    # (same header-row background, no header text, no cell content). Widened
+    # to sum to ~362px; no column added or removed.
+    "#": 54,
+    "Team": 64,
+    "Proj Wins": 62,
+    "Posted": 62,
+    "vs posted": 62,
+    HIGH_COL: 58,
 }
 
 PROJ_HELP = (

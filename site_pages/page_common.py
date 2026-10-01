@@ -269,16 +269,17 @@ def unlabeled_scatter_copy(fig):
 def plotly_phone_desktop(desktop_fig, phone_fig, *, slug: str) -> None:
     """Show desktop_fig above 640px and phone_fig at phone width.
 
-    A phone figure with an explicit layout.width keeps that size (no Plotly
-    autoshrink). Streamlit still stretch-wraps so the page itself does not
-    grow; CSS on the keyed container is what pans sideways.
+    A phone figure with an explicit layout.width uses Streamlit's content
+    sizing so Plotly keeps its fixed pixel width. CSS on the keyed container
+    clips that width to the viewport and provides horizontal panning.
     """
     phone_fixed = phone_fig.layout.width not in (None, 0)
     phone_cfg = {**_PLOTLY_TOUCH, "responsive": False} if phone_fixed else _PLOTLY_TOUCH
+    phone_width = "content" if phone_fixed else "stretch"
     with st.container(key=f"jsa-scatter-desktop-{slug}"):
         st.plotly_chart(desktop_fig, width="stretch", config=_PLOTLY_TOUCH)
     with st.container(key=f"jsa-scatter-phone-{slug}"):
-        st.plotly_chart(phone_fig, width="stretch", config=phone_cfg)
+        st.plotly_chart(phone_fig, width=phone_width, config=phone_cfg)
 
 
 def plotly_labeled_scatter(fig, *, slug: str) -> None:

@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 
 import pandas as pd
@@ -11,7 +10,7 @@ from publishing.contract import sha256_file
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_cbb_page_renders_published_card(tmp_path):
+def test_cbb_page_renders_published_card(tmp_path, monkeypatch):
     release_root = tmp_path / "data" / "releases" / "cbb_daily"
     artifact = tmp_path / "card.csv"
     row = {column: "" for column in CARD_COLUMNS}
@@ -38,13 +37,24 @@ def test_cbb_page_renders_published_card(tmp_path):
     }
     publish_card_candidate(artifact, metadata, root=tmp_path)
     harness = tmp_path / "harness.py"
+    monkeypatch.setenv("APP_OFFLINE", "1")
+    monkeypatch.setenv("JSA_CBB_FIXTURE_DIR", str(tmp_path))
+    import cbb_daily_data
+
+    loaders = (cbb_daily_data.load_manifest, cbb_daily_data.load_card, cbb_daily_data.load_results)
+    for loader in loaders:
+        loader.clear()
     harness.write_text(
-        f"import os, sys; os.environ['APP_OFFLINE']='1'; os.environ['JSA_CBB_FIXTURE_DIR']=r'{tmp_path}'; sys.path[:0]=[r'{ROOT}', r'{ROOT / 'site_pages'}']\n"
+        f"import sys; sys.path[:0]=[r'{ROOT}', r'{ROOT / 'site_pages'}']\n"
         "import page_cbb_daily; page_cbb_daily.render()\n",
         encoding="utf-8",
     )
-    at = AppTest.from_file(str(harness), default_timeout=180).run()
-    assert not at.exception, at.exception
-    assert not at.error, [error.value for error in at.error]
-    assert any("8.5-point play" in str(value.value) for value in at.success)
+    try:
+        at = AppTest.from_file(str(harness), default_timeout=180).run()
+        assert not at.exception, at.exception
+        assert not at.error, [error.value for error in at.error]
+        assert any("8.5-point play" in str(value.value) for value in at.success)
+    finally:
+        for loader in loaders:
+            loader.clear()
 

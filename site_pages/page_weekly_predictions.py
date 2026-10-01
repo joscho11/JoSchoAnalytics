@@ -880,7 +880,7 @@ def render():
                         f"border-radius:6px;"
                         f"padding:6px 12px;margin:14px 0 4px 0;font-size:13px;"
                         f"display:flex;align-items:center;gap:10px'>"
-                        f"<span style='background:#b88a1c22;border:1px solid #b88a1c;border-radius:4px;"
+                        f"<span class='jsa-experimental-tag' style='background:#b88a1c22;border:1px solid #b88a1c;border-radius:4px;"
                         f"padding:1px 7px;font-size:10px;color:#e0a93a;font-weight:700;"
                         f"letter-spacing:0.5px'>EXPERIMENTAL</span>"
                         f"&nbsp;<span style='color:#e0a93a;font-weight:700'>UNDER {_tot_line}</span>"

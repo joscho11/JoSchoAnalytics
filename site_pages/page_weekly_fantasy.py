@@ -43,6 +43,15 @@ PREVIEW_PHONE_COLUMNS = ["#", "Player", "Opponent", "Proj Pts", "Health", "Actua
 PREVIEW_PHONE_SLEEPER_COLUMNS = [
     "#", "Player", "Proj Pts", "Sleeper", "Opponent", "Health", "Actual Pts",
 ]
+# The phone table had no explicit column_config of its own (dataframe_phone_desktop's
+# fallback just filters the desktop config down to these columns, none of which carry
+# a width), so the grid auto-sized every column and ellipsized "Opponent" to "Oppo...".
+# Same unchanged header text and format/help as the desktop config; width and pinning
+# only, per column.
+_WF_PHONE_WIDTHS = {
+    "#": 36, "Player": 140, "Opponent": 60, "Proj Pts": 60,
+    "Health": 46, "Actual Pts": 64, "Sleeper": 56,
+}
 PREVIEW_PROJECTED_COLUMNS = {
     "QB": ["Proj Pass Yds", "Proj Rush Yds"],
     "RB": ["Proj Rush Yds", "Proj Rec Yds"],
@@ -371,6 +380,20 @@ def _preview_phone_columns(available_columns, *, show_sleeper: bool) -> list[str
     """Keep the Week 1 benchmark next to our projection on narrow screens."""
     preferred = PREVIEW_PHONE_SLEEPER_COLUMNS if show_sleeper else PREVIEW_PHONE_COLUMNS
     return [column for column in preferred if column in available_columns]
+
+
+def _phone_column_config(phone_keep: list[str], desktop_config: dict) -> dict:
+    """Reuse each desktop column's content and override only phone width/pinning."""
+    phone_config = {}
+    for col in phone_keep:
+        if col not in desktop_config or col not in _WF_PHONE_WIDTHS:
+            continue
+        config = dict(desktop_config[col])
+        config["width"] = _WF_PHONE_WIDTHS[col]
+        if col in {"#", "Player"}:
+            config["pinned"] = True
+        phone_config[col] = config
+    return phone_config
 
 
 @st.cache_data(ttl=3600)
@@ -1033,6 +1056,7 @@ def render():
                     width="stretch",
                     height=TABLE_HEIGHT,
                     column_config=col_config,
+                    phone_column_config=_phone_column_config(phone_keep, col_config),
                     key=(
                         f"wf_grid_{pos}_{season}_{week}_{player_search}_{len(tbl)}_"
                         f"{scoring}_{'detail' if show_more_info else 'simple'}"

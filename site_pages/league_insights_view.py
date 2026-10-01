@@ -113,6 +113,15 @@ def _sorted_seasons(seasons: dict) -> list[str]:
     return sorted((str(value) for value in seasons), key=_key)
 
 
+def _phone_round_heatmap(heat: go.Figure, round_count: int) -> go.Figure:
+    """Keep the complete draft heatmap readable on a phone by allocating room per round."""
+    phone = go.Figure(heat.to_dict())
+    margin = phone.layout.margin.to_plotly_json()
+    width = int((margin.get("l") or 55) + (margin.get("r") or 20) + 44 * round_count + 90)
+    phone.update_layout(width=width, autosize=False)
+    return phone
+
+
 def _scope_history(history: dict, season_filter: str) -> tuple[dict, str]:
     seasons = history.get("seasons", {})
     if season_filter != "All Time":
@@ -300,7 +309,8 @@ def _render_draft_room(
         if not construction.empty else 0
     )
 
-    m1, m2, m3, m4 = st.columns(4)
+    with st.container(key="jsa-metric-even-lh-draft"):
+        m1, m2, m3, m4 = st.columns(4)
     m1.metric("Drafts analyzed", drafts)
     m2.metric("Median first QB", f"Round {first_qb:g}" if pd.notna(first_qb) else "—")
     m3.metric("Median first TE", f"Round {first_te:g}" if pd.notna(first_te) else "—")
@@ -324,7 +334,11 @@ def _render_draft_room(
         _dark_layout(heat, height=350, title="Where the room spends each round")
         heat.update_xaxes(title="Round", dtick=1)
         heat.update_yaxes(title="")
-        _chart(heat)
+        page_common.plotly_phone_desktop(
+            heat,
+            _phone_round_heatmap(heat, len(matrix.columns)),
+            slug="lh-draft-rounds",
+        )
         peak_position, peak_round = matrix.stack().idxmax()
         peak_value = float(matrix.loc[peak_position, peak_round])
         st.caption(
@@ -500,7 +514,8 @@ def _render_player_facts(
     weekly_mvp_count = int(pd.Series(weekly_winners).value_counts().iloc[0]) if weekly_winners else 0
     window_note = f"Window: {scope_label}."
 
-    c1, c2, c3, c4 = st.columns(4)
+    with st.container(key="jsa-metric-even-lh-mvp"):
+        c1, c2, c3, c4 = st.columns(4)
     c1.metric(
         "Scoring king", top["player_name"], f"{top['lineup_points']:.1f} lineup pts",
         help=(

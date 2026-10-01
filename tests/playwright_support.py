@@ -74,7 +74,21 @@ _LAYOUT_PROBE = r"""() => {
     for (const el of document.querySelectorAll(sel)) {
       const r = el.getBoundingClientRect();
       if (r.width === 0 || r.height === 0) continue;
-      if (r.right > vw + 2) {
+      let parent = el.parentElement;
+      let horizontallyScrollable = false;
+      while (parent && parent !== document.body) {
+        const style = getComputedStyle(parent);
+        if (["auto", "scroll", "overlay"].includes(style.overflowX) &&
+            parent.scrollWidth > parent.clientWidth + 1) {
+          const bounds = parent.getBoundingClientRect();
+          if (bounds.left >= -1 && bounds.right <= vw + 1) {
+            horizontallyScrollable = true;
+            break;
+          }
+        }
+        parent = parent.parentElement;
+      }
+      if (r.right > vw + 2 && !horizontallyScrollable) {
         issues.push(sel + ' overflows viewport (right=' + Math.round(r.right) + ')');
         break;
       }

@@ -11,6 +11,13 @@ from dashboard_chrome import TABLE_HEIGHT, exact_table_height, dataframe_phone_d
 
 _LINEUP_PHONE_COLS = ["Slot", "Player", "Salary", "DK projection"]
 _HISTORY_PHONE_COLS = ["Slot", "Player", "Salary", "Actual"]
+# Neither phone table had an explicit phone column_config (dataframe_phone_desktop's
+# fallback just filters the desktop config to these columns), so the grid auto-sized
+# every column with no pinning and rendered two blank trailing rows worth of leftover
+# width as dead space. Slot+Player pinned, explicit px widths sized to fit each
+# column's own (unchanged) header text without ellipsis.
+_LINEUP_PHONE_WIDTHS = {"Slot": 46, "Player": 130, "Salary": 64, "DK projection": 100}
+_HISTORY_PHONE_WIDTHS = {"Slot": 46, "Player": 130, "Salary": 64, "Actual": 70}
 
 
 def _player_labels(pool: pd.DataFrame) -> dict[str, str]:
@@ -76,6 +83,15 @@ def _render_lineup(pipeline, lineup: pd.DataFrame) -> None:
         "DK projection": st.column_config.NumberColumn(format="%.1f"),
     }
     phone_cols = [col for col in _LINEUP_PHONE_COLS if col in table.columns]
+    phone_col_config = {
+        "Slot": st.column_config.TextColumn("Slot", width=_LINEUP_PHONE_WIDTHS["Slot"], pinned=True),
+        "Player": st.column_config.TextColumn("Player", width=_LINEUP_PHONE_WIDTHS["Player"], pinned=True),
+        "Salary": st.column_config.NumberColumn(
+            "Salary", format="$%d", width=_LINEUP_PHONE_WIDTHS["Salary"]),
+        "DK projection": st.column_config.NumberColumn(
+            "DK projection", format="%.1f", width=_LINEUP_PHONE_WIDTHS["DK projection"]),
+    }
+    phone_col_config = {k: v for k, v in phone_col_config.items() if k in phone_cols}
     dataframe_phone_desktop(
         table,
         table[phone_cols],
@@ -84,6 +100,7 @@ def _render_lineup(pipeline, lineup: pd.DataFrame) -> None:
         width="stretch",
         height=exact_table_height(len(table)),
         column_config=col_config,
+        phone_column_config=phone_col_config,
         key="dfs_lineup_grid",
     )
     st.download_button(
@@ -127,6 +144,15 @@ def _render_history_lineup_table(lineup: dict, *, season: int, week: int) -> Non
         "Actual": st.column_config.NumberColumn(format="%.1f"),
     }
     phone_cols = [col for col in _HISTORY_PHONE_COLS if col in table.columns]
+    phone_col_config = {
+        "Slot": st.column_config.TextColumn("Slot", width=_HISTORY_PHONE_WIDTHS["Slot"], pinned=True),
+        "Player": st.column_config.TextColumn("Player", width=_HISTORY_PHONE_WIDTHS["Player"], pinned=True),
+        "Salary": st.column_config.NumberColumn(
+            "Salary", format="%d", width=_HISTORY_PHONE_WIDTHS["Salary"]),
+        "Actual": st.column_config.NumberColumn(
+            "Actual", format="%.1f", width=_HISTORY_PHONE_WIDTHS["Actual"]),
+    }
+    phone_col_config = {k: v for k, v in phone_col_config.items() if k in phone_cols}
     dataframe_phone_desktop(
         _bold_last_row(table),
         _bold_last_row(table[phone_cols]),
@@ -135,6 +161,7 @@ def _render_history_lineup_table(lineup: dict, *, season: int, week: int) -> Non
         width="stretch",
         height=exact_table_height(len(table)),
         column_config=col_config,
+        phone_column_config=phone_col_config,
         key=f"dfs_history_grid_{season}_{week}_{lineup['kind']}",
     )
 
@@ -405,19 +432,20 @@ def render():
 
     with st.form("dfs_optimize_form"):
         st.subheader("Lineup controls")
-        left, right = st.columns(2)
-        locked = left.multiselect(
-            "Lock players",
-            options=list(labels),
-            format_func=labels.get,
-            key="dfs_locked",
-        )
-        excluded = right.multiselect(
-            "Exclude players",
-            options=list(labels),
-            format_func=labels.get,
-            key="dfs_excluded",
-        )
+        with st.container(key="jsa-dfs-lock-exclude"):
+            left, right = st.columns(2)
+            locked = left.multiselect(
+                "Lock players",
+                options=list(labels),
+                format_func=labels.get,
+                key="dfs_locked",
+            )
+            excluded = right.multiselect(
+                "Exclude players",
+                options=list(labels),
+                format_func=labels.get,
+                key="dfs_excluded",
+            )
         submitted = st.form_submit_button(
             "Optimize lineup",
             type="primary",

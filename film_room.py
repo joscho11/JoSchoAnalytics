@@ -61,7 +61,8 @@ def _embed_src(video_id: str) -> str:
 def _tiktok_embed(video_id: str, url: str) -> None:
     # Official player kit, not the oEmbed card. No oEmbed fetch, no embed.js.
     # Offline, TikTok's own unavailable state shows inside the dark frame.
-    st.iframe(_embed_src(video_id), height=_EMBED_HEIGHT)
+    with st.container(key="jsa-filmroom-player"):
+        st.iframe(_embed_src(video_id), height=_EMBED_HEIGHT)
 
 
 def _fmt_published(iso: str) -> str:
