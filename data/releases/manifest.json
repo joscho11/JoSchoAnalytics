@@ -25,7 +25,7 @@
   },
   "products": {
     "fantasy": {
-      "active_build": "fantasy-2026w04-3d42dcfbfcc0",
+      "active_build": "fantasy-2026w04-acd94fff81e3",
       "builds": {
         "fantasy-2025w10-33a7de4ef33f": {
           "artifact": "data/releases/builds/fantasy/2025/week10/fantasy-2025w10-33a7de4ef33f/artifact.csv",
@@ -596,6 +596,35 @@
             ]
           },
           "week": 4
+        },
+        "fantasy-2026w04-acd94fff81e3": {
+          "artifact": "data/releases/builds/fantasy/2026/week04/fantasy-2026w04-acd94fff81e3/artifact.csv",
+          "build_id": "fantasy-2026w04-acd94fff81e3",
+          "metadata": "data/releases/builds/fantasy/2026/week04/fantasy-2026w04-acd94fff81e3/metadata.json",
+          "model_version": "weekly-fantasy-v2-l1_wipe_prior_share_ranks-ad79f409f0b3",
+          "produced_at": "2026-10-01T02:39:48Z",
+          "product": "fantasy",
+          "published_at": "2026-10-01T02:40:07Z",
+          "row_count": 399,
+          "season": 2026,
+          "sha256": "acd94fff81e309e46b007e3355cdca923a91f8e8aa980672690d5a53dbdee3e4",
+          "status": "Published",
+          "validation": {
+            "checks": {
+              "artifact_sha256": "acd94fff81e309e46b007e3355cdca923a91f8e8aa980672690d5a53dbdee3e4",
+              "produced_at_utc": "2026-10-01T02:39:48Z",
+              "scheduled_teams": 32,
+              "team_position_cells": 128
+            },
+            "errors": [],
+            "ok": true,
+            "product": "fantasy",
+            "row_count": 399,
+            "warnings": [
+              "26 projections are below zero; retained as a model diagnostic"
+            ]
+          },
+          "week": 4
         }
       },
       "next_release": {
@@ -604,7 +633,7 @@
         "status": "Awaiting projections",
         "week": 2
       },
-      "previous_build": "fantasy-2026w03-c75803e2789f"
+      "previous_build": "fantasy-2026w04-3d42dcfbfcc0"
     },
     "predictions": {
       "active_build": "predictions-2026w04-f3e67139da16",
@@ -12202,5 +12231,5 @@
     }
   },
   "schema_version": 1,
-  "updated_at": "2026-09-29T23:00:03Z"
+  "updated_at": "2026-10-01T02:40:07Z"
 }
