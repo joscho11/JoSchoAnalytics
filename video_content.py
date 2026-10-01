@@ -374,4 +374,14 @@ VIDEOS = [
         "video_id": "7691111256488561951",
         "breakdown_file": "graphs_of_the_week_01.md",
     },
+    {
+        "slug": "week-4-model-gaps-2026",
+        "title": "NFL Week 4 2026: Model Gaps",
+        "subtitle": "2026 · Week 4 · four HIGH flags vs Tuesday median",
+        "date": "2026-10-01",
+        "section": "predictions",
+        "tiktok_url": "https://www.tiktok.com/@joschoanalytics/video/7691810928202894623",
+        "video_id": "7691810928202894623",
+        "breakdown_file": "week_4_model_gaps_2026.md",
+    },
 ]
