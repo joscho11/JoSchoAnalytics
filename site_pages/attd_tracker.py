@@ -11,6 +11,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from publishing.td_releases import read_td_release
+
 
 # Published Anytime TD paper-bet cutoff: model probability must exceed
 # DraftKings' implied probability by at least one percentage point (raised from
@@ -150,12 +152,14 @@ def implied_probability(price):
 
 def _dedup_key_columns(frame: pd.DataFrame) -> list[str]:
     if {"game_id", "player_id"} <= set(frame.columns):
-        return ["game_id", "player_id"]
+        return ["game_id", "player_id"] + [
+            column for column in ("prediction_mode", "model_version") if column in frame
+        ]
     preferred = [
         "season", "week", "player_id", "player_display_name", "team",
         "opponent_team",
     ]
-    return [column for column in preferred if column in frame.columns]
+    return [column for column in preferred + ["prediction_mode", "model_version"] if column in frame.columns]
 
 
 def deduplicate_player_games(frames: list[pd.DataFrame] | tuple[pd.DataFrame, ...]) -> pd.DataFrame:
@@ -186,7 +190,7 @@ def aggregate_published_csvs(paths: list[str | Path] | tuple[str | Path, ...]) -
     )
     frames = []
     for path in paths:
-        frame = pd.read_csv(path)
+        frame = read_td_release(path)
         for column in eligibility_columns:
             if column not in frame:
                 frame[column] = True

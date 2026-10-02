@@ -97,6 +97,9 @@ def test_week04_pit_cle_renders_all_three_markets(tmp_path):
             at.segmented_control(key="atd_view_2026_4").set_value(market).run()
             at.selectbox(key="atd_props_matchup_2026_4").set_value("PIT vs CLE").run()
         else:
+            # This game remains inspectable after kickoff; the default advances
+            # to the next unstarted game and must not depend on today's date.
+            at.selectbox(key="atd_matchup_2026_4").set_value("PIT vs CLE").run()
             assert at.selectbox(key="atd_matchup_2026_4").value == "PIT vs CLE"
         assert not at.exception, at.exception
         assert not at.error, [e.value for e in at.error]
@@ -461,18 +464,21 @@ def test_qualifies_probability_gap_never_returns_na():
     assert list(result) == [True, False, True]
 
 
-def test_pending_replacement_caption_pluralizes_the_verb(tmp_path):
-    # "1 quoted replacement row await model inputs" is a subject-verb
-    # mismatch. Requires exactly one pending row on the live board.
+def test_pending_replacement_caption_pluralizes_the_verb():
+    assert page._pending_replacement_caption(1).startswith(
+        "1 quoted replacement row awaits model inputs"
+    )
+    assert page._pending_replacement_caption(2).startswith(
+        "2 quoted replacement rows await model inputs"
+    )
+    assert page._pending_replacement_caption(0) is None
+
+
+def test_retrospective_unavailable_rows_are_not_called_replacements(tmp_path):
     at = _render(tmp_path, week=1)
-    raw = pd.read_csv(_HERE / "betting" / "anytime_td" / "anytime_td_2026_week01.csv")
-    pending_count = int(page.priced_rows(raw).p_ge1.isna().sum())
     captions = " ".join(str(c.value) for c in at.caption)
-    if pending_count == 1:
-        assert "1 quoted replacement row awaits model inputs" in captions
-        assert "row await model" not in captions
-    elif pending_count > 1:
-        assert f"{pending_count} quoted replacement rows await model inputs" in captions
+    assert "quoted rows have no reproducible retrospective probability" in captions
+    assert "quoted replacement" not in captions
 
 
 def test_anytime_td_files_cover_weeks_10_17():
@@ -793,19 +799,18 @@ def test_verified_replacement_can_display_book_odds_while_model_is_pending():
     assert two_plus.loc[0, "2+ TD Value Gap"] == "Pending"
 
 
-def test_live_week1_reconciles_tua_out_and_updated_atl_pit_prices():
-    live = pd.read_csv(
-        _HERE / "betting" / "anytime_td" / "anytime_td_2026_week01.csv"
-    )
-    matchup = live[live.game_id.eq("2026_01_ATL_PIT")]
+def test_week1_reconstruction_preserves_atl_pit_prices_and_unsupported_row():
+    release = page.available_releases()[(2026, 1)]
+    retro = pd.read_csv(release)
+    matchup = retro[retro.game_id.eq("2026_01_ATL_PIT")]
 
-    assert not live.player_display_name.eq("Tua Tagovailoa").any()
+    assert retro.prediction_mode.eq("retrospective").all()
+    assert retro.model_version.eq("td_product_ngs_44_frozen_2025_v1").all()
+    assert not retro.player_display_name.eq("Tua Tagovailoa").any()
     cooper = matchup[matchup.player_id.eq("00-0033662")].iloc[0]
     assert cooper.player_display_name == "Cooper Rush"
-    # Price moved between the 09-11 pregame capture (1500/6000/17000, see
-    # anytime_td_2026_week01.csv.bak_before_first_td) and the final graded
-    # board. Cooper Rush stays model_pending (no slp_proj feature): lambda,
-    # p_ge1, p_ge2, fair_amer, p_first are NaN in the live file.
+    # Prices remain as recorded. Cooper Rush's exact Sunday context is
+    # unavailable, so his model probability is not borrowed from another slate.
     assert (cooper.book_amer, cooper.first_amer, cooper.two_plus_amer) == (
         2200, 8000, 25000,
     )
@@ -826,7 +831,9 @@ def test_latest_2026_week_is_default_release_when_present():
 
 
 def test_current_week1_keeps_published_past_game_results():
-    expected = pd.read_csv(_HERE / "betting" / "anytime_td" / "anytime_td_2026_week01.csv")
+    release = page.available_releases()[(2026, 1)]
+    expected = pd.read_csv(release)
+    assert expected.prediction_mode.eq("retrospective").all()
     past = expected[expected.game_id.isin(["2026_01_NE_SEA", "2026_01_SF_LA"])]
 
     assert len(past) == 48
@@ -835,11 +842,9 @@ def test_current_week1_keeps_published_past_game_results():
     # td-settlement-proposal-v1, applied 2026-09-30, DATA_DEFECTS.md P15) and
     # are VOID, not a graded loss -- the same resolved-or-void distinction
     # already asserted for DEN_KC below.
-    resolved = (
-        pd.to_numeric(past.scored_anytime, errors="coerce").notna()
-        | past.status.astype(str).str.lower().eq("void")
-    )
-    assert resolved.all()
+    unresolved = past[past.settlement_status_anytime.astype(str).str.lower().eq("awaiting_evidence")]
+    assert sorted(unresolved.player_display_name) == ["Max Klare", "Tory Horton"]
+    assert pd.to_numeric(unresolved.scored_anytime, errors="coerce").eq(0).all()
     assert set(past.status) <= {"final", "void"}
     assert pd.isna(past.loc[past.status.eq("void"), "scored_anytime"]).all()
     assert list(past.loc[past.player_display_name.eq("Eli Raridon"), "scored_anytime"]) == [1]
@@ -848,10 +853,7 @@ def test_current_week1_keeps_published_past_game_results():
     assert len(den_kc) == 25
     # A quoted player with zero offensive snaps is VOID (no action), not a loss,
     # so "resolved" means graded OR void -- never silently blank.
-    resolved = (
-        pd.to_numeric(den_kc.scored_anytime, errors="coerce").notna()
-        | den_kc.status.astype(str).str.lower().eq("void")
-    )
+    resolved = den_kc.settlement_status_anytime.astype(str).str.lower().isin({"settled", "void"})
     assert resolved.all()
     assert pd.to_numeric(den_kc.loc[den_kc.status.ne("void"), "scored_two_plus"], errors="coerce").notna().all()
     assert set(den_kc.status) <= {"final", "void"}

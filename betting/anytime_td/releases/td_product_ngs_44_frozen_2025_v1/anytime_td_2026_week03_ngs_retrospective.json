@@ -1,0 +1,3652 @@
+{
+  "book": [
+    "DraftKings"
+  ],
+  "capture_max": "2026-09-28 19:50:15",
+  "feature_sidecars": [
+    {
+      "contract_sha256": "3f9d96c3d2d354149808f977fb70c7a4a48a9b4cacdd032f6a3d0f0ba73709c5",
+      "file": "2026_week03_full_draftkings_ngs_retrospective.features.json",
+      "row_count": 21,
+      "sha256": "830c55a13527a8d9f7f0bcf54422cae31809c75ca5ed154e0c2db8ce16677ed3"
+    },
+    {
+      "contract_sha256": "3f9d96c3d2d354149808f977fb70c7a4a48a9b4cacdd032f6a3d0f0ba73709c5",
+      "file": "2026_week03_monday_mnf_ngs_retrospective.features.json",
+      "row_count": 23,
+      "sha256": "213efcddd5eccbaaee923b50de247ecc2a6757fc2642628c410435fd4ca5cee0"
+    },
+    {
+      "contract_sha256": "3f9d96c3d2d354149808f977fb70c7a4a48a9b4cacdd032f6a3d0f0ba73709c5",
+      "file": "2026_week03_sunday_0935_ngs_retrospective.features.json",
+      "row_count": 339,
+      "sha256": "b7656dc2a83df49d6c3b70f41057aa0cce742b8890b6fce0ac56017580dc03ea"
+    }
+  ],
+  "first_td_candidate_mass_summary": {
+    "2026_03_ARI_SF": {
+      "candidate_count": 21,
+      "complete": false,
+      "record_sha256": "0924eca10c747d7144b2b5ea35f1a5d764c5a21f1aa82d79aafd58ceb46c1593",
+      "status": "first_td_candidate_mass_incomplete"
+    },
+    "2026_03_ATL_GB": {
+      "candidate_count": 21,
+      "complete": false,
+      "record_sha256": "4894d0c3d3e57930c40d555acab73c7c49db31b7088b7fe5400e536f70e654e1",
+      "status": "first_td_candidate_mass_incomplete"
+    },
+    "2026_03_BAL_DAL": {
+      "candidate_count": 25,
+      "complete": false,
+      "record_sha256": "47156cd506585bf55f4ddefb165599b03899c3f96759f0b91bacc2402037f648",
+      "status": "first_td_candidate_mass_incomplete"
+    },
+    "2026_03_CAR_CLE": {
+      "candidate_count": 25,
+      "complete": false,
+      "record_sha256": "88e7c880e9492c7502c1f7443e1e74cc4a17aaf29b8617f6d3e9bbaca072f0f7",
+      "status": "first_td_candidate_mass_incomplete"
+    },
+    "2026_03_CIN_PIT": {
+      "candidate_count": 26,
+      "complete": false,
+      "record_sha256": "20cdf6c979fa03098c10b895381f9d546265639171061f271b508df2e3ce29bd",
+      "status": "first_td_candidate_mass_incomplete"
+    },
+    "2026_03_HOU_IND": {
+      "candidate_count": 25,
+      "complete": false,
+      "record_sha256": "755ad78f51f663b89793583dcb8220864938fafadca4c1b13e365b9637ae3a2d",
+      "status": "first_td_candidate_mass_incomplete"
+    },
+    "2026_03_KC_MIA": {
+      "candidate_count": 24,
+      "complete": false,
+      "record_sha256": "6a3bffd6e60a4c66d3a7b77ecb22cf159b4472d5514f33a6ade32eff0b83673c",
+      "status": "first_td_candidate_mass_incomplete"
+    },
+    "2026_03_LAC_BUF": {
+      "candidate_count": 22,
+      "complete": false,
+      "record_sha256": "154faaead8153a7399fa75c949edb162427a665201f51be6d2703d4ae653aaab",
+      "status": "first_td_candidate_mass_incomplete"
+    },
+    "2026_03_LA_DEN": {
+      "candidate_count": 26,
+      "complete": false,
+      "record_sha256": "8eeebc91f9761340f2666b111ba0685758cc449a617576edeca0dde4be675d47",
+      "status": "first_td_candidate_mass_incomplete"
+    },
+    "2026_03_LV_NO": {
+      "candidate_count": 24,
+      "complete": false,
+      "record_sha256": "bbcfdd454f361ded7db92766b86cb55dbbfbe02c2873f69a2d8935a8512d39be",
+      "status": "first_td_candidate_mass_incomplete"
+    },
+    "2026_03_MIN_TB": {
+      "candidate_count": 26,
+      "complete": false,
+      "record_sha256": "505d9a62e665a2dd8a6e577944650e078884a2472fc0acfaeac70df74669aab3",
+      "status": "first_td_candidate_mass_incomplete"
+    },
+    "2026_03_NE_JAX": {
+      "candidate_count": 27,
+      "complete": false,
+      "record_sha256": "efec5b3db583e5a91bb7645c53f7e08d12844c47c4955c749a38fce0c35e51e5",
+      "status": "first_td_candidate_mass_incomplete"
+    },
+    "2026_03_NYJ_DET": {
+      "candidate_count": 22,
+      "complete": false,
+      "record_sha256": "084728e89010d6783952d674b08c35cfe2293e985d0ae3bd46dc499ae516896e",
+      "status": "first_td_candidate_mass_incomplete"
+    },
+    "2026_03_PHI_CHI": {
+      "candidate_count": 23,
+      "complete": false,
+      "record_sha256": "c0c94e9cd872db52992a44530fb1cc3626f045ad4116e982e1f3c42e9a91811c",
+      "status": "first_td_candidate_mass_incomplete"
+    },
+    "2026_03_SEA_WAS": {
+      "candidate_count": 22,
+      "complete": false,
+      "record_sha256": "8fd0f5ad1b809e044f40904edd5504f779af2db1d7ae15b337eade909bd6bef0",
+      "status": "first_td_candidate_mass_incomplete"
+    },
+    "2026_03_TEN_NYG": {
+      "candidate_count": 24,
+      "complete": false,
+      "record_sha256": "250824e283cffba3af5da4eb961dc6a8725de2c395914afc38708f2d25b9df24",
+      "status": "first_td_candidate_mass_incomplete"
+    }
+  },
+  "first_td_evidence": {
+    "MIN_CHI": null
+  },
+  "fit_through_season": 2025,
+  "historical_source_availability": "unverified; NGS releases were captured after these target weeks; current-season NGS is strictly filtered to prior weeks",
+  "label": "Retrospective reconstruction; historical input availability unverified.",
+  "model_bundle_sha256": "ec6171e5902a84b5986edd68adca7b8703006c8f8b57b020597dbc29fd0daac7",
+  "model_spec": "live_product_ngs_44",
+  "model_version": "td_product_ngs_44_frozen_2025_v1",
+  "no_2026_outcomes_used_for_fit": true,
+  "original_forward_support": {
+    "full_draftkings::2026_03_ATL_GB": {
+      "expected_skill_candidates": 22,
+      "feature_provenance": {
+        "as_of_utc": "2026-10-02T03:59:00+00:00",
+        "canonical_columns": [
+          "snap_pct_l4w",
+          "rush_share_l4w",
+          "target_share_l4w",
+          "rz_carry_share_l4w",
+          "rz_target_share_l4w",
+          "i10_carry_share_l4w",
+          "i10_target_share_l4w",
+          "rush_td_exp_l4w",
+          "rec_td_exp_l4w",
+          "team_plays_l4w",
+          "team_pass_rate_l4w",
+          "team_rz_trips_l4w",
+          "team_rz_td_rate_l4w",
+          "team_i10_pass_rate_l4w",
+          "opp_rz_td_rate_allowed_l4w",
+          "opp_td_allowed_to_pos_l4w",
+          "l4w_games_available",
+          "qb_cpoe_l4w",
+          "ngs_avg_separation_l4w",
+          "ngs_avg_expected_yac_l4w",
+          "ngs_avg_yac_above_expectation_l4w",
+          "ngs_recv_coverage_l4w",
+          "ngs_recv_available_l4w",
+          "ngs_percent_attempts_gte_eight_defenders_l4w",
+          "ngs_rush_yards_over_expectation_l4w",
+          "ngs_rush_coverage_l4w",
+          "ngs_rush_available_l4w"
+        ],
+        "current_week_outcomes_included": false,
+        "feature_source": "shared_td_features_windows_panel_helpers",
+        "features_with_missing_values": {
+          "i10_carry_share_l4w": 15,
+          "i10_target_share_l4w": 9,
+          "l4w_games_available": 0,
+          "ngs_avg_expected_yac_l4w": 9,
+          "ngs_avg_separation_l4w": 9,
+          "ngs_avg_yac_above_expectation_l4w": 9,
+          "ngs_percent_attempts_gte_eight_defenders_l4w": 18,
+          "ngs_recv_available_l4w": 0,
+          "ngs_recv_coverage_l4w": 0,
+          "ngs_rush_available_l4w": 0,
+          "ngs_rush_coverage_l4w": 0,
+          "ngs_rush_yards_over_expectation_l4w": 18,
+          "opp_rz_td_rate_allowed_l4w": 0,
+          "opp_td_allowed_to_pos_l4w": 0,
+          "qb_cpoe_l4w": 0,
+          "rec_td_exp_l4w": 1,
+          "rush_share_l4w": 1,
+          "rush_td_exp_l4w": 1,
+          "rz_carry_share_l4w": 11,
+          "rz_target_share_l4w": 5,
+          "snap_pct_l4w": 1,
+          "target_share_l4w": 1,
+          "team_i10_pass_rate_l4w": 0,
+          "team_pass_rate_l4w": 0,
+          "team_plays_l4w": 0,
+          "team_rz_td_rate_l4w": 0,
+          "team_rz_trips_l4w": 0
+        },
+        "ngs": {
+          "current_season_sources": {
+            "ngs_receiving": {
+              "capture_hash_status": "computed_legacy",
+              "captured_utc": "2026-09-29T15:52:34+00:00",
+              "max_week_source": 3,
+              "rows_after_cutoff": 143,
+              "sha256": "5b3fc88bd71ebb69e417733f48a300f15e36edca6b115bee84aa187791d75858"
+            },
+            "ngs_rushing": {
+              "capture_hash_status": "computed_legacy",
+              "captured_utc": "2026-09-29T15:52:34+00:00",
+              "max_week_source": 3,
+              "rows_after_cutoff": 67,
+              "sha256": "709dc5b5c761053d9863835d7fcf5d28ec036d9179809fc90a2ccc358f96b7af"
+            }
+          },
+          "final_regular_week_excluded": true,
+          "frozen_serving_source_hashes": {
+            "ff_opportunity": "dbb6db22a0c860b2c2ba8c4bb4cb1c71fd9fc2b1834743d810c96dfcd17c70dc",
+            "pbp": "87ccaacbb4606ee1482786eb8e177db79185c4b6fb162a0cfdead57268ad810a",
+            "player_stats": "489ce4a212377aa2c4bc6ed777a9980716a9eea17b52a210ccb673f130814d02",
+            "players": "7b3acde823e41cbc3b5d170f8a52bce5c451f200843980be57faefac3b0e9856",
+            "product_features": "58495f19d2cd3cfbaa824e6d462f0c68fc497237cdde3d8bfb130e19c4cb3a15",
+            "schedules": "78ff21f9530ad3e464dcf445f40664eb2e315be95e401aa578e75be5fbfc6cd3",
+            "snap_counts": "7b85db1820364f0b5817c623485e179cf2747b3d7f35d8624af54e59bc424de9"
+          },
+          "future_weeks_excluded": true,
+          "historical_snapshot": {
+            "manifest_sha256": "ae33d1482779595c2977b90bf840b3cc41d57582a68a973f74104fa28ea56a1d",
+            "receiving_sha256": "ea3aba531560a7b76f38d9afb4d824a478851e64771252f8d61e92d10435df8f",
+            "rushing_sha256": "8fc2cb2719c84ddee3934b52fac880223beca8e62c0c950d92d20ed6c358b5e3"
+          },
+          "normalization_audit": {
+            "ngs_receiving": {
+              "final_week_rows": 764,
+              "max_season": 2026,
+              "normalized_rows": 12232,
+              "raw_rows": 14874,
+              "unmapped_schedule_rows": 0,
+              "week_zero_rows": 1251
+            },
+            "ngs_rushing": {
+              "final_week_rows": 327,
+              "max_season": 2026,
+              "normalized_rows": 5055,
+              "raw_rows": 6126,
+              "unmapped_schedule_rows": 0,
+              "week_zero_rows": 508
+            },
+            "schedule_final_regular_week": {
+              "1999": 17,
+              "2000": 17,
+              "2001": 17,
+              "2002": 17,
+              "2003": 17,
+              "2004": 17,
+              "2005": 17,
+              "2006": 17,
+              "2007": 17,
+              "2008": 17,
+              "2009": 17,
+              "2010": 17,
+              "2011": 17,
+              "2012": 17,
+              "2013": 17,
+              "2014": 17,
+              "2015": 17,
+              "2016": 17,
+              "2017": 17,
+              "2018": 17,
+              "2019": 17,
+              "2020": 17,
+              "2021": 18,
+              "2022": 18,
+              "2023": 18,
+              "2024": 18,
+              "2025": 18,
+              "2026": 18
+            }
+          },
+          "week_zero_and_postseason_excluded": true
+        },
+        "sources": {
+          "ff_opportunity": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 683,
+            "sha256": "39d9c13c443df84382fe3ed7aa0f79e9bf296aff43e9c758983abb46372c6740"
+          },
+          "ngs_receiving": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 143,
+            "sha256": "5b3fc88bd71ebb69e417733f48a300f15e36edca6b115bee84aa187791d75858"
+          },
+          "ngs_rushing": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 67,
+            "sha256": "709dc5b5c761053d9863835d7fcf5d28ec036d9179809fc90a2ccc358f96b7af"
+          },
+          "pbp": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:36+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 5489,
+            "sha256": "d163b0a6367603912b821d1bd0aa2c07ef3aba7599c5fff0c578d6b71c77dda9"
+          },
+          "player_stats": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 2225,
+            "sha256": "bf2205c583c9268c340fff36eb7e3948956aba91262872a93dcb9a86cbe39726"
+          },
+          "players": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:35+00:00",
+            "max_week_source": null,
+            "rows_after_cutoff": 24834,
+            "sha256": "f16a1846f9114a009a7c69bacd339354d3dbb86dd398fd9377e46258a9aa7d0d"
+          },
+          "schedules": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:46+00:00",
+            "max_week_source": 18,
+            "rows_after_cutoff": 272,
+            "sha256": "2703d6d18ce25a33ed0fd4dc6d3fd43774024957f1cb5e1304d7ef4c5f2cbbe6"
+          },
+          "snap_counts": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:36+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 2994,
+            "sha256": "8e42d98d6448d63906a08e691432718047eb57a440cd4d18f9599facc1e2c6d5"
+          }
+        },
+        "status": "training_semantics_rebuilt"
+      },
+      "forward_sha256": "e9f0d2cbe25847a3fff45ee506415db432f7db913012175bd242dae6d81f7ca7",
+      "game_id": "2026_03_ATL_GB",
+      "original_release_metadata_sha256": "7acc0e60c7aeaad59aef4ed6004ba7e22d0a02d05df808dfc90105cf784b5d22",
+      "scored_skill_candidates": 21,
+      "slate": "full_draftkings",
+      "status": "scored_with_exact_forward_package",
+      "unscored_skill_player_ids": [
+        "00-0036212"
+      ]
+    },
+    "monday_mnf::2026_03_PHI_CHI": {
+      "expected_skill_candidates": 27,
+      "feature_provenance": {
+        "as_of_utc": "2026-10-02T03:59:00+00:00",
+        "canonical_columns": [
+          "snap_pct_l4w",
+          "rush_share_l4w",
+          "target_share_l4w",
+          "rz_carry_share_l4w",
+          "rz_target_share_l4w",
+          "i10_carry_share_l4w",
+          "i10_target_share_l4w",
+          "rush_td_exp_l4w",
+          "rec_td_exp_l4w",
+          "team_plays_l4w",
+          "team_pass_rate_l4w",
+          "team_rz_trips_l4w",
+          "team_rz_td_rate_l4w",
+          "team_i10_pass_rate_l4w",
+          "opp_rz_td_rate_allowed_l4w",
+          "opp_td_allowed_to_pos_l4w",
+          "l4w_games_available",
+          "qb_cpoe_l4w",
+          "ngs_avg_separation_l4w",
+          "ngs_avg_expected_yac_l4w",
+          "ngs_avg_yac_above_expectation_l4w",
+          "ngs_recv_coverage_l4w",
+          "ngs_recv_available_l4w",
+          "ngs_percent_attempts_gte_eight_defenders_l4w",
+          "ngs_rush_yards_over_expectation_l4w",
+          "ngs_rush_coverage_l4w",
+          "ngs_rush_available_l4w"
+        ],
+        "current_week_outcomes_included": false,
+        "feature_source": "shared_td_features_windows_panel_helpers",
+        "features_with_missing_values": {
+          "i10_carry_share_l4w": 16,
+          "i10_target_share_l4w": 12,
+          "l4w_games_available": 0,
+          "ngs_avg_expected_yac_l4w": 13,
+          "ngs_avg_separation_l4w": 13,
+          "ngs_avg_yac_above_expectation_l4w": 13,
+          "ngs_percent_attempts_gte_eight_defenders_l4w": 18,
+          "ngs_recv_available_l4w": 0,
+          "ngs_recv_coverage_l4w": 0,
+          "ngs_rush_available_l4w": 0,
+          "ngs_rush_coverage_l4w": 0,
+          "ngs_rush_yards_over_expectation_l4w": 18,
+          "opp_rz_td_rate_allowed_l4w": 0,
+          "opp_td_allowed_to_pos_l4w": 0,
+          "qb_cpoe_l4w": 0,
+          "rec_td_exp_l4w": 5,
+          "rush_share_l4w": 3,
+          "rush_td_exp_l4w": 5,
+          "rz_carry_share_l4w": 15,
+          "rz_target_share_l4w": 9,
+          "snap_pct_l4w": 3,
+          "target_share_l4w": 3,
+          "team_i10_pass_rate_l4w": 0,
+          "team_pass_rate_l4w": 0,
+          "team_plays_l4w": 0,
+          "team_rz_td_rate_l4w": 0,
+          "team_rz_trips_l4w": 0
+        },
+        "ngs": {
+          "current_season_sources": {
+            "ngs_receiving": {
+              "capture_hash_status": "computed_legacy",
+              "captured_utc": "2026-09-29T15:52:34+00:00",
+              "max_week_source": 3,
+              "rows_after_cutoff": 143,
+              "sha256": "5b3fc88bd71ebb69e417733f48a300f15e36edca6b115bee84aa187791d75858"
+            },
+            "ngs_rushing": {
+              "capture_hash_status": "computed_legacy",
+              "captured_utc": "2026-09-29T15:52:34+00:00",
+              "max_week_source": 3,
+              "rows_after_cutoff": 67,
+              "sha256": "709dc5b5c761053d9863835d7fcf5d28ec036d9179809fc90a2ccc358f96b7af"
+            }
+          },
+          "final_regular_week_excluded": true,
+          "frozen_serving_source_hashes": {
+            "ff_opportunity": "dbb6db22a0c860b2c2ba8c4bb4cb1c71fd9fc2b1834743d810c96dfcd17c70dc",
+            "pbp": "87ccaacbb4606ee1482786eb8e177db79185c4b6fb162a0cfdead57268ad810a",
+            "player_stats": "489ce4a212377aa2c4bc6ed777a9980716a9eea17b52a210ccb673f130814d02",
+            "players": "7b3acde823e41cbc3b5d170f8a52bce5c451f200843980be57faefac3b0e9856",
+            "product_features": "58495f19d2cd3cfbaa824e6d462f0c68fc497237cdde3d8bfb130e19c4cb3a15",
+            "schedules": "78ff21f9530ad3e464dcf445f40664eb2e315be95e401aa578e75be5fbfc6cd3",
+            "snap_counts": "7b85db1820364f0b5817c623485e179cf2747b3d7f35d8624af54e59bc424de9"
+          },
+          "future_weeks_excluded": true,
+          "historical_snapshot": {
+            "manifest_sha256": "ae33d1482779595c2977b90bf840b3cc41d57582a68a973f74104fa28ea56a1d",
+            "receiving_sha256": "ea3aba531560a7b76f38d9afb4d824a478851e64771252f8d61e92d10435df8f",
+            "rushing_sha256": "8fc2cb2719c84ddee3934b52fac880223beca8e62c0c950d92d20ed6c358b5e3"
+          },
+          "normalization_audit": {
+            "ngs_receiving": {
+              "final_week_rows": 764,
+              "max_season": 2026,
+              "normalized_rows": 12232,
+              "raw_rows": 14874,
+              "unmapped_schedule_rows": 0,
+              "week_zero_rows": 1251
+            },
+            "ngs_rushing": {
+              "final_week_rows": 327,
+              "max_season": 2026,
+              "normalized_rows": 5055,
+              "raw_rows": 6126,
+              "unmapped_schedule_rows": 0,
+              "week_zero_rows": 508
+            },
+            "schedule_final_regular_week": {
+              "1999": 17,
+              "2000": 17,
+              "2001": 17,
+              "2002": 17,
+              "2003": 17,
+              "2004": 17,
+              "2005": 17,
+              "2006": 17,
+              "2007": 17,
+              "2008": 17,
+              "2009": 17,
+              "2010": 17,
+              "2011": 17,
+              "2012": 17,
+              "2013": 17,
+              "2014": 17,
+              "2015": 17,
+              "2016": 17,
+              "2017": 17,
+              "2018": 17,
+              "2019": 17,
+              "2020": 17,
+              "2021": 18,
+              "2022": 18,
+              "2023": 18,
+              "2024": 18,
+              "2025": 18,
+              "2026": 18
+            }
+          },
+          "week_zero_and_postseason_excluded": true
+        },
+        "sources": {
+          "ff_opportunity": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 683,
+            "sha256": "39d9c13c443df84382fe3ed7aa0f79e9bf296aff43e9c758983abb46372c6740"
+          },
+          "ngs_receiving": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 143,
+            "sha256": "5b3fc88bd71ebb69e417733f48a300f15e36edca6b115bee84aa187791d75858"
+          },
+          "ngs_rushing": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 67,
+            "sha256": "709dc5b5c761053d9863835d7fcf5d28ec036d9179809fc90a2ccc358f96b7af"
+          },
+          "pbp": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:36+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 5489,
+            "sha256": "d163b0a6367603912b821d1bd0aa2c07ef3aba7599c5fff0c578d6b71c77dda9"
+          },
+          "player_stats": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 2225,
+            "sha256": "bf2205c583c9268c340fff36eb7e3948956aba91262872a93dcb9a86cbe39726"
+          },
+          "players": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:35+00:00",
+            "max_week_source": null,
+            "rows_after_cutoff": 24834,
+            "sha256": "f16a1846f9114a009a7c69bacd339354d3dbb86dd398fd9377e46258a9aa7d0d"
+          },
+          "schedules": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:46+00:00",
+            "max_week_source": 18,
+            "rows_after_cutoff": 272,
+            "sha256": "2703d6d18ce25a33ed0fd4dc6d3fd43774024957f1cb5e1304d7ef4c5f2cbbe6"
+          },
+          "snap_counts": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:36+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 2994,
+            "sha256": "8e42d98d6448d63906a08e691432718047eb57a440cd4d18f9599facc1e2c6d5"
+          }
+        },
+        "status": "training_semantics_rebuilt"
+      },
+      "forward_sha256": "e9f0d2cbe25847a3fff45ee506415db432f7db913012175bd242dae6d81f7ca7",
+      "game_id": "2026_03_PHI_CHI",
+      "original_release_metadata_sha256": "02de4d307af9a19dc7ebba3fab05095eb5cb55ec7110391031bbb309d8cc32a5",
+      "scored_skill_candidates": 23,
+      "slate": "monday_mnf",
+      "status": "scored_with_exact_forward_package",
+      "unscored_skill_player_ids": [
+        "00-0028986",
+        "00-0035662",
+        "00-0038416",
+        "00-0039918"
+      ]
+    },
+    "sunday_0935::2026_03_ARI_SF": {
+      "expected_skill_candidates": 22,
+      "feature_provenance": {
+        "as_of_utc": "2026-10-02T03:59:00+00:00",
+        "canonical_columns": [
+          "snap_pct_l4w",
+          "rush_share_l4w",
+          "target_share_l4w",
+          "rz_carry_share_l4w",
+          "rz_target_share_l4w",
+          "i10_carry_share_l4w",
+          "i10_target_share_l4w",
+          "rush_td_exp_l4w",
+          "rec_td_exp_l4w",
+          "team_plays_l4w",
+          "team_pass_rate_l4w",
+          "team_rz_trips_l4w",
+          "team_rz_td_rate_l4w",
+          "team_i10_pass_rate_l4w",
+          "opp_rz_td_rate_allowed_l4w",
+          "opp_td_allowed_to_pos_l4w",
+          "l4w_games_available",
+          "qb_cpoe_l4w",
+          "ngs_avg_separation_l4w",
+          "ngs_avg_expected_yac_l4w",
+          "ngs_avg_yac_above_expectation_l4w",
+          "ngs_recv_coverage_l4w",
+          "ngs_recv_available_l4w",
+          "ngs_percent_attempts_gte_eight_defenders_l4w",
+          "ngs_rush_yards_over_expectation_l4w",
+          "ngs_rush_coverage_l4w",
+          "ngs_rush_available_l4w"
+        ],
+        "current_week_outcomes_included": false,
+        "feature_source": "shared_td_features_windows_panel_helpers",
+        "features_with_missing_values": {
+          "i10_carry_share_l4w": 228,
+          "i10_target_share_l4w": 148,
+          "l4w_games_available": 0,
+          "ngs_avg_expected_yac_l4w": 181,
+          "ngs_avg_separation_l4w": 181,
+          "ngs_avg_yac_above_expectation_l4w": 181,
+          "ngs_percent_attempts_gte_eight_defenders_l4w": 281,
+          "ngs_recv_available_l4w": 0,
+          "ngs_recv_coverage_l4w": 0,
+          "ngs_rush_available_l4w": 0,
+          "ngs_rush_coverage_l4w": 0,
+          "ngs_rush_yards_over_expectation_l4w": 281,
+          "opp_rz_td_rate_allowed_l4w": 0,
+          "opp_td_allowed_to_pos_l4w": 0,
+          "qb_cpoe_l4w": 0,
+          "rec_td_exp_l4w": 50,
+          "rush_share_l4w": 48,
+          "rush_td_exp_l4w": 50,
+          "rz_carry_share_l4w": 208,
+          "rz_target_share_l4w": 117,
+          "snap_pct_l4w": 49,
+          "target_share_l4w": 48,
+          "team_i10_pass_rate_l4w": 0,
+          "team_pass_rate_l4w": 0,
+          "team_plays_l4w": 0,
+          "team_rz_td_rate_l4w": 0,
+          "team_rz_trips_l4w": 0
+        },
+        "ngs": {
+          "current_season_sources": {
+            "ngs_receiving": {
+              "capture_hash_status": "computed_legacy",
+              "captured_utc": "2026-09-29T15:52:34+00:00",
+              "max_week_source": 3,
+              "rows_after_cutoff": 143,
+              "sha256": "5b3fc88bd71ebb69e417733f48a300f15e36edca6b115bee84aa187791d75858"
+            },
+            "ngs_rushing": {
+              "capture_hash_status": "computed_legacy",
+              "captured_utc": "2026-09-29T15:52:34+00:00",
+              "max_week_source": 3,
+              "rows_after_cutoff": 67,
+              "sha256": "709dc5b5c761053d9863835d7fcf5d28ec036d9179809fc90a2ccc358f96b7af"
+            }
+          },
+          "final_regular_week_excluded": true,
+          "frozen_serving_source_hashes": {
+            "ff_opportunity": "dbb6db22a0c860b2c2ba8c4bb4cb1c71fd9fc2b1834743d810c96dfcd17c70dc",
+            "pbp": "87ccaacbb4606ee1482786eb8e177db79185c4b6fb162a0cfdead57268ad810a",
+            "player_stats": "489ce4a212377aa2c4bc6ed777a9980716a9eea17b52a210ccb673f130814d02",
+            "players": "7b3acde823e41cbc3b5d170f8a52bce5c451f200843980be57faefac3b0e9856",
+            "product_features": "58495f19d2cd3cfbaa824e6d462f0c68fc497237cdde3d8bfb130e19c4cb3a15",
+            "schedules": "78ff21f9530ad3e464dcf445f40664eb2e315be95e401aa578e75be5fbfc6cd3",
+            "snap_counts": "7b85db1820364f0b5817c623485e179cf2747b3d7f35d8624af54e59bc424de9"
+          },
+          "future_weeks_excluded": true,
+          "historical_snapshot": {
+            "manifest_sha256": "ae33d1482779595c2977b90bf840b3cc41d57582a68a973f74104fa28ea56a1d",
+            "receiving_sha256": "ea3aba531560a7b76f38d9afb4d824a478851e64771252f8d61e92d10435df8f",
+            "rushing_sha256": "8fc2cb2719c84ddee3934b52fac880223beca8e62c0c950d92d20ed6c358b5e3"
+          },
+          "normalization_audit": {
+            "ngs_receiving": {
+              "final_week_rows": 764,
+              "max_season": 2026,
+              "normalized_rows": 12232,
+              "raw_rows": 14874,
+              "unmapped_schedule_rows": 0,
+              "week_zero_rows": 1251
+            },
+            "ngs_rushing": {
+              "final_week_rows": 327,
+              "max_season": 2026,
+              "normalized_rows": 5055,
+              "raw_rows": 6126,
+              "unmapped_schedule_rows": 0,
+              "week_zero_rows": 508
+            },
+            "schedule_final_regular_week": {
+              "1999": 17,
+              "2000": 17,
+              "2001": 17,
+              "2002": 17,
+              "2003": 17,
+              "2004": 17,
+              "2005": 17,
+              "2006": 17,
+              "2007": 17,
+              "2008": 17,
+              "2009": 17,
+              "2010": 17,
+              "2011": 17,
+              "2012": 17,
+              "2013": 17,
+              "2014": 17,
+              "2015": 17,
+              "2016": 17,
+              "2017": 17,
+              "2018": 17,
+              "2019": 17,
+              "2020": 17,
+              "2021": 18,
+              "2022": 18,
+              "2023": 18,
+              "2024": 18,
+              "2025": 18,
+              "2026": 18
+            }
+          },
+          "week_zero_and_postseason_excluded": true
+        },
+        "sources": {
+          "ff_opportunity": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 683,
+            "sha256": "39d9c13c443df84382fe3ed7aa0f79e9bf296aff43e9c758983abb46372c6740"
+          },
+          "ngs_receiving": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 143,
+            "sha256": "5b3fc88bd71ebb69e417733f48a300f15e36edca6b115bee84aa187791d75858"
+          },
+          "ngs_rushing": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 67,
+            "sha256": "709dc5b5c761053d9863835d7fcf5d28ec036d9179809fc90a2ccc358f96b7af"
+          },
+          "pbp": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:36+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 5489,
+            "sha256": "d163b0a6367603912b821d1bd0aa2c07ef3aba7599c5fff0c578d6b71c77dda9"
+          },
+          "player_stats": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 2225,
+            "sha256": "bf2205c583c9268c340fff36eb7e3948956aba91262872a93dcb9a86cbe39726"
+          },
+          "players": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:35+00:00",
+            "max_week_source": null,
+            "rows_after_cutoff": 24834,
+            "sha256": "f16a1846f9114a009a7c69bacd339354d3dbb86dd398fd9377e46258a9aa7d0d"
+          },
+          "schedules": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:46+00:00",
+            "max_week_source": 18,
+            "rows_after_cutoff": 272,
+            "sha256": "2703d6d18ce25a33ed0fd4dc6d3fd43774024957f1cb5e1304d7ef4c5f2cbbe6"
+          },
+          "snap_counts": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:36+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 2994,
+            "sha256": "8e42d98d6448d63906a08e691432718047eb57a440cd4d18f9599facc1e2c6d5"
+          }
+        },
+        "status": "training_semantics_rebuilt"
+      },
+      "forward_sha256": "e9f0d2cbe25847a3fff45ee506415db432f7db913012175bd242dae6d81f7ca7",
+      "game_id": "2026_03_ARI_SF",
+      "original_release_metadata_sha256": "0c13d829a96c14c0657a0aff677736dfdfcd5c48baf50c4e3b8fb9de71b3d4aa",
+      "scored_skill_candidates": 21,
+      "slate": "sunday_0935",
+      "status": "scored_with_exact_forward_package",
+      "unscored_skill_player_ids": [
+        "sleeper:13297"
+      ]
+    },
+    "sunday_0935::2026_03_BAL_DAL": {
+      "expected_skill_candidates": 27,
+      "feature_provenance": {
+        "as_of_utc": "2026-10-02T03:59:00+00:00",
+        "canonical_columns": [
+          "snap_pct_l4w",
+          "rush_share_l4w",
+          "target_share_l4w",
+          "rz_carry_share_l4w",
+          "rz_target_share_l4w",
+          "i10_carry_share_l4w",
+          "i10_target_share_l4w",
+          "rush_td_exp_l4w",
+          "rec_td_exp_l4w",
+          "team_plays_l4w",
+          "team_pass_rate_l4w",
+          "team_rz_trips_l4w",
+          "team_rz_td_rate_l4w",
+          "team_i10_pass_rate_l4w",
+          "opp_rz_td_rate_allowed_l4w",
+          "opp_td_allowed_to_pos_l4w",
+          "l4w_games_available",
+          "qb_cpoe_l4w",
+          "ngs_avg_separation_l4w",
+          "ngs_avg_expected_yac_l4w",
+          "ngs_avg_yac_above_expectation_l4w",
+          "ngs_recv_coverage_l4w",
+          "ngs_recv_available_l4w",
+          "ngs_percent_attempts_gte_eight_defenders_l4w",
+          "ngs_rush_yards_over_expectation_l4w",
+          "ngs_rush_coverage_l4w",
+          "ngs_rush_available_l4w"
+        ],
+        "current_week_outcomes_included": false,
+        "feature_source": "shared_td_features_windows_panel_helpers",
+        "features_with_missing_values": {
+          "i10_carry_share_l4w": 228,
+          "i10_target_share_l4w": 148,
+          "l4w_games_available": 0,
+          "ngs_avg_expected_yac_l4w": 181,
+          "ngs_avg_separation_l4w": 181,
+          "ngs_avg_yac_above_expectation_l4w": 181,
+          "ngs_percent_attempts_gte_eight_defenders_l4w": 281,
+          "ngs_recv_available_l4w": 0,
+          "ngs_recv_coverage_l4w": 0,
+          "ngs_rush_available_l4w": 0,
+          "ngs_rush_coverage_l4w": 0,
+          "ngs_rush_yards_over_expectation_l4w": 281,
+          "opp_rz_td_rate_allowed_l4w": 0,
+          "opp_td_allowed_to_pos_l4w": 0,
+          "qb_cpoe_l4w": 0,
+          "rec_td_exp_l4w": 50,
+          "rush_share_l4w": 48,
+          "rush_td_exp_l4w": 50,
+          "rz_carry_share_l4w": 208,
+          "rz_target_share_l4w": 117,
+          "snap_pct_l4w": 49,
+          "target_share_l4w": 48,
+          "team_i10_pass_rate_l4w": 0,
+          "team_pass_rate_l4w": 0,
+          "team_plays_l4w": 0,
+          "team_rz_td_rate_l4w": 0,
+          "team_rz_trips_l4w": 0
+        },
+        "ngs": {
+          "current_season_sources": {
+            "ngs_receiving": {
+              "capture_hash_status": "computed_legacy",
+              "captured_utc": "2026-09-29T15:52:34+00:00",
+              "max_week_source": 3,
+              "rows_after_cutoff": 143,
+              "sha256": "5b3fc88bd71ebb69e417733f48a300f15e36edca6b115bee84aa187791d75858"
+            },
+            "ngs_rushing": {
+              "capture_hash_status": "computed_legacy",
+              "captured_utc": "2026-09-29T15:52:34+00:00",
+              "max_week_source": 3,
+              "rows_after_cutoff": 67,
+              "sha256": "709dc5b5c761053d9863835d7fcf5d28ec036d9179809fc90a2ccc358f96b7af"
+            }
+          },
+          "final_regular_week_excluded": true,
+          "frozen_serving_source_hashes": {
+            "ff_opportunity": "dbb6db22a0c860b2c2ba8c4bb4cb1c71fd9fc2b1834743d810c96dfcd17c70dc",
+            "pbp": "87ccaacbb4606ee1482786eb8e177db79185c4b6fb162a0cfdead57268ad810a",
+            "player_stats": "489ce4a212377aa2c4bc6ed777a9980716a9eea17b52a210ccb673f130814d02",
+            "players": "7b3acde823e41cbc3b5d170f8a52bce5c451f200843980be57faefac3b0e9856",
+            "product_features": "58495f19d2cd3cfbaa824e6d462f0c68fc497237cdde3d8bfb130e19c4cb3a15",
+            "schedules": "78ff21f9530ad3e464dcf445f40664eb2e315be95e401aa578e75be5fbfc6cd3",
+            "snap_counts": "7b85db1820364f0b5817c623485e179cf2747b3d7f35d8624af54e59bc424de9"
+          },
+          "future_weeks_excluded": true,
+          "historical_snapshot": {
+            "manifest_sha256": "ae33d1482779595c2977b90bf840b3cc41d57582a68a973f74104fa28ea56a1d",
+            "receiving_sha256": "ea3aba531560a7b76f38d9afb4d824a478851e64771252f8d61e92d10435df8f",
+            "rushing_sha256": "8fc2cb2719c84ddee3934b52fac880223beca8e62c0c950d92d20ed6c358b5e3"
+          },
+          "normalization_audit": {
+            "ngs_receiving": {
+              "final_week_rows": 764,
+              "max_season": 2026,
+              "normalized_rows": 12232,
+              "raw_rows": 14874,
+              "unmapped_schedule_rows": 0,
+              "week_zero_rows": 1251
+            },
+            "ngs_rushing": {
+              "final_week_rows": 327,
+              "max_season": 2026,
+              "normalized_rows": 5055,
+              "raw_rows": 6126,
+              "unmapped_schedule_rows": 0,
+              "week_zero_rows": 508
+            },
+            "schedule_final_regular_week": {
+              "1999": 17,
+              "2000": 17,
+              "2001": 17,
+              "2002": 17,
+              "2003": 17,
+              "2004": 17,
+              "2005": 17,
+              "2006": 17,
+              "2007": 17,
+              "2008": 17,
+              "2009": 17,
+              "2010": 17,
+              "2011": 17,
+              "2012": 17,
+              "2013": 17,
+              "2014": 17,
+              "2015": 17,
+              "2016": 17,
+              "2017": 17,
+              "2018": 17,
+              "2019": 17,
+              "2020": 17,
+              "2021": 18,
+              "2022": 18,
+              "2023": 18,
+              "2024": 18,
+              "2025": 18,
+              "2026": 18
+            }
+          },
+          "week_zero_and_postseason_excluded": true
+        },
+        "sources": {
+          "ff_opportunity": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 683,
+            "sha256": "39d9c13c443df84382fe3ed7aa0f79e9bf296aff43e9c758983abb46372c6740"
+          },
+          "ngs_receiving": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 143,
+            "sha256": "5b3fc88bd71ebb69e417733f48a300f15e36edca6b115bee84aa187791d75858"
+          },
+          "ngs_rushing": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 67,
+            "sha256": "709dc5b5c761053d9863835d7fcf5d28ec036d9179809fc90a2ccc358f96b7af"
+          },
+          "pbp": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:36+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 5489,
+            "sha256": "d163b0a6367603912b821d1bd0aa2c07ef3aba7599c5fff0c578d6b71c77dda9"
+          },
+          "player_stats": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 2225,
+            "sha256": "bf2205c583c9268c340fff36eb7e3948956aba91262872a93dcb9a86cbe39726"
+          },
+          "players": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:35+00:00",
+            "max_week_source": null,
+            "rows_after_cutoff": 24834,
+            "sha256": "f16a1846f9114a009a7c69bacd339354d3dbb86dd398fd9377e46258a9aa7d0d"
+          },
+          "schedules": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:46+00:00",
+            "max_week_source": 18,
+            "rows_after_cutoff": 272,
+            "sha256": "2703d6d18ce25a33ed0fd4dc6d3fd43774024957f1cb5e1304d7ef4c5f2cbbe6"
+          },
+          "snap_counts": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:36+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 2994,
+            "sha256": "8e42d98d6448d63906a08e691432718047eb57a440cd4d18f9599facc1e2c6d5"
+          }
+        },
+        "status": "training_semantics_rebuilt"
+      },
+      "forward_sha256": "e9f0d2cbe25847a3fff45ee506415db432f7db913012175bd242dae6d81f7ca7",
+      "game_id": "2026_03_BAL_DAL",
+      "original_release_metadata_sha256": "0c13d829a96c14c0657a0aff677736dfdfcd5c48baf50c4e3b8fb9de71b3d4aa",
+      "scored_skill_candidates": 25,
+      "slate": "sunday_0935",
+      "status": "scored_with_exact_forward_package",
+      "unscored_skill_player_ids": [
+        "00-0037120",
+        "00-0039064"
+      ]
+    },
+    "sunday_0935::2026_03_CAR_CLE": {
+      "expected_skill_candidates": 25,
+      "feature_provenance": {
+        "as_of_utc": "2026-10-02T03:59:00+00:00",
+        "canonical_columns": [
+          "snap_pct_l4w",
+          "rush_share_l4w",
+          "target_share_l4w",
+          "rz_carry_share_l4w",
+          "rz_target_share_l4w",
+          "i10_carry_share_l4w",
+          "i10_target_share_l4w",
+          "rush_td_exp_l4w",
+          "rec_td_exp_l4w",
+          "team_plays_l4w",
+          "team_pass_rate_l4w",
+          "team_rz_trips_l4w",
+          "team_rz_td_rate_l4w",
+          "team_i10_pass_rate_l4w",
+          "opp_rz_td_rate_allowed_l4w",
+          "opp_td_allowed_to_pos_l4w",
+          "l4w_games_available",
+          "qb_cpoe_l4w",
+          "ngs_avg_separation_l4w",
+          "ngs_avg_expected_yac_l4w",
+          "ngs_avg_yac_above_expectation_l4w",
+          "ngs_recv_coverage_l4w",
+          "ngs_recv_available_l4w",
+          "ngs_percent_attempts_gte_eight_defenders_l4w",
+          "ngs_rush_yards_over_expectation_l4w",
+          "ngs_rush_coverage_l4w",
+          "ngs_rush_available_l4w"
+        ],
+        "current_week_outcomes_included": false,
+        "feature_source": "shared_td_features_windows_panel_helpers",
+        "features_with_missing_values": {
+          "i10_carry_share_l4w": 228,
+          "i10_target_share_l4w": 148,
+          "l4w_games_available": 0,
+          "ngs_avg_expected_yac_l4w": 181,
+          "ngs_avg_separation_l4w": 181,
+          "ngs_avg_yac_above_expectation_l4w": 181,
+          "ngs_percent_attempts_gte_eight_defenders_l4w": 281,
+          "ngs_recv_available_l4w": 0,
+          "ngs_recv_coverage_l4w": 0,
+          "ngs_rush_available_l4w": 0,
+          "ngs_rush_coverage_l4w": 0,
+          "ngs_rush_yards_over_expectation_l4w": 281,
+          "opp_rz_td_rate_allowed_l4w": 0,
+          "opp_td_allowed_to_pos_l4w": 0,
+          "qb_cpoe_l4w": 0,
+          "rec_td_exp_l4w": 50,
+          "rush_share_l4w": 48,
+          "rush_td_exp_l4w": 50,
+          "rz_carry_share_l4w": 208,
+          "rz_target_share_l4w": 117,
+          "snap_pct_l4w": 49,
+          "target_share_l4w": 48,
+          "team_i10_pass_rate_l4w": 0,
+          "team_pass_rate_l4w": 0,
+          "team_plays_l4w": 0,
+          "team_rz_td_rate_l4w": 0,
+          "team_rz_trips_l4w": 0
+        },
+        "ngs": {
+          "current_season_sources": {
+            "ngs_receiving": {
+              "capture_hash_status": "computed_legacy",
+              "captured_utc": "2026-09-29T15:52:34+00:00",
+              "max_week_source": 3,
+              "rows_after_cutoff": 143,
+              "sha256": "5b3fc88bd71ebb69e417733f48a300f15e36edca6b115bee84aa187791d75858"
+            },
+            "ngs_rushing": {
+              "capture_hash_status": "computed_legacy",
+              "captured_utc": "2026-09-29T15:52:34+00:00",
+              "max_week_source": 3,
+              "rows_after_cutoff": 67,
+              "sha256": "709dc5b5c761053d9863835d7fcf5d28ec036d9179809fc90a2ccc358f96b7af"
+            }
+          },
+          "final_regular_week_excluded": true,
+          "frozen_serving_source_hashes": {
+            "ff_opportunity": "dbb6db22a0c860b2c2ba8c4bb4cb1c71fd9fc2b1834743d810c96dfcd17c70dc",
+            "pbp": "87ccaacbb4606ee1482786eb8e177db79185c4b6fb162a0cfdead57268ad810a",
+            "player_stats": "489ce4a212377aa2c4bc6ed777a9980716a9eea17b52a210ccb673f130814d02",
+            "players": "7b3acde823e41cbc3b5d170f8a52bce5c451f200843980be57faefac3b0e9856",
+            "product_features": "58495f19d2cd3cfbaa824e6d462f0c68fc497237cdde3d8bfb130e19c4cb3a15",
+            "schedules": "78ff21f9530ad3e464dcf445f40664eb2e315be95e401aa578e75be5fbfc6cd3",
+            "snap_counts": "7b85db1820364f0b5817c623485e179cf2747b3d7f35d8624af54e59bc424de9"
+          },
+          "future_weeks_excluded": true,
+          "historical_snapshot": {
+            "manifest_sha256": "ae33d1482779595c2977b90bf840b3cc41d57582a68a973f74104fa28ea56a1d",
+            "receiving_sha256": "ea3aba531560a7b76f38d9afb4d824a478851e64771252f8d61e92d10435df8f",
+            "rushing_sha256": "8fc2cb2719c84ddee3934b52fac880223beca8e62c0c950d92d20ed6c358b5e3"
+          },
+          "normalization_audit": {
+            "ngs_receiving": {
+              "final_week_rows": 764,
+              "max_season": 2026,
+              "normalized_rows": 12232,
+              "raw_rows": 14874,
+              "unmapped_schedule_rows": 0,
+              "week_zero_rows": 1251
+            },
+            "ngs_rushing": {
+              "final_week_rows": 327,
+              "max_season": 2026,
+              "normalized_rows": 5055,
+              "raw_rows": 6126,
+              "unmapped_schedule_rows": 0,
+              "week_zero_rows": 508
+            },
+            "schedule_final_regular_week": {
+              "1999": 17,
+              "2000": 17,
+              "2001": 17,
+              "2002": 17,
+              "2003": 17,
+              "2004": 17,
+              "2005": 17,
+              "2006": 17,
+              "2007": 17,
+              "2008": 17,
+              "2009": 17,
+              "2010": 17,
+              "2011": 17,
+              "2012": 17,
+              "2013": 17,
+              "2014": 17,
+              "2015": 17,
+              "2016": 17,
+              "2017": 17,
+              "2018": 17,
+              "2019": 17,
+              "2020": 17,
+              "2021": 18,
+              "2022": 18,
+              "2023": 18,
+              "2024": 18,
+              "2025": 18,
+              "2026": 18
+            }
+          },
+          "week_zero_and_postseason_excluded": true
+        },
+        "sources": {
+          "ff_opportunity": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 683,
+            "sha256": "39d9c13c443df84382fe3ed7aa0f79e9bf296aff43e9c758983abb46372c6740"
+          },
+          "ngs_receiving": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 143,
+            "sha256": "5b3fc88bd71ebb69e417733f48a300f15e36edca6b115bee84aa187791d75858"
+          },
+          "ngs_rushing": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 67,
+            "sha256": "709dc5b5c761053d9863835d7fcf5d28ec036d9179809fc90a2ccc358f96b7af"
+          },
+          "pbp": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:36+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 5489,
+            "sha256": "d163b0a6367603912b821d1bd0aa2c07ef3aba7599c5fff0c578d6b71c77dda9"
+          },
+          "player_stats": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 2225,
+            "sha256": "bf2205c583c9268c340fff36eb7e3948956aba91262872a93dcb9a86cbe39726"
+          },
+          "players": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:35+00:00",
+            "max_week_source": null,
+            "rows_after_cutoff": 24834,
+            "sha256": "f16a1846f9114a009a7c69bacd339354d3dbb86dd398fd9377e46258a9aa7d0d"
+          },
+          "schedules": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:46+00:00",
+            "max_week_source": 18,
+            "rows_after_cutoff": 272,
+            "sha256": "2703d6d18ce25a33ed0fd4dc6d3fd43774024957f1cb5e1304d7ef4c5f2cbbe6"
+          },
+          "snap_counts": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:36+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 2994,
+            "sha256": "8e42d98d6448d63906a08e691432718047eb57a440cd4d18f9599facc1e2c6d5"
+          }
+        },
+        "status": "training_semantics_rebuilt"
+      },
+      "forward_sha256": "e9f0d2cbe25847a3fff45ee506415db432f7db913012175bd242dae6d81f7ca7",
+      "game_id": "2026_03_CAR_CLE",
+      "original_release_metadata_sha256": "0c13d829a96c14c0657a0aff677736dfdfcd5c48baf50c4e3b8fb9de71b3d4aa",
+      "scored_skill_candidates": 25,
+      "slate": "sunday_0935",
+      "status": "scored_with_exact_forward_package",
+      "unscored_skill_player_ids": []
+    },
+    "sunday_0935::2026_03_CIN_PIT": {
+      "expected_skill_candidates": 28,
+      "feature_provenance": {
+        "as_of_utc": "2026-10-02T03:59:00+00:00",
+        "canonical_columns": [
+          "snap_pct_l4w",
+          "rush_share_l4w",
+          "target_share_l4w",
+          "rz_carry_share_l4w",
+          "rz_target_share_l4w",
+          "i10_carry_share_l4w",
+          "i10_target_share_l4w",
+          "rush_td_exp_l4w",
+          "rec_td_exp_l4w",
+          "team_plays_l4w",
+          "team_pass_rate_l4w",
+          "team_rz_trips_l4w",
+          "team_rz_td_rate_l4w",
+          "team_i10_pass_rate_l4w",
+          "opp_rz_td_rate_allowed_l4w",
+          "opp_td_allowed_to_pos_l4w",
+          "l4w_games_available",
+          "qb_cpoe_l4w",
+          "ngs_avg_separation_l4w",
+          "ngs_avg_expected_yac_l4w",
+          "ngs_avg_yac_above_expectation_l4w",
+          "ngs_recv_coverage_l4w",
+          "ngs_recv_available_l4w",
+          "ngs_percent_attempts_gte_eight_defenders_l4w",
+          "ngs_rush_yards_over_expectation_l4w",
+          "ngs_rush_coverage_l4w",
+          "ngs_rush_available_l4w"
+        ],
+        "current_week_outcomes_included": false,
+        "feature_source": "shared_td_features_windows_panel_helpers",
+        "features_with_missing_values": {
+          "i10_carry_share_l4w": 228,
+          "i10_target_share_l4w": 148,
+          "l4w_games_available": 0,
+          "ngs_avg_expected_yac_l4w": 181,
+          "ngs_avg_separation_l4w": 181,
+          "ngs_avg_yac_above_expectation_l4w": 181,
+          "ngs_percent_attempts_gte_eight_defenders_l4w": 281,
+          "ngs_recv_available_l4w": 0,
+          "ngs_recv_coverage_l4w": 0,
+          "ngs_rush_available_l4w": 0,
+          "ngs_rush_coverage_l4w": 0,
+          "ngs_rush_yards_over_expectation_l4w": 281,
+          "opp_rz_td_rate_allowed_l4w": 0,
+          "opp_td_allowed_to_pos_l4w": 0,
+          "qb_cpoe_l4w": 0,
+          "rec_td_exp_l4w": 50,
+          "rush_share_l4w": 48,
+          "rush_td_exp_l4w": 50,
+          "rz_carry_share_l4w": 208,
+          "rz_target_share_l4w": 117,
+          "snap_pct_l4w": 49,
+          "target_share_l4w": 48,
+          "team_i10_pass_rate_l4w": 0,
+          "team_pass_rate_l4w": 0,
+          "team_plays_l4w": 0,
+          "team_rz_td_rate_l4w": 0,
+          "team_rz_trips_l4w": 0
+        },
+        "ngs": {
+          "current_season_sources": {
+            "ngs_receiving": {
+              "capture_hash_status": "computed_legacy",
+              "captured_utc": "2026-09-29T15:52:34+00:00",
+              "max_week_source": 3,
+              "rows_after_cutoff": 143,
+              "sha256": "5b3fc88bd71ebb69e417733f48a300f15e36edca6b115bee84aa187791d75858"
+            },
+            "ngs_rushing": {
+              "capture_hash_status": "computed_legacy",
+              "captured_utc": "2026-09-29T15:52:34+00:00",
+              "max_week_source": 3,
+              "rows_after_cutoff": 67,
+              "sha256": "709dc5b5c761053d9863835d7fcf5d28ec036d9179809fc90a2ccc358f96b7af"
+            }
+          },
+          "final_regular_week_excluded": true,
+          "frozen_serving_source_hashes": {
+            "ff_opportunity": "dbb6db22a0c860b2c2ba8c4bb4cb1c71fd9fc2b1834743d810c96dfcd17c70dc",
+            "pbp": "87ccaacbb4606ee1482786eb8e177db79185c4b6fb162a0cfdead57268ad810a",
+            "player_stats": "489ce4a212377aa2c4bc6ed777a9980716a9eea17b52a210ccb673f130814d02",
+            "players": "7b3acde823e41cbc3b5d170f8a52bce5c451f200843980be57faefac3b0e9856",
+            "product_features": "58495f19d2cd3cfbaa824e6d462f0c68fc497237cdde3d8bfb130e19c4cb3a15",
+            "schedules": "78ff21f9530ad3e464dcf445f40664eb2e315be95e401aa578e75be5fbfc6cd3",
+            "snap_counts": "7b85db1820364f0b5817c623485e179cf2747b3d7f35d8624af54e59bc424de9"
+          },
+          "future_weeks_excluded": true,
+          "historical_snapshot": {
+            "manifest_sha256": "ae33d1482779595c2977b90bf840b3cc41d57582a68a973f74104fa28ea56a1d",
+            "receiving_sha256": "ea3aba531560a7b76f38d9afb4d824a478851e64771252f8d61e92d10435df8f",
+            "rushing_sha256": "8fc2cb2719c84ddee3934b52fac880223beca8e62c0c950d92d20ed6c358b5e3"
+          },
+          "normalization_audit": {
+            "ngs_receiving": {
+              "final_week_rows": 764,
+              "max_season": 2026,
+              "normalized_rows": 12232,
+              "raw_rows": 14874,
+              "unmapped_schedule_rows": 0,
+              "week_zero_rows": 1251
+            },
+            "ngs_rushing": {
+              "final_week_rows": 327,
+              "max_season": 2026,
+              "normalized_rows": 5055,
+              "raw_rows": 6126,
+              "unmapped_schedule_rows": 0,
+              "week_zero_rows": 508
+            },
+            "schedule_final_regular_week": {
+              "1999": 17,
+              "2000": 17,
+              "2001": 17,
+              "2002": 17,
+              "2003": 17,
+              "2004": 17,
+              "2005": 17,
+              "2006": 17,
+              "2007": 17,
+              "2008": 17,
+              "2009": 17,
+              "2010": 17,
+              "2011": 17,
+              "2012": 17,
+              "2013": 17,
+              "2014": 17,
+              "2015": 17,
+              "2016": 17,
+              "2017": 17,
+              "2018": 17,
+              "2019": 17,
+              "2020": 17,
+              "2021": 18,
+              "2022": 18,
+              "2023": 18,
+              "2024": 18,
+              "2025": 18,
+              "2026": 18
+            }
+          },
+          "week_zero_and_postseason_excluded": true
+        },
+        "sources": {
+          "ff_opportunity": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 683,
+            "sha256": "39d9c13c443df84382fe3ed7aa0f79e9bf296aff43e9c758983abb46372c6740"
+          },
+          "ngs_receiving": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 143,
+            "sha256": "5b3fc88bd71ebb69e417733f48a300f15e36edca6b115bee84aa187791d75858"
+          },
+          "ngs_rushing": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 67,
+            "sha256": "709dc5b5c761053d9863835d7fcf5d28ec036d9179809fc90a2ccc358f96b7af"
+          },
+          "pbp": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:36+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 5489,
+            "sha256": "d163b0a6367603912b821d1bd0aa2c07ef3aba7599c5fff0c578d6b71c77dda9"
+          },
+          "player_stats": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 2225,
+            "sha256": "bf2205c583c9268c340fff36eb7e3948956aba91262872a93dcb9a86cbe39726"
+          },
+          "players": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:35+00:00",
+            "max_week_source": null,
+            "rows_after_cutoff": 24834,
+            "sha256": "f16a1846f9114a009a7c69bacd339354d3dbb86dd398fd9377e46258a9aa7d0d"
+          },
+          "schedules": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:46+00:00",
+            "max_week_source": 18,
+            "rows_after_cutoff": 272,
+            "sha256": "2703d6d18ce25a33ed0fd4dc6d3fd43774024957f1cb5e1304d7ef4c5f2cbbe6"
+          },
+          "snap_counts": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:36+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 2994,
+            "sha256": "8e42d98d6448d63906a08e691432718047eb57a440cd4d18f9599facc1e2c6d5"
+          }
+        },
+        "status": "training_semantics_rebuilt"
+      },
+      "forward_sha256": "e9f0d2cbe25847a3fff45ee506415db432f7db913012175bd242dae6d81f7ca7",
+      "game_id": "2026_03_CIN_PIT",
+      "original_release_metadata_sha256": "0c13d829a96c14c0657a0aff677736dfdfcd5c48baf50c4e3b8fb9de71b3d4aa",
+      "scored_skill_candidates": 26,
+      "slate": "sunday_0935",
+      "status": "scored_with_exact_forward_package",
+      "unscored_skill_player_ids": [
+        "00-0036139",
+        "00-0038619"
+      ]
+    },
+    "sunday_0935::2026_03_HOU_IND": {
+      "expected_skill_candidates": 27,
+      "feature_provenance": {
+        "as_of_utc": "2026-10-02T03:59:00+00:00",
+        "canonical_columns": [
+          "snap_pct_l4w",
+          "rush_share_l4w",
+          "target_share_l4w",
+          "rz_carry_share_l4w",
+          "rz_target_share_l4w",
+          "i10_carry_share_l4w",
+          "i10_target_share_l4w",
+          "rush_td_exp_l4w",
+          "rec_td_exp_l4w",
+          "team_plays_l4w",
+          "team_pass_rate_l4w",
+          "team_rz_trips_l4w",
+          "team_rz_td_rate_l4w",
+          "team_i10_pass_rate_l4w",
+          "opp_rz_td_rate_allowed_l4w",
+          "opp_td_allowed_to_pos_l4w",
+          "l4w_games_available",
+          "qb_cpoe_l4w",
+          "ngs_avg_separation_l4w",
+          "ngs_avg_expected_yac_l4w",
+          "ngs_avg_yac_above_expectation_l4w",
+          "ngs_recv_coverage_l4w",
+          "ngs_recv_available_l4w",
+          "ngs_percent_attempts_gte_eight_defenders_l4w",
+          "ngs_rush_yards_over_expectation_l4w",
+          "ngs_rush_coverage_l4w",
+          "ngs_rush_available_l4w"
+        ],
+        "current_week_outcomes_included": false,
+        "feature_source": "shared_td_features_windows_panel_helpers",
+        "features_with_missing_values": {
+          "i10_carry_share_l4w": 228,
+          "i10_target_share_l4w": 148,
+          "l4w_games_available": 0,
+          "ngs_avg_expected_yac_l4w": 181,
+          "ngs_avg_separation_l4w": 181,
+          "ngs_avg_yac_above_expectation_l4w": 181,
+          "ngs_percent_attempts_gte_eight_defenders_l4w": 281,
+          "ngs_recv_available_l4w": 0,
+          "ngs_recv_coverage_l4w": 0,
+          "ngs_rush_available_l4w": 0,
+          "ngs_rush_coverage_l4w": 0,
+          "ngs_rush_yards_over_expectation_l4w": 281,
+          "opp_rz_td_rate_allowed_l4w": 0,
+          "opp_td_allowed_to_pos_l4w": 0,
+          "qb_cpoe_l4w": 0,
+          "rec_td_exp_l4w": 50,
+          "rush_share_l4w": 48,
+          "rush_td_exp_l4w": 50,
+          "rz_carry_share_l4w": 208,
+          "rz_target_share_l4w": 117,
+          "snap_pct_l4w": 49,
+          "target_share_l4w": 48,
+          "team_i10_pass_rate_l4w": 0,
+          "team_pass_rate_l4w": 0,
+          "team_plays_l4w": 0,
+          "team_rz_td_rate_l4w": 0,
+          "team_rz_trips_l4w": 0
+        },
+        "ngs": {
+          "current_season_sources": {
+            "ngs_receiving": {
+              "capture_hash_status": "computed_legacy",
+              "captured_utc": "2026-09-29T15:52:34+00:00",
+              "max_week_source": 3,
+              "rows_after_cutoff": 143,
+              "sha256": "5b3fc88bd71ebb69e417733f48a300f15e36edca6b115bee84aa187791d75858"
+            },
+            "ngs_rushing": {
+              "capture_hash_status": "computed_legacy",
+              "captured_utc": "2026-09-29T15:52:34+00:00",
+              "max_week_source": 3,
+              "rows_after_cutoff": 67,
+              "sha256": "709dc5b5c761053d9863835d7fcf5d28ec036d9179809fc90a2ccc358f96b7af"
+            }
+          },
+          "final_regular_week_excluded": true,
+          "frozen_serving_source_hashes": {
+            "ff_opportunity": "dbb6db22a0c860b2c2ba8c4bb4cb1c71fd9fc2b1834743d810c96dfcd17c70dc",
+            "pbp": "87ccaacbb4606ee1482786eb8e177db79185c4b6fb162a0cfdead57268ad810a",
+            "player_stats": "489ce4a212377aa2c4bc6ed777a9980716a9eea17b52a210ccb673f130814d02",
+            "players": "7b3acde823e41cbc3b5d170f8a52bce5c451f200843980be57faefac3b0e9856",
+            "product_features": "58495f19d2cd3cfbaa824e6d462f0c68fc497237cdde3d8bfb130e19c4cb3a15",
+            "schedules": "78ff21f9530ad3e464dcf445f40664eb2e315be95e401aa578e75be5fbfc6cd3",
+            "snap_counts": "7b85db1820364f0b5817c623485e179cf2747b3d7f35d8624af54e59bc424de9"
+          },
+          "future_weeks_excluded": true,
+          "historical_snapshot": {
+            "manifest_sha256": "ae33d1482779595c2977b90bf840b3cc41d57582a68a973f74104fa28ea56a1d",
+            "receiving_sha256": "ea3aba531560a7b76f38d9afb4d824a478851e64771252f8d61e92d10435df8f",
+            "rushing_sha256": "8fc2cb2719c84ddee3934b52fac880223beca8e62c0c950d92d20ed6c358b5e3"
+          },
+          "normalization_audit": {
+            "ngs_receiving": {
+              "final_week_rows": 764,
+              "max_season": 2026,
+              "normalized_rows": 12232,
+              "raw_rows": 14874,
+              "unmapped_schedule_rows": 0,
+              "week_zero_rows": 1251
+            },
+            "ngs_rushing": {
+              "final_week_rows": 327,
+              "max_season": 2026,
+              "normalized_rows": 5055,
+              "raw_rows": 6126,
+              "unmapped_schedule_rows": 0,
+              "week_zero_rows": 508
+            },
+            "schedule_final_regular_week": {
+              "1999": 17,
+              "2000": 17,
+              "2001": 17,
+              "2002": 17,
+              "2003": 17,
+              "2004": 17,
+              "2005": 17,
+              "2006": 17,
+              "2007": 17,
+              "2008": 17,
+              "2009": 17,
+              "2010": 17,
+              "2011": 17,
+              "2012": 17,
+              "2013": 17,
+              "2014": 17,
+              "2015": 17,
+              "2016": 17,
+              "2017": 17,
+              "2018": 17,
+              "2019": 17,
+              "2020": 17,
+              "2021": 18,
+              "2022": 18,
+              "2023": 18,
+              "2024": 18,
+              "2025": 18,
+              "2026": 18
+            }
+          },
+          "week_zero_and_postseason_excluded": true
+        },
+        "sources": {
+          "ff_opportunity": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 683,
+            "sha256": "39d9c13c443df84382fe3ed7aa0f79e9bf296aff43e9c758983abb46372c6740"
+          },
+          "ngs_receiving": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 143,
+            "sha256": "5b3fc88bd71ebb69e417733f48a300f15e36edca6b115bee84aa187791d75858"
+          },
+          "ngs_rushing": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 67,
+            "sha256": "709dc5b5c761053d9863835d7fcf5d28ec036d9179809fc90a2ccc358f96b7af"
+          },
+          "pbp": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:36+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 5489,
+            "sha256": "d163b0a6367603912b821d1bd0aa2c07ef3aba7599c5fff0c578d6b71c77dda9"
+          },
+          "player_stats": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 2225,
+            "sha256": "bf2205c583c9268c340fff36eb7e3948956aba91262872a93dcb9a86cbe39726"
+          },
+          "players": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:35+00:00",
+            "max_week_source": null,
+            "rows_after_cutoff": 24834,
+            "sha256": "f16a1846f9114a009a7c69bacd339354d3dbb86dd398fd9377e46258a9aa7d0d"
+          },
+          "schedules": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:46+00:00",
+            "max_week_source": 18,
+            "rows_after_cutoff": 272,
+            "sha256": "2703d6d18ce25a33ed0fd4dc6d3fd43774024957f1cb5e1304d7ef4c5f2cbbe6"
+          },
+          "snap_counts": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:36+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 2994,
+            "sha256": "8e42d98d6448d63906a08e691432718047eb57a440cd4d18f9599facc1e2c6d5"
+          }
+        },
+        "status": "training_semantics_rebuilt"
+      },
+      "forward_sha256": "e9f0d2cbe25847a3fff45ee506415db432f7db913012175bd242dae6d81f7ca7",
+      "game_id": "2026_03_HOU_IND",
+      "original_release_metadata_sha256": "0c13d829a96c14c0657a0aff677736dfdfcd5c48baf50c4e3b8fb9de71b3d4aa",
+      "scored_skill_candidates": 25,
+      "slate": "sunday_0935",
+      "status": "scored_with_exact_forward_package",
+      "unscored_skill_player_ids": [
+        "00-0035021",
+        "00-0036554"
+      ]
+    },
+    "sunday_0935::2026_03_KC_MIA": {
+      "expected_skill_candidates": 27,
+      "feature_provenance": {
+        "as_of_utc": "2026-10-02T03:59:00+00:00",
+        "canonical_columns": [
+          "snap_pct_l4w",
+          "rush_share_l4w",
+          "target_share_l4w",
+          "rz_carry_share_l4w",
+          "rz_target_share_l4w",
+          "i10_carry_share_l4w",
+          "i10_target_share_l4w",
+          "rush_td_exp_l4w",
+          "rec_td_exp_l4w",
+          "team_plays_l4w",
+          "team_pass_rate_l4w",
+          "team_rz_trips_l4w",
+          "team_rz_td_rate_l4w",
+          "team_i10_pass_rate_l4w",
+          "opp_rz_td_rate_allowed_l4w",
+          "opp_td_allowed_to_pos_l4w",
+          "l4w_games_available",
+          "qb_cpoe_l4w",
+          "ngs_avg_separation_l4w",
+          "ngs_avg_expected_yac_l4w",
+          "ngs_avg_yac_above_expectation_l4w",
+          "ngs_recv_coverage_l4w",
+          "ngs_recv_available_l4w",
+          "ngs_percent_attempts_gte_eight_defenders_l4w",
+          "ngs_rush_yards_over_expectation_l4w",
+          "ngs_rush_coverage_l4w",
+          "ngs_rush_available_l4w"
+        ],
+        "current_week_outcomes_included": false,
+        "feature_source": "shared_td_features_windows_panel_helpers",
+        "features_with_missing_values": {
+          "i10_carry_share_l4w": 228,
+          "i10_target_share_l4w": 148,
+          "l4w_games_available": 0,
+          "ngs_avg_expected_yac_l4w": 181,
+          "ngs_avg_separation_l4w": 181,
+          "ngs_avg_yac_above_expectation_l4w": 181,
+          "ngs_percent_attempts_gte_eight_defenders_l4w": 281,
+          "ngs_recv_available_l4w": 0,
+          "ngs_recv_coverage_l4w": 0,
+          "ngs_rush_available_l4w": 0,
+          "ngs_rush_coverage_l4w": 0,
+          "ngs_rush_yards_over_expectation_l4w": 281,
+          "opp_rz_td_rate_allowed_l4w": 0,
+          "opp_td_allowed_to_pos_l4w": 0,
+          "qb_cpoe_l4w": 0,
+          "rec_td_exp_l4w": 50,
+          "rush_share_l4w": 48,
+          "rush_td_exp_l4w": 50,
+          "rz_carry_share_l4w": 208,
+          "rz_target_share_l4w": 117,
+          "snap_pct_l4w": 49,
+          "target_share_l4w": 48,
+          "team_i10_pass_rate_l4w": 0,
+          "team_pass_rate_l4w": 0,
+          "team_plays_l4w": 0,
+          "team_rz_td_rate_l4w": 0,
+          "team_rz_trips_l4w": 0
+        },
+        "ngs": {
+          "current_season_sources": {
+            "ngs_receiving": {
+              "capture_hash_status": "computed_legacy",
+              "captured_utc": "2026-09-29T15:52:34+00:00",
+              "max_week_source": 3,
+              "rows_after_cutoff": 143,
+              "sha256": "5b3fc88bd71ebb69e417733f48a300f15e36edca6b115bee84aa187791d75858"
+            },
+            "ngs_rushing": {
+              "capture_hash_status": "computed_legacy",
+              "captured_utc": "2026-09-29T15:52:34+00:00",
+              "max_week_source": 3,
+              "rows_after_cutoff": 67,
+              "sha256": "709dc5b5c761053d9863835d7fcf5d28ec036d9179809fc90a2ccc358f96b7af"
+            }
+          },
+          "final_regular_week_excluded": true,
+          "frozen_serving_source_hashes": {
+            "ff_opportunity": "dbb6db22a0c860b2c2ba8c4bb4cb1c71fd9fc2b1834743d810c96dfcd17c70dc",
+            "pbp": "87ccaacbb4606ee1482786eb8e177db79185c4b6fb162a0cfdead57268ad810a",
+            "player_stats": "489ce4a212377aa2c4bc6ed777a9980716a9eea17b52a210ccb673f130814d02",
+            "players": "7b3acde823e41cbc3b5d170f8a52bce5c451f200843980be57faefac3b0e9856",
+            "product_features": "58495f19d2cd3cfbaa824e6d462f0c68fc497237cdde3d8bfb130e19c4cb3a15",
+            "schedules": "78ff21f9530ad3e464dcf445f40664eb2e315be95e401aa578e75be5fbfc6cd3",
+            "snap_counts": "7b85db1820364f0b5817c623485e179cf2747b3d7f35d8624af54e59bc424de9"
+          },
+          "future_weeks_excluded": true,
+          "historical_snapshot": {
+            "manifest_sha256": "ae33d1482779595c2977b90bf840b3cc41d57582a68a973f74104fa28ea56a1d",
+            "receiving_sha256": "ea3aba531560a7b76f38d9afb4d824a478851e64771252f8d61e92d10435df8f",
+            "rushing_sha256": "8fc2cb2719c84ddee3934b52fac880223beca8e62c0c950d92d20ed6c358b5e3"
+          },
+          "normalization_audit": {
+            "ngs_receiving": {
+              "final_week_rows": 764,
+              "max_season": 2026,
+              "normalized_rows": 12232,
+              "raw_rows": 14874,
+              "unmapped_schedule_rows": 0,
+              "week_zero_rows": 1251
+            },
+            "ngs_rushing": {
+              "final_week_rows": 327,
+              "max_season": 2026,
+              "normalized_rows": 5055,
+              "raw_rows": 6126,
+              "unmapped_schedule_rows": 0,
+              "week_zero_rows": 508
+            },
+            "schedule_final_regular_week": {
+              "1999": 17,
+              "2000": 17,
+              "2001": 17,
+              "2002": 17,
+              "2003": 17,
+              "2004": 17,
+              "2005": 17,
+              "2006": 17,
+              "2007": 17,
+              "2008": 17,
+              "2009": 17,
+              "2010": 17,
+              "2011": 17,
+              "2012": 17,
+              "2013": 17,
+              "2014": 17,
+              "2015": 17,
+              "2016": 17,
+              "2017": 17,
+              "2018": 17,
+              "2019": 17,
+              "2020": 17,
+              "2021": 18,
+              "2022": 18,
+              "2023": 18,
+              "2024": 18,
+              "2025": 18,
+              "2026": 18
+            }
+          },
+          "week_zero_and_postseason_excluded": true
+        },
+        "sources": {
+          "ff_opportunity": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 683,
+            "sha256": "39d9c13c443df84382fe3ed7aa0f79e9bf296aff43e9c758983abb46372c6740"
+          },
+          "ngs_receiving": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 143,
+            "sha256": "5b3fc88bd71ebb69e417733f48a300f15e36edca6b115bee84aa187791d75858"
+          },
+          "ngs_rushing": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 67,
+            "sha256": "709dc5b5c761053d9863835d7fcf5d28ec036d9179809fc90a2ccc358f96b7af"
+          },
+          "pbp": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:36+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 5489,
+            "sha256": "d163b0a6367603912b821d1bd0aa2c07ef3aba7599c5fff0c578d6b71c77dda9"
+          },
+          "player_stats": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 2225,
+            "sha256": "bf2205c583c9268c340fff36eb7e3948956aba91262872a93dcb9a86cbe39726"
+          },
+          "players": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:35+00:00",
+            "max_week_source": null,
+            "rows_after_cutoff": 24834,
+            "sha256": "f16a1846f9114a009a7c69bacd339354d3dbb86dd398fd9377e46258a9aa7d0d"
+          },
+          "schedules": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:46+00:00",
+            "max_week_source": 18,
+            "rows_after_cutoff": 272,
+            "sha256": "2703d6d18ce25a33ed0fd4dc6d3fd43774024957f1cb5e1304d7ef4c5f2cbbe6"
+          },
+          "snap_counts": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:36+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 2994,
+            "sha256": "8e42d98d6448d63906a08e691432718047eb57a440cd4d18f9599facc1e2c6d5"
+          }
+        },
+        "status": "training_semantics_rebuilt"
+      },
+      "forward_sha256": "e9f0d2cbe25847a3fff45ee506415db432f7db913012175bd242dae6d81f7ca7",
+      "game_id": "2026_03_KC_MIA",
+      "original_release_metadata_sha256": "0c13d829a96c14c0657a0aff677736dfdfcd5c48baf50c4e3b8fb9de71b3d4aa",
+      "scored_skill_candidates": 24,
+      "slate": "sunday_0935",
+      "status": "scored_with_exact_forward_package",
+      "unscored_skill_player_ids": [
+        "00-0039874",
+        "sleeper:13296",
+        "sleeper:13300"
+      ]
+    },
+    "sunday_0935::2026_03_LAC_BUF": {
+      "expected_skill_candidates": 23,
+      "feature_provenance": {
+        "as_of_utc": "2026-10-02T03:59:00+00:00",
+        "canonical_columns": [
+          "snap_pct_l4w",
+          "rush_share_l4w",
+          "target_share_l4w",
+          "rz_carry_share_l4w",
+          "rz_target_share_l4w",
+          "i10_carry_share_l4w",
+          "i10_target_share_l4w",
+          "rush_td_exp_l4w",
+          "rec_td_exp_l4w",
+          "team_plays_l4w",
+          "team_pass_rate_l4w",
+          "team_rz_trips_l4w",
+          "team_rz_td_rate_l4w",
+          "team_i10_pass_rate_l4w",
+          "opp_rz_td_rate_allowed_l4w",
+          "opp_td_allowed_to_pos_l4w",
+          "l4w_games_available",
+          "qb_cpoe_l4w",
+          "ngs_avg_separation_l4w",
+          "ngs_avg_expected_yac_l4w",
+          "ngs_avg_yac_above_expectation_l4w",
+          "ngs_recv_coverage_l4w",
+          "ngs_recv_available_l4w",
+          "ngs_percent_attempts_gte_eight_defenders_l4w",
+          "ngs_rush_yards_over_expectation_l4w",
+          "ngs_rush_coverage_l4w",
+          "ngs_rush_available_l4w"
+        ],
+        "current_week_outcomes_included": false,
+        "feature_source": "shared_td_features_windows_panel_helpers",
+        "features_with_missing_values": {
+          "i10_carry_share_l4w": 228,
+          "i10_target_share_l4w": 148,
+          "l4w_games_available": 0,
+          "ngs_avg_expected_yac_l4w": 181,
+          "ngs_avg_separation_l4w": 181,
+          "ngs_avg_yac_above_expectation_l4w": 181,
+          "ngs_percent_attempts_gte_eight_defenders_l4w": 281,
+          "ngs_recv_available_l4w": 0,
+          "ngs_recv_coverage_l4w": 0,
+          "ngs_rush_available_l4w": 0,
+          "ngs_rush_coverage_l4w": 0,
+          "ngs_rush_yards_over_expectation_l4w": 281,
+          "opp_rz_td_rate_allowed_l4w": 0,
+          "opp_td_allowed_to_pos_l4w": 0,
+          "qb_cpoe_l4w": 0,
+          "rec_td_exp_l4w": 50,
+          "rush_share_l4w": 48,
+          "rush_td_exp_l4w": 50,
+          "rz_carry_share_l4w": 208,
+          "rz_target_share_l4w": 117,
+          "snap_pct_l4w": 49,
+          "target_share_l4w": 48,
+          "team_i10_pass_rate_l4w": 0,
+          "team_pass_rate_l4w": 0,
+          "team_plays_l4w": 0,
+          "team_rz_td_rate_l4w": 0,
+          "team_rz_trips_l4w": 0
+        },
+        "ngs": {
+          "current_season_sources": {
+            "ngs_receiving": {
+              "capture_hash_status": "computed_legacy",
+              "captured_utc": "2026-09-29T15:52:34+00:00",
+              "max_week_source": 3,
+              "rows_after_cutoff": 143,
+              "sha256": "5b3fc88bd71ebb69e417733f48a300f15e36edca6b115bee84aa187791d75858"
+            },
+            "ngs_rushing": {
+              "capture_hash_status": "computed_legacy",
+              "captured_utc": "2026-09-29T15:52:34+00:00",
+              "max_week_source": 3,
+              "rows_after_cutoff": 67,
+              "sha256": "709dc5b5c761053d9863835d7fcf5d28ec036d9179809fc90a2ccc358f96b7af"
+            }
+          },
+          "final_regular_week_excluded": true,
+          "frozen_serving_source_hashes": {
+            "ff_opportunity": "dbb6db22a0c860b2c2ba8c4bb4cb1c71fd9fc2b1834743d810c96dfcd17c70dc",
+            "pbp": "87ccaacbb4606ee1482786eb8e177db79185c4b6fb162a0cfdead57268ad810a",
+            "player_stats": "489ce4a212377aa2c4bc6ed777a9980716a9eea17b52a210ccb673f130814d02",
+            "players": "7b3acde823e41cbc3b5d170f8a52bce5c451f200843980be57faefac3b0e9856",
+            "product_features": "58495f19d2cd3cfbaa824e6d462f0c68fc497237cdde3d8bfb130e19c4cb3a15",
+            "schedules": "78ff21f9530ad3e464dcf445f40664eb2e315be95e401aa578e75be5fbfc6cd3",
+            "snap_counts": "7b85db1820364f0b5817c623485e179cf2747b3d7f35d8624af54e59bc424de9"
+          },
+          "future_weeks_excluded": true,
+          "historical_snapshot": {
+            "manifest_sha256": "ae33d1482779595c2977b90bf840b3cc41d57582a68a973f74104fa28ea56a1d",
+            "receiving_sha256": "ea3aba531560a7b76f38d9afb4d824a478851e64771252f8d61e92d10435df8f",
+            "rushing_sha256": "8fc2cb2719c84ddee3934b52fac880223beca8e62c0c950d92d20ed6c358b5e3"
+          },
+          "normalization_audit": {
+            "ngs_receiving": {
+              "final_week_rows": 764,
+              "max_season": 2026,
+              "normalized_rows": 12232,
+              "raw_rows": 14874,
+              "unmapped_schedule_rows": 0,
+              "week_zero_rows": 1251
+            },
+            "ngs_rushing": {
+              "final_week_rows": 327,
+              "max_season": 2026,
+              "normalized_rows": 5055,
+              "raw_rows": 6126,
+              "unmapped_schedule_rows": 0,
+              "week_zero_rows": 508
+            },
+            "schedule_final_regular_week": {
+              "1999": 17,
+              "2000": 17,
+              "2001": 17,
+              "2002": 17,
+              "2003": 17,
+              "2004": 17,
+              "2005": 17,
+              "2006": 17,
+              "2007": 17,
+              "2008": 17,
+              "2009": 17,
+              "2010": 17,
+              "2011": 17,
+              "2012": 17,
+              "2013": 17,
+              "2014": 17,
+              "2015": 17,
+              "2016": 17,
+              "2017": 17,
+              "2018": 17,
+              "2019": 17,
+              "2020": 17,
+              "2021": 18,
+              "2022": 18,
+              "2023": 18,
+              "2024": 18,
+              "2025": 18,
+              "2026": 18
+            }
+          },
+          "week_zero_and_postseason_excluded": true
+        },
+        "sources": {
+          "ff_opportunity": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 683,
+            "sha256": "39d9c13c443df84382fe3ed7aa0f79e9bf296aff43e9c758983abb46372c6740"
+          },
+          "ngs_receiving": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 143,
+            "sha256": "5b3fc88bd71ebb69e417733f48a300f15e36edca6b115bee84aa187791d75858"
+          },
+          "ngs_rushing": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 67,
+            "sha256": "709dc5b5c761053d9863835d7fcf5d28ec036d9179809fc90a2ccc358f96b7af"
+          },
+          "pbp": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:36+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 5489,
+            "sha256": "d163b0a6367603912b821d1bd0aa2c07ef3aba7599c5fff0c578d6b71c77dda9"
+          },
+          "player_stats": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 2225,
+            "sha256": "bf2205c583c9268c340fff36eb7e3948956aba91262872a93dcb9a86cbe39726"
+          },
+          "players": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:35+00:00",
+            "max_week_source": null,
+            "rows_after_cutoff": 24834,
+            "sha256": "f16a1846f9114a009a7c69bacd339354d3dbb86dd398fd9377e46258a9aa7d0d"
+          },
+          "schedules": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:46+00:00",
+            "max_week_source": 18,
+            "rows_after_cutoff": 272,
+            "sha256": "2703d6d18ce25a33ed0fd4dc6d3fd43774024957f1cb5e1304d7ef4c5f2cbbe6"
+          },
+          "snap_counts": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:36+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 2994,
+            "sha256": "8e42d98d6448d63906a08e691432718047eb57a440cd4d18f9599facc1e2c6d5"
+          }
+        },
+        "status": "training_semantics_rebuilt"
+      },
+      "forward_sha256": "e9f0d2cbe25847a3fff45ee506415db432f7db913012175bd242dae6d81f7ca7",
+      "game_id": "2026_03_LAC_BUF",
+      "original_release_metadata_sha256": "0c13d829a96c14c0657a0aff677736dfdfcd5c48baf50c4e3b8fb9de71b3d4aa",
+      "scored_skill_candidates": 22,
+      "slate": "sunday_0935",
+      "status": "scored_with_exact_forward_package",
+      "unscored_skill_player_ids": [
+        "sleeper:13380"
+      ]
+    },
+    "sunday_0935::2026_03_LA_DEN": {
+      "expected_skill_candidates": 28,
+      "feature_provenance": {
+        "as_of_utc": "2026-10-02T03:59:00+00:00",
+        "canonical_columns": [
+          "snap_pct_l4w",
+          "rush_share_l4w",
+          "target_share_l4w",
+          "rz_carry_share_l4w",
+          "rz_target_share_l4w",
+          "i10_carry_share_l4w",
+          "i10_target_share_l4w",
+          "rush_td_exp_l4w",
+          "rec_td_exp_l4w",
+          "team_plays_l4w",
+          "team_pass_rate_l4w",
+          "team_rz_trips_l4w",
+          "team_rz_td_rate_l4w",
+          "team_i10_pass_rate_l4w",
+          "opp_rz_td_rate_allowed_l4w",
+          "opp_td_allowed_to_pos_l4w",
+          "l4w_games_available",
+          "qb_cpoe_l4w",
+          "ngs_avg_separation_l4w",
+          "ngs_avg_expected_yac_l4w",
+          "ngs_avg_yac_above_expectation_l4w",
+          "ngs_recv_coverage_l4w",
+          "ngs_recv_available_l4w",
+          "ngs_percent_attempts_gte_eight_defenders_l4w",
+          "ngs_rush_yards_over_expectation_l4w",
+          "ngs_rush_coverage_l4w",
+          "ngs_rush_available_l4w"
+        ],
+        "current_week_outcomes_included": false,
+        "feature_source": "shared_td_features_windows_panel_helpers",
+        "features_with_missing_values": {
+          "i10_carry_share_l4w": 228,
+          "i10_target_share_l4w": 148,
+          "l4w_games_available": 0,
+          "ngs_avg_expected_yac_l4w": 181,
+          "ngs_avg_separation_l4w": 181,
+          "ngs_avg_yac_above_expectation_l4w": 181,
+          "ngs_percent_attempts_gte_eight_defenders_l4w": 281,
+          "ngs_recv_available_l4w": 0,
+          "ngs_recv_coverage_l4w": 0,
+          "ngs_rush_available_l4w": 0,
+          "ngs_rush_coverage_l4w": 0,
+          "ngs_rush_yards_over_expectation_l4w": 281,
+          "opp_rz_td_rate_allowed_l4w": 0,
+          "opp_td_allowed_to_pos_l4w": 0,
+          "qb_cpoe_l4w": 0,
+          "rec_td_exp_l4w": 50,
+          "rush_share_l4w": 48,
+          "rush_td_exp_l4w": 50,
+          "rz_carry_share_l4w": 208,
+          "rz_target_share_l4w": 117,
+          "snap_pct_l4w": 49,
+          "target_share_l4w": 48,
+          "team_i10_pass_rate_l4w": 0,
+          "team_pass_rate_l4w": 0,
+          "team_plays_l4w": 0,
+          "team_rz_td_rate_l4w": 0,
+          "team_rz_trips_l4w": 0
+        },
+        "ngs": {
+          "current_season_sources": {
+            "ngs_receiving": {
+              "capture_hash_status": "computed_legacy",
+              "captured_utc": "2026-09-29T15:52:34+00:00",
+              "max_week_source": 3,
+              "rows_after_cutoff": 143,
+              "sha256": "5b3fc88bd71ebb69e417733f48a300f15e36edca6b115bee84aa187791d75858"
+            },
+            "ngs_rushing": {
+              "capture_hash_status": "computed_legacy",
+              "captured_utc": "2026-09-29T15:52:34+00:00",
+              "max_week_source": 3,
+              "rows_after_cutoff": 67,
+              "sha256": "709dc5b5c761053d9863835d7fcf5d28ec036d9179809fc90a2ccc358f96b7af"
+            }
+          },
+          "final_regular_week_excluded": true,
+          "frozen_serving_source_hashes": {
+            "ff_opportunity": "dbb6db22a0c860b2c2ba8c4bb4cb1c71fd9fc2b1834743d810c96dfcd17c70dc",
+            "pbp": "87ccaacbb4606ee1482786eb8e177db79185c4b6fb162a0cfdead57268ad810a",
+            "player_stats": "489ce4a212377aa2c4bc6ed777a9980716a9eea17b52a210ccb673f130814d02",
+            "players": "7b3acde823e41cbc3b5d170f8a52bce5c451f200843980be57faefac3b0e9856",
+            "product_features": "58495f19d2cd3cfbaa824e6d462f0c68fc497237cdde3d8bfb130e19c4cb3a15",
+            "schedules": "78ff21f9530ad3e464dcf445f40664eb2e315be95e401aa578e75be5fbfc6cd3",
+            "snap_counts": "7b85db1820364f0b5817c623485e179cf2747b3d7f35d8624af54e59bc424de9"
+          },
+          "future_weeks_excluded": true,
+          "historical_snapshot": {
+            "manifest_sha256": "ae33d1482779595c2977b90bf840b3cc41d57582a68a973f74104fa28ea56a1d",
+            "receiving_sha256": "ea3aba531560a7b76f38d9afb4d824a478851e64771252f8d61e92d10435df8f",
+            "rushing_sha256": "8fc2cb2719c84ddee3934b52fac880223beca8e62c0c950d92d20ed6c358b5e3"
+          },
+          "normalization_audit": {
+            "ngs_receiving": {
+              "final_week_rows": 764,
+              "max_season": 2026,
+              "normalized_rows": 12232,
+              "raw_rows": 14874,
+              "unmapped_schedule_rows": 0,
+              "week_zero_rows": 1251
+            },
+            "ngs_rushing": {
+              "final_week_rows": 327,
+              "max_season": 2026,
+              "normalized_rows": 5055,
+              "raw_rows": 6126,
+              "unmapped_schedule_rows": 0,
+              "week_zero_rows": 508
+            },
+            "schedule_final_regular_week": {
+              "1999": 17,
+              "2000": 17,
+              "2001": 17,
+              "2002": 17,
+              "2003": 17,
+              "2004": 17,
+              "2005": 17,
+              "2006": 17,
+              "2007": 17,
+              "2008": 17,
+              "2009": 17,
+              "2010": 17,
+              "2011": 17,
+              "2012": 17,
+              "2013": 17,
+              "2014": 17,
+              "2015": 17,
+              "2016": 17,
+              "2017": 17,
+              "2018": 17,
+              "2019": 17,
+              "2020": 17,
+              "2021": 18,
+              "2022": 18,
+              "2023": 18,
+              "2024": 18,
+              "2025": 18,
+              "2026": 18
+            }
+          },
+          "week_zero_and_postseason_excluded": true
+        },
+        "sources": {
+          "ff_opportunity": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 683,
+            "sha256": "39d9c13c443df84382fe3ed7aa0f79e9bf296aff43e9c758983abb46372c6740"
+          },
+          "ngs_receiving": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 143,
+            "sha256": "5b3fc88bd71ebb69e417733f48a300f15e36edca6b115bee84aa187791d75858"
+          },
+          "ngs_rushing": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 67,
+            "sha256": "709dc5b5c761053d9863835d7fcf5d28ec036d9179809fc90a2ccc358f96b7af"
+          },
+          "pbp": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:36+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 5489,
+            "sha256": "d163b0a6367603912b821d1bd0aa2c07ef3aba7599c5fff0c578d6b71c77dda9"
+          },
+          "player_stats": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 2225,
+            "sha256": "bf2205c583c9268c340fff36eb7e3948956aba91262872a93dcb9a86cbe39726"
+          },
+          "players": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:35+00:00",
+            "max_week_source": null,
+            "rows_after_cutoff": 24834,
+            "sha256": "f16a1846f9114a009a7c69bacd339354d3dbb86dd398fd9377e46258a9aa7d0d"
+          },
+          "schedules": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:46+00:00",
+            "max_week_source": 18,
+            "rows_after_cutoff": 272,
+            "sha256": "2703d6d18ce25a33ed0fd4dc6d3fd43774024957f1cb5e1304d7ef4c5f2cbbe6"
+          },
+          "snap_counts": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:36+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 2994,
+            "sha256": "8e42d98d6448d63906a08e691432718047eb57a440cd4d18f9599facc1e2c6d5"
+          }
+        },
+        "status": "training_semantics_rebuilt"
+      },
+      "forward_sha256": "e9f0d2cbe25847a3fff45ee506415db432f7db913012175bd242dae6d81f7ca7",
+      "game_id": "2026_03_LA_DEN",
+      "original_release_metadata_sha256": "0c13d829a96c14c0657a0aff677736dfdfcd5c48baf50c4e3b8fb9de71b3d4aa",
+      "scored_skill_candidates": 26,
+      "slate": "sunday_0935",
+      "status": "scored_with_exact_forward_package",
+      "unscored_skill_player_ids": [
+        "00-0037557",
+        "sleeper:13345"
+      ]
+    },
+    "sunday_0935::2026_03_LV_NO": {
+      "expected_skill_candidates": 25,
+      "feature_provenance": {
+        "as_of_utc": "2026-10-02T03:59:00+00:00",
+        "canonical_columns": [
+          "snap_pct_l4w",
+          "rush_share_l4w",
+          "target_share_l4w",
+          "rz_carry_share_l4w",
+          "rz_target_share_l4w",
+          "i10_carry_share_l4w",
+          "i10_target_share_l4w",
+          "rush_td_exp_l4w",
+          "rec_td_exp_l4w",
+          "team_plays_l4w",
+          "team_pass_rate_l4w",
+          "team_rz_trips_l4w",
+          "team_rz_td_rate_l4w",
+          "team_i10_pass_rate_l4w",
+          "opp_rz_td_rate_allowed_l4w",
+          "opp_td_allowed_to_pos_l4w",
+          "l4w_games_available",
+          "qb_cpoe_l4w",
+          "ngs_avg_separation_l4w",
+          "ngs_avg_expected_yac_l4w",
+          "ngs_avg_yac_above_expectation_l4w",
+          "ngs_recv_coverage_l4w",
+          "ngs_recv_available_l4w",
+          "ngs_percent_attempts_gte_eight_defenders_l4w",
+          "ngs_rush_yards_over_expectation_l4w",
+          "ngs_rush_coverage_l4w",
+          "ngs_rush_available_l4w"
+        ],
+        "current_week_outcomes_included": false,
+        "feature_source": "shared_td_features_windows_panel_helpers",
+        "features_with_missing_values": {
+          "i10_carry_share_l4w": 228,
+          "i10_target_share_l4w": 148,
+          "l4w_games_available": 0,
+          "ngs_avg_expected_yac_l4w": 181,
+          "ngs_avg_separation_l4w": 181,
+          "ngs_avg_yac_above_expectation_l4w": 181,
+          "ngs_percent_attempts_gte_eight_defenders_l4w": 281,
+          "ngs_recv_available_l4w": 0,
+          "ngs_recv_coverage_l4w": 0,
+          "ngs_rush_available_l4w": 0,
+          "ngs_rush_coverage_l4w": 0,
+          "ngs_rush_yards_over_expectation_l4w": 281,
+          "opp_rz_td_rate_allowed_l4w": 0,
+          "opp_td_allowed_to_pos_l4w": 0,
+          "qb_cpoe_l4w": 0,
+          "rec_td_exp_l4w": 50,
+          "rush_share_l4w": 48,
+          "rush_td_exp_l4w": 50,
+          "rz_carry_share_l4w": 208,
+          "rz_target_share_l4w": 117,
+          "snap_pct_l4w": 49,
+          "target_share_l4w": 48,
+          "team_i10_pass_rate_l4w": 0,
+          "team_pass_rate_l4w": 0,
+          "team_plays_l4w": 0,
+          "team_rz_td_rate_l4w": 0,
+          "team_rz_trips_l4w": 0
+        },
+        "ngs": {
+          "current_season_sources": {
+            "ngs_receiving": {
+              "capture_hash_status": "computed_legacy",
+              "captured_utc": "2026-09-29T15:52:34+00:00",
+              "max_week_source": 3,
+              "rows_after_cutoff": 143,
+              "sha256": "5b3fc88bd71ebb69e417733f48a300f15e36edca6b115bee84aa187791d75858"
+            },
+            "ngs_rushing": {
+              "capture_hash_status": "computed_legacy",
+              "captured_utc": "2026-09-29T15:52:34+00:00",
+              "max_week_source": 3,
+              "rows_after_cutoff": 67,
+              "sha256": "709dc5b5c761053d9863835d7fcf5d28ec036d9179809fc90a2ccc358f96b7af"
+            }
+          },
+          "final_regular_week_excluded": true,
+          "frozen_serving_source_hashes": {
+            "ff_opportunity": "dbb6db22a0c860b2c2ba8c4bb4cb1c71fd9fc2b1834743d810c96dfcd17c70dc",
+            "pbp": "87ccaacbb4606ee1482786eb8e177db79185c4b6fb162a0cfdead57268ad810a",
+            "player_stats": "489ce4a212377aa2c4bc6ed777a9980716a9eea17b52a210ccb673f130814d02",
+            "players": "7b3acde823e41cbc3b5d170f8a52bce5c451f200843980be57faefac3b0e9856",
+            "product_features": "58495f19d2cd3cfbaa824e6d462f0c68fc497237cdde3d8bfb130e19c4cb3a15",
+            "schedules": "78ff21f9530ad3e464dcf445f40664eb2e315be95e401aa578e75be5fbfc6cd3",
+            "snap_counts": "7b85db1820364f0b5817c623485e179cf2747b3d7f35d8624af54e59bc424de9"
+          },
+          "future_weeks_excluded": true,
+          "historical_snapshot": {
+            "manifest_sha256": "ae33d1482779595c2977b90bf840b3cc41d57582a68a973f74104fa28ea56a1d",
+            "receiving_sha256": "ea3aba531560a7b76f38d9afb4d824a478851e64771252f8d61e92d10435df8f",
+            "rushing_sha256": "8fc2cb2719c84ddee3934b52fac880223beca8e62c0c950d92d20ed6c358b5e3"
+          },
+          "normalization_audit": {
+            "ngs_receiving": {
+              "final_week_rows": 764,
+              "max_season": 2026,
+              "normalized_rows": 12232,
+              "raw_rows": 14874,
+              "unmapped_schedule_rows": 0,
+              "week_zero_rows": 1251
+            },
+            "ngs_rushing": {
+              "final_week_rows": 327,
+              "max_season": 2026,
+              "normalized_rows": 5055,
+              "raw_rows": 6126,
+              "unmapped_schedule_rows": 0,
+              "week_zero_rows": 508
+            },
+            "schedule_final_regular_week": {
+              "1999": 17,
+              "2000": 17,
+              "2001": 17,
+              "2002": 17,
+              "2003": 17,
+              "2004": 17,
+              "2005": 17,
+              "2006": 17,
+              "2007": 17,
+              "2008": 17,
+              "2009": 17,
+              "2010": 17,
+              "2011": 17,
+              "2012": 17,
+              "2013": 17,
+              "2014": 17,
+              "2015": 17,
+              "2016": 17,
+              "2017": 17,
+              "2018": 17,
+              "2019": 17,
+              "2020": 17,
+              "2021": 18,
+              "2022": 18,
+              "2023": 18,
+              "2024": 18,
+              "2025": 18,
+              "2026": 18
+            }
+          },
+          "week_zero_and_postseason_excluded": true
+        },
+        "sources": {
+          "ff_opportunity": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 683,
+            "sha256": "39d9c13c443df84382fe3ed7aa0f79e9bf296aff43e9c758983abb46372c6740"
+          },
+          "ngs_receiving": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 143,
+            "sha256": "5b3fc88bd71ebb69e417733f48a300f15e36edca6b115bee84aa187791d75858"
+          },
+          "ngs_rushing": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 67,
+            "sha256": "709dc5b5c761053d9863835d7fcf5d28ec036d9179809fc90a2ccc358f96b7af"
+          },
+          "pbp": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:36+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 5489,
+            "sha256": "d163b0a6367603912b821d1bd0aa2c07ef3aba7599c5fff0c578d6b71c77dda9"
+          },
+          "player_stats": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 2225,
+            "sha256": "bf2205c583c9268c340fff36eb7e3948956aba91262872a93dcb9a86cbe39726"
+          },
+          "players": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:35+00:00",
+            "max_week_source": null,
+            "rows_after_cutoff": 24834,
+            "sha256": "f16a1846f9114a009a7c69bacd339354d3dbb86dd398fd9377e46258a9aa7d0d"
+          },
+          "schedules": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:46+00:00",
+            "max_week_source": 18,
+            "rows_after_cutoff": 272,
+            "sha256": "2703d6d18ce25a33ed0fd4dc6d3fd43774024957f1cb5e1304d7ef4c5f2cbbe6"
+          },
+          "snap_counts": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:36+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 2994,
+            "sha256": "8e42d98d6448d63906a08e691432718047eb57a440cd4d18f9599facc1e2c6d5"
+          }
+        },
+        "status": "training_semantics_rebuilt"
+      },
+      "forward_sha256": "e9f0d2cbe25847a3fff45ee506415db432f7db913012175bd242dae6d81f7ca7",
+      "game_id": "2026_03_LV_NO",
+      "original_release_metadata_sha256": "0c13d829a96c14c0657a0aff677736dfdfcd5c48baf50c4e3b8fb9de71b3d4aa",
+      "scored_skill_candidates": 24,
+      "slate": "sunday_0935",
+      "status": "scored_with_exact_forward_package",
+      "unscored_skill_player_ids": [
+        "sleeper:13533"
+      ]
+    },
+    "sunday_0935::2026_03_MIN_TB": {
+      "expected_skill_candidates": 27,
+      "feature_provenance": {
+        "as_of_utc": "2026-10-02T03:59:00+00:00",
+        "canonical_columns": [
+          "snap_pct_l4w",
+          "rush_share_l4w",
+          "target_share_l4w",
+          "rz_carry_share_l4w",
+          "rz_target_share_l4w",
+          "i10_carry_share_l4w",
+          "i10_target_share_l4w",
+          "rush_td_exp_l4w",
+          "rec_td_exp_l4w",
+          "team_plays_l4w",
+          "team_pass_rate_l4w",
+          "team_rz_trips_l4w",
+          "team_rz_td_rate_l4w",
+          "team_i10_pass_rate_l4w",
+          "opp_rz_td_rate_allowed_l4w",
+          "opp_td_allowed_to_pos_l4w",
+          "l4w_games_available",
+          "qb_cpoe_l4w",
+          "ngs_avg_separation_l4w",
+          "ngs_avg_expected_yac_l4w",
+          "ngs_avg_yac_above_expectation_l4w",
+          "ngs_recv_coverage_l4w",
+          "ngs_recv_available_l4w",
+          "ngs_percent_attempts_gte_eight_defenders_l4w",
+          "ngs_rush_yards_over_expectation_l4w",
+          "ngs_rush_coverage_l4w",
+          "ngs_rush_available_l4w"
+        ],
+        "current_week_outcomes_included": false,
+        "feature_source": "shared_td_features_windows_panel_helpers",
+        "features_with_missing_values": {
+          "i10_carry_share_l4w": 228,
+          "i10_target_share_l4w": 148,
+          "l4w_games_available": 0,
+          "ngs_avg_expected_yac_l4w": 181,
+          "ngs_avg_separation_l4w": 181,
+          "ngs_avg_yac_above_expectation_l4w": 181,
+          "ngs_percent_attempts_gte_eight_defenders_l4w": 281,
+          "ngs_recv_available_l4w": 0,
+          "ngs_recv_coverage_l4w": 0,
+          "ngs_rush_available_l4w": 0,
+          "ngs_rush_coverage_l4w": 0,
+          "ngs_rush_yards_over_expectation_l4w": 281,
+          "opp_rz_td_rate_allowed_l4w": 0,
+          "opp_td_allowed_to_pos_l4w": 0,
+          "qb_cpoe_l4w": 0,
+          "rec_td_exp_l4w": 50,
+          "rush_share_l4w": 48,
+          "rush_td_exp_l4w": 50,
+          "rz_carry_share_l4w": 208,
+          "rz_target_share_l4w": 117,
+          "snap_pct_l4w": 49,
+          "target_share_l4w": 48,
+          "team_i10_pass_rate_l4w": 0,
+          "team_pass_rate_l4w": 0,
+          "team_plays_l4w": 0,
+          "team_rz_td_rate_l4w": 0,
+          "team_rz_trips_l4w": 0
+        },
+        "ngs": {
+          "current_season_sources": {
+            "ngs_receiving": {
+              "capture_hash_status": "computed_legacy",
+              "captured_utc": "2026-09-29T15:52:34+00:00",
+              "max_week_source": 3,
+              "rows_after_cutoff": 143,
+              "sha256": "5b3fc88bd71ebb69e417733f48a300f15e36edca6b115bee84aa187791d75858"
+            },
+            "ngs_rushing": {
+              "capture_hash_status": "computed_legacy",
+              "captured_utc": "2026-09-29T15:52:34+00:00",
+              "max_week_source": 3,
+              "rows_after_cutoff": 67,
+              "sha256": "709dc5b5c761053d9863835d7fcf5d28ec036d9179809fc90a2ccc358f96b7af"
+            }
+          },
+          "final_regular_week_excluded": true,
+          "frozen_serving_source_hashes": {
+            "ff_opportunity": "dbb6db22a0c860b2c2ba8c4bb4cb1c71fd9fc2b1834743d810c96dfcd17c70dc",
+            "pbp": "87ccaacbb4606ee1482786eb8e177db79185c4b6fb162a0cfdead57268ad810a",
+            "player_stats": "489ce4a212377aa2c4bc6ed777a9980716a9eea17b52a210ccb673f130814d02",
+            "players": "7b3acde823e41cbc3b5d170f8a52bce5c451f200843980be57faefac3b0e9856",
+            "product_features": "58495f19d2cd3cfbaa824e6d462f0c68fc497237cdde3d8bfb130e19c4cb3a15",
+            "schedules": "78ff21f9530ad3e464dcf445f40664eb2e315be95e401aa578e75be5fbfc6cd3",
+            "snap_counts": "7b85db1820364f0b5817c623485e179cf2747b3d7f35d8624af54e59bc424de9"
+          },
+          "future_weeks_excluded": true,
+          "historical_snapshot": {
+            "manifest_sha256": "ae33d1482779595c2977b90bf840b3cc41d57582a68a973f74104fa28ea56a1d",
+            "receiving_sha256": "ea3aba531560a7b76f38d9afb4d824a478851e64771252f8d61e92d10435df8f",
+            "rushing_sha256": "8fc2cb2719c84ddee3934b52fac880223beca8e62c0c950d92d20ed6c358b5e3"
+          },
+          "normalization_audit": {
+            "ngs_receiving": {
+              "final_week_rows": 764,
+              "max_season": 2026,
+              "normalized_rows": 12232,
+              "raw_rows": 14874,
+              "unmapped_schedule_rows": 0,
+              "week_zero_rows": 1251
+            },
+            "ngs_rushing": {
+              "final_week_rows": 327,
+              "max_season": 2026,
+              "normalized_rows": 5055,
+              "raw_rows": 6126,
+              "unmapped_schedule_rows": 0,
+              "week_zero_rows": 508
+            },
+            "schedule_final_regular_week": {
+              "1999": 17,
+              "2000": 17,
+              "2001": 17,
+              "2002": 17,
+              "2003": 17,
+              "2004": 17,
+              "2005": 17,
+              "2006": 17,
+              "2007": 17,
+              "2008": 17,
+              "2009": 17,
+              "2010": 17,
+              "2011": 17,
+              "2012": 17,
+              "2013": 17,
+              "2014": 17,
+              "2015": 17,
+              "2016": 17,
+              "2017": 17,
+              "2018": 17,
+              "2019": 17,
+              "2020": 17,
+              "2021": 18,
+              "2022": 18,
+              "2023": 18,
+              "2024": 18,
+              "2025": 18,
+              "2026": 18
+            }
+          },
+          "week_zero_and_postseason_excluded": true
+        },
+        "sources": {
+          "ff_opportunity": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 683,
+            "sha256": "39d9c13c443df84382fe3ed7aa0f79e9bf296aff43e9c758983abb46372c6740"
+          },
+          "ngs_receiving": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 143,
+            "sha256": "5b3fc88bd71ebb69e417733f48a300f15e36edca6b115bee84aa187791d75858"
+          },
+          "ngs_rushing": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 67,
+            "sha256": "709dc5b5c761053d9863835d7fcf5d28ec036d9179809fc90a2ccc358f96b7af"
+          },
+          "pbp": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:36+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 5489,
+            "sha256": "d163b0a6367603912b821d1bd0aa2c07ef3aba7599c5fff0c578d6b71c77dda9"
+          },
+          "player_stats": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 2225,
+            "sha256": "bf2205c583c9268c340fff36eb7e3948956aba91262872a93dcb9a86cbe39726"
+          },
+          "players": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:35+00:00",
+            "max_week_source": null,
+            "rows_after_cutoff": 24834,
+            "sha256": "f16a1846f9114a009a7c69bacd339354d3dbb86dd398fd9377e46258a9aa7d0d"
+          },
+          "schedules": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:46+00:00",
+            "max_week_source": 18,
+            "rows_after_cutoff": 272,
+            "sha256": "2703d6d18ce25a33ed0fd4dc6d3fd43774024957f1cb5e1304d7ef4c5f2cbbe6"
+          },
+          "snap_counts": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:36+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 2994,
+            "sha256": "8e42d98d6448d63906a08e691432718047eb57a440cd4d18f9599facc1e2c6d5"
+          }
+        },
+        "status": "training_semantics_rebuilt"
+      },
+      "forward_sha256": "e9f0d2cbe25847a3fff45ee506415db432f7db913012175bd242dae6d81f7ca7",
+      "game_id": "2026_03_MIN_TB",
+      "original_release_metadata_sha256": "0c13d829a96c14c0657a0aff677736dfdfcd5c48baf50c4e3b8fb9de71b3d4aa",
+      "scored_skill_candidates": 26,
+      "slate": "sunday_0935",
+      "status": "scored_with_exact_forward_package",
+      "unscored_skill_player_ids": [
+        "00-0032950"
+      ]
+    },
+    "sunday_0935::2026_03_NE_JAX": {
+      "expected_skill_candidates": 27,
+      "feature_provenance": {
+        "as_of_utc": "2026-10-02T03:59:00+00:00",
+        "canonical_columns": [
+          "snap_pct_l4w",
+          "rush_share_l4w",
+          "target_share_l4w",
+          "rz_carry_share_l4w",
+          "rz_target_share_l4w",
+          "i10_carry_share_l4w",
+          "i10_target_share_l4w",
+          "rush_td_exp_l4w",
+          "rec_td_exp_l4w",
+          "team_plays_l4w",
+          "team_pass_rate_l4w",
+          "team_rz_trips_l4w",
+          "team_rz_td_rate_l4w",
+          "team_i10_pass_rate_l4w",
+          "opp_rz_td_rate_allowed_l4w",
+          "opp_td_allowed_to_pos_l4w",
+          "l4w_games_available",
+          "qb_cpoe_l4w",
+          "ngs_avg_separation_l4w",
+          "ngs_avg_expected_yac_l4w",
+          "ngs_avg_yac_above_expectation_l4w",
+          "ngs_recv_coverage_l4w",
+          "ngs_recv_available_l4w",
+          "ngs_percent_attempts_gte_eight_defenders_l4w",
+          "ngs_rush_yards_over_expectation_l4w",
+          "ngs_rush_coverage_l4w",
+          "ngs_rush_available_l4w"
+        ],
+        "current_week_outcomes_included": false,
+        "feature_source": "shared_td_features_windows_panel_helpers",
+        "features_with_missing_values": {
+          "i10_carry_share_l4w": 228,
+          "i10_target_share_l4w": 148,
+          "l4w_games_available": 0,
+          "ngs_avg_expected_yac_l4w": 181,
+          "ngs_avg_separation_l4w": 181,
+          "ngs_avg_yac_above_expectation_l4w": 181,
+          "ngs_percent_attempts_gte_eight_defenders_l4w": 281,
+          "ngs_recv_available_l4w": 0,
+          "ngs_recv_coverage_l4w": 0,
+          "ngs_rush_available_l4w": 0,
+          "ngs_rush_coverage_l4w": 0,
+          "ngs_rush_yards_over_expectation_l4w": 281,
+          "opp_rz_td_rate_allowed_l4w": 0,
+          "opp_td_allowed_to_pos_l4w": 0,
+          "qb_cpoe_l4w": 0,
+          "rec_td_exp_l4w": 50,
+          "rush_share_l4w": 48,
+          "rush_td_exp_l4w": 50,
+          "rz_carry_share_l4w": 208,
+          "rz_target_share_l4w": 117,
+          "snap_pct_l4w": 49,
+          "target_share_l4w": 48,
+          "team_i10_pass_rate_l4w": 0,
+          "team_pass_rate_l4w": 0,
+          "team_plays_l4w": 0,
+          "team_rz_td_rate_l4w": 0,
+          "team_rz_trips_l4w": 0
+        },
+        "ngs": {
+          "current_season_sources": {
+            "ngs_receiving": {
+              "capture_hash_status": "computed_legacy",
+              "captured_utc": "2026-09-29T15:52:34+00:00",
+              "max_week_source": 3,
+              "rows_after_cutoff": 143,
+              "sha256": "5b3fc88bd71ebb69e417733f48a300f15e36edca6b115bee84aa187791d75858"
+            },
+            "ngs_rushing": {
+              "capture_hash_status": "computed_legacy",
+              "captured_utc": "2026-09-29T15:52:34+00:00",
+              "max_week_source": 3,
+              "rows_after_cutoff": 67,
+              "sha256": "709dc5b5c761053d9863835d7fcf5d28ec036d9179809fc90a2ccc358f96b7af"
+            }
+          },
+          "final_regular_week_excluded": true,
+          "frozen_serving_source_hashes": {
+            "ff_opportunity": "dbb6db22a0c860b2c2ba8c4bb4cb1c71fd9fc2b1834743d810c96dfcd17c70dc",
+            "pbp": "87ccaacbb4606ee1482786eb8e177db79185c4b6fb162a0cfdead57268ad810a",
+            "player_stats": "489ce4a212377aa2c4bc6ed777a9980716a9eea17b52a210ccb673f130814d02",
+            "players": "7b3acde823e41cbc3b5d170f8a52bce5c451f200843980be57faefac3b0e9856",
+            "product_features": "58495f19d2cd3cfbaa824e6d462f0c68fc497237cdde3d8bfb130e19c4cb3a15",
+            "schedules": "78ff21f9530ad3e464dcf445f40664eb2e315be95e401aa578e75be5fbfc6cd3",
+            "snap_counts": "7b85db1820364f0b5817c623485e179cf2747b3d7f35d8624af54e59bc424de9"
+          },
+          "future_weeks_excluded": true,
+          "historical_snapshot": {
+            "manifest_sha256": "ae33d1482779595c2977b90bf840b3cc41d57582a68a973f74104fa28ea56a1d",
+            "receiving_sha256": "ea3aba531560a7b76f38d9afb4d824a478851e64771252f8d61e92d10435df8f",
+            "rushing_sha256": "8fc2cb2719c84ddee3934b52fac880223beca8e62c0c950d92d20ed6c358b5e3"
+          },
+          "normalization_audit": {
+            "ngs_receiving": {
+              "final_week_rows": 764,
+              "max_season": 2026,
+              "normalized_rows": 12232,
+              "raw_rows": 14874,
+              "unmapped_schedule_rows": 0,
+              "week_zero_rows": 1251
+            },
+            "ngs_rushing": {
+              "final_week_rows": 327,
+              "max_season": 2026,
+              "normalized_rows": 5055,
+              "raw_rows": 6126,
+              "unmapped_schedule_rows": 0,
+              "week_zero_rows": 508
+            },
+            "schedule_final_regular_week": {
+              "1999": 17,
+              "2000": 17,
+              "2001": 17,
+              "2002": 17,
+              "2003": 17,
+              "2004": 17,
+              "2005": 17,
+              "2006": 17,
+              "2007": 17,
+              "2008": 17,
+              "2009": 17,
+              "2010": 17,
+              "2011": 17,
+              "2012": 17,
+              "2013": 17,
+              "2014": 17,
+              "2015": 17,
+              "2016": 17,
+              "2017": 17,
+              "2018": 17,
+              "2019": 17,
+              "2020": 17,
+              "2021": 18,
+              "2022": 18,
+              "2023": 18,
+              "2024": 18,
+              "2025": 18,
+              "2026": 18
+            }
+          },
+          "week_zero_and_postseason_excluded": true
+        },
+        "sources": {
+          "ff_opportunity": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 683,
+            "sha256": "39d9c13c443df84382fe3ed7aa0f79e9bf296aff43e9c758983abb46372c6740"
+          },
+          "ngs_receiving": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 143,
+            "sha256": "5b3fc88bd71ebb69e417733f48a300f15e36edca6b115bee84aa187791d75858"
+          },
+          "ngs_rushing": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 67,
+            "sha256": "709dc5b5c761053d9863835d7fcf5d28ec036d9179809fc90a2ccc358f96b7af"
+          },
+          "pbp": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:36+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 5489,
+            "sha256": "d163b0a6367603912b821d1bd0aa2c07ef3aba7599c5fff0c578d6b71c77dda9"
+          },
+          "player_stats": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 2225,
+            "sha256": "bf2205c583c9268c340fff36eb7e3948956aba91262872a93dcb9a86cbe39726"
+          },
+          "players": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:35+00:00",
+            "max_week_source": null,
+            "rows_after_cutoff": 24834,
+            "sha256": "f16a1846f9114a009a7c69bacd339354d3dbb86dd398fd9377e46258a9aa7d0d"
+          },
+          "schedules": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:46+00:00",
+            "max_week_source": 18,
+            "rows_after_cutoff": 272,
+            "sha256": "2703d6d18ce25a33ed0fd4dc6d3fd43774024957f1cb5e1304d7ef4c5f2cbbe6"
+          },
+          "snap_counts": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:36+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 2994,
+            "sha256": "8e42d98d6448d63906a08e691432718047eb57a440cd4d18f9599facc1e2c6d5"
+          }
+        },
+        "status": "training_semantics_rebuilt"
+      },
+      "forward_sha256": "e9f0d2cbe25847a3fff45ee506415db432f7db913012175bd242dae6d81f7ca7",
+      "game_id": "2026_03_NE_JAX",
+      "original_release_metadata_sha256": "0c13d829a96c14c0657a0aff677736dfdfcd5c48baf50c4e3b8fb9de71b3d4aa",
+      "scored_skill_candidates": 27,
+      "slate": "sunday_0935",
+      "status": "scored_with_exact_forward_package",
+      "unscored_skill_player_ids": []
+    },
+    "sunday_0935::2026_03_NYJ_DET": {
+      "expected_skill_candidates": 25,
+      "feature_provenance": {
+        "as_of_utc": "2026-10-02T03:59:00+00:00",
+        "canonical_columns": [
+          "snap_pct_l4w",
+          "rush_share_l4w",
+          "target_share_l4w",
+          "rz_carry_share_l4w",
+          "rz_target_share_l4w",
+          "i10_carry_share_l4w",
+          "i10_target_share_l4w",
+          "rush_td_exp_l4w",
+          "rec_td_exp_l4w",
+          "team_plays_l4w",
+          "team_pass_rate_l4w",
+          "team_rz_trips_l4w",
+          "team_rz_td_rate_l4w",
+          "team_i10_pass_rate_l4w",
+          "opp_rz_td_rate_allowed_l4w",
+          "opp_td_allowed_to_pos_l4w",
+          "l4w_games_available",
+          "qb_cpoe_l4w",
+          "ngs_avg_separation_l4w",
+          "ngs_avg_expected_yac_l4w",
+          "ngs_avg_yac_above_expectation_l4w",
+          "ngs_recv_coverage_l4w",
+          "ngs_recv_available_l4w",
+          "ngs_percent_attempts_gte_eight_defenders_l4w",
+          "ngs_rush_yards_over_expectation_l4w",
+          "ngs_rush_coverage_l4w",
+          "ngs_rush_available_l4w"
+        ],
+        "current_week_outcomes_included": false,
+        "feature_source": "shared_td_features_windows_panel_helpers",
+        "features_with_missing_values": {
+          "i10_carry_share_l4w": 228,
+          "i10_target_share_l4w": 148,
+          "l4w_games_available": 0,
+          "ngs_avg_expected_yac_l4w": 181,
+          "ngs_avg_separation_l4w": 181,
+          "ngs_avg_yac_above_expectation_l4w": 181,
+          "ngs_percent_attempts_gte_eight_defenders_l4w": 281,
+          "ngs_recv_available_l4w": 0,
+          "ngs_recv_coverage_l4w": 0,
+          "ngs_rush_available_l4w": 0,
+          "ngs_rush_coverage_l4w": 0,
+          "ngs_rush_yards_over_expectation_l4w": 281,
+          "opp_rz_td_rate_allowed_l4w": 0,
+          "opp_td_allowed_to_pos_l4w": 0,
+          "qb_cpoe_l4w": 0,
+          "rec_td_exp_l4w": 50,
+          "rush_share_l4w": 48,
+          "rush_td_exp_l4w": 50,
+          "rz_carry_share_l4w": 208,
+          "rz_target_share_l4w": 117,
+          "snap_pct_l4w": 49,
+          "target_share_l4w": 48,
+          "team_i10_pass_rate_l4w": 0,
+          "team_pass_rate_l4w": 0,
+          "team_plays_l4w": 0,
+          "team_rz_td_rate_l4w": 0,
+          "team_rz_trips_l4w": 0
+        },
+        "ngs": {
+          "current_season_sources": {
+            "ngs_receiving": {
+              "capture_hash_status": "computed_legacy",
+              "captured_utc": "2026-09-29T15:52:34+00:00",
+              "max_week_source": 3,
+              "rows_after_cutoff": 143,
+              "sha256": "5b3fc88bd71ebb69e417733f48a300f15e36edca6b115bee84aa187791d75858"
+            },
+            "ngs_rushing": {
+              "capture_hash_status": "computed_legacy",
+              "captured_utc": "2026-09-29T15:52:34+00:00",
+              "max_week_source": 3,
+              "rows_after_cutoff": 67,
+              "sha256": "709dc5b5c761053d9863835d7fcf5d28ec036d9179809fc90a2ccc358f96b7af"
+            }
+          },
+          "final_regular_week_excluded": true,
+          "frozen_serving_source_hashes": {
+            "ff_opportunity": "dbb6db22a0c860b2c2ba8c4bb4cb1c71fd9fc2b1834743d810c96dfcd17c70dc",
+            "pbp": "87ccaacbb4606ee1482786eb8e177db79185c4b6fb162a0cfdead57268ad810a",
+            "player_stats": "489ce4a212377aa2c4bc6ed777a9980716a9eea17b52a210ccb673f130814d02",
+            "players": "7b3acde823e41cbc3b5d170f8a52bce5c451f200843980be57faefac3b0e9856",
+            "product_features": "58495f19d2cd3cfbaa824e6d462f0c68fc497237cdde3d8bfb130e19c4cb3a15",
+            "schedules": "78ff21f9530ad3e464dcf445f40664eb2e315be95e401aa578e75be5fbfc6cd3",
+            "snap_counts": "7b85db1820364f0b5817c623485e179cf2747b3d7f35d8624af54e59bc424de9"
+          },
+          "future_weeks_excluded": true,
+          "historical_snapshot": {
+            "manifest_sha256": "ae33d1482779595c2977b90bf840b3cc41d57582a68a973f74104fa28ea56a1d",
+            "receiving_sha256": "ea3aba531560a7b76f38d9afb4d824a478851e64771252f8d61e92d10435df8f",
+            "rushing_sha256": "8fc2cb2719c84ddee3934b52fac880223beca8e62c0c950d92d20ed6c358b5e3"
+          },
+          "normalization_audit": {
+            "ngs_receiving": {
+              "final_week_rows": 764,
+              "max_season": 2026,
+              "normalized_rows": 12232,
+              "raw_rows": 14874,
+              "unmapped_schedule_rows": 0,
+              "week_zero_rows": 1251
+            },
+            "ngs_rushing": {
+              "final_week_rows": 327,
+              "max_season": 2026,
+              "normalized_rows": 5055,
+              "raw_rows": 6126,
+              "unmapped_schedule_rows": 0,
+              "week_zero_rows": 508
+            },
+            "schedule_final_regular_week": {
+              "1999": 17,
+              "2000": 17,
+              "2001": 17,
+              "2002": 17,
+              "2003": 17,
+              "2004": 17,
+              "2005": 17,
+              "2006": 17,
+              "2007": 17,
+              "2008": 17,
+              "2009": 17,
+              "2010": 17,
+              "2011": 17,
+              "2012": 17,
+              "2013": 17,
+              "2014": 17,
+              "2015": 17,
+              "2016": 17,
+              "2017": 17,
+              "2018": 17,
+              "2019": 17,
+              "2020": 17,
+              "2021": 18,
+              "2022": 18,
+              "2023": 18,
+              "2024": 18,
+              "2025": 18,
+              "2026": 18
+            }
+          },
+          "week_zero_and_postseason_excluded": true
+        },
+        "sources": {
+          "ff_opportunity": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 683,
+            "sha256": "39d9c13c443df84382fe3ed7aa0f79e9bf296aff43e9c758983abb46372c6740"
+          },
+          "ngs_receiving": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 143,
+            "sha256": "5b3fc88bd71ebb69e417733f48a300f15e36edca6b115bee84aa187791d75858"
+          },
+          "ngs_rushing": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 67,
+            "sha256": "709dc5b5c761053d9863835d7fcf5d28ec036d9179809fc90a2ccc358f96b7af"
+          },
+          "pbp": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:36+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 5489,
+            "sha256": "d163b0a6367603912b821d1bd0aa2c07ef3aba7599c5fff0c578d6b71c77dda9"
+          },
+          "player_stats": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 2225,
+            "sha256": "bf2205c583c9268c340fff36eb7e3948956aba91262872a93dcb9a86cbe39726"
+          },
+          "players": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:35+00:00",
+            "max_week_source": null,
+            "rows_after_cutoff": 24834,
+            "sha256": "f16a1846f9114a009a7c69bacd339354d3dbb86dd398fd9377e46258a9aa7d0d"
+          },
+          "schedules": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:46+00:00",
+            "max_week_source": 18,
+            "rows_after_cutoff": 272,
+            "sha256": "2703d6d18ce25a33ed0fd4dc6d3fd43774024957f1cb5e1304d7ef4c5f2cbbe6"
+          },
+          "snap_counts": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:36+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 2994,
+            "sha256": "8e42d98d6448d63906a08e691432718047eb57a440cd4d18f9599facc1e2c6d5"
+          }
+        },
+        "status": "training_semantics_rebuilt"
+      },
+      "forward_sha256": "e9f0d2cbe25847a3fff45ee506415db432f7db913012175bd242dae6d81f7ca7",
+      "game_id": "2026_03_NYJ_DET",
+      "original_release_metadata_sha256": "0c13d829a96c14c0657a0aff677736dfdfcd5c48baf50c4e3b8fb9de71b3d4aa",
+      "scored_skill_candidates": 22,
+      "slate": "sunday_0935",
+      "status": "scored_with_exact_forward_package",
+      "unscored_skill_player_ids": [
+        "00-0036842",
+        "00-0040582",
+        "00-0040736"
+      ]
+    },
+    "sunday_0935::2026_03_SEA_WAS": {
+      "expected_skill_candidates": 25,
+      "feature_provenance": {
+        "as_of_utc": "2026-10-02T03:59:00+00:00",
+        "canonical_columns": [
+          "snap_pct_l4w",
+          "rush_share_l4w",
+          "target_share_l4w",
+          "rz_carry_share_l4w",
+          "rz_target_share_l4w",
+          "i10_carry_share_l4w",
+          "i10_target_share_l4w",
+          "rush_td_exp_l4w",
+          "rec_td_exp_l4w",
+          "team_plays_l4w",
+          "team_pass_rate_l4w",
+          "team_rz_trips_l4w",
+          "team_rz_td_rate_l4w",
+          "team_i10_pass_rate_l4w",
+          "opp_rz_td_rate_allowed_l4w",
+          "opp_td_allowed_to_pos_l4w",
+          "l4w_games_available",
+          "qb_cpoe_l4w",
+          "ngs_avg_separation_l4w",
+          "ngs_avg_expected_yac_l4w",
+          "ngs_avg_yac_above_expectation_l4w",
+          "ngs_recv_coverage_l4w",
+          "ngs_recv_available_l4w",
+          "ngs_percent_attempts_gte_eight_defenders_l4w",
+          "ngs_rush_yards_over_expectation_l4w",
+          "ngs_rush_coverage_l4w",
+          "ngs_rush_available_l4w"
+        ],
+        "current_week_outcomes_included": false,
+        "feature_source": "shared_td_features_windows_panel_helpers",
+        "features_with_missing_values": {
+          "i10_carry_share_l4w": 228,
+          "i10_target_share_l4w": 148,
+          "l4w_games_available": 0,
+          "ngs_avg_expected_yac_l4w": 181,
+          "ngs_avg_separation_l4w": 181,
+          "ngs_avg_yac_above_expectation_l4w": 181,
+          "ngs_percent_attempts_gte_eight_defenders_l4w": 281,
+          "ngs_recv_available_l4w": 0,
+          "ngs_recv_coverage_l4w": 0,
+          "ngs_rush_available_l4w": 0,
+          "ngs_rush_coverage_l4w": 0,
+          "ngs_rush_yards_over_expectation_l4w": 281,
+          "opp_rz_td_rate_allowed_l4w": 0,
+          "opp_td_allowed_to_pos_l4w": 0,
+          "qb_cpoe_l4w": 0,
+          "rec_td_exp_l4w": 50,
+          "rush_share_l4w": 48,
+          "rush_td_exp_l4w": 50,
+          "rz_carry_share_l4w": 208,
+          "rz_target_share_l4w": 117,
+          "snap_pct_l4w": 49,
+          "target_share_l4w": 48,
+          "team_i10_pass_rate_l4w": 0,
+          "team_pass_rate_l4w": 0,
+          "team_plays_l4w": 0,
+          "team_rz_td_rate_l4w": 0,
+          "team_rz_trips_l4w": 0
+        },
+        "ngs": {
+          "current_season_sources": {
+            "ngs_receiving": {
+              "capture_hash_status": "computed_legacy",
+              "captured_utc": "2026-09-29T15:52:34+00:00",
+              "max_week_source": 3,
+              "rows_after_cutoff": 143,
+              "sha256": "5b3fc88bd71ebb69e417733f48a300f15e36edca6b115bee84aa187791d75858"
+            },
+            "ngs_rushing": {
+              "capture_hash_status": "computed_legacy",
+              "captured_utc": "2026-09-29T15:52:34+00:00",
+              "max_week_source": 3,
+              "rows_after_cutoff": 67,
+              "sha256": "709dc5b5c761053d9863835d7fcf5d28ec036d9179809fc90a2ccc358f96b7af"
+            }
+          },
+          "final_regular_week_excluded": true,
+          "frozen_serving_source_hashes": {
+            "ff_opportunity": "dbb6db22a0c860b2c2ba8c4bb4cb1c71fd9fc2b1834743d810c96dfcd17c70dc",
+            "pbp": "87ccaacbb4606ee1482786eb8e177db79185c4b6fb162a0cfdead57268ad810a",
+            "player_stats": "489ce4a212377aa2c4bc6ed777a9980716a9eea17b52a210ccb673f130814d02",
+            "players": "7b3acde823e41cbc3b5d170f8a52bce5c451f200843980be57faefac3b0e9856",
+            "product_features": "58495f19d2cd3cfbaa824e6d462f0c68fc497237cdde3d8bfb130e19c4cb3a15",
+            "schedules": "78ff21f9530ad3e464dcf445f40664eb2e315be95e401aa578e75be5fbfc6cd3",
+            "snap_counts": "7b85db1820364f0b5817c623485e179cf2747b3d7f35d8624af54e59bc424de9"
+          },
+          "future_weeks_excluded": true,
+          "historical_snapshot": {
+            "manifest_sha256": "ae33d1482779595c2977b90bf840b3cc41d57582a68a973f74104fa28ea56a1d",
+            "receiving_sha256": "ea3aba531560a7b76f38d9afb4d824a478851e64771252f8d61e92d10435df8f",
+            "rushing_sha256": "8fc2cb2719c84ddee3934b52fac880223beca8e62c0c950d92d20ed6c358b5e3"
+          },
+          "normalization_audit": {
+            "ngs_receiving": {
+              "final_week_rows": 764,
+              "max_season": 2026,
+              "normalized_rows": 12232,
+              "raw_rows": 14874,
+              "unmapped_schedule_rows": 0,
+              "week_zero_rows": 1251
+            },
+            "ngs_rushing": {
+              "final_week_rows": 327,
+              "max_season": 2026,
+              "normalized_rows": 5055,
+              "raw_rows": 6126,
+              "unmapped_schedule_rows": 0,
+              "week_zero_rows": 508
+            },
+            "schedule_final_regular_week": {
+              "1999": 17,
+              "2000": 17,
+              "2001": 17,
+              "2002": 17,
+              "2003": 17,
+              "2004": 17,
+              "2005": 17,
+              "2006": 17,
+              "2007": 17,
+              "2008": 17,
+              "2009": 17,
+              "2010": 17,
+              "2011": 17,
+              "2012": 17,
+              "2013": 17,
+              "2014": 17,
+              "2015": 17,
+              "2016": 17,
+              "2017": 17,
+              "2018": 17,
+              "2019": 17,
+              "2020": 17,
+              "2021": 18,
+              "2022": 18,
+              "2023": 18,
+              "2024": 18,
+              "2025": 18,
+              "2026": 18
+            }
+          },
+          "week_zero_and_postseason_excluded": true
+        },
+        "sources": {
+          "ff_opportunity": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 683,
+            "sha256": "39d9c13c443df84382fe3ed7aa0f79e9bf296aff43e9c758983abb46372c6740"
+          },
+          "ngs_receiving": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 143,
+            "sha256": "5b3fc88bd71ebb69e417733f48a300f15e36edca6b115bee84aa187791d75858"
+          },
+          "ngs_rushing": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 67,
+            "sha256": "709dc5b5c761053d9863835d7fcf5d28ec036d9179809fc90a2ccc358f96b7af"
+          },
+          "pbp": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:36+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 5489,
+            "sha256": "d163b0a6367603912b821d1bd0aa2c07ef3aba7599c5fff0c578d6b71c77dda9"
+          },
+          "player_stats": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 2225,
+            "sha256": "bf2205c583c9268c340fff36eb7e3948956aba91262872a93dcb9a86cbe39726"
+          },
+          "players": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:35+00:00",
+            "max_week_source": null,
+            "rows_after_cutoff": 24834,
+            "sha256": "f16a1846f9114a009a7c69bacd339354d3dbb86dd398fd9377e46258a9aa7d0d"
+          },
+          "schedules": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:46+00:00",
+            "max_week_source": 18,
+            "rows_after_cutoff": 272,
+            "sha256": "2703d6d18ce25a33ed0fd4dc6d3fd43774024957f1cb5e1304d7ef4c5f2cbbe6"
+          },
+          "snap_counts": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:36+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 2994,
+            "sha256": "8e42d98d6448d63906a08e691432718047eb57a440cd4d18f9599facc1e2c6d5"
+          }
+        },
+        "status": "training_semantics_rebuilt"
+      },
+      "forward_sha256": "e9f0d2cbe25847a3fff45ee506415db432f7db913012175bd242dae6d81f7ca7",
+      "game_id": "2026_03_SEA_WAS",
+      "original_release_metadata_sha256": "0c13d829a96c14c0657a0aff677736dfdfcd5c48baf50c4e3b8fb9de71b3d4aa",
+      "scored_skill_candidates": 22,
+      "slate": "sunday_0935",
+      "status": "scored_with_exact_forward_package",
+      "unscored_skill_player_ids": [
+        "00-0034869",
+        "00-0035704",
+        "00-0037809"
+      ]
+    },
+    "sunday_0935::2026_03_TEN_NYG": {
+      "expected_skill_candidates": 26,
+      "feature_provenance": {
+        "as_of_utc": "2026-10-02T03:59:00+00:00",
+        "canonical_columns": [
+          "snap_pct_l4w",
+          "rush_share_l4w",
+          "target_share_l4w",
+          "rz_carry_share_l4w",
+          "rz_target_share_l4w",
+          "i10_carry_share_l4w",
+          "i10_target_share_l4w",
+          "rush_td_exp_l4w",
+          "rec_td_exp_l4w",
+          "team_plays_l4w",
+          "team_pass_rate_l4w",
+          "team_rz_trips_l4w",
+          "team_rz_td_rate_l4w",
+          "team_i10_pass_rate_l4w",
+          "opp_rz_td_rate_allowed_l4w",
+          "opp_td_allowed_to_pos_l4w",
+          "l4w_games_available",
+          "qb_cpoe_l4w",
+          "ngs_avg_separation_l4w",
+          "ngs_avg_expected_yac_l4w",
+          "ngs_avg_yac_above_expectation_l4w",
+          "ngs_recv_coverage_l4w",
+          "ngs_recv_available_l4w",
+          "ngs_percent_attempts_gte_eight_defenders_l4w",
+          "ngs_rush_yards_over_expectation_l4w",
+          "ngs_rush_coverage_l4w",
+          "ngs_rush_available_l4w"
+        ],
+        "current_week_outcomes_included": false,
+        "feature_source": "shared_td_features_windows_panel_helpers",
+        "features_with_missing_values": {
+          "i10_carry_share_l4w": 228,
+          "i10_target_share_l4w": 148,
+          "l4w_games_available": 0,
+          "ngs_avg_expected_yac_l4w": 181,
+          "ngs_avg_separation_l4w": 181,
+          "ngs_avg_yac_above_expectation_l4w": 181,
+          "ngs_percent_attempts_gte_eight_defenders_l4w": 281,
+          "ngs_recv_available_l4w": 0,
+          "ngs_recv_coverage_l4w": 0,
+          "ngs_rush_available_l4w": 0,
+          "ngs_rush_coverage_l4w": 0,
+          "ngs_rush_yards_over_expectation_l4w": 281,
+          "opp_rz_td_rate_allowed_l4w": 0,
+          "opp_td_allowed_to_pos_l4w": 0,
+          "qb_cpoe_l4w": 0,
+          "rec_td_exp_l4w": 50,
+          "rush_share_l4w": 48,
+          "rush_td_exp_l4w": 50,
+          "rz_carry_share_l4w": 208,
+          "rz_target_share_l4w": 117,
+          "snap_pct_l4w": 49,
+          "target_share_l4w": 48,
+          "team_i10_pass_rate_l4w": 0,
+          "team_pass_rate_l4w": 0,
+          "team_plays_l4w": 0,
+          "team_rz_td_rate_l4w": 0,
+          "team_rz_trips_l4w": 0
+        },
+        "ngs": {
+          "current_season_sources": {
+            "ngs_receiving": {
+              "capture_hash_status": "computed_legacy",
+              "captured_utc": "2026-09-29T15:52:34+00:00",
+              "max_week_source": 3,
+              "rows_after_cutoff": 143,
+              "sha256": "5b3fc88bd71ebb69e417733f48a300f15e36edca6b115bee84aa187791d75858"
+            },
+            "ngs_rushing": {
+              "capture_hash_status": "computed_legacy",
+              "captured_utc": "2026-09-29T15:52:34+00:00",
+              "max_week_source": 3,
+              "rows_after_cutoff": 67,
+              "sha256": "709dc5b5c761053d9863835d7fcf5d28ec036d9179809fc90a2ccc358f96b7af"
+            }
+          },
+          "final_regular_week_excluded": true,
+          "frozen_serving_source_hashes": {
+            "ff_opportunity": "dbb6db22a0c860b2c2ba8c4bb4cb1c71fd9fc2b1834743d810c96dfcd17c70dc",
+            "pbp": "87ccaacbb4606ee1482786eb8e177db79185c4b6fb162a0cfdead57268ad810a",
+            "player_stats": "489ce4a212377aa2c4bc6ed777a9980716a9eea17b52a210ccb673f130814d02",
+            "players": "7b3acde823e41cbc3b5d170f8a52bce5c451f200843980be57faefac3b0e9856",
+            "product_features": "58495f19d2cd3cfbaa824e6d462f0c68fc497237cdde3d8bfb130e19c4cb3a15",
+            "schedules": "78ff21f9530ad3e464dcf445f40664eb2e315be95e401aa578e75be5fbfc6cd3",
+            "snap_counts": "7b85db1820364f0b5817c623485e179cf2747b3d7f35d8624af54e59bc424de9"
+          },
+          "future_weeks_excluded": true,
+          "historical_snapshot": {
+            "manifest_sha256": "ae33d1482779595c2977b90bf840b3cc41d57582a68a973f74104fa28ea56a1d",
+            "receiving_sha256": "ea3aba531560a7b76f38d9afb4d824a478851e64771252f8d61e92d10435df8f",
+            "rushing_sha256": "8fc2cb2719c84ddee3934b52fac880223beca8e62c0c950d92d20ed6c358b5e3"
+          },
+          "normalization_audit": {
+            "ngs_receiving": {
+              "final_week_rows": 764,
+              "max_season": 2026,
+              "normalized_rows": 12232,
+              "raw_rows": 14874,
+              "unmapped_schedule_rows": 0,
+              "week_zero_rows": 1251
+            },
+            "ngs_rushing": {
+              "final_week_rows": 327,
+              "max_season": 2026,
+              "normalized_rows": 5055,
+              "raw_rows": 6126,
+              "unmapped_schedule_rows": 0,
+              "week_zero_rows": 508
+            },
+            "schedule_final_regular_week": {
+              "1999": 17,
+              "2000": 17,
+              "2001": 17,
+              "2002": 17,
+              "2003": 17,
+              "2004": 17,
+              "2005": 17,
+              "2006": 17,
+              "2007": 17,
+              "2008": 17,
+              "2009": 17,
+              "2010": 17,
+              "2011": 17,
+              "2012": 17,
+              "2013": 17,
+              "2014": 17,
+              "2015": 17,
+              "2016": 17,
+              "2017": 17,
+              "2018": 17,
+              "2019": 17,
+              "2020": 17,
+              "2021": 18,
+              "2022": 18,
+              "2023": 18,
+              "2024": 18,
+              "2025": 18,
+              "2026": 18
+            }
+          },
+          "week_zero_and_postseason_excluded": true
+        },
+        "sources": {
+          "ff_opportunity": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 683,
+            "sha256": "39d9c13c443df84382fe3ed7aa0f79e9bf296aff43e9c758983abb46372c6740"
+          },
+          "ngs_receiving": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 143,
+            "sha256": "5b3fc88bd71ebb69e417733f48a300f15e36edca6b115bee84aa187791d75858"
+          },
+          "ngs_rushing": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 67,
+            "sha256": "709dc5b5c761053d9863835d7fcf5d28ec036d9179809fc90a2ccc358f96b7af"
+          },
+          "pbp": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:36+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 5489,
+            "sha256": "d163b0a6367603912b821d1bd0aa2c07ef3aba7599c5fff0c578d6b71c77dda9"
+          },
+          "player_stats": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:34+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 2225,
+            "sha256": "bf2205c583c9268c340fff36eb7e3948956aba91262872a93dcb9a86cbe39726"
+          },
+          "players": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:35+00:00",
+            "max_week_source": null,
+            "rows_after_cutoff": 24834,
+            "sha256": "f16a1846f9114a009a7c69bacd339354d3dbb86dd398fd9377e46258a9aa7d0d"
+          },
+          "schedules": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:46+00:00",
+            "max_week_source": 18,
+            "rows_after_cutoff": 272,
+            "sha256": "2703d6d18ce25a33ed0fd4dc6d3fd43774024957f1cb5e1304d7ef4c5f2cbbe6"
+          },
+          "snap_counts": {
+            "capture_hash_status": "computed_legacy",
+            "captured_utc": "2026-09-29T15:52:36+00:00",
+            "max_week_source": 3,
+            "rows_after_cutoff": 2994,
+            "sha256": "8e42d98d6448d63906a08e691432718047eb57a440cd4d18f9599facc1e2c6d5"
+          }
+        },
+        "status": "training_semantics_rebuilt"
+      },
+      "forward_sha256": "e9f0d2cbe25847a3fff45ee506415db432f7db913012175bd242dae6d81f7ca7",
+      "game_id": "2026_03_TEN_NYG",
+      "original_release_metadata_sha256": "0c13d829a96c14c0657a0aff677736dfdfcd5c48baf50c4e3b8fb9de71b3d4aa",
+      "scored_skill_candidates": 24,
+      "slate": "sunday_0935",
+      "status": "scored_with_exact_forward_package",
+      "unscored_skill_player_ids": [
+        "00-0036876",
+        "00-0039032"
+      ]
+    }
+  },
+  "original_public_board_sha256": "f4de36ee4ba28f27ef814698b5d08f5d5caa0880c44d0be36d051e6bfc3c345a",
+  "original_row_count": 383,
+  "package_hashes": {
+    "anytime_td_2026_week03_ngs_retrospective.csv": "dc121b8b3d5719cea4b39c33af7c6a42d3fe4064cb59f24eb00c6eab211b1cea"
+  },
+  "prediction_mode": "retrospective",
+  "preserved_price_columns": [
+    "book_amer",
+    "first_amer",
+    "two_plus_amer",
+    "p_book"
+  ],
+  "private_replay_audit_file": "2026_week03_ngs_retrospective.audit.json",
+  "private_replay_audit_sha256": "10593228bb9bf17efddca9f94202ae080de39f53be8c489a0695cb538130d46d",
+  "rebuilt_row_count": 383,
+  "reviewed_settlement_adjustment_count": 0,
+  "reviewed_settlement_adjustments": [],
+  "reviewed_settlement_registry_sha256": "02e9c0fb5980af63629bd5b14fed43c4b4ab48890d3d34e90be7f59fe3064ce3",
+  "schema_version": 1,
+  "scored_rows": 383,
+  "season": 2026,
+  "settlement_state_columns": [
+    "scored_anytime",
+    "scored_two_plus",
+    "scored_first",
+    "status",
+    "settlement_status_anytime",
+    "settlement_status_two_plus",
+    "settlement_status_first"
+  ],
+  "source_cutoff_et": "2026-10-01T23:59:00-04:00",
+  "unavailable_rows": 0,
+  "unsupported_game_count": 0,
+  "week": 3
+}

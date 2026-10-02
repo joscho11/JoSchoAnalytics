@@ -1,0 +1,35 @@
+{
+  "releases": [
+    {
+      "csv": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week01_ngs_retrospective.csv",
+      "csv_sha256": "dc3eada6dca75f089d73f6e0724d8e810db83ecb57b6e3730048b75a0e05195e",
+      "metadata": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week01_ngs_retrospective.json",
+      "metadata_sha256": "d522591abb4dcff4e9f6c9e971b9ede5ac01cb92de76cdf31e2044706d9f552b",
+      "model_version": "td_product_ngs_44_frozen_2025_v1",
+      "prediction_mode": "retrospective",
+      "season": 2026,
+      "week": 1
+    },
+    {
+      "csv": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week02_ngs_retrospective.csv",
+      "csv_sha256": "278787fad6587a6714c598e3656c52b164b74323c0ffe543beb30edc1c633060",
+      "metadata": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week02_ngs_retrospective.json",
+      "metadata_sha256": "b6585f761e7ccfdf29f9cb022d058d839386314f0667e94b42ec0b896a87c108",
+      "model_version": "td_product_ngs_44_frozen_2025_v1",
+      "prediction_mode": "retrospective",
+      "season": 2026,
+      "week": 2
+    },
+    {
+      "csv": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week03_ngs_retrospective.csv",
+      "csv_sha256": "dc121b8b3d5719cea4b39c33af7c6a42d3fe4064cb59f24eb00c6eab211b1cea",
+      "metadata": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week03_ngs_retrospective.json",
+      "metadata_sha256": "d2673aba2f8512ffd5dda70f361db0705783eeb1b55a877f8250396469dc501c",
+      "model_version": "td_product_ngs_44_frozen_2025_v1",
+      "prediction_mode": "retrospective",
+      "season": 2026,
+      "week": 3
+    }
+  ],
+  "schema_version": 1
+}

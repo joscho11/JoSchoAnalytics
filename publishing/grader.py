@@ -13,6 +13,7 @@ from .contract import PublicationError, sha256_file, utc_now_iso
 from .manifest import active_release, load_manifest, write_manifest
 from .paths import releases_root, relative_to_site, resolve_site_path
 from .validators import read_table
+from .td_releases import canonical_td_releases, read_td_release
 
 
 def _active_build_for_week(product: str, season: int, week: int, *, root=None) -> dict:
@@ -1087,12 +1088,9 @@ def grade_first_td_releases(root=None, *, participation_by_season: dict[int, pd.
     site_root = Path(root) if root is not None else Path(__file__).resolve().parents[1]
     directory = site_root / "betting" / "anytime_td"
     releases = []
-    for source in sorted(directory.glob("anytime_td_*_week*.csv")):
-        match = _ANYTIME_TD_RELEASE_RE.fullmatch(source.name)
-        if match is None:
-            continue
-        season, week = int(match.group("season")), int(match.group("week"))
-        if season >= 2026:
+    for (season, week), entry in sorted(canonical_td_releases(directory).items()):
+        source = entry["csv_path"]
+        if season >= 2026 and entry.get("prediction_mode", "live") == "live":
             releases.append((source, season, week))
     if not releases:
         return {"status": "skipped", "reason": "no published 2026 Anytime TD releases"}
@@ -1111,7 +1109,7 @@ def grade_first_td_releases(root=None, *, participation_by_season: dict[int, pd.
         if {"home_score", "away_score"} - set(slate.columns):
             raise PublicationError("schedule is missing score columns for Anytime TD grading")
         finals = slate["home_score"].notna() & slate["away_score"].notna()
-        board = read_table(source)
+        board = read_td_release(source)
         board_game_ids = {
             game_id for game_id in board["game_id"].map(_normal_identifier).dropna().tolist()
         }
@@ -1189,12 +1187,9 @@ def grade_anytime_td_releases(
     site_root = Path(root) if root is not None else Path(__file__).resolve().parents[1]
     directory = site_root / "betting" / "anytime_td"
     releases = []
-    for source in sorted(directory.glob("anytime_td_*_week*.csv")):
-        match = _ANYTIME_TD_RELEASE_RE.fullmatch(source.name)
-        if match is None:
-            continue
-        season, week = int(match.group("season")), int(match.group("week"))
-        if season >= 2026:
+    for (season, week), entry in sorted(canonical_td_releases(directory).items()):
+        source = entry["csv_path"]
+        if season >= 2026 and entry.get("prediction_mode", "live") == "live":
             releases.append((source, season, week))
     if not releases:
         return {"status": "skipped", "reason": "no published 2026 Anytime TD releases"}
@@ -1212,7 +1207,7 @@ def grade_anytime_td_releases(
         if {"home_score", "away_score"} - set(slate.columns):
             raise PublicationError("schedule is missing score columns for Anytime TD grading")
         finals = slate["home_score"].notna() & slate["away_score"].notna()
-        board = read_table(source)
+        board = read_td_release(source)
         board_game_ids = {
             game_id for game_id in board["game_id"].map(_normal_identifier).dropna().tolist()
         }

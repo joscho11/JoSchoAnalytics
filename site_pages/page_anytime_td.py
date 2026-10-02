@@ -17,6 +17,7 @@ import streamlit as st
 
 import attd_tracker as tracker
 import page_common
+from publishing.td_releases import MANIFEST_NAME, canonical_td_releases, read_td_release
 from dashboard_chrome import dataframe_phone_desktop, exact_table_height
 
 _HERE = Path(__file__).resolve().parents[1]
@@ -101,14 +102,7 @@ def _parse_release(name: str) -> tuple[int, int] | None:
 
 
 def available_releases() -> dict[tuple[int, int], Path]:
-    found: dict[tuple[int, int], Path] = {}
-    if not _DIR.is_dir():
-        return found
-    for path in sorted(_DIR.glob("anytime_td_*_week*.csv")):
-        key = _parse_release(path.name)
-        if key is not None:
-            found[key] = path
-    return found
+    return {key: entry["csv_path"] for key, entry in canonical_td_releases(_DIR).items()}
 
 
 def default_release(options: list[tuple[int, int]]) -> tuple[int, int]:
@@ -123,14 +117,8 @@ def default_release(options: list[tuple[int, int]]) -> tuple[int, int]:
 
 
 def available_weeks() -> dict[int, Path]:
-    found: dict[int, Path] = {}
-    if not _DIR.is_dir():
-        return found
-    for path in sorted(_DIR.glob(f"anytime_td_{DEMO_SEASON}_week*.csv")):
-        week = _parse_week(path.name)
-        if week is not None:
-            found[week] = path
-    return found
+    return {week: entry["csv_path"] for (season, week), entry in canonical_td_releases(_DIR).items()
+            if season == DEMO_SEASON}
 
 
 def priced_rows(df: pd.DataFrame) -> pd.DataFrame:
@@ -191,6 +179,17 @@ def _with_tag(value: str, tag: str) -> str:
     if not tag or not value or value in {"Pending", "Not implemented yet"}:
         return value
     return value + tag
+
+
+def _pending_replacement_caption(model_pending: int) -> str | None:
+    if model_pending <= 0:
+        return None
+    row_word = "row" if model_pending == 1 else "rows"
+    verb = "awaits" if model_pending == 1 else "await"
+    return (
+        f"{model_pending} quoted replacement {row_word} {verb} model inputs; "
+        "Pending rows are excluded from value-bet tracking."
+    )
 
 
 def by_position(df: pd.DataFrame, position: str) -> pd.DataFrame:
@@ -335,11 +334,16 @@ def _market_summary(
 
 @st.cache_data(ttl=900)
 def _load_season_tracker(
-    paths: tuple[str, ...], modified_at: tuple[int, ...], market: str = "anytime"
+    paths: tuple[str, ...], modified_at: tuple[int, ...], market: str = "anytime",
+    prediction_mode: str | None = None, model_version: str | None = None,
 ) -> dict:
     """Load the newest published file for each live week and score its paper bets."""
     del modified_at  # cache key; the files themselves are read below
     frame = tracker.aggregate_published_csvs(paths)
+    if prediction_mode is not None:
+        frame = frame[frame.prediction_mode.eq(prediction_mode)]
+    if model_version is not None:
+        frame = frame[frame.model_version.eq(model_version)]
     if market == "two_plus":
         return tracker.season_tracker(
             frame,
@@ -374,6 +378,12 @@ def _published_live_paths(releases: dict[tuple[int, int], Path]) -> tuple[tuple[
         if key[0] == LIVE_SEASON
     )
     modified_at = tuple(Path(path).stat().st_mtime_ns for path in paths)
+    manifest = _DIR / MANIFEST_NAME
+    if manifest.is_file():
+        modified_at += (manifest.stat().st_mtime_ns,)
+    modified_at += tuple(entry["metadata_path"].stat().st_mtime_ns
+                         for entry in canonical_td_releases(_DIR).values()
+                         if "metadata_path" in entry)
     return paths, modified_at
 
 
@@ -449,12 +459,28 @@ _MARKET_LABELS = {"anytime": "Anytime TD", "two_plus": "2+ TD", "first": "First 
 _MARKET_SHORT_LABELS = {"anytime": "", "two_plus": "2+ ", "first": "First "}
 
 
-def _render_scorecards(
+def _render_scorecards(priced, season, releases, *, market="anytime") -> None:
+    """Render each model/mode separately, including a partially locked week."""
+    if season != LIVE_SEASON:
+        _render_single_scorecards(priced, season, releases, market=market)
+        return
+    frame = priced.copy()
+    for column, default in (("prediction_mode", "live"), ("model_version", "legacy")):
+        if column not in frame:
+            frame[column] = default
+    for (mode, version), rows in frame.groupby(["prediction_mode", "model_version"], sort=True):
+        _render_single_scorecards(rows, season, releases, market=market,
+                                 prediction_mode=str(mode), model_version=str(version))
+
+
+def _render_single_scorecards(
     priced: pd.DataFrame,
     season: int,
     releases: dict[tuple[int, int], Path],
     *,
     market: str = "anytime",
+    prediction_mode: str = "live",
+    model_version: str = "legacy",
 ) -> None:
     is_two_plus = market == "two_plus"
     is_first = market == "first"
@@ -474,14 +500,15 @@ def _render_scorecards(
     if season == LIVE_SEASON:
         paths, modified_at = _published_live_paths(releases)
         if paths:
-            paper = _load_season_tracker(paths, modified_at, market)
+            paper = _load_season_tracker(paths, modified_at, market, prediction_mode, model_version)
             result = paper["summary"]
             ci = paper["ci"]
             st.caption(
-                f"{market_label} paper tracker · "
+                f"{market_label} paper tracker · {'retrospective reconstruction' if prediction_mode == 'retrospective' else 'live published'} · "
+                f"model {model_version} · "
                 f"candidate rule: {rule_text} · 1U per candidate."
             )
-            with st.container(horizontal=True, key="jsa-metric-even-atd"):
+            with st.container(horizontal=True, key=f"jsa-metric-even-atd-{prediction_mode}-{model_version}"):
                 st.metric("Net units", f"{result['net_units']:+.1f}U", border=True)
                 st.metric("ROI", _pct(result["roi"]), border=True)
                 st.metric(
@@ -564,12 +591,12 @@ def _render_scorecards(
 
 
 @st.cache_data(ttl=3600)
-def _load_csv(path: str, modified_at: int | None = None) -> pd.DataFrame:
-    return pd.read_csv(path)
+def _load_csv(path: str, modified_at: int | tuple[int, int] | None = None) -> pd.DataFrame:
+    return read_td_release(path)
 
 
 @st.cache_data(ttl=3600)
-def _load_meta(path: str) -> dict:
+def _load_meta(path: str, modified_at: int | None = None) -> dict:
     raw = Path(path)
     if not raw.is_file():
         return {}
@@ -581,6 +608,10 @@ def _load_meta(path: str) -> dict:
 
 
 def _live_metadata(season: int = LIVE_SEASON, week: int = 1) -> dict:
+    entry = canonical_td_releases(_DIR).get((season, week), {})
+    if "metadata_path" in entry:
+        path = entry["metadata_path"]
+        return _load_meta(str(path), path.stat().st_mtime_ns)
     files = sorted(_DIR.glob(f"anytime_td_{season}_week{week:02d}_*.json"))
     if not files:
         return {}
@@ -1341,7 +1372,7 @@ def _reading_guide() -> None:
         st.markdown("""
 Chance a skill player scores a rushing or receiving touchdown. Passing TDs are
 out. This is not even money: a typical quote is around one in five, so misses
-will outnumber hits. Over full 2025 the sportsbooks were still about 0.08% more
+will outnumber hits. The 2025 demo uses the earlier model. Over full 2025 the sportsbooks were still about 0.08% more
 accurate. On these eight demo weeks our numbers were closer in 5; that is not a
 betting record. For fun, not a proven edge. Bet responsibly.
 
@@ -1453,6 +1484,7 @@ def render() -> None:
         page_common.sync_query_value("atd_week", week)
         search = controls[2].text_input("Search player", placeholder="Barkley, Jefferson", key="atd_search")
     available = releases | {(DEMO_SEASON, w): p for w, p in demo.items()}
+    meta = {}
     if season == LIVE_SEASON:
         st.caption(
             "Live 2026 prices are manually copied from US sportsbook pages when available. "
@@ -1460,6 +1492,9 @@ def render() -> None:
         )
         meta = _live_metadata(season, week)
         if meta:
+            if meta.get("prediction_mode") == "retrospective":
+                st.caption("Retrospective reconstruction; historical input availability unverified. "
+                           "These probabilities were recomputed after the games, and were not published picks before kickoff.")
             book_value = meta.get("book", [])
             books = ", ".join(book_value) if isinstance(book_value, list) else str(book_value)
             st.caption(f"Latest paste: {books or 'manual paste'} · Captured: {meta.get('capture_max', 'unknown')}")
@@ -1468,8 +1503,10 @@ def render() -> None:
             st.caption(graded_line)
     with st.container(horizontal=True, vertical_alignment="center"):
         is_live = season == LIVE_SEASON
-        st.badge("Live" if is_live else "Demo", icon=":material/live_tv:" if is_live else ":material/science:",
-                 color="green" if is_live else "orange")
+        retrospective = meta.get("prediction_mode") == "retrospective"
+        st.badge("Retrospective" if retrospective else "Live" if is_live else "Demo",
+                 icon=":material/science:" if retrospective or not is_live else ":material/live_tv:",
+                 color="orange" if retrospective or not is_live else "green")
         st.caption("Priced players only. Sorted by the active market's Value Gap (highest first). " +
                    (f"Cumulative 2026 Week {week} release." if is_live else "2025 weeks 10-17 demo."))
     _reading_guide()
@@ -1483,7 +1520,9 @@ def render() -> None:
         return
 
     source = available[(season, week)]
-    raw = _load_csv(str(source), source.stat().st_mtime_ns)
+    manifest = _DIR / MANIFEST_NAME
+    csv_cache_key = (source.stat().st_mtime_ns, manifest.stat().st_mtime_ns if manifest.is_file() else 0)
+    raw = _load_csv(str(source), csv_cache_key)
     need = [
         "player_display_name", "position", "team", "opponent_team",
         "p_ge1", "p_book", "fair_amer", "book_amer", "scored_anytime",
@@ -1511,13 +1550,13 @@ def render() -> None:
             "\"no history\" rows have no prior NFL form for the model to read, so their "
             "gap is a guess and they are never highlighted."
         )
-    if model_pending:
-        row_word = "row" if model_pending == 1 else "rows"
-        verb = "awaits" if model_pending == 1 else "await"
+    if retrospective and model_pending:
         st.caption(
-            f"{model_pending} quoted replacement {row_word} {verb} model inputs; "
-            "Pending rows are excluded from value-bet tracking."
+            f"{model_pending} quoted rows have no reproducible retrospective probability; "
+            "they are excluded from performance scorecards."
         )
+    elif pending_caption := _pending_replacement_caption(model_pending):
+        st.caption(pending_caption)
     matchups = list(_matchup_groups(board_priced))
     if not matchups:
         st.info("No matchups match this search.")

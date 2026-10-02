@@ -10,6 +10,28 @@ for fun, not a proven edge. Bet responsibly.
 Training lives in the private `td_count_model_beta` repo. This public tree only
 ships CSV.
 
+## Canonical releases and reconstructed results
+
+`releases_manifest.json` (schema version 1) can bind a week's canonical CSV
+to one JSON metadata file. Each `releases` entry contains `season`, `week`,
+`csv`, `metadata`, `prediction_mode`, and `model_version`. Paths are relative
+to this directory and must remain inside it. Metadata repeats the season,
+week, model version, and prediction mode. Duplicate weekly entries, missing
+artifacts, or disagreements are publication errors.
+
+Without a manifest entry, only the exact `anytime_td_YYYY_weekWW.csv` filename
+is canonical. Suffixed CSVs and backup files never replace it. The page,
+paper tracker, and scheduled graders share this selection rule.
+
+An NGS backfill has `prediction_mode: retrospective` and is labeled
+"Retrospective reconstruction; historical input availability unverified."
+It describes probabilities computed after the games, not picks published
+before kickoff. Original releases remain in the private producer's audit
+archive. The public tracker reports retrospective and live rows separately,
+and separates model versions within each mode. A partially locked live week
+may contain rows from two model versions; those records stay separate.
+Missing reconstructed probabilities remain pending and cannot create bets.
+
 ## What the board is
 
 Every skill player the books quoted that week, sorted by `ATTD Value Gap`
