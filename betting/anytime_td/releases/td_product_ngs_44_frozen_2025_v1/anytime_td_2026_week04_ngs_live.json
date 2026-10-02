@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "season": 2026,
+  "week": 4,
+  "slate": "draftkings_future_ngs_20261002T1252ET",
+  "release_mode": "live",
+  "prediction_mode": "live",
+  "model_version": "td_product_ngs_44_frozen_2025_v1",
+  "model_spec": "live_product_ngs_44",
+  "training_seasons": [
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "scoring_cutoff_et": "2026-10-02T12:52:18.603288",
+  "model_bundle_sha256": "ec6171e5902a84b5986edd68adca7b8703006c8f8b57b020597dbc29fd0daac7",
+  "row_count": 389,
+  "future_ngs_rows": 362,
+  "locked_started_rows": 27,
+  "row_model_versions": {
+    "live_product_35_frozen": 27,
+    "td_product_ngs_44_frozen_2025_v1": 362
+  },
+  "locked_game_ids": [
+    "2026_04_PIT_CLE"
+  ],
+  "locked_rows_sha256_before_and_after": "1bc8dd49948cf5f359f68b2b121924f83cd651f1ae6e6f7fc077afee5c0fe0f6",
+  "odds_capture": {
+    "book": "DraftKings",
+    "captured_at_min_et": "2026-10-01 18:41:57",
+    "captured_at_max_et": "2026-10-01 18:41:57",
+    "captured_from_original_file": "2026_week04_draftkings_full.csv",
+    "original_file_sha256": "32f92caf662a163309716e2e9add2fc9b614492af52932d376bcd4db44c62726",
+    "scored_future_subset_sha256": "4a8737c77a9f8424146aea9273e28f680fe342404f249f7b98594d3dacf9ca27",
+    "odds_refreshed_at_scoring": false
+  },
+  "forward_projection": {
+    "as_of_status": null,
+    "sha256": "987a710714ba1945bd829cd50020ae0c423655057b9ff9937ac44825fd0e5e4a",
+    "coverage_sha256": "ffd6f8f64d42a4ae0f08dc100f12ce28c2a56e20ab4ca428368fb747d99b1cdd"
+  },
+  "prior_week_sources": {
+    "player_stats": {
+      "captured_utc": "2026-09-29T15:52:34+00:00",
+      "max_week_source": 3,
+      "sha256": "bf2205c583c9268c340fff36eb7e3948956aba91262872a93dcb9a86cbe39726",
+      "capture_hash_status": "computed_legacy"
+    },
+    "snap_counts": {
+      "captured_utc": "2026-09-29T15:52:36+00:00",
+      "max_week_source": 3,
+      "sha256": "8e42d98d6448d63906a08e691432718047eb57a440cd4d18f9599facc1e2c6d5",
+      "capture_hash_status": "computed_legacy"
+    },
+    "pbp": {
+      "captured_utc": "2026-09-29T15:52:36+00:00",
+      "max_week_source": 3,
+      "sha256": "d163b0a6367603912b821d1bd0aa2c07ef3aba7599c5fff0c578d6b71c77dda9",
+      "capture_hash_status": "computed_legacy"
+    },
+    "ff_opportunity": {
+      "captured_utc": "2026-09-29T15:52:34+00:00",
+      "max_week_source": 3,
+      "sha256": "39d9c13c443df84382fe3ed7aa0f79e9bf296aff43e9c758983abb46372c6740",
+      "capture_hash_status": "computed_legacy"
+    },
+    "schedules": {
+      "captured_utc": "2026-09-29T15:52:46+00:00",
+      "max_week_source": 18,
+      "sha256": "2703d6d18ce25a33ed0fd4dc6d3fd43774024957f1cb5e1304d7ef4c5f2cbbe6",
+      "capture_hash_status": "computed_legacy"
+    },
+    "players": {
+      "captured_utc": "2026-09-29T15:52:35+00:00",
+      "max_week_source": null,
+      "sha256": "f16a1846f9114a009a7c69bacd339354d3dbb86dd398fd9377e46258a9aa7d0d",
+      "capture_hash_status": "computed_legacy"
+    },
+    "ngs_receiving": {
+      "captured_utc": "2026-09-29T15:52:34+00:00",
+      "max_week_source": 3,
+      "sha256": "5b3fc88bd71ebb69e417733f48a300f15e36edca6b115bee84aa187791d75858",
+      "capture_hash_status": "computed_legacy"
+    },
+    "ngs_rushing": {
+      "captured_utc": "2026-09-29T15:52:34+00:00",
+      "max_week_source": 3,
+      "sha256": "709dc5b5c761053d9863835d7fcf5d28ec036d9179809fc90a2ccc358f96b7af",
+      "capture_hash_status": "computed_legacy"
+    }
+  },
+  "legacy_hash_provenance": "Older timestamped source entries without capture-time hashes were hashed at publication and labeled computed_legacy; capture timestamps and computed hashes are recorded in the private release sidecar.",
+  "first_td": {
+    "rows_with_probability": 242,
+    "incomplete_candidate_mass_games": [
+      "2026_04_JAX_CIN",
+      "2026_04_LA_PHI",
+      "2026_04_MIA_MIN",
+      "2026_04_NYJ_CHI",
+      "2026_04_TEN_BAL"
+    ],
+    "incomplete_games_remain_unavailable": true
+  },
+  "locked_result_preservation": "PIT-CLE settled outcomes, prices, and all pre-existing columns were byte-value identical before and after the Week 4 update."
+}

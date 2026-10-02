@@ -29,6 +29,16 @@
       "prediction_mode": "retrospective",
       "season": 2026,
       "week": 3
+    },
+    {
+      "season": 2026,
+      "week": 4,
+      "csv": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week04_ngs_live.csv",
+      "csv_sha256": "723f82d32e58e86e6dd8a350ea3c377e0540b4b0451227b1f7d58da76a0a9c01",
+      "metadata": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week04_ngs_live.json",
+      "metadata_sha256": "a4fbb35219d02907a0c1ba0533615dbc8a0c670f76fb474256b0c72a2e90c9b3",
+      "prediction_mode": "live",
+      "model_version": "td_product_ngs_44_frozen_2025_v1"
     }
   ],
   "schema_version": 1
