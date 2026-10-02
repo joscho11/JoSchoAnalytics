@@ -3,3 +3,9 @@
 # DFS sidecars hash the served bytes. Preserve every file in this nested tree
 # exactly so Git cannot rewrite CSV line endings between Windows and Linux.
 fantasy/optimizer_projections/** -text
+
+# Public TD manifests hash the exact bytes served by Streamlit Cloud. Keep
+# those artifacts byte-stable across Windows and Linux checkouts.
+betting/anytime_td/releases_manifest.json text eol=lf
+betting/anytime_td/releases/**/*.csv text eol=lf
+betting/anytime_td/releases/**/*.json text eol=lf
