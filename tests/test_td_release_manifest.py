@@ -96,8 +96,12 @@ def test_season_tracker_filters_mode_and_model_before_accounting(tmp_path):
     page._load_season_tracker.clear()
     ngs_live = page._load_season_tracker(paths, (1, 2, 3), prediction_mode="live", model_version="ngs44")
     ngs_retro = page._load_season_tracker(paths, (1, 2, 3), prediction_mode="retrospective", model_version="ngs44")
+    live_through_week_1 = page._load_season_tracker(
+        paths, (1, 2, 3), prediction_mode="live", through_week=1,
+    )
     assert ngs_live["summary"]["bets"] == ngs_retro["summary"]["bets"] == 1
     assert ngs_live["rows"].week.tolist() == [2]
+    assert live_through_week_1["rows"].empty
     combined = tracker.aggregate_published_csvs(paths)
     duplicate_game = combined.iloc[[0, 1]].copy()
     duplicate_game.loc[:, "game_id"] = "same"
@@ -125,8 +129,9 @@ def test_retrospective_page_labels_and_isolates_scorecards(tmp_path, monkeypatch
     assert not at.exception
     captions = " ".join(str(c.value) for c in at.caption)
     assert "Retrospective reconstruction; historical input availability unverified" in captions
-    assert "paper tracker · retrospective reconstruction" in captions
-    assert "paper tracker · live published" not in captions
+    assert "retrospective reconstruction rows" in captions
+    assert "Season to date" in " ".join(str(item.value) for item in at.markdown)
+    assert "live-published rows" not in captions
 
 
 def test_graders_only_visit_canonical_manifest_week(tmp_path, monkeypatch):

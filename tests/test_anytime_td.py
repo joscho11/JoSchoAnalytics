@@ -65,6 +65,14 @@ def test_anytime_td_renders_and_owns_controls(tmp_path):
     assert any(getattr(w, "key", None) == "atd_search" for w in at.text_input)
     metric_labels = {str(metric.label) for metric in at.metric}
     assert {"Net units", "ROI", "Record", "Approx. 95% ROI range"} <= metric_labels
+    if latest == (2026, 4):
+        assert len(at.metric) == 8
+        assert all(sum(str(metric.label) == label for metric in at.metric) == 2
+                   for label in ("Net units", "ROI", "Record", "Approx. 95% ROI range"))
+        captions = " ".join(str(c.value) for c in at.caption)
+        headings = " ".join(str(item.value) for item in at.markdown)
+        assert "Selected week" in captions
+        assert "Season to date" in headings and "Week 4" in headings
     record_delta = next(str(metric.delta) for metric in at.metric if str(metric.label) == "Record")
     assert "void" in record_delta
     expected = pd.read_csv(page.available_releases()[latest])
@@ -106,6 +114,9 @@ def test_week04_pit_cle_renders_all_three_markets(tmp_path):
         tables = [frame.value for frame in at.dataframe]
         assert tables
         assert any(book_column in table.columns for table in tables)
+        if market == "First TD":
+            captions = " ".join(str(c.value) for c in at.caption)
+            assert "45 of 47 settled games" in captions
 
 
 def test_two_plus_toggle_preserves_market_or_placeholder(tmp_path):
@@ -252,6 +263,7 @@ def test_first_td_toggle_renders_priced_matchup(tmp_path):
     assert not at.exception, at.exception
     assert not at.error, [e.value for e in at.error]
     assert any("First TD" in str(item.value) for item in at.info)
+    assert any("full scorer pool could not be verified" in str(item.value) for item in at.info)
     columns = set(at.dataframe[0].value.columns)
     assert {
         "#", "Player", "Pos", "Opp", "Model First TD Odds",
@@ -323,7 +335,7 @@ def test_ne_sea_display_only_first_td_model_view_is_shown(tmp_path):
         for frame in rendered
     )
     assert any(
-        "Results-only First TD tally" in str(item.value)
+        "First TD outcomes only" in str(item.value)
         for item in at.caption
     )
 
@@ -359,6 +371,15 @@ def test_first_td_results_tally_is_results_only():
         "graded": 0,
         "hits": 0,
     }
+
+
+def test_first_td_results_tally_counts_games_and_excludes_voids():
+    rows = pd.DataFrame({
+        "game_id": ["A", "A", "B", "C"],
+        "scored_first": [1, 0, 0, 1],
+        "settlement_status_first": ["settled", "settled", "settled", "void"],
+    })
+    assert page._first_td_results_tally(rows) == {"graded": 2, "hits": 1}
 
 
 def test_first_td_display_shape_and_ordering():

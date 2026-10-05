@@ -336,6 +336,7 @@ def _market_summary(
 def _load_season_tracker(
     paths: tuple[str, ...], modified_at: tuple[int, ...], market: str = "anytime",
     prediction_mode: str | None = None, model_version: str | None = None,
+    through_week: int | None = None,
 ) -> dict:
     """Load the newest published file for each live week and score its paper bets."""
     del modified_at  # cache key; the files themselves are read below
@@ -344,6 +345,28 @@ def _load_season_tracker(
         frame = frame[frame.prediction_mode.eq(prediction_mode)]
     if model_version is not None:
         frame = frame[frame.model_version.eq(model_version)]
+    if through_week is not None and "week" in frame:
+        weeks = pd.to_numeric(frame["week"], errors="coerce")
+        frame = frame[weeks.le(int(through_week))]
+    return _tracker_for_market(frame, market)
+
+
+@st.cache_data(ttl=900)
+def _load_retrospective_first_td_tally(
+    paths: tuple[str, ...], modified_at: tuple[int, ...], through_week: int,
+) -> dict[str, int]:
+    """Load outcome coverage only; retrospective probabilities are not bets."""
+    del modified_at
+    frame = tracker.aggregate_published_csvs(paths)
+    if "prediction_mode" in frame:
+        frame = frame[frame.prediction_mode.eq("retrospective")]
+    if "week" in frame:
+        frame = frame[pd.to_numeric(frame.week, errors="coerce").le(int(through_week))]
+    return _first_td_results_tally(frame)
+
+
+def _tracker_for_market(frame: pd.DataFrame, market: str) -> dict:
+    """Apply the market's fixed selection and settlement rules to one scope."""
     if market == "two_plus":
         return tracker.season_tracker(
             frame,
@@ -443,15 +466,26 @@ def _two_plus_results_tally(frame: pd.DataFrame) -> dict[str, int]:
 
 
 def _first_td_results_tally(frame: pd.DataFrame) -> dict[str, int]:
-    """Count graded First TD outcomes without treating them as historical bets."""
+    """Count settled games with an identifiable scorer among the listed rows."""
     outcome_col = "_outcome" if "_outcome" in frame else "scored_first"
     if outcome_col not in frame:
         return {"graded": 0, "hits": 0}
     outcomes = pd.to_numeric(frame[outcome_col], errors="coerce")
-    graded = outcomes.isin([0, 1])
+    status_col = "settlement_status_first" if "settlement_status_first" in frame else None
+    if status_col:
+        settled = frame[status_col].astype("string").str.strip().str.lower().eq("settled")
+        graded = settled
+    else:
+        graded = outcomes.isin([0, 1])
+    if "game_id" in frame:
+        game_ids = frame["game_id"].astype("string").str.strip()
+        valid_game = game_ids.notna() & game_ids.ne("")
+        graded_games = set(game_ids[graded & valid_game])
+        hit_games = set(game_ids[graded & valid_game & outcomes.eq(1)])
+        return {"graded": len(graded_games), "hits": len(hit_games)}
     return {
         "graded": int(graded.sum()),
-        "hits": int(outcomes[graded].eq(1).sum()),
+        "hits": int((graded & outcomes.eq(1)).sum()),
     }
 
 
@@ -460,7 +494,7 @@ _MARKET_SHORT_LABELS = {"anytime": "", "two_plus": "2+ ", "first": "First "}
 
 
 def _render_scorecards(priced, season, releases, *, market="anytime") -> None:
-    """Render each model/mode separately, including a partially locked week."""
+    """Render one season-to-date set and one selected-week set for 2026."""
     if season != LIVE_SEASON:
         _render_single_scorecards(priced, season, releases, market=market)
         return
@@ -468,9 +502,114 @@ def _render_scorecards(priced, season, releases, *, market="anytime") -> None:
     for column, default in (("prediction_mode", "live"), ("model_version", "legacy")):
         if column not in frame:
             frame[column] = default
-    for (mode, version), rows in frame.groupby(["prediction_mode", "model_version"], sort=True):
-        _render_single_scorecards(rows, season, releases, market=market,
-                                 prediction_mode=str(mode), model_version=str(version))
+    modes = sorted(frame["prediction_mode"].dropna().astype(str).unique())
+    mode = "live" if "live" in modes else modes[-1] if modes else "live"
+    frame = frame[frame["prediction_mode"].eq(mode)]
+    week_values = pd.to_numeric(frame.get("week", pd.Series(dtype=float)), errors="coerce").dropna()
+    week = int(week_values.max()) if not week_values.empty else None
+    paths, modified_at = _published_live_paths(releases)
+    if not paths or week is None:
+        _render_single_scorecards(frame, season, releases, market=market,
+                                  prediction_mode=mode, model_version="all")
+        return
+
+    season_paper = _load_season_tracker(
+        paths, modified_at, market, mode, through_week=week,
+    )
+    week_paper = _tracker_for_market(frame, market)
+    mode_label = {
+        "live": "live-published rows",
+        "retrospective": "retrospective reconstruction rows",
+    }.get(mode, f"{mode} rows")
+    model_versions = sorted(frame["model_version"].dropna().astype(str).unique())
+    model_label = ", ".join(model_versions) if model_versions else "unspecified model version"
+    rule_text = tracker.rule_description(market)
+    st.markdown("#### Season to date")
+    _render_scorecard_metrics(
+        season_paper, market, "season-to-date",
+        f"Through Week {week} · {mode_label} · fixed rule: {rule_text}.",
+    )
+    if market == "first":
+        _render_first_td_results_note(season_paper["rows"])
+        if mode == "live":
+            historical = _load_retrospective_first_td_tally(paths, modified_at, week)
+            if historical["graded"]:
+                st.caption(
+                    "Earlier Weeks 1–3 retrospective outcomes only · a listed scorer was identifiable in "
+                    f"{historical['hits']} of {historical['graded']} settled games. These releases had no "
+                    "NGS First TD probabilities, so the tally is excluded from live paper betting and model accuracy."
+                )
+    st.markdown(f"#### Week {week}")
+    _render_scorecard_metrics(
+        week_paper, market, f"week-{week}",
+        f"Selected week · {mode_label} · model versions in this board: {model_label} · fixed rule: {rule_text}.",
+    )
+    if market == "first":
+        _render_first_td_results_note(week_paper["rows"])
+
+    summary = _market_summary(
+        frame,
+        model_probability_col="p_first" if market == "first" else "p_ge2" if market == "two_plus" else "p_ge1",
+        book_probability_col="book_first_p_devigged" if market == "first" else None if market == "two_plus" else "p_book",
+        book_price_col="first_amer" if market == "first" else "two_plus_amer" if market == "two_plus" else "book_amer",
+        outcome_col="scored_first" if market == "first" else "scored_two_plus" if market == "two_plus" else "scored_anytime",
+    )
+    model_context = "—" if summary["mean_p"] is None else f"{100 * summary['mean_p']:.1f}%"
+    book_context = "—" if summary["mean_book"] is None else f"{100 * summary['mean_book']:.1f}%"
+    short = _MARKET_SHORT_LABELS[market]
+    st.caption(
+        f"Supporting context · Model {short}P {model_context} · Book {short}P {book_context} · "
+        "Model and book probabilities are shown here for context; the table carries the odds."
+    )
+
+
+def _render_scorecard_metrics(paper: dict, market: str, key: str, scope: str) -> None:
+    result = paper["summary"]
+    ci = paper["ci"]
+    st.caption(f"{_MARKET_LABELS[market]} paper tracker · {scope}")
+    with st.container(horizontal=True, key=f"jsa-metric-even-atd-{key}"):
+        st.metric("Net units", f"{result['net_units']:+.1f}U" if result["bets"] else "—", border=True)
+        st.metric("ROI", _pct(result["roi"]), border=True)
+        st.metric(
+            "Record", f"{result['wins']}-{result['losses']}" if result["bets"] else "No bets",
+            delta=(f"{result['open_bets']} open · {result['void_bets']} void"
+                   if result["bets"] else "No qualifying picks"),
+            delta_color="off", border=True,
+        )
+        st.metric("Approx. 95% ROI range", _roi_range_value(ci), border=True)
+    if ci["available"]:
+        st.caption("Empirical uncertainty range, not a guarantee.")
+    elif result["settled_bets"]:
+        st.caption(
+            "Approx. 95% ROI range is pending until at least 5 settled games "
+            "and 20 settled paper bets are available."
+        )
+    elif result["bets"]:
+        st.caption("Qualifying picks are still open or void, so settled ROI is not available yet.")
+    else:
+        st.caption("No qualifying model-backed bets in this scope; the cards show no settled betting record.")
+    if market == "two_plus":
+        tally = _two_plus_results_tally(paper["rows"])
+        if tally["graded"]:
+            st.caption(
+                "Results-only 2+ TD tally · "
+                f"{tally['hits']} hits / {tally['graded']} graded player-games. This is not a betting record."
+            )
+
+
+def _render_first_td_results_note(frame: pd.DataFrame) -> None:
+    tally = _first_td_results_tally(frame)
+    if tally["graded"]:
+        st.caption(
+            "First TD outcomes only · "
+            f"a scorer is identifiable among the listed players in {tally['hits']} of "
+            f"{tally['graded']} settled games. This is outcome coverage, not model accuracy or ROI."
+        )
+    else:
+        st.caption(
+            "No settled First TD outcome coverage in this scope. Retrospective releases with an "
+            "incomplete scorer pool do not have model-backed First TD probabilities or picks."
+        )
 
 
 def _render_single_scorecards(
@@ -1286,12 +1425,22 @@ def _render_week_recommended(
     market = "first" if show_first_td else "two_plus"
     market_label = "First TD" if show_first_td else "2+ TD"
     rule_text = tracker.rule_description(market)
-    st.info(
-        f"Important: {market_label} predictions have no historical backtest"
-        + (" of any kind" if show_first_td else " yet")
-        + f". This view is forward-looking tracking only, not evidence of "
-        "accuracy or profitability."
+    retrospective = (
+        "prediction_mode" in board_priced
+        and board_priced["prediction_mode"].astype(str).eq("retrospective").all()
     )
+    if show_first_td and retrospective:
+        st.info(
+            "Important: the NGS retrospective release has no First TD probabilities because its full scorer pool "
+            "could not be verified. The listed scorer outcomes are coverage only, not a model backtest."
+        )
+    else:
+        st.info(
+            f"Important: {market_label} predictions have no historical backtest"
+            + (" of any kind" if show_first_td else " yet")
+            + f". This view is forward-looking tracking only, not evidence of "
+            "accuracy or profitability."
+        )
     st.caption(
         f"Every {market_label} candidate across this week's matchups: {rule_text}. "
         "Sorted by value gap, highest first."
@@ -1416,9 +1565,12 @@ Anytime TD rate, scaled by the historical rate an offensive skill player
 scores first at all (roughly 94% of games; the rest go to defense, special
 teams, or no score). The sportsbook's First TD price is de-vigged within the
 game, since first touchdown is a genuine one-winner market (unlike the
-Yes-only Anytime quote). There is no historical First TD backtest anywhere
-in this project for any season, only a forward live-week board, so treat this
-view as entertainment, not a proven edge, even more so than 2+ TD. Because
+Yes-only Anytime quote). Weeks 1–3 of the 2026 NGS retrospective release have
+no First TD probabilities because the complete scorer pool could not be
+verified. Their partly mapped scorer outcomes are shown as coverage only, not
+NGS accuracy or a betting record. The tracker counts only rows with model
+probabilities in the selected release mode, so treat this view as
+entertainment, not a proven edge, even more so than 2+ TD. Because
 p_first values within a game are not independent (they split a fixed pool,
 not separate coin flips) and real bell-cow players already show a
 persistent -5pp to -8pp gap vs DraftKings' price, First TD keeps a wider
@@ -1427,8 +1579,10 @@ return at the book's actual, vigged price: the de-vigged gap alone can
 still clear on a bet that loses money at the real price, since First TD's
 raw prices sum to about 121% per game, not 100%.
 
-The live cards track those 1U candidates across the 2026 season: settled/open
-paper bets, net units, settled ROI, and an uncertainty range. Open bets stay out
+The cards show one four-metric set for season to date through the selected
+week and another for that week alone. Each set tracks 1U candidates: settled/open
+paper bets, net units, settled ROI, and an uncertainty range. Retrospective
+weeks are labeled separately from live-published weeks. Open bets stay out
 of the P&L. After five settled games and 20 settled bets, the board also shows an
 approximate 95% ROI range from a deterministic game-block bootstrap. It is an
 empirical uncertainty range, not a guarantee. Anytime uses a +1.0pp value-gap
@@ -1634,13 +1788,20 @@ def render() -> None:
         and not display_only_first_td
     )
     if show_first_td:
-        st.info(
-            "Important: First TD predictions have no historical backtest of any "
-            "kind. There is no first-touchdown market data anywhere in this "
-            "project for any season, so this view is a forward live-week board "
-            "only—not evidence of accuracy or profitability, even more so than "
-            "the 2+ TD view."
+        retrospective = (
+            "prediction_mode" in matchup
+            and matchup["prediction_mode"].astype(str).eq("retrospective").all()
         )
+        if retrospective:
+            st.info(
+                "Important: the NGS retrospective release has no First TD probabilities because its full scorer pool "
+                "could not be verified. Listed scorer outcomes are coverage only, not a model backtest."
+            )
+        else:
+            st.info(
+                "Important: First TD has no validated historical backtest. This live board is forward tracking, "
+                "not evidence of accuracy or profitability."
+            )
         if completed_without_first_td_market:
             st.info(
                 "This matchup was completed before First TD prices were "
