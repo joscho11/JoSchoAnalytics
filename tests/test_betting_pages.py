@@ -66,13 +66,12 @@ def test_weekly_predictions_renders_and_owns_controls(tmp_path):
     qb_markdown = " ".join(str(item.value) for item in qb_expander.markdown)
     assert "**ATL:** Michael Penix Jr. — previous-game dropback leader" in qb_markdown
     assert "**MIN:** Kyler Murray — previous-game dropback leader" in qb_markdown
-    # Joseph's Week 4 manual inputs (2026-09-29): TB starts Jalon Daniels; WAS and CHI have pinned defaults.
-    assert "**TB:** Jalon Daniels — user modeling assumption" in qb_markdown
-    assert "**WAS:** Marcus Mariota — user modeling assumption" in qb_markdown
-    assert "**CHI:** Case Keenum — user modeling assumption" in qb_markdown
-    assert "Baker Mayfield" not in qb_markdown and "Caleb Williams" not in qb_markdown
+    # Joseph's Week 5 counted paths (2026-10-06): Huntley scores for BAL, Daniels scores for WAS.
+    assert "**BAL:** Tyler Huntley — user modeling assumption" in qb_markdown
+    assert "**WAS:** Jayden Daniels — user modeling assumption" in qb_markdown
+    assert "**TB:** Jalon Daniels — previous-game dropback leader" in qb_markdown
     scenario_caption = " ".join(str(c.value) for c in qb_expander.caption)
-    assert "QB scenarios for" in scenario_caption and "CHI" in scenario_caption and "WAS" in scenario_caption
+    assert "QB scenarios for" in scenario_caption and "BAL" in scenario_caption and "WAS" in scenario_caption
     assert not any(str(k).startswith("tr_") for k in keys), \
         "Weekly Predictions must not carry Track Record's controls"
 
@@ -476,7 +475,7 @@ def test_week3_st_promotion_reissue_card_states(tmp_path):
 
 
 def test_week4_qb_paths_and_card_states(tmp_path):
-    """Week 4 QB paths and card states from the active published release.
+    """Week 4 QB paths and card states from the published Week 4 release.
 
     TB starts Jalon Daniels (manual). WAS (Mariota default, Daniels path) and CHI (Keenum default,
     Williams and Bagent paths) carry QB scenarios. IND at WAS has no path clearing HIGH; NYJ at
@@ -498,7 +497,8 @@ def test_week4_qb_paths_and_card_states(tmp_path):
 
     manifest = page_common.load_release_manifest()
     shown = release_status("predictions", 2026, 4, manifest=manifest, root=_HERE)
-    assert shown["build_id"] == manifest["products"]["predictions"]["active_build"], shown
+    week4_build_id = "predictions-2026w04-f3e67139da16"
+    assert shown["build_id"] == week4_build_id, shown
     build = manifest["products"]["predictions"]["builds"][shown["build_id"]]
     assert build["model_version"].endswith("-b4a325000b7a")
 

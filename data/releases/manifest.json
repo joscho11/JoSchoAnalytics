@@ -25,7 +25,7 @@
   },
   "products": {
     "fantasy": {
-      "active_build": "fantasy-2026w04-acd94fff81e3",
+      "active_build": "fantasy-2026w05-39ebd833e7bd",
       "builds": {
         "fantasy-2025w10-33a7de4ef33f": {
           "artifact": "data/releases/builds/fantasy/2025/week10/fantasy-2025w10-33a7de4ef33f/artifact.csv",
@@ -641,18 +641,47 @@
             ]
           },
           "week": 4
+        },
+        "fantasy-2026w05-39ebd833e7bd": {
+          "artifact": "data/releases/builds/fantasy/2026/week05/fantasy-2026w05-39ebd833e7bd/artifact.csv",
+          "build_id": "fantasy-2026w05-39ebd833e7bd",
+          "metadata": "data/releases/builds/fantasy/2026/week05/fantasy-2026w05-39ebd833e7bd/metadata.json",
+          "model_version": "weekly-fantasy-v2-l1_wipe_prior_share_ranks-ad79f409f0b3",
+          "produced_at": "2026-10-06T16:07:26Z",
+          "product": "fantasy",
+          "published_at": "2026-10-06T16:09:24Z",
+          "row_count": 347,
+          "season": 2026,
+          "sha256": "39ebd833e7bd59996ae4fdf3c16b00664695895b7a84041b7729d98d5ad1516e",
+          "status": "Published",
+          "validation": {
+            "checks": {
+              "artifact_sha256": "39ebd833e7bd59996ae4fdf3c16b00664695895b7a84041b7729d98d5ad1516e",
+              "produced_at_utc": "2026-10-06T16:07:26Z",
+              "scheduled_teams": 30,
+              "team_position_cells": 120
+            },
+            "errors": [],
+            "ok": true,
+            "product": "fantasy",
+            "row_count": 347,
+            "warnings": [
+              "18 projections are below zero; retained as a model diagnostic"
+            ]
+          },
+          "week": 5
         }
       },
       "next_release": {
         "scheduled_for": null,
         "season": 2026,
         "status": "Awaiting projections",
-        "week": 2
+        "week": 6
       },
-      "previous_build": "fantasy-2026w04-3d42dcfbfcc0"
+      "previous_build": "fantasy-2026w04-acd94fff81e3"
     },
     "predictions": {
-      "active_build": "predictions-2026w04-f3e67139da16",
+      "active_build": "predictions-2026w05-496c87e67cde",
       "builds": {
         "predictions-2025w10-8f1701d7a6db": {
           "artifact": "data/releases/builds/predictions/2025/week10/predictions-2025w10-8f1701d7a6db/artifact.csv",
@@ -12255,12 +12284,43 @@
             "warnings": []
           },
           "week": 4
+        },
+        "predictions-2026w05-496c87e67cde": {
+          "artifact": "data/releases/builds/predictions/2026/week05/predictions-2026w05-496c87e67cde/artifact.csv",
+          "build_id": "predictions-2026w05-496c87e67cde",
+          "metadata": "data/releases/builds/predictions/2026/week05/predictions-2026w05-496c87e67cde/metadata.json",
+          "model_version": "spread-v3-prod-sunday-tuesday-market-46-qb-ir-scoped-flag-b4a325000b7a",
+          "produced_at": "2026-10-06T16:08:20Z",
+          "product": "predictions",
+          "published_at": "2026-10-06T16:09:25Z",
+          "row_count": 15,
+          "season": 2026,
+          "sha256": "496c87e67cde948c8e76965595d59b230e60c681daa1c5dd304b9434d0f6ec4b",
+          "status": "Published",
+          "validation": {
+            "checks": {
+              "artifact_sha256": "496c87e67cde948c8e76965595d59b230e60c681daa1c5dd304b9434d0f6ec4b",
+              "produced_at_utc": "2026-10-06T16:08:20Z",
+              "scheduled_games": 15
+            },
+            "errors": [],
+            "ok": true,
+            "product": "predictions",
+            "row_count": 15,
+            "warnings": []
+          },
+          "week": 5
         }
       },
-      "next_release": null,
-      "previous_build": "predictions-2026w04-c9b03f6bb25e"
+      "next_release": {
+        "scheduled_for": null,
+        "season": 2026,
+        "status": "Awaiting projections",
+        "week": 6
+      },
+      "previous_build": "predictions-2026w04-f3e67139da16"
     }
   },
   "schema_version": 1,
-  "updated_at": "2026-10-06T00:03:20Z"
+  "updated_at": "2026-10-06T16:10:03Z"
 }
