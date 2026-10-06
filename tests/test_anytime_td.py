@@ -73,6 +73,27 @@ def test_anytime_td_renders_and_owns_controls(tmp_path):
         headings = " ".join(str(item.value) for item in at.markdown)
         assert "Selected week" in captions
         assert "Season to date" in headings and "Week 4" in headings
+        assert "Season totals include retrospective Weeks 1, 2, 3" in captions
+        releases = page.available_releases()
+        season_rows = pd.concat([
+            pd.read_csv(path) for (season, week), path in releases.items()
+            if season == 2026 and week <= 4
+        ], ignore_index=True)
+        assert set(season_rows.week) == {1, 2, 3, 4}
+        scopes = (season_rows, pd.read_csv(releases[(2026, 4)]))
+        expected_summaries = [
+            page.tracker.strategy_summary(
+                page.tracker.prepare_paper_bets(rows),
+                threshold=page.tracker.ATTD_VALUE_THRESHOLD,
+            )
+            for rows in scopes
+        ]
+        assert [str(metric.value) for metric in at.metric if metric.label == "Net units"] == [
+            f"{summary['net_units']:+.1f}U" for summary in expected_summaries
+        ]
+        assert [str(metric.value) for metric in at.metric if metric.label == "Record"] == [
+            f"{summary['wins']}-{summary['losses']}" for summary in expected_summaries
+        ]
     record_delta = next(str(metric.delta) for metric in at.metric if str(metric.label) == "Record")
     assert "void" in record_delta
     expected = pd.read_csv(page.available_releases()[latest])
@@ -111,6 +132,7 @@ def test_week04_pit_cle_renders_all_three_markets(tmp_path):
             assert at.selectbox(key="atd_matchup_2026_4").value == "PIT vs CLE"
         assert not at.exception, at.exception
         assert not at.error, [e.value for e in at.error]
+        assert len(at.metric) == 8
         tables = [frame.value for frame in at.dataframe]
         assert tables
         assert any(book_column in table.columns for table in tables)

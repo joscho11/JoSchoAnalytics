@@ -27,9 +27,11 @@ An NGS backfill has `prediction_mode: retrospective` and is labeled
 "Retrospective reconstruction; historical input availability unverified."
 It describes probabilities computed after the games, not picks published
 before kickoff. Original releases remain in the private producer's audit
-archive. The public tracker reports retrospective and live rows separately,
-and separates model versions within each mode. A partially locked live week
-may contain rows from two model versions; those records stay separate.
+archive. The season-to-date cards combine each week's latest canonical release
+through the selected week, including retrospective republished predictions.
+The season caption identifies weeks recomputed after the games. The selected-week
+cards cover that week alone. A partially locked live week
+may contain rows from two model versions; their row metadata preserves the version.
 Missing reconstructed probabilities remain pending and cannot create bets.
 
 ## What the board is

@@ -504,7 +504,6 @@ def _render_scorecards(priced, season, releases, *, market="anytime") -> None:
             frame[column] = default
     modes = sorted(frame["prediction_mode"].dropna().astype(str).unique())
     mode = "live" if "live" in modes else modes[-1] if modes else "live"
-    frame = frame[frame["prediction_mode"].eq(mode)]
     week_values = pd.to_numeric(frame.get("week", pd.Series(dtype=float)), errors="coerce").dropna()
     week = int(week_values.max()) if not week_values.empty else None
     paths, modified_at = _published_live_paths(releases)
@@ -514,7 +513,7 @@ def _render_scorecards(priced, season, releases, *, market="anytime") -> None:
         return
 
     season_paper = _load_season_tracker(
-        paths, modified_at, market, mode, through_week=week,
+        paths, modified_at, market, through_week=week,
     )
     week_paper = _tracker_for_market(frame, market)
     mode_label = {
@@ -524,11 +523,24 @@ def _render_scorecards(priced, season, releases, *, market="anytime") -> None:
     model_versions = sorted(frame["model_version"].dropna().astype(str).unique())
     model_label = ", ".join(model_versions) if model_versions else "unspecified model version"
     rule_text = tracker.rule_description(market)
-    st.markdown(f"#### Season to date · {mode_label}")
+    st.markdown("#### Season to date")
     _render_scorecard_metrics(
         season_paper, market, "season-to-date",
         f"Through Week {week} · fixed rule: {rule_text}.",
     )
+    season_rows = season_paper["rows"]
+    retro_weeks = sorted(
+        pd.to_numeric(
+            season_rows.loc[season_rows.prediction_mode.eq("retrospective"), "week"],
+            errors="coerce",
+        ).dropna().astype(int).unique()
+    )
+    if retro_weeks:
+        st.caption(
+            "Season totals include retrospective Weeks "
+            + ", ".join(str(value) for value in retro_weeks)
+            + ", whose predictions were recomputed after the games."
+        )
     if market == "first":
         _render_first_td_results_note(season_paper["rows"])
         if mode == "live":
@@ -537,7 +549,7 @@ def _render_scorecards(priced, season, releases, *, market="anytime") -> None:
                 st.caption(
                     "Earlier Weeks 1–3 retrospective outcomes only · a listed scorer was identifiable in "
                     f"{historical['hits']} of {historical['graded']} settled games. These releases had no "
-                    "NGS First TD probabilities, so the tally is excluded from live paper betting and model accuracy."
+                    "NGS First TD probabilities, so the tally is excluded from paper betting and model accuracy."
                 )
     st.markdown(f"#### Week {week}")
     _render_scorecard_metrics(
@@ -546,30 +558,6 @@ def _render_scorecards(priced, season, releases, *, market="anytime") -> None:
     )
     if market == "first":
         _render_first_td_results_note(week_paper["rows"])
-
-    if mode == "live" and week > 1:
-        earlier_retro = _load_season_tracker(
-            paths, modified_at, market, "retrospective", through_week=week - 1,
-        )
-        retro_rows = earlier_retro["rows"]
-        if not retro_rows.empty:
-            retro_versions = sorted(
-                retro_rows["model_version"].dropna().astype(str).unique()
-            ) if "model_version" in retro_rows else ["unspecified model version"]
-            st.markdown("#### Earlier retrospective weeks")
-            st.caption(
-                f"Through Week {week - 1} · retrospective reconstructions, not live picks. "
-                "Reported separately from the live season-to-date card."
-            )
-            for retro_version in retro_versions:
-                retro_paper = _load_season_tracker(
-                    paths, modified_at, market, "retrospective", retro_version,
-                    through_week=week - 1,
-                )
-                _render_scorecard_metrics(
-                    retro_paper, market, f"retrospective-through-{week - 1}-{retro_version}",
-                    f"Weeks 1–{week - 1} · retrospective reconstruction · model {retro_version}.",
-                )
 
     summary = _market_summary(
         frame,
@@ -1593,7 +1581,7 @@ Yes-only Anytime quote). Weeks 1–3 of the 2026 NGS retrospective release have
 no First TD probabilities because the complete scorer pool could not be
 verified. Their partly mapped scorer outcomes are shown as coverage only, not
 NGS accuracy or a betting record. The tracker counts only rows with model
-probabilities in the selected release mode, so treat this view as
+probabilities and captured sportsbook prices, so treat this view as
 entertainment, not a proven edge, even more so than 2+ TD. Because
 p_first values within a game are not independent (they split a fixed pool,
 not separate coin flips) and real bell-cow players already show a
@@ -1605,8 +1593,9 @@ raw prices sum to about 121% per game, not 100%.
 
 The cards show one four-metric set for season to date through the selected
 week and another for that week alone. Each set tracks 1U candidates: settled/open
-paper bets, net units, settled ROI, and an uncertainty range. Retrospective
-weeks are labeled separately from live-published weeks. Open bets stay out
+paper bets, net units, settled ROI, and an uncertainty range. Season totals
+use each week's latest published predictions, including retrospective
+reconstructions identified in the season caption. Open bets stay out
 of the P&L. After five settled games and 20 settled bets, the board also shows an
 approximate 95% ROI range from a deterministic game-block bootstrap. It is an
 empirical uncertainty range, not a guarantee. Anytime uses a +1.0pp value-gap
