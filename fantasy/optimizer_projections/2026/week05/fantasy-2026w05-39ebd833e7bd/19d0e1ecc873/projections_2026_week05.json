@@ -1,0 +1,154 @@
+{
+  "calibration": {
+    "QB": [
+      4.9315,
+      0.8072
+    ],
+    "RB": [
+      1.1044,
+      1.1639
+    ],
+    "TE": [
+      0.9123,
+      1.3261
+    ],
+    "WR": [
+      1.3809,
+      1.237
+    ]
+  },
+  "ceiling_p85": {
+    "QB": 8.41,
+    "RB": 5.22,
+    "TE": 3.85,
+    "WR": 5.31
+  },
+  "games": [
+    {
+      "date": "2026-10-08",
+      "teams": [
+        "DAL",
+        "TB"
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "teams": [
+        "ARI",
+        "DET"
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "teams": [
+        "ATL",
+        "BAL"
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "teams": [
+        "CHI",
+        "GB"
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "teams": [
+        "CIN",
+        "MIA"
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "teams": [
+        "CLE",
+        "NYJ"
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "teams": [
+        "DEN",
+        "LAC"
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "teams": [
+        "HOU",
+        "TEN"
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "teams": [
+        "IND",
+        "PIT"
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "teams": [
+        "JAX",
+        "PHI"
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "teams": [
+        "LV",
+        "NE"
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "teams": [
+        "MIN",
+        "NO"
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "teams": [
+        "NYG",
+        "WAS"
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "teams": [
+        "SEA",
+        "SF"
+      ]
+    },
+    {
+      "date": "2026-10-12",
+      "teams": [
+        "BUF",
+        "LA"
+      ]
+    }
+  ],
+  "generated_at_utc": "2026-10-06T16:13:51.467223+00:00",
+  "method": "Interim per-position affine calibration onto DraftKings Classic points, not the trained direct-DK model. See module docstring for the fit and its limits.",
+  "position_counts": {
+    "QB": 30,
+    "RB": 89,
+    "TE": 90,
+    "WR": 138
+  },
+  "producer_revision": "19d0e1ecc8731e91910e8f85447311e383d03272",
+  "product": "dfs_optimizer_v1",
+  "projection_csv_sha256": "0c710609a944420b43d201856ca7f4e1c479326b429416134f4b1b2d4b7d017d",
+  "projection_units": "direct_dk_points",
+  "row_count": 347,
+  "scoring": "draftkings_classic",
+  "season": 2026,
+  "source": "model",
+  "source_artifact": "data/releases/builds/fantasy/2026/week05/fantasy-2026w05-39ebd833e7bd/artifact.csv",
+  "source_artifact_sha256": "39ebd833e7bd59996ae4fdf3c16b00664695895b7a84041b7729d98d5ad1516e",
+  "source_build_id": "fantasy-2026w05-39ebd833e7bd",
+  "synced_at_utc": "2026-10-06T16:13:51.518239+00:00",
+  "week": 5
+}
