@@ -524,10 +524,10 @@ def _render_scorecards(priced, season, releases, *, market="anytime") -> None:
     model_versions = sorted(frame["model_version"].dropna().astype(str).unique())
     model_label = ", ".join(model_versions) if model_versions else "unspecified model version"
     rule_text = tracker.rule_description(market)
-    st.markdown("#### Season to date")
+    st.markdown(f"#### Season to date · {mode_label}")
     _render_scorecard_metrics(
         season_paper, market, "season-to-date",
-        f"Through Week {week} · {mode_label} · fixed rule: {rule_text}.",
+        f"Through Week {week} · fixed rule: {rule_text}.",
     )
     if market == "first":
         _render_first_td_results_note(season_paper["rows"])
@@ -546,6 +546,30 @@ def _render_scorecards(priced, season, releases, *, market="anytime") -> None:
     )
     if market == "first":
         _render_first_td_results_note(week_paper["rows"])
+
+    if mode == "live" and week > 1:
+        earlier_retro = _load_season_tracker(
+            paths, modified_at, market, "retrospective", through_week=week - 1,
+        )
+        retro_rows = earlier_retro["rows"]
+        if not retro_rows.empty:
+            retro_versions = sorted(
+                retro_rows["model_version"].dropna().astype(str).unique()
+            ) if "model_version" in retro_rows else ["unspecified model version"]
+            st.markdown("#### Earlier retrospective weeks")
+            st.caption(
+                f"Through Week {week - 1} · retrospective reconstructions, not live picks. "
+                "Reported separately from the live season-to-date card."
+            )
+            for retro_version in retro_versions:
+                retro_paper = _load_season_tracker(
+                    paths, modified_at, market, "retrospective", retro_version,
+                    through_week=week - 1,
+                )
+                _render_scorecard_metrics(
+                    retro_paper, market, f"retrospective-through-{week - 1}-{retro_version}",
+                    f"Weeks 1–{week - 1} · retrospective reconstruction · model {retro_version}.",
+                )
 
     summary = _market_summary(
         frame,
