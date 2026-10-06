@@ -586,6 +586,951 @@
       "season": 2026,
       "status": "void",
       "week": 1
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Steelers inactives for Week 4 vs. Browns",
+        "source_url": "https://www.steelers.com/news/steelers-inactives-for-week-4-vs-browns"
+      },
+      "game_id": "2026_04_PIT_CLE",
+      "market": "anytime",
+      "player_id": "00-0041490",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Steelers inactives for Week 4 vs. Browns",
+        "source_url": "https://www.steelers.com/news/steelers-inactives-for-week-4-vs-browns"
+      },
+      "game_id": "2026_04_PIT_CLE",
+      "market": "two_plus",
+      "player_id": "00-0041490",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Steelers inactives for Week 4 vs. Browns",
+        "source_url": "https://www.steelers.com/news/steelers-inactives-for-week-4-vs-browns"
+      },
+      "game_id": "2026_04_PIT_CLE",
+      "market": "first",
+      "player_id": "00-0041490",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "NFL Week 4 Inactive List: Giants vs. Cardinals",
+        "source_url": "https://www.giants.com/news/nfl-week-4-inactive-list-who-s-in-who-s-out-for-giants-vs-cardinals"
+      },
+      "game_id": "2026_04_ARI_NYG",
+      "market": "anytime",
+      "player_id": "00-0035250",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "NFL Week 4 Inactive List: Giants vs. Cardinals",
+        "source_url": "https://www.giants.com/news/nfl-week-4-inactive-list-who-s-in-who-s-out-for-giants-vs-cardinals"
+      },
+      "game_id": "2026_04_ARI_NYG",
+      "market": "two_plus",
+      "player_id": "00-0035250",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "NFL Week 4 Inactive List: Giants vs. Cardinals",
+        "source_url": "https://www.giants.com/news/nfl-week-4-inactive-list-who-s-in-who-s-out-for-giants-vs-cardinals"
+      },
+      "game_id": "2026_04_ARI_NYG",
+      "market": "first",
+      "player_id": "00-0035250",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "49ers inactives for Week 4 vs. Broncos",
+        "source_url": "https://www.49ers.com/news/romello-height-mike-evans-and-more-available-vs-broncos-inactives-for-week-4-denvssf"
+      },
+      "game_id": "2026_04_DEN_SF",
+      "market": "anytime",
+      "player_id": "00-0040177",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "49ers inactives for Week 4 vs. Broncos",
+        "source_url": "https://www.49ers.com/news/romello-height-mike-evans-and-more-available-vs-broncos-inactives-for-week-4-denvssf"
+      },
+      "game_id": "2026_04_DEN_SF",
+      "market": "two_plus",
+      "player_id": "00-0040177",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "49ers inactives for Week 4 vs. Broncos",
+        "source_url": "https://www.49ers.com/news/romello-height-mike-evans-and-more-available-vs-broncos-inactives-for-week-4-denvssf"
+      },
+      "game_id": "2026_04_DEN_SF",
+      "market": "first",
+      "player_id": "00-0040177",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Week 4 Inactives vs. Detroit",
+        "source_url": "https://www.panthers.com/news/week-4-inactives-vs-detroit-jalen-coker-out-this-week-sunday-night-football-lions"
+      },
+      "game_id": "2026_04_DET_CAR",
+      "market": "anytime",
+      "player_id": "00-0039491",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Week 4 Inactives vs. Detroit",
+        "source_url": "https://www.panthers.com/news/week-4-inactives-vs-detroit-jalen-coker-out-this-week-sunday-night-football-lions"
+      },
+      "game_id": "2026_04_DET_CAR",
+      "market": "two_plus",
+      "player_id": "00-0039491",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Week 4 Inactives vs. Detroit",
+        "source_url": "https://www.panthers.com/news/week-4-inactives-vs-detroit-jalen-coker-out-this-week-sunday-night-football-lions"
+      },
+      "game_id": "2026_04_DET_CAR",
+      "market": "first",
+      "player_id": "00-0039491",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Packers-Bucs Inactives",
+        "source_url": "https://www.buccaneers.com/news/packers-bucs-inactives-jacob-parrish-sirvocea-dennis-cleared-play"
+      },
+      "game_id": "2026_04_GB_TB",
+      "market": "anytime",
+      "player_id": "00-0037311",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Packers-Bucs Inactives",
+        "source_url": "https://www.buccaneers.com/news/packers-bucs-inactives-jacob-parrish-sirvocea-dennis-cleared-play"
+      },
+      "game_id": "2026_04_GB_TB",
+      "market": "two_plus",
+      "player_id": "00-0037311",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Packers-Bucs Inactives",
+        "source_url": "https://www.buccaneers.com/news/packers-bucs-inactives-jacob-parrish-sirvocea-dennis-cleared-play"
+      },
+      "game_id": "2026_04_GB_TB",
+      "market": "first",
+      "player_id": "00-0037311",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Texans Inactives: Week 4 vs. Dallas Cowboys",
+        "source_url": "https://www.houstontexans.com/news/texans-inactives-week-4-vs-dallas-cowboys"
+      },
+      "game_id": "2026_04_DAL_HOU",
+      "market": "anytime",
+      "player_id": "00-0041472",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Texans Inactives: Week 4 vs. Dallas Cowboys",
+        "source_url": "https://www.houstontexans.com/news/texans-inactives-week-4-vs-dallas-cowboys"
+      },
+      "game_id": "2026_04_DAL_HOU",
+      "market": "two_plus",
+      "player_id": "00-0041472",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Texans Inactives: Week 4 vs. Dallas Cowboys",
+        "source_url": "https://www.houstontexans.com/news/texans-inactives-week-4-vs-dallas-cowboys"
+      },
+      "game_id": "2026_04_DAL_HOU",
+      "market": "first",
+      "player_id": "00-0041472",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Cowboys Week 4 inactives",
+        "source_url": "https://www.dallascowboys.com/news/updates-october-2026"
+      },
+      "game_id": "2026_04_DAL_HOU",
+      "market": "anytime",
+      "player_id": "00-0038705",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Cowboys Week 4 inactives",
+        "source_url": "https://www.dallascowboys.com/news/updates-october-2026"
+      },
+      "game_id": "2026_04_DAL_HOU",
+      "market": "two_plus",
+      "player_id": "00-0038705",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Cowboys Week 4 inactives",
+        "source_url": "https://www.dallascowboys.com/news/updates-october-2026"
+      },
+      "game_id": "2026_04_DAL_HOU",
+      "market": "first",
+      "player_id": "00-0038705",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Colts Week 4 inactive players",
+        "source_url": "https://www.colts.com/news/colts-announce-6-inactive-players-for-week-4-game-vs-commanders"
+      },
+      "game_id": "2026_04_IND_WAS",
+      "market": "anytime",
+      "player_id": "00-0030279",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Colts Week 4 inactive players",
+        "source_url": "https://www.colts.com/news/colts-announce-6-inactive-players-for-week-4-game-vs-commanders"
+      },
+      "game_id": "2026_04_IND_WAS",
+      "market": "two_plus",
+      "player_id": "00-0030279",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Colts Week 4 inactive players",
+        "source_url": "https://www.colts.com/news/colts-announce-6-inactive-players-for-week-4-game-vs-commanders"
+      },
+      "game_id": "2026_04_IND_WAS",
+      "market": "first",
+      "player_id": "00-0030279",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Colts Week 4 inactive players",
+        "source_url": "https://www.colts.com/news/colts-announce-6-inactive-players-for-week-4-game-vs-commanders"
+      },
+      "game_id": "2026_04_IND_WAS",
+      "market": "anytime",
+      "player_id": "00-0035535",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Colts Week 4 inactive players",
+        "source_url": "https://www.colts.com/news/colts-announce-6-inactive-players-for-week-4-game-vs-commanders"
+      },
+      "game_id": "2026_04_IND_WAS",
+      "market": "two_plus",
+      "player_id": "00-0035535",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Colts Week 4 inactive players",
+        "source_url": "https://www.colts.com/news/colts-announce-6-inactive-players-for-week-4-game-vs-commanders"
+      },
+      "game_id": "2026_04_IND_WAS",
+      "market": "first",
+      "player_id": "00-0035535",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Commanders inactives vs. Colts",
+        "source_url": "https://www.commanders.com/news/inactives-commanders-vs-colts-week-4-2026"
+      },
+      "game_id": "2026_04_IND_WAS",
+      "market": "anytime",
+      "player_id": "00-0035659",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Commanders inactives vs. Colts",
+        "source_url": "https://www.commanders.com/news/inactives-commanders-vs-colts-week-4-2026"
+      },
+      "game_id": "2026_04_IND_WAS",
+      "market": "two_plus",
+      "player_id": "00-0035659",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Commanders inactives vs. Colts",
+        "source_url": "https://www.commanders.com/news/inactives-commanders-vs-colts-week-4-2026"
+      },
+      "game_id": "2026_04_IND_WAS",
+      "market": "first",
+      "player_id": "00-0035659",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Commanders inactives vs. Colts",
+        "source_url": "https://www.commanders.com/news/inactives-commanders-vs-colts-week-4-2026"
+      },
+      "game_id": "2026_04_IND_WAS",
+      "market": "anytime",
+      "player_id": "00-0039355",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Commanders inactives vs. Colts",
+        "source_url": "https://www.commanders.com/news/inactives-commanders-vs-colts-week-4-2026"
+      },
+      "game_id": "2026_04_IND_WAS",
+      "market": "two_plus",
+      "player_id": "00-0039355",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Commanders inactives vs. Colts",
+        "source_url": "https://www.commanders.com/news/inactives-commanders-vs-colts-week-4-2026"
+      },
+      "game_id": "2026_04_IND_WAS",
+      "market": "first",
+      "player_id": "00-0039355",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official Seahawks update says he was placed on injured reserve Saturday before the Week 4 game; he could not participate.",
+        "decision_source": "official_roster_transaction",
+        "evidence_date": "2026-10-04",
+        "source_title": "Seahawks vs. Chargers Week 4 Inactives",
+        "source_url": "https://www.seahawks.com/news/seahawks-vs-chargers-week-4-inactives"
+      },
+      "game_id": "2026_04_LAC_SEA",
+      "market": "anytime",
+      "player_id": "00-0041512",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official Seahawks update says he was placed on injured reserve Saturday before the Week 4 game; he could not participate.",
+        "decision_source": "official_roster_transaction",
+        "evidence_date": "2026-10-04",
+        "source_title": "Seahawks vs. Chargers Week 4 Inactives",
+        "source_url": "https://www.seahawks.com/news/seahawks-vs-chargers-week-4-inactives"
+      },
+      "game_id": "2026_04_LAC_SEA",
+      "market": "two_plus",
+      "player_id": "00-0041512",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official Seahawks update says he was placed on injured reserve Saturday before the Week 4 game; he could not participate.",
+        "decision_source": "official_roster_transaction",
+        "evidence_date": "2026-10-04",
+        "source_title": "Seahawks vs. Chargers Week 4 Inactives",
+        "source_url": "https://www.seahawks.com/news/seahawks-vs-chargers-week-4-inactives"
+      },
+      "game_id": "2026_04_LAC_SEA",
+      "market": "first",
+      "player_id": "00-0041512",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Chargers-Seahawks Week 4 Inactives",
+        "source_url": "https://www.chargers.com/news/seahawks-week-4-inactives-derwin-james"
+      },
+      "game_id": "2026_04_LAC_SEA",
+      "market": "anytime",
+      "player_id": "00-0041550",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Chargers-Seahawks Week 4 Inactives",
+        "source_url": "https://www.chargers.com/news/seahawks-week-4-inactives-derwin-james"
+      },
+      "game_id": "2026_04_LAC_SEA",
+      "market": "two_plus",
+      "player_id": "00-0041550",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Chargers-Seahawks Week 4 Inactives",
+        "source_url": "https://www.chargers.com/news/seahawks-week-4-inactives-derwin-james"
+      },
+      "game_id": "2026_04_LAC_SEA",
+      "market": "first",
+      "player_id": "00-0041550",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Rams vs. Eagles Inactives",
+        "source_url": "https://www.philadelphiaeagles.com/news/rams-vs-eagles-inactives-week-4-2026-zack-baun-devonta-smith"
+      },
+      "game_id": "2026_04_LA_PHI",
+      "market": "anytime",
+      "player_id": "00-0036912",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Rams vs. Eagles Inactives",
+        "source_url": "https://www.philadelphiaeagles.com/news/rams-vs-eagles-inactives-week-4-2026-zack-baun-devonta-smith"
+      },
+      "game_id": "2026_04_LA_PHI",
+      "market": "two_plus",
+      "player_id": "00-0036912",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Rams vs. Eagles Inactives",
+        "source_url": "https://www.philadelphiaeagles.com/news/rams-vs-eagles-inactives-week-4-2026-zack-baun-devonta-smith"
+      },
+      "game_id": "2026_04_LA_PHI",
+      "market": "first",
+      "player_id": "00-0036912",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Rams vs. Eagles Inactives",
+        "source_url": "https://www.philadelphiaeagles.com/news/rams-vs-eagles-inactives-week-4-2026-zack-baun-devonta-smith"
+      },
+      "game_id": "2026_04_LA_PHI",
+      "market": "anytime",
+      "player_id": "00-0036244",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Rams vs. Eagles Inactives",
+        "source_url": "https://www.philadelphiaeagles.com/news/rams-vs-eagles-inactives-week-4-2026-zack-baun-devonta-smith"
+      },
+      "game_id": "2026_04_LA_PHI",
+      "market": "two_plus",
+      "player_id": "00-0036244",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Rams vs. Eagles Inactives",
+        "source_url": "https://www.philadelphiaeagles.com/news/rams-vs-eagles-inactives-week-4-2026-zack-baun-devonta-smith"
+      },
+      "game_id": "2026_04_LA_PHI",
+      "market": "first",
+      "player_id": "00-0036244",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Rams vs. Eagles Inactives",
+        "source_url": "https://www.philadelphiaeagles.com/news/rams-vs-eagles-inactives-week-4-2026-zack-baun-devonta-smith"
+      },
+      "game_id": "2026_04_LA_PHI",
+      "market": "anytime",
+      "player_id": "00-0035662",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Rams vs. Eagles Inactives",
+        "source_url": "https://www.philadelphiaeagles.com/news/rams-vs-eagles-inactives-week-4-2026-zack-baun-devonta-smith"
+      },
+      "game_id": "2026_04_LA_PHI",
+      "market": "two_plus",
+      "player_id": "00-0035662",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Rams vs. Eagles Inactives",
+        "source_url": "https://www.philadelphiaeagles.com/news/rams-vs-eagles-inactives-week-4-2026-zack-baun-devonta-smith"
+      },
+      "game_id": "2026_04_LA_PHI",
+      "market": "first",
+      "player_id": "00-0035662",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Vikings and Dolphins Inactives for Week 4 of 2026",
+        "source_url": "https://www.vikings.com/news/vikings-dolphins-inactives-week-4-2026-nfl-season"
+      },
+      "game_id": "2026_04_MIA_MIN",
+      "market": "anytime",
+      "player_id": "00-0036322",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Vikings and Dolphins Inactives for Week 4 of 2026",
+        "source_url": "https://www.vikings.com/news/vikings-dolphins-inactives-week-4-2026-nfl-season"
+      },
+      "game_id": "2026_04_MIA_MIN",
+      "market": "two_plus",
+      "player_id": "00-0036322",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Vikings and Dolphins Inactives for Week 4 of 2026",
+        "source_url": "https://www.vikings.com/news/vikings-dolphins-inactives-week-4-2026-nfl-season"
+      },
+      "game_id": "2026_04_MIA_MIN",
+      "market": "first",
+      "player_id": "00-0036322",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Vikings and Dolphins Inactives for Week 4 of 2026",
+        "source_url": "https://www.vikings.com/news/vikings-dolphins-inactives-week-4-2026-nfl-season"
+      },
+      "game_id": "2026_04_MIA_MIN",
+      "market": "anytime",
+      "player_id": "00-0041077",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Vikings and Dolphins Inactives for Week 4 of 2026",
+        "source_url": "https://www.vikings.com/news/vikings-dolphins-inactives-week-4-2026-nfl-season"
+      },
+      "game_id": "2026_04_MIA_MIN",
+      "market": "two_plus",
+      "player_id": "00-0041077",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official team Week 4 inactive report confirms the player was inactive for this matchup.",
+        "decision_source": "official_team_week4_inactives",
+        "evidence_date": "2026-10-04",
+        "source_title": "Vikings and Dolphins Inactives for Week 4 of 2026",
+        "source_url": "https://www.vikings.com/news/vikings-dolphins-inactives-week-4-2026-nfl-season"
+      },
+      "game_id": "2026_04_MIA_MIN",
+      "market": "first",
+      "player_id": "00-0041077",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official Texans transaction placed Brooks on Reserve/Injured before Week 4.",
+        "decision_source": "official_inactive_or_roster_status",
+        "evidence_date": "2026-10-04",
+        "source_title": "Houston Texans Transactions (10-02-2026)",
+        "source_url": "https://www.houstontexans.com/news/houston-texans-transactions-10-02-2026"
+      },
+      "game_id": "2026_04_DAL_HOU",
+      "market": "anytime",
+      "player_id": "00-0039603",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official Texans transaction placed Brooks on Reserve/Injured before Week 4.",
+        "decision_source": "official_inactive_or_roster_status",
+        "evidence_date": "2026-10-04",
+        "source_title": "Houston Texans Transactions (10-02-2026)",
+        "source_url": "https://www.houstontexans.com/news/houston-texans-transactions-10-02-2026"
+      },
+      "game_id": "2026_04_DAL_HOU",
+      "market": "two_plus",
+      "player_id": "00-0039603",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official Texans transaction placed Brooks on Reserve/Injured before Week 4.",
+        "decision_source": "official_inactive_or_roster_status",
+        "evidence_date": "2026-10-04",
+        "source_title": "Houston Texans Transactions (10-02-2026)",
+        "source_url": "https://www.houstontexans.com/news/houston-texans-transactions-10-02-2026"
+      },
+      "game_id": "2026_04_DAL_HOU",
+      "market": "first",
+      "player_id": "00-0039603",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official Rams transaction waived Smith before Week 4.",
+        "decision_source": "official_inactive_or_roster_status",
+        "evidence_date": "2026-10-04",
+        "source_title": "Rams waive wide receiver Xavier Smith",
+        "source_url": "https://www.therams.com/news/rams-waive-wide-receiver-xavier-smith-week-4-2026-eagles"
+      },
+      "game_id": "2026_04_LA_PHI",
+      "market": "anytime",
+      "player_id": "00-0038359",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official Rams transaction waived Smith before Week 4.",
+        "decision_source": "official_inactive_or_roster_status",
+        "evidence_date": "2026-10-04",
+        "source_title": "Rams waive wide receiver Xavier Smith",
+        "source_url": "https://www.therams.com/news/rams-waive-wide-receiver-xavier-smith-week-4-2026-eagles"
+      },
+      "game_id": "2026_04_LA_PHI",
+      "market": "two_plus",
+      "player_id": "00-0038359",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official Rams transaction waived Smith before Week 4.",
+        "decision_source": "official_inactive_or_roster_status",
+        "evidence_date": "2026-10-04",
+        "source_title": "Rams waive wide receiver Xavier Smith",
+        "source_url": "https://www.therams.com/news/rams-waive-wide-receiver-xavier-smith-week-4-2026-eagles"
+      },
+      "game_id": "2026_04_LA_PHI",
+      "market": "first",
+      "player_id": "00-0038359",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official NFL inactive list names Moore inactive for Week 4.",
+        "decision_source": "official_inactive_or_roster_status",
+        "evidence_date": "2026-10-04",
+        "source_title": "NFL Week 4 inactives",
+        "source_url": "https://www.nfl.com/news/nfl-week-4-inactives-players-ruled-out-sunday-14-games-2026"
+      },
+      "game_id": "2026_04_TEN_BAL",
+      "market": "anytime",
+      "player_id": "00-0032398",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official NFL inactive list names Moore inactive for Week 4.",
+        "decision_source": "official_inactive_or_roster_status",
+        "evidence_date": "2026-10-04",
+        "source_title": "NFL Week 4 inactives",
+        "source_url": "https://www.nfl.com/news/nfl-week-4-inactives-players-ruled-out-sunday-14-games-2026"
+      },
+      "game_id": "2026_04_TEN_BAL",
+      "market": "two_plus",
+      "player_id": "00-0032398",
+      "season": 2026,
+      "status": "void",
+      "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official NFL inactive list names Moore inactive for Week 4.",
+        "decision_source": "official_inactive_or_roster_status",
+        "evidence_date": "2026-10-04",
+        "source_title": "NFL Week 4 inactives",
+        "source_url": "https://www.nfl.com/news/nfl-week-4-inactives-players-ruled-out-sunday-14-games-2026"
+      },
+      "game_id": "2026_04_TEN_BAL",
+      "market": "first",
+      "player_id": "00-0032398",
+      "season": 2026,
+      "status": "void",
+      "week": 4
     }
   ]
 }

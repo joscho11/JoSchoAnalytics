@@ -14,9 +14,9 @@
       "predictions": {
         "latest": {
           "build_id": "predictions-2026w04-f3e67139da16",
-          "final_games": 1,
-          "graded_at": "2026-10-02T05:37:26Z",
-          "graded_rows": 1,
+          "final_games": 15,
+          "graded_at": "2026-10-06T00:03:20Z",
+          "graded_rows": 14,
           "season": 2026,
           "week": 4
         }
@@ -12220,14 +12220,14 @@
           },
           "grading": {
             "artifact": "data/releases/results/predictions/2026/week04/predictions-2026w04-f3e67139da16-graded.csv",
-            "artifact_sha256": "56a324b6119066219129c3fdc5c597de17c57d240a89fb82288bb9a84290dc54",
+            "artifact_sha256": "d400e56a92a32c2abac648799ecf8f491cbbcd207a457fc5e991771cf7583511",
             "complete": false,
-            "final_games": 1,
-            "graded_at": "2026-10-02T05:37:26Z",
-            "graded_rows": 1,
+            "final_games": 15,
+            "graded_at": "2026-10-06T00:03:20Z",
+            "graded_rows": 14,
             "metadata": "data/releases/results/predictions/2026/week04/predictions-2026w04-f3e67139da16-graded.json",
             "product": "predictions",
-            "pushes": 0,
+            "pushes": 1,
             "schema_version": 1,
             "season": 2026,
             "source_build": "predictions-2026w04-f3e67139da16",
@@ -12262,5 +12262,5 @@
     }
   },
   "schema_version": 1,
-  "updated_at": "2026-10-02T05:37:26Z"
+  "updated_at": "2026-10-06T00:03:20Z"
 }

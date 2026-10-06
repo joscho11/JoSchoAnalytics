@@ -1,11 +1,11 @@
 {
-  "anytime_graded_rows": 26,
+  "anytime_graded_rows": 347,
   "awaiting_stat_rows": 1,
-  "final_games": 1,
-  "first_td_graded_rows": 25,
-  "graded_at": "2026-10-02T12:35:08Z",
+  "final_games": 15,
+  "first_td_graded_rows": 338,
+  "graded_at": "2026-10-06T00:31:22Z",
   "schema_version": 1,
   "season": 2026,
-  "two_plus_graded_rows": 26,
+  "two_plus_graded_rows": 347,
   "week": 4
 }
