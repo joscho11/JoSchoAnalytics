@@ -14,6 +14,7 @@ import page_common
 from fantasy_scoring import DEFAULT_SCORING, SCORING_MODES, points_from_half_ppr
 from dashboard_chrome import TABLE_HEIGHT, dataframe_phone_desktop, _OFFLINE
 from publishing.manifest import published_builds, resolve_build_artifact
+from team_display import public_team_abbr
 
 _HERE = Path(__file__).resolve().parents[1]
 DEMO_SEASON = 2025
@@ -880,6 +881,8 @@ def render():
                         display["Proj Receptions"] = pos_df["pred_te_receptions"].fillna(0).round(1)
                         display["Proj Rec Yds"]    = pos_df["pred_te_rec_yards"].fillna(0).round(0).astype(int)
 
+                display["team"] = display["team"].map(public_team_abbr)
+                display["opponent_team"] = display["opponent_team"].map(public_team_abbr)
                 display["Player"] = display["player_display_name"] + " - " + display["team"]
                 if "is_home" in display.columns:
                     sep = display["is_home"].map(lambda h: "vs" if h in (1, True, 1.0) else "@")
@@ -1119,14 +1122,14 @@ def render():
                         up_html = (
                             f"<div style='background:#1a2a1a;border-left:3px solid #00c853;{card_style}'>"
                             f"<b style='color:#e8e8e8'>{_html.escape(up['player'])}</b> "
-                            f"<span style='color:#888;font-size:12px'>({_html.escape(up['team'])})</span><br>"
+                            f"<span style='color:#888;font-size:12px'>({_html.escape(public_team_abbr(up['team']))})</span><br>"
                             f"<span style='color:#aaa;font-size:13px'>{_html.escape(up['reason'])}</span>"
                             f"</div>"
                         ) if up else "<div></div>"
                         dn_html = (
                             f"<div style='background:#2a1a1a;border-left:3px solid #ff5252;{card_style}'>"
                             f"<b style='color:#e8e8e8'>{_html.escape(dn['player'])}</b> "
-                            f"<span style='color:#888;font-size:12px'>({_html.escape(dn['team'])})</span><br>"
+                            f"<span style='color:#888;font-size:12px'>({_html.escape(public_team_abbr(dn['team']))})</span><br>"
                             f"<span style='color:#aaa;font-size:13px'>{_html.escape(dn['reason'])}</span>"
                             f"</div>"
                         ) if dn else "<div></div>"

@@ -252,11 +252,11 @@ def test_ne_sea_display_only_two_plus_model_view_is_shown(tmp_path):
 def test_sf_la_display_only_two_plus_model_view_is_shown(tmp_path):
     at = _render(tmp_path, week=1)
     at.segmented_control(key="atd_view_2026_1").set_value("2+ TD").run()
-    _pick_props_matchup(at, "SF vs LA")
+    _pick_props_matchup(at, "SF vs LAR")
     assert not at.exception, at.exception
     assert not at.error, [e.value for e in at.error]
     info = " ".join(str(item.value) for item in at.info)
-    assert "Display-only historical 2+ TD model view for SF vs LA" in info
+    assert "Display-only historical 2+ TD model view for SF vs LAR" in info
     rendered = list(at.dataframe)[-2:]
     assert len(rendered) == 2
     assert all(
@@ -365,11 +365,11 @@ def test_ne_sea_display_only_first_td_model_view_is_shown(tmp_path):
 def test_sf_la_display_only_first_td_model_view_is_shown(tmp_path):
     at = _render(tmp_path, week=1)
     at.segmented_control(key="atd_view_2026_1").set_value("First TD").run()
-    _pick_props_matchup(at, "SF vs LA")
+    _pick_props_matchup(at, "SF vs LAR")
     assert not at.exception, at.exception
     assert not at.error, [e.value for e in at.error]
     info = " ".join(str(item.value) for item in at.info)
-    assert "Display-only historical First TD model view for SF vs LA" in info
+    assert "Display-only historical First TD model view for SF vs LAR" in info
     rendered = list(at.dataframe)[-2:]
     assert len(rendered) == 2
     assert all(
@@ -952,7 +952,7 @@ def test_default_matchup_skips_fully_graded_games():
     ])
 
     matchups = list(page._matchup_groups(rows))
-    assert page.default_matchup_label(matchups) == "SF vs LA"
+    assert page.default_matchup_label(matchups) == "SF vs LAR"
 
 
 def test_default_matchup_skips_started_games_before_grading():

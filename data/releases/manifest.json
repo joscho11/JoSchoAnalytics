@@ -681,7 +681,7 @@
       "previous_build": "fantasy-2026w04-acd94fff81e3"
     },
     "predictions": {
-      "active_build": "predictions-2026w05-496c87e67cde",
+      "active_build": "predictions-2026w05-e6902ce4fb32",
       "builds": {
         "predictions-2025w10-8f1701d7a6db": {
           "artifact": "data/releases/builds/predictions/2025/week10/predictions-2025w10-8f1701d7a6db/artifact.csv",
@@ -12310,6 +12310,856 @@
             "warnings": []
           },
           "week": 5
+        },
+        "predictions-2026w05-e6902ce4fb32": {
+          "artifact": "data/releases/builds/predictions/2026/week05/predictions-2026w05-e6902ce4fb32/artifact.csv",
+          "build_id": "predictions-2026w05-e6902ce4fb32",
+          "correction": {
+            "allowed_defaults": {},
+            "as_of_policy": "source evidence must precede prediction as-of; the cutoff is capped at Wednesday 00:00 ET",
+            "availability_mode": "live_asof",
+            "candidate_market_snapshots": {
+              "coverage": {
+                "mkt_ml_spread_gap": {
+                  "missing": 0,
+                  "non_null": 15,
+                  "nonzero": 15,
+                  "rows": 15,
+                  "unique_non_null": 15
+                },
+                "mkt_move_sunday_to_tuesday": {
+                  "missing": 0,
+                  "non_null": 15,
+                  "nonzero": 5,
+                  "rows": 15,
+                  "unique_non_null": 5
+                },
+                "mkt_total_move_sunday_to_tuesday": {
+                  "missing": 0,
+                  "non_null": 15,
+                  "nonzero": 6,
+                  "rows": 15,
+                  "unique_non_null": 7
+                }
+              },
+              "games": 15,
+              "line_agreement": {
+                "same_snapshot_lines_match": true,
+                "spread_median_differences": [],
+                "total_median_differences": []
+              },
+              "season": 2026,
+              "status": "ok",
+              "sunday": {
+                "actual_timestamp_utc": "2026-10-05T05:55:36+00:00",
+                "approved_monday_recovery": {
+                  "matched_games": 15,
+                  "missing_optional_markets": {},
+                  "provider_timestamp_utc": "2026-10-05T05:55:36Z",
+                  "requested_snapshot_utc": "2026-10-05T06:00:00Z",
+                  "scheduled_games": 15
+                },
+                "free_window_capture": null,
+                "manual_recovery": null,
+                "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\sunday_1120_paid_recovery\\2026_w05_monday0155.json",
+                "quote_provenance": null,
+                "requested_snapshot_utc": "2026-10-05T06:00:00+00:00",
+                "sha256": "c492df52f9cf769a078a42d61e5b472c871a3b6ddfa93ffe961125cf58141929",
+                "source": "paid-historical-monday-0155-approved-w05-v1",
+                "window_end_et": null,
+                "window_start_et": null,
+                "windowed_supplemental_pairs": []
+              },
+              "tuesday": {
+                "actual_timestamp_utc": "2026-10-06T12:55:36+00:00",
+                "moneyline_provenance": null,
+                "original_tuesday": null,
+                "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\tuesday_0900\\2026_w05.json",
+                "provider_after_scheduled_marker_seconds": null,
+                "requested_snapshot_utc": "2026-10-06T13:00:00+00:00",
+                "sha256": "c431ee379c0368f2149c55ab82961b3a506853fd1d4a0eaa854e3698a4ba1096",
+                "source": "paid-historical-tuesday-0900-v1"
+              },
+              "week": 5
+            },
+            "injury_snapshot_captured_at": "2026-10-06T15:35:55.045132+00:00",
+            "injury_snapshot_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\live_2026\\injuries_20261006T151114.648053Z.parquet",
+            "injury_snapshot_sha256": "b118f81904980aa6fe39b59db2f700399132e60439da599af59933c5c1a705b3",
+            "input_as_of_utc": "2026-10-06T16:07:18.918156100+00:00",
+            "ir_inputs": {
+              "players_snapshot_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\live_2026\\players_2026_20261006T153555367504Z.parquet",
+              "players_snapshot_sha256": "598c31338c67a37eeef479190877f2470256ad8c9bde6294bfadd9506dc92785",
+              "post_cutoff_finished_weeks_exception": false,
+              "roster_asset_updated_at": "2026-10-06T14:11:27Z",
+              "roster_parity_confirmation": null,
+              "roster_parity_status": "ok",
+              "roster_snapshot_captured_at": "2026-10-06T15:11:15.828231+00:00",
+              "roster_snapshot_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\live_2026\\roster_weekly_20261006T151115.828231Z.parquet",
+              "roster_snapshot_sha256": "022a3b1cf2dba6f3df7fe58f3a4625c932f14f1ede29d1692764536d0d84ae37",
+              "snap_snapshot_captured_at": "2026-10-06T15:35:55.837209+00:00",
+              "snap_snapshot_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\live_2026\\snap_counts_2026_20261006T153555837209Z.parquet",
+              "snap_snapshot_sha256": "b799fcc69baf08f99f9ca228a1f423f25634e30c29148cb015457ae706b2992a",
+              "source_type": "prior_game_roster_and_snap_counts",
+              "warnings": []
+            },
+            "model_bundle_sha256": "b4a325000b7a8982f092402528e415177f64ad3193ab9e8bb392cfa28f726d61",
+            "promotion_audit": {
+              "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\spread_v3_prod\\artifacts\\week05_monday0155_promotion_audit.json",
+              "sha256": "697667e8b4b9862019d28f6a68357a4bd8e266ee5096cfd936020e4bd8a873f9"
+            },
+            "qb_override_source_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\news\\2026_w05_qb_input_overrides.csv",
+            "qb_override_source_sha256": "3d17d90cc0838e0fa725cba099427a9814e2ecfd00953fde104c4b28f626b635",
+            "qb_scenarios": {
+              "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\news\\2026_w05_qb_scenarios.csv",
+              "results": {
+                "2026_05_BAL_ATL": [
+                  {
+                    "clears_high": true,
+                    "edge": 3.9195679540685946,
+                    "features_neutralized": false,
+                    "player_id": "00-0035993",
+                    "player_name": "Tyler Huntley",
+                    "side": "HOME (ATL)",
+                    "team": "BAL"
+                  },
+                  {
+                    "clears_high": false,
+                    "edge": 2.503292011681324,
+                    "features_neutralized": false,
+                    "player_id": "00-0034796",
+                    "player_name": "Lamar Jackson",
+                    "side": "HOME (ATL)",
+                    "team": "BAL"
+                  }
+                ],
+                "2026_05_NYG_WAS": [
+                  {
+                    "clears_high": false,
+                    "edge": 2.47067371779188,
+                    "features_neutralized": false,
+                    "player_id": "00-0039910",
+                    "player_name": "Jayden Daniels",
+                    "side": "HOME (WAS)",
+                    "team": "WAS"
+                  },
+                  {
+                    "clears_high": true,
+                    "edge": 3.644865090401291,
+                    "features_neutralized": false,
+                    "player_id": "00-0041117",
+                    "player_name": "Athan Kaliakmanis",
+                    "side": "HOME (WAS)",
+                    "team": "WAS"
+                  }
+                ]
+              },
+              "sha256": "1afb800adc8f00076f3b912306a237a469baa3b442a514d6750e60392955e1b1",
+              "teams": [
+                "BAL",
+                "WAS"
+              ]
+            },
+            "qb_selection_details": {
+              "ARI": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0033119",
+                "player_name": "Jacoby Brissett",
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "ATL": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0039917",
+                "player_name": "Michael Penix Jr.",
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "BAL": {
+                "is_user_modeling_assumption": true,
+                "player_id": "00-0035993",
+                "player_name": "Tyler Huntley",
+                "reason": "explicit user QB-input override takes precedence over automated selection rules",
+                "tier": "manual_override"
+              },
+              "BUF": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0034857",
+                "player_name": "Josh Allen",
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "CHI": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0038416",
+                "player_name": "Tyson Bagent",
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "CIN": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0036442",
+                "player_name": "Joe Burrow",
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "CLE": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0033537",
+                "player_name": "Deshaun Watson",
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "DAL": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0033077",
+                "player_name": "Dak Prescott",
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "DEN": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0039732",
+                "player_name": "Bo Nix",
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "DET": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0033106",
+                "player_name": "Jared Goff",
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "GB": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0036264",
+                "player_name": "Jordan Love",
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "HOU": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0039163",
+                "player_name": "C.J. Stroud",
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "IND": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0035710",
+                "player_name": "Daniel Jones",
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "JAX": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0036971",
+                "player_name": "Trevor Lawrence",
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "LA": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0026498",
+                "player_name": "Matthew Stafford",
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "LAC": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0036355",
+                "player_name": "Justin Herbert",
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "LV": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0029604",
+                "player_name": "Kirk Cousins",
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "MIA": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0038128",
+                "player_name": "Malik Willis",
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "MIN": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0035228",
+                "player_name": "Kyler Murray",
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "NE": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0039851",
+                "player_name": "Drake Maye",
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "NO": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0040743",
+                "player_name": "Tyler Shough",
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "NYG": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0031503",
+                "player_name": "Jameis Winston",
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "NYJ": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0030565",
+                "player_name": "Geno Smith",
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "PHI": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0036389",
+                "player_name": "Jalen Hurts",
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "PIT": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0023459",
+                "player_name": "Aaron Rodgers",
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "SEA": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0034869",
+                "player_name": "Sam Darnold",
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "SF": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0037834",
+                "player_name": "Brock Purdy",
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "TB": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0041251",
+                "player_name": "Jalon Daniels",
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "TEN": {
+                "is_user_modeling_assumption": false,
+                "player_id": "00-0040676",
+                "player_name": "Cam Ward",
+                "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+                "tier": "previous_game_leader"
+              },
+              "WAS": {
+                "is_user_modeling_assumption": true,
+                "player_id": "00-0039910",
+                "player_name": "Jayden Daniels",
+                "reason": "explicit user QB-input override takes precedence over automated selection rules",
+                "tier": "manual_override"
+              }
+            },
+            "qb_selection_policy": "explicit_manual_override; else timestamped_confirmed_starter_asof; else out_or_doubtful_replacement_asof; else prior_game_dropback_leader",
+            "qb_selections": {
+              "ARI": "00-0033119",
+              "ATL": "00-0039917",
+              "BAL": "00-0035993",
+              "BUF": "00-0034857",
+              "CHI": "00-0038416",
+              "CIN": "00-0036442",
+              "CLE": "00-0033537",
+              "DAL": "00-0033077",
+              "DEN": "00-0039732",
+              "DET": "00-0033106",
+              "GB": "00-0036264",
+              "HOU": "00-0039163",
+              "IND": "00-0035710",
+              "JAX": "00-0036971",
+              "LA": "00-0026498",
+              "LAC": "00-0036355",
+              "LV": "00-0029604",
+              "MIA": "00-0038128",
+              "MIN": "00-0035228",
+              "NE": "00-0039851",
+              "NO": "00-0040743",
+              "NYG": "00-0031503",
+              "NYJ": "00-0030565",
+              "PHI": "00-0036389",
+              "PIT": "00-0023459",
+              "SEA": "00-0034869",
+              "SF": "00-0037834",
+              "TB": "00-0041251",
+              "TEN": "00-0040676",
+              "WAS": "00-0039910"
+            },
+            "qb_source_audit": {
+              "assignment_conflicts": [],
+              "cutoff_utc": "2026-10-06T16:07:18.918156100+00:00",
+              "depth_charts": {
+                "as_of_dt_per_team": {
+                  "ARI": "2026-10-06 14:08:49+00:00",
+                  "ATL": "2026-10-06 14:08:49+00:00",
+                  "BAL": "2026-10-06 14:08:49+00:00",
+                  "BUF": "2026-10-06 14:08:49+00:00",
+                  "CAR": "2026-10-06 14:08:49+00:00",
+                  "CHI": "2026-10-06 14:08:49+00:00",
+                  "CIN": "2026-10-06 14:08:49+00:00",
+                  "CLE": "2026-10-06 14:08:49+00:00",
+                  "DAL": "2026-10-06 14:08:49+00:00",
+                  "DEN": "2026-10-06 14:08:49+00:00",
+                  "DET": "2026-10-06 14:08:49+00:00",
+                  "GB": "2026-10-06 14:08:49+00:00",
+                  "HOU": "2026-10-06 14:08:49+00:00",
+                  "IND": "2026-10-06 14:08:49+00:00",
+                  "JAX": "2026-10-06 14:08:49+00:00",
+                  "KC": "2026-10-06 14:08:49+00:00",
+                  "LA": "2026-10-06 14:08:49+00:00",
+                  "LAC": "2026-10-06 14:08:49+00:00",
+                  "LV": "2026-10-06 14:08:49+00:00",
+                  "MIA": "2026-10-06 14:08:49+00:00",
+                  "MIN": "2026-10-06 14:08:49+00:00",
+                  "NE": "2026-10-06 14:08:49+00:00",
+                  "NO": "2026-10-06 14:08:49+00:00",
+                  "NYG": "2026-10-06 14:08:49+00:00",
+                  "NYJ": "2026-10-06 14:08:49+00:00",
+                  "PHI": "2026-10-06 14:08:49+00:00",
+                  "PIT": "2026-10-06 14:08:49+00:00",
+                  "SEA": "2026-10-06 14:08:49+00:00",
+                  "SF": "2026-10-06 14:08:49+00:00",
+                  "TB": "2026-10-06 14:08:49+00:00",
+                  "TEN": "2026-10-06 14:08:49+00:00",
+                  "WAS": "2026-10-06 14:08:49+00:00"
+                },
+                "captured_at_utc": "2026-10-06T15:11:15.129135+00:00",
+                "cutoff_utc": "2026-10-06T16:07:18.918156100+00:00",
+                "rows": 93,
+                "status": "ok"
+              },
+              "expected_starter_acceptance_policy": "confirmed_only",
+              "expected_starters": {
+                "eligible_rows": 0,
+                "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\news\\2026_w05_expected_starters.csv",
+                "post_cutoff_rows": 0,
+                "rows": 0,
+                "selected_teams": [],
+                "status": "no_file"
+              },
+              "injuries": {
+                "captured_at_utc": "2026-10-06T15:35:55.045132+00:00",
+                "cutoff_utc": "2026-10-06T16:07:18.918156100+00:00",
+                "rows": 1052,
+                "sha256": "b118f81904980aa6fe39b59db2f700399132e60439da599af59933c5c1a705b3",
+                "status": "ok"
+              },
+              "latest_capture_attempts": {
+                "depth_charts": {
+                  "attempt_finished_utc": "2026-10-06T15:11:18.659956Z",
+                  "attempt_started_utc": "2026-10-06T15:11:11.453915Z",
+                  "captured_at_utc": "2026-10-06T15:11:15.129135Z",
+                  "fetch_finished_utc": "2026-10-06T15:11:15.129135Z",
+                  "fetch_started_utc": "2026-10-06T15:11:14.850090Z",
+                  "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\live_2026\\depth_charts_20261006T151115.129135Z.parquet",
+                  "rows": 613196,
+                  "source": "depth_charts",
+                  "status": "ok"
+                },
+                "injuries": {
+                  "attempt_finished_utc": "2026-10-06T15:11:18.659956Z",
+                  "attempt_started_utc": "2026-10-06T15:11:11.453915Z",
+                  "captured_at_utc": "2026-10-06T15:11:14.648053Z",
+                  "fetch_finished_utc": "2026-10-06T15:11:14.648053Z",
+                  "fetch_started_utc": "2026-10-06T15:11:13.764858Z",
+                  "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\live_2026\\injuries_20261006T151114.648053Z.parquet",
+                  "rows": 1052,
+                  "source": "injuries",
+                  "status": "ok"
+                },
+                "players": {
+                  "attempt_finished_utc": "2026-10-06T15:11:18.659956Z",
+                  "attempt_started_utc": "2026-10-06T15:11:11.453915Z",
+                  "captured_at_utc": "2026-10-06T15:11:18.586432Z",
+                  "fetch_finished_utc": "2026-10-06T15:11:18.586432Z",
+                  "fetch_started_utc": "2026-10-06T15:11:18.475904Z",
+                  "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\live_2026\\players_20261006T151118.586432Z.parquet",
+                  "rows": 24844,
+                  "source": "players",
+                  "status": "ok"
+                },
+                "roster_parity": {
+                  "added": 0,
+                  "attempt_finished_utc": "2026-10-06T15:11:18.659956Z",
+                  "attempt_started_utc": "2026-10-06T15:11:11.453915Z",
+                  "changed": 0,
+                  "examples": [],
+                  "finished_weeks": [
+                    1,
+                    2,
+                    3
+                  ],
+                  "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\live_2026\\roster_parity_20261006T151115.828231Z.json",
+                  "prior_captured_at_utc": "2026-09-29T15:20:38.661525+00:00",
+                  "prior_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\live_2026\\roster_weekly_20260929T152038.661525Z.parquet",
+                  "removed": 0,
+                  "roster_captured_at_utc": "2026-10-06T15:11:15.828231Z",
+                  "roster_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\live_2026\\roster_weekly_20261006T151115.828231Z.parquet",
+                  "rows_compared_new": 8036,
+                  "rows_compared_prior": 8036,
+                  "source": "roster_parity",
+                  "status": "ok"
+                },
+                "roster_weekly": {
+                  "asset_name": "roster_weekly_2026.parquet",
+                  "asset_updated_at": "2026-10-06T14:11:27Z",
+                  "attempt_finished_utc": "2026-10-06T15:11:18.659956Z",
+                  "attempt_started_utc": "2026-10-06T15:11:11.453915Z",
+                  "captured_at_utc": "2026-10-06T15:11:15.828231Z",
+                  "fetch_finished_utc": "2026-10-06T15:11:15.828231Z",
+                  "fetch_started_utc": "2026-10-06T15:11:15.745214Z",
+                  "ir_r01_rows": 923,
+                  "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\live_2026\\roster_weekly_20261006T151115.828231Z.parquet",
+                  "res_rows": 1379,
+                  "rows": 13004,
+                  "source": "roster_weekly",
+                  "status": "ok"
+                },
+                "snap_counts": {
+                  "attempt_finished_utc": "2026-10-06T15:11:18.659956Z",
+                  "attempt_started_utc": "2026-10-06T15:11:11.453915Z",
+                  "captured_at_utc": "2026-10-06T15:11:14.841590Z",
+                  "fetch_finished_utc": "2026-10-06T15:11:14.841590Z",
+                  "fetch_started_utc": "2026-10-06T15:11:14.764575Z",
+                  "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\live_2026\\snap_counts_20261006T151114.841590Z.parquet",
+                  "rows": 5970,
+                  "source": "snap_counts",
+                  "status": "ok"
+                }
+              },
+              "lineup_overrides": {
+                "ambiguous_teams": [],
+                "eligible_rows": 1,
+                "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\news\\2026_w05_lineup_overrides.csv",
+                "post_cutoff_rows": 0,
+                "rows": 1,
+                "selected_teams": [
+                  "WAS"
+                ],
+                "status": "ok"
+              },
+              "manual_qb_overrides": {
+                "ambiguous_teams": [],
+                "applicable_rows": 2,
+                "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\news\\2026_w05_qb_input_overrides.csv",
+                "rows": 2,
+                "rows_after_cutoff": 0,
+                "selected_teams": [
+                  "BAL",
+                  "WAS"
+                ],
+                "status": "ok"
+              }
+            },
+            "qb_uncertainty_flags": {
+              "flagged_teams": [
+                "BAL",
+                "WAS"
+              ],
+              "manual_uncertain": {
+                "applicable_rows": 2,
+                "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\news\\2026_w05_qb_manual_uncertain.csv",
+                "rows": 2,
+                "status": "ok",
+                "teams": [
+                  "BAL",
+                  "WAS"
+                ]
+              },
+              "mode": "flag_only",
+              "rule": "selected QB did not finish a close game last week (score within 16)",
+              "teams": [
+                {
+                  "flag": 0,
+                  "qb_id": "00-0033119",
+                  "reason": "finished 2026_04_ARI_NYG, or left it in a game already out of reach",
+                  "source": "none",
+                  "team": "ARI",
+                  "tier": "previous_game_leader"
+                },
+                {
+                  "flag": 0,
+                  "qb_id": "00-0039917",
+                  "reason": "finished 2026_04_ATL_NO, or left it in a game already out of reach",
+                  "source": "none",
+                  "team": "ATL",
+                  "tier": "previous_game_leader"
+                },
+                {
+                  "flag": 0,
+                  "qb_id": "00-0035993",
+                  "reason": "finished 2026_04_TEN_BAL, or left it in a game already out of reach",
+                  "source": "none",
+                  "team": "BAL",
+                  "tier": "manual_override"
+                },
+                {
+                  "flag": 0,
+                  "qb_id": "00-0034857",
+                  "reason": "finished 2026_04_NE_BUF, or left it in a game already out of reach",
+                  "source": "none",
+                  "team": "BUF",
+                  "tier": "previous_game_leader"
+                },
+                {
+                  "flag": 0,
+                  "qb_id": "00-0038416",
+                  "reason": "finished 2026_04_NYJ_CHI, or left it in a game already out of reach",
+                  "source": "none",
+                  "team": "CHI",
+                  "tier": "previous_game_leader"
+                },
+                {
+                  "flag": 0,
+                  "qb_id": "00-0036442",
+                  "reason": "finished 2026_04_JAX_CIN, or left it in a game already out of reach",
+                  "source": "none",
+                  "team": "CIN",
+                  "tier": "previous_game_leader"
+                },
+                {
+                  "flag": 0,
+                  "qb_id": "00-0033537",
+                  "reason": "finished 2026_04_PIT_CLE, or left it in a game already out of reach",
+                  "source": "none",
+                  "team": "CLE",
+                  "tier": "previous_game_leader"
+                },
+                {
+                  "flag": 0,
+                  "qb_id": "00-0033077",
+                  "reason": "finished 2026_04_DAL_HOU, or left it in a game already out of reach",
+                  "source": "none",
+                  "team": "DAL",
+                  "tier": "previous_game_leader"
+                },
+                {
+                  "flag": 0,
+                  "qb_id": "00-0039732",
+                  "reason": "finished 2026_04_DEN_SF, or left it in a game already out of reach",
+                  "source": "none",
+                  "team": "DEN",
+                  "tier": "previous_game_leader"
+                },
+                {
+                  "flag": 0,
+                  "qb_id": "00-0033106",
+                  "reason": "finished 2026_04_DET_CAR, or left it in a game already out of reach",
+                  "source": "none",
+                  "team": "DET",
+                  "tier": "previous_game_leader"
+                },
+                {
+                  "flag": 0,
+                  "qb_id": "00-0036264",
+                  "reason": "finished 2026_04_GB_TB, or left it in a game already out of reach",
+                  "source": "none",
+                  "team": "GB",
+                  "tier": "previous_game_leader"
+                },
+                {
+                  "flag": 0,
+                  "qb_id": "00-0039163",
+                  "reason": "finished 2026_04_DAL_HOU, or left it in a game already out of reach",
+                  "source": "none",
+                  "team": "HOU",
+                  "tier": "previous_game_leader"
+                },
+                {
+                  "flag": 0,
+                  "qb_id": "00-0035710",
+                  "reason": "finished 2026_04_IND_WAS, or left it in a game already out of reach",
+                  "source": "none",
+                  "team": "IND",
+                  "tier": "previous_game_leader"
+                },
+                {
+                  "flag": 0,
+                  "qb_id": "00-0036971",
+                  "reason": "finished 2026_04_JAX_CIN, or left it in a game already out of reach",
+                  "source": "none",
+                  "team": "JAX",
+                  "tier": "previous_game_leader"
+                },
+                {
+                  "flag": 0,
+                  "qb_id": "00-0026498",
+                  "reason": "finished 2026_04_LA_PHI, or left it in a game already out of reach",
+                  "source": "none",
+                  "team": "LA",
+                  "tier": "previous_game_leader"
+                },
+                {
+                  "flag": 0,
+                  "qb_id": "00-0036355",
+                  "reason": "finished 2026_04_LAC_SEA, or left it in a game already out of reach",
+                  "source": "none",
+                  "team": "LAC",
+                  "tier": "previous_game_leader"
+                },
+                {
+                  "flag": 0,
+                  "qb_id": "00-0029604",
+                  "reason": "finished 2026_04_KC_LV, or left it in a game already out of reach",
+                  "source": "none",
+                  "team": "LV",
+                  "tier": "previous_game_leader"
+                },
+                {
+                  "flag": 0,
+                  "qb_id": "00-0038128",
+                  "reason": "finished 2026_04_MIA_MIN, or left it in a game already out of reach",
+                  "source": "none",
+                  "team": "MIA",
+                  "tier": "previous_game_leader"
+                },
+                {
+                  "flag": 0,
+                  "qb_id": "00-0035228",
+                  "reason": "finished 2026_04_MIA_MIN, or left it in a game already out of reach",
+                  "source": "none",
+                  "team": "MIN",
+                  "tier": "previous_game_leader"
+                },
+                {
+                  "flag": 0,
+                  "qb_id": "00-0039851",
+                  "reason": "finished 2026_04_NE_BUF, or left it in a game already out of reach",
+                  "source": "none",
+                  "team": "NE",
+                  "tier": "previous_game_leader"
+                },
+                {
+                  "flag": 0,
+                  "qb_id": "00-0040743",
+                  "reason": "finished 2026_04_ATL_NO, or left it in a game already out of reach",
+                  "source": "none",
+                  "team": "NO",
+                  "tier": "previous_game_leader"
+                },
+                {
+                  "flag": 0,
+                  "qb_id": "00-0031503",
+                  "reason": "finished 2026_04_ARI_NYG, or left it in a game already out of reach",
+                  "source": "none",
+                  "team": "NYG",
+                  "tier": "previous_game_leader"
+                },
+                {
+                  "flag": 0,
+                  "qb_id": "00-0030565",
+                  "reason": "finished 2026_04_NYJ_CHI, or left it in a game already out of reach",
+                  "source": "none",
+                  "team": "NYJ",
+                  "tier": "previous_game_leader"
+                },
+                {
+                  "flag": 0,
+                  "qb_id": "00-0036389",
+                  "reason": "finished 2026_04_LA_PHI, or left it in a game already out of reach",
+                  "source": "none",
+                  "team": "PHI",
+                  "tier": "previous_game_leader"
+                },
+                {
+                  "flag": 0,
+                  "qb_id": "00-0023459",
+                  "reason": "finished 2026_04_PIT_CLE, or left it in a game already out of reach",
+                  "source": "none",
+                  "team": "PIT",
+                  "tier": "previous_game_leader"
+                },
+                {
+                  "flag": 0,
+                  "qb_id": "00-0034869",
+                  "reason": "finished 2026_04_LAC_SEA, or left it in a game already out of reach",
+                  "source": "none",
+                  "team": "SEA",
+                  "tier": "previous_game_leader"
+                },
+                {
+                  "flag": 0,
+                  "qb_id": "00-0037834",
+                  "reason": "finished 2026_04_DEN_SF, or left it in a game already out of reach",
+                  "source": "none",
+                  "team": "SF",
+                  "tier": "previous_game_leader"
+                },
+                {
+                  "flag": 0,
+                  "qb_id": "00-0041251",
+                  "reason": "finished 2026_04_GB_TB, or left it in a game already out of reach",
+                  "source": "none",
+                  "team": "TB",
+                  "tier": "previous_game_leader"
+                },
+                {
+                  "flag": 0,
+                  "qb_id": "00-0040676",
+                  "reason": "finished 2026_04_TEN_BAL, or left it in a game already out of reach",
+                  "source": "none",
+                  "team": "TEN",
+                  "tier": "previous_game_leader"
+                },
+                {
+                  "flag": 0,
+                  "qb_id": "00-0039910",
+                  "reason": "selected QB has no dropback in 2026_04_IND_WAS",
+                  "source": "none",
+                  "team": "WAS",
+                  "tier": "manual_override"
+                }
+              ]
+            },
+            "reason": "Replace the Monday DraftKings email baseline with the approved Odds API snapshot at 2026-10-05T05:55:36Z.",
+            "snap_snapshot_captured_at": "2026-10-06T15:11:14.841590Z",
+            "snap_snapshot_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\live_2026\\snap_counts_20261006T151114.841590Z.parquet",
+            "snap_snapshot_sha256": "200ab999226aeb2fcce23ee49d53cd1bd2d5ec3e9ef727cdf8c666d703c0f219",
+            "source_snapshot_captured_at": "2026-10-06T12:55:36+00:00",
+            "source_snapshot_sha256": "c431ee379c0368f2149c55ab82961b3a506853fd1d4a0eaa854e3698a4ba1096",
+            "supersedes_build_id": "predictions-2026w05-496c87e67cde"
+          },
+          "metadata": "data/releases/builds/predictions/2026/week05/predictions-2026w05-e6902ce4fb32/metadata.json",
+          "model_version": "spread-v3-prod-sunday-tuesday-market-46-qb-ir-scoped-flag-b4a325000b7a",
+          "produced_at": "2026-10-06T17:06:13Z",
+          "product": "predictions",
+          "published_at": "2026-10-06T17:07:33Z",
+          "row_count": 15,
+          "season": 2026,
+          "sha256": "e6902ce4fb32ec66fe99df601ffb4fda65263afd70a1904148c0c430ffc7a6a8",
+          "status": "Published",
+          "validation": {
+            "checks": {
+              "artifact_sha256": "e6902ce4fb32ec66fe99df601ffb4fda65263afd70a1904148c0c430ffc7a6a8",
+              "produced_at_utc": "2026-10-06T17:06:13Z",
+              "scheduled_games": 15
+            },
+            "errors": [],
+            "ok": true,
+            "product": "predictions",
+            "row_count": 15,
+            "warnings": []
+          },
+          "week": 5
         }
       },
       "next_release": {
@@ -12318,9 +13168,9 @@
         "status": "Awaiting projections",
         "week": 6
       },
-      "previous_build": "predictions-2026w04-f3e67139da16"
+      "previous_build": "predictions-2026w05-496c87e67cde"
     }
   },
   "schema_version": 1,
-  "updated_at": "2026-10-06T16:10:03Z"
+  "updated_at": "2026-10-06T17:07:33Z"
 }

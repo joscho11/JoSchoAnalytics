@@ -24,6 +24,7 @@ from dashboard_utils import (
     format_ats_record,
     get_confidence,
 )
+from team_display import public_matchup_text, public_team_abbr
 from live_2026 import (
     HIGH_GAP,
     LIVE_HIGH_LABELS,
@@ -170,7 +171,7 @@ def _live_model_context(release_state: dict) -> None:
                 prior = previous_qbs.get(team, {})
                 prior_name = prior.get("player_name") or prior.get("player_id") or previous_ids.get(team, "unknown")
                 note += f"; previous release used {prior_name}"
-            qb_notes.append(f"- **{team}:** {name} — {note}")
+            qb_notes.append(f"- **{public_team_abbr(team)}:** {name} — {note}")
         st.markdown("\n".join(qb_notes))
         flagged = [
             row for row in ((correction.get("qb_uncertainty_flags") or {}).get("teams") or []) if row.get("flag")
@@ -180,11 +181,16 @@ def _live_model_context(release_state: dict) -> None:
                 "Automatic uncertain-QB flag: the QB the model uses did not finish a close game last week. "
                 "It is an extra model input; the QB numbers are kept."
             )
-            st.markdown("\n".join(f"- **{row['team']}:** {row.get('reason', '')}" for row in flagged))
+            st.markdown(
+                "\n".join(
+                    f"- **{public_team_abbr(row['team'])}:** {row.get('reason', '')}"
+                    for row in flagged
+                )
+            )
         scenario_teams = (correction.get("qb_scenarios") or {}).get("teams") or []
         if scenario_teams:
             st.caption(
-                "QB scenarios for " + ", ".join(scenario_teams)
+                "QB scenarios for " + ", ".join(public_team_abbr(team) for team in scenario_teams)
                 + ": each listed QB is scored as the certain starter on the matchup card. "
                 "They are shown for planning and are not part of the model's official pick."
             )
@@ -227,6 +233,8 @@ def _scenario_card_html(item: dict, home: str, spread: float) -> str:
     edge = float(item["edge"])
     side = str(item.get("side", ""))
     picked = side.split("(")[1].rstrip(")") if "(" in side else side
+    picked = public_team_abbr(picked)
+    home = public_team_abbr(home)
     high = bool(item.get("clears_high"))
     color = "#00c853" if high else "#93A0B1"
     background = "#0c1a12" if high else "#1e2a3a"
@@ -276,8 +284,8 @@ def _render_qb_scenarios(items: list[dict], verdict: str, home: str, away: str, 
     """Simple view for a game whose QB is not settled: one equal card per listed QB, then one verdict."""
     st.markdown(
         f"<div style='font-size:12px;color:#93A0B1;margin:2px 0 6px'>Tuesday line: "
-        f"<b style='color:#ccc'>{_html.escape(str(home))} {_signed(-float(spread))}</b> &nbsp;|&nbsp; "
-        f"<b style='color:#ccc'>{_html.escape(str(away))} {_signed(float(spread))}</b>. "
+        f"<b style='color:#ccc'>{_html.escape(public_team_abbr(home))} {_signed(-float(spread))}</b> &nbsp;|&nbsp; "
+        f"<b style='color:#ccc'>{_html.escape(public_team_abbr(away))} {_signed(float(spread))}</b>. "
         "The starter is not settled, so each card scores the game with that QB as the starter.</div>",
         unsafe_allow_html=True,
     )
@@ -296,7 +304,7 @@ def _official_row_label(rec_team, edge, tier) -> str:
     if not rec_team or pd.isna(edge) or edge == 0:
         return "Official model row (used for the season record)"
     return (
-        f"Official model row for the season record: {rec_team} {abs(float(edge)):.2f} points"
+        f"Official model row for the season record: {public_team_abbr(rec_team)} {abs(float(edge)):.2f} points"
         f"{', HIGH' if str(tier) == 'HIGH' else ''}"
     )
 
@@ -318,7 +326,7 @@ def _best_quote_label(row, recommended_team: str | None) -> str:
         return ""
     team_line = -float(spread) if recommended_team == row.get("home_team") else float(spread)
     return (
-        f"Best available for {recommended_team}: {team_line:+.1f} "
+        f"Best available for {public_team_abbr(recommended_team)}: {team_line:+.1f} "
         f"({_format_price(price)}) at {book}"
     )
 
@@ -333,7 +341,7 @@ def _best_quote_html(row, recommended_team: str | None) -> str:
     team_line = -float(spread) if recommended_team == row.get("home_team") else float(spread)
     return (
         "<div style='font-size:13px;color:#e8eaed;margin:0 0 6px 0'>"
-        f"Best available for <b style='color:#fff'>{_html.escape(str(recommended_team))}</b>: "
+        f"Best available for <b style='color:#fff'>{_html.escape(public_team_abbr(recommended_team))}</b>: "
         f"<span style='color:#fff;font-weight:800;font-size:15px'>{team_line:+.1f}</span>"
         f"<span style='color:#fff;font-weight:600'>&nbsp;({_html.escape(price)})</span>"
         f"<span style='color:#e8eaed'>&nbsp;at&nbsp;</span>"
@@ -686,6 +694,10 @@ def render():
 
             top_is_rec = rec_team == top_team
             bot_is_rec = rec_team == bot_team
+            home_name = public_team_abbr(home)
+            away_name = public_team_abbr(away)
+            top_name = public_team_abbr(top_team)
+            bot_name = public_team_abbr(bot_team)
 
             results_available = results_in and pd.notna(row['actual_margin'])
             _row_push = bool(results_available and pd.isna(row.get('home_covered')))
@@ -761,7 +773,7 @@ def render():
             with st.container(key=f"jsa-gc-{_gc_i}"):
                 st.markdown(
                     f"<div class='{_gc_meta}' style='font-size:13px;color:#888;margin-bottom:6px;{_meta_box}'>"
-                    f"<b style='color:#ccc'>{_html.escape(str(away))} @ {_html.escape(str(home))}</b>"
+                    f"<b style='color:#ccc'>{_html.escape(str(away_name))} @ {_html.escape(str(home_name))}</b>"
                     f"&nbsp;&nbsp;·&nbsp;&nbsp;{_html.escape(str(row['gameday']))}"
                     f"{tier_html}"
                     f"{'&nbsp;&nbsp;·&nbsp;&nbsp;<b>' + result_label + '</b>' if result_label else ''}"
@@ -804,12 +816,12 @@ def render():
                     top_w, top_c = name_style(top_is_rec)
                     a0.markdown(
                         f"<div class='jsa-gc-team' style='font-weight:{top_w};font-size:15px;color:{top_c};"
-                        f"padding-top:6px;height:32px'>{top_team}</div>",
+                        f"padding-top:6px;height:32px'>{top_name}</div>",
                         unsafe_allow_html=True
                     )
                     a1.markdown(stat_box(top_spread),                       unsafe_allow_html=True)
                     a2.markdown(stat_box(top_predicted, is_rec=top_is_rec), unsafe_allow_html=True)
-                    a4.markdown(bet_box(top_team, rec_color) if top_is_rec else empty_box(), unsafe_allow_html=True)
+                    a4.markdown(bet_box(top_name, rec_color) if top_is_rec else empty_box(), unsafe_allow_html=True)
 
                     st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
 
@@ -822,12 +834,12 @@ def render():
                     bot_w, bot_c = name_style(bot_is_rec)
                     b0.markdown(
                         f"<div class='jsa-gc-team' style='font-weight:{bot_w};font-size:15px;color:{bot_c};"
-                        f"padding-top:6px;height:32px'>{bot_team}</div>",
+                        f"padding-top:6px;height:32px'>{bot_name}</div>",
                         unsafe_allow_html=True
                     )
                     b1.markdown(stat_box(bot_spread),                       unsafe_allow_html=True)
                     b2.markdown(stat_box(bot_predicted, is_rec=bot_is_rec), unsafe_allow_html=True)
-                    b4.markdown(bet_box(bot_team, rec_color) if bot_is_rec else empty_box(), unsafe_allow_html=True)
+                    b4.markdown(bet_box(bot_name, rec_color) if bot_is_rec else empty_box(), unsafe_allow_html=True)
 
                     if _scen_items:
                         st.space(8)
@@ -837,6 +849,7 @@ def render():
                     game_text = game_analysis.get(game_key, None)
 
                     if game_text:
+                        game_text = public_matchup_text(game_text)
                         if '🟢' in game_text:
                             btn_color = "#00c853"
                             btn_bg    = "#1a3a1a"

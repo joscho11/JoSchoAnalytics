@@ -8,6 +8,7 @@ import streamlit as st
 
 import dfs_runtime as runtime
 from dashboard_chrome import TABLE_HEIGHT, exact_table_height, dataframe_phone_desktop
+from team_display import public_matchup_text, public_team_abbr
 
 _LINEUP_PHONE_COLS = ["Slot", "Player", "Salary", "DK projection"]
 _HISTORY_PHONE_COLS = ["Slot", "Player", "Salary", "Actual"]
@@ -24,7 +25,7 @@ def _player_labels(pool: pd.DataFrame) -> dict[str, str]:
     labels = {}
     for row in pool[pool["optimization_eligible"]].itertuples():
         labels[str(row.player_key)] = (
-            f"{row.name} · {row.position} · {row.team} · ${int(row.salary):,} · {row.dfs_proj_pts:.1f} pts"
+            f"{row.name} · {row.position} · {public_team_abbr(row.team)} · ${int(row.salary):,} · {row.dfs_proj_pts:.1f} pts"
         )
     return labels
 
@@ -40,7 +41,7 @@ def _render_pool_summary(pool: pd.DataFrame, summary: dict) -> None:
         st.metric("Eligible", f"{len(eligible):,}", border=True)
         st.metric("Model coverage", f"{coverage:.1f}%", border=True)
         st.metric("Excluded", f"{excluded:,}", border=True)
-    games = ", ".join(summary.get("games", [])) or "Game metadata unavailable"
+    games = public_matchup_text(", ".join(summary.get("games", []))) or "Game metadata unavailable"
     dst_note = pool.attrs.get("dst_caption", "DST: DraftKings average (no game line)")
     st.caption(f"{summary.get('n_games', 0)} games · {games} · {dst_note}.")
 
@@ -53,6 +54,7 @@ def _render_pool_summary(pool: pd.DataFrame, summary: dict) -> None:
         "dfs_proj_pts": "DK projection", "optimization_eligible": "Eligible",
         "exclusion_reason": "Exclusion reason",
     })
+    audit["Team"] = audit["Team"].map(public_team_abbr)
     with st.expander("Review projection matches", expanded=False, icon=":material/fact_check:"):
         st.dataframe(
             audit,
@@ -78,6 +80,7 @@ def _render_lineup(pipeline, lineup: pd.DataFrame) -> None:
         columns={"name": "Player", "position": "Pos", "team": "Team", "salary": "Salary",
                  "dfs_proj_pts": "DK projection", "status": "Status"}
     )
+    table["Team"] = table["Team"].map(public_team_abbr)
     col_config = {
         "Salary": st.column_config.NumberColumn(format="$%d"),
         "DK projection": st.column_config.NumberColumn(format="%.1f"),
@@ -120,6 +123,7 @@ def _history_table(lineup: dict) -> pd.DataFrame:
         "salary": "Salary", "ceiling": "Ceiling", "mean": "Mean",
         "actual": "Actual", "own": "Own",
     })[["Slot", "Player", "Pos", "Team", "Salary", "Ceiling", "Mean", "Actual", "Own"]]
+    table["Team"] = table["Team"].map(public_team_abbr)
     total = {
         "Slot": "Total", "Player": "", "Pos": "", "Team": "",
         "Salary": lineup["salary"], "Ceiling": lineup["total_ceiling"],

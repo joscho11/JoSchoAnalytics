@@ -19,6 +19,7 @@ import attd_tracker as tracker
 import page_common
 from publishing.td_releases import MANIFEST_NAME, canonical_td_releases, read_td_release
 from dashboard_chrome import dataframe_phone_desktop, exact_table_height
+from team_display import public_team_abbr
 
 _HERE = Path(__file__).resolve().parents[1]
 _DIR = _HERE / "betting" / "anytime_td"
@@ -216,7 +217,8 @@ def _matchup_groups(df: pd.DataFrame):
             teams = [parts[1], parts[2]]
         else:
             teams = sorted(set(group.team.astype(str)) | set(group.opponent_team.astype(str)))
-        label = f"{teams[0]} vs {teams[1]}" if len(teams) >= 2 else str(teams[0])
+        shown = [public_team_abbr(team) for team in teams]
+        label = f"{shown[0]} vs {shown[1]}" if len(shown) >= 2 else str(shown[0])
         kickoff = pd.to_datetime(group.get("kickoff_et"), errors="coerce")
         first_kickoff = kickoff.min() if kickoff is not None else pd.NaT
         groups.append((first_kickoff, label, teams, group.drop(columns=["_matchup_key"])))
@@ -910,9 +912,9 @@ def _display(df: pd.DataFrame) -> pd.DataFrame:
     book_american = ranked["book_amer"] if "book_amer" in ranked else pd.Series(pd.NA, index=ranked.index)
     return pd.DataFrame({
         "#": range(1, len(ranked) + 1),
-        "Player": ranked.player_display_name + " · " + ranked.team.astype(str),
+        "Player": ranked.player_display_name + " · " + ranked.team.map(public_team_abbr),
         "Pos": ranked.position,
-        "Opp": ranked.opponent_team,
+        "Opp": ranked.opponent_team.map(public_team_abbr),
         "Model ATTD Odds": [
             _model_odds_probability(american, probability)
             for american, probability in zip(model_american, ranked.p_ge1)
@@ -988,9 +990,9 @@ def _two_plus_display(df: pd.DataFrame) -> pd.DataFrame:
     hit = outcome.map(lambda value: "Yes" if value == 1 else ("No" if pd.notna(value) else ""))
     return pd.DataFrame({
         "#": range(1, len(ranked) + 1),
-        "Player": ranked.player_display_name + " · " + ranked.team.astype(str),
+        "Player": ranked.player_display_name + " · " + ranked.team.map(public_team_abbr),
         "Pos": ranked.position,
-        "Opp": ranked.opponent_team,
+        "Opp": ranked.opponent_team.map(public_team_abbr),
         "Model 2+ TD Odds": [
             value or ("Pending" if pd.isna(probability) else "Not implemented yet")
             for value, probability in zip(model_odds, ranked.p_ge2)
@@ -1064,9 +1066,9 @@ def _first_td_display(df: pd.DataFrame) -> pd.DataFrame:
     ]
     return pd.DataFrame({
         "#": range(1, len(ranked) + 1),
-        "Player": ranked.player_display_name + " · " + ranked.team.astype(str),
+        "Player": ranked.player_display_name + " · " + ranked.team.map(public_team_abbr),
         "Pos": ranked.position,
-        "Opp": ranked.opponent_team,
+        "Opp": ranked.opponent_team.map(public_team_abbr),
         "Model First TD Odds": model_odds,
         "Book First TD Odds": [value or "Not implemented yet" for value in book_odds],
         "First TD Value Gap": [
@@ -1899,7 +1901,7 @@ def render() -> None:
             team_view = matchup[matchup.team.astype(str).eq(team)]
             if team_view.empty:
                 continue
-            st.markdown(f"**{team} {view}s**")
+            st.markdown(f"**{public_team_abbr(team)} {view}s**")
             shown_total += _board(
                 team_view,
                 f"atd-{team.lower()}-{label.replace(' ', '-')}",

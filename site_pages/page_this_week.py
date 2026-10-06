@@ -15,6 +15,7 @@ import dashboard_data
 import nav_registry
 import page_common
 from live_2026 import BREAKEVEN, LIVE_SEASON, row_display_high, season_high_record
+from team_display import public_team_abbr
 
 
 def _page_link(slug: str, label: str, icon: str) -> None:
@@ -53,7 +54,7 @@ def _high_this_week(preds, season: int, week: int):
     for _, r in wk[mask].iterrows():
         home, away = r.get("home_team"), r.get("away_team")
         if pd.notna(home) and pd.notna(away):
-            games.append(f"{away} @ {home}")
+            games.append(f"{public_team_abbr(away)} @ {public_team_abbr(home)}")
     return int(mask.sum()), games
 
 

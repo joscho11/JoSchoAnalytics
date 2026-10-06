@@ -16,6 +16,8 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
+from team_display import public_team_abbr
+
 _HERE = Path(__file__).resolve().parents[1]
 _CSV = _HERE / "futures" / "published" / "season_totals_2026.csv"
 _EVIDENCE = _HERE / "futures" / "published" / "evidence.json"
@@ -345,7 +347,7 @@ def render():
         else pd.Series([""] * len(df))
     )
     view = pd.DataFrame({
-        "Team": df["team"],
+        "Team": df["team"].map(public_team_abbr),
         "Proj Wins": pd.to_numeric(df["proj_wins"], errors="coerce"),
         "Posted": pd.to_numeric(df["posted"], errors="coerce"),
         "vs posted": pd.to_numeric(df["vs_posted"], errors="coerce"),

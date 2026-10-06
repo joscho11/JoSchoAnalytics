@@ -13,6 +13,7 @@ import streamlit as st
 import page_common
 from fantasy_scoring import DEFAULT_SCORING, SCORING_MODES
 from dashboard_chrome import TABLE_HEIGHT, dataframe_phone_desktop
+from team_display import public_team_abbr
 
 _MONTHS = ("January", "February", "March", "April", "May", "June", "July",
            "August", "September", "October", "November", "December")
@@ -515,7 +516,7 @@ def _load_adjustment_disclosure():
         ],
     )
     adj["method"] = adj["method"].str.replace("_", " ", regex=False)
-    return (
+    disclosed = (
         adj.rename(
             columns={
                 "position": "Position",
@@ -531,6 +532,8 @@ def _load_adjustment_disclosure():
         .sort_values(["Position", "Player"], kind="stable")
         .reset_index(drop=True)
     )
+    disclosed["Team"] = disclosed["Team"].map(public_team_abbr)
+    return disclosed
 
 
 # Same cutoffs as the in-house VOR board (phase0_benchmark / model_rankings CSV).
@@ -1357,6 +1360,8 @@ def _render_outside_market(board_size: int):
 
         display_view = view.copy()
         display_view.insert(0, _ROW_NO, range(1, len(display_view) + 1))
+        if "team" in display_view.columns:
+            display_view["team"] = display_view["team"].map(public_team_abbr)
         for _k in _TALENT_KEYS:
             if _k in display_view.columns:
                 display_view[_k] = _blank_missing_talent(display_view[_k], decimals=1)
@@ -1534,6 +1539,8 @@ def render():
     # Numbered in the CURRENT sort/filter order — a reading aid, recomputed on every render.
     display_view = view.copy()
     display_view.insert(0, _ROW_NO, range(1, len(display_view) + 1))
+    if "team" in display_view.columns:
+        display_view["team"] = display_view["team"].map(public_team_abbr)
     for _k in _TALENT_KEYS:
         if _k in display_view.columns:
             display_view[_k] = _blank_missing_talent(display_view[_k], decimals=0)
@@ -1596,9 +1603,12 @@ def render():
         **grid_kwargs,
     )
 
+    export = view.copy()
+    if "team" in export.columns:
+        export["team"] = export["team"].map(public_team_abbr)
     st.download_button(
         "Download board (CSV)",
-        data=view[_DISPLAY_COLS].rename(columns=export_names_for(market))
+        data=export[_DISPLAY_COLS].rename(columns=export_names_for(market))
                        .to_csv(index=False).encode("utf-8"),
         file_name={
             MODEL_DRAFT_MARKET: "draft_board_2026_model_rank.csv",

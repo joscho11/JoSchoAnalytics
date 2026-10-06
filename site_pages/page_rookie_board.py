@@ -11,6 +11,7 @@ import pandas as pd
 import streamlit as st
 
 from dashboard_chrome import dataframe_phone_desktop
+from team_display import public_team_abbr
 
 _HERE = Path(__file__).resolve().parents[1]
 _BOARD = _HERE / "fantasy" / "rookie" / "board_data"
@@ -97,18 +98,18 @@ def _load(cls: int) -> pd.DataFrame:
     return pd.read_csv(f) if f.exists() else pd.DataFrame()
 
 
-# The rookie board CSVs carry PFR-style team codes (NWE/KAN/LVR/NOR/SFO/TAM/LAR/GNB) while
-# every other surface on the site uses the nflverse canonical set. Normalised at DISPLAY time;
-# the build artifact is left alone.
+# The rookie board CSVs carry PFR-style team codes (NWE/KAN/LVR/NOR/SFO/TAM/LAR/GNB).
+# Normalised at display time; the build artifact is left alone. Rams display as LAR.
 _TEAM_DISPLAY = {"NWE": "NE", "KAN": "KC", "LVR": "LV", "NOR": "NO", "SFO": "SF",
-                 "TAM": "TB", "LAR": "LA", "GNB": "GB", "JAC": "JAX", "ARZ": "ARI",
+                 "TAM": "TB", "GNB": "GB", "JAC": "JAX", "ARZ": "ARI",
                  "BLT": "BAL", "CLV": "CLE", "HST": "HOU", "SDG": "LAC", "OAK": "LV",
-                 "STL": "LA", "WSH": "WAS"}
+                 "STL": "LAR", "WSH": "WAS"}
 
 
 def canon_team(value):
-    """Map any feed's team code onto the site-wide canonical convention."""
-    return _TEAM_DISPLAY.get(str(value), value)
+    """Map any feed's team code onto the abbreviation the website shows."""
+    mapped = _TEAM_DISPLAY.get(str(value), value)
+    return public_team_abbr(mapped)
 
 
 _COLLEGE_QB = _HERE / "fantasy" / "talent" / "college_qb_score_2026.csv"

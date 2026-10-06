@@ -97,8 +97,14 @@ def test_display_matches_the_artifact():
     at = _run()
     df = _table(at)
     csv = pd.read_csv(_CSV)
-    assert set(df["Team"]) == set(csv["team"])
-    merged = df.merge(csv, left_on="Team", right_on="team")
+    from team_display import public_team_abbr
+
+    shown = csv["team"].map(public_team_abbr)
+    assert set(df["Team"]) == set(shown)
+    assert "LA" not in set(df["Team"])
+    assert "LAR" in set(df["Team"])
+    assert "LAC" in set(df["Team"])
+    merged = df.merge(csv.assign(_shown=shown), left_on="Team", right_on="_shown")
     assert len(merged) == 32
     assert (merged["Proj Wins"] - merged["proj_wins"]).abs().max() < 1e-9
     assert (merged["Posted"] - merged["posted"]).abs().max() < 1e-9
