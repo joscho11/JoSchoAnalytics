@@ -39,6 +39,16 @@
       "prediction_mode": "live",
       "season": 2026,
       "week": 4
+    },
+    {
+      "season": 2026,
+      "week": 5,
+      "csv": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week05_ngs_live.csv",
+      "metadata": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week05_ngs_live.json",
+      "csv_sha256": "2149408d4ed67516af367fecc34bcd845143fbb25ee4ccdd3d5b67cc78eed4f5",
+      "metadata_sha256": "309309ad6998c77222657b12fab9f9c5c7ae47a49d75db87eb6f4425f1d342cd",
+      "prediction_mode": "live",
+      "model_version": "td_product_ngs_44_frozen_2025_v1"
     }
   ],
   "schema_version": 1

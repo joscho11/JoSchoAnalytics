@@ -141,6 +141,37 @@ def test_week04_pit_cle_renders_all_three_markets(tmp_path):
             assert "45 of 47 settled games" in captions
 
 
+def test_week05_defaults_to_the_live_release_and_keeps_first_gaps_pending(tmp_path):
+    at = _render(tmp_path)
+    releases = page.available_releases()
+    assert page.default_release(list(releases)) == (2026, 5)
+    assert any(w.key == "atd_week" and w.value == 5 for w in at.selectbox)
+    assert any("Week 5" in str(item.value) for item in at.markdown)
+
+    markets = {
+        "Anytime TD": "Book ATTD Odds",
+        "2+ TD": "Book 2+ TD Odds",
+        "First TD": "Book First TD Odds",
+    }
+    for market, expected_column in markets.items():
+        at = _render(tmp_path, week=5)
+        if market != "Anytime TD":
+            at.segmented_control(key="atd_view_2026_5").set_value(market).run()
+        assert not at.exception, at.exception
+        assert not at.error, [e.value for e in at.error]
+        assert any(expected_column in frame.value.columns for frame in at.dataframe)
+        if market == "First TD":
+            tables = [frame.value for frame in at.dataframe]
+            first_table = next(table for table in tables if expected_column in table.columns)
+            assert first_table["First TD Value Gap"].astype(str).str.contains("Pending").all()
+            assert first_table["Book First TD Odds"].astype(str).str.contains("no-vig pending").any()
+            info = " ".join(str(item.value) for item in at.info)
+            assert "quote pools are not fully verified" in info
+        if market == "2+ TD":
+            captions = " ".join(str(item.value) for item in at.caption)
+            assert all(matchup in captions for matchup in ("CIN at MIA", "HOU at TEN", "NYG at WAS"))
+
+
 def test_two_plus_toggle_preserves_market_or_placeholder(tmp_path):
     at = _render(tmp_path, week=1)
     at.segmented_control(key="atd_view_2026_1").set_value("2+ TD").run()

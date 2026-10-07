@@ -1058,11 +1058,19 @@ def _first_td_display(df: pd.DataFrame) -> pd.DataFrame:
     ]
     value_gap = [
         _value_gap(model, book, model_p, book_p) or (
-            "Pending" if pd.isna(model_p) else ""
+            "Pending" if pd.isna(model_p) or pd.isna(book_p) else ""
         )
         for model, book, model_p, book_p in zip(
             model_american, ranked["_first_amer"], ranked["p_first"], ranked["_book_first"]
         )
+    ]
+    book_odds = [
+        (
+            f"{_amer_display(american)} · no-vig pending"
+            if pd.notna(american) and pd.isna(probability)
+            else _odds_probability(american, probability)
+        )
+        for american, probability in zip(ranked["_first_amer"], ranked["_book_first"])
     ]
     return pd.DataFrame({
         "#": range(1, len(ranked) + 1),
@@ -1459,17 +1467,67 @@ def _render_week_recommended(
         f"Every {market_label} candidate across this week's matchups: {rule_text}. "
         "Sorted by value gap, highest first."
     )
+    price_column = "first_amer" if show_first_td else "two_plus_amer"
+    if price_column in board_priced:
+        all_game_ids = set(board_priced.game_id.astype(str))
+        has_price = pd.to_numeric(board_priced[price_column], errors="coerce").notna()
+        game_has_price = has_price.groupby(board_priced.game_id.astype(str)).any()
+        no_price_game_ids = set(game_has_price.index[~game_has_price])
+        if no_price_game_ids and no_price_game_ids < all_game_ids:
+            missing_labels = sorted(
+                (
+                    f"{public_team_abbr(str(game_id).split('_')[-2])} at "
+                    f"{public_team_abbr(str(game_id).split('_')[-1])}"
+                )
+                if len(str(game_id).split("_")) >= 4
+                else str(game_id)
+                for game_id in no_price_game_ids
+            )
+            if missing_labels:
+                st.caption(
+                    f"No DraftKings {market_label} prices were supplied for: "
+                    + ", ".join(missing_labels)
+                    + ". Those markets remain blank."
+                )
     _render_scorecards(board_priced, season, releases, market=market)
-    st.markdown(f"#### Recommended {market_label} players this week")
-    shown = _board(
-        board_priced, f"atd-week-recommended-{market}", "",
-        show_two_plus=not show_first_td, show_first_td=show_first_td,
-        recommended_only=True, phone_show_opp=True,
+    candidate_table = (
+        _first_td_display(board_priced) if show_first_td
+        else _two_plus_display(board_priced)
     )
-    if not shown:
-        st.info(
-            f"No players clear the {market_label} candidate rule this week."
+    if candidate_table["_candidate"].any():
+        st.markdown(f"#### Recommended {market_label} players this week")
+        _board(
+            board_priced, f"atd-week-recommended-{market}", "",
+            show_two_plus=not show_first_td, show_first_td=show_first_td,
+            recommended_only=True, phone_show_opp=True,
         )
+        return
+
+    weeks = pd.to_numeric(board_priced.get("week"), errors="coerce").dropna()
+    week5_pending_first = (
+        show_first_td
+        and int(season) == LIVE_SEASON
+        and not weeks.empty
+        and int(weeks.max()) == 5
+        and "first_quote_pool_complete" in board_priced
+        and not board_priced.groupby("game_id")["first_quote_pool_complete"].all().all()
+    )
+    if not week5_pending_first:
+        st.markdown(f"#### Recommended {market_label} players this week")
+        st.info(f"No players clear the {market_label} candidate rule this week.")
+        return
+
+    st.info(
+        "First TD value gaps are pending because the captured player and no-TD "
+        "quote pools are not fully verified. Raw DraftKings prices are shown; "
+        "no-vig book probabilities remain unavailable and no First TD bets are eligible."
+    )
+    st.markdown("#### Captured First TD prices awaiting verification")
+    _board(
+        board_priced, "atd-week-captured-first", "",
+        show_two_plus=False, show_first_td=True,
+        recommended_only=False, phone_show_opp=True,
+    )
 
 
 def _board(
