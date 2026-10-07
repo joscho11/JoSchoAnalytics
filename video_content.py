@@ -384,4 +384,14 @@ VIDEOS = [
         "video_id": "7691810928202894623",
         "breakdown_file": "week_4_model_gaps_2026.md",
     },
+    {
+        "slug": "graphs-of-the-week-02",
+        "title": "Graphs of the Week 02: NFL Week 4",
+        "subtitle": "2026 · Week 4 · four stats with the right comparison",
+        "date": "2026-10-06",
+        "section": "in-season",
+        "tiktok_url": "https://www.tiktok.com/@joschoanalytics/video/7693760435463458079",
+        "video_id": "7693760435463458079",
+        "breakdown_file": "graphs_of_the_week_02.md",
+    },
 ]

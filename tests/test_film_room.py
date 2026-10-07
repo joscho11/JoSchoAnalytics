@@ -74,6 +74,7 @@ def test_catalog_size_and_expected_slugs():
     assert "jadarian-price" in slugs
     assert "garrett-wilson" in slugs
     assert "lamar-jackson" in slugs
+    assert "graphs-of-the-week-02" in slugs
     assert DEFAULT_VIDEO_SLUG == "league-history-guide"
     assert DEFAULT_VIDEO_SLUG in slugs
 
@@ -120,6 +121,7 @@ def test_picker_lists_every_episode_and_no_retired_intro(tmp_path):
     captions = {str(c.value) for c in at.caption}
     assert _section_control(at).options == [
         "Walkthroughs",
+        "Predictions",
         "In-season",
         "Draft",
         "Players",
@@ -140,8 +142,9 @@ def test_catalog_sections():
         "site-walkthrough",
         LATEST_LEAGUE_HISTORY_VIDEO_SLUG,
     ]
-    assert "Predictions & weekly" not in grouped, "empty sections are hidden"
+    assert grouped["Predictions & weekly"] == ["week-4-model-gaps-2026"]
     expected_in_season = [
+        "graphs-of-the-week-01",
         "latest-video-2026-09-24",
         "wr-te-advanced-stats",
         "rb-advanced-stats-part-2",
@@ -184,6 +187,32 @@ def test_catalog_sections():
     ]
     assert "Archive" not in grouped
     assert newest_first[0]["slug"] == _newest()["slug"]
+
+
+def test_graphs_of_the_week_02_registration():
+    item = next(v for v in VIDEOS if v["slug"] == "graphs-of-the-week-02")
+    assert item["video_id"] == "7693760435463458079"
+    assert item["tiktok_url"].endswith(f"/video/{item['video_id']}")
+    assert item["date"] == "2026-10-06"
+    assert (_HERE / "video_breakdowns" / item["breakdown_file"]).is_file()
+
+
+def test_graphs_of_the_week_02_plays_and_opens_its_breakdown(tmp_path):
+    at = _render(tmp_path)
+    at = _section_control(at).set_value("in-season").run()
+    assert not at.exception, at.exception
+    at = _episode_box(at).set_value("graphs-of-the-week-02").run()
+    assert not at.exception, at.exception
+    assert not at.error, [e.value for e in at.error]
+    watch = [link for link in at.get("link_button") if link.label == "Watch on TikTok"]
+    assert len(watch) == 1
+    assert watch[0].url == (
+        "https://www.tiktok.com/@joschoanalytics/video/7693760435463458079"
+    )
+    md = _md(at)
+    assert "Graphs of the Week 02: NFL Week 4" in md
+    breakdown = [b for b in at.button if "Full breakdown" in str(b.label)]
+    assert len(breakdown) == 1
 
 
 def test_every_episode_has_a_known_content_section():
