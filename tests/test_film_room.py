@@ -75,6 +75,7 @@ def test_catalog_size_and_expected_slugs():
     assert "garrett-wilson" in slugs
     assert "lamar-jackson" in slugs
     assert "graphs-of-the-week-02" in slugs
+    assert "week-5-model-gaps-2026" in slugs
     assert DEFAULT_VIDEO_SLUG == "league-history-guide"
     assert DEFAULT_VIDEO_SLUG in slugs
 
@@ -142,8 +143,12 @@ def test_catalog_sections():
         "site-walkthrough",
         LATEST_LEAGUE_HISTORY_VIDEO_SLUG,
     ]
-    assert grouped["Predictions & weekly"] == ["week-4-model-gaps-2026"]
+    assert grouped["Predictions & weekly"] == [
+        "week-5-model-gaps-2026",
+        "week-4-model-gaps-2026",
+    ]
     expected_in_season = [
+        "graphs-of-the-week-02",
         "graphs-of-the-week-01",
         "latest-video-2026-09-24",
         "wr-te-advanced-stats",
@@ -187,6 +192,33 @@ def test_catalog_sections():
     ]
     assert "Archive" not in grouped
     assert newest_first[0]["slug"] == _newest()["slug"]
+
+
+def test_week_5_model_gaps_registration():
+    item = next(v for v in VIDEOS if v["slug"] == "week-5-model-gaps-2026")
+    assert item["video_id"] == "7694038078754671902"
+    assert item["tiktok_url"].endswith(f"/video/{item['video_id']}")
+    assert item["date"] == "2026-10-07"
+    assert item["section"] == "predictions"
+    assert (_HERE / "video_breakdowns" / item["breakdown_file"]).is_file()
+
+
+def test_week_5_model_gaps_plays_and_opens_its_breakdown(tmp_path):
+    at = _render(tmp_path)
+    at = _section_control(at).set_value("predictions").run()
+    assert not at.exception, at.exception
+    at = _episode_box(at).set_value("week-5-model-gaps-2026").run()
+    assert not at.exception, at.exception
+    assert not at.error, [e.value for e in at.error]
+    watch = [link for link in at.get("link_button") if link.label == "Watch on TikTok"]
+    assert len(watch) == 1
+    assert watch[0].url == (
+        "https://www.tiktok.com/@joschoanalytics/video/7694038078754671902"
+    )
+    md = _md(at)
+    assert "NFL Week 5 2026: Model Gaps" in md
+    breakdown = [b for b in at.button if "Full breakdown" in str(b.label)]
+    assert len(breakdown) == 1
 
 
 def test_graphs_of_the_week_02_registration():
