@@ -141,7 +141,7 @@ def test_week04_pit_cle_renders_all_three_markets(tmp_path):
             assert "45 of 47 settled games" in captions
 
 
-def test_week05_defaults_to_the_live_release_and_keeps_first_gaps_pending(tmp_path):
+def test_week05_defaults_to_the_live_release_and_first_td_recommended_is_candidates_only(tmp_path):
     at = _render(tmp_path)
     releases = page.available_releases()
     assert page.default_release(list(releases)) == (2026, 5)
@@ -159,17 +159,28 @@ def test_week05_defaults_to_the_live_release_and_keeps_first_gaps_pending(tmp_pa
             at.segmented_control(key="atd_view_2026_5").set_value(market).run()
         assert not at.exception, at.exception
         assert not at.error, [e.value for e in at.error]
-        assert any(expected_column in frame.value.columns for frame in at.dataframe)
         if market == "First TD":
+            # Recommended stays on the candidate list; it must not dump every
+            # priced First TD quote when a few quote pools are still incomplete.
+            from publishing.td_releases import read_td_release
+            priced = page.priced_rows(read_td_release(releases[(2026, 5)]))
+            expected = page._first_td_display(priced)
+            expected = expected[expected["_candidate"]].reset_index(drop=True)
             tables = [frame.value for frame in at.dataframe]
-            first_table = next(table for table in tables if expected_column in table.columns)
-            assert first_table["First TD Value Gap"].astype(str).str.contains("Pending").all()
-            assert first_table["Book First TD Odds"].astype(str).str.contains("no-vig pending").any()
-            info = " ".join(str(item.value) for item in at.info)
-            assert "quote pools are not fully verified" in info
-        if market == "2+ TD":
-            captions = " ".join(str(item.value) for item in at.caption)
-            assert all(matchup in captions for matchup in ("CIN at MIA", "HOU at TEN", "NYG at WAS"))
+            first_tables = [table for table in tables if expected_column in table.columns]
+            assert first_tables
+            first_table = first_tables[0]
+            assert len(first_table) == len(expected)
+            assert not first_table["Model First TD Odds"].astype(str).str.contains("Pending").any()
+            assert not first_table["First TD Value Gap"].astype(str).str.contains("Pending").any()
+            blob = " ".join(str(item.value) for item in list(at.info) + list(at.markdown) + list(at.caption))
+            assert "Captured First TD prices awaiting verification" not in blob
+            assert "Recommended First TD players this week" in blob
+        else:
+            assert any(expected_column in frame.value.columns for frame in at.dataframe)
+            if market == "2+ TD":
+                blob = " ".join(str(item.value) for item in list(at.caption) + list(at.markdown))
+                assert "Every 2+ TD candidate across this week's matchups" in blob
 
 
 def test_two_plus_toggle_preserves_market_or_placeholder(tmp_path):

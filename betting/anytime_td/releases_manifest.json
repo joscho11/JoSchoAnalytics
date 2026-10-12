@@ -45,8 +45,8 @@
       "week": 5,
       "csv": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week05_ngs_live.csv",
       "metadata": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week05_ngs_live.json",
-      "csv_sha256": "33ce54203e7c721e1f22bedbc4b4c60471876c6a38acc3fa87bc49c83d7d6b10",
-      "metadata_sha256": "5ec4c5c085001dfdc39f7e80f1acf574dc4ad624ba006f9f8a77cbeb6d18c285",
+      "csv_sha256": "2a741921557b0e38555748fe045a0e64d8da0f398d7552f8bc96f7950bfb7857",
+      "metadata_sha256": "bfb0c2f9d6299c86a7430797c4dc28905a47aa3c0fa0fd7b5e6a687b3805f623",
       "prediction_mode": "live",
       "model_version": "td_product_ngs_44_frozen_2025_v1"
     }

@@ -1494,8 +1494,8 @@ def _render_week_recommended(
         _first_td_display(board_priced) if show_first_td
         else _two_plus_display(board_priced)
     )
+    st.markdown(f"#### Recommended {market_label} players this week")
     if candidate_table["_candidate"].any():
-        st.markdown(f"#### Recommended {market_label} players this week")
         _board(
             board_priced, f"atd-week-recommended-{market}", "",
             show_two_plus=not show_first_td, show_first_td=show_first_td,
@@ -1503,31 +1503,25 @@ def _render_week_recommended(
         )
         return
 
-    weeks = pd.to_numeric(board_priced.get("week"), errors="coerce").dropna()
-    week5_pending_first = (
-        show_first_td
-        and int(season) == LIVE_SEASON
-        and not weeks.empty
-        and int(weeks.max()) == 5
-        and "first_quote_pool_complete" in board_priced
-        and not board_priced.groupby("game_id")["first_quote_pool_complete"].all().all()
-    )
-    if not week5_pending_first:
-        st.markdown(f"#### Recommended {market_label} players this week")
-        st.info(f"No players clear the {market_label} candidate rule this week.")
-        return
-
-    st.info(
-        "First TD value gaps are pending because the captured player and no-TD "
-        "quote pools are not fully verified. Raw DraftKings prices are shown; "
-        "no-vig book probabilities remain unavailable and no First TD bets are eligible."
-    )
-    st.markdown("#### Captured First TD prices awaiting verification")
-    _board(
-        board_priced, "atd-week-captured-first", "",
-        show_two_plus=False, show_first_td=True,
-        recommended_only=False, phone_show_opp=True,
-    )
+    st.info(f"No players clear the {market_label} candidate rule this week.")
+    if show_first_td:
+        model_ready = candidate_table["_p"].notna().any()
+        book_ready = (
+            "book_first_p_devigged" in board_priced
+            and pd.to_numeric(board_priced["book_first_p_devigged"], errors="coerce").notna().any()
+        )
+        if model_ready and not book_ready:
+            st.caption(
+                "Model First TD odds are available on priced players, but no-vig "
+                "book probabilities are still pending where the captured First TD "
+                "quote pool is incomplete. Open a matchup to see the full board."
+            )
+        elif not model_ready:
+            st.caption(
+                "Model First TD odds are pending for games whose contestant "
+                "denominator could not be frozen. Open a matchup to see captured "
+                "DraftKings prices."
+            )
 
 
 def _board(
