@@ -32,7 +32,7 @@
     },
     {
       "csv": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week04_ngs_live.csv",
-      "csv_sha256": "94e4e28884734443f2c8dbc8e8846a1b2182e57ed27d828a35f4433d4bcc522d",
+      "csv_sha256": "dfddc1ac63ee7b018f421040756f8ea1dff9168bcc74bb874cd578fed09ece5d",
       "metadata": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week04_ngs_live.json",
       "metadata_sha256": "a4fbb35219d02907a0c1ba0533615dbc8a0c670f76fb474256b0c72a2e90c9b3",
       "model_version": "td_product_ngs_44_frozen_2025_v1",
@@ -42,7 +42,7 @@
     },
     {
       "csv": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week05_ngs_live.csv",
-      "csv_sha256": "f5d35d23f74865e289a2846acde55babe11ca941517c0c43955de81692d7ba19",
+      "csv_sha256": "4828a9722f99f5622e093ae1317b7202bb5c8b51c0f9ee0a334118d5c0454707",
       "metadata": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week05_ngs_live.json",
       "metadata_sha256": "bfb0c2f9d6299c86a7430797c4dc28905a47aa3c0fa0fd7b5e6a687b3805f623",
       "model_version": "td_product_ngs_44_frozen_2025_v1",
