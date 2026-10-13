@@ -755,7 +755,7 @@
       "previous_build": "fantasy-2026w06-e6b507c23f73"
     },
     "predictions": {
-      "active_build": "predictions-2026w06-c3c200e3354b",
+      "active_build": "predictions-2026w06-610992bd5dbf",
       "builds": {
         "predictions-2025w10-8f1701d7a6db": {
           "artifact": "data/releases/builds/predictions/2025/week10/predictions-2025w10-8f1701d7a6db/artifact.csv",
@@ -13250,6 +13250,32 @@
           },
           "week": 5
         },
+        "predictions-2026w06-610992bd5dbf": {
+          "artifact": "data/releases/builds/predictions/2026/week06/predictions-2026w06-610992bd5dbf/artifact.csv",
+          "build_id": "predictions-2026w06-610992bd5dbf",
+          "metadata": "data/releases/builds/predictions/2026/week06/predictions-2026w06-610992bd5dbf/metadata.json",
+          "model_version": "spread-v3-prod-sunday-tuesday-market-46-qb-ir-scoped-flag-b4a325000b7a",
+          "produced_at": "2026-10-13T23:35:10Z",
+          "product": "predictions",
+          "published_at": "2026-10-13T23:36:30Z",
+          "row_count": 14,
+          "season": 2026,
+          "sha256": "610992bd5dbf8b4585d4acb19e1952f4360219b2ca907c97d99c0572f7486dff",
+          "status": "Published",
+          "validation": {
+            "checks": {
+              "artifact_sha256": "610992bd5dbf8b4585d4acb19e1952f4360219b2ca907c97d99c0572f7486dff",
+              "produced_at_utc": "2026-10-13T23:35:10Z",
+              "scheduled_games": 14
+            },
+            "errors": [],
+            "ok": true,
+            "product": "predictions",
+            "row_count": 14,
+            "warnings": []
+          },
+          "week": 6
+        },
         "predictions-2026w06-6a6402fb66a9": {
           "artifact": "data/releases/builds/predictions/2026/week06/predictions-2026w06-6a6402fb66a9/artifact.csv",
           "build_id": "predictions-2026w06-6a6402fb66a9",
@@ -13464,9 +13490,9 @@
         "status": "Awaiting projections",
         "week": 7
       },
-      "previous_build": "predictions-2026w06-6a6402fb66a9"
+      "previous_build": "predictions-2026w06-c3c200e3354b"
     }
   },
   "schema_version": 1,
-  "updated_at": "2026-10-13T21:35:08Z"
+  "updated_at": "2026-10-13T23:36:30Z"
 }
