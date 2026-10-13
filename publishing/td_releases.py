@@ -97,6 +97,70 @@ def release_for_path(path: str | Path) -> dict:
                  if entry["csv_path"].resolve() == path.resolve()), {})
 
 
+def refresh_td_release_hash(path: str | Path) -> bool:
+    """Refresh a manifest-bound CSV hash after grading mutates its outcomes.
+
+    Prediction and price columns remain frozen, but settlement columns are
+    attached to the versioned release in place. Keep its integrity manifest
+    valid so the next market grader and the website can read that same release.
+    """
+    path = Path(path).resolve()
+    directory = next(
+        (parent for parent in (path.parent, *path.parents)
+         if (parent / MANIFEST_NAME).is_file()),
+        None,
+    )
+    if directory is None:
+        return False
+    manifest_path = directory / MANIFEST_NAME
+    try:
+        payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+        if payload.get("schema_version") != 1 or not isinstance(payload.get("releases"), list):
+            raise ValueError("unsupported schema")
+        matches = []
+        for raw in payload["releases"]:
+            csv_path = _artifact(directory, raw["csv"], ".csv")
+            if csv_path.resolve() == path:
+                matches.append(raw)
+        if len(matches) > 1:
+            raise ValueError("CSV is bound to multiple weeks")
+        if not matches:
+            return False
+        matches[0]["csv_sha256"] = _sha256(path)
+        temporary = manifest_path.with_name(f"{manifest_path.name}.tmp")
+        temporary.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        temporary.replace(manifest_path)
+        return True
+    except (OSError, ValueError, TypeError, KeyError) as exc:
+        raise PublicationError(f"Unable to refresh TD release manifest: {exc}") from exc
+
+
+def sync_td_release_mirror(path: str | Path) -> bool:
+    """Keep an existing weekly live CSV mirror aligned with its release."""
+    path = Path(path).resolve()
+    directory = next(
+        (parent for parent in (path.parent, *path.parents)
+         if (parent / MANIFEST_NAME).is_file()),
+        None,
+    )
+    if directory is None:
+        return False
+    entry = next(
+        (release for release in canonical_td_releases(directory).values()
+         if release["csv_path"].resolve() == path),
+        None,
+    )
+    if not entry or entry.get("prediction_mode") != "live" or int(entry["season"]) < 2026:
+        return False
+    mirror = directory / f"anytime_td_{int(entry['season'])}_week{int(entry['week']):02d}.csv"
+    if not mirror.is_file() or mirror.resolve() == path:
+        return False
+    content = path.read_bytes()
+    if mirror.read_bytes() != content:
+        mirror.write_bytes(content)
+    return True
+
+
 def read_td_release(path: str | Path) -> pd.DataFrame:
     frame = pd.read_csv(path)
     entry = release_for_path(path)

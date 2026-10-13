@@ -13,7 +13,12 @@ from .contract import PublicationError, sha256_file, utc_now_iso
 from .manifest import active_release, load_manifest, write_manifest
 from .paths import releases_root, relative_to_site, resolve_site_path
 from .validators import read_table
-from .td_releases import canonical_td_releases, read_td_release
+from .td_releases import (
+    canonical_td_releases,
+    read_td_release,
+    refresh_td_release_hash,
+    sync_td_release_mirror,
+)
 
 
 def _active_build_for_week(product: str, season: int, week: int, *, root=None) -> dict:
@@ -681,6 +686,8 @@ def grade_anytime_td_file(
     changed = encoded != source.read_bytes()
     if changed:
         source.write_bytes(encoded)
+        refresh_td_release_hash(source)
+        sync_td_release_mirror(source)
 
     graded = pd.to_numeric(board["scored_anytime"], errors="coerce").notna()
     graded_two_plus = (
@@ -1059,6 +1066,8 @@ def grade_first_td_file(
     changed = encoded != source.read_bytes()
     if changed:
         source.write_bytes(encoded)
+        refresh_td_release_hash(source)
+        sync_td_release_mirror(source)
 
     graded = (
         pd.to_numeric(board["scored_first"], errors="coerce").notna()
