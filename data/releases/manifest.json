@@ -681,7 +681,7 @@
       "previous_build": "fantasy-2026w04-acd94fff81e3"
     },
     "predictions": {
-      "active_build": "predictions-2026w06-93422d877ab0",
+      "active_build": "predictions-2026w06-6a6402fb66a9",
       "builds": {
         "predictions-2025w10-8f1701d7a6db": {
           "artifact": "data/releases/builds/predictions/2025/week10/predictions-2025w10-8f1701d7a6db/artifact.csv",
@@ -13176,6 +13176,87 @@
           },
           "week": 5
         },
+        "predictions-2026w06-6a6402fb66a9": {
+          "artifact": "data/releases/builds/predictions/2026/week06/predictions-2026w06-6a6402fb66a9/artifact.csv",
+          "build_id": "predictions-2026w06-6a6402fb66a9",
+          "correction": {
+            "input_as_of_utc": "2026-10-13T14:00:00Z",
+            "qb_pair_scenarios": {
+              "audit_artifact_sha256": "6182252d00c6fd890211ee6b2681cf45bbc4fd4c8cb53e2c8330aa84d29f4f88",
+              "input_hashes": {
+                "bundle_sha256": "b4a325000b7a8982f092402528e415177f64ad3193ab9e8bb392cfa28f726d61",
+                "depth_chart_capture_time": "2026-10-13T13:42:38.625460+00:00",
+                "injury_capture_sha256": "5fd58b9a6b2ab866c5907af629c2366d69db0843d84b2e6e7625b0eb5d5965e1",
+                "panel_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\spread_v3_prod\\artifacts\\panel_tuesday_asof.parquet",
+                "panel_sha256": "da3ec434b77f0acd0ea2e15216bbd1a0dd7ab601c4b70de8809c9dc6f8e51c77",
+                "players_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\live_2026\\players_20261013T134241.035290Z.parquet",
+                "players_sha256": "5e853c1158b61bdba1033b6c49ab38fd5f00611edd30828dc94dc1e8d6c21324",
+                "prediction_cutoff_utc": "2026-10-13T14:00:00Z",
+                "roster_capture_sha256": "66eeb92cc4e7897c54a6cafc20dfe2602cd3598cd8ba32e5378c7108a9e59cfb",
+                "scenario_file_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\news\\2026_w06_qb_scenarios.csv",
+                "scenario_file_sha256": "17aba8c03acd5614bfad949ed4c0312588164f57d756fa8ee34bc0c2dd7958f4",
+                "snap_capture_sha256": "14c9f046077ab71fd521503b78946f53fc1a2570824d7bfea723a9c4b9b1758f",
+                "sunday_snapshot_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\sunday_1120_paid_recovery\\2026_w06_monday0100_probe.json",
+                "sunday_snapshot_sha256": "58439755156ea03d2a892d3ac1ca015f335526adb5387c0d8f16277cf7003508",
+                "tuesday_snapshot_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\tuesday_0900\\2026_w06.json",
+                "tuesday_snapshot_sha256": "21ca9f6746f08259d09017fc2e75e7377536676f3ecabfa8832dfe52e1dce68b"
+              },
+              "main_path": {
+                "away_qb": "Caleb Williams",
+                "away_team": "CHI",
+                "edge": 3.2326990266898123,
+                "home_qb": "Michael Penix Jr.",
+                "home_team": "ATL"
+              },
+              "newly_scored_pairings": [
+                {
+                  "away_player_name": "Case Keenum",
+                  "clears_high": true,
+                  "edge": 3.747059532385038,
+                  "home_player_name": "Tua Tagovailoa",
+                  "side": "HOME (ATL)"
+                },
+                {
+                  "away_player_name": "Tyson Bagent",
+                  "clears_high": true,
+                  "edge": 3.747059532385038,
+                  "home_player_name": "Tua Tagovailoa",
+                  "side": "HOME (ATL)"
+                }
+              ],
+              "scenario_count": 6,
+              "source_active_build_id": "predictions-2026w06-93422d877ab0",
+              "source_artifact_sha256": "93422d877ab0fce49cf55d49a3a72f3d4093106e58862ac320ca50169ac74864",
+              "verdict": "high_all_clear"
+            },
+            "reason": "Added all six jointly scored CHI-ATL QB pairings. The original Week 6 predictions, picks, tiers, and Tuesday lines are unchanged.",
+            "source_snapshot_captured_at": "2026-10-13T12:55:36Z",
+            "source_snapshot_sha256": "21ca9f6746f08259d09017fc2e75e7377536676f3ecabfa8832dfe52e1dce68b",
+            "supersedes_build_id": "predictions-2026w06-93422d877ab0"
+          },
+          "metadata": "data/releases/builds/predictions/2026/week06/predictions-2026w06-6a6402fb66a9/metadata.json",
+          "model_version": "spread-v3-prod-sunday-tuesday-market-46-qb-ir-scoped-flag-b4a325000b7a",
+          "produced_at": "2026-10-13T15:40:10Z",
+          "product": "predictions",
+          "published_at": "2026-10-13T15:41:36Z",
+          "row_count": 14,
+          "season": 2026,
+          "sha256": "6a6402fb66a90f168600e5a40ceaf4d7d1cfe6c8127f3b6e4254369b9f149b4e",
+          "status": "Published",
+          "validation": {
+            "checks": {
+              "artifact_sha256": "6a6402fb66a90f168600e5a40ceaf4d7d1cfe6c8127f3b6e4254369b9f149b4e",
+              "produced_at_utc": "2026-10-13T15:40:10Z",
+              "scheduled_games": 14
+            },
+            "errors": [],
+            "ok": true,
+            "product": "predictions",
+            "row_count": 14,
+            "warnings": []
+          },
+          "week": 6
+        },
         "predictions-2026w06-93422d877ab0": {
           "artifact": "data/releases/builds/predictions/2026/week06/predictions-2026w06-93422d877ab0/artifact.csv",
           "build_id": "predictions-2026w06-93422d877ab0",
@@ -13209,9 +13290,9 @@
         "status": "Awaiting projections",
         "week": 7
       },
-      "previous_build": "predictions-2026w05-e6902ce4fb32"
+      "previous_build": "predictions-2026w06-93422d877ab0"
     }
   },
   "schema_version": 1,
-  "updated_at": "2026-10-13T15:00:29Z"
+  "updated_at": "2026-10-13T15:41:36Z"
 }

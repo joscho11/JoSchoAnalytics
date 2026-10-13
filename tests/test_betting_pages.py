@@ -64,14 +64,14 @@ def test_weekly_predictions_renders_and_owns_controls(tmp_path):
     assert shown_correction.get("model_update") is not True or shown_correction["promotion_audit"]["sha256"]
     qb_expander = next(exp for exp in at.expander if exp.label == "QB inputs used for this release")
     qb_markdown = " ".join(str(item.value) for item in qb_expander.markdown)
-    assert "**ATL:** Michael Penix Jr. — previous-game dropback leader" in qb_markdown
+    # The newest release is Week 6, with explicit QB assumptions for these teams.
+    assert "**ATL:** Michael Penix Jr. — user modeling assumption" in qb_markdown
+    assert "**CHI:** Caleb Williams — user modeling assumption" in qb_markdown
     assert "**MIN:** Kyler Murray — previous-game dropback leader" in qb_markdown
-    # Joseph's Week 5 counted paths (2026-10-06): Huntley scores for BAL, Daniels scores for WAS.
-    assert "**BAL:** Tyler Huntley — user modeling assumption" in qb_markdown
-    assert "**WAS:** Jayden Daniels — user modeling assumption" in qb_markdown
-    assert "**TB:** Jalon Daniels — previous-game dropback leader" in qb_markdown
+    assert "**BAL:** Lamar Jackson — user modeling assumption" in qb_markdown
+    assert "**TB:** Jalon Daniels — user modeling assumption" in qb_markdown
     scenario_caption = " ".join(str(c.value) for c in qb_expander.caption)
-    assert "QB scenarios for" in scenario_caption and "BAL" in scenario_caption and "WAS" in scenario_caption
+    assert all(team in scenario_caption for team in ("BAL", "CHI", "ATL", "TB"))
     assert not any(str(k).startswith("tr_") for k in keys), \
         "Weekly Predictions must not carry Track Record's controls"
 
@@ -402,6 +402,26 @@ def test_weekly_predictions_shows_one_equal_card_per_listed_qb(tmp_path):
     assert "Automatic uncertain-QB flag" in text
     assert "**CHI:**" in text and "left before the end of" in text
     assert "QB scenarios for" in text
+
+
+def test_week6_chi_atl_shows_all_joint_qb_pairs(tmp_path):
+    at = _render_page(tmp_path, "page_weekly_predictions")
+    next(w for w in at.selectbox if getattr(w, "key", None) == "wp_season").set_value(2026)
+    next(w for w in at.selectbox if getattr(w, "key", None) == "wp_week").set_value(6)
+    at.run()
+    assert not at.exception, at.exception
+    assert not at.error, [e.value for e in at.error]
+
+    markdown = " ".join(str(item.value) for item in at.markdown)
+    captions = " ".join(str(item.value) for item in at.caption)
+    labels = [exp.label for exp in at.expander]
+    assert "All 6 joint QB pairings" in labels
+    for name in ("Caleb Williams", "Case Keenum", "Tyson Bagent", "Michael Penix Jr.", "Tua Tagovailoa"):
+        assert name in markdown, name
+    assert markdown.count("MAIN PATH") == 1
+    assert "ATL stays HIGH in all 6 QB pairings" in markdown
+    assert "These are scenario scores, not blended probabilities" in captions
+    assert "HIGH under all 5 QBs" not in markdown
 
 
 def test_week3_st_promotion_reissue_card_states(tmp_path):

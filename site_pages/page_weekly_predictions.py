@@ -207,6 +207,17 @@ _SCENARIO_HEADERS = {
     ),
 }
 
+_PAIR_SCENARIO_HEADERS = {
+    "high_split": (
+        "&nbsp;&nbsp;<span style='background:#3a2a12;border:1px solid #ff9800;border-radius:4px;"
+        "padding:1px 6px;font-size:11px;color:#ff9800;font-weight:700'>QB PAIR SPLIT · review</span>"
+    ),
+    "scenario_high_only": (
+        "&nbsp;&nbsp;<span style='background:#1e2a3a;border:1px solid #93A0B1;border-radius:4px;"
+        "padding:1px 6px;font-size:11px;color:#93A0B1'>HIGH only under some QB pairs</span>"
+    ),
+}
+
 
 def _signed(value) -> str:
     return f"{float(value):+.1f}"
@@ -224,6 +235,22 @@ def _scenario_items(row) -> tuple[list[dict], str]:
     if not isinstance(items, list) or not items:
         return [], ""
     verdict = row.get("qb_scenario_verdict")
+    verdict = "" if verdict is None or (isinstance(verdict, float) and pd.isna(verdict)) else str(verdict).strip()
+    return items, verdict
+
+
+def _pair_scenario_items(row) -> tuple[list[dict], str]:
+    """Joint QB pairings scored with both teams' listed starters at once."""
+    raw = row.get("qb_pair_scenarios")
+    if raw is None or (isinstance(raw, float) and pd.isna(raw)) or not str(raw).strip():
+        return [], ""
+    try:
+        items = json.loads(str(raw))
+    except (TypeError, ValueError):
+        return [], ""
+    if not isinstance(items, list) or not items:
+        return [], ""
+    verdict = row.get("qb_pair_scenario_verdict")
     verdict = "" if verdict is None or (isinstance(verdict, float) and pd.isna(verdict)) else str(verdict).strip()
     return items, verdict
 
@@ -280,6 +307,54 @@ def _scenario_verdict_html(items: list[dict], verdict: str) -> str:
     )
 
 
+def _pair_scenario_card_html(item: dict, home: str, away: str, spread: float) -> str:
+    edge = float(item["edge"])
+    side = str(item.get("side", ""))
+    picked = side.split("(")[1].rstrip(")") if "(" in side else side
+    picked = public_team_abbr(picked)
+    home = public_team_abbr(home)
+    color = "#00c853" if item.get("clears_high") else "#93A0B1"
+    background = "#0c1a12" if item.get("clears_high") else "#1e2a3a"
+    model_home_line = -(edge + float(spread))
+    high = "HIGH" if item.get("clears_high") else "below HIGH"
+    main = (
+        "<span style='background:#1a3a1a;border:1px solid #00c853;border-radius:4px;"
+        "padding:1px 6px;font-size:10px;color:#00c853;font-weight:700'>MAIN PATH</span>"
+        if item.get("is_main_path") else ""
+    )
+    return (
+        f"<div class='jsa-gc-pair' style='background:{background};border:1.5px solid {color};border-radius:8px;"
+        "padding:9px 11px;min-height:100%;box-sizing:border-box'>"
+        f"<div style='font-size:12px;color:#e8eaed;line-height:1.45'><b>{_html.escape(public_team_abbr(away))}:</b> "
+        f"{_html.escape(str(item.get('away_player_name', '')))} <span style='color:#93A0B1'>vs</span> "
+        f"<b>{_html.escape(public_team_abbr(home))}:</b> { _html.escape(str(item.get('home_player_name', '')))}</div>"
+        f"<div style='font-size:12px;color:#ccc;margin-top:5px'>Pick: <b style='color:#fff'>{_html.escape(picked)}</b>"
+        f" · edge {abs(edge):.2f} · {home} model line {_signed(model_home_line)}</div>"
+        f"<div style='display:flex;align-items:center;gap:6px;margin-top:6px'>{main}"
+        f"<span style='font-size:11px;color:{color};font-weight:700'>{high}</span></div></div>"
+    )
+
+
+def _pair_scenario_verdict_html(items: list[dict], verdict: str, official_edge: float, home: str, away: str) -> str:
+    total = len(items)
+    clears = sum(bool(item.get("clears_high")) for item in items)
+    main_pick = public_team_abbr(home if official_edge > 0 else away)
+    text = {
+        "high_all_clear": ("#00c853", "#1a3a1a", f"{main_pick} stays HIGH in all {total} QB pairings"),
+        "high_split": ("#ff9800", "#3a2a12", f"QB split: {main_pick} is HIGH in {clears} of {total} pairings; review before using the pick"),
+        "scenario_high_only": ("#93A0B1", "#1e2a3a", f"HIGH appears in {clears} of {total} pairings, but not on the main path"),
+        "no_high": ("#93A0B1", "#1e2a3a", f"No HIGH under any of the {total} QB pairings"),
+    }.get(verdict)
+    if not text:
+        return ""
+    color, background, label = text
+    return (
+        f"<div style='margin:8px 0 10px'><span class='jsa-gc-verdict' style='display:inline-block;background:{background};"
+        f"border:1px solid {color};border-radius:4px;padding:3px 10px;font-size:12px;font-weight:700;color:{color};"
+        f"max-width:100%;box-sizing:border-box'>{_html.escape(label)}</span></div>"
+    )
+
+
 def _render_qb_scenarios(items: list[dict], verdict: str, home: str, away: str, spread: float) -> None:
     """Simple view for a game whose QB is not settled: one equal card per listed QB, then one verdict."""
     st.markdown(
@@ -297,6 +372,29 @@ def _render_qb_scenarios(items: list[dict], verdict: str, home: str, away: str, 
     verdict_html = _scenario_verdict_html(items, verdict)
     if verdict_html:
         st.markdown(verdict_html, unsafe_allow_html=True)
+
+
+def _render_qb_pair_scenarios(items: list[dict], verdict: str, home: str, away: str, spread: float, official_edge: float) -> None:
+    """Render each two-team QB combination as its own scored matchup."""
+    with st.expander(f"All {len(items)} joint QB pairings", expanded=True):
+        st.caption(
+            "Each card changes both teams to the listed starters. Caleb Williams vs Michael Penix Jr. is the main path. "
+            "These are scenario scores, not blended probabilities."
+        )
+        away_qbs = dict.fromkeys(str(item.get("away_player_name", "")) for item in items)
+        for away_qb in away_qbs:
+            st.caption(f"Chicago path: {away_qb}")
+            group = [item for item in items if str(item.get("away_player_name", "")) == away_qb]
+            columns = st.columns(2)
+            for column, item in zip(columns, group):
+                column.markdown(
+                    _pair_scenario_card_html(item, home, away, spread),
+                    unsafe_allow_html=True,
+                )
+        st.markdown(
+            _pair_scenario_verdict_html(items, verdict, official_edge, home, away),
+            unsafe_allow_html=True,
+        )
 
 
 def _official_row_label(rec_team, edge, tier) -> str:
@@ -754,8 +852,13 @@ def render():
                 is_high = False
                 tier_html = ''
 
+            _pair_items, _pair_verdict = _pair_scenario_items(row) if live else ([], "")
             _scen_items, _scen_verdict = _scenario_items(row) if live else ([], "")
-            if _scen_items and _scen_verdict in _SCENARIO_HEADERS:
+            _has_qb_scenarios = bool(_pair_items or _scen_items)
+            if _pair_items and _pair_verdict in _PAIR_SCENARIO_HEADERS:
+                is_high = False
+                tier_html = _PAIR_SCENARIO_HEADERS[_pair_verdict]
+            elif _scen_items and _scen_verdict in _SCENARIO_HEADERS:
                 # the official row can be HIGH while the listed QBs disagree; the header follows the scenarios
                 is_high = False
                 tier_html = _SCENARIO_HEADERS[_scen_verdict]
@@ -781,11 +884,15 @@ def render():
                     unsafe_allow_html=True
                 )
 
-                if _scen_items:
+                if _pair_items:
+                    _render_qb_pair_scenarios(
+                        _pair_items, _pair_verdict, home, away, spread, float(edge)
+                    )
+                elif _scen_items:
                     _render_qb_scenarios(_scen_items, _scen_verdict, home, away, spread)
                 _official_ctx = (
                     st.expander(_official_row_label(rec_team, edge, tier), expanded=False)
-                    if _scen_items else contextlib.nullcontext()
+                    if _has_qb_scenarios else contextlib.nullcontext()
                 )
                 with _official_ctx:
                     if live:

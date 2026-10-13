@@ -566,6 +566,24 @@ details summary{
   .jsa-gc-scen > div:last-child{ margin-top:4px !important; }
 }
 
+/* Joint QB matchup cards use two columns on desktop and one readable card per
+   row on phones. Scope the grid to these cards so the game scorecard stays put. */
+@media (max-width: 640px){
+  [class*="st-key-jsa-gc"] [data-testid="stHorizontalBlock"]:has(.jsa-gc-pair){
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) !important;
+    gap:.5rem !important;
+  }
+  [class*="st-key-jsa-gc"] [data-testid="stHorizontalBlock"]:has(.jsa-gc-pair) > [data-testid="stColumn"]{
+    min-width:0 !important;
+    max-width:none !important;
+    width:auto !important;
+    padding:0 !important;
+  }
+  [data-testid="stMarkdownContainer"]:has(> .jsa-gc-pair){ margin-bottom:0 !important; }
+  .jsa-gc-pair{ min-height:0 !important; padding:8px 10px !important; overflow-wrap:anywhere !important; }
+}
+
 /* 9a. Keep the OUTPERFORM / UNDERPERFORM headers paired with the two-column
    card grid underneath them, which is raw CSS grid and does not stack. */
 @media (max-width: 640px){
