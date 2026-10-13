@@ -569,12 +569,12 @@ details summary{
 /* Joint QB matchup cards use two columns on desktop and one readable card per
    row on phones. Scope the grid to these cards so the game scorecard stays put. */
 @media (max-width: 640px){
-  [class*="st-key-jsa-gc"] [data-testid="stHorizontalBlock"]:has(.jsa-gc-pair){
+  [data-testid="stHorizontalBlock"]:has(.jsa-gc-pair){
     display:grid !important;
     grid-template-columns:minmax(0,1fr) !important;
     gap:.5rem !important;
   }
-  [class*="st-key-jsa-gc"] [data-testid="stHorizontalBlock"]:has(.jsa-gc-pair) > [data-testid="stColumn"]{
+  [data-testid="stHorizontalBlock"]:has(.jsa-gc-pair) > [data-testid="stColumn"]{
     min-width:0 !important;
     max-width:none !important;
     width:auto !important;
