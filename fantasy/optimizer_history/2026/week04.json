@@ -1,0 +1,125 @@
+{
+  "season": 2026,
+  "week": 4,
+  "mode": "tournament_ceiling",
+  "engine_version": "0.2.3",
+  "projection_sha256": "7606e1f7b0422327b005c260152e2e38cf21033a8ddffe9d502a1eb3439b1265",
+  "salary_sha256": "ddf9630d389fc8f6db04eb2c10738528f334c5e72b65fbae2b51d9266b767cbe",
+  "field": {
+    "median": 114,
+    "top": 201
+  },
+  "lineups": [
+    {
+      "label": "Optimizer lineup",
+      "kind": "untouched",
+      "exclusions": [],
+      "total_actual": 122.94,
+      "total_ceiling": 181.55,
+      "total_mean": 137.7,
+      "salary": 50000,
+      "top_pct": 36,
+      "players": [
+        {
+          "slot": "QB",
+          "player": "Jacoby Brissett",
+          "pos": "QB",
+          "team": "ARI",
+          "salary": 5000,
+          "ceiling": 26.43,
+          "mean": 18.02,
+          "actual": 13.44,
+          "own": "7%"
+        },
+        {
+          "slot": "RB",
+          "player": "Kenneth Walker III",
+          "pos": "RB",
+          "team": "KC",
+          "salary": 8200,
+          "ceiling": 26.1,
+          "mean": 20.88,
+          "actual": 33.9,
+          "own": "15%"
+        },
+        {
+          "slot": "RB",
+          "player": "Javonte Williams",
+          "pos": "RB",
+          "team": "DAL",
+          "salary": 6600,
+          "ceiling": 22.36,
+          "mean": 17.14,
+          "actual": 31.3,
+          "own": "1%"
+        },
+        {
+          "slot": "FLEX",
+          "player": "Aaron Jones Sr.",
+          "pos": "RB",
+          "team": "MIN",
+          "salary": 6000,
+          "ceiling": 23.78,
+          "mean": 18.56,
+          "actual": 16.8,
+          "own": "20%"
+        },
+        {
+          "slot": "WR",
+          "player": "Davante Adams",
+          "pos": "WR",
+          "team": "LAR",
+          "salary": 7000,
+          "ceiling": 21.84,
+          "mean": 16.53,
+          "actual": 7.2,
+          "own": "3%"
+        },
+        {
+          "slot": "WR",
+          "player": "Rashee Rice",
+          "pos": "WR",
+          "team": "KC",
+          "salary": 6400,
+          "ceiling": 21.1,
+          "mean": 15.79,
+          "actual": 0.0,
+          "own": "3%"
+        },
+        {
+          "slot": "WR",
+          "player": "Jordan Addison",
+          "pos": "WR",
+          "team": "MIN",
+          "salary": 5300,
+          "ceiling": 19.59,
+          "mean": 14.28,
+          "actual": 9.1,
+          "own": "24%"
+        },
+        {
+          "slot": "TE",
+          "player": "AJ Barner",
+          "pos": "TE",
+          "team": "SEA",
+          "salary": 3000,
+          "ceiling": 13.68,
+          "mean": 9.83,
+          "actual": 2.2,
+          "own": "3%"
+        },
+        {
+          "slot": "DST",
+          "player": "Cardinals",
+          "pos": "DST",
+          "team": "ARI",
+          "salary": 2500,
+          "ceiling": 6.66,
+          "mean": 6.66,
+          "actual": 9.0,
+          "own": "12%"
+        }
+      ]
+    }
+  ]
+}

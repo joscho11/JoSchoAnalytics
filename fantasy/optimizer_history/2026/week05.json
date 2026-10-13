@@ -1,0 +1,125 @@
+{
+  "season": 2026,
+  "week": 5,
+  "mode": "tournament_ceiling",
+  "engine_version": "0.2.3",
+  "projection_sha256": "0c710609a944420b43d201856ca7f4e1c479326b429416134f4b1b2d4b7d017d",
+  "salary_sha256": "4a4fbbf8c2ed363fe64c226f4294c2328181c18c06dca993da9c1642ae4eaacb",
+  "field": {
+    "median": 130,
+    "top": 226
+  },
+  "lineups": [
+    {
+      "label": "Optimizer lineup",
+      "kind": "untouched",
+      "exclusions": [],
+      "total_actual": 132.76,
+      "total_ceiling": 183.9,
+      "total_mean": 141.42,
+      "salary": 49800,
+      "top_pct": 46,
+      "players": [
+        {
+          "slot": "QB",
+          "player": "Jacoby Brissett",
+          "pos": "QB",
+          "team": "ARI",
+          "salary": 5500,
+          "ceiling": 29.25,
+          "mean": 20.84,
+          "actual": 26.28,
+          "own": "35%"
+        },
+        {
+          "slot": "RB",
+          "player": "Aaron Jones Sr.",
+          "pos": "RB",
+          "team": "MIN",
+          "salary": 6500,
+          "ceiling": 22.68,
+          "mean": 17.46,
+          "actual": 22.7,
+          "own": "15%"
+        },
+        {
+          "slot": "RB",
+          "player": "Emanuel Wilson",
+          "pos": "RB",
+          "team": "SEA",
+          "salary": 5300,
+          "ceiling": 18.06,
+          "mean": 12.84,
+          "actual": 14.2,
+          "own": "24%"
+        },
+        {
+          "slot": "WR",
+          "player": "Amon-Ra St. Brown",
+          "pos": "WR",
+          "team": "DET",
+          "salary": 7900,
+          "ceiling": 25.83,
+          "mean": 20.52,
+          "actual": 12.9,
+          "own": "37%"
+        },
+        {
+          "slot": "WR",
+          "player": "Michael Wilson",
+          "pos": "WR",
+          "team": "ARI",
+          "salary": 6200,
+          "ceiling": 21.81,
+          "mean": 16.5,
+          "actual": 7.28,
+          "own": "52%"
+        },
+        {
+          "slot": "WR",
+          "player": "Rome Odunze",
+          "pos": "WR",
+          "team": "CHI",
+          "salary": 4700,
+          "ceiling": 17.7,
+          "mean": 12.39,
+          "actual": 6.0,
+          "own": "4%"
+        },
+        {
+          "slot": "TE",
+          "player": "Trey McBride",
+          "pos": "TE",
+          "team": "ARI",
+          "salary": 6700,
+          "ceiling": 22.78,
+          "mean": 18.93,
+          "actual": 21.6,
+          "own": "38%"
+        },
+        {
+          "slot": "FLEX",
+          "player": "Sam LaPorta",
+          "pos": "TE",
+          "team": "DET",
+          "salary": 4900,
+          "ceiling": 19.44,
+          "mean": 15.59,
+          "actual": 19.8,
+          "own": "18%"
+        },
+        {
+          "slot": "DST",
+          "player": "Titans",
+          "pos": "DST",
+          "team": "TEN",
+          "salary": 2100,
+          "ceiling": 6.34,
+          "mean": 6.34,
+          "actual": 2.0,
+          "own": "8%"
+        }
+      ]
+    }
+  ]
+}
