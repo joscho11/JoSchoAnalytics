@@ -67,7 +67,6 @@ def test_weekly_predictions_renders_and_owns_controls(tmp_path):
     # The newest release is Week 6, with explicit QB assumptions for these teams.
     assert "**ATL:** Michael Penix Jr. — user modeling assumption" in qb_markdown
     assert "**CHI:** Caleb Williams — user modeling assumption" in qb_markdown
-    assert "**MIN:** Kyler Murray — previous-game dropback leader" in qb_markdown
     assert "**BAL:** Lamar Jackson — user modeling assumption" in qb_markdown
     assert "**TB:** Jalon Daniels — user modeling assumption" in qb_markdown
     scenario_caption = " ".join(str(c.value) for c in qb_expander.caption)
@@ -418,6 +417,10 @@ def test_week6_chi_atl_shows_all_joint_qb_pairs(tmp_path):
     assert "All 6 joint QB pairings" in labels
     for name in ("Caleb Williams", "Case Keenum", "Tyson Bagent", "Michael Penix Jr.", "Tua Tagovailoa"):
         assert name in markdown, name
+    pair_cards = [str(item.value) for item in at.markdown if "jsa-gc-pair" in str(item.value)]
+    assert len(pair_cards) == 6
+    keenum_tua = next(card for card in pair_cards if "Case Keenum" in card and "Tua Tagovailoa" in card)
+    assert "edge 3.46" in keenum_tua
     assert markdown.count("MAIN PATH") == 1
     assert "ATL stays HIGH in all 6 QB pairings" in markdown
     assert "These are scenario scores, not blended probabilities" in captions

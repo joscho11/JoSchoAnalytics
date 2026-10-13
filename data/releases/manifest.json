@@ -681,7 +681,7 @@
       "previous_build": "fantasy-2026w04-acd94fff81e3"
     },
     "predictions": {
-      "active_build": "predictions-2026w06-6a6402fb66a9",
+      "active_build": "predictions-2026w06-c3c200e3354b",
       "builds": {
         "predictions-2025w10-8f1701d7a6db": {
           "artifact": "data/releases/builds/predictions/2025/week10/predictions-2025w10-8f1701d7a6db/artifact.csv",
@@ -13282,6 +13282,106 @@
             "warnings": []
           },
           "week": 6
+        },
+        "predictions-2026w06-c3c200e3354b": {
+          "artifact": "data/releases/builds/predictions/2026/week06/predictions-2026w06-c3c200e3354b/artifact.csv",
+          "build_id": "predictions-2026w06-c3c200e3354b",
+          "correction": {
+            "input_as_of_utc": "2026-10-13T14:00:00Z",
+            "qb_pair_scenarios": {
+              "audit_artifact_sha256": "bff88459663bf2ec7f7ebe1fb603b2ff8a5b4e58f9e0d74c0ea903a2a3747daf",
+              "direct_replay": {
+                "as_of_utc": "2026-10-13T14:00:00Z",
+                "bagent_tua_edge": 3.747059532385038,
+                "baseline_main_path_edge": 3.2326990266898123,
+                "keenum_tua_edge": 3.4564108784629006,
+                "keenum_tua_vs_bagent_tua_delta": 0.29064865392213735,
+                "override_ids": {
+                  "bagent_tua": {
+                    "ATL": "00-0036212",
+                    "CHI": "00-0038416"
+                  },
+                  "keenum_tua": {
+                    "ATL": "00-0036212",
+                    "CHI": "00-0028986"
+                  }
+                },
+                "scorer": "src/forward.py::score_forward",
+                "validation_note": "The two direct scenario scores and unchanged Caleb\u2013Penix baseline were reproduced against the pinned inputs."
+              },
+              "input_hashes": {
+                "bundle_sha256": "b4a325000b7a8982f092402528e415177f64ad3193ab9e8bb392cfa28f726d61",
+                "depth_chart_capture_time": "2026-10-13T13:42:38.625460+00:00",
+                "injury_capture_sha256": "5fd58b9a6b2ab866c5907af629c2366d69db0843d84b2e6e7625b0eb5d5965e1",
+                "panel_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\spread_v3_prod\\artifacts\\panel_tuesday_asof.parquet",
+                "panel_sha256": "da3ec434b77f0acd0ea2e15216bbd1a0dd7ab601c4b70de8809c9dc6f8e51c77",
+                "players_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\live_2026\\players_20261013T134241.035290Z.parquet",
+                "players_sha256": "5e853c1158b61bdba1033b6c49ab38fd5f00611edd30828dc94dc1e8d6c21324",
+                "prediction_cutoff_utc": "2026-10-13T14:00:00Z",
+                "roster_capture_sha256": "66eeb92cc4e7897c54a6cafc20dfe2602cd3598cd8ba32e5378c7108a9e59cfb",
+                "scenario_file_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\news\\2026_w06_qb_scenarios.csv",
+                "scenario_file_sha256": "17aba8c03acd5614bfad949ed4c0312588164f57d756fa8ee34bc0c2dd7958f4",
+                "snap_capture_sha256": "14c9f046077ab71fd521503b78946f53fc1a2570824d7bfea723a9c4b9b1758f",
+                "sunday_snapshot_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\sunday_1120_paid_recovery\\2026_w06_monday0100_probe.json",
+                "sunday_snapshot_sha256": "58439755156ea03d2a892d3ac1ca015f335526adb5387c0d8f16277cf7003508",
+                "tuesday_snapshot_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\tuesday_0900\\2026_w06.json",
+                "tuesday_snapshot_sha256": "21ca9f6746f08259d09017fc2e75e7377536676f3ecabfa8832dfe52e1dce68b"
+              },
+              "main_path": {
+                "away_qb": "Caleb Williams",
+                "away_team": "CHI",
+                "edge": 3.2326990266898123,
+                "home_qb": "Michael Penix Jr.",
+                "home_team": "ATL"
+              },
+              "newly_scored_pairings": [
+                {
+                  "away_player_name": "Case Keenum",
+                  "clears_high": true,
+                  "edge": 3.4564108784629006,
+                  "home_player_name": "Tua Tagovailoa",
+                  "side": "HOME (ATL)"
+                },
+                {
+                  "away_player_name": "Tyson Bagent",
+                  "clears_high": true,
+                  "edge": 3.747059532385038,
+                  "home_player_name": "Tua Tagovailoa",
+                  "side": "HOME (ATL)"
+                }
+              ],
+              "scenario_count": 6,
+              "source_active_build_id": "predictions-2026w06-6a6402fb66a9",
+              "source_artifact_sha256": "6a6402fb66a90f168600e5a40ceaf4d7d1cfe6c8127f3b6e4254369b9f149b4e",
+              "verdict": "high_all_clear"
+            },
+            "reason": "Corrected the Case Keenum versus Tua Tagovailoa joint QB scenario edge after direct paired replay. Official prediction rows, Tuesday lines, and all other pair scores are unchanged.",
+            "source_snapshot_captured_at": "2026-10-13T12:55:36Z",
+            "source_snapshot_sha256": "21ca9f6746f08259d09017fc2e75e7377536676f3ecabfa8832dfe52e1dce68b",
+            "supersedes_build_id": "predictions-2026w06-6a6402fb66a9"
+          },
+          "metadata": "data/releases/builds/predictions/2026/week06/predictions-2026w06-c3c200e3354b/metadata.json",
+          "model_version": "spread-v3-prod-sunday-tuesday-market-46-qb-ir-scoped-flag-b4a325000b7a",
+          "produced_at": "2026-10-13T15:55:23Z",
+          "product": "predictions",
+          "published_at": "2026-10-13T15:55:58Z",
+          "row_count": 14,
+          "season": 2026,
+          "sha256": "c3c200e3354bc1f573e1ac386ec54b77523648d6f5dbe016cf2ea816fb818d73",
+          "status": "Published",
+          "validation": {
+            "checks": {
+              "artifact_sha256": "c3c200e3354bc1f573e1ac386ec54b77523648d6f5dbe016cf2ea816fb818d73",
+              "produced_at_utc": "2026-10-13T15:55:23Z",
+              "scheduled_games": 14
+            },
+            "errors": [],
+            "ok": true,
+            "product": "predictions",
+            "row_count": 14,
+            "warnings": []
+          },
+          "week": 6
         }
       },
       "next_release": {
@@ -13290,9 +13390,9 @@
         "status": "Awaiting projections",
         "week": 7
       },
-      "previous_build": "predictions-2026w06-93422d877ab0"
+      "previous_build": "predictions-2026w06-6a6402fb66a9"
     }
   },
   "schema_version": 1,
-  "updated_at": "2026-10-13T15:41:36Z"
+  "updated_at": "2026-10-13T15:55:58Z"
 }
