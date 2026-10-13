@@ -85,11 +85,11 @@ def _live_notice():
         )
 
 
-def _live_model_context(release_state: dict) -> None:
-    """Show the selected immutable release's model ID and material QB assumptions."""
+def _live_model_context(release_state: dict) -> dict[str, str]:
+    """Show release context and return its selected QB names keyed by team."""
     build_id = release_state.get("build_id")
     if not build_id:
-        return
+        return {}
     manifest = page_common.load_release_manifest()
     state = manifest.get("products", {}).get("predictions", {})
     build = state.get("builds", {}).get(str(build_id), {})
@@ -102,7 +102,7 @@ def _live_model_context(release_state: dict) -> None:
     current_ids = correction.get("qb_selections") or {}
     # Ordinary weekly publishes stamp the same QB map on the release metadata
     # instead of under correction.
-    if not current_qbs and not current_ids:
+    if not current_qbs:
         meta_rel = build.get("metadata")
         if meta_rel:
             from publishing.paths import resolve_site_path
@@ -114,18 +114,32 @@ def _live_model_context(release_state: dict) -> None:
             except Exception:
                 payload = {}
             current_qbs = payload.get("qb_selection_details") or {}
-            current_ids = payload.get("qb_selections") or {}
+            current_ids = current_ids or payload.get("qb_selections") or {}
             if current_qbs or current_ids:
                 correction = {
                     **correction,
                     "qb_selection_details": current_qbs,
                     "qb_selections": current_ids,
-                    "qb_uncertainty_flags": payload.get("qb_uncertainty_flags") or {},
-                    "qb_selection_policy": payload.get("qb_selection_policy"),
-                    "qb_scenarios": payload.get("qb_scenarios") or {},
+                    "qb_uncertainty_flags": (
+                        correction.get("qb_uncertainty_flags")
+                        or payload.get("qb_uncertainty_flags") or {}
+                    ),
+                    "qb_selection_policy": (
+                        correction.get("qb_selection_policy")
+                        or payload.get("qb_selection_policy")
+                    ),
+                    "qb_scenarios": (
+                        correction.get("qb_scenarios")
+                        or payload.get("qb_scenarios") or {}
+                    ),
                 }
     if not current_qbs and not current_ids:
-        return
+        return {}
+    qb_names = {
+        str(team): str(details["player_name"]).strip()
+        for team, details in current_qbs.items()
+        if isinstance(details, dict) and str(details.get("player_name", "")).strip()
+    }
     previous_id = correction.get("supersedes_build_id")
     previous = state.get("builds", {}).get(str(previous_id), {})
     previous_correction = previous.get("correction") or {}
@@ -144,7 +158,7 @@ def _live_model_context(release_state: dict) -> None:
     # dropback leader) explicit too. The expander stays collapsed by default.
     relevant = sorted(set(current_ids) | set(current_qbs) | changed | manual)
     if not relevant:
-        return
+        return qb_names
     with st.expander("QB inputs used for this release", expanded=False):
         if correction.get("reason") and correction.get("retrospective") is not True:
             st.caption(str(correction["reason"]))
@@ -194,6 +208,22 @@ def _live_model_context(release_state: dict) -> None:
                 + ": each listed QB is scored as the certain starter on the matchup card. "
                 "They are shown for planning and are not part of the model's official pick."
             )
+    return qb_names
+
+
+def _team_cell_html(team_name: str, qb_name: str | None, weight: str, color: str) -> str:
+    """Compact team label with an escaped release-selected QB on its second line."""
+    qb_line = (
+        f"<div class='jsa-gc-qb' style='font-size:10px;font-weight:400;color:#93A0B1;line-height:1.15'>"
+        f"QB: {_html.escape(str(qb_name))}</div>"
+        if qb_name else ""
+    )
+    return (
+        f"<div class='jsa-gc-team' style='font-weight:{weight};color:{color};padding:1px 0;"
+        f"height:auto;min-height:32px;line-height:1.15'>"
+        f"<div class='jsa-gc-team-abbr' style='font-size:15px;font-weight:{weight}'>"
+        f"{_html.escape(str(team_name))}</div>{qb_line}</div>"
+    )
 
 
 _SCENARIO_HEADERS = {
@@ -505,8 +535,9 @@ def render():
         )
     if live:
         _live_notice()
-        _live_model_context(release_state)
+        _release_qb_names = _live_model_context(release_state)
     else:
+        _release_qb_names = {}
         _demo_2025_notice()
 
     week_df    = df[(df['season'] == season) & (df['week'] == week)].copy()
@@ -922,8 +953,7 @@ def render():
 
                     top_w, top_c = name_style(top_is_rec)
                     a0.markdown(
-                        f"<div class='jsa-gc-team' style='font-weight:{top_w};font-size:15px;color:{top_c};"
-                        f"padding-top:6px;height:32px'>{top_name}</div>",
+                        _team_cell_html(top_name, _release_qb_names.get(top_team), top_w, top_c),
                         unsafe_allow_html=True
                     )
                     a1.markdown(stat_box(top_spread),                       unsafe_allow_html=True)
@@ -940,8 +970,7 @@ def render():
 
                     bot_w, bot_c = name_style(bot_is_rec)
                     b0.markdown(
-                        f"<div class='jsa-gc-team' style='font-weight:{bot_w};font-size:15px;color:{bot_c};"
-                        f"padding-top:6px;height:32px'>{bot_name}</div>",
+                        _team_cell_html(bot_name, _release_qb_names.get(bot_team), bot_w, bot_c),
                         unsafe_allow_html=True
                     )
                     b1.markdown(stat_box(bot_spread),                       unsafe_allow_html=True)

@@ -501,7 +501,10 @@ details summary{
     height:auto !important;
     min-height:32px !important;
     display:flex !important;
-    align-items:center !important;
+    flex-direction:column !important;
+    align-items:flex-start !important;
+    justify-content:center !important;
+    gap:1px !important;
     padding-top:0 !important;
     overflow-wrap:anywhere !important;
   }

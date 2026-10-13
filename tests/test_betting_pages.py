@@ -69,10 +69,31 @@ def test_weekly_predictions_renders_and_owns_controls(tmp_path):
     assert "**CHI:** Caleb Williams — user modeling assumption" in qb_markdown
     assert "**BAL:** Lamar Jackson — user modeling assumption" in qb_markdown
     assert "**TB:** Jalon Daniels — user modeling assumption" in qb_markdown
+    card_labels = " ".join(
+        str(item.value) for item in at.markdown if "jsa-gc-team-abbr" in str(item.value)
+    )
+    for team, qb in (
+        ("ATL", "Michael Penix Jr."),
+        ("BAL", "Lamar Jackson"),
+        ("CHI", "Caleb Williams"),
+        ("TB", "Jalon Daniels"),
+    ):
+        assert f">{team}</div><div class='jsa-gc-qb'" in card_labels
+        assert f"QB: {qb}</div>" in card_labels
+    assert "font-size:10px" in card_labels
     scenario_caption = " ".join(str(c.value) for c in qb_expander.caption)
     assert all(team in scenario_caption for team in ("BAL", "CHI", "ATL", "TB"))
     assert not any(str(k).startswith("tr_") for k in keys), \
         "Weekly Predictions must not carry Track Record's controls"
+
+
+def test_weekly_prediction_team_cell_escapes_release_names():
+    from page_weekly_predictions import _team_cell_html
+
+    markup = _team_cell_html("<b>TB</b>", "<img src=x onerror=alert(1)>", "700", "white")
+    assert "&lt;b&gt;TB&lt;/b&gt;" in markup
+    assert "QB: &lt;img src=x onerror=alert(1)&gt;" in markup
+    assert "<img src=x" not in markup
 
 
 def test_weekly_predictions_shows_min_edge_on_2025_demo(tmp_path):
