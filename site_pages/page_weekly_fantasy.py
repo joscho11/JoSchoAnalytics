@@ -457,7 +457,14 @@ def _phone_column_config(phone_keep: list[str], desktop_config: dict) -> dict:
 
 @st.cache_data(ttl=3600)
 def _load_proj_csv(path: str) -> pd.DataFrame:
-    return pd.read_csv(path)
+    frame = pd.read_csv(path)
+    # Older graded releases merged player stats that also had a `team`
+    # column. Pandas suffixed the frozen projection team as `team_x`, which
+    # made the otherwise complete postgame board fail its display schema.
+    # Keep the projection-side team as the canonical value for this view.
+    if "team" not in frame.columns and "team_x" in frame.columns:
+        frame = frame.rename(columns={"team_x": "team"})
+    return frame
 
 
 _ACTUAL_STAT_COLUMNS = [

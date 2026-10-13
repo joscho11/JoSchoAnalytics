@@ -82,6 +82,16 @@ def test_complete_week1_release_prefers_graded_postgame_artifact():
     assert len(actuals["half_ppr"]) == len(frame)
 
 
+def test_week05_graded_release_restores_projection_team_column():
+    path = weekly.available_projection_files()[(2026, 5)]
+    assert path.name.endswith("-graded.csv")
+
+    frame = weekly._load_proj_csv(str(path))
+
+    assert "team" in frame.columns
+    assert frame["team"].notna().all()
+
+
 def _render_weekly(tmp_path):
     h = tmp_path / "h_weekly.py"
     h.write_text(
@@ -133,6 +143,18 @@ def test_week1_graded_release_renders_postgame_actuals(tmp_path):
         not {"Actual Pass Yds", "Actual Rush Yds", "Actual Rec Yds"} & set(frame.columns)
         for frame in actual_frames
     )
+
+
+def test_week05_postgame_view_renders_graded_release(tmp_path):
+    path = weekly.available_projection_files()[(2026, 5)]
+
+    at = _render_weekly_release(tmp_path, path, season=2026, week=5)
+
+    warnings = " ".join(str(item.value) for item in at.warning)
+    assert "Projection CSV is missing columns" not in warnings
+    tables = [item.value for item in at.dataframe if "Player" in item.value.columns]
+    assert tables
+    assert any(frame["Actual Pts"].notna().any() for frame in tables if "Actual Pts" in frame)
 
 
 def test_weekly_fantasy_defaults_to_live_2026_release(tmp_path):
