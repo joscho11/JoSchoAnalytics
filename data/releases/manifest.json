@@ -681,7 +681,7 @@
       "previous_build": "fantasy-2026w04-acd94fff81e3"
     },
     "predictions": {
-      "active_build": "predictions-2026w05-e6902ce4fb32",
+      "active_build": "predictions-2026w06-93422d877ab0",
       "builds": {
         "predictions-2025w10-8f1701d7a6db": {
           "artifact": "data/releases/builds/predictions/2025/week10/predictions-2025w10-8f1701d7a6db/artifact.csv",
@@ -13175,17 +13175,43 @@
             "warnings": []
           },
           "week": 5
+        },
+        "predictions-2026w06-93422d877ab0": {
+          "artifact": "data/releases/builds/predictions/2026/week06/predictions-2026w06-93422d877ab0/artifact.csv",
+          "build_id": "predictions-2026w06-93422d877ab0",
+          "metadata": "data/releases/builds/predictions/2026/week06/predictions-2026w06-93422d877ab0/metadata.json",
+          "model_version": "spread-v3-prod-sunday-tuesday-market-46-qb-ir-scoped-flag-b4a325000b7a",
+          "produced_at": "2026-10-13T14:58:17Z",
+          "product": "predictions",
+          "published_at": "2026-10-13T14:59:22Z",
+          "row_count": 14,
+          "season": 2026,
+          "sha256": "93422d877ab0fce49cf55d49a3a72f3d4093106e58862ac320ca50169ac74864",
+          "status": "Published",
+          "validation": {
+            "checks": {
+              "artifact_sha256": "93422d877ab0fce49cf55d49a3a72f3d4093106e58862ac320ca50169ac74864",
+              "produced_at_utc": "2026-10-13T14:58:17Z",
+              "scheduled_games": 14
+            },
+            "errors": [],
+            "ok": true,
+            "product": "predictions",
+            "row_count": 14,
+            "warnings": []
+          },
+          "week": 6
         }
       },
       "next_release": {
         "scheduled_for": null,
         "season": 2026,
         "status": "Awaiting projections",
-        "week": 6
+        "week": 7
       },
-      "previous_build": "predictions-2026w05-496c87e67cde"
+      "previous_build": "predictions-2026w05-e6902ce4fb32"
     }
   },
   "schema_version": 1,
-  "updated_at": "2026-10-13T04:39:39Z"
+  "updated_at": "2026-10-13T15:00:29Z"
 }
