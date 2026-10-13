@@ -298,6 +298,13 @@ def fetch_snap_counts(season: int) -> pd.DataFrame:
     return frame.to_pandas() if hasattr(frame, "to_pandas") else frame
 
 
+def fetch_weekly_rosters(season: int) -> pd.DataFrame:
+    """Fetch official week-level roster status, including announced inactives."""
+    import nflreadpy as nfl
+    frame = nfl.load_rosters_weekly([int(season)])
+    return frame.to_pandas() if hasattr(frame, "to_pandas") else frame
+
+
 _ANYTIME_TD_RELEASE_RE = re.compile(
     r"^anytime_td_(?P<season>\d{4})_week(?P<week>\d{1,2})(?:_[^.]*)?\.csv$"
 )
@@ -318,7 +325,26 @@ def _normal_name(value) -> str | None:
     if pd.isna(value):
         return None
     text = re.sub(r"[^a-z0-9]+", "", str(value).strip().casefold())
+    # The official weekly roster feed lists Matt Hibner while the DraftKings
+    # board has used Matthew Hibner. This exact, team-scoped alias bridges the
+    # same player without introducing fuzzy name matching.
+    if text == "matthibner":
+        text = "matthewhibner"
     return text or None
+
+
+def _identifier_aliases(value) -> set[str]:
+    """Return exact id variants for site-prefixed external ids."""
+    key = _normal_identifier(value)
+    if not key:
+        return set()
+    aliases = {key}
+    if key.startswith("SLEEPER:"):
+        aliases.add(key.split(":", 1)[1])
+    for alias in tuple(aliases):
+        if alias.endswith(".0") and alias[:-2].isdigit():
+            aliases.add(alias[:-2])
+    return aliases
 
 
 def load_reviewed_td_settlements(root=None) -> dict[tuple[int, int, str, str, str], dict]:
@@ -437,6 +463,64 @@ def _prepare_participation(participation: pd.DataFrame | None, season: int, week
     }
 
 
+def _prepare_weekly_roster_status(
+    rosters: pd.DataFrame | None, season: int, week: int
+) -> dict:
+    """Index official weekly roster IDs/names for explicit inactive evidence.
+
+    Only the gameday ``INA`` status is treated as confirmed inactive. Missing
+    roster rows and other statuses do not imply that a player was inactive.
+    """
+    if rosters is None or rosters.empty or "status" not in rosters:
+        return {"inactive_by_alias_team": set(), "inactive_by_name_team": set()}
+    frame = rosters.copy()
+    if "season" in frame:
+        frame = frame[pd.to_numeric(frame["season"], errors="coerce").eq(int(season))]
+    if "week" in frame:
+        frame = frame[pd.to_numeric(frame["week"], errors="coerce").eq(int(week))]
+    if "season_type" in frame:
+        frame = frame[frame["season_type"].astype(str).str.upper().eq("REG")]
+    frame = frame[frame["status"].astype("string").str.strip().str.upper().isin({"INA", "INACTIVE"})]
+    aliases = [
+        column for column in ("player_id", "gsis_id", "sleeper_id", "pfr_player_id")
+        if column in frame
+    ]
+    team_column = "team" if "team" in frame else "recent_team" if "recent_team" in frame else None
+    name_column = next(
+        (column for column in ("full_name", "player_display_name", "player_name", "player") if column in frame),
+        None,
+    )
+    inactive_by_alias_team: set[tuple[str, str]] = set()
+    inactive_by_name_team: set[tuple[str, str]] = set()
+    for row in frame.to_dict(orient="records"):
+        team = _normal_team(row.get(team_column)) if team_column else None
+        if not team:
+            continue
+        for column in aliases:
+            for player_id in _identifier_aliases(row.get(column)):
+                inactive_by_alias_team.add((player_id, team))
+        name = _normal_name(row.get(name_column)) if name_column else None
+        if name:
+            inactive_by_name_team.add((team, name))
+    return {
+        "inactive_by_alias_team": inactive_by_alias_team,
+        "inactive_by_name_team": inactive_by_name_team,
+    }
+
+
+def _is_explicitly_inactive(row: pd.Series, roster_info: dict) -> bool:
+    team = _normal_team(row.get("team"))
+    if not team:
+        return False
+    if any(
+        (player_id, team) in roster_info["inactive_by_alias_team"]
+        for player_id in _identifier_aliases(row.get("player_id"))
+    ):
+        return True
+    name = _normal_name(row.get("player_display_name"))
+    return bool(name and (team, name) in roster_info["inactive_by_name_team"])
+
+
 def _prepare_anytime_stats(
     actuals: pd.DataFrame,
     season: int,
@@ -491,8 +575,7 @@ def _prepare_anytime_stats(
     for row in stats.to_dict(orient="records"):
         touchdowns = float(row["_anytime_tds"])
         for col in aliases:
-            key = row.get(col)
-            if key is not None:
+            for key in _identifier_aliases(row.get(col)):
                 td_by_alias[key] = max(td_by_alias.get(key, 0.0), touchdowns)
         if team_column and name_column:
             team = _normal_team(row.get(team_column))
@@ -532,13 +615,14 @@ def grade_anytime_td_file(
     season: int,
     week: int,
     participation: pd.DataFrame | None = None,
+    weekly_rosters: pd.DataFrame | None = None,
     reviewed_settlements: dict | None = None,
 ) -> dict:
     """Attach final rushing/receiving TD outcomes to one live board.
 
-    A final game is left pending unless the player feed is complete enough to
-    distinguish a zero from a missing stat row. The source CSV is updated in
-    place; the publisher's frozen prediction and price columns are untouched.
+    A row settles only with a player stat row, positive participation, or an
+    authoritative inactive status. Missing evidence stays pending; frozen
+    prediction and price columns are untouched.
     """
     source = Path(path)
     if not source.is_file():
@@ -577,6 +661,13 @@ def grade_anytime_td_file(
     pending_games = []
     updated_games = []
     updated_rows = 0
+    roster_info = _prepare_weekly_roster_status(weekly_rosters, season, week)
+
+    def lookup_alias(values: dict, player_id):
+        for alias in _identifier_aliases(player_id):
+            if alias in values:
+                return values[alias]
+        return None
 
     for game_id in sorted(board_game_ids):
         game_rows = board[board["_game_id"].eq(game_id)]
@@ -592,22 +683,17 @@ def grade_anytime_td_file(
             ) if team is not None
         }
         player_ids = set(game_rows["_player_id"].dropna().tolist())
-        if not player_ids or game_rows["_player_id"].isna().any():
-            pending_games.append(game_id)
-            continue
-
+        player_id_aliases = {
+            alias for player_id in player_ids for alias in _identifier_aliases(player_id)
+        }
         complete_feed = bool(teams and teams <= stat_info["teams"])
-        if not complete_feed and player_ids <= set(stat_info["td_by_alias"]):
-            complete_feed = True
-        if not complete_feed:
-            pending_games.append(game_id)
-            continue
-
+        if not complete_feed and player_id_aliases:
+            complete_feed = player_id_aliases <= set(stat_info["td_by_alias"])
         participation_info = stat_info["participation"]
 
         def player_outcome(row):
             player_id = row["_player_id"]
-            touchdowns = stat_info["td_by_alias"].get(row["_player_id"])
+            touchdowns = lookup_alias(stat_info["td_by_alias"], player_id)
             matched_stats = touchdowns is not None
             if touchdowns is None and "player_display_name" in row and "team" in row:
                 key = (_normal_team(row["team"]), _normal_name(row["player_display_name"]))
@@ -617,25 +703,32 @@ def grade_anytime_td_file(
                 touchdowns = float(touchdowns or 0.0)
             snaps = None
             if stat_info["participation"]["available"]:
-                snaps = stat_info["participation"]["snaps_by_alias"].get(player_id)
+                snaps = lookup_alias(stat_info["participation"]["snaps_by_alias"], player_id)
                 if snaps is None and "player_display_name" in row and "team" in row:
                     key = (_normal_team(row["team"]), _normal_name(row["player_display_name"]))
                     snaps = stat_info["participation"]["snaps_by_name_team"].get(key)
+            explicit_inactive = _is_explicitly_inactive(row, roster_info)
             reviewed_void = all(
                 (int(season), int(week), row["_game_id"], player_id, market) in reviewed_settlements
                 for market in ("anytime", "two_plus")
             )
-            if reviewed_void:
+            if reviewed_void or explicit_inactive:
                 if (matched_stats and touchdowns > 0) or (snaps is not None and float(snaps) > 0):
                     raise PublicationError(
-                        f"reviewed TD void conflicts with scoring/participation evidence: "
+                        f"TD inactive/void conflicts with scoring/participation evidence: "
                         f"{row['_game_id']}/{player_id}"
                     )
                 return ("void", float("nan"))
+            if matched_stats and touchdowns > 0:
+                return ("win", touchdowns)
             if matched_stats:
-                return ("loss" if touchdowns <= 0 else "win", touchdowns)
+                return ("loss", touchdowns) if complete_feed else ("pending", float("nan"))
             if snaps is not None:
-                return ("loss", 0.0) if float(snaps) > 0 else ("void", float("nan"))
+                if float(snaps) <= 0:
+                    return ("void", float("nan"))
+                if complete_feed:
+                    return ("loss", 0.0)
+                return ("pending", float("nan"))
             return ("pending", float("nan"))
 
         outcomes = game_rows.apply(player_outcome, axis=1)
@@ -894,6 +987,7 @@ def grade_first_td_file(
     season: int,
     week: int,
     participation: pd.DataFrame | None = None,
+    weekly_rosters: pd.DataFrame | None = None,
     reviewed_settlements: dict | None = None,
 ) -> dict:
     """Attach the game's first-TD scorer outcome to one live board.
@@ -952,6 +1046,7 @@ def grade_first_td_file(
     participation_info = _prepare_participation(
         participation if participation is not None else actuals, season, week
     )
+    roster_info = _prepare_weekly_roster_status(weekly_rosters, season, week)
     reviewed_settlements = reviewed_settlements or {}
     board_game_ids = set(board["_game_id"].dropna().tolist())
     board_final_ids = board_game_ids & final_game_ids
@@ -989,14 +1084,6 @@ def grade_first_td_file(
                     elif len(values) == 1 and values[0] in {"false", "0", "no"}:
                         no_td_offered = False
                     break
-            if no_td_offered is None:
-                if "settlement_status_first" not in board:
-                    board["settlement_status_first"] = "open"
-                board.loc[game_rows.index, "settlement_status_first"] = "awaiting_evidence"
-                board.loc[game_rows.index, "scored_first"] = pd.NA
-                pending_games.append(game_id)
-                continue
-
         first_scorer_id_normalized = _normal_identifier(first_scorer_id)
         canonical_ids = id_aliases.get(first_scorer_id_normalized, {first_scorer_id_normalized})
         scorer_identity = (
@@ -1010,7 +1097,11 @@ def grade_first_td_file(
             reviewed = reviewed_settlements.get((
                 int(season), int(week), game_id, player_id, "first",
             ))
-            snaps = participation_info["snaps_by_alias"].get(player_id)
+            snaps = next((
+                participation_info["snaps_by_alias"][alias]
+                for alias in _identifier_aliases(player_id)
+                if alias in participation_info["snaps_by_alias"]
+            ), None)
             if snaps is None and "player_display_name" in row and "team" in row:
                 key = (_normal_team(row["team"]), _normal_name(row["player_display_name"]))
                 snaps = participation_info["snaps_by_name_team"].get(key)
@@ -1022,10 +1113,19 @@ def grade_first_td_file(
                     and (_normal_team(row["team"]), _normal_name(row["player_display_name"])) == scorer_identity
                 ))
             )
+            explicit_inactive = _is_explicitly_inactive(row, roster_info)
             if reviewed is not None and reviewed["status"] == "void":
                 if is_scorer or (snaps is not None and float(snaps) > 0):
                     raise PublicationError(
                         f"reviewed First TD void conflicts with scorer/participation evidence: {game_id}/{player_id}"
+                    )
+                settlement.loc[idx] = "void"
+                continue
+            if explicit_inactive:
+                if is_scorer or (snaps is not None and float(snaps) > 0):
+                    raise PublicationError(
+                        f"weekly inactive conflicts with First TD scorer/participation evidence: "
+                        f"{game_id}/{player_id}"
                     )
                 settlement.loc[idx] = "void"
                 continue
@@ -1042,9 +1142,16 @@ def grade_first_td_file(
                 if snaps is not None and float(snaps) > 0:
                     outcome.loc[idx] = 0.0
                     settlement.loc[idx] = "settled"
-            elif kind == "no_touchdown":
+            elif kind == "no_touchdown" and no_td_offered is False:
                 # A verified no-TD game with no No Touchdown selection is void.
                 settlement.loc[idx] = "void"
+        if settlement.eq("awaiting_evidence").all():
+            if "settlement_status_first" not in board:
+                board["settlement_status_first"] = "open"
+            board.loc[game_rows.index, "settlement_status_first"] = "awaiting_evidence"
+            board.loc[game_rows.index, "scored_first"] = pd.NA
+            pending_games.append(game_id)
+            continue
         if settlement.eq("awaiting_evidence").any():
             pending_games.append(game_id)
         board["scored_first"] = pd.to_numeric(board["scored_first"], errors="coerce").astype("Float64")
@@ -1092,7 +1199,12 @@ def grade_first_td_file(
     }
 
 
-def grade_first_td_releases(root=None, *, participation_by_season: dict[int, pd.DataFrame | None] | None = None) -> dict:
+def grade_first_td_releases(
+    root=None,
+    *,
+    participation_by_season: dict[int, pd.DataFrame | None] | None = None,
+    weekly_rosters_by_season: dict[int, pd.DataFrame | None] | None = None,
+) -> dict:
     """Grade all published 2026 Anytime TD boards' first-TD column that have final games."""
     site_root = Path(root) if root is not None else Path(__file__).resolve().parents[1]
     directory = site_root / "betting" / "anytime_td"
@@ -1109,6 +1221,7 @@ def grade_first_td_releases(root=None, *, participation_by_season: dict[int, pd.
     pbp_by_season = {}
     results = {}
     participation_by_season = participation_by_season if participation_by_season is not None else {}
+    weekly_rosters_by_season = weekly_rosters_by_season if weekly_rosters_by_season is not None else {}
     reviewed_settlements = load_reviewed_td_settlements(site_root)
     for source, season, week in releases:
         if season not in schedules:
@@ -1138,12 +1251,18 @@ def grade_first_td_releases(root=None, *, participation_by_season: dict[int, pd.
                 participation_by_season[season] = fetch_snap_counts(season)
             except Exception:
                 participation_by_season[season] = None
+        if season not in weekly_rosters_by_season:
+            try:
+                weekly_rosters_by_season[season] = fetch_weekly_rosters(season)
+            except Exception:
+                weekly_rosters_by_season[season] = None
         results[label] = grade_first_td_file(
             source,
             schedule,
             pbp_by_season[season],
             actuals_by_season[season],
             participation=participation_by_season[season],
+            weekly_rosters=weekly_rosters_by_season[season],
             season=season,
             week=week,
             reviewed_settlements=reviewed_settlements,
@@ -1190,7 +1309,10 @@ def write_td_grading_stamps(anytime: dict, first_td: dict, root=None) -> list[st
 
 
 def grade_anytime_td_releases(
-    root=None, *, participation_by_season: dict[int, pd.DataFrame | None] | None = None
+    root=None,
+    *,
+    participation_by_season: dict[int, pd.DataFrame | None] | None = None,
+    weekly_rosters_by_season: dict[int, pd.DataFrame | None] | None = None,
 ) -> dict:
     """Grade all published 2026 Anytime TD boards that have final games."""
     site_root = Path(root) if root is not None else Path(__file__).resolve().parents[1]
@@ -1208,6 +1330,7 @@ def grade_anytime_td_releases(
     participation_by_season = participation_by_season if participation_by_season is not None else {}
     results = {}
     reviewed_settlements = load_reviewed_td_settlements(site_root)
+    weekly_rosters_by_season = weekly_rosters_by_season if weekly_rosters_by_season is not None else {}
     for source, season, week in releases:
         if season not in schedules:
             schedules[season] = fetch_nfl_schedule(season)
@@ -1237,11 +1360,17 @@ def grade_anytime_td_releases(
                 # must not, however, zero-fill quoted players absent from that
                 # feed, so a failed snap fetch safely leaves those rows pending.
                 participation_by_season[season] = None
+        if season not in weekly_rosters_by_season:
+            try:
+                weekly_rosters_by_season[season] = fetch_weekly_rosters(season)
+            except Exception:
+                weekly_rosters_by_season[season] = None
         results[label] = grade_anytime_td_file(
             source,
             schedule,
             actuals_by_season[season],
             participation=participation_by_season[season],
+            weekly_rosters=weekly_rosters_by_season[season],
             season=season,
             week=week,
             reviewed_settlements=reviewed_settlements,

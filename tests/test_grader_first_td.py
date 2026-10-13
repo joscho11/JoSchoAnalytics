@@ -124,6 +124,47 @@ def test_first_td_pass_touchdown_credits_receiver_not_passer(tmp_path):
     assert graded["scored_first"].tolist() == [1.0, 0.0]
 
 
+def test_first_td_voids_authoritative_inactive_with_matt_hibner_alias(tmp_path):
+    import pandas as pd
+    from publishing.grader import grade_first_td_file
+
+    csv = tmp_path / "anytime_td_2026_week02.csv"
+    pd.DataFrame({
+        "game_id": ["2026_02_MIN_CHI"] * 3,
+        "player_id": ["sleeper:unknown", "GSIS1", "GSIS2"],
+        "player_display_name": ["Matthew Hibner", "Scorer", "Other Player"],
+        "team": ["MIN", "MIN", "CHI"], "scored_first": [None, None, None],
+    }).to_csv(csv, index=False)
+    schedule = pd.DataFrame([{
+        "season": 2026, "week": 2, "game_id": "2026_02_MIN_CHI",
+        "home_team": "CHI", "away_team": "MIN", "home_score": 6, "away_score": 0,
+    }])
+    pbp = pd.DataFrame(_plays(6, 0))
+    pbp.loc[1, ["touchdown", "td_player_id", "td_team", "posteam", "defteam", "return_touchdown"]] = [
+        1, "GSIS1", "MIN", "MIN", "CHI", 0,
+    ]
+    actuals = pd.DataFrame({
+        "player_id": ["GSIS1", "GSIS2"], "position": ["WR", "QB"],
+        "team": ["MIN", "CHI"], "player_display_name": ["Scorer", "Other Player"],
+        "offense_snaps": [1, 1], "defense_snaps": [0, 0], "st_snaps": [0, 0],
+    })
+    rosters = pd.DataFrame([{
+        "season": 2026, "week": 2, "team": "MIN", "status": "INA",
+        "gsis_id": "HIBNER-GSIS", "full_name": "Matt Hibner",
+    }])
+
+    result = grade_first_td_file(
+        csv, schedule, pbp, actuals, season=2026, week=2, weekly_rosters=rosters,
+    )
+
+    graded = pd.read_csv(csv).set_index("player_id")
+    assert result["status"] == "graded"
+    assert graded.loc["sleeper:unknown", "settlement_status_first"] == "void"
+    assert pd.isna(graded.loc["sleeper:unknown", "scored_first"])
+    assert graded.loc["GSIS1", "settlement_status_first"] == "settled"
+    assert graded.loc["GSIS1", "scored_first"] == 1
+
+
 def test_first_td_grading_keeps_void_status_set_by_the_anytime_grader(tmp_path):
     import pandas as pd
     from publishing.grader import grade_first_td_file

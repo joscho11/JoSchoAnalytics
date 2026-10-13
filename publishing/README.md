@@ -26,11 +26,12 @@ folder under `cowork_OS` is required.
 4. Weekly Predictions and Weekly Fantasy use that active pointer as their default.
    Track Record stays on 2025 until a 2026 prediction release has at least one final
    graded game.
-5. `.github/workflows/grade_releases.yml` polls after game windows. Prediction
-   and fantasy results are written separately under `data/releases/results/`;
-   the released prediction or projection snapshot is never edited. The same
-   action attaches rushing/receiving TD outcomes to the live ATTD CSV after a
-   final game has a complete enough player-stat feed.
+5. `.github/workflows/grade_releases.yml` runs when a weekly release or live TD
+   board changes and polls every six hours on all days. Prediction and fantasy
+   results are written separately under `data/releases/results/`; the released
+   prediction or projection snapshot is never edited. The same action grades
+   live TD boards from player stats, participation, and weekly inactive reports.
+   Rows with incomplete evidence stay pending for a later scheduled recheck.
 
 The checked-in manifest also drives the `Published`, `Scheduled`, and
 `Awaiting projections` badges. A missing, malformed, or hash-mismatched

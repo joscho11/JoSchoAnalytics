@@ -167,11 +167,16 @@ def _grade_published(root: Path, product: str = "all") -> dict:
         results[selected] = product_results
     if product in ("all", "anytime_td"):
         td_participation_by_season = {}
+        td_weekly_rosters_by_season = {}
         results["anytime_td"] = grade_anytime_td_releases(
-            root, participation_by_season=td_participation_by_season
+            root,
+            participation_by_season=td_participation_by_season,
+            weekly_rosters_by_season=td_weekly_rosters_by_season,
         )
         results["first_td"] = grade_first_td_releases(
-            root, participation_by_season=td_participation_by_season
+            root,
+            participation_by_season=td_participation_by_season,
+            weekly_rosters_by_season=td_weekly_rosters_by_season,
         )
         results["td_grading_stamps"] = write_td_grading_stamps(
             results["anytime_td"], results["first_td"], root

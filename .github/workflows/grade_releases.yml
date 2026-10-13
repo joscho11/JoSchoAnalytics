@@ -1,9 +1,17 @@
 name: Grade published releases
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "data/releases/manifest.json"
+      - "data/releases/builds/**"
+      - "betting/anytime_td/releases_manifest.json"
+      - "betting/anytime_td/releases/**"
+      - "betting/anytime_td/anytime_td_20*_week*.csv"
   schedule:
-    # Poll after NFL game windows. The command is a no-op until at least one game is final.
-    - cron: '17 */6 * * 0,1,2,5,6'
+    # Recheck every day so final stats and late feed corrections are picked up.
+    - cron: '17 */6 * * *'
   workflow_dispatch:
 
 concurrency:

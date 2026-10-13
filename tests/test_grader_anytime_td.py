@@ -81,3 +81,133 @@ def test_missing_stats_or_participation_does_not_create_a_void(tmp_path):
     dnp = graded.iloc[0]
     assert pd.isna(dnp["scored_anytime"])
     assert dnp["settlement_status_anytime"] == "awaiting_evidence"
+
+
+def test_td_grader_uses_name_alias_participation_and_inactive_roster_evidence(tmp_path):
+    path = tmp_path / "anytime_td_2026_week03.csv"
+    pd.DataFrame({
+        "game_id": ["2026_03_BAL_ATL"] * 5,
+        "player_id": [
+            "sleeper:hibner-unmatched", "sleeper:inactive-id", "sleeper:inactive-name",
+            "PART", "UNKNOWN",
+        ],
+        "player_display_name": [
+            "Matthew Hibner", "Inactive By ID", "Name Inactive", "Participated",
+            "Unknown Player",
+        ],
+        "team": ["BAL", "BAL", "BAL", "ATL", "ATL"],
+        "scored_anytime": [None] * 5, "scored_two_plus": [None] * 5,
+        "status": ["pregame"] * 5,
+    }).to_csv(path, index=False)
+    schedule = pd.DataFrame([{
+        "season": 2026, "week": 3, "game_id": "2026_03_BAL_ATL",
+        "home_team": "BAL", "away_team": "ATL", "home_score": 14, "away_score": 10,
+    }])
+    actuals = pd.DataFrame([
+        {"season": 2026, "week": 3, "season_type": "REG", "player_id": "HIBNER-GSIS",
+         "player_display_name": "Matt Hibner", "team": "BAL", "rushing_tds": 0, "receiving_tds": 0},
+        {"season": 2026, "week": 3, "season_type": "REG", "player_id": "ATL-PLAYER",
+         "player_display_name": "Atlanta Player", "team": "ATL", "rushing_tds": 0, "receiving_tds": 0},
+    ])
+    participation = pd.DataFrame([{
+        "season": 2026, "week": 3, "player_id": "PART", "team": "ATL",
+        "player_display_name": "Participated", "offense_snaps": 12,
+    }])
+    weekly_rosters = pd.DataFrame([
+        {"season": 2026, "week": 3, "team": "BAL", "status": "INA",
+         "gsis_id": "ROSTER-ID", "sleeper_id": "inactive-id", "full_name": "Different Name"},
+        {"season": 2026, "week": 3, "team": "BAL", "status": "INA",
+         "gsis_id": "OTHER-ID", "sleeper_id": "other-sleeper-id", "full_name": "Name Inactive"},
+    ])
+
+    result = grade_anytime_td_file(
+        path, schedule, actuals, participation=participation,
+        weekly_rosters=weekly_rosters, season=2026, week=3,
+    )
+
+    graded = pd.read_csv(path).set_index("player_id")
+    assert result["status"] == "graded"
+    assert graded.loc["sleeper:hibner-unmatched", "scored_anytime"] == 0
+    assert graded.loc["sleeper:hibner-unmatched", "settlement_status_two_plus"] == "settled"
+    assert graded.loc["sleeper:inactive-id", "settlement_status_anytime"] == "void"
+    assert graded.loc["sleeper:inactive-id", "settlement_status_two_plus"] == "void"
+    assert graded.loc["sleeper:inactive-name", "settlement_status_anytime"] == "void"
+    assert graded.loc["PART", "scored_anytime"] == 0
+    assert graded.loc["PART", "settlement_status_two_plus"] == "settled"
+    assert pd.isna(graded.loc["UNKNOWN", "scored_anytime"])
+    assert graded.loc["UNKNOWN", "settlement_status_anytime"] == "awaiting_evidence"
+
+
+def test_incomplete_stats_feed_keeps_positive_snap_missing_stat_pending_but_voids_ina(tmp_path):
+    path = tmp_path / "anytime_td_2026_week03.csv"
+    pd.DataFrame({
+        "game_id": ["2026_03_BAL_ATL"] * 4,
+        "player_id": ["PART", "INACTIVE", "BAL-ZERO", "BAL-SCORER"],
+        "player_display_name": ["Participated", "Inactive Player", "Zero TD", "Scorer"],
+        "team": ["ATL", "BAL", "BAL", "BAL"], "scored_anytime": [None] * 4,
+        "scored_two_plus": [None] * 4, "status": ["pregame"] * 4,
+    }).to_csv(path, index=False)
+    schedule = pd.DataFrame([{
+        "season": 2026, "week": 3, "game_id": "2026_03_BAL_ATL",
+        "home_team": "BAL", "away_team": "ATL", "home_score": 14, "away_score": 10,
+    }])
+    actuals = pd.DataFrame([
+        {"season": 2026, "week": 3, "season_type": "REG", "player_id": "BAL-ZERO",
+         "team": "BAL", "rushing_tds": 0, "receiving_tds": 0},
+        {"season": 2026, "week": 3, "season_type": "REG", "player_id": "BAL-SCORER",
+         "team": "BAL", "rushing_tds": 1, "receiving_tds": 0},
+    ])
+    participation = pd.DataFrame([{
+        "season": 2026, "week": 3, "player_id": "PART", "team": "ATL",
+        "player_display_name": "Participated", "offense_snaps": 12,
+    }])
+    weekly_rosters = pd.DataFrame([{
+        "season": 2026, "week": 3, "team": "BAL", "status": "INA",
+        "gsis_id": "INACTIVE", "full_name": "Inactive Player",
+    }])
+
+    grade_anytime_td_file(
+        path, schedule, actuals, participation=participation,
+        weekly_rosters=weekly_rosters, season=2026, week=3,
+    )
+
+    graded = pd.read_csv(path).set_index("player_id")
+    assert graded.loc["INACTIVE", "settlement_status_anytime"] == "void"
+    assert graded.loc["INACTIVE", "settlement_status_two_plus"] == "void"
+    assert pd.isna(graded.loc["PART", "scored_anytime"])
+    assert graded.loc["PART", "settlement_status_anytime"] == "awaiting_evidence"
+    assert pd.isna(graded.loc["BAL-ZERO", "scored_anytime"])
+    assert graded.loc["BAL-ZERO", "settlement_status_anytime"] == "awaiting_evidence"
+    assert graded.loc["BAL-SCORER", "scored_anytime"] == 1
+    assert graded.loc["BAL-SCORER", "settlement_status_anytime"] == "settled"
+
+
+def test_positive_snaps_settle_missing_stat_as_loss_when_both_team_feeds_are_complete(tmp_path):
+    path = tmp_path / "anytime_td_2026_week03.csv"
+    pd.DataFrame({
+        "game_id": ["2026_03_BAL_ATL"], "player_id": ["PART"],
+        "player_display_name": ["Participated"], "team": ["ATL"],
+        "scored_anytime": [None], "scored_two_plus": [None], "status": ["pregame"],
+    }).to_csv(path, index=False)
+    schedule = pd.DataFrame([{
+        "season": 2026, "week": 3, "game_id": "2026_03_BAL_ATL",
+        "home_team": "BAL", "away_team": "ATL", "home_score": 14, "away_score": 10,
+    }])
+    actuals = pd.DataFrame([
+        {"season": 2026, "week": 3, "season_type": "REG", "player_id": "BAL-PLAYER",
+         "team": "BAL", "rushing_tds": 0, "receiving_tds": 0},
+        {"season": 2026, "week": 3, "season_type": "REG", "player_id": "ATL-PLAYER",
+         "team": "ATL", "rushing_tds": 0, "receiving_tds": 0},
+    ])
+    participation = pd.DataFrame([{
+        "season": 2026, "week": 3, "player_id": "PART", "team": "ATL",
+        "player_display_name": "Participated", "offense_snaps": 12,
+    }])
+
+    grade_anytime_td_file(
+        path, schedule, actuals, participation=participation, season=2026, week=3,
+    )
+
+    graded = pd.read_csv(path).iloc[0]
+    assert graded["scored_anytime"] == 0
+    assert graded["settlement_status_anytime"] == "settled"

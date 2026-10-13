@@ -674,7 +674,7 @@ def test_anytime_td_grading_updates_final_games_and_leaves_partial_slate_pending
     assert second["changed"] is False
 
 
-def test_anytime_td_grading_does_not_zero_fill_an_incomplete_feed(tmp_path):
+def test_anytime_td_grading_scores_positive_td_but_does_not_zero_fill_incomplete_feed(tmp_path):
     path = _anytime_board(tmp_path)
     # Make this fixture byte-canonical across Windows and Linux so `changed`
     # reports grading edits, not CRLF-to-LF normalization on write.
@@ -689,10 +689,13 @@ def test_anytime_td_grading_does_not_zero_fill_an_incomplete_feed(tmp_path):
     }])
 
     result = grade_anytime_td_file(path, schedule, actuals, season=2026, week=1)
-    assert result["status"] == "pending"
-    assert result["changed"] is False
-    assert result["graded_rows"] == 0
-    assert pd.read_csv(path)["scored_anytime"].isna().all()
+    assert result["status"] == "graded"
+    assert result["changed"] is True
+    assert result["graded_rows"] == 1
+    graded = pd.read_csv(path).set_index("player_id")
+    assert graded.loc["SEA-RB", "scored_anytime"] == 1
+    assert pd.isna(graded.loc["NE-RB", "scored_anytime"])
+    assert graded.loc["NE-RB", "settlement_status_anytime"] == "awaiting_evidence"
 
 
 def test_anytime_td_grading_one_unmatched_player_does_not_hold_back_the_game(tmp_path):
@@ -809,12 +812,13 @@ def test_scheduled_grader_dispatches_anytime_td(monkeypatch, tmp_path):
     calls = []
     monkeypatch.setattr(
         "publishing.cli.grade_anytime_td_releases",
-        lambda root, participation_by_season: calls.append(participation_by_season) or expected,
+        lambda root, participation_by_season, weekly_rosters_by_season:
+            calls.append((participation_by_season, weekly_rosters_by_season)) or expected,
     )
 
     result = _grade_published(site, "anytime_td")
     assert result["anytime_td"] == expected
-    assert calls and calls[0] == {}
+    assert calls and calls[0] == ({}, {})
 
 
 def test_scheduled_grader_dispatches_first_td(monkeypatch, tmp_path):
@@ -828,17 +832,20 @@ def test_scheduled_grader_dispatches_first_td(monkeypatch, tmp_path):
     calls = []
     monkeypatch.setattr(
         "publishing.cli.grade_anytime_td_releases",
-        lambda root, participation_by_season: calls.append(("anytime", participation_by_season)) or expected_anytime,
+        lambda root, participation_by_season, weekly_rosters_by_season:
+            calls.append(("anytime", participation_by_season, weekly_rosters_by_season)) or expected_anytime,
     )
     monkeypatch.setattr(
         "publishing.cli.grade_first_td_releases",
-        lambda root, participation_by_season: calls.append(("first", participation_by_season)) or expected_first,
+        lambda root, participation_by_season, weekly_rosters_by_season:
+            calls.append(("first", participation_by_season, weekly_rosters_by_season)) or expected_first,
     )
 
     result = _grade_published(site, "anytime_td")
     assert result["anytime_td"] == expected_anytime
     assert result["first_td"] == expected_first
     assert calls[0][1] is calls[1][1]
+    assert calls[0][2] is calls[1][2]
 
 
 def test_anytime_td_grading_handles_the_real_publisher_schema_end_to_end(tmp_path):

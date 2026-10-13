@@ -51,7 +51,7 @@ def test_scheduled_td_grading_fetches_participation_once_per_season(tmp_path, mo
                 "offense_snaps": 1, "defense_snaps": 0, "st_snaps": 0,
             })
 
-    calls = {"snaps": 0}
+    calls = {"snaps": 0, "rosters": 0}
     monkeypatch.setattr("publishing.grader.fetch_nfl_schedule", lambda season: pd.DataFrame(schedules))
     monkeypatch.setattr("publishing.grader.fetch_player_stats", lambda season: pd.DataFrame(stats_rows))
     monkeypatch.setattr("publishing.grader.fetch_nfl_pbp", lambda season: pd.DataFrame(pbp_rows))
@@ -59,8 +59,13 @@ def test_scheduled_td_grading_fetches_participation_once_per_season(tmp_path, mo
         calls["snaps"] += 1
         return pd.DataFrame(snap_rows)
     monkeypatch.setattr("publishing.grader.fetch_snap_counts", fetch_snaps)
+    def fetch_rosters(season):
+        calls["rosters"] += 1
+        return pd.DataFrame()
+    monkeypatch.setattr("publishing.grader.fetch_weekly_rosters", fetch_rosters)
 
     result = _grade_published(tmp_path, "anytime_td")
     assert result["anytime_td"]["2026w01"]["graded_rows"] == 1
     assert result["first_td"]["2026w02"]["graded_rows"] == 1
     assert calls["snaps"] == 1
+    assert calls["rosters"] == 1
