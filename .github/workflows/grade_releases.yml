@@ -19,6 +19,7 @@ jobs:
 
     steps:
       - name: Checkout repo
+        id: checkout
         uses: actions/checkout@v4
 
       - name: Set up Python
@@ -30,10 +31,23 @@ jobs:
       - name: Install grading dependencies
         run: pip install -r requirements-ci.txt
 
-      - name: Grade published releases and Anytime TD boards
-        run: python -m publishing.cli grade-published
+      - name: Grade fantasy releases
+        id: grade_fantasy
+        continue-on-error: true
+        run: python -m publishing.cli grade-published --product fantasy
+
+      - name: Grade prediction releases
+        id: grade_predictions
+        continue-on-error: true
+        run: python -m publishing.cli grade-published --product predictions
+
+      - name: Grade Anytime TD boards
+        id: grade_anytime_td
+        continue-on-error: true
+        run: python -m publishing.cli grade-published --product anytime_td
 
       - name: Commit new grading artifacts
+        if: always() && steps.checkout.outcome == 'success'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -41,3 +55,9 @@ jobs:
           git diff --staged --quiet || git commit -m "Auto: grade published releases"
           git pull --rebase
           git push
+
+      - name: Report grading failures
+        if: always() && (steps.grade_fantasy.outcome == 'failure' || steps.grade_predictions.outcome == 'failure' || steps.grade_anytime_td.outcome == 'failure')
+        run: |
+          echo "At least one product grader failed. Successful product artifacts were committed where possible."
+          exit 1

@@ -12,7 +12,7 @@ Sleeper projections are an evaluation benchmark, not a model feature. The produc
 
 The producer writes a candidate CSV and SHA-256 sidecar. The public [publishing contract](../publishing/README.md) validates the schema, coverage, source metadata, and sidecar before copying the candidate into `data/releases/builds/`. The site reads the active manifest pointer. Direct writes into `fantasy/fantasy_projections/` are retired for 2026. The promoted model version is `weekly-fantasy-v2-l1_wipe_prior_share_ranks-ad79f409f0b3`.
 
-2026 Week 1 is the active, partially graded public release and is not revised by this promotion. The manifest now identifies 2026 Week 2 as the next expected fantasy release; no Week 2 artifact is published until its projection, directory, market, and lineup-news snapshots are available.
+2026 Week 5 is the active public release. Its complete postgame grade is stored separately under `data/releases/results/fantasy/2026/week05`; the published projection build remains immutable.
 
 ## Locked evaluation
 

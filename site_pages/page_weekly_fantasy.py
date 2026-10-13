@@ -610,8 +610,11 @@ def render():
         # releases carry settled half-PPR points, so the public page can stay
         # postgame even when the external stats feed is unavailable.
         _actuals       = load_actual_stats(season, week)
-        if not _actuals.get("half_ppr"):
-            _actuals = _actuals_from_graded_projection(_projection_source)
+        _graded_actuals = _actuals_from_graded_projection(_projection_source)
+        if _graded_actuals:
+            # Prefer settled release points over a cached, partial live feed.
+            # Keep live stat components for the detailed actual-yards columns.
+            _actuals = {**_actuals, **_graded_actuals}
         actuals_in     = bool(_actuals.get('half_ppr'))
         _half_ppr_dict     = _actuals.get('half_ppr',    {})
         actual_qb_pass_yds = _actuals.get('qb_pass_yds', {})

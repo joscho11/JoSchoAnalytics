@@ -1,7 +1,7 @@
 # Weekly publication contract
 
-Status: checked against the current CLI, validators, manifest, and grading workflow on 2026-09-10.
-At this check, the clean 2026 Week 1 prediction release and fantasy release are active and no 2026 release has been graded.
+Status: checked against the current CLI, validators, manifest, and grading workflow on 2026-10-13.
+The active 2026 Week 5 fantasy release has a complete postgame grade: 347 player rows across 15 final games.
 
 This package is the only public write boundary for spread predictions and weekly
 fantasy projections. Producer repositories write candidates to their own `outputs/`

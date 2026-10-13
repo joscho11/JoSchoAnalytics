@@ -43,7 +43,7 @@ The site covers five published product families:
 
 - **NFL spreads:** an independent margin estimate compared with the sportsbook line. The site separates the live 2026 record from the 2025 demo.
 - **Game and season totals:** a 2025 experimental game-total demo plus a separate 32-team season-win product.
-- **Weekly fantasy:** 2026 Week 1 is live from one half-PPR LightGBM and locks at each game's kickoff. Later immutable revisions preserve every started game's rows exactly. The 2025 weeks 10-17 on the page are a prior-model demo.
+- **Weekly fantasy:** the active 2026 release is Week 5, built from one half-PPR LightGBM and locked at each game's kickoff. Week 5 now has a complete postgame grade; the prediction snapshot remains immutable. The 2025 weeks 10-17 on the page are a prior-model demo.
 - **DFS optimizer:** DraftKings Classic lineups from checked direct-DK projection files. No published projection edge.
 - **Anytime TDs:** the latest live 2026 board (currently Week 5) plus the 2025 demo, using manually pasted US-book Yes prices. For fun. Not a proven edge.
 - **Draft and rookie analysis:** season projections, market ranks, rookie hit probabilities, and descriptive NFL and college talent scores.
