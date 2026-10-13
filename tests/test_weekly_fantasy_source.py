@@ -164,6 +164,41 @@ def test_weekly_fantasy_defaults_to_latest_published_week(tmp_path):
     assert not any(exp.label == "Why Sleeper is included for Week 1" for exp in at.expander)
 
 
+def test_manual_qb_default_renders_source_out_warning_and_player(tmp_path):
+    path = tmp_path / "projections_2026_week06.csv"
+    pd.DataFrame({
+        "player_id": ["00-0034796", "00-0039918"],
+        "player_display_name": ["Lamar Jackson", "Caleb Williams"],
+        "position": ["QB", "QB"],
+        "team": ["BAL", "CHI"],
+        "opponent_team": ["CLE", "ATL"],
+        "season": [2026, 2026], "week": [6, 6],
+        "projected_pts": [15.31, 16.45],
+        "injury_status": ["Out", "Out"],
+        "reported_injury_status": ["Out", "Out"],
+        "injury_status_source": ["sleeper_player_directory"] * 2,
+        "slp_proj": [20.75, 17.91],
+        "tuesday_sleeper_projection_signal": [True, True],
+        "injury_status_score": [0.0, 0.0],
+        "is_home": [0.0, 0.0], "off_epa_rank": [8.0, 7.0],
+        "implied_team_total": [22.75, 26.25],
+        "qb_manual_assumption": [True, True],
+        "qb_assumption_source": ["user_manual_override", "user_manual_override"],
+        "qb_assumption_reason": ["Approved main path", "Approved main path"],
+        "qb_assumption_as_of_utc": ["2026-10-13T13:53:14Z"] * 2,
+    }).to_csv(path, index=False)
+
+    at = _render_weekly_release(tmp_path, path, season=2026, week=6)
+    warnings = " ".join(str(item.value) for item in at.warning)
+    assert "Tuesday Sleeper signal" in warnings
+    assert "does not confirm they will play" in warnings
+    assert "Lamar Jackson (BAL)" in warnings
+    assert "Caleb Williams (CHI)" in warnings
+    assert "not clearance" in warnings
+    tables = [item.value for item in at.dataframe if "Player" in item.value.columns]
+    assert tables and any("Lamar Jackson - BAL" in frame.Player.tolist() for frame in tables)
+
+
 def test_coming_soon_copy_points_at_2025_demo():
     text = weekly._coming_soon_copy(2026, 1)
     assert "2026 Week 1" in text
@@ -274,6 +309,48 @@ def test_pregame_board_drops_roster_ir_and_keeps_questionable():
     )
     ids = set(shown["player_id"].astype(str))
     assert ids == {"q1", "healthy"}
+
+
+def test_approved_manual_qb_default_can_show_with_source_out_label():
+    frame = pd.DataFrame({
+        "player_id": ["qb-out", "qb-out-unapproved"],
+        "player_display_name": ["Approved QB", "Unapproved QB"],
+        "position": ["QB", "QB"],
+        "team": ["BAL", "CHI"],
+        "injury_status": ["Out", "Out"],
+        "injury_status_score": [0.0, 0.0],
+        "qb_manual_assumption": [True, False],
+        "qb_assumption_source": ["user_manual_override", ""],
+        "qb_assumption_reason": ["Approved main path", ""],
+        "qb_assumption_as_of_utc": ["2026-10-13T13:53:14Z", ""],
+    })
+    shown = weekly.eligible_board_rows(frame, 2026, 6)
+
+    assert set(shown.player_id.astype(str)) == {"qb-out"}
+    assert shown.iloc[0].injury_status == "Out"
+
+
+def test_tuesday_projection_signal_keeps_directory_out_but_not_terminal_or_manual_out():
+    frame = pd.DataFrame({
+        "player_id": ["projected-out", "projected-ir", "inactive-roster", "manual-out", "no-projection"],
+        "player_display_name": ["Projected Out", "IR Player", "Inactive Roster", "Manual Out", "No Projection"],
+        "position": ["WR", "WR", "WR", "RB", "TE"],
+        "team": ["CAR", "CLE", "DEN", "PIT", "CHI"],
+        "season": [2026] * 5, "week": [6] * 5,
+        "injury_status": ["Out"] * 5,
+        "reported_injury_status": ["Out", "IR", "Out", "Out", "Out"],
+        "injury_status_source": [
+            "sleeper_player_directory", "sleeper_player_directory",
+            "sleeper_player_directory", "lineup_override", "sleeper_player_directory",
+        ],
+        "sleeper_roster_status": ["Active", "Active", "Inactive", "Active", "Active"],
+        "sleeper_is_active": [True] * 5,
+        "tuesday_sleeper_projection_signal": [True] * 5,
+        "slp_proj": [8.5, 7.0, 6.0, 9.0, float("nan")],
+    })
+    shown = weekly.eligible_board_rows(frame, 2026, 6)
+
+    assert set(shown.player_id.astype(str)) == {"projected-out"}
 
 
 def test_unavailable_roster_ids_uses_weekly_ina_then_season_ir(monkeypatch):

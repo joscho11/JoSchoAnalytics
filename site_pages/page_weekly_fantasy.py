@@ -268,6 +268,44 @@ def _ruled_out_by_injury(frame: pd.DataFrame) -> pd.Series:
     return mask.fillna(False)
 
 
+def _manual_qb_default(frame: pd.DataFrame) -> pd.Series:
+    """Only an audited producer default can exempt a QB from the Out filter."""
+    flag = frame.get("qb_manual_assumption", pd.Series(False, index=frame.index))
+    flag = flag.astype("string").str.strip().str.lower().isin({"true", "1", "yes"})
+    position = frame.get("position", pd.Series("", index=frame.index)).astype(str)
+    source = frame.get("qb_assumption_source", pd.Series("", index=frame.index)).astype(str)
+    reason = frame.get("qb_assumption_reason", pd.Series("", index=frame.index)).astype(str).str.strip()
+    as_of = frame.get("qb_assumption_as_of_utc", pd.Series("", index=frame.index)).astype(str).str.strip()
+    return flag & position.eq("QB") & source.eq("user_manual_override") & reason.ne("") & as_of.ne("")
+
+
+def _tuesday_sleeper_projection_signal(frame: pd.DataFrame) -> pd.Series:
+    """Validate the producer's provisional current-week projection signal."""
+    flag = frame.get(
+        "tuesday_sleeper_projection_signal", pd.Series(False, index=frame.index)
+    ).astype("string").str.strip().str.lower().isin({"true", "1", "yes"})
+    source = frame.get(
+        "injury_status_source", pd.Series("", index=frame.index)
+    ).astype(str).eq("sleeper_player_directory")
+    reported = frame.get(
+        "reported_injury_status", pd.Series("", index=frame.index)
+    ).astype("string").str.strip().str.lower().isin({"out", "doubtful"})
+    roster_status = frame.get(
+        "sleeper_roster_status", pd.Series("", index=frame.index)
+    ).astype("string").str.strip().str.lower()
+    active_false = frame.get(
+        "sleeper_is_active", pd.Series(None, index=frame.index)
+    ).astype("string").str.strip().str.lower().isin({"false", "0", "no"})
+    projection = pd.to_numeric(
+        frame.get("slp_proj", pd.Series(float("nan"), index=frame.index)),
+        errors="coerce",
+    ).notna()
+    terminal_roster_status = roster_status.isin({
+        "ir", "injured reserve", "pup", "suspended", "inactive", "retired",
+    })
+    return flag & source & reported & ~terminal_roster_status & ~active_false & projection
+
+
 def eligible_board_rows(
     frame: pd.DataFrame,
     season: int,
@@ -284,7 +322,10 @@ def eligible_board_rows(
     out = _apply_display_exclusions(frame, season, week)
     if out.empty or "player_id" not in out.columns:
         return out
-    out = out.loc[~_ruled_out_by_injury(out)].copy()
+    ruled_out = _ruled_out_by_injury(out)
+    manual_qb = _manual_qb_default(out)
+    tuesday_signal = _tuesday_sleeper_projection_signal(out)
+    out = out.loc[~ruled_out | manual_qb | tuesday_signal].copy()
     pid = out["player_id"].astype(str)
 
     def alias_hit(values) -> pd.Series:
@@ -605,6 +646,29 @@ def render():
         preview_layout = _uses_preview_layout(season, week)
 
         _projection_source = _load_proj_csv(str(available[(season, week)]))
+        tuesday_signal_rows = _projection_source.loc[
+            _tuesday_sleeper_projection_signal(_projection_source)
+            & _ruled_out_by_injury(_projection_source)
+        ]
+        if not tuesday_signal_rows.empty:
+            st.warning(
+                f"Tuesday Sleeper signal: {len(tuesday_signal_rows)} player(s) have a current-week "
+                "projection despite an Out or Doubtful source label. We keep them on the board "
+                "provisionally because the status may be stale. A projection suggests Sleeper is "
+                "considering them for this week; it does not confirm they will play. Health markers "
+                "still reflect the source label."
+            )
+        manual_qb_rows = _projection_source.loc[_manual_qb_default(_projection_source)]
+        manual_out_rows = manual_qb_rows.loc[_ruled_out_by_injury(manual_qb_rows)]
+        if not manual_out_rows.empty:
+            names = ", ".join(
+                f"{row.player_display_name} ({row.team})"
+                for row in manual_out_rows.itertuples(index=False)
+            )
+            st.warning(
+                f"Manual QB default(s) included despite the source Out label: {names}. "
+                "The Health marker still reflects the source report; this is a starter assumption, not clearance."
+            )
 
         # Actual results (available after week is played). Complete graded
         # releases carry settled half-PPR points, so the public page can stay
@@ -1012,7 +1076,7 @@ def render():
                     "EPA Rank":   st.column_config.TextColumn("EPA Rank",
                                       help="Team's last-four-game offensive EPA rank among all 32 NFL teams (1 = best offense, 32 = worst). Green is better; red is worse. Note: this text column sorts alphabetically."),
                     "Health":     st.column_config.TextColumn("Health",
-                                      help="Player's injury status from the weekly NFL injury report.\n\n✅ Healthy  🟡 Questionable\n\nOut, Doubtful, IR, and anyone who did not play are removed from the board.\n\nNote: sorts alphabetically due to a Streamlit limitation."),
+                                      help="Player's status label from Sleeper. Tuesday labels can lag the upcoming week; a numeric current-week Sleeper projection lets an Out or Doubtful player remain on the board provisionally, but does not confirm they will play. IR, PUP, suspended, inactive, and players blocked by current roster data remain excluded. The marker still reflects Sleeper's label.\n\n✅ Healthy  🟡 Questionable\n\nNote: sorts alphabetically due to a Streamlit limitation."),
                     "Proj Pts":   st.column_config.NumberColumn("Proj Pts",   format="%.1f",
                                       help=f"Projected {scoring} fantasy points for this week. Standard = 0 points per reception, Half-PPR = 0.5, PPR = 1.0; yardage and touchdown scoring stays unchanged."),
                     "Sleeper":    st.column_config.NumberColumn("Sleeper",    format="%.1f",
