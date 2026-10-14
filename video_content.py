@@ -413,4 +413,20 @@ VIDEOS = [
         "tiktok_url": "https://www.tiktok.com/@joschoanalytics/video/7696007783489096990",
         "video_id": "7696007783489096990",
     },
+    {
+        "slug": "bryce-young-2026",
+        "title": "Bryce Young Breakdown",
+        "date": "2026-10-08",
+        "section": "in-season",
+        "tiktok_url": "https://www.tiktok.com/@joschoanalytics/video/7694407296717196574",
+        "video_id": "7694407296717196574",
+    },
+    {
+        "slug": "vikings-2026",
+        "title": "Minnesota Vikings Breakdown",
+        "date": "2026-10-09",
+        "section": "in-season",
+        "tiktok_url": "https://www.tiktok.com/@joschoanalytics/video/7694869306751995166",
+        "video_id": "7694869306751995166",
+    },
 ]
