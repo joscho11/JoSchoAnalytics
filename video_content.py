@@ -429,4 +429,13 @@ VIDEOS = [
         "tiktok_url": "https://www.tiktok.com/@joschoanalytics/video/7694869306751995166",
         "video_id": "7694869306751995166",
     },
+    {
+        "slug": "week-6-picks-2026",
+        "title": "NFL Week 6 2026: Picks",
+        "subtitle": "2026 · Week 6 predictions",
+        "date": "2026-10-14",
+        "section": "predictions",
+        "tiktok_url": "https://www.tiktok.com/@joschoanalytics/video/7696355759197523231",
+        "video_id": "7696355759197523231",
+    },
 ]
