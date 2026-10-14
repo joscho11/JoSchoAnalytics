@@ -404,4 +404,13 @@ VIDEOS = [
         "video_id": "7693760435463458079",
         "breakdown_file": "graphs_of_the_week_02.md",
     },
+    {
+        "slug": "graphs-of-the-week-03",
+        "title": "Graphs of the Week 03: NFL Week 5",
+        "subtitle": "2026 · Week 5 · four stats worth a closer look",
+        "date": "2026-10-13",
+        "section": "in-season",
+        "tiktok_url": "https://www.tiktok.com/@joschoanalytics/video/7696007783489096990",
+        "video_id": "7696007783489096990",
+    },
 ]
