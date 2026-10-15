@@ -142,6 +142,18 @@ def atd_two_plus_view(page) -> None:
     _click_segment(page, "2+ TD")
 
 
+def atd_select_week06_matchup(page, market: str, matchup: str) -> None:
+    _click_segment(page, market)
+    combo = page.get_by_role("combobox", name="Matchup")
+    combo.click()
+    combo.press("ArrowDown")
+    combo.fill(matchup)
+    combo.press("ArrowDown")
+    combo.press("Enter")
+    wait_for_app(page)
+    assert combo.input_value() == matchup, f"Expected {matchup}, got {combo.input_value()}"
+
+
 def dfs_upload_and_optimize(page) -> None:
     uploaders = page.locator('[data-testid="stFileUploader"] input[type="file"]')
     uploaders.nth(0).set_input_files(str(_DFS_SALARY))
@@ -175,6 +187,20 @@ ACTIONS = {
     "atd_two_plus_view": atd_two_plus_view,
     "dfs_upload_and_optimize": dfs_upload_and_optimize,
 }
+
+_W06_MATCHUP_VIEWS = {
+    "atd_w06_anytime_ari_lar": ("Anytime TD", "ARI vs LAR"),
+    "atd_w06_first_ari_lar": ("First TD", "ARI vs LAR"),
+    "atd_w06_two_plus_ari_lar": ("2+ TD", "ARI vs LAR"),
+    "atd_w06_anytime_buf_lv": ("Anytime TD", "BUF vs LV"),
+    "atd_w06_first_buf_lv": ("First TD", "BUF vs LV"),
+    "atd_w06_two_plus_buf_lv": ("2+ TD", "BUF vs LV"),
+}
+for _name, (_market, _matchup) in _W06_MATCHUP_VIEWS.items():
+    ACTIONS[_name] = (
+        lambda page, market=_market, matchup=_matchup:
+            atd_select_week06_matchup(page, market, matchup)
+    )
 
 
 def run_action(page, name: str | None) -> None:

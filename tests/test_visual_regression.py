@@ -278,6 +278,8 @@ def test_page_screenshot(browser, app_url, update_visual, scene, viewport):
         name = f"{scene.id}__{viewport}.png"
         baseline = _BASELINES / name
         _ARTIFACTS.mkdir(parents=True, exist_ok=True)
+        if os.environ.get("SAVE_VISUAL_ARTIFACTS") == "1":
+            (_ARTIFACTS / name).write_bytes(png)
         if update_visual:
             _BASELINES.mkdir(parents=True, exist_ok=True)
             baseline.write_bytes(png)

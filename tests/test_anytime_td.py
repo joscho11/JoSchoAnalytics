@@ -141,12 +141,12 @@ def test_week04_pit_cle_renders_all_three_markets(tmp_path):
             assert "45 of 47 settled games" in captions
 
 
-def test_week05_defaults_to_the_live_release_and_first_td_recommended_is_candidates_only(tmp_path):
+def test_week06_defaults_to_the_current_release_and_week05_history_still_renders(tmp_path):
     at = _render(tmp_path)
     releases = page.available_releases()
-    assert page.default_release(list(releases)) == (2026, 5)
-    assert any(w.key == "atd_week" and w.value == 5 for w in at.selectbox)
-    assert any("Week 5" in str(item.value) for item in at.markdown)
+    assert page.default_release(list(releases)) == (2026, 6)
+    assert any(w.key == "atd_week" and w.value == 6 for w in at.selectbox)
+    assert any("Week 6" in str(item.value) for item in at.markdown)
 
     markets = {
         "Anytime TD": "Book ATTD Odds",
