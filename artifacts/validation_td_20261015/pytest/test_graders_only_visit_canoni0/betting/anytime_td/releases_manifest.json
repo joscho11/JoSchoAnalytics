@@ -1,0 +1,1 @@
+{"schema_version": 1, "releases": [{"season": 2026, "week": 1, "csv": "ngs_week01.csv", "metadata": "ngs_week01.json", "prediction_mode": "live", "model_version": "ngs44"}]}
