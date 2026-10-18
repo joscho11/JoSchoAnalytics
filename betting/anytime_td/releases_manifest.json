@@ -55,7 +55,7 @@
       "week": 6,
       "csv": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week06_ngs_live_sunday_draftkings_20261018T090613ET.csv",
       "metadata": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week06_ngs_live_sunday_draftkings_20261018T090613ET.json",
-      "csv_sha256": "0ea34bcb8f3902794872655908fc6dab07d1a98c9b58523c2d551a635d4f2fe8",
+      "csv_sha256": "6851747287917a88dcd03aad576ff7195e837b9a143425ac038c369c6eac28eb",
       "metadata_sha256": "be893e301fb2329a74947ae4935fde8dcd28dae8fd37d2b1cf534e68114393f8",
       "prediction_mode": "live",
       "model_version": "td_product_ngs_44_frozen_2025_v1"

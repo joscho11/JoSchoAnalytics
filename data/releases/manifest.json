@@ -3,22 +3,22 @@
     "products": {
       "fantasy": {
         "latest": {
-          "build_id": "fantasy-2026w04-acd94fff81e3",
-          "final_games": 16,
-          "graded_at": "2026-10-13T23:57:21Z",
-          "graded_rows": 399,
+          "build_id": "fantasy-2026w06-902f3a5d9ab2",
+          "final_games": 1,
+          "graded_at": "2026-10-16T11:28:25Z",
+          "graded_rows": 18,
           "season": 2026,
-          "week": 4
+          "week": 6
         }
       },
       "predictions": {
         "latest": {
-          "build_id": "predictions-2026w04-f3e67139da16",
-          "final_games": 16,
-          "graded_at": "2026-10-13T23:57:21Z",
-          "graded_rows": 15,
+          "build_id": "predictions-2026w06-610992bd5dbf",
+          "final_games": 1,
+          "graded_at": "2026-10-16T04:35:30Z",
+          "graded_rows": 1,
           "season": 2026,
-          "week": 4
+          "week": 6
         }
       }
     }
@@ -719,6 +719,22 @@
         "fantasy-2026w06-902f3a5d9ab2": {
           "artifact": "data/releases/builds/fantasy/2026/week06/fantasy-2026w06-902f3a5d9ab2/artifact.csv",
           "build_id": "fantasy-2026w06-902f3a5d9ab2",
+          "grading": {
+            "artifact": "data/releases/results/fantasy/2026/week06/fantasy-2026w06-902f3a5d9ab2-graded.csv",
+            "artifact_sha256": "c38e42f87f373d580a82ebd6e2df2022e77eada8942988a21da1ca42aa70bc0d",
+            "complete": false,
+            "final_games": 1,
+            "graded_at": "2026-10-16T11:28:25Z",
+            "graded_rows": 18,
+            "metadata": "data/releases/results/fantasy/2026/week06/fantasy-2026w06-902f3a5d9ab2-graded.json",
+            "missing_actuals": 326,
+            "product": "fantasy",
+            "schema_version": 1,
+            "season": 2026,
+            "source_build": "fantasy-2026w06-902f3a5d9ab2",
+            "week": 6,
+            "zero_filled_after_complete_feed": false
+          },
           "metadata": "data/releases/builds/fantasy/2026/week06/fantasy-2026w06-902f3a5d9ab2/metadata.json",
           "model_version": "weekly-fantasy-v2-l1_wipe_prior_share_ranks-ad79f409f0b3",
           "produced_at": "2026-10-13T21:34:46Z",
@@ -13282,6 +13298,21 @@
         "predictions-2026w06-610992bd5dbf": {
           "artifact": "data/releases/builds/predictions/2026/week06/predictions-2026w06-610992bd5dbf/artifact.csv",
           "build_id": "predictions-2026w06-610992bd5dbf",
+          "grading": {
+            "artifact": "data/releases/results/predictions/2026/week06/predictions-2026w06-610992bd5dbf-graded.csv",
+            "artifact_sha256": "caeb6c9f269070b82847fba345e267f593c5d73bf38632e3808ba1af0daf72b1",
+            "complete": false,
+            "final_games": 1,
+            "graded_at": "2026-10-16T04:35:30Z",
+            "graded_rows": 1,
+            "metadata": "data/releases/results/predictions/2026/week06/predictions-2026w06-610992bd5dbf-graded.json",
+            "product": "predictions",
+            "pushes": 0,
+            "schema_version": 1,
+            "season": 2026,
+            "source_build": "predictions-2026w06-610992bd5dbf",
+            "week": 6
+          },
           "metadata": "data/releases/builds/predictions/2026/week06/predictions-2026w06-610992bd5dbf/metadata.json",
           "model_version": "spread-v3-prod-sunday-tuesday-market-46-qb-ir-scoped-flag-b4a325000b7a",
           "produced_at": "2026-10-13T23:35:10Z",
