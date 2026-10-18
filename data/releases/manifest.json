@@ -25,7 +25,7 @@
   },
   "products": {
     "fantasy": {
-      "active_build": "fantasy-2026w06-902f3a5d9ab2",
+      "active_build": "fantasy-2026w06-3cfa101a43f4",
       "builds": {
         "fantasy-2025w10-33a7de4ef33f": {
           "artifact": "data/releases/builds/fantasy/2025/week10/fantasy-2025w10-33a7de4ef33f/artifact.csv",
@@ -687,6 +687,35 @@
           },
           "week": 5
         },
+        "fantasy-2026w06-3cfa101a43f4": {
+          "artifact": "data/releases/builds/fantasy/2026/week06/fantasy-2026w06-3cfa101a43f4/artifact.csv",
+          "build_id": "fantasy-2026w06-3cfa101a43f4",
+          "metadata": "data/releases/builds/fantasy/2026/week06/fantasy-2026w06-3cfa101a43f4/metadata.json",
+          "model_version": "weekly-fantasy-v2-l1_wipe_prior_share_ranks-ad79f409f0b3",
+          "produced_at": "2026-10-18T13:18:41Z",
+          "product": "fantasy",
+          "published_at": "2026-10-18T13:20:06Z",
+          "row_count": 329,
+          "season": 2026,
+          "sha256": "3cfa101a43f4a98ecb0010cf438d1d0ec414daeb59aed66686a9e22ed54aa76d",
+          "status": "Published",
+          "validation": {
+            "checks": {
+              "artifact_sha256": "3cfa101a43f4a98ecb0010cf438d1d0ec414daeb59aed66686a9e22ed54aa76d",
+              "produced_at_utc": "2026-10-18T13:18:41Z",
+              "scheduled_teams": 28,
+              "team_position_cells": 112
+            },
+            "errors": [],
+            "ok": true,
+            "product": "fantasy",
+            "row_count": 329,
+            "warnings": [
+              "16 projections are below zero; retained as a model diagnostic"
+            ]
+          },
+          "week": 6
+        },
         "fantasy-2026w06-902f3a5d9ab2": {
           "artifact": "data/releases/builds/fantasy/2026/week06/fantasy-2026w06-902f3a5d9ab2/artifact.csv",
           "build_id": "fantasy-2026w06-902f3a5d9ab2",
@@ -752,7 +781,7 @@
         "status": "Awaiting projections",
         "week": 6
       },
-      "previous_build": "fantasy-2026w06-e6b507c23f73"
+      "previous_build": "fantasy-2026w06-902f3a5d9ab2"
     },
     "predictions": {
       "active_build": "predictions-2026w06-610992bd5dbf",
@@ -13494,5 +13523,5 @@
     }
   },
   "schema_version": 1,
-  "updated_at": "2026-10-13T23:57:21Z"
+  "updated_at": "2026-10-18T13:20:06Z"
 }

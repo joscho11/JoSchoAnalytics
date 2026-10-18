@@ -1,0 +1,337 @@
+{
+  "artifact_name": "projections_2026_week06.csv",
+  "artifact_sha256": "3cfa101a43f4a98ecb0010cf438d1d0ec414daeb59aed66686a9e22ed54aa76d",
+  "edition": "Sunday",
+  "expected_gsis_id_sha256": "f7dffc7c6d58bffde0d9636fdf9f4bed478756144563780896b5d58f6db3e5b9",
+  "expected_player_ids_sha256": "cd0b023fb945050ed4fbeb29959318ef5dcffb15bbf11acbabc1de7d78b8d155",
+  "expected_rows": 329,
+  "expected_sleeper_id_sha256": "eeff91d18c9a3c8d3717371da1e8716a309c9fdff14ee4c21d7a53564e3c3b25",
+  "expected_teams": [
+    "ARI",
+    "ATL",
+    "BAL",
+    "BUF",
+    "CAR",
+    "CHI",
+    "CLE",
+    "DAL",
+    "DEN",
+    "GB",
+    "HOU",
+    "IND",
+    "JAX",
+    "KC",
+    "LA",
+    "LAC",
+    "LV",
+    "NE",
+    "NO",
+    "NYG",
+    "NYJ",
+    "PHI",
+    "PIT",
+    "SEA",
+    "SF",
+    "TB",
+    "TEN",
+    "WAS"
+  ],
+  "identity_aliases": [
+    "gsis_id",
+    "sleeper_id"
+  ],
+  "legacy_bootstrap": false,
+  "manual_qb_assumptions": [
+    {
+      "as_of_utc": "2026-10-18T12:53:00Z",
+      "game_id": "2026_06_CHI_ATL",
+      "player_id": "00-0039918",
+      "player_name": "Caleb Williams",
+      "reason": "Joseph 2026-10-13: main path; Sunday directory reports Questionable and NFL report confirms full practice.",
+      "reported_injury_status": "Questionable",
+      "source": "user_manual_override",
+      "team": "CHI"
+    },
+    {
+      "as_of_utc": "2026-10-13T23:32:19Z",
+      "game_id": "2026_06_CHI_ATL",
+      "player_id": "00-0039917",
+      "player_name": "Michael Penix",
+      "reason": "Joseph 2026-10-13: sole primary QB input; no secondary path requested.",
+      "reported_injury_status": "none",
+      "source": "user_manual_override",
+      "team": "ATL"
+    },
+    {
+      "as_of_utc": "2026-10-18T12:53:00Z",
+      "game_id": "2026_06_BAL_CLE",
+      "player_id": "00-0035993",
+      "player_name": "Tyler Huntley",
+      "reason": "Official team report said Huntley would start if Jackson could not play; NFL report ruled Jackson Out.",
+      "reported_injury_status": "none",
+      "source": "Baltimore Ravens official Week 6 QB update",
+      "team": "BAL"
+    },
+    {
+      "as_of_utc": "2026-10-13T23:32:19Z",
+      "game_id": "2026_06_PIT_TB",
+      "player_id": "00-0041251",
+      "player_name": "Jalon Daniels",
+      "reason": "Joseph 2026-10-13: sole primary QB input; no secondary path requested.",
+      "reported_injury_status": "none",
+      "source": "user_manual_override",
+      "team": "TB"
+    },
+    {
+      "as_of_utc": "2026-10-18T12:53:00Z",
+      "game_id": "2026_06_CAR_PHI",
+      "player_id": "00-0038400",
+      "player_name": "Tanner McKee",
+      "reason": "Team confirmed McKee will start with Hurts on Injured Reserve.",
+      "reported_injury_status": "none",
+      "source": "Philadelphia Eagles official Week 6 starter announcement",
+      "team": "PHI"
+    }
+  ],
+  "model_version": "weekly-fantasy-v2-l1_wipe_prior_share_ranks-ad79f409f0b3",
+  "position_counts": {
+    "QB": 28,
+    "RB": 78,
+    "TE": 89,
+    "WR": 134
+  },
+  "produced_at": "2026-10-18T13:18:41Z",
+  "product": "fantasy",
+  "schema_version": 1,
+  "season": 2026,
+  "source_inputs": {
+    "lineup_overrides": {
+      "path": "workspace/nfl/raw/news/2026_w06_sunday_lineup_overrides_20261018T085300ET.csv",
+      "rows": 2,
+      "sha256": "e88bcf1ece4f198deddd95a3540c2d670d315f7b06d8f2f40a820e2c08ae08a7"
+    },
+    "player_directory": {
+      "path": "workspace/nfl/raw/sleeper/gameday/2026-10-18.json",
+      "requested_utc": "2026-10-18T12:53:00Z",
+      "sha256": "924ff2d55878cf964663e98da392debdddd435b6e6ca8e72126820b5295684de"
+    },
+    "previous_forward": "JoSchoAnalytics/data/releases/builds/fantasy/2026/week06/fantasy-2026w06-902f3a5d9ab2",
+    "qb_input_overrides": {
+      "path": "workspace/nfl/raw/news/2026_w06_sunday_qb_input_overrides_20261018T085300ET.csv",
+      "rows": 5,
+      "sha256": "0d105f145b215b40410f52c5c4b20498825bb8e6f691f4c355bf8a61de3d5e9c"
+    },
+    "weekly_projection": {
+      "path": "workspace/nfl/raw/sleeper/tuesday/2026_w06_projections.json",
+      "requested_utc": "2026-10-13T20:18:01Z",
+      "sha256": "8e9abad35adf54c63e1f92be2c3de3536a156afa3e9eae5f9fe10c49712f4271"
+    }
+  },
+  "team_position_counts": {
+    "ARI": {
+      "QB": 1,
+      "RB": 1,
+      "TE": 2,
+      "WR": 5
+    },
+    "ATL": {
+      "QB": 1,
+      "RB": 2,
+      "TE": 3,
+      "WR": 4
+    },
+    "BAL": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 6
+    },
+    "BUF": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 6
+    },
+    "CAR": {
+      "QB": 1,
+      "RB": 1,
+      "TE": 5,
+      "WR": 5
+    },
+    "CHI": {
+      "QB": 1,
+      "RB": 2,
+      "TE": 3,
+      "WR": 5
+    },
+    "CLE": {
+      "QB": 1,
+      "RB": 2,
+      "TE": 3,
+      "WR": 6
+    },
+    "DAL": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 5
+    },
+    "DEN": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 4,
+      "WR": 4
+    },
+    "GB": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 3
+    },
+    "HOU": {
+      "QB": 1,
+      "RB": 2,
+      "TE": 4,
+      "WR": 5
+    },
+    "IND": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 6
+    },
+    "JAX": {
+      "QB": 1,
+      "RB": 4,
+      "TE": 4,
+      "WR": 5
+    },
+    "KC": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 4
+    },
+    "LA": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 4,
+      "WR": 5
+    },
+    "LAC": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 2,
+      "WR": 6
+    },
+    "LV": {
+      "QB": 1,
+      "RB": 4,
+      "TE": 3,
+      "WR": 5
+    },
+    "NE": {
+      "QB": 1,
+      "RB": 2,
+      "TE": 3,
+      "WR": 4
+    },
+    "NO": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 4,
+      "WR": 4
+    },
+    "NYG": {
+      "QB": 1,
+      "RB": 4,
+      "TE": 2,
+      "WR": 4
+    },
+    "NYJ": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 4,
+      "WR": 3
+    },
+    "PHI": {
+      "QB": 1,
+      "RB": 1,
+      "TE": 4,
+      "WR": 7
+    },
+    "PIT": {
+      "QB": 1,
+      "RB": 4,
+      "TE": 3,
+      "WR": 3
+    },
+    "SEA": {
+      "QB": 1,
+      "RB": 2,
+      "TE": 3,
+      "WR": 4
+    },
+    "SF": {
+      "QB": 1,
+      "RB": 4,
+      "TE": 2,
+      "WR": 4
+    },
+    "TB": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 5
+    },
+    "TEN": {
+      "QB": 1,
+      "RB": 5,
+      "TE": 2,
+      "WR": 5
+    },
+    "WAS": {
+      "QB": 1,
+      "RB": 2,
+      "TE": 4,
+      "WR": 6
+    }
+  },
+  "tuesday_sleeper_projection_signal": {
+    "players": [
+      {
+        "player_id": "00-0041133",
+        "player_name": "Dallen Bentley",
+        "position": "TE",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 0.16,
+        "sleeper_roster_status": "Active",
+        "team": "DEN"
+      }
+    ],
+    "policy": "A numeric current-week Sleeper projection plus an exact Out/Doubtful Sleeper directory label is a provisional Tuesday signal, not confirmation of play.",
+    "row_count": 1,
+    "source": {
+      "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\sleeper\\tuesday\\2026_w06_projections.json",
+      "requested_utc": "2026-10-13T20:18:01Z",
+      "sha256": "8e9abad35adf54c63e1f92be2c3de3536a156afa3e9eae5f9fe10c49712f4271"
+    }
+  },
+  "validation": {
+    "checks": {
+      "artifact_sha256": "3cfa101a43f4a98ecb0010cf438d1d0ec414daeb59aed66686a9e22ed54aa76d",
+      "produced_at_utc": "2026-10-18T13:18:41Z",
+      "scheduled_teams": 28,
+      "team_position_cells": 112
+    },
+    "errors": [],
+    "ok": true,
+    "product": "fantasy",
+    "row_count": 329,
+    "warnings": [
+      "16 projections are below zero; retained as a model diagnostic"
+    ]
+  },
+  "week": 6
+}

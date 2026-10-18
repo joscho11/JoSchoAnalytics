@@ -306,6 +306,18 @@ def _tuesday_sleeper_projection_signal(frame: pd.DataFrame) -> pd.Series:
     return flag & source & reported & ~terminal_roster_status & ~active_false & projection
 
 
+def _pregame_game_mask(frame: pd.DataFrame) -> pd.Series:
+    """True while a player's game has not kicked off.
+
+    Provisional Tuesday status and manual-QB messages only help with a live
+    pregame decision; a frozen row from a finished game is historical.
+    """
+    if "kickoff" not in frame.columns:
+        return pd.Series(False, index=frame.index)
+    kickoff = pd.to_datetime(frame["kickoff"], utc=True, errors="coerce")
+    return kickoff.gt(pd.Timestamp.now(tz="UTC")).fillna(False)
+
+
 def eligible_board_rows(
     frame: pd.DataFrame,
     season: int,
@@ -324,7 +336,8 @@ def eligible_board_rows(
         return out
     ruled_out = _ruled_out_by_injury(out)
     manual_qb = _manual_qb_default(out)
-    tuesday_signal = _tuesday_sleeper_projection_signal(out)
+    pregame = _pregame_game_mask(out)
+    tuesday_signal = _tuesday_sleeper_projection_signal(out) & pregame
     out = out.loc[~ruled_out | manual_qb | tuesday_signal].copy()
     pid = out["player_id"].astype(str)
 
@@ -656,6 +669,7 @@ def render():
         tuesday_signal_rows = _projection_source.loc[
             _tuesday_sleeper_projection_signal(_projection_source)
             & _ruled_out_by_injury(_projection_source)
+            & _pregame_game_mask(_projection_source)
         ]
         if not tuesday_signal_rows.empty:
             st.warning(
@@ -666,7 +680,10 @@ def render():
                 "still reflect the source label."
             )
         manual_qb_rows = _projection_source.loc[_manual_qb_default(_projection_source)]
-        manual_out_rows = manual_qb_rows.loc[_ruled_out_by_injury(manual_qb_rows)]
+        manual_out_rows = manual_qb_rows.loc[
+            _ruled_out_by_injury(manual_qb_rows)
+            & _pregame_game_mask(manual_qb_rows)
+        ]
         if not manual_out_rows.empty:
             names = ", ".join(
                 f"{row.player_display_name} ({row.team})"
