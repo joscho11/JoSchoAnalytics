@@ -11,25 +11,27 @@
   },
   "lineups": [
     {
-      "label": "Hypothetical optimized lineup",
+      "label": "Hypothetical optimized lineup (excluding Tyler Warren)",
       "kind": "hypothetical",
-      "exclusions": [],
-      "total_actual": 110.06,
-      "total_ceiling": 189.78,
-      "total_mean": 145.93,
-      "salary": 49900,
-      "top_pct": 75,
+      "exclusions": [
+        "Tyler Warren"
+      ],
+      "total_actual": 116.9,
+      "total_ceiling": 189.28,
+      "total_mean": 146.8,
+      "salary": 50000,
+      "top_pct": 64,
       "players": [
         {
           "slot": "QB",
-          "player": "Daniel Jones",
+          "player": "Drake Maye",
           "pos": "QB",
-          "team": "IND",
-          "salary": 5200,
-          "ceiling": 26.44,
-          "mean": 18.03,
-          "actual": 15.76,
-          "own": "<1%"
+          "team": "NE",
+          "salary": 6600,
+          "ceiling": 30.05,
+          "mean": 21.64,
+          "actual": 23.8,
+          "own": "3%"
         },
         {
           "slot": "RB",
@@ -54,15 +56,15 @@
           "own": "28%"
         },
         {
-          "slot": "FLEX",
-          "player": "Ashton Jeanty",
-          "pos": "RB",
-          "team": "LV",
-          "salary": 6500,
-          "ceiling": 22.75,
-          "mean": 17.53,
-          "actual": 15.8,
-          "own": "13%"
+          "slot": "WR",
+          "player": "Drake London",
+          "pos": "WR",
+          "team": "ATL",
+          "salary": 7000,
+          "ceiling": 22.88,
+          "mean": 17.57,
+          "actual": 12.2,
+          "own": "26%"
         },
         {
           "slot": "WR",
@@ -87,26 +89,26 @@
           "own": "9%"
         },
         {
-          "slot": "WR",
-          "player": "Tre Tucker",
-          "pos": "WR",
-          "team": "LV",
-          "salary": 4700,
-          "ceiling": 17.35,
-          "mean": 12.04,
-          "actual": 26.7,
-          "own": "14%"
+          "slot": "TE",
+          "player": "Isaiah Likely",
+          "pos": "TE",
+          "team": "NYG",
+          "salary": 4800,
+          "ceiling": 18.39,
+          "mean": 14.54,
+          "actual": 23.9,
+          "own": "39%"
         },
         {
-          "slot": "TE",
-          "player": "Tyler Warren",
+          "slot": "FLEX",
+          "player": "Tyler Higbee",
           "pos": "TE",
-          "team": "IND",
-          "salary": 5300,
-          "ceiling": 20.5,
-          "mean": 16.65,
-          "actual": 0.0,
-          "own": "<1%"
+          "team": "LAR",
+          "salary": 3400,
+          "ceiling": 15.21,
+          "mean": 11.36,
+          "actual": 5.2,
+          "own": "16%"
         },
         {
           "slot": "DST",
