@@ -1531,6 +1531,54 @@
       "season": 2026,
       "status": "void",
       "week": 4
+    },
+    {
+      "evidence": {
+        "basis": "Official NFL Week 6 inactive report and Titans game inactives list Tyler Warren inactive for IND-TEN.",
+        "decision_source": "official_inactive_or_roster_status",
+        "evidence_date": "2026-10-18",
+        "source_title": "NFL Week 6 inactives; Titans game inactives",
+        "source_url": "https://www.nfl.com/news/nfl-week-6-inactives-players-ruled-out-sunday-2026-season",
+        "corroborating_source_url": "https://www.tennesseetitans.com/news/game-inactives-week-6-titans-at-colts"
+      },
+      "game_id": "2026_06_TEN_IND",
+      "market": "anytime",
+      "player_id": "00-0040128",
+      "season": 2026,
+      "status": "void",
+      "week": 6
+    },
+    {
+      "evidence": {
+        "basis": "Official NFL Week 6 inactive report and Titans game inactives list Tyler Warren inactive for IND-TEN.",
+        "decision_source": "official_inactive_or_roster_status",
+        "evidence_date": "2026-10-18",
+        "source_title": "NFL Week 6 inactives; Titans game inactives",
+        "source_url": "https://www.nfl.com/news/nfl-week-6-inactives-players-ruled-out-sunday-2026-season",
+        "corroborating_source_url": "https://www.tennesseetitans.com/news/game-inactives-week-6-titans-at-colts"
+      },
+      "game_id": "2026_06_TEN_IND",
+      "market": "two_plus",
+      "player_id": "00-0040128",
+      "season": 2026,
+      "status": "void",
+      "week": 6
+    },
+    {
+      "evidence": {
+        "basis": "Official NFL Week 6 inactive report and Titans game inactives list Tyler Warren inactive for IND-TEN.",
+        "decision_source": "official_inactive_or_roster_status",
+        "evidence_date": "2026-10-18",
+        "source_title": "NFL Week 6 inactives; Titans game inactives",
+        "source_url": "https://www.nfl.com/news/nfl-week-6-inactives-players-ruled-out-sunday-2026-season",
+        "corroborating_source_url": "https://www.tennesseetitans.com/news/game-inactives-week-6-titans-at-colts"
+      },
+      "game_id": "2026_06_TEN_IND",
+      "market": "first",
+      "player_id": "00-0040128",
+      "season": 2026,
+      "status": "void",
+      "week": 6
     }
   ]
 }
