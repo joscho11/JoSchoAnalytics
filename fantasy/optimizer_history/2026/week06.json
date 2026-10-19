@@ -1,0 +1,126 @@
+{
+  "season": 2026,
+  "week": 6,
+  "mode": "tournament_ceiling",
+  "engine_version": "0.2.3",
+  "projection_sha256": "511ccc90aa374d8f624d501ed1db6a879a141471b7a418247a6403e54a65835a",
+  "salary_sha256": "ac48dc9311a9a5e0e7ab043987d58ea2de434365323fd90ebe54f298240456b5",
+  "field": {
+    "median": 125,
+    "top": 203
+  },
+  "lineups": [
+    {
+      "label": "Hypothetical optimized lineup",
+      "kind": "hypothetical",
+      "exclusions": [],
+      "total_actual": 110.06,
+      "total_ceiling": 189.78,
+      "total_mean": 145.93,
+      "salary": 49900,
+      "top_pct": 75,
+      "players": [
+        {
+          "slot": "QB",
+          "player": "Daniel Jones",
+          "pos": "QB",
+          "team": "IND",
+          "salary": 5200,
+          "ceiling": 26.44,
+          "mean": 18.03,
+          "actual": 15.76,
+          "own": "<1%"
+        },
+        {
+          "slot": "RB",
+          "player": "James Cook III",
+          "pos": "RB",
+          "team": "BUF",
+          "salary": 7400,
+          "ceiling": 26.14,
+          "mean": 20.92,
+          "actual": 24.3,
+          "own": "17%"
+        },
+        {
+          "slot": "RB",
+          "player": "Kyren Williams",
+          "pos": "RB",
+          "team": "LAR",
+          "salary": 6800,
+          "ceiling": 26.42,
+          "mean": 21.2,
+          "actual": 9.7,
+          "own": "28%"
+        },
+        {
+          "slot": "FLEX",
+          "player": "Ashton Jeanty",
+          "pos": "RB",
+          "team": "LV",
+          "salary": 6500,
+          "ceiling": 22.75,
+          "mean": 17.53,
+          "actual": 15.8,
+          "own": "13%"
+        },
+        {
+          "slot": "WR",
+          "player": "Davante Adams",
+          "pos": "WR",
+          "team": "LAR",
+          "salary": 6600,
+          "ceiling": 23.54,
+          "mean": 18.23,
+          "actual": 6.9,
+          "own": "13%"
+        },
+        {
+          "slot": "WR",
+          "player": "Rome Odunze",
+          "pos": "WR",
+          "team": "CHI",
+          "salary": 4900,
+          "ceiling": 19.93,
+          "mean": 14.62,
+          "actual": 6.9,
+          "own": "9%"
+        },
+        {
+          "slot": "WR",
+          "player": "Tre Tucker",
+          "pos": "WR",
+          "team": "LV",
+          "salary": 4700,
+          "ceiling": 17.35,
+          "mean": 12.04,
+          "actual": 26.7,
+          "own": "14%"
+        },
+        {
+          "slot": "TE",
+          "player": "Tyler Warren",
+          "pos": "TE",
+          "team": "IND",
+          "salary": 5300,
+          "ceiling": 20.5,
+          "mean": 16.65,
+          "actual": 0.0,
+          "own": "<1%"
+        },
+        {
+          "slot": "DST",
+          "player": "Panthers",
+          "pos": "DST",
+          "team": "CAR",
+          "salary": 2500,
+          "ceiling": 6.72,
+          "mean": 6.72,
+          "actual": 4.0,
+          "own": "34%"
+        }
+      ],
+      "hypothetical": true
+    }
+  ]
+}

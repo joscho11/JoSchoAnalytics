@@ -183,11 +183,12 @@ def _render_history_week(payload: dict, *, season: int) -> None:
     lineups = payload.get("lineups", [])
     for lineup in lineups:
         with st.container(border=True, key=f"jsa-dfs-history-{season}-{week}-{lineup['kind']}"):
-            if len(lineups) > 1:
+            if len(lineups) > 1 or lineup.get("hypothetical", False):
                 st.markdown(f"**{lineup['label']}**")
             with st.container(horizontal=True, key=f"jsa-metric-even-dfs-history-{lineup['kind']}"):
                 st.metric("Actual DK points", f"{lineup['total_actual']:.1f}", border=True)
-                st.metric("Finish", f"Top {lineup['top_pct']}%", border=True)
+                finish_label = "Hypothetical finish" if lineup.get("hypothetical", False) else "Finish"
+                st.metric(finish_label, f"Top {lineup['top_pct']}%", border=True)
             _render_history_lineup_table(lineup, season=season, week=week)
 
 
