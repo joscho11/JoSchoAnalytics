@@ -381,7 +381,12 @@ def load_reviewed_td_settlements(root=None) -> dict[tuple[int, int, str, str, st
     return result
 
 
-def _prepare_participation(participation: pd.DataFrame | None, season: int, week: int) -> dict:
+def _prepare_participation(
+    participation: pd.DataFrame | None,
+    season: int,
+    week: int,
+    weekly_rosters: pd.DataFrame | None = None,
+) -> dict:
     """Build player participation lookups used to distinguish loss from void.
 
     nflverse snap-count feeds use ``offense_snaps``/``offense_pct``.  A stats
@@ -395,8 +400,9 @@ def _prepare_participation(participation: pd.DataFrame | None, season: int, week
         stats = stats[pd.to_numeric(stats["season"], errors="coerce").eq(int(season))]
     if "week" in stats:
         stats = stats[pd.to_numeric(stats["week"], errors="coerce").eq(int(week))]
-    if "season_type" in stats:
-        stats = stats[stats["season_type"].astype(str).str.upper().eq("REG")]
+    season_type_column = "season_type" if "season_type" in stats else "game_type" if "game_type" in stats else None
+    if season_type_column:
+        stats = stats[stats[season_type_column].astype(str).str.upper().eq("REG")]
     snap_columns = [
         column for column in ("offense_snaps", "defense_snaps", "st_snaps")
         if column in stats
@@ -439,6 +445,39 @@ def _prepare_participation(participation: pd.DataFrame | None, season: int, week
         )
         snaps = snaps.where(stats[pct_columns].notna().any(axis=1))
     stats = stats.assign(_participation_value=snaps)
+
+    # nflverse snap counts identify players with PFR IDs, while sportsbook
+    # boards usually carry GSIS IDs. Bridge only one-to-one player mappings
+    # from the same regular-season week and team. Ambiguous roster identities
+    # stay unresolved instead of turning a missing row into a false loss.
+    pfr_to_gsis: dict[tuple[str, str], str] = {}
+    if (
+        weekly_rosters is not None
+        and not weekly_rosters.empty
+        and {"gsis_id", "pfr_id", "team"}.issubset(weekly_rosters.columns)
+    ):
+        roster = weekly_rosters.copy()
+        if "season" in roster:
+            roster = roster[pd.to_numeric(roster["season"], errors="coerce").eq(int(season))]
+        if "week" in roster:
+            roster = roster[pd.to_numeric(roster["week"], errors="coerce").eq(int(week))]
+        roster_type_column = "season_type" if "season_type" in roster else "game_type" if "game_type" in roster else None
+        if roster_type_column:
+            roster = roster[roster[roster_type_column].astype(str).str.upper().eq("REG")]
+        roster = roster.assign(
+            _team=roster["team"].map(_normal_team),
+            _gsis=roster["gsis_id"].map(_normal_identifier),
+            _pfr=roster["pfr_id"].map(_normal_identifier),
+        ).dropna(subset=["_team", "_gsis", "_pfr"])
+        pairs = roster[["_team", "_gsis", "_pfr"]].drop_duplicates()
+        unique_pairs = pairs[
+            pairs.groupby(["_team", "_gsis"])["_pfr"].transform("nunique").eq(1)
+            & pairs.groupby(["_team", "_pfr"])["_gsis"].transform("nunique").eq(1)
+        ]
+        pfr_to_gsis = {
+            (row["_team"], row["_pfr"]): row["_gsis"]
+            for row in unique_pairs.to_dict(orient="records")
+        }
     by_alias: dict[str, float] = {}
     by_name_team: dict[tuple[str, str], float] = {}
     for row in stats.to_dict(orient="records"):
@@ -450,6 +489,13 @@ def _prepare_participation(participation: pd.DataFrame | None, season: int, week
             key = row.get(column)
             if key is not None:
                 by_alias[key] = max(by_alias.get(key, float("-inf")), value)
+        if team_column:
+            team = _normal_team(row.get(team_column))
+            pfr_id = _normal_identifier(row.get("pfr_player_id"))
+            gsis_id = pfr_to_gsis.get((team, pfr_id)) if team and pfr_id else None
+            existing_gsis = _normal_identifier(row.get("gsis_id"))
+            if gsis_id and (existing_gsis is None or existing_gsis == gsis_id):
+                by_alias[gsis_id] = max(by_alias.get(gsis_id, float("-inf")), value)
         if team_column and name_column:
             team = _normal_team(row.get(team_column))
             name = _normal_name(row.get(name_column))
@@ -478,8 +524,9 @@ def _prepare_weekly_roster_status(
         frame = frame[pd.to_numeric(frame["season"], errors="coerce").eq(int(season))]
     if "week" in frame:
         frame = frame[pd.to_numeric(frame["week"], errors="coerce").eq(int(week))]
-    if "season_type" in frame:
-        frame = frame[frame["season_type"].astype(str).str.upper().eq("REG")]
+    season_type_column = "season_type" if "season_type" in frame else "game_type" if "game_type" in frame else None
+    if season_type_column:
+        frame = frame[frame[season_type_column].astype(str).str.upper().eq("REG")]
     frame = frame[frame["status"].astype("string").str.strip().str.upper().isin({"INA", "INACTIVE"})]
     aliases = [
         column for column in ("player_id", "gsis_id", "sleeper_id", "pfr_player_id")
@@ -526,6 +573,7 @@ def _prepare_anytime_stats(
     season: int,
     week: int,
     participation: pd.DataFrame | None = None,
+    weekly_rosters: pd.DataFrame | None = None,
 ) -> dict:
     stats = actuals.copy()
     if "season" in stats:
@@ -595,7 +643,10 @@ def _prepare_anytime_stats(
             game_id for game_id in stats["game_id"].map(_normal_identifier).dropna().tolist()
         }
     participation_info = _prepare_participation(
-        participation if participation is not None else actuals, season, week
+        participation if participation is not None else actuals,
+        season,
+        week,
+        weekly_rosters,
     )
     return {
         "td_by_alias": td_by_alias,
@@ -653,7 +704,7 @@ def grade_anytime_td_file(
     sched["away_score"] = pd.to_numeric(sched["away_score"], errors="coerce")
     sched["_is_final"] = sched["home_score"].notna() & sched["away_score"].notna()
 
-    stat_info = _prepare_anytime_stats(actuals, season, week, participation)
+    stat_info = _prepare_anytime_stats(actuals, season, week, participation, weekly_rosters)
     reviewed_settlements = reviewed_settlements or {}
     board_game_ids = set(board["_game_id"].dropna().tolist())
     final_schedule = sched[sched["_is_final"]].copy()
@@ -1044,7 +1095,10 @@ def grade_first_td_file(
     pos_lookup = _first_td_position_lookup(scoped_actuals)
     id_aliases = _first_td_alias_groups(actuals, season=season, week=week)
     participation_info = _prepare_participation(
-        participation if participation is not None else actuals, season, week
+        participation if participation is not None else actuals,
+        season,
+        week,
+        weekly_rosters,
     )
     roster_info = _prepare_weekly_roster_status(weekly_rosters, season, week)
     reviewed_settlements = reviewed_settlements or {}

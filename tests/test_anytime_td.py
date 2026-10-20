@@ -141,12 +141,12 @@ def test_week04_pit_cle_renders_all_three_markets(tmp_path):
             assert "45 of 47 settled games" in captions
 
 
-def test_week06_defaults_to_the_current_release_and_week05_history_still_renders(tmp_path):
+def test_week07_defaults_to_the_current_release_and_week05_history_still_renders(tmp_path):
     at = _render(tmp_path)
     releases = page.available_releases()
-    assert page.default_release(list(releases)) == (2026, 6)
-    assert any(w.key == "atd_week" and w.value == 6 for w in at.selectbox)
-    assert any("Week 6" in str(item.value) for item in at.markdown)
+    assert page.default_release(list(releases)) == (2026, 7)
+    assert any(w.key == "atd_week" and w.value == 7 for w in at.selectbox)
+    assert any("Week 7" in str(item.value) for item in at.markdown)
 
     markets = {
         "Anytime TD": "Book ATTD Odds",
@@ -157,6 +157,12 @@ def test_week06_defaults_to_the_current_release_and_week05_history_still_renders
         at = _render(tmp_path, week=5)
         if market != "Anytime TD":
             at.segmented_control(key="atd_view_2026_5").set_value(market).run()
+            if page._week_is_complete(
+                pd.read_csv(releases[(2026, 5)]), 2026, 5,
+            ):
+                at.selectbox(key="atd_props_matchup_2026_5").set_value(
+                    page.RECOMMENDED_LABEL,
+                ).run()
         assert not at.exception, at.exception
         assert not at.error, [e.value for e in at.error]
         if market == "First TD":
@@ -490,6 +496,16 @@ def test_phone_odds_column_widths_fit_the_widest_realistic_value():
     # "+89.1k · 100.0%" (15 chars) must not be narrower than before the fix.
     assert page.PHONE_WIDTHS["Model ATTD Odds"] >= 130
     assert page.PHONE_WIDTHS["Book ATTD Odds"] >= 130
+
+
+def test_result_status_column_fits_awaiting_evidence_on_desktop_and_phone():
+    # Settlement labels must remain legible even when a player is still
+    # awaiting participation evidence and has no betting recommendation.
+    assert page.PHONE_WIDTHS["Hit"] >= 150
+    assert page._desktop_column_config()["Hit"]["width"] >= 150
+    assert page._two_plus_column_config()["Hit"]["width"] >= 150
+    assert page._first_td_column_config()["Hit"]["width"] >= 150
+    assert page._first_td_phone_column_config()["Hit"]["width"] >= 150
 
 
 def test_year_and_week_selectors_keep_2025_available(tmp_path):
@@ -858,6 +874,87 @@ def test_live_release_discovery_and_pending_hit_is_blank(tmp_path, monkeypatch):
     assert page.available_releases()[(2026, 1)] == live
     display = page._display(page.priced_rows(pd.read_csv(live)))
     assert display.loc[0, "Hit"] == ""
+
+
+def test_hit_labels_distinguish_settled_void_and_pending_rows():
+    rows = pd.DataFrame({
+        "scored_first": [1, 0, None, 0, None],
+        "settlement_status_first": [
+            "settled", "settled", "void", "awaiting_evidence", "open",
+        ],
+    })
+
+    assert page._hit_labels(rows, "scored_first", "settlement_status_first").tolist() == [
+        "Yes", "No", "Void", "Awaiting evidence", "",
+    ]
+
+
+def test_week_completion_uses_grade_stamp_not_every_player_settlement(tmp_path, monkeypatch):
+    import json
+
+    monkeypatch.setattr(page, "_DIR", tmp_path)
+    (tmp_path / "grading_2026_week06.json").write_text(
+        json.dumps({"final_games": 2}), encoding="utf-8",
+    )
+    rows = pd.DataFrame({
+        "game_id": ["g1", "g1", "g2", "g2"],
+        "settlement_status_first": ["settled", "awaiting_evidence", "void", "settled"],
+    })
+
+    assert page._week_is_complete(rows, 2026, 6)
+    assert not page._week_is_complete(rows, 2026, 5)
+    (tmp_path / "grading_2026_week06.json").write_text(
+        json.dumps({"final_games": 1}), encoding="utf-8",
+    )
+    assert not page._week_is_complete(rows, 2026, 6)
+
+
+def test_missing_scheduled_markets_names_uncovered_week7_game(tmp_path, monkeypatch):
+    betting = tmp_path / "betting"
+    betting.mkdir()
+    pd.DataFrame([
+        {"game_id": "2026_07_CIN_BAL", "season": 2026, "week": 7,
+         "game_type": "REG", "away_team": "CIN", "home_team": "BAL"},
+        {"game_id": "2026_07_SF_ATL", "season": 2026, "week": 7,
+         "game_type": "REG", "away_team": "SF", "home_team": "ATL"},
+    ]).to_csv(betting / "nfl_2026_schedule.csv", index=False)
+    monkeypatch.setattr(page, "_HERE", tmp_path)
+
+    missing = page._missing_scheduled_markets(
+        pd.DataFrame({"game_id": ["2026_07_CIN_BAL"]}), 2026, 7
+    )
+
+    assert missing == ["SF at ATL"]
+
+
+def test_completed_week_first_td_defaults_to_all_results(tmp_path):
+    at = _render(tmp_path, week=6)
+    at.segmented_control(key="atd_view_2026_6").set_value("First TD").run()
+
+    matchup = next(w for w in at.selectbox if w.key == "atd_props_matchup_2026_6")
+    assert matchup.value == page.ALL_RESULTS_LABEL
+    assert page.ALL_RESULTS_LABEL in matchup.options
+    assert page.RECOMMENDED_LABEL in matchup.options
+    headings = " ".join(str(item.value) for item in at.markdown)
+    assert page._week_is_complete(
+        pd.read_csv(page.available_releases()[(2026, 6)]), 2026, 6,
+    )
+    assert "All First TD results across matchups" in headings
+    assert len([item for item in at.markdown if " vs " in str(item.value)]) >= 10
+
+
+def test_completed_week_can_still_select_recommended_and_matchup(tmp_path):
+    at = _render(tmp_path, week=6)
+    at.segmented_control(key="atd_view_2026_6").set_value("First TD").run()
+    selector = at.selectbox(key="atd_props_matchup_2026_6")
+
+    selector.set_value(page.RECOMMENDED_LABEL).run()
+    assert at.selectbox(key="atd_props_matchup_2026_6").value == page.RECOMMENDED_LABEL
+    matchup_label = next(label for label, _, _ in page._matchup_groups(
+        page.priced_rows(pd.read_csv(page.available_releases()[(2026, 6)]))
+    ))
+    at.selectbox(key="atd_props_matchup_2026_6").set_value(matchup_label).run()
+    assert at.selectbox(key="atd_props_matchup_2026_6").value == matchup_label
 
 
 def test_verified_replacement_can_display_book_odds_while_model_is_pending():

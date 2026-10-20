@@ -14,6 +14,7 @@ import page_common
 from fantasy_scoring import DEFAULT_SCORING, SCORING_MODES, points_from_half_ppr
 from dashboard_chrome import TABLE_HEIGHT, dataframe_phone_desktop, _OFFLINE
 from publishing.manifest import published_builds, resolve_build_artifact
+from publishing.paths import resolve_site_path
 from team_display import public_team_abbr
 
 _HERE = Path(__file__).resolve().parents[1]
@@ -120,6 +121,33 @@ def _format_last_updated(published_at: str | None) -> str | None:
     date = f"{eastern.strftime('%b')} {eastern.day}, {eastern.year}"
     time = eastern.strftime("%I:%M %p").lstrip("0")
     return f"Last updated {date} at {time} ET"
+
+
+def _selected_build_details(release_state, *, season: int, week: int, root=None):
+    """Read the selected immutable build's review note and grading state."""
+    if not isinstance(release_state, dict) or not release_state.get("build_id"):
+        return {}, {}
+    base = Path(root).resolve() if root is not None else _HERE
+    manifest = page_common.load_release_manifest() if root is None else None
+    if manifest is None:
+        manifest_path = base / "data" / "releases" / "manifest.json"
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return {}, {}
+    state = (manifest.get("products") or {}).get("fantasy") or {}
+    builds = state.get("builds") or {}
+    build = builds.get(str(release_state["build_id"]))
+    if not isinstance(build, dict):
+        return {}, {}
+    try:
+        if (int(build.get("season")), int(build.get("week"))) != (int(season), int(week)):
+            return {}, {}
+        metadata_path = resolve_site_path(build.get("metadata", ""), root=base)
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError, TypeError, json.JSONDecodeError):
+        metadata = {}
+    return metadata, build.get("grading") or {}
 
 
 def _weeks_by_season(available: dict[tuple[int, int], Path]) -> dict[int, list[int]]:
@@ -618,6 +646,19 @@ def render():
     )
     season, week = _fantasy_season_week_controls(available, default)
     release_state = page_common.render_release_status("fantasy", season, week)
+    selected_metadata, selected_grading = _selected_build_details(
+        release_state, season=season, week=week
+    )
+    if int(season) >= LIVE_FROM_SEASON:
+        postgame = bool(selected_grading.get("complete"))
+        st.badge(
+            "Postgame" if postgame else "Pregame",
+            icon=":material/check_circle:" if postgame else ":material/schedule:",
+            color="green" if postgame else "blue",
+        )
+    public_note = (selected_metadata.get("release_review") or {}).get("public_note")
+    if public_note:
+        st.warning(str(public_note))
     published_at = release_state.get("published_at") if release_state else None
     last_updated = _format_last_updated(published_at)
     if last_updated:

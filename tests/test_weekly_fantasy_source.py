@@ -1,5 +1,6 @@
 """2025 weekly CSVs stay as the site demo. 2026 files come from weekly_projections_v2."""
 import hashlib
+import json
 import os
 import sys
 from pathlib import Path
@@ -80,6 +81,30 @@ def test_complete_week1_release_prefers_graded_postgame_artifact():
     assert frame["actual_half_ppr"].notna().all()
     actuals = weekly._actuals_from_graded_projection(frame)
     assert len(actuals["half_ppr"]) == len(frame)
+
+
+def test_selected_build_details_exposes_review_note_and_postgame_state(tmp_path):
+    metadata_path = tmp_path / "data" / "releases" / "builds" / "week07" / "metadata.json"
+    metadata_path.parent.mkdir(parents=True)
+    metadata_path.write_text(json.dumps({
+        "season": 2026, "week": 7,
+        "release_review": {"public_note": "No BAL QB is present in the source projection."},
+    }), encoding="utf-8")
+    manifest_path = tmp_path / "data" / "releases" / "manifest.json"
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    manifest_path.write_text(json.dumps({"products": {"fantasy": {"builds": {
+        "build-7": {
+            "season": 2026, "week": 7,
+            "metadata": "data/releases/builds/week07/metadata.json",
+            "grading": {"complete": True},
+        }
+    }}}}), encoding="utf-8")
+
+    metadata, grading = weekly._selected_build_details(
+        {"build_id": "build-7"}, season=2026, week=7, root=tmp_path
+    )
+    assert metadata["release_review"]["public_note"].startswith("No BAL QB")
+    assert grading["complete"] is True
 
 
 def test_week05_graded_release_restores_projection_team_column():
@@ -187,14 +212,14 @@ def test_weekly_fantasy_defaults_to_latest_published_week(tmp_path):
 
 
 def test_manual_qb_default_renders_source_out_warning_and_player(tmp_path):
-    path = tmp_path / "projections_2026_week06.csv"
+    path = tmp_path / "projections_2026_week07.csv"
     pd.DataFrame({
         "player_id": ["00-0034796", "00-0039918"],
         "player_display_name": ["Lamar Jackson", "Caleb Williams"],
         "position": ["QB", "QB"],
         "team": ["BAL", "CHI"],
         "opponent_team": ["CLE", "ATL"],
-        "season": [2026, 2026], "week": [6, 6],
+        "season": [2026, 2026], "week": [7, 7],
         "projected_pts": [15.31, 16.45],
         "injury_status": ["Out", "Out"],
         "reported_injury_status": ["Out", "Out"],
@@ -208,9 +233,10 @@ def test_manual_qb_default_renders_source_out_warning_and_player(tmp_path):
         "qb_assumption_source": ["user_manual_override", "user_manual_override"],
         "qb_assumption_reason": ["Approved main path", "Approved main path"],
         "qb_assumption_as_of_utc": ["2026-10-13T13:53:14Z"] * 2,
+        "kickoff": ["2026-10-25 13:00:00-04:00"] * 2,
     }).to_csv(path, index=False)
 
-    at = _render_weekly_release(tmp_path, path, season=2026, week=6)
+    at = _render_weekly_release(tmp_path, path, season=2026, week=7)
     warnings = " ".join(str(item.value) for item in at.warning)
     assert "Tuesday Sleeper signal" in warnings
     assert "does not confirm they will play" in warnings
@@ -358,7 +384,8 @@ def test_tuesday_projection_signal_keeps_directory_out_but_not_terminal_or_manua
         "player_display_name": ["Projected Out", "IR Player", "Inactive Roster", "Manual Out", "No Projection"],
         "position": ["WR", "WR", "WR", "RB", "TE"],
         "team": ["CAR", "CLE", "DEN", "PIT", "CHI"],
-        "season": [2026] * 5, "week": [6] * 5,
+        "season": [2026] * 5, "week": [7] * 5,
+        "kickoff": ["2026-10-25 13:00:00-04:00"] * 5,
         "injury_status": ["Out"] * 5,
         "reported_injury_status": ["Out", "IR", "Out", "Out", "Out"],
         "injury_status_source": [
@@ -370,7 +397,7 @@ def test_tuesday_projection_signal_keeps_directory_out_but_not_terminal_or_manua
         "tuesday_sleeper_projection_signal": [True] * 5,
         "slp_proj": [8.5, 7.0, 6.0, 9.0, float("nan")],
     })
-    shown = weekly.eligible_board_rows(frame, 2026, 6)
+    shown = weekly.eligible_board_rows(frame, 2026, 7)
 
     assert set(shown.player_id.astype(str)) == {"projected-out"}
 

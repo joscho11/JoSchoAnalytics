@@ -250,6 +250,100 @@ def test_first_td_uses_unique_weekly_team_name_when_provider_alias_is_missing(tm
     assert graded["scored_first"].tolist() == [1.0, 0.0]
 
 
+def test_td_grading_bridges_unique_weekly_gsis_pfr_ids_and_keeps_ambiguous_player_pending(tmp_path):
+    import pandas as pd
+    from publishing.grader import grade_anytime_td_file, grade_first_td_file
+
+    game_id = "2026_02_MIN_CHI"
+    csv = tmp_path / "anytime_td_2026_week02.csv"
+    board = pd.DataFrame({
+        "season": [2026] * 3,
+        "week": [2] * 3,
+        "game_id": [game_id] * 3,
+        "player_id": ["GSIS1", "GSIS2", "GSIS3"],
+        "player_display_name": ["Winner", "Played Player", "Ambiguous Player"],
+        "team": ["MIN"] * 3,
+        "scored_anytime": [None] * 3,
+        "scored_two_plus": [None] * 3,
+        "scored_first": [None] * 3,
+        "settlement_status_first": ["open"] * 3,
+        "status": ["scheduled"] * 3,
+        "p_first": [0.21, 0.08, 0.03],
+        "book_first_p_devigged": [0.18, None, None],
+        "first_amer": [455, None, None],
+        "first_no_td_offered": [True] * 3,
+    })
+    board.to_csv(csv, index=False)
+    frozen = board[["p_first", "book_first_p_devigged", "first_amer"]].copy()
+
+    schedule = pd.DataFrame([{
+        "season": 2026, "week": 2, "game_id": game_id,
+        "home_team": "CHI", "away_team": "MIN", "home_score": 6, "away_score": 0,
+    }])
+    pbp = pd.DataFrame(_plays(6, 0))
+    pbp.loc[1, ["touchdown", "td_player_id", "td_team", "posteam", "defteam", "return_touchdown"]] = [
+        1, "GSIS1", "MIN", "MIN", "CHI", 0,
+    ]
+    actuals = pd.DataFrame([
+        {"season": 2026, "week": 2, "season_type": "REG", "player_id": "GSIS1",
+         "gsis_id": "GSIS1", "position": "RB", "team": "MIN",
+         "player_display_name": "Winner", "rushing_tds": 1, "receiving_tds": 0},
+        {"season": 2026, "week": 2, "season_type": "REG", "player_id": "CHI-COVERAGE",
+         "position": "DEF", "team": "CHI", "player_display_name": "Coverage",
+         "rushing_tds": 0, "receiving_tds": 0},
+    ])
+    participation = pd.DataFrame([
+        {"season": 2026, "week": 2, "game_type": "REG", "pfr_player_id": "PFR2", "team": "MIN",
+         "offense_snaps": 30, "defense_snaps": 0, "st_snaps": 0},
+        {"season": 2026, "week": 2, "game_type": "REG", "pfr_player_id": "PFR3", "team": "MIN",
+         "offense_snaps": 15, "defense_snaps": 0, "st_snaps": 0},
+    ])
+    weekly_rosters = pd.DataFrame([
+        {"season": 2026, "week": 2, "game_type": "REG", "team": "MIN", "status": "ACT",
+         "gsis_id": "GSIS2", "pfr_id": "PFR2"},
+        {"season": 2026, "week": 2, "game_type": "REG", "team": "MIN", "status": "ACT",
+         "gsis_id": "GSIS3", "pfr_id": "PFR3"},
+        # The duplicate PFR identity makes this crosswalk ambiguous and must
+        # not be used to settle GSIS3 from the PFR3 snap-count row.
+        {"season": 2026, "week": 2, "game_type": "REG", "team": "MIN", "status": "ACT",
+         "gsis_id": "GSIS4", "pfr_id": "PFR3"},
+    ])
+
+    anytime = grade_anytime_td_file(
+        csv, schedule, actuals, participation=participation,
+        weekly_rosters=weekly_rosters, season=2026, week=2,
+    )
+    first = grade_first_td_file(
+        csv, schedule, pbp, actuals, participation=participation,
+        weekly_rosters=weekly_rosters, season=2026, week=2,
+    )
+    graded = pd.read_csv(csv).set_index("player_id")
+
+    assert graded.loc["GSIS1", "scored_first"] == 1
+    assert graded.loc["GSIS2", "scored_first"] == 0
+    assert graded.loc["GSIS2", "settlement_status_first"] == "settled"
+    assert pd.isna(graded.loc["GSIS3", "scored_first"])
+    assert graded.loc["GSIS3", "settlement_status_first"] == "awaiting_evidence"
+    assert graded.loc["GSIS2", "scored_anytime"] == 0
+    assert pd.isna(graded.loc["GSIS3", "scored_anytime"])
+    pd.testing.assert_frame_equal(
+        graded.reset_index().loc[:, frozen.columns], frozen.reset_index(drop=True),
+        check_dtype=False,
+    )
+    assert anytime["changed"] is True and first["changed"] is True
+
+    repeat_anytime = grade_anytime_td_file(
+        csv, schedule, actuals, participation=participation,
+        weekly_rosters=weekly_rosters, season=2026, week=2,
+    )
+    repeat_first = grade_first_td_file(
+        csv, schedule, pbp, actuals, participation=participation,
+        weekly_rosters=weekly_rosters, season=2026, week=2,
+    )
+    assert repeat_anytime["changed"] is False
+    assert repeat_first["changed"] is False
+
+
 def test_first_td_preserves_null_first_scorer_instead_of_using_later_td_id():
     import pandas as pd
     from publishing.grader import _first_td_by_game

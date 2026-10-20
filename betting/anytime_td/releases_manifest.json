@@ -52,13 +52,23 @@
     },
     {
       "csv": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week06_ngs_live_sunday_draftkings_20261018T090613ET.csv",
-      "csv_sha256": "20d8ccbda73832d20b557ad91ef68f7dd6d6cef569e0eae3f637e70ef6e0eefb",
+      "csv_sha256": "114dbdd38ad3e1f120cd7ea35698a5f97510c88ef7f06ad25b7c59546622dfbc",
       "metadata": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week06_ngs_live_sunday_draftkings_20261018T090613ET.json",
       "metadata_sha256": "be893e301fb2329a74947ae4935fde8dcd28dae8fd37d2b1cf534e68114393f8",
       "model_version": "td_product_ngs_44_frozen_2025_v1",
       "prediction_mode": "live",
       "season": 2026,
       "week": 6
+    },
+    {
+      "season": 2026,
+      "week": 7,
+      "csv": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week07_ngs_live_draftkings_week07_20261020.csv",
+      "metadata": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week07_ngs_live_draftkings_week07_20261020.json",
+      "csv_sha256": "e8fbbafc893fe38d360be88467a2d11d4616acc313823d55e7bc19cbf01dd7ed",
+      "metadata_sha256": "e6418cf87c6b7e23c49dfa8a6e95abd17b2764467ffd77099948aee6a0c9c200",
+      "prediction_mode": "live",
+      "model_version": "td_product_ngs_44_frozen_2025_v1"
     }
   ],
   "schema_version": 1

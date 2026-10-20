@@ -435,10 +435,47 @@ def _validate_fantasy(
         for position in POSITION_MINIMUMS
         if int(actual_team_positions.get(team, {}).get(position, 0)) == 0
     )
-    if missing_team_positions:
+    exceptions = metadata.get("team_position_gap_exceptions") or []
+    exception_keys = set()
+    invalid_exceptions = []
+    review = metadata.get("release_review") or {}
+    reviewed_projection_sha = str(review.get("sleeper_projection_sha256") or "")
+    for item in exceptions:
+        if not isinstance(item, dict):
+            invalid_exceptions.append(item)
+            continue
+        team = str(item.get("team") or "")
+        position = str(item.get("position") or "")
+        evidence_sha = str(item.get("source_sha256") or "")
+        reason = str(item.get("reason") or "").strip()
+        key = (team, position)
+        if (
+            team not in scheduled_teams
+            or position not in POSITION_MINIMUMS
+            or not reason
+            or len(evidence_sha) != 64
+            or evidence_sha != reviewed_projection_sha
+            or key in exception_keys
+        ):
+            invalid_exceptions.append(item)
+            continue
+        exception_keys.add(key)
+    stale_exceptions = sorted(exception_keys - set(missing_team_positions))
+    if invalid_exceptions or stale_exceptions:
         report.errors.append(
-            f"scheduled teams lack projected skill-position players: {missing_team_positions[:8]}"
+            "team-position gap exceptions are invalid or no longer match the candidate"
         )
+    unexplained_gaps = sorted(set(missing_team_positions) - exception_keys)
+    if unexplained_gaps:
+        report.errors.append(
+            f"scheduled teams lack projected skill-position players: {unexplained_gaps[:8]}"
+        )
+    if exception_keys and not invalid_exceptions and not stale_exceptions:
+        report.warnings.append(
+            "documented team-position coverage gaps: "
+            + ", ".join(f"{team} {position}" for team, position in sorted(exception_keys))
+        )
+    report.checks["team_position_gap_exceptions"] = int(len(exception_keys))
     report.checks["scheduled_teams"] = int(len(scheduled_teams))
     report.checks["team_position_cells"] = int(
         sum(int(count > 0) for values in actual_team_positions.values() for count in values.values())

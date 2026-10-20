@@ -247,6 +247,44 @@ def test_fantasy_contract_checks_identity_position_and_schedule_coverage(tmp_pat
     assert any("lack projected skill-position players" in error for error in missing.errors)
 
 
+def test_fantasy_declared_team_position_gap_requires_matching_source_evidence(tmp_path):
+    artifact, _, schedule = _fantasy_candidate(tmp_path)
+    rows = pd.read_csv(artifact)
+    rows = rows.loc[~(rows["team"].eq("NE") & rows["position"].eq("QB"))]
+    extra_qbs = pd.DataFrame([
+        {"player_id": f"QB-extra-{i}", "player_display_name": f"Extra QB {i}",
+         "position": "QB", "team": "SEA", "opponent_team": "NE", "season": 2026,
+         "week": 1, "projected_pts": 1.0}
+        for i in range(12)
+    ])
+    rows = pd.concat([rows, extra_qbs], ignore_index=True)
+    rows.to_csv(artifact, index=False)
+    metadata = build_candidate_metadata(
+        "fantasy", artifact, season=2026, week=1,
+        model_version="weekly-fantasy-test", produced_at="2026-09-08T13:00:00Z",
+    )
+    projection_sha = "a" * 64
+    metadata["release_review"] = {"sleeper_projection_sha256": projection_sha}
+    missing = validate_candidate(artifact, metadata, schedule=schedule)
+    assert not missing.ok
+    assert any("lack projected skill-position players" in error for error in missing.errors)
+
+    metadata["team_position_gap_exceptions"] = [{
+        "team": "NE", "position": "QB",
+        "reason": "No QB row exists in the captured provider projection universe.",
+        "source_sha256": projection_sha,
+    }]
+    accepted = validate_candidate(artifact, metadata, schedule=schedule)
+    assert accepted.ok, accepted.errors
+    assert accepted.checks["team_position_gap_exceptions"] == 1
+    assert any("NE QB" in warning for warning in accepted.warnings)
+
+    metadata["team_position_gap_exceptions"][0]["source_sha256"] = "b" * 64
+    rejected = validate_candidate(artifact, metadata, schedule=schedule)
+    assert not rejected.ok
+    assert any("gap exceptions are invalid" in error for error in rejected.errors)
+
+
 def test_publish_is_immutable_and_failed_candidate_does_not_move_pointer(tmp_path):
     site = tmp_path / "site"
     site.mkdir()

@@ -36,6 +36,7 @@ DISPLAY_ONLY_TWO_PLUS_GAME_IDS = {"2026_01_NE_SEA", "2026_01_SF_LA"}
 # fun, display-only views rather than hidden entirely.
 DISPLAY_ONLY_FIRST_TD_GAME_IDS = {"2026_01_NE_SEA", "2026_01_SF_LA"}
 RECOMMENDED_LABEL = "Recommended"
+ALL_RESULTS_LABEL = "All results"
 DESKTOP_COLS = [
     "#", "Player", "Pos", "Opp", "Model ATTD Odds", "Book ATTD Odds",
     "ATTD Value Gap", "Hit",
@@ -58,7 +59,7 @@ PHONE_WIDTHS = {
     "Model ATTD Odds": 132,
     "Book ATTD Odds": 132,
     "ATTD Value Gap": 190,
-    "Hit": 44,
+    "Hit": 150,
 }
 TWO_PLUS_DESKTOP_COLS = [
     "#", "Player", "Pos", "Opp", "Model 2+ TD Odds", "Book 2+ TD Odds",
@@ -115,6 +116,27 @@ def default_release(options: list[tuple[int, int]]) -> tuple[int, int]:
         reverse=True,
     )
     return live[0] if live else sorted(options)[0]
+
+
+def _missing_scheduled_markets(frame: pd.DataFrame, season: int, week: int) -> list[str]:
+    """Name scheduled 2026 games absent from a published weekly board."""
+    if int(season) != LIVE_SEASON:
+        return []
+    schedule_path = _HERE / "betting" / "nfl_2026_schedule.csv"
+    if not schedule_path.is_file():
+        return []
+    schedule = pd.read_csv(schedule_path)
+    slate = schedule.loc[
+        pd.to_numeric(schedule.season, errors="coerce").eq(int(season))
+        & pd.to_numeric(schedule.week, errors="coerce").eq(int(week))
+        & schedule.game_type.astype(str).eq("REG")
+    ]
+    covered = set(frame.get("game_id", pd.Series(dtype=str)).dropna().astype(str))
+    return sorted(
+        f"{row.away_team} at {row.home_team}"
+        for row in slate.itertuples(index=False)
+        if str(row.game_id) not in covered
+    )
 
 
 def available_weeks() -> dict[int, Path]:
@@ -247,6 +269,27 @@ def _matchup_is_started(group: pd.DataFrame) -> bool:
         kickoff = kickoff.dt.tz_convert("America/New_York").dt.tz_localize(None)
     now_et = pd.Timestamp.now(tz="America/New_York").tz_localize(None)
     return bool(kickoff.min() <= now_et)
+
+
+def _week_is_complete(frame: pd.DataFrame, season: int, week: int) -> bool:
+    """Use final-game coverage from the grading stamp, independent of player rows.
+
+    A final game can still have player settlements awaiting evidence. The stamp
+    counts final games while the release supplies the scheduled game set, so
+    completion must not depend on every row having a result.
+    """
+    if int(season) != LIVE_SEASON or frame.empty or "game_id" not in frame:
+        return False
+    scheduled_games = int(frame.game_id.dropna().astype(str).nunique())
+    if scheduled_games == 0:
+        return False
+    path = _DIR / f"grading_{int(season)}_week{int(week):02d}.json"
+    try:
+        stamp = json.loads(path.read_text(encoding="utf-8"))
+        final_games = int(stamp.get("final_games", 0))
+    except (OSError, ValueError, TypeError, json.JSONDecodeError):
+        return False
+    return final_games >= scheduled_games
 
 
 def default_matchup_label(matchups: list[tuple[str, list[str], pd.DataFrame]]) -> str:
@@ -906,8 +949,7 @@ def _display(df: pd.DataFrame) -> pd.DataFrame:
         ascending=[False, False, True],
         na_position="last",
     ).reset_index(drop=True)
-    outcome = pd.to_numeric(ranked.scored_anytime, errors="coerce")
-    hit = outcome.map(lambda value: "Yes" if value == 1 else ("No" if pd.notna(value) else ""))
+    hit = _hit_labels(ranked, "scored_anytime", "settlement_status_anytime")
     model_american = ranked["fair_amer"] if "fair_amer" in ranked else pd.Series(pd.NA, index=ranked.index)
     book_american = ranked["book_amer"] if "book_amer" in ranked else pd.Series(pd.NA, index=ranked.index)
     return pd.DataFrame({
@@ -944,7 +986,7 @@ def _display(df: pd.DataFrame) -> pd.DataFrame:
     })
 
 
-def _two_plus_display(df: pd.DataFrame) -> pd.DataFrame:
+def _two_plus_display(df: pd.DataFrame, *, include_unpriced: bool = False) -> pd.DataFrame:
     ranked = df.copy()
     ranked["p_ge2"] = pd.to_numeric(ranked.get("p_ge2"), errors="coerce")
     if "two_plus_amer" in ranked:
@@ -952,7 +994,7 @@ def _two_plus_display(df: pd.DataFrame) -> pd.DataFrame:
         # A live sportsbook quote is only meaningful for players the book
         # actually offered in this market. If the release has no 2+ market at
         # all, retain the model-only placeholder behavior for older releases.
-        if ranked["_book_2plus"].notna().any():
+        if ranked["_book_2plus"].notna().any() and not include_unpriced:
             ranked = ranked[ranked["_book_2plus"].notna()].copy()
     if "_book_2plus" in ranked:
         book_probability = ranked["_book_2plus"].map(_implied_probability)
@@ -986,8 +1028,7 @@ def _two_plus_display(df: pd.DataFrame) -> pd.DataFrame:
             model_american, book_american, ranked.p_ge2, book_probability
         )
     ]
-    outcome = _numeric_column(ranked, "scored_two_plus")
-    hit = outcome.map(lambda value: "Yes" if value == 1 else ("No" if pd.notna(value) else ""))
+    hit = _hit_labels(ranked, "scored_two_plus", "settlement_status_two_plus")
     return pd.DataFrame({
         "#": range(1, len(ranked) + 1),
         "Player": ranked.player_display_name + " · " + ranked.team.map(public_team_abbr),
@@ -1019,7 +1060,7 @@ def _two_plus_display(df: pd.DataFrame) -> pd.DataFrame:
     })
 
 
-def _first_td_display(df: pd.DataFrame) -> pd.DataFrame:
+def _first_td_display(df: pd.DataFrame, *, include_unpriced: bool = False) -> pd.DataFrame:
     """First TD is a competing-risk allocation, not a per-player marginal price.
 
     p_first already sums to a fixed empirical constant across the whole game
@@ -1035,7 +1076,7 @@ def _first_td_display(df: pd.DataFrame) -> pd.DataFrame:
     ranked["_book_first"] = _numeric_column(ranked, "book_first_p_devigged")
     if "first_amer" in ranked:
         ranked["_first_amer"] = pd.to_numeric(ranked["first_amer"], errors="coerce")
-        if ranked["_first_amer"].notna().any():
+        if ranked["_first_amer"].notna().any() and not include_unpriced:
             ranked = ranked[ranked["_first_amer"].notna()].copy()
     else:
         ranked["_first_amer"] = pd.Series(pd.NA, index=ranked.index, dtype="Float64")
@@ -1045,8 +1086,7 @@ def _first_td_display(df: pd.DataFrame) -> pd.DataFrame:
         ascending=[False, True],
         na_position="last",
     ).reset_index(drop=True)
-    outcome = _numeric_column(ranked, "scored_first")
-    hit = outcome.map(lambda value: "Yes" if value == 1 else ("No" if pd.notna(value) else ""))
+    hit = _hit_labels(ranked, "scored_first", "settlement_status_first")
     model_american = ranked["p_first"].map(_fair_amer_from_probability)
     model_odds = [
         _model_odds_probability(american, probability)
@@ -1090,6 +1130,47 @@ def _first_td_display(df: pd.DataFrame) -> pd.DataFrame:
             ranked["p_first"], ranked["_first_amer"], ranked["_value"]
         ) & _bet_eligibility(ranked).to_numpy(),
     })
+
+
+def _hit_labels(df: pd.DataFrame, outcome_col: str, settlement_col: str) -> pd.Series:
+    """Show settled outcomes and distinguish no-action/pending rows."""
+    outcomes = _numeric_column(df, outcome_col)
+    settlements = (
+        df[settlement_col].astype("string").str.strip().str.lower()
+        if settlement_col in df else pd.Series("", index=df.index, dtype="string")
+    )
+    if "status" in df:
+        legacy_void = df["status"].astype("string").str.strip().str.lower().eq("void")
+    else:
+        legacy_void = pd.Series(False, index=df.index)
+    labels = pd.Series("", index=df.index, dtype="string")
+    labels.loc[outcomes.eq(1)] = "Yes"
+    labels.loc[outcomes.eq(0)] = "No"
+    labels.loc[settlements.eq("void") | legacy_void] = "Void"
+    labels.loc[settlements.eq("awaiting_evidence")] = "Awaiting evidence"
+    return labels
+
+
+def _render_week_all_results(
+    matchups: list[tuple[str, list[str], pd.DataFrame]], *,
+    market_label: str, show_first_td: bool,
+) -> None:
+    st.caption(f"Every listed {market_label} outcome across completed matchups.")
+    st.markdown(f"#### All {market_label} results across matchups")
+    for label, teams, matchup in matchups:
+        st.markdown(f"**{label}**")
+        for team in teams:
+            team_view = matchup[matchup.team.astype(str).eq(team)]
+            if team_view.empty:
+                continue
+            st.markdown(f"{public_team_abbr(team)} {market_label}s")
+            _board(
+                team_view,
+                f"atd-results-{market_label}-{team.lower()}-{label.replace(' ', '-')}",
+                "",
+                show_two_plus=market_label == "2+ TD", show_first_td=show_first_td,
+                phone_show_opp=True, force_hit=True, include_unpriced=True,
+            )
 
 
 def _style(view: pd.DataFrame):
@@ -1275,7 +1356,7 @@ def _desktop_column_config() -> dict:
     return {
         "#": st.column_config.NumberColumn("#", format="%d", width=50, pinned=True,
                                            help="Row number in this list as currently sorted."),
-        "Player": st.column_config.TextColumn("Player", help="Name and NFL team."),
+        "Player": st.column_config.TextColumn("Player", width=185, help="Name and NFL team."),
         "Opp": st.column_config.TextColumn("Opp", help="Opponent this week."),
         "Model ATTD Odds": st.column_config.TextColumn(
             "Model ATTD Odds",
@@ -1287,10 +1368,11 @@ def _desktop_column_config() -> dict:
         ),
         "ATTD Value Gap": st.column_config.TextColumn(
             "ATTD Value Gap",
+            width=140,
             help="Book-minus-model American-odds gap and model-minus-book probability differential. Positive means more value in our model.",
         ),
         "Hit": st.column_config.TextColumn(
-            "Hit", help="Did they score a rushing or receiving TD?",
+            "Hit", width=150, help="Did they score a rushing or receiving TD?",
         ),
     }
 
@@ -1334,7 +1416,7 @@ def _two_plus_column_config() -> dict:
             help="Row number in this list as currently sorted.",
         ),
         "Player": st.column_config.TextColumn(
-            "Player", help="Name and NFL team.",
+            "Player", width=185, help="Name and NFL team.",
         ),
         "Model 2+ TD Odds": st.column_config.TextColumn(
             "Model 2+ TD Odds",
@@ -1346,10 +1428,11 @@ def _two_plus_column_config() -> dict:
         ),
         "2+ TD Value Gap": st.column_config.TextColumn(
             "2+ TD Value Gap",
+            width=140,
             help="Book-minus-model American-odds gap and model-minus-book probability differential.",
         ),
         "Hit": st.column_config.TextColumn(
-            "Hit", help="Did they score two or more rushing or receiving TDs?",
+            "Hit", width=150, help="Did they score two or more rushing or receiving TDs?",
         ),
     }
 
@@ -1389,7 +1472,7 @@ def _first_td_column_config() -> dict:
             "#", format="%d", width=50, pinned=True,
             help="Row number in this list as currently sorted.",
         ),
-        "Player": st.column_config.TextColumn("Player", help="Name and NFL team."),
+        "Player": st.column_config.TextColumn("Player", width=185, help="Name and NFL team."),
         "Opp": st.column_config.TextColumn("Opp", help="Opponent this week."),
         "Model First TD Odds": st.column_config.TextColumn(
             "Model First TD Odds",
@@ -1401,10 +1484,11 @@ def _first_td_column_config() -> dict:
         ),
         "First TD Value Gap": st.column_config.TextColumn(
             "First TD Value Gap",
+            width=140,
             help="Book-minus-model American-odds gap and model-minus-book probability differential. Positive means more value in our model.",
         ),
         "Hit": st.column_config.TextColumn(
-            "Hit", help="Did they score the game's first touchdown?",
+            "Hit", width=150, help="Did they score the game's first touchdown?",
         ),
     }
 
@@ -1528,24 +1612,25 @@ def _board(
     view: pd.DataFrame, slug: str, search: str, *,
     show_two_plus: bool = False, show_first_td: bool = False,
     recommended_only: bool = False, phone_show_opp: bool = False,
+    force_hit: bool = False, include_unpriced: bool = False,
 ) -> int:
     if show_first_td:
-        table = _first_td_display(view)
-        graded = _numeric_column(view, "scored_first").notna().any()
+        table = _first_td_display(view, include_unpriced=include_unpriced)
+        graded = force_hit or _numeric_column(view, "scored_first").notna().any()
         desktop_cols = FIRST_TD_DESKTOP_COLS if graded else [c for c in FIRST_TD_DESKTOP_COLS if c != "Hit"]
         phone_cols = FIRST_TD_PHONE_COLS if graded else [c for c in FIRST_TD_PHONE_COLS if c != "Hit"]
         desktop_config = _first_td_column_config()
         phone_config = _first_td_phone_column_config()
     elif show_two_plus:
-        table = _two_plus_display(view)
-        graded = _numeric_column(view, "scored_two_plus").notna().any()
+        table = _two_plus_display(view, include_unpriced=include_unpriced)
+        graded = force_hit or _numeric_column(view, "scored_two_plus").notna().any()
         desktop_cols = TWO_PLUS_DESKTOP_COLS if graded else [c for c in TWO_PLUS_DESKTOP_COLS if c != "Hit"]
         phone_cols = TWO_PLUS_PHONE_COLS if graded else [c for c in TWO_PLUS_PHONE_COLS if c != "Hit"]
         desktop_config = _two_plus_column_config()
         phone_config = _two_plus_phone_column_config()
     else:
         table = _display(view)
-        graded = pd.to_numeric(view.scored_anytime, errors="coerce").notna().any()
+        graded = force_hit or pd.to_numeric(view.scored_anytime, errors="coerce").notna().any()
         desktop_cols = DESKTOP_COLS if graded else [c for c in DESKTOP_COLS if c != "Hit"]
         phone_cols = PHONE_COLS if graded else [c for c in PHONE_COLS if c != "Hit"]
         desktop_config = _desktop_column_config()
@@ -1603,7 +1688,9 @@ are available in each column's help text. The list is sorted by ATTD Value Gap,
 highest first.
 
 Use the **Market** control to switch between Anytime TD, 2+ TD, and First TD.
-Only one market renders at a time.
+Only one market renders at a time. Completed 2026 weeks default to **All
+results** across matchups; **Recommended** and individual matchup views remain
+available. The Hit column distinguishes Yes, No, Void, and Awaiting evidence.
 
 **2+ TD.** When the pasted release includes that market, the view shows model
 odds, current sportsbook odds, and the value gap for players with a listed 2+
@@ -1706,12 +1793,14 @@ def render() -> None:
         search = controls[2].text_input("Search player", placeholder="Barkley, Jefferson", key="atd_search")
     available = releases | {(DEMO_SEASON, w): p for w, p in demo.items()}
     meta = {}
+    retrospective = False
     if season == LIVE_SEASON:
         st.caption(
             "Live 2026 prices are manually copied from US sportsbook pages when available. "
             "The source is shown for each matchup. No odds API is used."
         )
         meta = _live_metadata(season, week)
+        retrospective = meta.get("prediction_mode") == "retrospective"
         if meta:
             if meta.get("prediction_mode") == "retrospective":
                 st.caption("Retrospective reconstruction; historical input availability unverified. "
@@ -1722,14 +1811,6 @@ def render() -> None:
         graded_line = _grading_stamp_caption(season, week)
         if graded_line:
             st.caption(graded_line)
-    with st.container(horizontal=True, vertical_alignment="center"):
-        is_live = season == LIVE_SEASON
-        retrospective = meta.get("prediction_mode") == "retrospective"
-        st.badge("Retrospective" if retrospective else "Live" if is_live else "Demo",
-                 icon=":material/science:" if retrospective or not is_live else ":material/live_tv:",
-                 color="orange" if retrospective or not is_live else "green")
-        st.caption("Priced players only. Sorted by the active market's Value Gap (highest first). " +
-                   (f"Cumulative 2026 Week {week} release." if is_live else "2025 weeks 10-17 demo."))
     _reading_guide()
 
     if (season, week) not in available:
@@ -1744,6 +1825,16 @@ def render() -> None:
     manifest = _DIR / MANIFEST_NAME
     csv_cache_key = (source.stat().st_mtime_ns, manifest.stat().st_mtime_ns if manifest.is_file() else 0)
     raw = _load_csv(str(source), csv_cache_key)
+    missing_markets = _missing_scheduled_markets(raw, season, week)
+    if missing_markets:
+        st.warning("No published touchdown prices for: " + ", ".join(missing_markets) + ".")
+    unresolved_count = int(meta.get("unresolved_player_count") or 0)
+    if unresolved_count:
+        st.caption(
+            f"{unresolved_count} pasted player name(s) could not be mapped to the player universe and were left out of the modeled board."
+        )
+    if meta.get("capture_window_warning"):
+        st.caption("Pasted prices were captured across a wide time window and may reflect different market moments.")
     need = [
         "player_display_name", "position", "team", "opponent_team",
         "p_ge1", "p_book", "fair_amer", "book_amer", "scored_anytime",
@@ -1778,6 +1869,25 @@ def render() -> None:
         )
     elif pending_caption := _pending_replacement_caption(model_pending):
         st.caption(pending_caption)
+    completed_week = _week_is_complete(raw, season, week)
+    with st.container(horizontal=True, vertical_alignment="center"):
+        is_live = season == LIVE_SEASON
+        if retrospective:
+            badge = "Retrospective"
+        elif completed_week:
+            badge = "Postgame"
+        else:
+            badge = "Live" if is_live else "Demo"
+        st.badge(
+            badge,
+            icon=(":material/science:" if retrospective else
+                  ":material/check_circle:" if completed_week else
+                  ":material/live_tv:" if is_live else ":material/science:"),
+            color=("orange" if retrospective or not is_live else
+                   "blue" if completed_week else "green"),
+        )
+        st.caption("Priced players only. Sorted by the active market's Value Gap (highest first). " +
+                   (f"Cumulative 2026 Week {week} release." if is_live else "2025 weeks 10-17 demo."))
     matchups = list(_matchup_groups(board_priced))
     if not matchups:
         st.info("No matchups match this search.")
@@ -1800,6 +1910,25 @@ def render() -> None:
     show_two_plus = view == "2+ TD"
     show_first_td = view == "First TD"
     pool_eligible = show_two_plus or show_first_td
+    if show_first_td and season == LIVE_SEASON:
+        complete_pools = (
+            raw.get("first_quote_pool_complete", pd.Series(False, index=raw.index))
+            .fillna(False).astype(str).str.lower().eq("true")
+        )
+        if not complete_pools.any():
+            first_games = int(
+                raw.loc[
+                    pd.to_numeric(
+                        raw.get("first_amer", pd.Series(index=raw.index, dtype="float64")),
+                        errors="coerce",
+                    ).notna(),
+                    "game_id",
+                ].nunique()
+            )
+            st.warning(
+                "First TD quote pools are unverified. Book probabilities, value gaps, and recommendations are unavailable."
+            )
+            st.caption(f"First TD prices appear in {first_games} of {raw.game_id.nunique()} published matchups.")
 
     if pool_eligible:
         # 2+ TD and First TD: "Recommended" (every candidate across the week)
@@ -1807,13 +1936,41 @@ def render() -> None:
         # of its priced players with the candidates highlighted, like ATTD.
         # Own widget key so each visit to these markets lands on Recommended.
         recommended_only = False
-        selected_label = st.selectbox(
-            "Matchup", [RECOMMENDED_LABEL] + [item[0] for item in matchups],
-            key=f"atd_props_matchup_{season}_{week}",
-            help="Recommended lists every player who clears the market's "
-                 "candidate rule across the week. Pick a game to see all of "
-                 "its priced players, with qualifying players highlighted.",
+        matchup_options = [RECOMMENDED_LABEL] + [item[0] for item in matchups]
+        if is_live and completed_week:
+            matchup_options = [ALL_RESULTS_LABEL] + matchup_options
+        props_matchup_key = f"atd_props_matchup_{season}_{week}"
+        props_manual_key = f"{props_matchup_key}__manual"
+        default_props_matchup = (
+            ALL_RESULTS_LABEL if is_live and completed_week else RECOMMENDED_LABEL
         )
+        current_props_matchup = st.session_state.get(props_matchup_key)
+        if current_props_matchup not in matchup_options:
+            st.session_state[props_matchup_key] = default_props_matchup
+            st.session_state[props_manual_key] = False
+        elif not st.session_state.get(props_manual_key, False):
+            st.session_state[props_matchup_key] = default_props_matchup
+        selected_label = st.selectbox(
+            "Matchup", matchup_options,
+            key=props_matchup_key,
+            on_change=_mark_matchup_manual,
+            args=(props_manual_key,),
+            help=(
+                "All results shows every listed player across completed matchups. "
+                "Recommended shows candidates across the week. Choose a game "
+                "to inspect its full market board."
+                if is_live and completed_week else
+                "Recommended lists every player who clears the market's "
+                "candidate rule across the week. Pick a game to see all of "
+                "its priced players, with qualifying players highlighted."
+            ),
+        )
+        if selected_label == ALL_RESULTS_LABEL:
+            _render_week_all_results(
+                matchups, market_label="First TD" if show_first_td else "2+ TD",
+                show_first_td=show_first_td,
+            )
+            return
         if selected_label == RECOMMENDED_LABEL:
             _render_week_recommended(
                 board_priced, season, releases, show_first_td=show_first_td,
