@@ -816,7 +816,7 @@
       "previous_build": "fantasy-2026w06-902f3a5d9ab2"
     },
     "predictions": {
-      "active_build": "predictions-2026w06-610992bd5dbf",
+      "active_build": "predictions-2026w07-e87f9d325375",
       "builds": {
         "predictions-2025w10-8f1701d7a6db": {
           "artifact": "data/releases/builds/predictions/2025/week10/predictions-2025w10-8f1701d7a6db/artifact.csv",
@@ -13558,6 +13558,32 @@
             "warnings": []
           },
           "week": 6
+        },
+        "predictions-2026w07-e87f9d325375": {
+          "artifact": "data/releases/builds/predictions/2026/week07/predictions-2026w07-e87f9d325375/artifact.csv",
+          "build_id": "predictions-2026w07-e87f9d325375",
+          "metadata": "data/releases/builds/predictions/2026/week07/predictions-2026w07-e87f9d325375/metadata.json",
+          "model_version": "spread-v3-prod-sunday-tuesday-market-46-qb-ir-scoped-flag-b4a325000b7a",
+          "produced_at": "2026-10-20T23:09:15Z",
+          "product": "predictions",
+          "published_at": "2026-10-20T23:09:57Z",
+          "row_count": 14,
+          "season": 2026,
+          "sha256": "e87f9d3253755d3b05808b4ed387eb357f1c9d656d9627caaadc25e654db4405",
+          "status": "Published",
+          "validation": {
+            "checks": {
+              "artifact_sha256": "e87f9d3253755d3b05808b4ed387eb357f1c9d656d9627caaadc25e654db4405",
+              "produced_at_utc": "2026-10-20T23:09:15Z",
+              "scheduled_games": 14
+            },
+            "errors": [],
+            "ok": true,
+            "product": "predictions",
+            "row_count": 14,
+            "warnings": []
+          },
+          "week": 7
         }
       },
       "next_release": {
@@ -13566,9 +13592,9 @@
         "status": "Awaiting projections",
         "week": 7
       },
-      "previous_build": "predictions-2026w06-c3c200e3354b"
+      "previous_build": "predictions-2026w06-610992bd5dbf"
     }
   },
   "schema_version": 1,
-  "updated_at": "2026-10-20T04:54:47Z"
+  "updated_at": "2026-10-20T23:09:57Z"
 }
