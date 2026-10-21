@@ -1108,3 +1108,68 @@ def test_standard_scoring_actual_pts_are_filled_when_the_live_feed_supplies_rece
     # Standard drops the half point per reception: 3 receptions each is 1.5 fewer points.
     assert standard["Actual Pts"].notna().all()
     assert (half["Actual Pts"] - standard["Actual Pts"]).round(1).eq(1.5).all()
+
+
+def _column_help(at, column, *, has_column):
+    """The tooltip a board grid carries for one column, read from the rendered config."""
+    import json
+
+    grid = next(d for d in at.dataframe if has_column in d.value.columns)
+    return json.loads(grid.proto.columns)[column]["help"]
+
+
+def test_actual_players_note_matches_how_the_actuals_arrived():
+    live = weekly._actual_players_note(settled=False, scored=False)
+    assert live == (
+        "Blank = missing from the box-score feed. Players who did not play are removed from this board."
+    )
+    settled = weekly._actual_players_note(settled=True, scored=False)
+    assert settled == (
+        "Players who did not play stay on this board at 0.0 points. "
+        "A blank yardage cell means no box-score row. "
+        "Players listed Out or Doubtful at kickoff are not on the board."
+    )
+    scored = weekly._actual_players_note(settled=True, scored=True)
+    assert scored.startswith(
+        "Players who did not play stay on this board at 0.0 points "
+        "and count as misses in the ranking scorecard. "
+    )
+    assert "removed from this board" not in settled + scored
+
+
+def test_graded_week_tooltips_say_non_players_stay_at_zero_and_ties_share_a_rank(tmp_path):
+    at = _render_weekly(tmp_path)
+    at = next(w for w in at.selectbox if w.key == "wf_week").set_value(6).run()
+
+    actual = _column_help(at, "Actual Pts", has_column="Rk Δ")
+    assert "stay on this board at 0.0 points and count as misses in the ranking scorecard" in actual
+    assert "removed from this board" not in actual
+    finish = _column_help(at, "Finish", has_column="Rk Δ")
+    assert finish == (
+        "Where he finished at QB among the 28 players we projected this week, by actual half-PPR "
+        "points. 1 = most points. Players tied on the same points share a rank, so everyone who "
+        "scored 0.0 shows the same Finish."
+    )
+    assert _column_help(at, "Rk Δ", has_column="Rk Δ").endswith(
+        "Players tied on the same points share a Finish, so everyone who scored 0.0 is measured "
+        "against the same Finish."
+    )
+
+
+def test_settled_points_without_a_scorecard_do_not_mention_the_scorecard(tmp_path):
+    graded = weekly.available_projection_files()[(2026, 6)]
+    at = _render_weekly_release(tmp_path, graded, season=2026, week=6)
+
+    actual = _column_help(at, "Actual Pts", has_column="Actual Pts")
+    assert "stay on this board at 0.0 points." in actual
+    assert "scorecard" not in actual
+
+
+def test_live_feed_tooltips_keep_saying_non_players_are_removed(tmp_path):
+    at = _render_demo_week_with_live_actuals(tmp_path, 10)
+
+    text = _column_help(at, "Actual Pts", has_column="Off EPA")
+    assert text.endswith(
+        "Blank = missing from the box-score feed. Players who did not play are removed from this board."
+    )
+    assert "stay on this board" not in text

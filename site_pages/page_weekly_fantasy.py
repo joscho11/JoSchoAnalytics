@@ -674,6 +674,42 @@ def _rank_lookup(ranked: pd.DataFrame) -> pd.DataFrame:
     return keyed.drop_duplicates("player_id").set_index("player_id")
 
 
+_TIES_SHARE_A_RANK = (
+    "Players tied on the same points share a rank, so everyone who scored 0.0 shows the same Finish."
+)
+_RK_DELTA_HELP = (
+    "Our rank minus his finish. Green means he finished higher than we ranked him. Red means lower. "
+    "Players tied on the same points share a Finish, so everyone who scored 0.0 is measured "
+    "against the same Finish."
+)
+
+
+def _finish_help(position: str, players: int) -> str:
+    return (
+        f"Where he finished at {position} among the {players} players we projected this week, "
+        f"by actual half-PPR points. 1 = most points. {_TIES_SHARE_A_RANK}"
+    )
+
+
+def _actual_players_note(*, settled: bool, scored: bool) -> str:
+    """Who is on the board once actuals are in, worded for how the actuals arrived.
+
+    A completely graded release zero-fills anyone who did not play, so those players
+    stay (at 0.0). Only the live box-score feed drops players that have no row.
+    """
+    if not settled:
+        return (
+            "Blank = missing from the box-score feed. "
+            "Players who did not play are removed from this board."
+        )
+    counted = " and count as misses in the ranking scorecard" if scored else ""
+    return (
+        f"Players who did not play stay on this board at 0.0 points{counted}. "
+        "A blank yardage cell means no box-score row. "
+        "Players listed Out or Doubtful at kickoff are not on the board."
+    )
+
+
 def _tier_text(sizes: dict) -> str:
     return f"{sizes['QB']} QB, {sizes['RB']} RB, {sizes['WR']} WR and {sizes['TE']} TE"
 
@@ -1087,6 +1123,7 @@ def render():
                 accuracy_card = rank_lookup = None
                 accuracy_error = err
         accuracy_ready = accuracy_card is not None and not accuracy_card.empty
+        _dnp_note = _actual_players_note(settled=bool(_graded_actuals), scored=accuracy_ready)
 
         # The preview exercises the live 2026 surface, which has no legacy agent cards.
         fantasy_analysis = None
@@ -1459,7 +1496,6 @@ def render():
                 tbl.insert(0, "#", range(1, len(tbl) + 1))
                 style_fn = make_style_table(display)
 
-                _dnp_note = "Blank = missing from the box-score feed. Players who did not play are removed from this board."
                 col_config = {
                     "#":          st.column_config.NumberColumn("#", format="%d", width=50, pinned=True,   # grid minimum; pinned = grow 0, so it keeps that exact width
                                       help="Row number in this table as currently sorted and filtered — a counter to keep your place, not a ranking."),
@@ -1526,9 +1562,9 @@ def render():
                         col_config["Our Rk"] = st.column_config.NumberColumn("Our Rk", format="%d",
                                           help=f"Where we ranked him at {pos} this week, by our half-PPR projection. 1 = highest projection.")
                         col_config["Finish"] = st.column_config.NumberColumn("Finish", format="%d",
-                                          help=f"Where he finished at {pos} among the {int(rank_counts.get(pos, 0))} players we projected this week, by actual half-PPR points. 1 = most points. Equal scores share a finish.")
+                                          help=_finish_help(pos, int(rank_counts.get(pos, 0))))
                         col_config["Rk Δ"] = st.column_config.NumberColumn("Rk Δ", format="%+d",
-                                          help="Our rank minus his finish. Green means he finished higher than we ranked him. Red means lower.")
+                                          help=_RK_DELTA_HELP)
 
                 if preview_layout:
                     phone_keep = _preview_phone_columns(
