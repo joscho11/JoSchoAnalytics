@@ -120,6 +120,26 @@ def qualifies_first_td_ev(
     return (gap_ok & ev_ok).fillna(False).astype(bool)
 
 
+def qualifies_first_td_actual_ev(model_probability, book_price):
+    """Qualify a First TD quote when its frozen model probability has positive
+    expected return at the actual captured American price.
+
+    This experimental strategy does not use a de-vigged probability. Missing
+    or malformed probabilities/prices fail closed.
+    """
+    model = pd.to_numeric(model_probability, errors="coerce").astype("float64")
+    price = pd.to_numeric(book_price, errors="coerce").astype("float64")
+    valid_model = model.between(0.0, 1.0, inclusive="both")
+    valid_price = price.notna() & price.abs().ge(100) & price.map(
+        lambda value: bool(np.isfinite(value) and float(value).is_integer())
+        if pd.notna(value) else False
+    )
+    decimal = price.map(
+        lambda value: american_to_decimal(value) if pd.notna(value) and abs(value) >= 100 else np.nan
+    )
+    return (valid_model & valid_price & model.mul(decimal).sub(1.0).gt(0.0)).fillna(False).astype(bool)
+
+
 def rule_description(market: str) -> str:
     """Plain-language description of the paper-bet qualifying rule for `market`."""
     if market == "two_plus":
@@ -214,6 +234,7 @@ def prepare_paper_bets(
     book_price_col: str = "book_amer",
     outcome_col: str = "scored_anytime",
     qualifies=None,
+    eligibility_col: str | None = None,
 ) -> pd.DataFrame:
     """Add value-gap, candidate, settlement, and profit fields to one market.
 
@@ -256,7 +277,7 @@ def prepare_paper_bets(
     # First TD when the complete quoted pool cannot be reconstructed). A
     # missing explicit market decision fails closed; legacy releases without
     # this column keep their historical common-eligibility behavior.
-    eligibility_col = {
+    eligibility_col = eligibility_col or {
         "scored_anytime": "bet_eligible_anytime",
         "scored_two_plus": "bet_eligible_two_plus",
         "scored_first": "bet_eligible_first",
@@ -498,6 +519,7 @@ def season_tracker(
     outcome_col: str = "scored_anytime",
     threshold: float = ATTD_VALUE_THRESHOLD,
     qualifies=None,
+    eligibility_col: str | None = None,
 ) -> dict:
     """Return fixed-rule cards and its suppressed-or-available ROI interval.
 
@@ -515,6 +537,7 @@ def season_tracker(
         outcome_col=outcome_col,
         threshold=threshold,
         qualifies=qualifies,
+        eligibility_col=eligibility_col,
     )
     fixed = strategy_summary(prepared, threshold=threshold, qualifies=qualifies)
     ci = block_bootstrap_roi(prepared, threshold=threshold)

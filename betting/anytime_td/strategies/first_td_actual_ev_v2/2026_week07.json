@@ -1,0 +1,353 @@
+{
+  "games": [
+    {
+      "bets": [
+        {
+          "decimal_odds": 13.0,
+          "expected_return": 0.05964100800000427,
+          "first_amer": 1200,
+          "opponent_team": "CIN",
+          "p_first": 0.0815108467692311,
+          "player_display_name": "Mark Andrews",
+          "player_id": "00-0034753",
+          "stake_units": 1.0,
+          "team": "BAL"
+        },
+        {
+          "decimal_odds": 46.0,
+          "expected_return": 0.3037520979526165,
+          "first_amer": 4500,
+          "opponent_team": "BAL",
+          "p_first": 0.0283424369120134,
+          "player_display_name": "Joe Burrow",
+          "player_id": "00-0036442",
+          "stake_units": 1.0,
+          "team": "CIN"
+        },
+        {
+          "decimal_odds": 41.0,
+          "expected_return": 0.14082012114134734,
+          "first_amer": 4000,
+          "opponent_team": "CIN",
+          "p_first": 0.0278248810034475,
+          "player_display_name": "Josh Cuevas",
+          "player_id": "00-0040887",
+          "stake_units": 1.0,
+          "team": "BAL"
+        },
+        {
+          "decimal_odds": 51.0,
+          "expected_return": 0.004020078757169809,
+          "first_amer": 5000,
+          "opponent_team": "BAL",
+          "p_first": 0.0196866682109249,
+          "player_display_name": "Drew Sample",
+          "player_id": "00-0035631",
+          "stake_units": 1.0,
+          "team": "CIN"
+        },
+        {
+          "decimal_odds": 141.0,
+          "expected_return": 0.058302147075406374,
+          "first_amer": 14000,
+          "opponent_team": "CIN",
+          "p_first": 0.0075056889863504,
+          "player_display_name": "Rasheen Ali",
+          "player_id": "00-0039796",
+          "stake_units": 1.0,
+          "team": "BAL"
+        }
+      ],
+      "decision_sha256": "53518ae2d1b00c5a6d9acf1e69d1172036a9662916ece539dfe3a206dd120f67",
+      "decision_status": "frozen",
+      "exclusion_counts": {
+        "identity_history_or_availability_exclusion": 1
+      },
+      "frozen_at_et": "2026-10-20T20:03:28.695901-04:00",
+      "frozen_inputs_sha256": "035c9bd417e14a5208274ff2bdc2dda1a68efbba90a28e9836c2158561e9bccc",
+      "game_id": "2026_07_CIN_BAL",
+      "kickoff_et": "2026-10-25T13:00:00-04:00",
+      "quotes_captured_at_et": "2026-10-20T18:52:50-04:00",
+      "release_published_at_et": "2026-10-20T19:15:54.096239-04:00",
+      "selected_bet_count": 5,
+      "source_metadata_sha256": "e6418cf87c6b7e23c49dfa8a6e95abd17b2764467ffd77099948aee6a0c9c200",
+      "source_model_bundle_sha256": "ec6171e5902a84b5986edd68adca7b8703006c8f8b57b020597dbc29fd0daac7",
+      "source_model_version": "td_product_ngs_44_frozen_2025_v1",
+      "source_release": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week07_ngs_live_draftkings_week07_20261020.csv"
+    },
+    {
+      "bets": [
+        {
+          "decimal_odds": 29.0,
+          "expected_return": 0.1907283723597839,
+          "first_amer": 2800,
+          "opponent_team": "DAL",
+          "p_first": 0.0410595990468891,
+          "player_display_name": "Makai Lemon",
+          "player_id": "00-0040867",
+          "stake_units": 1.0,
+          "team": "PHI"
+        },
+        {
+          "decimal_odds": 101.0,
+          "expected_return": 0.2055972702812885,
+          "first_amer": 10000,
+          "opponent_team": "DAL",
+          "p_first": 0.0119366066364484,
+          "player_display_name": "Elijah Moore",
+          "player_id": "00-0036980",
+          "stake_units": 1.0,
+          "team": "PHI"
+        }
+      ],
+      "decision_sha256": "946e85d3d1804f9086ce6cc0259d495dc187f2fd495eb066f3cffb0e95f294ec",
+      "decision_status": "frozen",
+      "exclusion_counts": {},
+      "frozen_at_et": "2026-10-20T20:03:28.695901-04:00",
+      "frozen_inputs_sha256": "7bb5f3ef668b77cd4a00a829e1d56a19088ef3ffa43f19f920259c3c76612eda",
+      "game_id": "2026_07_DAL_PHI",
+      "kickoff_et": "2026-10-26T20:15:00-04:00",
+      "quotes_captured_at_et": "2026-10-20T18:52:50-04:00",
+      "release_published_at_et": "2026-10-20T19:15:54.096239-04:00",
+      "selected_bet_count": 2,
+      "source_metadata_sha256": "e6418cf87c6b7e23c49dfa8a6e95abd17b2764467ffd77099948aee6a0c9c200",
+      "source_model_bundle_sha256": "ec6171e5902a84b5986edd68adca7b8703006c8f8b57b020597dbc29fd0daac7",
+      "source_model_version": "td_product_ngs_44_frozen_2025_v1",
+      "source_release": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week07_ngs_live_draftkings_week07_20261020.csv"
+    },
+    {
+      "bets": [
+        {
+          "decimal_odds": 51.0,
+          "expected_return": 0.021721317824338948,
+          "first_amer": 5000,
+          "opponent_team": "DET",
+          "p_first": 0.020033751329889,
+          "player_display_name": "Jordan Love",
+          "player_id": "00-0036264",
+          "stake_units": 1.0,
+          "team": "GB"
+        },
+        {
+          "decimal_odds": 56.0,
+          "expected_return": 0.0634791717373544,
+          "first_amer": 5500,
+          "opponent_team": "GB",
+          "p_first": 0.0189906994953099,
+          "player_display_name": "Jared Goff",
+          "player_id": "00-0033106",
+          "stake_units": 1.0,
+          "team": "DET"
+        },
+        {
+          "decimal_odds": 121.0,
+          "expected_return": 0.24435096313240456,
+          "first_amer": 12000,
+          "opponent_team": "GB",
+          "p_first": 0.0102838922572926,
+          "player_display_name": "Jacob Saylors",
+          "player_id": "00-0038896",
+          "stake_units": 1.0,
+          "team": "DET"
+        }
+      ],
+      "decision_sha256": "f57b55d9a0cef6cfd38b3f9ad20db1363e31c9e845b8eb49f11fd2d82eb0164b",
+      "decision_status": "frozen",
+      "exclusion_counts": {},
+      "frozen_at_et": "2026-10-20T20:03:28.695901-04:00",
+      "frozen_inputs_sha256": "cf8687f75f97abe562b981d8d397b57aa069f749a1bf62631cea75853bc48e67",
+      "game_id": "2026_07_GB_DET",
+      "kickoff_et": "2026-10-25T16:25:00-04:00",
+      "quotes_captured_at_et": "2026-10-20T18:52:50-04:00",
+      "release_published_at_et": "2026-10-20T19:15:54.096239-04:00",
+      "selected_bet_count": 3,
+      "source_metadata_sha256": "e6418cf87c6b7e23c49dfa8a6e95abd17b2764467ffd77099948aee6a0c9c200",
+      "source_model_bundle_sha256": "ec6171e5902a84b5986edd68adca7b8703006c8f8b57b020597dbc29fd0daac7",
+      "source_model_version": "td_product_ngs_44_frozen_2025_v1",
+      "source_release": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week07_ngs_live_draftkings_week07_20261020.csv"
+    },
+    {
+      "bets": [
+        {
+          "decimal_odds": 9.5,
+          "expected_return": 0.010886528296877751,
+          "first_amer": 850,
+          "opponent_team": "KC",
+          "p_first": 0.1064091082417766,
+          "player_display_name": "Jaxon Smith-Njigba",
+          "player_id": "00-0038543",
+          "stake_units": 1.0,
+          "team": "SEA"
+        },
+        {
+          "decimal_odds": 13.0,
+          "expected_return": 0.05112535845422039,
+          "first_amer": 1200,
+          "opponent_team": "SEA",
+          "p_first": 0.0808557968041708,
+          "player_display_name": "Rashee Rice",
+          "player_id": "00-0039067",
+          "stake_units": 1.0,
+          "team": "KC"
+        },
+        {
+          "decimal_odds": 51.0,
+          "expected_return": 0.0492317243068654,
+          "first_amer": 5000,
+          "opponent_team": "SEA",
+          "p_first": 0.0205731710648405,
+          "player_display_name": "Emmett Johnson",
+          "player_id": "00-0041013",
+          "stake_units": 1.0,
+          "team": "KC"
+        }
+      ],
+      "decision_sha256": "ec3ed978e7678b9a0bd26baf2364172b2338965ab5abb1b9742753c5fee82630",
+      "decision_status": "frozen",
+      "exclusion_counts": {},
+      "frozen_at_et": "2026-10-20T20:03:28.695901-04:00",
+      "frozen_inputs_sha256": "2c28d021ab80d1ba4c8c383011dcf6dc12a417c473aa5a5e3d2b11ef20c31699",
+      "game_id": "2026_07_KC_SEA",
+      "kickoff_et": "2026-10-25T20:20:00-04:00",
+      "quotes_captured_at_et": "2026-10-20T18:52:50-04:00",
+      "release_published_at_et": "2026-10-20T19:15:54.096239-04:00",
+      "selected_bet_count": 3,
+      "source_metadata_sha256": "e6418cf87c6b7e23c49dfa8a6e95abd17b2764467ffd77099948aee6a0c9c200",
+      "source_model_bundle_sha256": "ec6171e5902a84b5986edd68adca7b8703006c8f8b57b020597dbc29fd0daac7",
+      "source_model_version": "td_product_ngs_44_frozen_2025_v1",
+      "source_release": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week07_ngs_live_draftkings_week07_20261020.csv"
+    },
+    {
+      "bets": [
+        {
+          "decimal_odds": 23.0,
+          "expected_return": 0.04995632701725872,
+          "first_amer": 2200,
+          "opponent_team": "CHI",
+          "p_first": 0.0456502750877069,
+          "player_display_name": "DeMario Douglas",
+          "player_id": "00-0038621",
+          "stake_units": 1.0,
+          "team": "NE"
+        },
+        {
+          "decimal_odds": 36.0,
+          "expected_return": 0.2686953066657489,
+          "first_amer": 3500,
+          "opponent_team": "CHI",
+          "p_first": 0.0352415362962708,
+          "player_display_name": "Eli Raridon",
+          "player_id": "00-0041395",
+          "stake_units": 1.0,
+          "team": "NE"
+        },
+        {
+          "decimal_odds": 46.0,
+          "expected_return": 0.11336599680280801,
+          "first_amer": 4500,
+          "opponent_team": "CHI",
+          "p_first": 0.024203608626148,
+          "player_display_name": "Corey Kiner",
+          "player_id": "00-0040556",
+          "stake_units": 1.0,
+          "team": "NE"
+        },
+        {
+          "decimal_odds": 91.0,
+          "expected_return": 0.11068045988072805,
+          "first_amer": 9000,
+          "opponent_team": "NE",
+          "p_first": 0.0122052797789091,
+          "player_display_name": "Jahdae Walker",
+          "player_id": "00-0040277",
+          "stake_units": 1.0,
+          "team": "CHI"
+        },
+        {
+          "decimal_odds": 101.0,
+          "expected_return": 0.11850756734980794,
+          "first_amer": 10000,
+          "opponent_team": "CHI",
+          "p_first": 0.0110743323499981,
+          "player_display_name": "Cameron Latu",
+          "player_id": "00-0038564",
+          "stake_units": 1.0,
+          "team": "NE"
+        }
+      ],
+      "decision_sha256": "279623cfa169eda7820d216114a88c30ec0050a91fc86dc31efa6ff5ffab9022",
+      "decision_status": "frozen",
+      "exclusion_counts": {},
+      "frozen_at_et": "2026-10-20T20:03:28.695901-04:00",
+      "frozen_inputs_sha256": "df28a004dc1734b48998d34d33930dbfa335bcffd6f98b1be01c823c96576d3d",
+      "game_id": "2026_07_NE_CHI",
+      "kickoff_et": "2026-10-22T20:15:00-04:00",
+      "quotes_captured_at_et": "2026-10-20T18:52:50-04:00",
+      "release_published_at_et": "2026-10-20T19:15:54.096239-04:00",
+      "selected_bet_count": 5,
+      "source_metadata_sha256": "e6418cf87c6b7e23c49dfa8a6e95abd17b2764467ffd77099948aee6a0c9c200",
+      "source_model_bundle_sha256": "ec6171e5902a84b5986edd68adca7b8703006c8f8b57b020597dbc29fd0daac7",
+      "source_model_version": "td_product_ngs_44_frozen_2025_v1",
+      "source_release": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week07_ngs_live_draftkings_week07_20261020.csv"
+    },
+    {
+      "bets": [
+        {
+          "decimal_odds": 5.5,
+          "expected_return": 0.06743366523283711,
+          "first_amer": 450,
+          "opponent_team": "NO",
+          "p_first": 0.1940788482241522,
+          "player_display_name": "Jaylen Warren",
+          "player_id": "00-0037228",
+          "stake_units": 1.0,
+          "team": "PIT"
+        },
+        {
+          "decimal_odds": 16.0,
+          "expected_return": 0.05362771269468802,
+          "first_amer": 1500,
+          "opponent_team": "NO",
+          "p_first": 0.065851732043418,
+          "player_display_name": "Pat Freiermuth",
+          "player_id": "00-0036894",
+          "stake_units": 1.0,
+          "team": "PIT"
+        },
+        {
+          "decimal_odds": 56.0,
+          "expected_return": 0.004694243309859125,
+          "first_amer": 5500,
+          "opponent_team": "NO",
+          "p_first": 0.0179409686305332,
+          "player_display_name": "Aaron Rodgers",
+          "player_id": "00-0023459",
+          "stake_units": 1.0,
+          "team": "PIT"
+        }
+      ],
+      "decision_sha256": "d1075405d62a5256539258e8e7170eadaa44a41cab59bb4c7d264236add5796b",
+      "decision_status": "frozen",
+      "exclusion_counts": {
+        "identity_history_or_availability_exclusion": 2
+      },
+      "frozen_at_et": "2026-10-20T20:03:28.695901-04:00",
+      "frozen_inputs_sha256": "2bf3ed3c804f86f6cdca7186b59a895a76d938167446982162fcecd004a5bf12",
+      "game_id": "2026_07_PIT_NO",
+      "kickoff_et": "2026-10-25T09:30:00-04:00",
+      "quotes_captured_at_et": "2026-10-20T18:52:50-04:00",
+      "release_published_at_et": "2026-10-20T19:15:54.096239-04:00",
+      "selected_bet_count": 3,
+      "source_metadata_sha256": "e6418cf87c6b7e23c49dfa8a6e95abd17b2764467ffd77099948aee6a0c9c200",
+      "source_model_bundle_sha256": "ec6171e5902a84b5986edd68adca7b8703006c8f8b57b020597dbc29fd0daac7",
+      "source_model_version": "td_product_ngs_44_frozen_2025_v1",
+      "source_release": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week07_ngs_live_draftkings_week07_20261020.csv"
+    }
+  ],
+  "ledger_sha256": "290964a951f84b488991d939d8717510b608b1084bd013b63755ea7a474e7958",
+  "rule": "every eligible quoted player with model_probability * decimal_odds - 1 > 0; 1 unit each",
+  "schema_version": 1,
+  "season": 2026,
+  "strategy_id": "first_td_actual_ev_v2",
+  "week": 7
+}

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import re
 from datetime import datetime
 from pathlib import Path
@@ -1029,6 +1030,263 @@ def _no_touchdown_games(pbp: pd.DataFrame, game_ids: set, final_schedule: pd.Dat
     return confirmed
 
 
+def _stable_frame_sha256(frame: pd.DataFrame, columns: list[str], sort_by: list[str]) -> str:
+    """Hash a canonical frame subset for evidence provenance."""
+    selected = [column for column in columns if column in frame]
+    work = frame[selected].copy()
+    sort_columns = [column for column in sort_by if column in work]
+    if sort_columns and not work.empty:
+        work = work.sort_values(sort_columns, kind="stable", na_position="last")
+    records = json.loads(work.to_json(orient="records", date_format="iso", double_precision=15))
+    encoded = json.dumps(
+        {"columns": selected, "records": records},
+        sort_keys=True, separators=(",", ":"), ensure_ascii=False,
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def _first_td_result_sidecar(
+    source: Path,
+    original_board: pd.DataFrame,
+    graded_board: pd.DataFrame,
+    schedule: pd.DataFrame,
+    pbp: pd.DataFrame,
+    *,
+    season: int,
+    week: int,
+    first_td_by_game: dict,
+    no_td_games: set,
+    scoped_actuals: pd.DataFrame,
+    id_aliases: dict[str, set[str]],
+) -> tuple[Path, bool]:
+    """Persist verified game scorers, including winners outside the published rows."""
+    board = original_board.copy()
+    board["_game_id"] = board["game_id"].map(_normal_identifier)
+    board["_player_id"] = board["player_id"].map(_normal_identifier)
+    game_ids = sorted(board["_game_id"].dropna().unique().tolist())
+
+    frozen_columns = [
+        "season", "week", "game_id", "player_id", "player_display_name", "team",
+        "opponent_team", "position", "lambda", "p_first", "unquoted_lambda_remainder",
+        "prediction_mode", "model_version", "book", "slate", "snapped_at_et",
+        "first_amer", "bet_eligible_first", "eligibility_reason_first",
+    ]
+    frozen_board_sha = _stable_frame_sha256(
+        board, frozen_columns, ["game_id", "player_id", "player_display_name"],
+    )
+    schedule_rows = schedule.copy()
+    if "game_id" in schedule_rows:
+        schedule_rows["_game_id"] = schedule_rows["game_id"].map(_normal_identifier)
+    pbp_rows = pbp.copy()
+    if "game_id" in pbp_rows:
+        pbp_rows["_game_id"] = pbp_rows["game_id"].map(_normal_identifier)
+    actuals_rows = scoped_actuals.copy()
+    identity_cols = [
+        "player_id", "gsis_id", "sleeper_id", "player_display_name", "player_name",
+        "team", "recent_team", "position",
+    ]
+
+    event_by_game = {}
+    if {"game_id", "touchdown"} <= set(pbp_rows.columns):
+        touchdown_rows = pbp_rows[pbp_rows["_game_id"].isin(game_ids) & pbp_rows["touchdown"].eq(1)].copy()
+        sort_cols = [column for column in ("_game_id", "qtr", "play_id") if column in touchdown_rows]
+        if sort_cols:
+            touchdown_rows = touchdown_rows.sort_values(sort_cols, kind="stable")
+        event_by_game = {
+            game_id: row
+            for game_id, row in touchdown_rows.drop_duplicates("_game_id", keep="first").set_index("_game_id").iterrows()
+        }
+
+    games = []
+    for game_id in game_ids:
+        player_rows = graded_board[
+            graded_board["game_id"].map(_normal_identifier).eq(game_id)
+        ]
+        player_settlements = {}
+        for row in player_rows.to_dict(orient="records"):
+            raw_player_id = row.get("player_id")
+            if pd.isna(raw_player_id) or str(raw_player_id).strip() == "":
+                continue
+            player_id = str(raw_player_id).strip()
+            raw_status = str(row.get("settlement_status_first", "awaiting_evidence")).strip().lower()
+            status = raw_status if raw_status in {"settled", "void", "awaiting_evidence"} else "awaiting_evidence"
+            scored_first = pd.to_numeric(row.get("scored_first"), errors="coerce")
+            player_settlements[player_id] = {
+                "status": status,
+                "scored_first": float(scored_first) if status == "settled" and pd.notna(scored_first) else None,
+            }
+        final_row = schedule_rows[schedule_rows.get("_game_id", pd.Series(index=schedule_rows.index, dtype="string")).eq(game_id)]
+        is_final = bool(
+            len(final_row) == 1
+            and pd.notna(pd.to_numeric(final_row.iloc[0].get("home_score"), errors="coerce"))
+            and pd.notna(pd.to_numeric(final_row.iloc[0].get("away_score"), errors="coerce"))
+        )
+        scorer_id = None
+        scorer_kind = None
+        scorer_name = None
+        scorer_team = None
+        scorer_on_board = None
+        pending_reason = None
+
+        if not is_final:
+            pending_reason = "game_not_final"
+        elif game_id in first_td_by_game:
+            raw_scorer_id, scorer_kind = first_td_by_game[game_id]
+            scorer_id = _normal_identifier(raw_scorer_id)
+            event = event_by_game.get(game_id, {})
+            scorer_team = _normal_team(event.get("td_team")) if event is not None else None
+            if scorer_id is None or scorer_kind == "unresolved":
+                scorer_id = None
+                scorer_kind = "unresolved"
+                pending_reason = "first_scorer_identity_unresolved"
+            else:
+                identity = _first_td_name_team(actuals_rows, scorer_id, season=season, week=week)
+                if identity:
+                    scorer_team, normalized_name = identity
+                    id_cols = [column for column in ("player_id", "gsis_id", "sleeper_id") if column in actuals_rows]
+                    name_cols = [column for column in ("player_display_name", "player_name") if column in actuals_rows]
+                    if id_cols and name_cols:
+                        identity_mask = pd.Series(False, index=actuals_rows.index)
+                        for column in id_cols:
+                            identity_mask |= actuals_rows[column].map(_normal_identifier).eq(scorer_id)
+                        identity_rows = actuals_rows[identity_mask]
+                        if len(identity_rows) == 1:
+                            display_name = identity_rows.iloc[0][name_cols[0]]
+                            scorer_name = str(display_name) if pd.notna(display_name) else normalized_name
+                        else:
+                            scorer_name = normalized_name
+                    else:
+                        scorer_name = normalized_name
+                aliases = id_aliases.get(scorer_id, {scorer_id})
+                board_ids = set(board.loc[board["_game_id"].eq(game_id), "_player_id"].dropna())
+                scorer_on_board = bool(board_ids & aliases)
+                if not scorer_on_board and scorer_name and scorer_team:
+                    names = board.loc[board["_game_id"].eq(game_id)]
+                    scorer_on_board = any(
+                        _normal_team(row.get("team")) == scorer_team
+                        and _normal_name(row.get("player_display_name")) == _normal_name(scorer_name)
+                        for row in names.to_dict(orient="records")
+                    )
+        elif game_id in no_td_games:
+            scorer_kind = "no_touchdown"
+            scorer_on_board = False
+        else:
+            pending_reason = "play_by_play_missing_or_incomplete"
+
+        state = "pending" if pending_reason else "resolved"
+        pbp_game = pbp_rows[pbp_rows.get("_game_id", pd.Series(index=pbp_rows.index, dtype="string")).eq(game_id)]
+        sched_game = schedule_rows[schedule_rows.get("_game_id", pd.Series(index=schedule_rows.index, dtype="string")).eq(game_id)]
+        stats_game = actuals_rows
+        if scorer_id is not None:
+            relevant_ids = id_aliases.get(scorer_id, {scorer_id})
+            id_cols = [column for column in ("player_id", "gsis_id", "sleeper_id") if column in stats_game]
+            if id_cols:
+                mask = pd.Series(False, index=stats_game.index)
+                for column in id_cols:
+                    mask |= stats_game[column].map(_normal_identifier).isin(relevant_ids)
+                stats_game = stats_game[mask]
+        games.append({
+            "game_id": game_id,
+            "status": state,
+            "pending_reason": pending_reason,
+            "outcome_kind": scorer_kind,
+            "scorer_player_id": scorer_id,
+            "scorer_name": scorer_name,
+            "scorer_team": scorer_team,
+            "scorer_on_board": scorer_on_board,
+            "player_settlements": player_settlements,
+            "evidence_source": "nflverse_play_by_play",
+            "identity_source": "nflverse_player_stats" if scorer_name else "play_by_play_player_id",
+            "first_score_qtr": event_by_game.get(game_id, {}).get("qtr") if game_id in event_by_game else None,
+            "first_score_play_id": event_by_game.get(game_id, {}).get("play_id") if game_id in event_by_game else None,
+            "source_hashes": {
+                "published_frozen_inputs": frozen_board_sha,
+                "schedule": _stable_frame_sha256(
+                    sched_game, ["game_id", "home_team", "away_team", "home_score", "away_score"], ["game_id"],
+                ),
+                "play_by_play": _stable_frame_sha256(
+                    pbp_game,
+                    ["game_id", "qtr", "play_id", "touchdown", "td_player_id", "td_team", "posteam", "defteam",
+                     "return_touchdown", "total_home_score", "total_away_score"],
+                    ["qtr", "play_id"],
+                ),
+                "player_identity": _stable_frame_sha256(
+                    stats_game, identity_cols, [column for column in ("player_id", "gsis_id", "sleeper_id") if column in stats_game],
+                ),
+            },
+        })
+
+    sidecar = source.with_name(f"first_td_results_{int(season)}_week{int(week):02d}.json")
+    existing_games = {}
+    if sidecar.is_file():
+        try:
+            old = json.loads(sidecar.read_text(encoding="utf-8"))
+            existing_games = {game["game_id"]: game for game in old.get("games", [])}
+        except (OSError, ValueError, TypeError, KeyError) as exc:
+            raise PublicationError(f"Invalid First TD game result sidecar: {sidecar}") from exc
+    now = utc_now_iso()
+    changed = False
+    for game in games:
+        prior = existing_games.get(game["game_id"])
+        prior_settlements = dict(prior.get("player_settlements", {})) if prior else {}
+        current_settlements = game["player_settlements"]
+        merged_settlements = dict(prior_settlements)
+        settlements_changed = False
+        for player_id, current in current_settlements.items():
+            previous = prior_settlements.get(player_id)
+            if previous and previous.get("status") in {"settled", "void"}:
+                if current.get("status") in {"settled", "void"} and current != previous:
+                    raise PublicationError(
+                        f"First TD player settlement conflicts with previously verified sidecar: "
+                        f"{game['game_id']}/{player_id}"
+                    )
+                continue
+            if previous != current:
+                merged_settlements[player_id] = current
+                settlements_changed = True
+        game["player_settlements"] = merged_settlements
+        if prior and prior.get("status") == "resolved":
+            if game["status"] == "resolved" and any(
+                prior.get(field) != game.get(field)
+                for field in ("outcome_kind", "scorer_player_id", "scorer_team", "scorer_on_board")
+            ):
+                raise PublicationError(
+                    f"First TD game result conflicts with previously verified sidecar: {game['game_id']}"
+                )
+            # A verified result is immutable; keep its original evidence and timestamp.
+            if settlements_changed:
+                prior["player_settlements"] = merged_settlements
+                prior["settlements_updated_at"] = now
+                changed = True
+            continue
+        if prior:
+            prior_content = {key: value for key, value in prior.items() if key != "graded_at"}
+            prior_content.pop("settlements_updated_at", None)
+            if prior_content == game:
+                continue
+        game["graded_at"] = now
+        if settlements_changed:
+            game["settlements_updated_at"] = now
+        existing_games[game["game_id"]] = game
+        changed = True
+    payload = {
+        "schema_version": 1,
+        "season": int(season),
+        "week": int(week),
+        "source_release": source.name,
+        "published_frozen_inputs_sha256": frozen_board_sha,
+        "games": [existing_games[key] for key in sorted(existing_games)],
+    }
+    encoded = (json.dumps(payload, indent=2, sort_keys=True) + "\n").encode("utf-8")
+    if sidecar.is_file() and sidecar.read_bytes() != encoded:
+        # Existing pending rows can gain evidence, and new board games can be added.
+        changed = True
+    if changed or not sidecar.is_file():
+        sidecar.write_bytes(encoded)
+        changed = True
+    return sidecar, changed
+
+
 def grade_first_td_file(
     path: str | Path,
     schedule: pd.DataFrame,
@@ -1199,6 +1457,28 @@ def grade_first_td_file(
             elif kind == "no_touchdown" and no_td_offered is False:
                 # A verified no-TD game with no No Touchdown selection is void.
                 settlement.loc[idx] = "void"
+        # Losing source participation rows must not erase already verified
+        # settlements. New evidence still wins: this only fills a newly
+        # awaiting row from its valid prior settled/void value.
+        prior_rows = original_board.loc[game_rows.index]
+        prior_status = (
+            prior_rows["settlement_status_first"].astype("string").str.strip().str.lower()
+            if "settlement_status_first" in prior_rows
+            else pd.Series("", index=game_rows.index, dtype="string")
+        )
+        prior_outcome = pd.to_numeric(
+            prior_rows.get("scored_first", pd.Series(pd.NA, index=game_rows.index)),
+            errors="coerce",
+        )
+        prior_valid = (
+            prior_status.eq("settled") & prior_outcome.isin([0, 1])
+        ) | (
+            prior_status.eq("void") & prior_outcome.isna()
+        )
+        preserve_mask = settlement.eq("awaiting_evidence") & prior_valid
+        if preserve_mask.any():
+            settlement.loc[preserve_mask] = prior_status.loc[preserve_mask]
+            outcome.loc[preserve_mask] = prior_outcome.loc[preserve_mask]
         if settlement.eq("awaiting_evidence").all():
             if "settlement_status_first" not in board:
                 board["settlement_status_first"] = "open"
@@ -1221,6 +1501,20 @@ def grade_first_td_file(
             board.loc[game_rows.index[~keep_void.to_numpy()], "status"] = "final"
         updated_games.append(game_id)
         updated_rows += int(settlement.ne("awaiting_evidence").sum())
+
+    result_sidecar, result_sidecar_changed = _first_td_result_sidecar(
+        source,
+        original_board,
+        board,
+        sched,
+        pbp_work,
+        season=season,
+        week=week,
+        first_td_by_game=first_td_by_game,
+        no_td_games=no_td_games,
+        scoped_actuals=scoped_actuals,
+        id_aliases=id_aliases,
+    )
 
     board = board.drop(columns=["_game_id", "_player_id"])
     encoded = board.to_csv(index=False, lineterminator="\n").encode("utf-8")
@@ -1250,6 +1544,8 @@ def grade_first_td_file(
         "pending_games": pending_games,
         "complete": bool(board_games_final and not pending_games and resolved_first.all()),
         "changed": changed,
+        "game_results_path": str(result_sidecar),
+        "game_results_changed": result_sidecar_changed,
     }
 
 

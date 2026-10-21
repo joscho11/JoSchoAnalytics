@@ -90,10 +90,16 @@ def _plays(final_home, final_away, touchdown=0):
 
 def test_no_touchdown_game_waits_for_market_contract_and_participation(tmp_path):
     """The no-scorer option and player participation decide settled loss vs void."""
+    import json
+    from pathlib import Path
+
     result, graded = _grade_fixture(tmp_path, _plays(3, 9), home_score=3, away_score=9)
     assert result["status"] == "pending" and result["complete"] is False
     assert graded["scored_first"].isna().all()
     assert graded["settlement_status_first"].tolist() == ["awaiting_evidence"] * 2
+    game = json.loads(Path(result["game_results_path"]).read_text(encoding="utf-8"))["games"][0]
+    assert game["status"] == "resolved" and game["outcome_kind"] == "no_touchdown"
+    assert {item["status"] for item in game["player_settlements"].values()} == {"awaiting_evidence"}
 
 
 def test_no_touchdown_game_stays_pending_until_pbp_reaches_final_score(tmp_path):
@@ -111,6 +117,159 @@ def test_touchdown_game_still_grades_the_scorer(tmp_path):
     })
     result, graded = _grade_fixture(tmp_path, rows, home_score=3, away_score=9)
     assert graded["scored_first"].tolist() == [1.0, 0.0]
+
+
+def test_first_td_game_sidecar_identifies_winner_outside_board_and_is_idempotent(tmp_path):
+    import json
+    import pandas as pd
+    from publishing.grader import grade_first_td_file
+
+    csv = tmp_path / "anytime_td_2026_week02.csv"
+    frozen = pd.DataFrame({
+        "game_id": ["2026_02_MIN_CHI"] * 2,
+        "player_id": ["JJ", "CW"],
+        "player_display_name": ["Jeremiyah Love", "Caleb Williams"],
+        "team": ["MIN", "CHI"],
+        "p_first": [0.2, 0.1],
+        "first_amer": [400, 700],
+        "scored_first": [float("nan")] * 2,
+    })
+    frozen.to_csv(csv, index=False)
+    schedule = pd.DataFrame([{
+        "season": 2026, "week": 2, "game_id": "2026_02_MIN_CHI",
+        "home_team": "CHI", "away_team": "MIN", "home_score": 6, "away_score": 0,
+    }])
+    pbp = pd.DataFrame(_plays(6, 0))
+    pbp.loc[1, ["touchdown", "td_player_id", "td_team", "posteam", "defteam", "return_touchdown"]] = [
+        1, "OUTSIDE", "MIN", "MIN", "CHI", 0,
+    ]
+    actuals = pd.DataFrame({
+        "player_id": ["JJ", "CW", "OUTSIDE"],
+        "position": ["WR", "QB", "WR"],
+        "team": ["MIN", "CHI", "MIN"],
+        "player_display_name": ["Jeremiyah Love", "Caleb Williams", "Unlisted Scorer"],
+        "offense_snaps": [1, 1, 1], "defense_snaps": [0, 0, 0], "st_snaps": [0, 0, 0],
+    })
+
+    first = grade_first_td_file(csv, schedule, pbp, actuals, season=2026, week=2)
+    result_path = Path(first["game_results_path"])
+    payload = json.loads(result_path.read_text(encoding="utf-8"))
+    game = payload["games"][0]
+    assert game["status"] == "resolved"
+    assert game["outcome_kind"] == "offense_skill"
+    assert game["scorer_player_id"] == "OUTSIDE"
+    assert game["scorer_name"] == "Unlisted Scorer"
+    assert game["scorer_on_board"] is False
+    assert game["source_hashes"]["published_frozen_inputs"] == payload["published_frozen_inputs_sha256"]
+    assert set(game["source_hashes"]) == {
+        "published_frozen_inputs", "schedule", "play_by_play", "player_identity",
+    }
+    assert game["player_settlements"] == {
+        "JJ": {"status": "settled", "scored_first": 0.0},
+        "CW": {"status": "settled", "scored_first": 0.0},
+    }
+    graded = pd.read_csv(csv)
+    frozen_prediction_columns = [
+        "game_id", "player_id", "player_display_name", "team", "p_first", "first_amer",
+    ]
+    pd.testing.assert_frame_equal(
+        graded[frozen_prediction_columns], frozen[frozen_prediction_columns], check_dtype=False,
+    )
+
+    second = grade_first_td_file(csv, schedule, pbp, actuals, season=2026, week=2)
+    assert second["game_results_changed"] is False
+    assert json.loads(result_path.read_text(encoding="utf-8"))["games"][0]["graded_at"] == game["graded_at"]
+
+
+def test_first_td_game_sidecar_keeps_unknown_earliest_scorer_pending(tmp_path):
+    import json
+    import pandas as pd
+    from publishing.grader import grade_first_td_file
+
+    csv = tmp_path / "anytime_td_2026_week02.csv"
+    pd.DataFrame({
+        "game_id": ["2026_02_MIN_CHI"] * 2,
+        "player_id": ["JJ", "CW"],
+        "scored_first": [float("nan")] * 2,
+    }).to_csv(csv, index=False)
+    schedule = pd.DataFrame([{
+        "season": 2026, "week": 2, "game_id": "2026_02_MIN_CHI",
+        "home_team": "CHI", "away_team": "MIN", "home_score": 6, "away_score": 0,
+    }])
+    pbp = pd.DataFrame([
+        {"game_id": "2026_02_MIN_CHI", "play_id": 1, "qtr": 1, "touchdown": 1,
+         "td_player_id": None, "td_team": "MIN", "posteam": "MIN", "defteam": "CHI",
+         "return_touchdown": 0, "total_home_score": 0, "total_away_score": 6},
+        {"game_id": "2026_02_MIN_CHI", "play_id": 2, "qtr": 2, "touchdown": 1,
+         "td_player_id": "JJ", "td_team": "MIN", "posteam": "MIN", "defteam": "CHI",
+         "return_touchdown": 0, "total_home_score": 0, "total_away_score": 6},
+    ])
+    actuals = pd.DataFrame({
+        "player_id": ["JJ", "CW"], "position": ["WR", "QB"], "team": ["MIN", "CHI"],
+        "player_display_name": ["Jeremiyah Love", "Caleb Williams"],
+        "offense_snaps": [1, 1], "defense_snaps": [0, 0], "st_snaps": [0, 0],
+    })
+
+    result = grade_first_td_file(csv, schedule, pbp, actuals, season=2026, week=2)
+    game = json.loads(Path(result["game_results_path"]).read_text(encoding="utf-8"))["games"][0]
+    assert game["status"] == "pending"
+    assert game["pending_reason"] == "first_scorer_identity_unresolved"
+    assert game["scorer_player_id"] is None
+    assert game["scorer_on_board"] is None
+    assert game["player_settlements"] == {
+        "JJ": {"status": "awaiting_evidence", "scored_first": None},
+        "CW": {"status": "awaiting_evidence", "scored_first": None},
+    }
+
+
+def test_first_td_preserves_valid_no_and_void_when_new_participation_is_missing(tmp_path):
+    import json
+    import pandas as pd
+    from publishing.grader import grade_first_td_file
+
+    csv = tmp_path / "anytime_td_2026_week02.csv"
+    pd.DataFrame({
+        "game_id": ["2026_02_MIN_CHI"] * 3,
+        "player_id": ["SCORER", "PREVIOUS_NO", "PREVIOUS_VOID"],
+        "player_display_name": ["Scorer", "Prior No", "Prior Void"],
+        "team": ["MIN", "MIN", "CHI"],
+        "scored_first": [None, 0.0, None],
+        "settlement_status_first": ["open", "settled", "void"],
+        "status": ["scheduled", "final", "void"],
+    }).to_csv(csv, index=False)
+    schedule = pd.DataFrame([{
+        "season": 2026, "week": 2, "game_id": "2026_02_MIN_CHI",
+        "home_team": "CHI", "away_team": "MIN", "home_score": 6, "away_score": 0,
+    }])
+    pbp = pd.DataFrame(_plays(6, 0))
+    pbp.loc[1, ["touchdown", "td_player_id", "td_team", "posteam", "defteam", "return_touchdown"]] = [
+        1, "SCORER", "MIN", "MIN", "CHI", 0,
+    ]
+    # Stats provide positions and identities, while deliberately omitting snap
+    # counts so the two non-scorer rows become newly awaiting evidence.
+    actuals = pd.DataFrame({
+        "player_id": ["SCORER", "PREVIOUS_NO", "PREVIOUS_VOID"],
+        "position": ["RB", "WR", "TE"],
+        "team": ["MIN", "MIN", "CHI"],
+        "player_display_name": ["Scorer", "Prior No", "Prior Void"],
+    })
+
+    result = grade_first_td_file(csv, schedule, pbp, actuals, season=2026, week=2)
+    graded = pd.read_csv(csv).set_index("player_id")
+    assert graded.loc["SCORER", "settlement_status_first"] == "settled"
+    assert graded.loc["SCORER", "scored_first"] == 1
+    assert graded.loc["PREVIOUS_NO", "settlement_status_first"] == "settled"
+    assert graded.loc["PREVIOUS_NO", "scored_first"] == 0
+    assert graded.loc["PREVIOUS_VOID", "settlement_status_first"] == "void"
+    assert pd.isna(graded.loc["PREVIOUS_VOID", "scored_first"])
+
+    sidecar = json.loads(Path(result["game_results_path"]).read_text(encoding="utf-8"))["games"][0]
+    assert sidecar["player_settlements"]["PREVIOUS_NO"] == {
+        "status": "settled", "scored_first": 0.0,
+    }
+    assert sidecar["player_settlements"]["PREVIOUS_VOID"] == {
+        "status": "void", "scored_first": None,
+    }
 
 
 def test_first_td_pass_touchdown_credits_receiver_not_passer(tmp_path):
@@ -163,6 +322,14 @@ def test_first_td_voids_authoritative_inactive_with_matt_hibner_alias(tmp_path):
     assert pd.isna(graded.loc["sleeper:unknown", "scored_first"])
     assert graded.loc["GSIS1", "settlement_status_first"] == "settled"
     assert graded.loc["GSIS1", "scored_first"] == 1
+    import json
+    sidecar_game = json.loads(Path(result["game_results_path"]).read_text(encoding="utf-8"))["games"][0]
+    assert sidecar_game["player_settlements"]["sleeper:unknown"] == {
+        "status": "void", "scored_first": None,
+    }
+    assert sidecar_game["player_settlements"]["GSIS1"] == {
+        "status": "settled", "scored_first": 1.0,
+    }
 
 
 def test_first_td_grading_keeps_void_status_set_by_the_anytime_grader(tmp_path):

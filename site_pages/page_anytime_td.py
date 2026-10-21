@@ -18,6 +18,10 @@ import streamlit as st
 import attd_tracker as tracker
 import page_common
 from publishing.td_releases import MANIFEST_NAME, canonical_td_releases, read_td_release
+from publishing.first_td_strategy import (
+    load_first_td_actual_ev_v2,
+    published_board_rankings,
+)
 from dashboard_chrome import dataframe_phone_desktop, exact_table_height
 from team_display import public_team_abbr
 
@@ -437,6 +441,124 @@ def _tracker_for_market(frame: pd.DataFrame, market: str) -> dict:
             ),
         )
     return tracker.season_tracker(frame)
+
+
+def _first_td_game_results(source: Path, season: int, week: int) -> tuple[dict[str, dict], str | None]:
+    """Read the grader's adjacent game-result sidecar for a published release."""
+    path = source.with_name(f"first_td_results_{int(season)}_week{int(week):02d}.json")
+    if not path.is_file():
+        return {}, None
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        return {}, f"First TD result sidecar could not be read: {exc}"
+    if not isinstance(payload, dict):
+        return {}, "First TD result sidecar has an invalid top-level value."
+    if (
+        payload.get("schema_version") != 1
+        or str(payload.get("season", "")) != str(season)
+        or str(payload.get("week", "")) != str(week)
+        or Path(str(payload.get("source_release", ""))).name != source.name
+    ):
+        return {}, "First TD result sidecar does not match this published release."
+    games = payload.get("games", [])
+    if not isinstance(games, list):
+        return {}, "First TD result sidecar has an invalid games list."
+    return {str(game["game_id"]): game for game in games if isinstance(game, dict) and game.get("game_id")}, None
+
+
+def _published_board_ranking_display(raw: pd.DataFrame, results: dict[str, dict]):
+    """Attach readable matchup labels to the published-board ranking table."""
+    table, summary = published_board_rankings(raw, results)
+    labels = {
+        str(group.game_id.iloc[0]): label
+        for label, _, group in _matchup_groups(raw)
+        if not group.empty and "game_id" in group
+    }
+    if not table.empty:
+        table["Game"] = table["Game"].map(labels).fillna(table["Game"])
+    return table, summary
+
+
+def _render_published_board_rankings(raw: pd.DataFrame, source: Path, season: int, week: int) -> None:
+    """Show Top-1/Top-3 outcomes independently of quotes and no-vig pools."""
+    st.markdown("#### Published board rankings")
+    st.caption(
+        "Frozen model probabilities rank every published player, whether or not a First TD price or full market is available. "
+        "Outside-board scorers, defensive scores, and no-touchdown games count as misses; unresolved games remain pending."
+    )
+    results, issue = _first_td_game_results(source, season, week)
+    if issue:
+        st.warning(issue)
+    try:
+        table, summary = _published_board_ranking_display(raw, results)
+    except Exception as exc:
+        st.info(f"Published-board rankings are unavailable for this release: {exc}")
+        return
+    graded = summary["graded_games"]
+    top1 = f"{summary['top1_hits']}/{graded}" if graded else "Pending"
+    top3 = f"{summary['top3_hits']}/{graded}" if graded else "Pending"
+    with st.container(horizontal=True):
+        st.metric("Top 1 hits", top1, border=True)
+        st.metric("Top 3 hits", top3, border=True)
+        st.metric("Resolved games", str(graded), border=True)
+        st.metric("Pending games", str(summary["pending_games"]), border=True)
+    st.caption("Top-1 and Top-3 counts use resolved games only. These are published-board rankings, separate from paper betting record and ROI.")
+    if not table.empty:
+        table = table.rename(columns={"Game": "Matchup"})
+        st.dataframe(table, hide_index=True)
+
+
+def _render_first_td_actual_ev_v2(season: int, week: int, releases: dict[tuple[int, int], Path]) -> None:
+    """Show the immutable actual-price experimental First TD paper ledger."""
+    st.markdown("#### Experimental paper strategy · first_td_actual_ev_v2")
+    st.caption(
+        "One paper unit per eligible quoted player when frozen model probability × actual decimal odds − 1 is strictly positive. "
+        "This record uses captured prices and does not require a complete quote pool."
+    )
+    try:
+        bets, ledger = load_first_td_actual_ev_v2(releases=releases)
+    except Exception as exc:
+        st.warning(f"The First TD v2 ledger could not be verified: {exc}")
+        return
+    decisions = [
+        game for game in ledger.get("games", [])
+        if int(game.get("season", season)) == int(season) and int(game.get("week", week)) == int(week)
+    ]
+    if not bets.empty:
+        scoped = bets[
+            pd.to_numeric(bets.season, errors="coerce").eq(int(season))
+            & pd.to_numeric(bets.week, errors="coerce").eq(int(week))
+        ].copy()
+    else:
+        scoped = bets
+    if scoped.empty:
+        locked = len(decisions)
+        zero_picks = sum(int(game.get("selected_bet_count", 0)) == 0 for game in decisions)
+        st.info(
+            f"No selected bets in this scope. {locked} game decision(s) are frozen, including {zero_picks} zero-pick decision(s)."
+            if locked else "No immutable First TD v2 game decisions are frozen for this week yet."
+        )
+        return
+    paper = tracker.season_tracker(
+        scoped,
+        model_probability_col="p_first",
+        book_probability_col=None,
+        book_price_col="first_amer",
+        outcome_col="scored_first",
+        qualifies=lambda frame: tracker.qualifies_first_td_actual_ev(
+            frame["_model_probability"], frame["_book_price"],
+        ),
+        eligibility_col="bet_eligible_first_actual_v2",
+    )
+    _render_scorecard_metrics(
+        paper, "first", f"first-td-v2-{season}-{week}",
+        f"Week {week} · frozen actual-price selections · {len(decisions)} game decisions.",
+    )
+    st.caption(
+        f"Frozen selections: {len(scoped)} · zero-pick game decisions: "
+        f"{sum(int(game.get('selected_bet_count', 0)) == 0 for game in decisions)}."
+    )
 
 
 def _published_live_paths(releases: dict[tuple[int, int], Path]) -> tuple[tuple[str, ...], tuple[int, ...]]:
@@ -1097,8 +1219,12 @@ def _first_td_display(df: pd.DataFrame, *, include_unpriced: bool = False) -> pd
         for american, probability in zip(ranked["_first_amer"], ranked["_book_first"])
     ]
     value_gap = [
-        _value_gap(model, book, model_p, book_p) or (
-            "Pending" if pd.isna(model_p) or pd.isna(book_p) else ""
+        (
+            "Full market unavailable"
+            if pd.notna(book) and pd.isna(book_p)
+            else _value_gap(model, book, model_p, book_p) or (
+                "Pending" if pd.isna(model_p) or pd.isna(book_p) else ""
+            )
         )
         for model, book, model_p, book_p in zip(
             model_american, ranked["_first_amer"], ranked["p_first"], ranked["_book_first"]
@@ -1106,7 +1232,7 @@ def _first_td_display(df: pd.DataFrame, *, include_unpriced: bool = False) -> pd
     ]
     book_odds = [
         (
-            f"{_amer_display(american)} · no-vig pending"
+            f"{_amer_display(american)} · Full market unavailable"
             if pd.notna(american) and pd.isna(probability)
             else _odds_probability(american, probability)
         )
@@ -1480,12 +1606,12 @@ def _first_td_column_config() -> dict:
         ),
         "Book First TD Odds": st.column_config.TextColumn(
             "Book First TD Odds",
-            help="Sportsbook American odds and de-vigged (within-game) percentage chance of scoring the game's first touchdown.",
+            help="Raw sportsbook American price. A de-vigged probability appears only when the complete within-game First TD market is verified.",
         ),
         "First TD Value Gap": st.column_config.TextColumn(
             "First TD Value Gap",
             width=140,
-            help="Book-minus-model American-odds gap and model-minus-book probability differential. Positive means more value in our model.",
+            help="Model-versus-book comparison. Full market unavailable when the complete within-game quote pool is unverified.",
         ),
         "Hit": st.column_config.TextColumn(
             "Hit", width=150, help="Did they score the game's first touchdown?",
@@ -1509,11 +1635,11 @@ def _first_td_phone_column_config() -> dict:
     )
     cfg["Book First TD Odds"] = st.column_config.TextColumn(
         "Book", width=PHONE_WIDTHS["Book ATTD Odds"],
-        help="Sportsbook American odds and de-vigged percentage chance of scoring first.",
+        help="Raw sportsbook American price; no-vig probability requires a verified complete market.",
     )
     cfg["First TD Value Gap"] = st.column_config.TextColumn(
         "Value", width=PHONE_WIDTHS["ATTD Value Gap"],
-        help="Book-minus-model American-odds gap and model-minus-book percentage differential.",
+        help="Model-versus-book comparison; full market unavailable when the complete quote pool is unverified.",
     )
     cfg["Hit"] = st.column_config.TextColumn(
         "Hit", width=PHONE_WIDTHS["Hit"],
@@ -1539,6 +1665,11 @@ def _render_week_recommended(
         st.info(
             "Important: the NGS retrospective release has no First TD probabilities because its full scorer pool "
             "could not be verified. The listed scorer outcomes are coverage only, not a model backtest."
+        )
+    elif show_first_td:
+        st.info(
+            "Published-board Top-1 and Top-3 results are shown above. The legacy no-vig paper strategy and "
+            "experimental actual-price paper strategy are tracked separately from ranking outcomes."
         )
     else:
         st.info(
@@ -1926,9 +2057,14 @@ def render() -> None:
                 ].nunique()
             )
             st.warning(
-                "First TD quote pools are unverified. Book probabilities, value gaps, and recommendations are unavailable."
+                "Full market unavailable. No-vig probabilities and value gaps are unavailable; raw prices, published-board rankings, and eligible actual-price paper tracking remain available."
             )
             st.caption(f"First TD prices appear in {first_games} of {raw.game_id.nunique()} published matchups.")
+
+    if show_first_td and season == LIVE_SEASON and not retrospective:
+        _render_published_board_rankings(raw, source, season, week)
+        if week >= 7:
+            _render_first_td_actual_ev_v2(season, week, releases)
 
     if pool_eligible:
         # 2+ TD and First TD: "Recommended" (every candidate across the week)
@@ -2023,27 +2159,18 @@ def render() -> None:
             )
         else:
             st.info(
-                "Important: First TD has no validated historical backtest. This live board is forward tracking, "
-                "not evidence of accuracy or profitability."
+                "Published-board Top-1 and Top-3 results are shown above. Paper strategy record and ROI are separate."
             )
         if completed_without_first_td_market:
             st.info(
-                "This matchup was completed before First TD prices were "
-                "published, so model First TD odds are not shown retroactively. "
-                "Once grading supplies the final outcome, it is counted only in "
-                "the results-only tally—not in betting W-L, units, ROI, or "
-                "backtest results."
+                "This matchup has no captured First TD price. Published-board model ranks and verified outcomes "
+                "remain visible above; it is excluded from paper betting."
             )
         elif first_td_prices_available:
             st.caption(
-                "First TD view: model probability (a competing-risk allocation "
-                "across the whole game, not a per-player marginal chance), "
-                "the sportsbook price de-vigged within the game, and the value gap. "
-                f"The rule powering the 1U paper tracker below is {tracker.rule_description('first')}, "
-                "since real bell-cow players already show a persistent -5pp to "
-                "-8pp gap here that a narrower rule would misread as value, and "
-                "the de-vigged gap alone can still pass on a bet that loses "
-                "money at the book's real, vigged price."
+                "First TD view: frozen model probability and raw sportsbook price. A no-vig comparison appears only "
+                "when the full within-game quote pool is verified. The legacy strategy remains accessible below; "
+                "the experimental actual-price strategy is shown above."
             )
         elif display_only_first_td:
             st.info(

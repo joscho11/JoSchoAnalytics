@@ -132,7 +132,7 @@ def test_week04_pit_cle_renders_all_three_markets(tmp_path):
             assert at.selectbox(key="atd_matchup_2026_4").value == "PIT vs CLE"
         assert not at.exception, at.exception
         assert not at.error, [e.value for e in at.error]
-        assert len(at.metric) == 8
+        assert len(at.metric) == (12 if market == "First TD" else 8)
         tables = [frame.value for frame in at.dataframe]
         assert tables
         assert any(book_column in table.columns for table in tables)
@@ -147,6 +147,21 @@ def test_week07_defaults_to_the_current_release_and_week05_history_still_renders
     assert page.default_release(list(releases)) == (2026, 7)
     assert any(w.key == "atd_week" and w.value == 7 for w in at.selectbox)
     assert any("Week 7" in str(item.value) for item in at.markdown)
+
+
+def test_week07_first_td_shows_rankings_and_actual_price_strategy_separately(tmp_path):
+    at = _render(tmp_path, week=7)
+    releases = page.available_releases()
+    at.segmented_control(key="atd_view_2026_7").set_value("First TD").run()
+    assert not at.exception, at.exception
+    assert not at.error, [item.value for item in at.error]
+    headings = " ".join(str(item.value) for item in at.markdown)
+    copy = headings + " " + " ".join(str(item.value) for item in at.warning)
+    assert "Published board rankings" in headings
+    assert "first_td_actual_ev_v2" in headings
+    assert "Full market unavailable" in copy
+    assert "no-vig pending" not in copy.lower()
+    assert any({"Matchup", "Top 1", "Top 3"} <= set(frame.value.columns) for frame in at.dataframe)
 
     markets = {
         "Anytime TD": "Book ATTD Odds",
@@ -187,6 +202,20 @@ def test_week07_defaults_to_the_current_release_and_week05_history_still_renders
             if market == "2+ TD":
                 blob = " ".join(str(item.value) for item in list(at.caption) + list(at.markdown))
                 assert "Every 2+ TD candidate across this week's matchups" in blob
+
+
+def test_published_board_rankings_use_readable_matchup_labels():
+    board = pd.DataFrame([
+        {
+            "game_id": "2026_06_ARI_LA", "player_id": f"player-{idx}",
+            "player_display_name": f"Player {idx}", "p_first": 0.2 - idx * 0.01,
+            "team": "LA", "opponent_team": "ARI", "kickoff_et": "2026-10-15 20:15",
+        }
+        for idx in range(3)
+    ])
+    table, summary = page._published_board_ranking_display(board, {})
+    assert table["Game"].tolist() == ["ARI vs LAR"]
+    assert summary["pending_games"] == 1
 
 
 def test_two_plus_toggle_preserves_market_or_placeholder(tmp_path):
@@ -1407,6 +1436,20 @@ def test_first_td_display_candidate_requires_positive_ev_not_just_the_gap():
     display = page._first_td_display(rows).set_index("Player")
     assert not bool(display.loc["Losing At Real Price · X", "_candidate"])
     assert bool(display.loc["Real Candidate · X", "_candidate"])
+
+
+def test_first_td_display_shows_raw_price_when_full_market_is_unavailable():
+    import page_anytime_td as page
+
+    rows = pd.DataFrame([{
+        "player_display_name": "Raw Price", "team": "X", "position": "WR",
+        "opponent_team": "Y", "p_first": 0.20,
+        "book_first_p_devigged": None, "first_amer": 400,
+        "scored_first": None,
+    }])
+    display = page._first_td_display(rows)
+    assert "+400 · Full market unavailable" in display.loc[0, "Book First TD Odds"]
+    assert display.loc[0, "First TD Value Gap"] == "Full market unavailable"
 
 
 def test_two_plus_season_tracker_uses_ratio_qualifier_not_flat_gap():
