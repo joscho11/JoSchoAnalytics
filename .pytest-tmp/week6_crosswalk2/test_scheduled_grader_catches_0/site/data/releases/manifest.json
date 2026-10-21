@@ -1,0 +1,115 @@
+{
+  "grading": {
+    "products": {
+      "predictions": {
+        "latest": {
+          "build_id": "predictions-2026w02-861fd066d1db",
+          "final_games": 2,
+          "graded_at": "2026-10-20T23:07:29Z",
+          "graded_rows": 1,
+          "season": 2026,
+          "week": 2
+        }
+      }
+    }
+  },
+  "products": {
+    "fantasy": {
+      "active_build": null,
+      "builds": {},
+      "next_release": null,
+      "previous_build": null
+    },
+    "predictions": {
+      "active_build": "predictions-2026w02-861fd066d1db",
+      "builds": {
+        "predictions-2026w01-688c31c4df8a": {
+          "artifact": "data/releases/builds/predictions/2026/week01/predictions-2026w01-688c31c4df8a/artifact.csv",
+          "build_id": "predictions-2026w01-688c31c4df8a",
+          "grading": {
+            "artifact": "data/releases/results/predictions/2026/week01/predictions-2026w01-688c31c4df8a-graded.csv",
+            "artifact_sha256": "a467fa094a7d8dde2547ae23d74725844cac1984e91a3f1c8031df7cc651037d",
+            "complete": true,
+            "final_games": 2,
+            "graded_at": "2026-10-20T23:07:29Z",
+            "graded_rows": 1,
+            "metadata": "data/releases/results/predictions/2026/week01/predictions-2026w01-688c31c4df8a-graded.json",
+            "product": "predictions",
+            "pushes": 1,
+            "schema_version": 1,
+            "season": 2026,
+            "source_build": "predictions-2026w01-688c31c4df8a",
+            "week": 1
+          },
+          "metadata": "data/releases/builds/predictions/2026/week01/predictions-2026w01-688c31c4df8a/metadata.json",
+          "model_version": "spread-v3-test-0.0",
+          "produced_at": "2026-09-08T13:00:00Z",
+          "product": "predictions",
+          "published_at": "2026-10-20T23:07:29Z",
+          "row_count": 2,
+          "season": 2026,
+          "sha256": "688c31c4df8a99494d899f48ab0c3953072bb91f68e2f5545af224652fe09817",
+          "status": "Published",
+          "validation": {
+            "checks": {
+              "artifact_sha256": "688c31c4df8a99494d899f48ab0c3953072bb91f68e2f5545af224652fe09817",
+              "produced_at_utc": "2026-09-08T13:00:00Z",
+              "scheduled_games": 2
+            },
+            "errors": [],
+            "ok": true,
+            "product": "predictions",
+            "row_count": 2,
+            "warnings": []
+          },
+          "week": 1
+        },
+        "predictions-2026w02-861fd066d1db": {
+          "artifact": "data/releases/builds/predictions/2026/week02/predictions-2026w02-861fd066d1db/artifact.csv",
+          "build_id": "predictions-2026w02-861fd066d1db",
+          "grading": {
+            "artifact": "data/releases/results/predictions/2026/week02/predictions-2026w02-861fd066d1db-graded.csv",
+            "artifact_sha256": "8604883fb02a6eb9c8d59dd18df7957c12c6369c87312e694f102fc40162a6d3",
+            "complete": true,
+            "final_games": 2,
+            "graded_at": "2026-10-20T23:07:29Z",
+            "graded_rows": 1,
+            "metadata": "data/releases/results/predictions/2026/week02/predictions-2026w02-861fd066d1db-graded.json",
+            "product": "predictions",
+            "pushes": 1,
+            "schema_version": 1,
+            "season": 2026,
+            "source_build": "predictions-2026w02-861fd066d1db",
+            "week": 2
+          },
+          "metadata": "data/releases/builds/predictions/2026/week02/predictions-2026w02-861fd066d1db/metadata.json",
+          "model_version": "spread-v3-test-0.0",
+          "produced_at": "2026-09-08T13:00:00Z",
+          "product": "predictions",
+          "published_at": "2026-10-20T23:07:29Z",
+          "row_count": 2,
+          "season": 2026,
+          "sha256": "861fd066d1dbf6346aa4499ed046839b99b9d1d46a5e879af1be92e2a0415f55",
+          "status": "Published",
+          "validation": {
+            "checks": {
+              "artifact_sha256": "861fd066d1dbf6346aa4499ed046839b99b9d1d46a5e879af1be92e2a0415f55",
+              "produced_at_utc": "2026-09-08T13:00:00Z",
+              "scheduled_games": 2
+            },
+            "errors": [],
+            "ok": true,
+            "product": "predictions",
+            "row_count": 2,
+            "warnings": []
+          },
+          "week": 2
+        }
+      },
+      "next_release": null,
+      "previous_build": "predictions-2026w01-688c31c4df8a"
+    }
+  },
+  "schema_version": 1,
+  "updated_at": "2026-10-20T23:07:29Z"
+}

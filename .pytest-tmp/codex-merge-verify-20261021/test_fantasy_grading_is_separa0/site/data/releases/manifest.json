@@ -1,0 +1,77 @@
+{
+  "grading": {
+    "products": {
+      "fantasy": {
+        "latest": {
+          "build_id": "fantasy-2026w01-e76d5637e79f",
+          "final_games": 1,
+          "graded_at": "2026-10-21T04:16:37Z",
+          "graded_rows": 180,
+          "season": 2026,
+          "week": 1
+        }
+      }
+    }
+  },
+  "products": {
+    "fantasy": {
+      "active_build": "fantasy-2026w01-e76d5637e79f",
+      "builds": {
+        "fantasy-2026w01-e76d5637e79f": {
+          "artifact": "data/releases/builds/fantasy/2026/week01/fantasy-2026w01-e76d5637e79f/artifact.csv",
+          "build_id": "fantasy-2026w01-e76d5637e79f",
+          "grading": {
+            "artifact": "data/releases/results/fantasy/2026/week01/fantasy-2026w01-e76d5637e79f-graded.csv",
+            "artifact_sha256": "f2ba5530bd900221ac30948fc67af7c5dafe91d6fd326fb0040ae0b03bbe3366",
+            "complete": true,
+            "final_games": 1,
+            "graded_at": "2026-10-21T04:16:37Z",
+            "graded_rows": 180,
+            "metadata": "data/releases/results/fantasy/2026/week01/fantasy-2026w01-e76d5637e79f-graded.json",
+            "missing_actuals": 0,
+            "product": "fantasy",
+            "schema_version": 1,
+            "season": 2026,
+            "source_build": "fantasy-2026w01-e76d5637e79f",
+            "week": 1,
+            "zero_filled_after_complete_feed": true
+          },
+          "metadata": "data/releases/builds/fantasy/2026/week01/fantasy-2026w01-e76d5637e79f/metadata.json",
+          "model_version": "weekly-fantasy-test",
+          "produced_at": "2026-09-08T13:00:00Z",
+          "product": "fantasy",
+          "published_at": "2026-10-21T04:16:37Z",
+          "row_count": 180,
+          "season": 2026,
+          "sha256": "e76d5637e79fd5ec6cdfcb160ab929657d8e970eebf05a15cb2f6591c809d7ff",
+          "status": "Published",
+          "validation": {
+            "checks": {
+              "artifact_sha256": "e76d5637e79fd5ec6cdfcb160ab929657d8e970eebf05a15cb2f6591c809d7ff",
+              "produced_at_utc": "2026-09-08T13:00:00Z",
+              "scheduled_teams": 2,
+              "team_position_cells": 8,
+              "team_position_gap_exceptions": 0
+            },
+            "errors": [],
+            "ok": true,
+            "product": "fantasy",
+            "row_count": 180,
+            "warnings": []
+          },
+          "week": 1
+        }
+      },
+      "next_release": null,
+      "previous_build": null
+    },
+    "predictions": {
+      "active_build": null,
+      "builds": {},
+      "next_release": null,
+      "previous_build": null
+    }
+  },
+  "schema_version": 1,
+  "updated_at": "2026-10-21T04:16:37Z"
+}

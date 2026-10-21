@@ -1,0 +1,2 @@
+season,week,game_id,player_id,p_ge1,p_book,book_amer,scored_anytime,settlement_status_anytime,p_ge2,two_plus_amer,scored_two_plus,settlement_status_two_plus,p_first,book_first_p_devigged,first_amer,scored_first,settlement_status_first
+2026,1,g1,p1,0.5,0.4,150,1,settled,0.3,400,1,settled,0.5,0.4,150,1,settled

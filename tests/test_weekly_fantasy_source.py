@@ -534,6 +534,12 @@ def test_preview_phone_grid_keeps_ranking_columns():
         "#", "Player", "Opponent", "Proj Pts", "Health", "Actual Pts",
     ]
     assert set(page.PREVIEW_SIMPLE_COLUMNS).issubset(page.PREVIEW_PHONE_COLUMNS)
+    # Postgame with a Finish rank: it follows Actual Pts and stays inside a 390px grid.
+    assert page.PREVIEW_PHONE_RANK_COLUMNS == [
+        "#", "Player", "Proj Pts", "Actual Pts", "Finish", "Opponent", "Health",
+    ]
+    inside_phone = ["#", "Player", "Proj Pts", "Actual Pts", "Finish"]
+    assert sum(page._WF_PHONE_WIDTHS[column] for column in inside_phone) <= 358
 
 
 def test_week_one_phone_grid_keeps_sleeper_beside_model_projection():
@@ -592,3 +598,246 @@ def test_actuals_fail_closed_when_week_schedule_is_missing():
     assert weekly._week_is_complete(
         pd.DataFrame({"season": [2026], "week": [1]}), 2026, 1
     ) is False
+
+
+def _scorecard_shown(at):
+    return any("How the rankings did" in str(item.value) for item in at.markdown)
+
+
+def _rank_columns_shown(at):
+    return any({"Our Rk", "Rk Δ"} & set(item.value.columns) for item in at.dataframe)
+
+
+def test_postgame_rank_columns_follow_actual_pts_only_when_requested():
+    assert ["#", *weekly._preview_table_columns("WR", False, True, actual_detail=False)] == [
+        "#", "Player", "Opponent", "Proj Pts", "Actual Pts",
+    ]
+    assert ["#", *weekly._preview_table_columns(
+        "WR", False, True, actual_detail=False, rank_columns=True,
+    )] == ["#", "Player", "Opponent", "Proj Pts", "Actual Pts", "Our Rk", "Finish", "Rk Δ"]
+    assert ["#", *weekly._preview_table_columns("RB", False, True, rank_columns=True)] == [
+        "#", "Player", "Opponent", "Proj Pts", "Actual Pts", "Our Rk", "Finish", "Rk Δ",
+        "Actual Rush Yds", "Actual Rec Yds",
+    ]
+    # The phone grid keeps Finish (right after Actual Pts) and drops Our Rk and Rk Δ, and
+    # only when the table has Finish. Without it the phone list is unchanged.
+    with_ranks = ["#", "Player", "Opponent", "Proj Pts", "Actual Pts", "Our Rk", "Finish", "Rk Δ"]
+    assert weekly._preview_phone_columns(with_ranks, show_sleeper=False) == [
+        "#", "Player", "Proj Pts", "Actual Pts", "Finish", "Opponent",
+    ]
+    assert weekly._preview_phone_columns(with_ranks[:5], show_sleeper=False) == [
+        "#", "Player", "Opponent", "Proj Pts", "Actual Pts",
+    ]
+    assert weekly._WF_PHONE_WIDTHS["Finish"] == 52
+
+
+def test_rank_delta_is_green_above_zero_red_below_and_plain_at_zero_or_missing():
+    assert "#35D08A" in weekly._rank_delta_style(3)
+    assert "#F08A8A" in weekly._rank_delta_style(-2)
+    assert weekly._rank_delta_style(0) == ""
+    assert weekly._rank_delta_style(pd.NA) == ""
+    assert weekly._rank_delta_style(float("nan")) == ""
+
+
+def test_graded_week_paths_use_the_latest_build_per_week_and_only_when_it_is_complete(
+    tmp_path, monkeypatch,
+):
+    def build(season, week, build_id, published_at, complete=None):
+        grading = {} if complete is None else {"complete": complete}
+        return {
+            "season": season, "week": week, "build_id": build_id,
+            "published_at": published_at, "grading": grading,
+        }
+
+    builds = [
+        build(2025, 17, "demo", "2026-08-21T00:00:00Z", True),
+        build(2026, 1, "w1-old", "2026-09-08T00:00:00Z", True),
+        build(2026, 1, "w1-new", "2026-09-09T00:00:00Z", False),  # newest revision is not graded
+        build(2026, 2, "w2-old", "2026-09-15T00:00:00Z", False),
+        build(2026, 2, "w2-new", "2026-09-16T00:00:00Z", True),
+        build(2026, 3, "w3", "2026-09-22T00:00:00Z"),
+    ]
+    (tmp_path / "w2-new-graded.csv").write_text("player_id\n", encoding="utf-8")
+    monkeypatch.setattr(weekly.page_common, "load_release_manifest", lambda: {})
+    monkeypatch.setattr(weekly, "published_builds", lambda *args, **kwargs: builds)
+    monkeypatch.setattr(
+        weekly, "resolve_build_artifact",
+        lambda item, **kwargs: tmp_path / f"{item['build_id']}-graded.csv",
+    )
+
+    assert weekly._graded_week_paths(2026) == ((2, str(tmp_path / "w2-new-graded.csv")),)
+    assert weekly._graded_week_paths(2027) == ()
+
+
+def test_season_accuracy_figure_plots_ours_and_sleeper_rank_correlation():
+    rows = pd.DataFrame({
+        "week": [2, 1, 3], "our_rho": [0.41, 0.30, 0.50], "slp_rho": [0.35, 0.45, 0.50],
+    })
+
+    fig = weekly._season_accuracy_figure(rows)
+
+    assert [trace.name for trace in fig.data] == ["Ours", "Sleeper"]
+    assert list(fig.data[0].x) == [1, 2, 3]
+    assert list(fig.data[0].y) == [0.30, 0.41, 0.50]
+    assert list(fig.data[1].y) == [0.45, 0.35, 0.50]
+    # Level at the last week, so the two end labels are split above and below.
+    assert {trace.textposition for trace in fig.data} == {"top right", "bottom right"}
+    low, high = fig.layout.yaxis.range
+    assert low <= 0.30 and high >= 0.50
+    assert fig.layout.legend.orientation == "h"
+    assert fig.layout.dragmode is False
+
+
+def test_week06_graded_release_shows_ranking_scorecard_and_rank_columns(tmp_path):
+    at = _render_weekly(tmp_path)
+    at = next(w for w in at.selectbox if w.key == "wf_week").set_value(6).run()
+    assert not at.exception, at.exception
+    assert not at.error, [e.value for e in at.error]
+
+    assert _scorecard_shown(at)
+    assert {m.label: (m.value, m.delta) for m in at.metric} == {
+        "Top-tier hits": ("39 of 72", "Sleeper 39 of 72"),
+        "Average miss": ("5.02 pts", "Sleeper 5.35 pts"),
+        "Rank correlation": ("0.34", "Sleeper 0.30"),
+    }
+    frames = [item.value for item in at.dataframe]
+    scorecard = next(f for f in frames if {"Position", "Sleeper hits"} <= set(f.columns))
+    assert scorecard["Position"].tolist() == ["QB", "RB", "WR", "TE", "All"]
+    assert scorecard["Top-tier hits"].tolist() == [
+        "7 of 12", "14 of 24", "13 of 24", "5 of 12", "39 of 72",
+    ]
+    assert scorecard["Sleeper hits"].tolist() == [
+        "9 of 12", "15 of 24", "12 of 24", "3 of 12", "39 of 72",
+    ]
+    assert scorecard["Rank corr"].tolist() == [0.34, 0.48, 0.20, 0.37, 0.34]
+    assert scorecard["Sleeper corr"].tolist() == [0.53, 0.42, 0.08, 0.26, 0.30]
+    assert scorecard["Avg miss"].tolist() == [5.42, 5.02, 4.95, 4.78, 5.02]
+    assert scorecard["Sleeper miss"].tolist() == [5.21, 5.45, 5.54, 4.97, 5.35]
+    # The phone copy stacks ours and Sleeper's as two narrow rows per position.
+    phone_card = next(f for f in frames if {"Position", "Who"} <= set(f.columns))
+    assert phone_card["Position"].tolist() == [p for p in ("QB", "RB", "WR", "TE", "All") for _ in (0, 1)]
+    assert phone_card["Who"].tolist() == ["Ours", "Sleeper"] * 5
+    assert phone_card["Top-tier hits"].tolist()[:2] == ["7 of 12", "9 of 12"]
+    assert phone_card["Rank corr"].tolist()[-2:] == [0.34, 0.30]
+    assert phone_card["Avg miss"].tolist()[-2:] == [5.02, 5.35]
+
+    # Season to date: one collapsed expander with a row for each graded week.
+    assert [exp.label for exp in at.expander] == ["Season to date"]
+    by_week = next(f for f in frames if {"Week", "Sleeper hits"} <= set(f.columns))
+    assert by_week["Week"].tolist() == [1, 2, 3, 4, 5, 6]
+    assert by_week["Top-tier hits"].tolist()[-1] == "39 of 72"
+    # Phone copy: two rows a week, newest first, since the site caps phone tables at 26rem.
+    phone_weeks = next(f for f in frames if {"Week", "Who"} <= set(f.columns))
+    assert phone_weeks["Week"].tolist() == [w for w in (6, 5, 4, 3, 2, 1) for _ in (0, 1)]
+    assert phone_weeks["Who"].tolist()[:2] == ["Ours", "Sleeper"]
+    texts = [str(item.value) for item in at.markdown]
+    assert (
+        "We beat Sleeper on top-tier hits at 2 of 4 positions, "
+        "on rank correlation at 3 of 4, and on average miss at 3 of 4."
+    ) in texts
+    assert (
+        "Over 6 graded weeks we beat Sleeper on top-tier hits in 3, "
+        "on rank correlation in 3, and on average miss in 4."
+    ) in texts
+
+    # Desktop grid: Our Rk, Finish and Rk Δ right after Actual Pts. Phone grid: Finish only.
+    desktop = next(f for f in frames if "Rk Δ" in f.columns)
+    phone = next(f for f in frames if "Finish" in f.columns and "Rk Δ" not in f.columns)
+    columns = list(desktop.columns)
+    assert columns[columns.index("Actual Pts") + 1:][:3] == ["Our Rk", "Finish", "Rk Δ"]
+    assert list(phone.columns) == ["#", "Player", "Proj Pts", "Actual Pts", "Finish", "Opponent"]
+    assert (desktop["Rk Δ"] == desktop["Our Rk"] - desktop["Finish"]).all()
+    # Half-PPR default: the QB tab is sorted by the same projection that sets Our Rk.
+    assert desktop["#"].tolist() == desktop["Our Rk"].tolist()
+    assert desktop["Finish"].between(1, 28).all()
+
+
+def test_rank_columns_sit_between_actual_pts_and_live_actual_yardage(tmp_path):
+    h = tmp_path / "h_weekly_live_yardage.py"
+    h.write_text(
+        f"import sys; sys.path[:0] = [r'{_HERE}', r'{_SITE_PAGES}']\n"
+        "import page_weekly_fantasy as p\n"
+        "_live = p.load_actual_stats\n"
+        "try:\n"
+        "    p.load_actual_stats = lambda season, week: {\n"
+        "        'qb_pass_yds': {'00-0034857': 250.0}, 'qb_rush_yds': {'00-0034857': 12.0},\n"
+        "    }\n"
+        "    p.render()\n"
+        "finally:\n"
+        "    p.load_actual_stats = _live\n",
+        encoding="utf-8",
+    )
+    at = AppTest.from_file(str(h), default_timeout=180).run()
+    at = next(w for w in at.selectbox if w.key == "wf_week").set_value(6).run()
+    assert not at.exception, at.exception
+    assert not at.error, [e.value for e in at.error]
+
+    frames = [item.value for item in at.dataframe]
+    desktop = next(f for f in frames if "Rk Δ" in f.columns)
+    phone = next(f for f in frames if "Finish" in f.columns and "Rk Δ" not in f.columns)
+    assert list(desktop.columns) == [
+        "#", "Player", "Opponent", "Proj Pts", "Actual Pts", "Our Rk", "Finish", "Rk Δ",
+        "Actual Pass Yds", "Actual Rush Yds",
+    ]
+    assert list(phone.columns) == ["#", "Player", "Proj Pts", "Actual Pts", "Finish", "Opponent"]
+    assert desktop.loc[desktop["Player"].str.startswith("Josh Allen"), "Actual Pass Yds"].iloc[0] == 250
+
+
+def test_scorecard_ignores_the_scoring_toggle_and_new_copy_has_no_dashes(tmp_path):
+    at = _render_weekly(tmp_path)
+    at = next(w for w in at.selectbox if w.key == "wf_week").set_value(6).run()
+    half_ppr = [(m.label, m.value, m.delta) for m in at.metric]
+
+    at = next(w for w in at.segmented_control if w.key == "wf_scoring").set_value("PPR").run()
+
+    assert not at.exception, at.exception
+    assert [(m.label, m.value, m.delta) for m in at.metric] == half_ppr
+    new_copy = [
+        str(item.value) for item in list(at.caption) + list(at.markdown)
+        if any(key in str(item.value) for key in (
+            "Half-PPR points, whatever", "We beat Sleeper", "Rank correlation by week",
+            "same definitions as the week scorecard", "How the rankings did",
+        ))
+    ]
+    new_copy += [m.proto.help for m in at.metric] + [str(m.proto.label) for m in at.metric]
+    assert len(new_copy) >= 9
+    assert not [text for text in new_copy if "—" in text or "–" in text]
+
+
+def test_ungraded_demo_and_unflagged_weeks_show_no_ranking_scorecard(tmp_path):
+    graded = weekly.available_projection_files()[(2026, 6)]
+    # The same rows before any points settle: an ungraded 2026 week.
+    ungraded = tmp_path / "projections_2026_week07.csv"
+    pd.read_csv(graded).drop(
+        columns=["actual_half_ppr", "projection_error", "absolute_error"]
+    ).to_csv(ungraded, index=False)
+
+    at = _render_weekly_release(tmp_path, ungraded, season=2026, week=7)
+    assert not any("Results are in" in str(item.value) for item in at.success)
+    assert not _scorecard_shown(at) and not _rank_columns_shown(at)
+    assert not at.expander
+
+    demo = _HERE / "fantasy" / "fantasy_projections" / "projections_2025_week17.csv"
+    at = _render_weekly_release(tmp_path, demo, season=2025, week=17)
+    assert not _scorecard_shown(at) and not _rank_columns_shown(at)
+    assert not at.expander
+
+    # Settled points without the release's complete-grade flag (no release state): no scorecard.
+    at = _render_weekly_release(tmp_path, graded, season=2026, week=6)
+    assert any("Results are in" in str(item.value) for item in at.success)
+    assert not _scorecard_shown(at) and not _rank_columns_shown(at)
+    assert not at.expander
+
+
+def test_default_release_shows_the_scorecard_only_once_it_is_completely_graded(tmp_path):
+    """The newest published week is ungraded until its games finish, then picks this up unaided."""
+    import page_common
+
+    season, week = page_common.release_default_selection("fantasy", (2025, 10))
+    graded = weekly.available_projection_files()[(season, week)].name.endswith("-graded.csv")
+
+    at = _render_weekly(tmp_path)
+
+    assert _scorecard_shown(at) is graded
+    assert _rank_columns_shown(at) is graded
+    assert any(exp.label == "Season to date" for exp in at.expander) is graded

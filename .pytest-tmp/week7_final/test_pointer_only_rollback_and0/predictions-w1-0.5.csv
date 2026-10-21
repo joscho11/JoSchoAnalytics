@@ -1,0 +1,3 @@
+game_id,home_team,away_team,season,week,gameday,gametime,predicted_margin,model_edge,recommendation,logged_at,tuesday_spread_line,tuesday_spread_book,tuesday_spread_price,tuesday_median_spread_line,consensus_tier
+2026_01_NE_SEA,SEA,NE,2026,1,2026-09-09,20:20,4.5,1.0,HOME (SEA),2026-09-08T13:00:00Z,3.0,DraftKings,-110,3.5,
+2026_01_SF_LA,LA,SF,2026,1,2026-09-10,20:35,-1.0,-2.5,AWAY (SF),2026-09-08T13:00:00Z,2.0,BetRivers,-108,1.5,

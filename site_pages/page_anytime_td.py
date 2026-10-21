@@ -17,9 +17,11 @@ import streamlit as st
 
 import attd_tracker as tracker
 import page_common
+from publishing import first_td_v3
 from publishing.td_releases import MANIFEST_NAME, canonical_td_releases, read_td_release
 from publishing.first_td_strategy import (
-    load_first_td_actual_ev_v2,
+    attach_first_td_v3,
+    load_first_td_best_value_v3,
     published_board_rankings,
 )
 from dashboard_chrome import dataframe_phone_desktop, exact_table_height
@@ -64,6 +66,10 @@ PHONE_WIDTHS = {
     "Book ATTD Odds": 132,
     "ATTD Value Gap": 190,
     "Hit": 150,
+    # First TD book cells read "+1200 · 7.7% implied" (20 characters), wider than
+    # the Anytime "+89.1k · 100.0%" worst case; Expected Return is a short "+12%".
+    "Book First TD Odds": 176,
+    "Expected Return": 96,
 }
 TWO_PLUS_DESKTOP_COLS = [
     "#", "Player", "Pos", "Opp", "Model 2+ TD Odds", "Book 2+ TD Odds",
@@ -74,10 +80,10 @@ TWO_PLUS_PHONE_COLS = [
 ]
 FIRST_TD_DESKTOP_COLS = [
     "#", "Player", "Pos", "Opp", "Model First TD Odds", "Book First TD Odds",
-    "First TD Value Gap", "Hit",
+    "Expected Return", "Hit",
 ]
 FIRST_TD_PHONE_COLS = [
-    "#", "Player", "Model First TD Odds", "Book First TD Odds", "First TD Value Gap", "Hit",
+    "#", "Player", "Model First TD Odds", "Book First TD Odds", "Expected Return", "Hit",
 ]
 # No historical first-TD book prices exist anywhere in this workspace for any
 # season, unlike 2+ TD which at least has a demo comparison. There is no
@@ -509,55 +515,83 @@ def _render_published_board_rankings(raw: pd.DataFrame, source: Path, season: in
         st.dataframe(table, hide_index=True)
 
 
-def _render_first_td_actual_ev_v2(season: int, week: int, releases: dict[tuple[int, int], Path]) -> None:
-    """Show the immutable actual-price experimental First TD paper ledger."""
-    st.markdown("#### Experimental paper strategy · first_td_actual_ev_v2")
-    st.caption(
-        "One paper unit per eligible quoted player when frozen model probability × actual decimal odds − 1 is strictly positive. "
-        "This record uses captured prices and does not require a complete quote pool."
-    )
-    try:
-        bets, ledger = load_first_td_actual_ev_v2(releases=releases)
-    except Exception as exc:
-        st.warning(f"The First TD v2 ledger could not be verified: {exc}")
-        return
-    decisions = [
-        game for game in ledger.get("games", [])
-        if int(game.get("season", season)) == int(season) and int(game.get("week", week)) == int(week)
-    ]
-    if not bets.empty:
-        scoped = bets[
-            pd.to_numeric(bets.season, errors="coerce").eq(int(season))
-            & pd.to_numeric(bets.week, errors="coerce").eq(int(week))
-        ].copy()
+def _first_td_v3_paper(scoped: pd.DataFrame, price_cap: int | None) -> dict:
+    """Score frozen v3 picks with the shared tracker: fixed rule, 1U each."""
+    if price_cap:
+        def qualifies(frame):
+            return tracker.qualifies_first_td_best_value_v3(
+                frame["_model_probability"], frame["_book_price"], price_cap=price_cap,
+            )
     else:
-        scoped = bets
-    if scoped.empty:
-        locked = len(decisions)
-        zero_picks = sum(int(game.get("selected_bet_count", 0)) == 0 for game in decisions)
-        st.info(
-            f"No selected bets in this scope. {locked} game decision(s) are frozen, including {zero_picks} zero-pick decision(s)."
-            if locked else "No immutable First TD v2 game decisions are frozen for this week yet."
-        )
-        return
-    paper = tracker.season_tracker(
+        # Without the params copy to read, the ledger itself still guarantees the
+        # cap: the freeze only writes picks priced at or below it.
+        def qualifies(frame):
+            return tracker.qualifies_first_td_actual_ev(frame["_model_probability"], frame["_book_price"])
+    return tracker.season_tracker(
         scoped,
-        model_probability_col="p_first",
+        model_probability_col="p_first_v3",
         book_probability_col=None,
         book_price_col="first_amer",
         outcome_col="scored_first",
-        qualifies=lambda frame: tracker.qualifies_first_td_actual_ev(
-            frame["_model_probability"], frame["_book_price"],
-        ),
-        eligibility_col="bet_eligible_first_actual_v2",
+        qualifies=qualifies,
+        eligibility_col="bet_eligible_first_best_value_v3",
     )
+
+
+def _render_first_td_v3_scope(
+    scoped: pd.DataFrame, decisions: list[dict], key: str, scope: str, price_cap: int | None,
+) -> None:
+    zero_picks = sum(int(game.get("selected_bet_count", 0)) == 0 for game in decisions)
+    if scoped.empty:
+        st.caption(
+            f"{_MARKET_LABELS['first']} paper tracker · {scope} · no picks yet. "
+            f"{len(decisions)} game decision(s) are frozen, {zero_picks} with no qualifying player."
+        )
+        return
     _render_scorecard_metrics(
-        paper, "first", f"first-td-v2-{season}-{week}",
-        f"Week {week} · frozen actual-price selections · {len(decisions)} game decisions.",
+        _first_td_v3_paper(scoped, price_cap), "first", key,
+        f"{scope} · frozen best-value picks · {len(decisions)} game decisions.",
     )
+    st.caption(f"Frozen picks: {len(scoped)} · games with no qualifying player: {zero_picks}.")
+
+
+def _render_first_td_best_value_v3(season: int, week: int, releases: dict[tuple[int, int], Path]) -> None:
+    """Show the immutable best-value First TD paper ledger: one pick per game, tracked from Week 7."""
+    st.markdown("#### Best-value picks · one per game")
+    cap = tracker.first_td_v3_price_cap()
+    cap_text = f"+{cap}" if cap else "the frozen cap"
     st.caption(
-        f"Frozen selections: {len(scoped)} · zero-pick game decisions: "
-        f"{sum(int(game.get('selected_bet_count', 0)) == 0 for game in decisions)}."
+        "One paper unit on each game's best value: the player with the highest expected return at the quoted "
+        f"DraftKings price, only when that return is above zero and the price is {cap_text} or shorter. "
+        "Picks are frozen before kickoff, and results are tracked from Week 7 on. "
+        "The sample is small, so early results mostly reflect luck. This tracks a rule; it does not prove an edge."
+    )
+    try:
+        bets, ledger = load_first_td_best_value_v3(releases=releases)
+    except Exception:
+        st.warning("The First TD best-value ledger could not be verified, so its picks and record are hidden.")
+        return
+    season_decisions = [
+        game for game in ledger.get("games", [])
+        if int(game.get("season", season)) == int(season) and int(game.get("week", week)) <= int(week)
+    ]
+    if not season_decisions:
+        st.info("No First TD best-value picks are frozen yet. Picks lock before each game's kickoff.")
+        return
+    if bets.empty:
+        season_bets = week_bets = bets
+    else:
+        in_season = pd.to_numeric(bets.season, errors="coerce").eq(int(season))
+        weeks = pd.to_numeric(bets.week, errors="coerce")
+        season_bets = bets[in_season & weeks.le(int(week))].copy()
+        week_bets = bets[in_season & weeks.eq(int(week))].copy()
+    week_decisions = [game for game in season_decisions if int(game.get("week", week)) == int(week)]
+    _render_first_td_v3_scope(
+        season_bets, season_decisions, f"first-td-v3-season-{season}-{week}",
+        f"Season to date, from Week {first_td_v3.FIRST_V3_WEEK}", cap,
+    )
+    _render_first_td_v3_scope(
+        week_bets, week_decisions, f"first-td-v3-week-{season}-{week}", f"Week {week}", cap,
     )
 
 
@@ -689,7 +723,9 @@ def _render_scorecards(priced, season, releases, *, market="anytime") -> None:
     }.get(mode, f"{mode} rows")
     model_versions = sorted(frame["model_version"].dropna().astype(str).unique())
     model_label = ", ".join(model_versions) if model_versions else "unspecified model version"
-    rule_text = tracker.rule_description(market)
+    # These cards always score the earlier First TD rule (Weeks 1 to 6); the v3
+    # best-value rule has its own card.
+    rule_text = tracker.rule_description("first_legacy" if market == "first" else market)
     st.markdown("#### Season to date")
     _render_scorecard_metrics(
         season_paper, market, "season-to-date",
@@ -814,7 +850,9 @@ def _render_single_scorecards(
         book_price_col="first_amer" if is_first else "two_plus_amer" if is_two_plus else "book_amer",
         outcome_col="scored_first" if is_first else "scored_two_plus" if is_two_plus else "scored_anytime",
     )
-    rule_text = tracker.rule_description(market)
+    # These cards always score the earlier First TD rule (Weeks 1 to 6); the v3
+    # best-value rule has its own card.
+    rule_text = tracker.rule_description("first_legacy" if market == "first" else market)
     if season == LIVE_SEASON:
         paths, modified_at = _published_live_paths(releases)
         if paths:
@@ -1182,79 +1220,102 @@ def _two_plus_display(df: pd.DataFrame, *, include_unpriced: bool = False) -> pd
     })
 
 
+def _decimal_or_nan(american) -> float:
+    if pd.isna(american) or float(american) == 0:
+        return float("nan")
+    return float(tracker.american_to_decimal(american))
+
+
+def _signed_pct(value) -> str:
+    """Expected return as a whole percent: +12%, -35%, 0%."""
+    if value is None or pd.isna(value):
+        return ""
+    rounded = int(round(100 * float(value)))
+    return f"{rounded:+d}%" if rounded else "0%"
+
+
 def _first_td_display(df: pd.DataFrame, *, include_unpriced: bool = False) -> pd.DataFrame:
     """First TD is a competing-risk allocation, not a per-player marginal price.
 
-    p_first already sums to a fixed empirical constant across the whole game
-    (roughly 94%, the historical rate an offensive skill player scores
-    first), with the rest split among defense/special-teams/no-TD. book_amer
-    here is DK's first_amer, de-vigged WITHIN the game (a genuine one-winner
-    market, unlike ATTD's Yes-only quote) -- book_first_p_devigged already
-    carries that de-vig, computed upstream in first_td/build_week1_board.py
-    and first_td/publish_site_columns.py, not here.
+    The model chance splits one fixed pool per game (roughly 94%, the
+    historical rate an offensive skill player scores first, with the rest going
+    to defense, special teams or no score). Boards from 2026 Week 7 carry
+    ``p_first_v3`` (and the game-level ``first_td_v3_pick``); earlier boards
+    only have the flat ``p_first``.
+
+    Expected return is the model chance times DraftKings' actual payout, minus
+    one. Rows sort by it, then by model chance, then by player_id: never by
+    name, and rows with no price or no model chance come last.
     """
     ranked = df.copy()
+    uses_v3 = "p_first_v3" in ranked
     ranked["p_first"] = _numeric_column(ranked, "p_first")
+    ranked["_q"] = _numeric_column(ranked, "p_first_v3") if uses_v3 else ranked["p_first"]
     ranked["_book_first"] = _numeric_column(ranked, "book_first_p_devigged")
-    if "first_amer" in ranked:
-        ranked["_first_amer"] = pd.to_numeric(ranked["first_amer"], errors="coerce")
-        if ranked["_first_amer"].notna().any() and not include_unpriced:
-            ranked = ranked[ranked["_first_amer"].notna()].copy()
-    else:
-        ranked["_first_amer"] = pd.Series(pd.NA, index=ranked.index, dtype="Float64")
+    ranked["_first_amer"] = _numeric_column(ranked, "first_amer")
+    if ranked["_first_amer"].notna().any() and not include_unpriced:
+        ranked = ranked[ranked["_first_amer"].notna()].copy()
+    decimal = ranked["_first_amer"].map(_decimal_or_nan)
+    ranked["_ev"] = ranked["_q"] * decimal - 1.0
+    ranked["_book_raw"] = 1.0 / decimal
+    # The old no-vig gap still drives the Weeks 1 to 6 highlight.
     ranked["_value"] = ranked["p_first"] - ranked["_book_first"]
+    ranked["_pid"] = ranked["player_id"].astype(str) if "player_id" in ranked else ""
     ranked = ranked.sort_values(
-        ["_value", "player_display_name"],
-        ascending=[False, True],
+        ["_ev", "_q", "_pid"],
+        ascending=[False, False, True],
         na_position="last",
     ).reset_index(drop=True)
     hit = _hit_labels(ranked, "scored_first", "settlement_status_first")
-    model_american = ranked["p_first"].map(_fair_amer_from_probability)
-    model_odds = [
-        _model_odds_probability(american, probability)
-        for american, probability in zip(model_american, ranked["p_first"])
-    ]
-    book_odds = [
-        _odds_probability(american, probability)
-        for american, probability in zip(ranked["_first_amer"], ranked["_book_first"])
-    ]
-    value_gap = [
-        (
-            "Full market unavailable"
-            if pd.notna(book) and pd.isna(book_p)
-            else _value_gap(model, book, model_p, book_p) or (
-                "Pending" if pd.isna(model_p) or pd.isna(book_p) else ""
-            )
+    model_american = ranked["_q"].map(_fair_amer_from_probability)
+    model_odds = []
+    for american, probability, flat in zip(model_american, ranked["_q"], ranked["p_first"]):
+        if pd.isna(probability) and uses_v3 and pd.notna(flat):
+            model_odds.append("")  # only the v3 chance is unavailable: leave it blank
+        else:
+            model_odds.append(_model_odds_probability(american, probability))
+    book_phone, book_desktop = [], []
+    for american, implied, no_vig in zip(ranked["_first_amer"], ranked["_book_raw"], ranked["_book_first"]):
+        base = f"{_amer_display(american)} · {100 * implied:.1f}% implied" if pd.notna(american) else ""
+        book_phone.append(base)
+        book_desktop.append(f"{base} · no-vig {100 * no_vig:.1f}%" if base and pd.notna(no_vig) else base)
+    expected_return = []
+    for ev, probability, flat, priced in zip(
+        ranked["_ev"], ranked["_q"], ranked["p_first"], ranked["_first_amer"].notna(),
+    ):
+        if pd.notna(ev):
+            expected_return.append(_signed_pct(ev))
+        elif priced and pd.isna(probability) and not (uses_v3 and pd.notna(flat)):
+            expected_return.append("Pending")
+        else:
+            expected_return.append("")
+    if uses_v3:
+        picks = (
+            ranked["first_td_v3_pick"].fillna(False).astype(bool)
+            if "first_td_v3_pick" in ranked else pd.Series(False, index=ranked.index)
         )
-        for model, book, model_p, book_p in zip(
-            model_american, ranked["_first_amer"], ranked["p_first"], ranked["_book_first"]
-        )
-    ]
-    book_odds = [
-        (
-            f"{_amer_display(american)} · Full market unavailable"
-            if pd.notna(american) and pd.isna(probability)
-            else _odds_probability(american, probability)
-        )
-        for american, probability in zip(ranked["_first_amer"], ranked["_book_first"])
-    ]
+        candidate = picks & _bet_eligibility(ranked).to_numpy()
+    else:
+        candidate = tracker.qualifies_first_td_ev(
+            ranked["p_first"], ranked["_first_amer"], ranked["_value"]
+        ) & _bet_eligibility(ranked).to_numpy()
     return pd.DataFrame({
         "#": range(1, len(ranked) + 1),
         "Player": ranked.player_display_name + " · " + ranked.team.map(public_team_abbr),
         "Pos": ranked.position,
         "Opp": ranked.opponent_team.map(public_team_abbr),
         "Model First TD Odds": model_odds,
-        "Book First TD Odds": [value or "Not implemented yet" for value in book_odds],
-        "First TD Value Gap": [
+        "Book First TD Odds": [value or "Not implemented yet" for value in book_desktop],
+        "Expected Return": [
             _with_tag(value, tag)
-            for value, tag in zip(value_gap, _eligibility_tags(ranked))
+            for value, tag in zip(expected_return, _eligibility_tags(ranked))
         ],
         "Hit": hit,
-        "_p": ranked["p_first"].astype(float),
+        "_p": ranked["_q"].astype(float),
         "_value": ranked["_value"].astype(float),
-        "_candidate": tracker.qualifies_first_td_ev(
-            ranked["p_first"], ranked["_first_amer"], ranked["_value"]
-        ) & _bet_eligibility(ranked).to_numpy(),
+        "_ev": ranked["_ev"].astype(float),
+        "_book_phone": [value or "Not implemented yet" for value in book_phone],
+        "_candidate": candidate,
     })
 
 
@@ -1363,7 +1424,10 @@ def _style(view: pd.DataFrame):
 
 
 def _first_td_style(view: pd.DataFrame):
-    """Same opaque candidate treatment as _style, targeting First TD column names."""
+    """Same opaque candidate treatment as _style, targeting First TD column names.
+
+    The Expected Return cell is green above zero, red below it and grey at zero,
+    unless the row is a highlighted pick."""
     candidate_row_bg = "background-color: #123229"
     candidate_focus = (
         "background-color: #1A4A3B; color: #B7F7D0; font-weight: 700"
@@ -1394,15 +1458,15 @@ def _first_td_style(view: pd.DataFrame):
                     row_bg = missed_candidate_row_bg if _missed_candidate(i) else candidate_row_bg
                     style = f"{style}; {row_bg}"
                 styles.iloc[i, df.columns.get_loc("Model First TD Odds")] = style
-        if "First TD Value Gap" in df.columns:
-            for i, value in enumerate(view["_value"]):
+        if "Expected Return" in df.columns:
+            for i, value in enumerate(view["_ev"]):
                 if pd.isna(value):
                     continue
                 color = "#35D08A" if value > 0 else "#F08A8A" if value < 0 else "#B8C0CC"
                 style = f"color: {color}; font-weight: 700"
                 if view["_candidate"].iloc[i]:
                     style = missed_candidate_focus if _missed_candidate(i) else candidate_focus
-                styles.iloc[i, df.columns.get_loc("First TD Value Gap")] = style
+                styles.iloc[i, df.columns.get_loc("Expected Return")] = style
         if "Hit" in df.columns:
             for i, mark in enumerate(view["Hit"]):
                 if mark == "Yes":
@@ -1602,16 +1666,24 @@ def _first_td_column_config() -> dict:
         "Opp": st.column_config.TextColumn("Opp", help="Opponent this week."),
         "Model First TD Odds": st.column_config.TextColumn(
             "Model First TD Odds",
-            help="Our lambda-share model American odds and percentage chance of scoring the game's first touchdown.",
+            help="Our model's American odds and percentage chance that this player scores the game's first touchdown.",
         ),
         "Book First TD Odds": st.column_config.TextColumn(
             "Book First TD Odds",
-            help="Raw sportsbook American price. A de-vigged probability appears only when the complete within-game First TD market is verified.",
+            width=250,
+            help=(
+                "DraftKings' quoted First TD price and the chance it implies, which includes the book's built-in margin. "
+                "A no-vig percentage is added only when the full within-game market was captured."
+            ),
         ),
-        "First TD Value Gap": st.column_config.TextColumn(
-            "First TD Value Gap",
+        "Expected Return": st.column_config.TextColumn(
+            "Expected Return",
             width=140,
-            help="Model-versus-book comparison. Full market unavailable when the complete within-game quote pool is unverified.",
+            help=(
+                "The model's estimate of average profit per unit staked at the quoted DraftKings price: "
+                "model chance times the payout, minus 1. First TD prices carry a large built-in margin, "
+                "so most players show a negative number. It is an estimate, not a promise."
+            ),
         ),
         "Hit": st.column_config.TextColumn(
             "Hit", width=150, help="Did they score the game's first touchdown?",
@@ -1634,18 +1706,23 @@ def _first_td_phone_column_config() -> dict:
         help="Model American odds and percentage chance of scoring first.",
     )
     cfg["Book First TD Odds"] = st.column_config.TextColumn(
-        "Book", width=PHONE_WIDTHS["Book ATTD Odds"],
-        help="Raw sportsbook American price; no-vig probability requires a verified complete market.",
+        "Book", width=PHONE_WIDTHS["Book First TD Odds"],
+        help="DraftKings' quoted First TD price and the chance it implies, including the book's margin.",
     )
-    cfg["First TD Value Gap"] = st.column_config.TextColumn(
-        "Value", width=PHONE_WIDTHS["ATTD Value Gap"],
-        help="Model-versus-book comparison; full market unavailable when the complete quote pool is unverified.",
+    cfg["Expected Return"] = st.column_config.TextColumn(
+        "EV", width=PHONE_WIDTHS["Expected Return"],
+        help="Expected return: the model's estimate of average profit per unit at the quoted price. Most First TD rows are negative.",
     )
     cfg["Hit"] = st.column_config.TextColumn(
         "Hit", width=PHONE_WIDTHS["Hit"],
         help="Did they score the game's first touchdown?",
     )
     return cfg
+
+
+def _frame_uses_v3(df: pd.DataFrame) -> bool:
+    """True for boards that carry First TD v3 probabilities (2026 Week 7 on)."""
+    return "p_first_v3" in df.columns
 
 
 def _render_week_recommended(
@@ -1656,7 +1733,10 @@ def _render_week_recommended(
     one game at a time -- a per-matchup view would mostly show nothing."""
     market = "first" if show_first_td else "two_plus"
     market_label = "First TD" if show_first_td else "2+ TD"
-    rule_text = tracker.rule_description(market)
+    first_v3 = show_first_td and _frame_uses_v3(board_priced)
+    rule_text = tracker.rule_description(
+        "first" if first_v3 else "first_legacy" if show_first_td else market
+    )
     retrospective = (
         "prediction_mode" in board_priced
         and board_priced["prediction_mode"].astype(str).eq("retrospective").all()
@@ -1666,10 +1746,18 @@ def _render_week_recommended(
             "Important: the NGS retrospective release has no First TD probabilities because its full scorer pool "
             "could not be verified. The listed scorer outcomes are coverage only, not a model backtest."
         )
+    elif first_v3:
+        st.info(
+            "Expected return is the model's estimate of average profit per unit at the quoted DraftKings price. "
+            "First TD prices carry a large built-in margin, so most players are negative. Each game's pick is "
+            "its highest expected return, if that is above zero and the price is within the cap. Picks are "
+            "frozen before kickoff and results are tracked from Week 7 on. Published-board Top-1 and Top-3 "
+            "results are shown above and are tracked separately."
+        )
     elif show_first_td:
         st.info(
-            "Published-board Top-1 and Top-3 results are shown above. The legacy no-vig paper strategy and "
-            "experimental actual-price paper strategy are tracked separately from ranking outcomes."
+            "Published-board Top-1 and Top-3 results are shown above. The paper strategy record below follows "
+            "the earlier value-gap rule and is tracked separately from ranking outcomes."
         )
     else:
         st.info(
@@ -1679,8 +1767,8 @@ def _render_week_recommended(
             "accuracy or profitability."
         )
     st.caption(
-        f"Every {market_label} candidate across this week's matchups: {rule_text}. "
-        "Sorted by value gap, highest first."
+        f"Every {market_label} {'pick' if first_v3 else 'candidate'} across this week's matchups: {rule_text}. "
+        f"Sorted by {'expected return' if show_first_td else 'value gap'}, highest first."
     )
     price_column = "first_amer" if show_first_td else "two_plus_amer"
     if price_column in board_priced:
@@ -1704,7 +1792,9 @@ def _render_week_recommended(
                     + ", ".join(missing_labels)
                     + ". Those markets remain blank."
                 )
-    _render_scorecards(board_priced, season, releases, market=market)
+    if not first_v3:
+        # From Week 7 the v3 card above replaces the earlier First TD cards.
+        _render_scorecards(board_priced, season, releases, market=market)
     candidate_table = (
         _first_td_display(board_priced) if show_first_td
         else _two_plus_display(board_priced)
@@ -1725,7 +1815,12 @@ def _render_week_recommended(
             "book_first_p_devigged" in board_priced
             and pd.to_numeric(board_priced["book_first_p_devigged"], errors="coerce").notna().any()
         )
-        if model_ready and not book_ready:
+        if first_v3 and model_ready:
+            st.caption(
+                "A game shows no pick when no player has a positive expected return at a price "
+                "within the cap. Open a matchup to see every priced player."
+            )
+        elif model_ready and not book_ready:
             st.caption(
                 "Model First TD odds are available on priced players, but no-vig "
                 "book probabilities are still pending where the captured First TD "
@@ -1780,6 +1875,9 @@ def _board(
     )
     style = table[desktop_cols]
     phone = table[phone_cols]
+    if show_first_td and "_book_phone" in table:
+        # Desktop may add a no-vig percentage to the book cell; the phone cell stays short.
+        phone = phone.assign(**{"Book First TD Odds": table["_book_phone"]})
     desktop_data = style.style.apply(style_fn, axis=None) if style_fn else style
     phone_data = phone.style.apply(style_fn, axis=None) if style_fn else phone
     dataframe_phone_desktop(

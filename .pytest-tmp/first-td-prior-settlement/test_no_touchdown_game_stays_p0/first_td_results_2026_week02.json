@@ -1,0 +1,41 @@
+{
+  "games": [
+    {
+      "evidence_source": "nflverse_play_by_play",
+      "first_score_play_id": null,
+      "first_score_qtr": null,
+      "game_id": "2026_02_MIN_CHI",
+      "graded_at": "2026-10-21T00:25:30Z",
+      "identity_source": "play_by_play_player_id",
+      "outcome_kind": null,
+      "pending_reason": "play_by_play_missing_or_incomplete",
+      "player_settlements": {
+        "CW": {
+          "scored_first": null,
+          "status": "awaiting_evidence"
+        },
+        "JJ": {
+          "scored_first": null,
+          "status": "awaiting_evidence"
+        }
+      },
+      "scorer_name": null,
+      "scorer_on_board": null,
+      "scorer_player_id": null,
+      "scorer_team": null,
+      "settlements_updated_at": "2026-10-21T00:25:30Z",
+      "source_hashes": {
+        "play_by_play": "9309f9dd3fb1ee25837dce7804a62eb056835e1df97843bd8cb4e4499752f4c0",
+        "player_identity": "01e48298d9bd7f63d0073ffc252d52d8ab5ed7d99194d93fae956711df827dcb",
+        "published_frozen_inputs": "d536e285699ddd8063553f18019af34e4d08e03c11c836103d0c4ce2595a897c",
+        "schedule": "3c51d91015c14718c54cc712bb917ee059ba817b7833460bdacb57f15ba314d6"
+      },
+      "status": "pending"
+    }
+  ],
+  "published_frozen_inputs_sha256": "d536e285699ddd8063553f18019af34e4d08e03c11c836103d0c4ce2595a897c",
+  "schema_version": 1,
+  "season": 2026,
+  "source_release": "anytime_td_2026_week02.csv",
+  "week": 2
+}

@@ -1,0 +1,2 @@
+player_id,player_display_name,position,team,opponent_team,season,week,projected_pts,pred_qb_pass_yards,pred_qb_rush_yards,pred_rush_yards,pred_rec_yards,pred_wr_rec_yards,pred_te_rec_yards,off_epa_rank,implied_team_total,injury_status_score
+00-1,Test Quarterback,QB,NE,SEA,2026,1,20.4,252.5,28.0,,,,,7,24.5,1.0

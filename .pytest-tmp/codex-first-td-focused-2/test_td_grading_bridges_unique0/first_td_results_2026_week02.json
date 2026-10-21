@@ -1,0 +1,45 @@
+{
+  "games": [
+    {
+      "evidence_source": "nflverse_play_by_play",
+      "first_score_play_id": 2,
+      "first_score_qtr": 4,
+      "game_id": "2026_02_MIN_CHI",
+      "graded_at": "2026-10-21T00:01:18Z",
+      "identity_source": "nflverse_player_stats",
+      "outcome_kind": "offense_skill",
+      "pending_reason": null,
+      "player_settlements": {
+        "GSIS1": {
+          "scored_first": 1.0,
+          "status": "settled"
+        },
+        "GSIS2": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "GSIS3": {
+          "scored_first": null,
+          "status": "awaiting_evidence"
+        }
+      },
+      "scorer_name": "Winner",
+      "scorer_on_board": true,
+      "scorer_player_id": "GSIS1",
+      "scorer_team": "MIN",
+      "settlements_updated_at": "2026-10-21T00:01:18Z",
+      "source_hashes": {
+        "play_by_play": "d752c3d8ad76d756ec15cc853d14f51be2ed6e34eef436efb30f9f5c85e22250",
+        "player_identity": "736288ced5c8e0749c4e3e34fdd30bee1b2707bf962f348e3946760109e37ac3",
+        "published_frozen_inputs": "4e09c98b85723f7b266763d87f5ca87322bb0587b42188c7d95d5333fcfb38e4",
+        "schedule": "fbbf00b1c5e7722fb315e0e3c64134c56e46042a7d08e116b9704e89e75e2270"
+      },
+      "status": "resolved"
+    }
+  ],
+  "published_frozen_inputs_sha256": "4e09c98b85723f7b266763d87f5ca87322bb0587b42188c7d95d5333fcfb38e4",
+  "schema_version": 1,
+  "season": 2026,
+  "source_release": "anytime_td_2026_week02.csv",
+  "week": 2
+}

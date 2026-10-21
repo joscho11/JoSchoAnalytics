@@ -61,6 +61,7 @@ jobs:
           tests/test_page_futures.py
           tests/test_page_rookie_board.py
           tests/test_weekly_fantasy_source.py
+          tests/test_fantasy_accuracy.py
           tests/test_espn_adp.py
           tests/test_yahoo_adp.py
           tests/test_board_refresh.py
@@ -143,6 +144,7 @@ jobs:
           tests/test_page_futures.py
           tests/test_page_rookie_board.py
           tests/test_weekly_fantasy_source.py
+          tests/test_fantasy_accuracy.py
           tests/test_espn_adp.py
           tests/test_yahoo_adp.py
           tests/test_visual_regression.py

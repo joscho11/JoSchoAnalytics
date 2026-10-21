@@ -1,0 +1,48 @@
+{
+  "grading": {
+    "products": {}
+  },
+  "products": {
+    "fantasy": {
+      "active_build": null,
+      "builds": {},
+      "next_release": null,
+      "previous_build": null
+    },
+    "predictions": {
+      "active_build": "predictions-2026w01-688c31c4df8a",
+      "builds": {
+        "predictions-2026w01-688c31c4df8a": {
+          "artifact": "data/releases/builds/predictions/2026/week01/predictions-2026w01-688c31c4df8a/artifact.csv",
+          "build_id": "predictions-2026w01-688c31c4df8a",
+          "metadata": "data/releases/builds/predictions/2026/week01/predictions-2026w01-688c31c4df8a/metadata.json",
+          "model_version": "spread-v3-test-0.0",
+          "produced_at": "2026-09-08T13:00:00Z",
+          "product": "predictions",
+          "published_at": "2026-10-21T00:08:19Z",
+          "row_count": 2,
+          "season": 2026,
+          "sha256": "688c31c4df8a99494d899f48ab0c3953072bb91f68e2f5545af224652fe09817",
+          "status": "Published",
+          "validation": {
+            "checks": {
+              "artifact_sha256": "688c31c4df8a99494d899f48ab0c3953072bb91f68e2f5545af224652fe09817",
+              "produced_at_utc": "2026-09-08T13:00:00Z",
+              "scheduled_games": 2
+            },
+            "errors": [],
+            "ok": true,
+            "product": "predictions",
+            "row_count": 2,
+            "warnings": []
+          },
+          "week": 1
+        }
+      },
+      "next_release": null,
+      "previous_build": null
+    }
+  },
+  "schema_version": 1,
+  "updated_at": "2026-10-21T00:08:19Z"
+}

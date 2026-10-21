@@ -6,11 +6,18 @@ import json
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import pandas as pd
 
 from .candidate import build_candidate_metadata, write_candidate_sidecar
 from .contract import PublicationError, utc_now_iso
+from .first_td_strategy import (
+    STRATEGY_ID_V3,
+    freeze_first_td_best_value_v3,
+    kickoffs_from_release,
+)
+from .first_td_v3 import uses_first_td_v3
 from .grader import (
     fetch_nfl_schedule,
     fetch_player_stats,
@@ -28,11 +35,38 @@ from .publisher import (
     rollback_release,
     schedule_release,
 )
+from .td_releases import canonical_td_releases, read_td_release
 from .validators import read_metadata, validate_candidate
 
 
 def _print(value) -> None:
     print(json.dumps(value, indent=2, sort_keys=True, default=str))
+
+
+def _now_et() -> str:
+    return datetime.now(ZoneInfo("America/New_York")).isoformat()
+
+
+def _freeze_first_td_v3(root: Path, season: int, week: int) -> dict:
+    """Freeze the v3 best-value picks for the active TD release of one week.
+
+    Freeze time is now (Eastern). A game that has not been frozen yet is
+    refused at or after its kickoff, so a decision is never made retroactively.
+    The frozen params copy must sit in the v3 ledger folder.
+    """
+    if not uses_first_td_v3(season, week):
+        raise PublicationError("First TD v3 tracking starts with the 2026 Week 7 board")
+    td_dir = root / "betting" / "anytime_td"
+    entry = canonical_td_releases(td_dir).get((season, week))
+    if not entry or "metadata_path" not in entry:
+        raise PublicationError(f"No manifest-validated TD release is active for {season} week {week}")
+    board = read_td_release(entry["csv_path"])
+    return freeze_first_td_best_value_v3(
+        entry["csv_path"],
+        frozen_at_et=_now_et(),
+        kickoff_by_game=kickoffs_from_release(board),
+        ledger_root=td_dir / "strategies" / STRATEGY_ID_V3,
+    )
 
 
 def _bootstrap(root: Path) -> dict:
@@ -237,6 +271,13 @@ def parser() -> argparse.ArgumentParser:
         "--product", choices=("all", "predictions", "fantasy", "anytime_td"), default="all"
     )
 
+    freeze_v3 = commands.add_parser(
+        "freeze-first-td-v3",
+        help="freeze First TD v3 best-value picks for a week's active TD release (before kickoff)",
+    )
+    freeze_v3.add_argument("--season", type=int, required=True)
+    freeze_v3.add_argument("--week", type=int, required=True)
+
     commands.add_parser("bootstrap", help="register immutable 2025 demo baselines")
     return top
 
@@ -313,6 +354,8 @@ def main(argv=None) -> int:
                         root=root,
                     )
                 )
+        elif args.command == "freeze-first-td-v3":
+            _print(_freeze_first_td_v3(root, args.season, args.week))
         elif args.command == "bootstrap":
             _print(_bootstrap(root))
         return 0

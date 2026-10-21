@@ -1,0 +1,30 @@
+{
+  "games": [
+    {
+      "evidence_source": "nflverse_play_by_play",
+      "first_score_play_id": 1,
+      "first_score_qtr": 1,
+      "game_id": "2026_01_NE_SEA",
+      "graded_at": "2026-10-20T23:52:59Z",
+      "identity_source": "nflverse_player_stats",
+      "outcome_kind": "offense_skill",
+      "pending_reason": null,
+      "scorer_name": "Scorer",
+      "scorer_on_board": true,
+      "scorer_player_id": "GSIS1",
+      "scorer_team": "NE",
+      "source_hashes": {
+        "play_by_play": "9edd11e256d46d1b13fa8643428146cb3372c40b49111a64ad0df82e4248d145",
+        "player_identity": "33a011898005db692aa842e4fb0ee492c0d6f17979aa963ce533ac58918f5600",
+        "published_frozen_inputs": "c391aa7d4fe29073199a15186eb483ec03941d9b32d39f2b519c3e42ec80e95c",
+        "schedule": "868bf04deaa582f1f8c21f9c4dcdc98a6d376be5ec59d1730b84f7c524e480b4"
+      },
+      "status": "resolved"
+    }
+  ],
+  "published_frozen_inputs_sha256": "c391aa7d4fe29073199a15186eb483ec03941d9b32d39f2b519c3e42ec80e95c",
+  "schema_version": 1,
+  "season": 2026,
+  "source_release": "anytime_td_2026_week01.csv",
+  "week": 1
+}

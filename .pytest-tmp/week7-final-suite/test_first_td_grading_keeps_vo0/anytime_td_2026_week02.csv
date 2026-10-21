@@ -1,0 +1,3 @@
+game_id,player_id,scored_first,status,first_no_td_offered,settlement_status_first
+2026_02_MIN_CHI,JJ,0.0,void,True,settled
+2026_02_MIN_CHI,CW,0.0,final,True,settled

@@ -11,6 +11,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from publishing import first_td_v3
+from publishing.contract import PublicationError
 from publishing.td_releases import read_td_release
 
 
@@ -140,14 +142,63 @@ def qualifies_first_td_actual_ev(model_probability, book_price):
     return (valid_model & valid_price & model.mul(decimal).sub(1.0).gt(0.0)).fillna(False).astype(bool)
 
 
+def first_td_v3_price_cap() -> int | None:
+    """The frozen First TD v3 long-shot cap (an American price) from params.json.
+
+    None while the frozen params copy is missing or invalid, so every v3 check
+    fails closed instead of guessing a cap.
+    """
+    try:
+        return first_td_v3.load_params().price_cap
+    except PublicationError:
+        return None
+
+
+def __getattr__(name: str):
+    # FIRST_TD_V3_PRICE_CAP is read from params.json each time it is used, so a
+    # copy placed after import is picked up and a stale value is never cached.
+    if name == "FIRST_TD_V3_PRICE_CAP":
+        return first_td_v3_price_cap()
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+def qualifies_first_td_best_value_v3(model_probability, book_price, *, price_cap=None):
+    """First TD v3 pick test for one quote: strictly positive expected return at
+    the actual captured price, and a price no longer than the frozen cap.
+
+    The one-pick-per-game choice among qualifiers is made by the freeze
+    (publishing.first_td_strategy); this is the per-quote part of the rule.
+    `price_cap` defaults to the cap in the frozen params copy; with no cap
+    available nothing qualifies.
+    """
+    cap = first_td_v3_price_cap() if price_cap is None else price_cap
+    qualified = qualifies_first_td_actual_ev(model_probability, book_price)
+    if cap is None:
+        return qualified & False
+    price = pd.to_numeric(book_price, errors="coerce").astype("float64")
+    return (qualified & price.le(float(cap))).fillna(False).astype(bool)
+
+
 def rule_description(market: str) -> str:
-    """Plain-language description of the paper-bet qualifying rule for `market`."""
+    """Plain-language description of the paper-bet qualifying rule for `market`.
+
+    "first" is the current First TD v3 rule (2026 Week 7 on). "first_legacy" is
+    the earlier gap-plus-expected-return rule that Weeks 1 to 6 were tracked under.
+    """
     if market == "two_plus":
         return (
             f"model probability at least {TWO_PLUS_RATIO_THRESHOLD:.2f}x the book's "
             f"price, with that price at least {100 * TWO_PLUS_PRICE_FLOOR:.0f}%"
         )
     if market == "first":
+        cap = first_td_v3_price_cap()
+        cap_text = f"+{cap}" if cap else "the frozen cap"
+        return (
+            "one pick per game: the player with the highest expected return at the "
+            "book's actual price, only if that return is above zero and the price is "
+            f"{cap_text} or shorter"
+        )
+    if market == "first_legacy":
         return (
             f"+{100 * FIRST_TD_VALUE_THRESHOLD:.1f}pp value gap AND a positive "
             "expected return at the book's actual price"

@@ -1,0 +1,2 @@
+season,week,player_id,player_display_name,position,team,opponent_team,p_ge1,p_ge2,p_book,fair_amer,book_amer,scored_anytime
+2026,1,p1,Player One,RB,SF,LA,0.4,0.1,0.375,150,167,

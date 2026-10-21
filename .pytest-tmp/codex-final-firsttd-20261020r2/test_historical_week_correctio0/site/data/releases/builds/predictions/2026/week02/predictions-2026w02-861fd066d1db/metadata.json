@@ -1,0 +1,31 @@
+{
+  "artifact_name": "predictions-w2-0.0.csv",
+  "artifact_sha256": "861fd066d1dbf6346aa4499ed046839b99b9d1d46a5e879af1be92e2a0415f55",
+  "expected_game_ids_sha256": "398a720a29939bfb1afd0664ad4aad7051a74057f6b6b240f56af9ea4cf37b71",
+  "expected_rows": 2,
+  "expected_teams": [
+    "LA",
+    "NE",
+    "SEA",
+    "SF"
+  ],
+  "legacy_bootstrap": false,
+  "model_version": "spread-v3-test-0.0",
+  "produced_at": "2026-09-08T13:00:00Z",
+  "product": "predictions",
+  "schema_version": 1,
+  "season": 2026,
+  "validation": {
+    "checks": {
+      "artifact_sha256": "861fd066d1dbf6346aa4499ed046839b99b9d1d46a5e879af1be92e2a0415f55",
+      "produced_at_utc": "2026-09-08T13:00:00Z",
+      "scheduled_games": 2
+    },
+    "errors": [],
+    "ok": true,
+    "product": "predictions",
+    "row_count": 2,
+    "warnings": []
+  },
+  "week": 2
+}

@@ -1,0 +1,84 @@
+{
+  "grading": {
+    "products": {}
+  },
+  "products": {
+    "fantasy": {
+      "active_build": null,
+      "builds": {},
+      "next_release": null,
+      "previous_build": null
+    },
+    "predictions": {
+      "active_build": "predictions-2026w01-285d9de41cae",
+      "builds": {
+        "predictions-2026w01-285d9de41cae": {
+          "artifact": "data/releases/builds/predictions/2026/week01/predictions-2026w01-285d9de41cae/artifact.csv",
+          "build_id": "predictions-2026w01-285d9de41cae",
+          "correction": {
+            "model_update": true,
+            "reason": "Promote the validated causal-cleanup model.",
+            "source_snapshot_captured_at": "2026-09-08T11:23:16-04:00",
+            "source_snapshot_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "supersedes_build_id": "predictions-2026w01-688c31c4df8a"
+          },
+          "metadata": "data/releases/builds/predictions/2026/week01/predictions-2026w01-285d9de41cae/metadata.json",
+          "model_version": "spread-v3-clean-ridge",
+          "produced_at": "2026-09-11T13:05:00Z",
+          "product": "predictions",
+          "published_at": "2026-10-21T04:16:37Z",
+          "row_count": 2,
+          "season": 2026,
+          "sha256": "285d9de41cae9177fd11ea172d6995ed8041726d87b37f4a4d9d0bef37cb954e",
+          "status": "Published",
+          "validation": {
+            "checks": {
+              "artifact_sha256": "285d9de41cae9177fd11ea172d6995ed8041726d87b37f4a4d9d0bef37cb954e",
+              "post_kickoff_correction": true,
+              "produced_at_utc": "2026-09-11T13:05:00Z",
+              "scheduled_games": 2
+            },
+            "errors": [],
+            "ok": true,
+            "product": "predictions",
+            "row_count": 2,
+            "warnings": [
+              "correction was produced after the first kickoff; correction controls verified"
+            ]
+          },
+          "week": 1
+        },
+        "predictions-2026w01-688c31c4df8a": {
+          "artifact": "data/releases/builds/predictions/2026/week01/predictions-2026w01-688c31c4df8a/artifact.csv",
+          "build_id": "predictions-2026w01-688c31c4df8a",
+          "metadata": "data/releases/builds/predictions/2026/week01/predictions-2026w01-688c31c4df8a/metadata.json",
+          "model_version": "spread-v3-test-0.0",
+          "produced_at": "2026-09-08T13:00:00Z",
+          "product": "predictions",
+          "published_at": "2026-10-21T04:16:37Z",
+          "row_count": 2,
+          "season": 2026,
+          "sha256": "688c31c4df8a99494d899f48ab0c3953072bb91f68e2f5545af224652fe09817",
+          "status": "Published",
+          "validation": {
+            "checks": {
+              "artifact_sha256": "688c31c4df8a99494d899f48ab0c3953072bb91f68e2f5545af224652fe09817",
+              "produced_at_utc": "2026-09-08T13:00:00Z",
+              "scheduled_games": 2
+            },
+            "errors": [],
+            "ok": true,
+            "product": "predictions",
+            "row_count": 2,
+            "warnings": []
+          },
+          "week": 1
+        }
+      },
+      "next_release": null,
+      "previous_build": "predictions-2026w01-688c31c4df8a"
+    }
+  },
+  "schema_version": 1,
+  "updated_at": "2026-10-21T04:16:37Z"
+}

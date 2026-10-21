@@ -1,0 +1,3 @@
+season,week,player_id,player_display_name,position,team,opponent_team,game_id,kickoff_et,snapped_at_et,book,book_amer,first_amer,two_plus_amer,p_book,lambda,p_ge1,p_ge2,fair_amer,scored_anytime,scored_two_plus,status,slate,identity_source,l4w_games_available,forward_history_missing,bet_eligible,eligibility_reason,settlement_status_anytime,settlement_status_two_plus
+2026,1,SEA-RB,Sea RB,RB,SEA,NE,2026_01_NE_SEA,2026-09-10 20:20,2026-09-10 17:20,DraftKings,150.0,,400.0,0.3,0.55,0.4,0.2,150,1.0,1.0,final,test,gsis,4,False,True,,settled,settled
+2026,1,sleeper:rookie,Rookie Nobody,WR,SEA,NE,2026_01_NE_SEA,2026-09-10 20:20,2026-09-10 17:20,DraftKings,,,,,0.1,0.09,0.01,1000,,,void,test,synthetic_sleeper,0,True,False,synthetic_or_unresolved_identity,void,void

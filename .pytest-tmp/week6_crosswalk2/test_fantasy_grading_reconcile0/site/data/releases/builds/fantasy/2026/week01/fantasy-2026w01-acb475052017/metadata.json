@@ -1,0 +1,56 @@
+{
+  "artifact_name": "fantasy.csv",
+  "artifact_sha256": "acb475052017561f248589db39037ca52649aafad55b6cb0ef4114824f72c8b8",
+  "expected_gsis_id_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+  "expected_player_ids_sha256": "044560ab8ece3c75a556263b1f42b75528d1016f37a416f0dcb71226a16c7ae4",
+  "expected_rows": 180,
+  "expected_sleeper_id_sha256": "41dd8d953c18a4e7814607b051c84121ddfb7f647ee9bf30441de7eeaa0b743b",
+  "expected_teams": [
+    "NE",
+    "SEA"
+  ],
+  "identity_aliases": [
+    "gsis_id",
+    "sleeper_id"
+  ],
+  "legacy_bootstrap": false,
+  "model_version": "weekly-fantasy-alias-test",
+  "position_counts": {
+    "QB": 24,
+    "RB": 60,
+    "TE": 24,
+    "WR": 72
+  },
+  "produced_at": "2026-09-08T13:00:00Z",
+  "product": "fantasy",
+  "schema_version": 1,
+  "season": 2026,
+  "team_position_counts": {
+    "NE": {
+      "QB": 12,
+      "RB": 30,
+      "TE": 12,
+      "WR": 36
+    },
+    "SEA": {
+      "QB": 12,
+      "RB": 30,
+      "TE": 12,
+      "WR": 36
+    }
+  },
+  "validation": {
+    "checks": {
+      "artifact_sha256": "acb475052017561f248589db39037ca52649aafad55b6cb0ef4114824f72c8b8",
+      "produced_at_utc": "2026-09-08T13:00:00Z",
+      "scheduled_teams": 2,
+      "team_position_cells": 8
+    },
+    "errors": [],
+    "ok": true,
+    "product": "fantasy",
+    "row_count": 180,
+    "warnings": []
+  },
+  "week": 1
+}

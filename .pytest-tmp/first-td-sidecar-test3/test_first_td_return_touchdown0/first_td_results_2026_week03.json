@@ -1,0 +1,30 @@
+{
+  "games": [
+    {
+      "evidence_source": "nflverse_play_by_play",
+      "first_score_play_id": 1,
+      "first_score_qtr": 1,
+      "game_id": "2026_03_MIN_TB",
+      "graded_at": "2026-10-20T23:52:59Z",
+      "identity_source": "nflverse_player_stats",
+      "outcome_kind": "special_teams",
+      "pending_reason": null,
+      "scorer_name": "Myles Price",
+      "scorer_on_board": true,
+      "scorer_player_id": "GSIS100",
+      "scorer_team": "MIN",
+      "source_hashes": {
+        "play_by_play": "b8c7f03afa3de6e6fbef2b2bb95cfb78814f9645c376726e0487be3f3093d2a0",
+        "player_identity": "972f66e06d2508e897c395aff8ab685e5792fbdf1867af58968d9ef26319c3f3",
+        "published_frozen_inputs": "2ac204b0656d6ac636c541f38ece59d7db3253c09b387afcdab8e8fc56940097",
+        "schedule": "767b0e7e55f0008291aa5d84cebf58a81cc4f4eb27620084032d5d97717cdd52"
+      },
+      "status": "resolved"
+    }
+  ],
+  "published_frozen_inputs_sha256": "2ac204b0656d6ac636c541f38ece59d7db3253c09b387afcdab8e8fc56940097",
+  "schema_version": 1,
+  "season": 2026,
+  "source_release": "anytime_td_2026_week03.csv",
+  "week": 3
+}

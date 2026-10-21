@@ -1,0 +1,4 @@
+season,week,game_id,player_id,player_display_name,team,opponent_team,p_ge1,p_book,p_ge2,two_plus_amer,scored_anytime,status,settlement_status_anytime,settlement_status_two_plus,scored_two_plus
+2026,1,2026_01_NE_SEA,SEA-RB,Sea RB,SEA,NE,0.4,0.3,0.2,400,1.0,final,settled,settled,1.0
+2026,1,2026_01_NE_SEA,NE-RB,Ne RB,NE,SEA,0.35,0.3,0.15,566,,pregame,awaiting_evidence,awaiting_evidence,
+2026,1,2026_01_SF_LA,SF-RB,Sf RB,SF,LA,0.3,0.25,0.1,900,,pregame,open,open,

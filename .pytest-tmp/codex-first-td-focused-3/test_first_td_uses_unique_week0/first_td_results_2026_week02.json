@@ -1,0 +1,41 @@
+{
+  "games": [
+    {
+      "evidence_source": "nflverse_play_by_play",
+      "first_score_play_id": 2,
+      "first_score_qtr": 4,
+      "game_id": "2026_02_MIN_CHI",
+      "graded_at": "2026-10-21T00:02:35Z",
+      "identity_source": "nflverse_player_stats",
+      "outcome_kind": "offense_skill",
+      "pending_reason": null,
+      "player_settlements": {
+        "unmapped:101": {
+          "scored_first": 1.0,
+          "status": "settled"
+        },
+        "unmapped:202": {
+          "scored_first": 0.0,
+          "status": "settled"
+        }
+      },
+      "scorer_name": "Jeremiyah Love",
+      "scorer_on_board": true,
+      "scorer_player_id": "GSIS1",
+      "scorer_team": "MIN",
+      "settlements_updated_at": "2026-10-21T00:02:35Z",
+      "source_hashes": {
+        "play_by_play": "d752c3d8ad76d756ec15cc853d14f51be2ed6e34eef436efb30f9f5c85e22250",
+        "player_identity": "16aa17382730eb29a20c9febfe7b397df15ea5fe9813165f6c365c5f03410d64",
+        "published_frozen_inputs": "0ac726d04f7964af7c262e92038570ebce99e51554c25bce2dd9703c6d222d8f",
+        "schedule": "fbbf00b1c5e7722fb315e0e3c64134c56e46042a7d08e116b9704e89e75e2270"
+      },
+      "status": "resolved"
+    }
+  ],
+  "published_frozen_inputs_sha256": "0ac726d04f7964af7c262e92038570ebce99e51554c25bce2dd9703c6d222d8f",
+  "schema_version": 1,
+  "season": 2026,
+  "source_release": "anytime_td_2026_week02.csv",
+  "week": 2
+}

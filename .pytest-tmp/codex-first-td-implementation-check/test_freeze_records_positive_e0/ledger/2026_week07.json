@@ -1,0 +1,75 @@
+{
+  "games": [
+    {
+      "bets": [
+        {
+          "decimal_odds": 4.0,
+          "expected_return": 0.19999999999999996,
+          "first_amer": 300,
+          "opponent_team": "BBB",
+          "p_first": 0.3,
+          "player_display_name": "Player a",
+          "player_id": "a",
+          "stake_units": 1.0,
+          "team": "AAA"
+        }
+      ],
+      "decision_sha256": "4c17e9160a67f6ee314725f1f53ccefcc4d484f4bbb78665c6bdd17171a79fba",
+      "decision_status": "frozen",
+      "exclusion_counts": {},
+      "frozen_at_et": "2026-10-20T19:30:00-04:00",
+      "frozen_inputs_sha256": "a8c84ca0f068b0512df19bea5eb35347d9ea1426792b89c11ed534ac473fdb67",
+      "game_id": "g1",
+      "kickoff_et": "2026-10-20T20:00:00-04:00",
+      "quotes_captured_at_et": "2026-10-20T19:10:00-04:00",
+      "release_published_at_et": "2026-10-20T19:15:00-04:00",
+      "selected_bet_count": 1,
+      "source_metadata_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "source_model_bundle_sha256": "",
+      "source_model_version": "frozen-test-model",
+      "source_release": "week07.csv"
+    },
+    {
+      "bets": [],
+      "decision_sha256": "5ec49bbc01b3dfe6e4e62aac72a1398792254fe33c929090bda9495cf30b4eb6",
+      "decision_status": "frozen",
+      "exclusion_counts": {},
+      "frozen_at_et": "2026-10-20T19:30:00-04:00",
+      "frozen_inputs_sha256": "dc4b4e8a9658f1bf783358a09c17060d5699822b9e5266d9b19eee74d278154f",
+      "game_id": "g2",
+      "kickoff_et": "2026-10-20T20:00:00-04:00",
+      "quotes_captured_at_et": "2026-10-20T19:10:00-04:00",
+      "release_published_at_et": "2026-10-20T19:15:00-04:00",
+      "selected_bet_count": 0,
+      "source_metadata_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "source_model_bundle_sha256": "",
+      "source_model_version": "frozen-test-model",
+      "source_release": "week07.csv"
+    },
+    {
+      "bets": [],
+      "decision_sha256": "ec73322aa2dcad9a3609cd493701ed0044c467c850c6e9e116691ae0e87c25f5",
+      "decision_status": "frozen",
+      "exclusion_counts": {
+        "invalid_model_probability": 1
+      },
+      "frozen_at_et": "2026-10-20T19:30:00-04:00",
+      "frozen_inputs_sha256": "40b8942cb6a72b084008203c168deb7faf627100aaf415fa52538c72a31e25eb",
+      "game_id": "g3",
+      "kickoff_et": "2026-10-20T20:00:00-04:00",
+      "quotes_captured_at_et": "2026-10-20T19:10:00-04:00",
+      "release_published_at_et": "2026-10-20T19:15:00-04:00",
+      "selected_bet_count": 0,
+      "source_metadata_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "source_model_bundle_sha256": "",
+      "source_model_version": "frozen-test-model",
+      "source_release": "week07.csv"
+    }
+  ],
+  "ledger_sha256": "bdb16a76d58415db91fb6ccd2ae8e2f019b1c66c6bc461ff52cf54f98fb57dd3",
+  "rule": "every eligible quoted player with model_probability * decimal_odds - 1 > 0; 1 unit each",
+  "schema_version": 1,
+  "season": 2026,
+  "strategy_id": "first_td_actual_ev_v2",
+  "week": 7
+}

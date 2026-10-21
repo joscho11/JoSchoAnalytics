@@ -65,6 +65,8 @@ private producer
 
 Published projection files remain immutable. Actual points and errors are written under `data/releases/results/`. This separates what the model knew at release time from what happened later.
 
+The Weekly Fantasy page reads those graded files when it renders, so each completed week gets a scorecard with no extra job. "How the rankings did" compares our rankings with Sleeper's on the same players: top-tier hits (how many of each list's top 12 QB, 24 RB, 24 WR and 12 TE finished in that group), average miss, and rank correlation, by position and overall. A Season to date view repeats it for every completely graded week. It is always half-PPR, leaves out players listed Out or Doubtful at kickoff, and counts late scratches at zero points. The definitions live in `site_pages/fantasy_accuracy.py`, and `tests/test_fantasy_accuracy.py` fails if a graded week stops carrying the columns the scorecard needs.
+
 ## Public repository map
 
 | Path | Role |
@@ -77,6 +79,7 @@ Published projection files remain immutable. Actual points and errors are writte
 | `../publishing/` | Candidate validation, builds, activation, rollback, and grading |
 | `../data/releases/` | Immutable release registry and result ledgers |
 | `../site_pages/page_weekly_fantasy.py` | Release-backed weekly fantasy page |
+| `../site_pages/fantasy_accuracy.py` | Postgame scorecard definitions, shared by the page and its tests |
 
 Training for the 2026 weekly producer is in the private `weekly_projections_v2_prod` repository. This public tree does not ship notebooks or serialized models.
 

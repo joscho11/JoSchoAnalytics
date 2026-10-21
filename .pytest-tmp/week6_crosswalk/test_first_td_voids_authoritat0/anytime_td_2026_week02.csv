@@ -1,0 +1,4 @@
+game_id,player_id,player_display_name,team,scored_first,settlement_status_first
+2026_02_MIN_CHI,sleeper:unknown,Matthew Hibner,MIN,,void
+2026_02_MIN_CHI,GSIS1,Scorer,MIN,1.0,settled
+2026_02_MIN_CHI,GSIS2,Other Player,CHI,0.0,settled

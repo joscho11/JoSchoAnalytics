@@ -2,6 +2,7 @@
 import html as _html
 import itertools as _it
 import json
+import math
 import os
 from datetime import datetime as dt
 from pathlib import Path
@@ -10,6 +11,7 @@ from zoneinfo import ZoneInfo
 import pandas as pd
 import streamlit as st
 
+import fantasy_accuracy
 import page_common
 from fantasy_scoring import DEFAULT_SCORING, SCORING_MODES, points_from_half_ppr
 from dashboard_chrome import TABLE_HEIGHT, dataframe_phone_desktop, _OFFLINE
@@ -46,6 +48,11 @@ PREVIEW_PHONE_COLUMNS = ["#", "Player", "Opponent", "Proj Pts", "Health", "Actua
 PREVIEW_PHONE_SLEEPER_COLUMNS = [
     "#", "Player", "Proj Pts", "Sleeper", "Opponent", "Health", "Actual Pts",
 ]
+# Postgame with a Finish rank: Proj Pts, Actual Pts and Finish fill a 390px phone
+# grid, so Opponent follows them instead of pushing Finish past the right edge.
+PREVIEW_PHONE_RANK_COLUMNS = [
+    "#", "Player", "Proj Pts", "Actual Pts", "Finish", "Opponent", "Health",
+]
 # The phone table had no explicit column_config of its own (dataframe_phone_desktop's
 # fallback just filters the desktop config down to these columns, none of which carry
 # a width), so the grid auto-sized every column and ellipsized "Opponent" to "Oppo...".
@@ -53,7 +60,7 @@ PREVIEW_PHONE_SLEEPER_COLUMNS = [
 # only, per column.
 _WF_PHONE_WIDTHS = {
     "#": 36, "Player": 140, "Opponent": 60, "Proj Pts": 60,
-    "Health": 46, "Actual Pts": 64, "Sleeper": 56,
+    "Health": 46, "Actual Pts": 64, "Sleeper": 56, "Finish": 52,
 }
 PREVIEW_PROJECTED_COLUMNS = {
     "QB": ["Proj Pass Yds", "Proj Rush Yds"],
@@ -68,6 +75,8 @@ PREVIEW_ACTUAL_COLUMNS = {
     "WR": ["Actual Rec Yds"],
     "TE": ["Actual Rec Yds"],
 }
+# Postgame rank context, shown only for a completely graded 2026 release.
+PREVIEW_RANK_COLUMNS = ["Our Rk", "Finish", "Rk Δ"]
 _JSA_PROJ_DIR = _HERE / "fantasy" / "fantasy_projections"
 
 
@@ -462,6 +471,7 @@ def _preview_table_columns(
     actuals_in: bool,
     actual_detail: bool = True,
     show_sleeper: bool = False,
+    rank_columns: bool = False,
 ) -> list[str]:
     columns = list(PREVIEW_SIMPLE_COLUMNS)
     if show_sleeper:
@@ -471,14 +481,21 @@ def _preview_table_columns(
         columns.extend(PREVIEW_CONTEXT_COLUMNS)
     if actuals_in:
         columns.append("Actual Pts")
+        if rank_columns:
+            columns.extend(PREVIEW_RANK_COLUMNS)
         if actual_detail:
             columns.extend(PREVIEW_ACTUAL_COLUMNS[position])
     return columns
 
 
 def _preview_phone_columns(available_columns, *, show_sleeper: bool) -> list[str]:
-    """Keep the Week 1 benchmark next to our projection on narrow screens."""
-    preferred = PREVIEW_PHONE_SLEEPER_COLUMNS if show_sleeper else PREVIEW_PHONE_COLUMNS
+    """Keep the Week 1 benchmark, or the postgame Finish rank, next to our projection."""
+    if show_sleeper:
+        preferred = PREVIEW_PHONE_SLEEPER_COLUMNS
+    elif "Finish" in available_columns:
+        preferred = PREVIEW_PHONE_RANK_COLUMNS
+    else:
+        preferred = PREVIEW_PHONE_COLUMNS
     return [column for column in preferred if column in available_columns]
 
 
@@ -634,6 +651,260 @@ def _actuals_from_graded_projection(frame: pd.DataFrame) -> dict:
     }
 
 
+def _rank_delta_style(value) -> str:
+    """Green when he finished better than we ranked him, red when worse."""
+    if pd.isna(value) or value == 0:
+        return ""
+    return f"color: {'#35D08A' if value > 0 else '#F08A8A'}; font-weight: 600"
+
+
+def _rank_lookup(ranked: pd.DataFrame) -> pd.DataFrame:
+    keyed = ranked.assign(player_id=ranked["player_id"].astype(str))
+    return keyed.drop_duplicates("player_id").set_index("player_id")
+
+
+def _tier_text(sizes: dict) -> str:
+    return f"{sizes['QB']} QB, {sizes['RB']} RB, {sizes['WR']} WR and {sizes['TE']} TE"
+
+
+def _two_decimals(value) -> str:
+    return "n/a" if pd.isna(value) else f"{value:.2f}"
+
+
+_HITS_HELP = (
+    "Players our projections put in the starter tier at each position "
+    f"(top {_tier_text(fantasy_accuracy.HIT_K)}) who finished in that tier. "
+    "Sleeper's own top tier is scored the same way."
+)
+_MISS_HELP = (
+    "Average gap in fantasy points between a projection and what the player scored. "
+    "Lower is better."
+)
+_CORR_HELP = (
+    "How closely a projection's order matches the order players finished, "
+    "from -1 to 1. Higher is better."
+)
+
+
+def _accuracy_caption(total: pd.Series) -> str:
+    left_out = int(total["n_excluded"])
+    text = (
+        "Half-PPR points, whatever Scoring format is selected. Top-tier hits count how many of "
+        f"each list's top {_tier_text(fantasy_accuracy.HIT_K)} finished in that same top group. "
+        "Average miss and rank correlation (1.0 means the same order) use the same "
+        f"{int(total['n'])} players for both lists: the top "
+        f"{_tier_text(fantasy_accuracy.BOARD_TOP_N)} on either one."
+    )
+    if left_out:
+        text += (
+            f" {left_out} {'player' if left_out == 1 else 'players'} without a Sleeper "
+            f"projection {'is' if left_out == 1 else 'are'} left out."
+        )
+    return (
+        f"{text} Players listed Out or Doubtful at kickoff are not counted. Everyone else is, "
+        "including late scratches at zero points, for both lists. One week is a small sample."
+    )
+
+
+def _accuracy_table(
+    rows: pd.DataFrame, *, label: str, column: str, slug: str, newest_first: bool = False,
+) -> None:
+    """Wide table on desktop. A phone gets two narrow rows per position or week."""
+    column_config = st.column_config
+    numeric_label = pd.api.types.is_numeric_dtype(rows[column])
+    desktop_config = {
+        label: (
+            column_config.NumberColumn(label, format="%d", alignment="left")
+            if numeric_label else column_config.TextColumn(label)
+        ),
+        "Top-tier hits": column_config.TextColumn("Top-tier hits", alignment="right", help=_HITS_HELP),
+        "Sleeper hits": column_config.TextColumn("Sleeper hits", alignment="right"),
+        "Avg miss": column_config.NumberColumn("Avg miss", format="%.2f", help=_MISS_HELP),
+        "Sleeper miss": column_config.NumberColumn("Sleeper miss", format="%.2f"),
+        "Rank corr": column_config.NumberColumn("Rank corr", format="%.2f", help=_CORR_HELP),
+        "Sleeper corr": column_config.NumberColumn("Sleeper corr", format="%.2f"),
+    }
+    phone_config = {
+        label: (
+            column_config.NumberColumn(label, format="%d", width=48, alignment="left")
+            if numeric_label else column_config.TextColumn(label, width=60)
+        ),
+        "Who": column_config.TextColumn("Who", width=62),
+        "Top-tier hits": column_config.TextColumn(
+            "Top-tier hits", width=92, alignment="right", help=_HITS_HELP
+        ),
+        "Avg miss": column_config.NumberColumn("Avg miss", format="%.2f", width=64, help=_MISS_HELP),
+        "Rank corr": column_config.NumberColumn("Rank corr", format="%.2f", width=70, help=_CORR_HELP),
+    }
+    dataframe_phone_desktop(
+        fantasy_accuracy.scorecard_display(rows, label=label, column=column),
+        fantasy_accuracy.scorecard_display_phone(
+            rows, label=label, column=column, newest_first=newest_first
+        ),
+        slug=slug,
+        hide_index=True,
+        width="stretch",
+        height="content",
+        column_config=desktop_config,
+        phone_column_config=phone_config,
+        key=f"wf_{slug}",
+    )
+
+
+def _render_ranking_accuracy(card: pd.DataFrame) -> None:
+    """Week scorecard under the Results banner: ours beside Sleeper's, same players."""
+    st.markdown("#### How the rankings did")
+    total = card.loc[card["position"] == fantasy_accuracy.ALL_LABEL].iloc[0]
+    hits = fantasy_accuracy.hits_text
+    with st.container(horizontal=True):
+        st.metric(
+            "Top-tier hits",
+            hits(total["our_hits"], total["k"]),
+            f"Sleeper {hits(total['slp_hits'], total['k'])}",
+            delta_color="off", delta_arrow="off", border=True, help=_HITS_HELP,
+        )
+        st.metric(
+            "Average miss",
+            f"{_two_decimals(total['our_mae'])} pts",
+            f"Sleeper {_two_decimals(total['slp_mae'])} pts",
+            delta_color="off", delta_arrow="off", border=True, help=_MISS_HELP,
+        )
+        st.metric(
+            "Rank correlation",
+            _two_decimals(total["our_rho"]),
+            f"Sleeper {_two_decimals(total['slp_rho'])}",
+            delta_color="off", delta_arrow="off", border=True, help=_CORR_HELP,
+        )
+    st.write(fantasy_accuracy.week_summary(card))
+    _accuracy_table(card, label="Position", column="position", slug="accuracy-week")
+    st.caption(_accuracy_caption(total))
+
+
+def _graded_week_paths(season: int) -> tuple[tuple[int, str], ...]:
+    """(week, graded CSV) for each completely graded week of a season.
+
+    Same build choice as the board: the latest published build per week, and
+    only when that build's own grading is complete.
+    """
+    latest: dict[int, dict] = {}
+    for build in published_builds(
+        "fantasy", manifest=page_common.load_release_manifest(), root=_HERE
+    ):
+        try:
+            if int(build["season"]) == int(season):
+                latest[int(build["week"])] = build
+        except (KeyError, TypeError, ValueError):
+            continue
+    paths = []
+    for week, build in sorted(latest.items()):
+        if not (build.get("grading") or {}).get("complete"):
+            continue
+        path = resolve_build_artifact(build, root=_HERE, prefer_graded=True)
+        if path is not None and path.is_file():
+            paths.append((week, str(path)))
+    return tuple(paths)
+
+
+@st.cache_data(ttl=3600, max_entries=8)
+def _season_accuracy_table(
+    season: int, graded_paths: tuple[tuple[int, str], ...]
+) -> pd.DataFrame:
+    """Keyed on the graded artifact paths, which carry immutable build IDs."""
+    weeks = [
+        (week, eligible_board_rows(_load_proj_csv(path), season, week))
+        for week, path in graded_paths
+    ]
+    return fantasy_accuracy.season_table(weeks)
+
+
+# Dataviz categorical slots 1 and 2 (dark step), validated on the site's dark surface.
+_ACCURACY_OURS_COLOR = "#3987e5"
+_ACCURACY_SLEEPER_COLOR = "#d95926"
+_SITE_SURFACE = "#0B0F14"
+
+
+def _season_accuracy_figure(weekly: pd.DataFrame):
+    """Rank correlation by week, all positions: ours against Sleeper's."""
+    import plotly.graph_objects as go
+
+    weekly = weekly.sort_values("week")
+    weeks = weekly["week"].astype(int).tolist()
+    ours = weekly["our_rho"].round(2).tolist()
+    theirs = weekly["slp_rho"].round(2).tolist()
+    # The higher line's end label sits above its marker and the lower line's
+    # below, so the labels cannot collide when the lines finish close together.
+    ours_on_top = not (ours[-1] < theirs[-1])
+    fig = go.Figure()
+    for name, values, color, symbol, label_at in (
+        ("Ours", ours, _ACCURACY_OURS_COLOR, "circle",
+         "top right" if ours_on_top else "bottom right"),
+        ("Sleeper", theirs, _ACCURACY_SLEEPER_COLOR, "diamond",
+         "bottom right" if ours_on_top else "top right"),
+    ):
+        fig.add_trace(go.Scatter(
+            x=weeks, y=values, name=name, mode="lines+markers+text",
+            line=dict(color=color, width=2),
+            marker=dict(size=9, color=color, symbol=symbol,
+                        line=dict(color=_SITE_SURFACE, width=2)),
+            text=[""] * (len(weeks) - 1) + [name], textposition=label_at,
+            textfont=dict(color="#C9D1DC", size=12), cliponaxis=False,
+            hovertemplate="%{y:.2f}<extra>" + name + "</extra>",
+        ))
+    plotted = [value for value in ours + theirs if value == value]
+    fig.update_layout(
+        height=280,
+        margin=dict(l=48, r=64, t=28, b=44),
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
+        font=dict(color="#E7ECF3", size=12),
+        legend=dict(orientation="h", x=0, y=1.0, xanchor="left", yanchor="bottom", title_text=""),
+        hovermode="x unified",
+        hoverlabel=dict(bgcolor="#17202b", font_color="#ffffff"),
+        dragmode=False,
+    )
+    fig.update_xaxes(
+        title_text="Week", dtick=1 if len(weeks) <= 9 else 2,
+        range=[min(weeks) - 0.5, max(weeks) + 0.5],
+        gridcolor="rgba(255,255,255,.08)", zeroline=False, fixedrange=True,
+        tickfont=dict(color="#9AA4B2"),
+    )
+    fig.update_yaxes(
+        title_text="Rank correlation", dtick=0.1, tickformat=".1f",
+        range=[max(-1.0, math.floor((min(plotted) - 0.05) * 10) / 10) if plotted else 0,
+               min(1.0, math.ceil((max(plotted) + 0.05) * 10) / 10) if plotted else 1],
+        gridcolor="rgba(255,255,255,.08)", zeroline=False, fixedrange=True,
+        tickfont=dict(color="#9AA4B2"),
+    )
+    return fig
+
+
+def _render_season_to_date(season: int) -> None:
+    """Week-by-week view of every completely graded week of the season so far."""
+    with st.expander("Season to date", expanded=False):
+        try:
+            table = _season_accuracy_table(int(season), _graded_week_paths(season))
+        except ValueError:
+            st.info("Season ranking accuracy is not available for this season.")
+            return
+        weekly = table.loc[table["position"] == fantasy_accuracy.ALL_LABEL]
+        if weekly.empty:
+            st.info("No graded weeks yet this season.")
+            return
+        st.caption("Rank correlation by week, all positions. Higher is better.")
+        st.plotly_chart(
+            _season_accuracy_figure(weekly), width="stretch",
+            config={"displayModeBar": False, "scrollZoom": False},
+        )
+        _accuracy_table(
+            weekly, label="Week", column="week", slug="accuracy-season", newest_first=True
+        )
+        st.write(fantasy_accuracy.season_summary(table))
+        st.caption(
+            "All positions combined, with the same definitions as the week scorecard. "
+            "Each week is scored from its own completed grade."
+        )
+
+
 def render():
     st.title("Weekly fantasy projections")
     st.caption(
@@ -779,6 +1050,27 @@ def render():
             unavailable_ids=unavailable_ids,
         )
 
+        # Postgame ranking accuracy needs a completely graded 2026+ release. A
+        # partial grade or a 2025 demo week shows nothing new.
+        accuracy_card = rank_lookup = None
+        accuracy_note = None
+        if (
+            actuals_in
+            and int(season) >= LIVE_FROM_SEASON
+            and selected_grading.get("complete")
+            and "actual_half_ppr" in _projection_source.columns
+        ):
+            try:
+                ranked = fantasy_accuracy.rank_frame(
+                    eligible_board_rows(_projection_source, season, week)
+                )
+                accuracy_card = fantasy_accuracy.position_scorecard(ranked)
+                rank_lookup = _rank_lookup(ranked)
+                rank_counts = ranked["position"].value_counts()
+            except ValueError:
+                accuracy_note = "Ranking accuracy is not available for this release."
+        accuracy_ready = accuracy_card is not None and not accuracy_card.empty
+
         # The preview exercises the live 2026 surface, which has no legacy agent cards.
         fantasy_analysis = None
         if not live_format_preview:
@@ -795,6 +1087,11 @@ def render():
                 f"Results are in! Settled fantasy points are now shown alongside "
                 f"projections for Week {week}."
             )
+            if accuracy_ready:
+                _render_ranking_accuracy(accuracy_card)
+                _render_season_to_date(season)
+            elif accuracy_note:
+                st.info(accuracy_note)
         else:
             st.caption("Games not yet played · actual stats appear after the week's results are in.")
 
@@ -899,6 +1196,8 @@ def render():
                 styles["Proj Pts"] = "font-weight: 700; font-size: 15px"
                 if "Actual Pts" in df.columns:
                     styles["Actual Pts"] = "font-weight: 700; font-size: 15px"
+                if "Rk Δ" in df.columns:
+                    styles["Rk Δ"] = df["Rk Δ"].map(_rank_delta_style)
                 return styles
             return _style
 
@@ -919,10 +1218,8 @@ def render():
                 if pos == "QB" and "depth_chart_position" in pos_subset.columns:
                     pos_subset = pos_subset[pos_subset["depth_chart_position"] == 1]
                     pos_subset = pos_subset.sort_values("_scoring_pts", ascending=False).drop_duplicates(subset="team")
-                # Rows shown per position tab. QB is 24 to match the scored
-                # universe cap in the producer (UNIVERSE_CAPS), which is also
-                # roughly a 12-team league's startable pool plus streamers.
-                top_n = {"QB": 24, "RB": 40, "WR": 40, "TE": 24}.get(pos, 20)
+                # Rows shown per position tab (the same pool the postgame scorecard compares).
+                top_n = fantasy_accuracy.BOARD_TOP_N.get(pos, 20)
                 pos_df = pos_subset.sort_values("_scoring_pts", ascending=False)
                 if player_search:
                     mask = pos_df["player_display_name"].str.contains(player_search, case=False, na=False, regex=False)
@@ -1073,6 +1370,13 @@ def render():
                     display["Actual Pts"] = points_from_half_ppr(
                         _actual_raw, display["player_id"].map(_actual_recs), scoring
                     ).round(1)
+                    if accuracy_ready:
+                        keys = display["player_id"].astype(str)
+                        for column, source in (
+                            ("Our Rk", "our_rank"), ("Finish", "finish_rank"),
+                            ("Rk Δ", "rank_delta"),
+                        ):
+                            display[column] = keys.map(rank_lookup[source]).astype("Int64")
                     if preview_layout and actual_detail_available:
                         display["Actual Pass Yds"] = pd.to_numeric(
                             display["player_id"].map(actual_qb_pass_yds if pos == "QB" else {}),
@@ -1103,6 +1407,7 @@ def render():
                             show_more_info,
                             actuals_in=True,
                             actual_detail=True,
+                            rank_columns=accuracy_ready,
                         )
                     elif actual_detail_available and has_qb_stats:
                         display["Actual Pass Yds"] = pd.to_numeric(display["player_id"].map(actual_qb_pass_yds), errors="coerce")
@@ -1122,6 +1427,8 @@ def render():
                         tbl_cols = base_cols + ["Actual Pts", "Actual Receptions", "Actual Rec Yds"]
                     else:
                         tbl_cols = base_cols + ["Actual Pts"]
+                        if accuracy_ready:
+                            tbl_cols += PREVIEW_RANK_COLUMNS
                 else:
                     tbl_cols = base_cols
 
@@ -1193,6 +1500,13 @@ def render():
                                           help=f"Actual receiving yards recorded in this game. {_dnp_note}")
                         col_config["Actual Receptions"] = st.column_config.NumberColumn("Actual Receptions", format="%.1f",
                                           help=f"Actual number of receptions recorded in this game. {_dnp_note}")
+                    if accuracy_ready:
+                        col_config["Our Rk"] = st.column_config.NumberColumn("Our Rk", format="%d",
+                                          help=f"Where we ranked him at {pos} this week, by our half-PPR projection. 1 = highest projection.")
+                        col_config["Finish"] = st.column_config.NumberColumn("Finish", format="%d",
+                                          help=f"Where he finished at {pos} among the {int(rank_counts.get(pos, 0))} players we projected this week, by actual half-PPR points. 1 = most points. Equal scores share a finish.")
+                        col_config["Rk Δ"] = st.column_config.NumberColumn("Rk Δ", format="%+d",
+                                          help="Our rank minus his finish. Green means he finished higher than we ranked him. Red means lower.")
 
                 if preview_layout:
                     phone_keep = _preview_phone_columns(

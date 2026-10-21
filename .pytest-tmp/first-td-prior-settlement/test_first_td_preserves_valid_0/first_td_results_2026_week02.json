@@ -1,0 +1,45 @@
+{
+  "games": [
+    {
+      "evidence_source": "nflverse_play_by_play",
+      "first_score_play_id": 2,
+      "first_score_qtr": 4,
+      "game_id": "2026_02_MIN_CHI",
+      "graded_at": "2026-10-21T00:25:30Z",
+      "identity_source": "nflverse_player_stats",
+      "outcome_kind": "offense_skill",
+      "pending_reason": null,
+      "player_settlements": {
+        "PREVIOUS_NO": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "PREVIOUS_VOID": {
+          "scored_first": null,
+          "status": "void"
+        },
+        "SCORER": {
+          "scored_first": 1.0,
+          "status": "settled"
+        }
+      },
+      "scorer_name": "Scorer",
+      "scorer_on_board": true,
+      "scorer_player_id": "SCORER",
+      "scorer_team": "MIN",
+      "settlements_updated_at": "2026-10-21T00:25:30Z",
+      "source_hashes": {
+        "play_by_play": "ae0080926eefca32f9276737dc3d0fc8e476dca88d5e34d861130fee841b5e73",
+        "player_identity": "7858798ed2c4a4b925fe459c74b9d3474df53f793f8c293cb6268a9b33f144cf",
+        "published_frozen_inputs": "1395acc675a06799fa2468d334b5def9d732e94ec504ce5a9f2a86b2e7623214",
+        "schedule": "fbbf00b1c5e7722fb315e0e3c64134c56e46042a7d08e116b9704e89e75e2270"
+      },
+      "status": "resolved"
+    }
+  ],
+  "published_frozen_inputs_sha256": "1395acc675a06799fa2468d334b5def9d732e94ec504ce5a9f2a86b2e7623214",
+  "schema_version": 1,
+  "season": 2026,
+  "source_release": "anytime_td_2026_week02.csv",
+  "week": 2
+}
