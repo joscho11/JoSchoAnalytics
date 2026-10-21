@@ -829,6 +829,106 @@ def test_ungraded_demo_and_unflagged_weeks_show_no_ranking_scorecard(tmp_path):
     assert not at.expander
 
 
+def _render_weekly_graded(tmp_path, projection_path, *, extra="", season=2026, week=6):
+    """Render one release as if its grading were complete, with optional page patches."""
+    h = tmp_path / "h_weekly_graded.py"
+    h.write_text(
+        f"import sys; sys.path[:0] = [r'{_HERE}', r'{_SITE_PAGES}']\n"
+        "from pathlib import Path\n"
+        "import page_weekly_fantasy as p\n"
+        "_saved = (p.available_projection_files, p.page_common.release_default_selection,\n"
+        "          p.page_common.render_release_status, p._selected_build_details,\n"
+        "          p.fantasy_accuracy.position_scorecard, p._season_accuracy_table)\n"
+        "try:\n"
+        f"    p.available_projection_files = lambda: {{({season}, {week}): Path(r'{projection_path}')}}\n"
+        f"    p.page_common.release_default_selection = lambda *a, **k: ({season}, {week})\n"
+        "    p.page_common.render_release_status = lambda *a, **k: {'build_id': 'stub'}\n"
+        "    p._selected_build_details = lambda *a, **k: ({}, {'complete': True})\n"
+        f"{extra}"
+        "    p.render()\n"
+        "finally:\n"
+        "    (p.available_projection_files, p.page_common.release_default_selection,\n"
+        "     p.page_common.render_release_status, p._selected_build_details,\n"
+        "     p.fantasy_accuracy.position_scorecard, p._season_accuracy_table) = _saved\n",
+        encoding="utf-8",
+    )
+    at = AppTest.from_file(str(h), default_timeout=180).run()
+    assert not at.exception, at.exception
+    assert not at.error, [e.value for e in at.error]
+    return at
+
+
+_ACCURACY_UNAVAILABLE = "Ranking accuracy is not available for this release."
+
+
+def _board_still_shows_actual_points(at):
+    return any("Actual Pts" in item.value.columns for item in at.dataframe)
+
+
+def test_graded_release_missing_slp_proj_shows_one_line_and_keeps_the_board(tmp_path):
+    graded = weekly.available_projection_files()[(2026, 6)]
+    broken = tmp_path / "projections_2026_week06.csv"
+    pd.read_csv(graded).drop(columns=["slp_proj"]).to_csv(broken, index=False)
+
+    at = _render_weekly_graded(tmp_path, broken)
+
+    assert [item.value for item in at.info if "Ranking accuracy" in str(item.value)] == [
+        _ACCURACY_UNAVAILABLE
+    ]
+    assert not _scorecard_shown(at) and not _rank_columns_shown(at)
+    assert not at.expander and not at.metric
+    assert any("Results are in" in str(item.value) for item in at.success)
+    assert _board_still_shows_actual_points(at)
+
+
+def test_unexpected_error_in_the_week_scorecard_degrades_to_one_line(tmp_path):
+    graded = weekly.available_projection_files()[(2026, 6)]
+    boom = (
+        "    def _boom(*args, **kwargs):\n"
+        "        raise RuntimeError('boom')\n"
+        "    p.fantasy_accuracy.position_scorecard = _boom\n"
+    )
+
+    at = _render_weekly_graded(tmp_path, graded, extra=boom)
+
+    assert [item.value for item in at.info if "Ranking accuracy" in str(item.value)] == [
+        _ACCURACY_UNAVAILABLE
+    ]
+    assert not _scorecard_shown(at) and not _rank_columns_shown(at)
+    assert _board_still_shows_actual_points(at)
+
+
+def test_unexpected_error_in_the_season_view_leaves_the_week_scorecard_intact(tmp_path):
+    graded = weekly.available_projection_files()[(2026, 6)]
+    boom = (
+        "    def _boom(*args, **kwargs):\n"
+        "        raise OSError('graded file unreadable')\n"
+        "    p._season_accuracy_table = _boom\n"
+    )
+
+    at = _render_weekly_graded(tmp_path, graded, extra=boom)
+
+    assert _scorecard_shown(at) and _rank_columns_shown(at)
+    assert [exp.label for exp in at.expander] == ["Season to date"]
+    assert [item.value for item in at.info if "Season ranking" in str(item.value)] == [
+        "Season ranking accuracy is not available right now."
+    ]
+    assert not any(_ACCURACY_UNAVAILABLE in str(item.value) for item in at.info)
+
+
+def test_graded_release_with_nothing_to_score_shows_no_scorecard(tmp_path):
+    graded = weekly.available_projection_files()[(2026, 6)]
+    frame = pd.read_csv(graded)
+    frame["projected_pts"] = float("nan")
+    unscorable = tmp_path / "projections_2026_week06.csv"
+    frame.to_csv(unscorable, index=False)
+
+    at = _render_weekly_graded(tmp_path, unscorable)
+
+    assert not _scorecard_shown(at) and not _rank_columns_shown(at)
+    assert not at.expander and not at.metric
+
+
 def test_default_release_shows_the_scorecard_only_once_it_is_completely_graded(tmp_path):
     """The newest published week is ungraded until its games finish, then picks this up unaided."""
     import page_common

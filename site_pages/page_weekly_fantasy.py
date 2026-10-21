@@ -878,31 +878,37 @@ def _season_accuracy_figure(weekly: pd.DataFrame):
     return fig
 
 
+def _accuracy_unavailable(err: Exception, note: str) -> None:
+    """The postgame scorecard is an add-on: any failure in it shows one line, never a crash."""
+    import logging as _logging
+    _logging.warning("Weekly Fantasy ranking accuracy skipped: %r", err)
+    st.info(note)
+
+
 def _render_season_to_date(season: int) -> None:
     """Week-by-week view of every completely graded week of the season so far."""
     with st.expander("Season to date", expanded=False):
         try:
             table = _season_accuracy_table(int(season), _graded_week_paths(season))
-        except ValueError:
-            st.info("Season ranking accuracy is not available for this season.")
-            return
-        weekly = table.loc[table["position"] == fantasy_accuracy.ALL_LABEL]
-        if weekly.empty:
-            st.info("No graded weeks yet this season.")
-            return
-        st.caption("Rank correlation by week, all positions. Higher is better.")
-        st.plotly_chart(
-            _season_accuracy_figure(weekly), width="stretch",
-            config={"displayModeBar": False, "scrollZoom": False},
-        )
-        _accuracy_table(
-            weekly, label="Week", column="week", slug="accuracy-season", newest_first=True
-        )
-        st.write(fantasy_accuracy.season_summary(table))
-        st.caption(
-            "All positions combined, with the same definitions as the week scorecard. "
-            "Each week is scored from its own completed grade."
-        )
+            weekly = table.loc[table["position"] == fantasy_accuracy.ALL_LABEL]
+            if weekly.empty:
+                st.info("No graded weeks yet this season.")
+                return
+            st.caption("Rank correlation by week, all positions. Higher is better.")
+            st.plotly_chart(
+                _season_accuracy_figure(weekly), width="stretch",
+                config={"displayModeBar": False, "scrollZoom": False},
+            )
+            _accuracy_table(
+                weekly, label="Week", column="week", slug="accuracy-season", newest_first=True
+            )
+            st.write(fantasy_accuracy.season_summary(table))
+            st.caption(
+                "All positions combined, with the same definitions as the week scorecard. "
+                "Each week is scored from its own completed grade."
+            )
+        except Exception as err:
+            _accuracy_unavailable(err, "Season ranking accuracy is not available right now.")
 
 
 def render():
@@ -1052,8 +1058,7 @@ def render():
 
         # Postgame ranking accuracy needs a completely graded 2026+ release. A
         # partial grade or a 2025 demo week shows nothing new.
-        accuracy_card = rank_lookup = None
-        accuracy_note = None
+        accuracy_card = rank_lookup = accuracy_error = None
         if (
             actuals_in
             and int(season) >= LIVE_FROM_SEASON
@@ -1067,8 +1072,9 @@ def render():
                 accuracy_card = fantasy_accuracy.position_scorecard(ranked)
                 rank_lookup = _rank_lookup(ranked)
                 rank_counts = ranked["position"].value_counts()
-            except ValueError:
-                accuracy_note = "Ranking accuracy is not available for this release."
+            except Exception as err:
+                accuracy_card = rank_lookup = None
+                accuracy_error = err
         accuracy_ready = accuracy_card is not None and not accuracy_card.empty
 
         # The preview exercises the live 2026 surface, which has no legacy agent cards.
@@ -1088,10 +1094,15 @@ def render():
                 f"projections for Week {week}."
             )
             if accuracy_ready:
-                _render_ranking_accuracy(accuracy_card)
+                try:
+                    _render_ranking_accuracy(accuracy_card)
+                except Exception as err:
+                    _accuracy_unavailable(err, "Ranking accuracy is not available for this release.")
                 _render_season_to_date(season)
-            elif accuracy_note:
-                st.info(accuracy_note)
+            elif accuracy_error is not None:
+                _accuracy_unavailable(
+                    accuracy_error, "Ranking accuracy is not available for this release."
+                )
         else:
             st.caption("Games not yet played · actual stats appear after the week's results are in.")
 
@@ -1376,7 +1387,7 @@ def render():
                             ("Our Rk", "our_rank"), ("Finish", "finish_rank"),
                             ("Rk Δ", "rank_delta"),
                         ):
-                            display[column] = keys.map(rank_lookup[source]).astype("Int64")
+                            display[column] = keys.map(rank_lookup[source]).round().astype("Int64")
                     if preview_layout and actual_detail_available:
                         display["Actual Pass Yds"] = pd.to_numeric(
                             display["player_id"].map(actual_qb_pass_yds if pos == "QB" else {}),
