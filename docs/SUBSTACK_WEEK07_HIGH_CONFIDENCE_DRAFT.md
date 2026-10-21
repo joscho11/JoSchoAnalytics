@@ -4,7 +4,7 @@
 
 Last week hurt. My published Week 6 card went 2-12 against the spread, and all four HIGH picks lost. Buffalo won its game but missed -5.5 by 2.5 points. I can't call that week anything but a miss.
 
-For Week 7, the model flags three sides: Titans -2, Colts +6.5 and Texans -9.5.
+For Week 7, the model flags three sides: Titans +2, Colts +6.5 and Texans -9.5.
 
 ## What HIGH means
 
@@ -14,13 +14,13 @@ A HIGH pick has a model edge of at least three points against the frozen Tuesday
 
 | Pick | Gap toward pick | Saved Tuesday quote |
 |---|---:|---|
-| Titans -2 vs. Browns | 3.67 points | Caesars, -110 |
+| Titans +2 vs. Browns | 3.67 points | Caesars, -110 |
 | Colts +6.5 at Vikings | 3.18 points | DraftKings, -112 |
 | Texans -9.5 vs. Giants | 3.65 points | BetMGM, -110 |
 
-### Tennessee -2
+### Tennessee +2
 
-The Titans have the largest gap on the card at 3.67 points, about two-thirds of a point above the HIGH cutoff. Caesars had the best saved line at -2 and -110. At -2, Tennessee needs to win by at least three. A worse number changes the bet, even though the frozen Tuesday label stays the same.
+The Titans have the largest gap on the card at 3.67 points. My model projects Tennessee to win by 2.17, while the Tuesday median favored Cleveland by 1.5. Caesars offered Tennessee +2 at -110. A one-point Titans loss covers; a two-point loss pushes. I'm getting points with the team my model projects to win.
 
 ### Indianapolis +6.5
 
