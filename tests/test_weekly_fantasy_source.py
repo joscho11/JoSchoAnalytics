@@ -941,3 +941,170 @@ def test_default_release_shows_the_scorecard_only_once_it_is_completely_graded(t
     assert _scorecard_shown(at) is graded
     assert _rank_columns_shown(at) is graded
     assert any(exp.label == "Season to date" for exp in at.expander) is graded
+
+
+def _nflverse_schedule():
+    """The real nflverse shape: a game_type column (REG, WC, ...) and no season_type."""
+    return pd.DataFrame({
+        "season": [2026, 2026, 2026, 2026, 2026],
+        "game_type": ["REG", "REG", "REG", "REG", "WC"],
+        "week": [1, 1, 2, 2, 1],
+        "home_score": [24.0, 17.0, 21.0, None, None],
+        "away_score": [20.0, 14.0, 10.0, None, None],
+    })
+
+
+def test_nflverse_game_type_schedule_marks_a_finished_week_complete():
+    schedule = _nflverse_schedule()
+    assert "season_type" not in schedule.columns
+
+    # Week 1 also lists an unscored postseason-labeled game, which must not hold it back.
+    assert weekly._week_is_complete(schedule, 2026, 1) is True
+    # Week 2 has a regular-season game with no score yet.
+    assert weekly._week_is_complete(schedule, 2026, 2) is False
+    postseason_only = schedule.assign(game_type="WC")
+    assert weekly._week_is_complete(postseason_only, 2026, 1) is False
+    # Either column name works, and the frame itself is not modified.
+    renamed = schedule.rename(columns={"game_type": "season_type"})
+    assert weekly._week_is_complete(renamed, 2026, 1) is True
+    assert "season_type" not in schedule.columns
+
+
+def test_schedule_with_neither_type_column_degrades_to_not_complete():
+    no_type = _nflverse_schedule().drop(columns=["game_type"])
+
+    assert weekly._week_is_complete(no_type, 2026, 1) is False
+
+
+def _fake_player_stats():
+    return pd.DataFrame({
+        "season_type": ["REG", "REG", "POST"],
+        "week": [1, 1, 1],
+        "position": ["QB", "WR", "QB"],
+        "player_id": ["qb1", "wr1", "qb-post"],
+        "passing_yards": [300.0, None, 400.0],
+        "passing_tds": [2, None, 3],
+        "passing_interceptions": [1, None, 0],
+        "rushing_yards": [10.0, None, 0.0],
+        "rushing_tds": [0, None, 0],
+        "receptions": [None, 6, None],
+        "receiving_yards": [None, 80.0, None],
+        "receiving_tds": [None, 1, None],
+        "rushing_fumbles_lost": [0, None, 0],
+        "receiving_fumbles_lost": [None, 0, None],
+    })
+
+
+def _live_feed(monkeypatch, schedule):
+    """Point load_actual_stats at fake nflverse frames, with no network and clean caches."""
+    import nflreadpy
+
+    weekly._load_schedule_season.clear()
+    weekly._load_actual_stats_season.clear()
+    monkeypatch.setattr(weekly, "_OFFLINE", False)
+    monkeypatch.setattr(nflreadpy, "load_schedules", lambda seasons: schedule)
+    monkeypatch.setattr(nflreadpy, "load_player_stats", lambda seasons: _fake_player_stats())
+
+
+def test_live_actuals_turn_on_once_every_game_in_the_week_has_a_score(monkeypatch):
+    try:
+        _live_feed(monkeypatch, _nflverse_schedule())
+
+        done = weekly.load_actual_stats(2026, 1)
+        # QB: 12 pass yds pts + 8 TD - 2 INT + 1 rush yds pts. WR: 3 reception pts + 8 + 6 TD.
+        assert {k: round(v, 6) for k, v in done["half_ppr"].items()} == {"qb1": 19.0, "wr1": 17.0}
+        assert done["qb_pass_yds"] == {"qb1": 300.0}
+        assert done["wr_recs"] == {"wr1": 6.0}
+        # Week 2 still has an unscored game: no live actuals yet.
+        assert weekly.load_actual_stats(2026, 2) == {}
+    finally:
+        weekly._load_schedule_season.clear()
+        weekly._load_actual_stats_season.clear()
+
+
+def test_live_actuals_stay_off_when_the_schedule_has_no_type_column(monkeypatch):
+    try:
+        _live_feed(monkeypatch, _nflverse_schedule().drop(columns=["game_type"]))
+
+        assert weekly.load_actual_stats(2026, 1) == {}
+    finally:
+        weekly._load_schedule_season.clear()
+        weekly._load_actual_stats_season.clear()
+
+
+def _render_demo_week_with_live_actuals(tmp_path, week):
+    """Run the real page on a 2025 demo week with the live feed returning a score for everyone."""
+    csv = _HERE / "fantasy" / "fantasy_projections" / f"projections_2025_week{week}.csv"
+    h = tmp_path / f"h_demo_actuals_{week}.py"
+    h.write_text(
+        f"import sys; sys.path[:0] = [r'{_HERE}', r'{_SITE_PAGES}']\n"
+        "import pandas as pd\n"
+        "import page_weekly_fantasy as p\n"
+        f"_ids = pd.read_csv(r'{csv}')['player_id'].astype(str).tolist()\n"
+        "_live = p.load_actual_stats\n"
+        "try:\n"
+        "    p.load_actual_stats = lambda season, week: {'half_ppr': {i: 12.5 for i in _ids}}\n"
+        "    p.render()\n"
+        "finally:\n"
+        "    p.load_actual_stats = _live\n",
+        encoding="utf-8",
+    )
+    at = AppTest.from_file(str(h), default_timeout=180).run()
+    at = next(w for w in at.selectbox if w.key == "wf_season").set_value(2025).run()
+    at = next(w for w in at.selectbox if w.key == "wf_week").set_value(week).run()
+    assert not at.exception, at.exception
+    assert not at.error, [e.value for e in at.error]
+    return at
+
+
+def test_demo_week_with_live_actuals_keeps_actual_pts_inside_the_phone_grid(tmp_path):
+    at = _render_demo_week_with_live_actuals(tmp_path, 10)
+
+    assert any("Results are in" in str(item.value) for item in at.success)
+    assert not _scorecard_shown(at) and not _rank_columns_shown(at)
+    frames = [item.value for item in at.dataframe if "Player" in item.value.columns]
+    desktop = next(f for f in frames if "Off EPA" in f.columns)
+    phone = next(f for f in frames if "Off EPA" not in f.columns)
+    assert desktop["Actual Pts"].eq(12.5).all()
+    assert list(phone.columns) == weekly.LEGACY_PHONE_COLUMNS
+    # Without actuals the phone grid is unchanged: Health follows Proj Pts as before.
+    assert weekly.LEGACY_PHONE_COLUMNS == ["#", "Player", "Opponent", "Proj Pts", "Actual Pts", "Health"]
+
+
+def test_demo_week_with_live_actuals_leaves_the_frozen_csvs_untouched(tmp_path):
+    folder = _HERE / "fantasy" / "fantasy_projections"
+    before = {p.name: hashlib.md5(p.read_bytes()).hexdigest() for p in folder.glob("projections_2025_week*.csv")}
+
+    _render_demo_week_with_live_actuals(tmp_path, 17)
+
+    after = {p.name: hashlib.md5(p.read_bytes()).hexdigest() for p in folder.glob("projections_2025_week*.csv")}
+    assert after == before == DEMO_MD5
+
+
+def test_standard_scoring_actual_pts_are_filled_when_the_live_feed_supplies_receptions(tmp_path):
+    graded = weekly.available_projection_files()[(2026, 6)]
+    h = tmp_path / "h_standard_actuals.py"
+    h.write_text(
+        f"import sys; sys.path[:0] = [r'{_HERE}', r'{_SITE_PAGES}']\n"
+        "import pandas as pd\n"
+        "import page_weekly_fantasy as p\n"
+        f"_ids = pd.read_csv(r'{graded}')['player_id'].astype(str).tolist()\n"
+        "_live = p.load_actual_stats\n"
+        "try:\n"
+        "    p.load_actual_stats = lambda season, week: {\n"
+        "        key: {i: 3.0 for i in _ids} for key in ('qb_recs', 'rb_recs', 'wr_recs', 'te_recs')}\n"
+        "    p.render()\n"
+        "finally:\n"
+        "    p.load_actual_stats = _live\n",
+        encoding="utf-8",
+    )
+    at = AppTest.from_file(str(h), default_timeout=180).run()
+    at = next(w for w in at.selectbox if w.key == "wf_week").set_value(6).run()
+    half = next(f.value for f in at.dataframe if "Rk Δ" in f.value.columns)
+    at = next(w for w in at.segmented_control if w.key == "wf_scoring").set_value("Standard").run()
+    assert not at.exception, at.exception
+    standard = next(f.value for f in at.dataframe if "Rk Δ" in f.value.columns)
+
+    # Standard drops the half point per reception: 3 receptions each is 1.5 fewer points.
+    assert standard["Actual Pts"].notna().all()
+    assert (half["Actual Pts"] - standard["Actual Pts"]).round(1).eq(1.5).all()

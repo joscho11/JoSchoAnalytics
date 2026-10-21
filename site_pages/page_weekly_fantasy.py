@@ -48,6 +48,9 @@ PREVIEW_PHONE_COLUMNS = ["#", "Player", "Opponent", "Proj Pts", "Health", "Actua
 PREVIEW_PHONE_SLEEPER_COLUMNS = [
     "#", "Player", "Proj Pts", "Sleeper", "Opponent", "Health", "Actual Pts",
 ]
+# The older 2025 demo layout. Actual Pts comes before Health so that, once a week's
+# actuals are in, they are not pushed past the right edge of a 390px grid.
+LEGACY_PHONE_COLUMNS = ["#", "Player", "Opponent", "Proj Pts", "Actual Pts", "Health"]
 # Postgame with a Finish rank: Proj Pts, Actual Pts and Finish fill a 390px phone
 # grid, so Opponent follows them instead of pushing Finish past the right edge.
 PREVIEW_PHONE_RANK_COLUMNS = [
@@ -537,10 +540,18 @@ _SCHEDULE_RESULT_COLUMNS = [
 ]
 
 
+def _with_season_type(schedule: pd.DataFrame) -> pd.DataFrame:
+    """nflverse schedules name the REG/WC/DIV/CON/SB column game_type; accept either name."""
+    if "season_type" not in schedule.columns and "game_type" in schedule.columns:
+        return schedule.assign(season_type=schedule["game_type"])
+    return schedule
+
+
 def _week_is_complete(schedule: pd.DataFrame | None, season: int, week: int) -> bool:
     """Return true only after every scheduled regular-season game has a score."""
     if schedule is None or schedule.empty:
         return False
+    schedule = _with_season_type(schedule)
     if not set(_SCHEDULE_RESULT_COLUMNS).issubset(schedule.columns):
         return False
     games = schedule.loc[
@@ -561,7 +572,7 @@ def _load_schedule_season(season: int) -> pd.DataFrame | None:
         raw = nfl.load_schedules([int(season)])
         if hasattr(raw, "to_pandas"):
             raw = raw.to_pandas()
-        return raw.loc[:, _SCHEDULE_RESULT_COLUMNS].copy()
+        return _with_season_type(raw).loc[:, _SCHEDULE_RESULT_COLUMNS].copy()
     except Exception as _e:
         import logging as _logging
         _logging.warning(f"_load_schedule_season({season}) failed: {_e}")
@@ -1524,11 +1535,7 @@ def render():
                         tbl.columns, show_sleeper=_show_slp,
                     )
                 else:
-                    phone_keep = [
-                        col for col in (
-                            "#", "Player", "Opponent", "Proj Pts", "Health", "Actual Pts",
-                        ) if col in tbl.columns
-                    ]
+                    phone_keep = [col for col in LEGACY_PHONE_COLUMNS if col in tbl.columns]
                 dataframe_phone_desktop(
                     tbl.style.apply(style_fn, axis=None),
                     tbl[phone_keep].style.apply(style_fn, axis=None),
