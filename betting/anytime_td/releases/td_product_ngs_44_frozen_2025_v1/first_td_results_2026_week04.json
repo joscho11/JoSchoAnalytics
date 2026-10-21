@@ -1,0 +1,1949 @@
+{
+  "games": [
+    {
+      "evidence_source": "nflverse_play_by_play",
+      "first_score_play_id": 237.0,
+      "first_score_qtr": 1.0,
+      "game_id": "2026_04_ARI_NYG",
+      "graded_at": "2026-10-21T04:18:50Z",
+      "identity_source": "nflverse_player_stats",
+      "outcome_kind": "offense_skill",
+      "pending_reason": null,
+      "player_settlements": {
+        "00-0031484": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0031503": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0033119": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0033307": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0033376": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0034419": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0035250": {
+          "scored_first": null,
+          "status": "void"
+        },
+        "00-0036309": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0036331": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0036893": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0037263": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0037744": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0037838": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038559": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038640": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039041": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039337": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039384": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039847": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039849": {
+          "scored_first": 1.0,
+          "status": "settled"
+        },
+        "00-0040715": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0041027": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0041042": {
+          "scored_first": 0.0,
+          "status": "settled"
+        }
+      },
+      "scorer_name": "Marvin Harrison Jr.",
+      "scorer_on_board": true,
+      "scorer_player_id": "00-0039849",
+      "scorer_team": "ARI",
+      "settlements_updated_at": "2026-10-21T04:18:50Z",
+      "source_hashes": {
+        "play_by_play": "6b316883bb9a9efeb4ecaf990db815b4d570c55551f58b6757624bea23a700ee",
+        "player_identity": "b55a68cdfae1bbfd4a49be90172a84cb87e20c13b7728711b706dc117707b43c",
+        "published_frozen_inputs": "c79969265bb3606ef8bcc00d983eeceb5afeda0a5ea85e726d8af4838944a66d",
+        "schedule": "4d5ddf96eae34e2267a924a373d1191866eee1b6a5ed5afc330984f515745789"
+      },
+      "status": "resolved"
+    },
+    {
+      "evidence_source": "nflverse_play_by_play",
+      "first_score_play_id": 110.0,
+      "first_score_qtr": 1.0,
+      "game_id": "2026_04_ATL_NO",
+      "graded_at": "2026-10-21T04:18:50Z",
+      "identity_source": "nflverse_player_stats",
+      "outcome_kind": "offense_skill",
+      "pending_reason": null,
+      "player_settlements": {
+        "00-0032392": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0033906": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0035208": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0035644": {
+          "scored_first": null,
+          "status": "void"
+        },
+        "00-0036040": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0036429": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0036970": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0037238": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0037239": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0037741": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0037746": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038542": {
+          "scored_first": 1.0,
+          "status": "settled"
+        },
+        "00-0038551": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039424": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039917": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040743": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0041041": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0041044": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0041067": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0041326": {
+          "scored_first": 0.0,
+          "status": "settled"
+        }
+      },
+      "scorer_name": "Bijan Robinson",
+      "scorer_on_board": true,
+      "scorer_player_id": "00-0038542",
+      "scorer_team": "ATL",
+      "settlements_updated_at": "2026-10-21T04:18:50Z",
+      "source_hashes": {
+        "play_by_play": "95cfd3b5697f2bdad78210b1444cccd17ebaf5964384b462dcf19f07cbf9885d",
+        "player_identity": "5c362f6e4dd452c551aaa9ebae5aeb06240741548368331ef3b706e71be4e6a4",
+        "published_frozen_inputs": "c79969265bb3606ef8bcc00d983eeceb5afeda0a5ea85e726d8af4838944a66d",
+        "schedule": "381fd080126eb30b962317c3b29548487ebdda703989c9d525d6043105c91fc8"
+      },
+      "status": "resolved"
+    },
+    {
+      "evidence_source": "nflverse_play_by_play",
+      "first_score_play_id": 250.0,
+      "first_score_qtr": 1.0,
+      "game_id": "2026_04_DAL_HOU",
+      "graded_at": "2026-10-21T04:18:50Z",
+      "identity_source": "nflverse_player_stats",
+      "outcome_kind": "offense_skill",
+      "pending_reason": null,
+      "player_settlements": {
+        "00-0033077": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0034383": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0034981": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0035685": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0036358": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0036554": {
+          "scored_first": 1.0,
+          "status": "settled"
+        },
+        "00-0036997": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0037120": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0037247": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0037801": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038041": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038547": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038608": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038618": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038705": {
+          "scored_first": null,
+          "status": "void"
+        },
+        "00-0038728": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038738": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039062": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039163": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039359": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039410": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039530": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039603": {
+          "scored_first": null,
+          "status": "void"
+        },
+        "00-0040138": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040583": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0041472": {
+          "scored_first": null,
+          "status": "void"
+        }
+      },
+      "scorer_name": "Nico Collins",
+      "scorer_on_board": true,
+      "scorer_player_id": "00-0036554",
+      "scorer_team": "HOU",
+      "settlements_updated_at": "2026-10-21T04:18:50Z",
+      "source_hashes": {
+        "play_by_play": "95df0a7250e30fd30cf4a8b2d7e79d69ee9579abffcf554634d52c70f7dc5fc9",
+        "player_identity": "9d2fb58677dda001c6d12567c0420fb4fee203a1150f98bf7f7604488d59d63e",
+        "published_frozen_inputs": "c79969265bb3606ef8bcc00d983eeceb5afeda0a5ea85e726d8af4838944a66d",
+        "schedule": "51cbb9c1aaf95ea1732ee116213be33c80cedb8cda9eac85bae80e2ca9824fbe"
+      },
+      "status": "resolved"
+    },
+    {
+      "evidence_source": "nflverse_play_by_play",
+      "first_score_play_id": 2957.0,
+      "first_score_qtr": 3.0,
+      "game_id": "2026_04_DEN_SF",
+      "graded_at": "2026-10-21T04:18:50Z",
+      "identity_source": "nflverse_player_stats",
+      "outcome_kind": "offense_skill",
+      "pending_reason": null,
+      "player_settlements": {
+        "00-0029892": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0031236": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0031408": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0033280": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0033288": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0033881": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0034348": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0035719": {
+          "scored_first": 1.0,
+          "status": "settled"
+        },
+        "00-0036158": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0036422": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0036613": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0036887": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0037085": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0037834": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038783": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038976": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039365": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039732": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039868": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040134": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040172": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040177": {
+          "scored_first": null,
+          "status": "void"
+        },
+        "00-0040730": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0041052": {
+          "scored_first": 0.0,
+          "status": "settled"
+        }
+      },
+      "scorer_name": "Deebo Samuel Sr.",
+      "scorer_on_board": true,
+      "scorer_player_id": "00-0035719",
+      "scorer_team": "SF",
+      "settlements_updated_at": "2026-10-21T04:18:50Z",
+      "source_hashes": {
+        "play_by_play": "4a1c1662c099feae16da3fd99237716dc83695c1cb067f91dea48879c8fd45fb",
+        "player_identity": "fd14420184b52513dd18ec17e1b2cd2dd58c153eefba9c016c6e7192064cc175",
+        "published_frozen_inputs": "c79969265bb3606ef8bcc00d983eeceb5afeda0a5ea85e726d8af4838944a66d",
+        "schedule": "935a516adafc641d49c1807c91beb5144b13e2cc18bf1e86ceffc3c762e928fa"
+      },
+      "status": "resolved"
+    },
+    {
+      "evidence_source": "nflverse_play_by_play",
+      "first_score_play_id": 829.0,
+      "first_score_qtr": 1.0,
+      "game_id": "2026_04_DET_CAR",
+      "graded_at": "2026-10-21T04:18:50Z",
+      "identity_source": "nflverse_player_stats",
+      "outcome_kind": "offense_skill",
+      "pending_reason": null,
+      "player_settlements": {
+        "00-0031610": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0033106": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0033589": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0035544": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0036265": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0036555": {
+          "scored_first": 1.0,
+          "status": "settled"
+        },
+        "00-0036754": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0036825": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0036963": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0037005": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0037240": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0037524": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0037614": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038840": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038896": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039065": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039139": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039150": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039364": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039491": {
+          "scored_first": null,
+          "status": "void"
+        },
+        "00-0040124": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040187": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040669": {
+          "scored_first": 0.0,
+          "status": "settled"
+        }
+      },
+      "scorer_name": "Chuba Hubbard",
+      "scorer_on_board": true,
+      "scorer_player_id": "00-0036555",
+      "scorer_team": "CAR",
+      "settlements_updated_at": "2026-10-21T04:18:50Z",
+      "source_hashes": {
+        "play_by_play": "20a782df5abc7eb865ccaac37c79c686c690f2ba436f0dae3cd1dc1f9bbf5352",
+        "player_identity": "cedfd10e46781fa18e36bc192be206b19ca1a7eba6cc5e909a7cc177d9b65fd4",
+        "published_frozen_inputs": "c79969265bb3606ef8bcc00d983eeceb5afeda0a5ea85e726d8af4838944a66d",
+        "schedule": "de152ce353bb9cfaea154491f1e81ecfb7408775c12fd4539f13048e55cb0618"
+      },
+      "status": "resolved"
+    },
+    {
+      "evidence_source": "nflverse_play_by_play",
+      "first_score_play_id": 927.0,
+      "first_score_qtr": 2.0,
+      "game_id": "2026_04_GB_TB",
+      "graded_at": "2026-10-21T04:18:50Z",
+      "identity_source": "nflverse_player_stats",
+      "outcome_kind": "offense_skill",
+      "pending_reason": null,
+      "player_settlements": {
+        "00-0033858": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0033921": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0036264": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0036919": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0037091": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0037311": {
+          "scored_first": null,
+          "status": "void"
+        },
+        "00-0038090": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038124": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038129": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038589": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038685": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038951": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038996": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039050": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039361": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039589": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039811": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040129": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040142": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040237": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040667": {
+          "scored_first": 1.0,
+          "status": "settled"
+        },
+        "00-0041048": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0041094": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0041251": {
+          "scored_first": 0.0,
+          "status": "settled"
+        }
+      },
+      "scorer_name": "Matthew Golden",
+      "scorer_on_board": true,
+      "scorer_player_id": "00-0040667",
+      "scorer_team": "GB",
+      "settlements_updated_at": "2026-10-21T04:18:50Z",
+      "source_hashes": {
+        "play_by_play": "cdf82b974d26bdfde8ca19c49a4f2339bc811c6505ec2da06cd1ebd696a2231d",
+        "player_identity": "e80a9291e1aa5b1c6fed05975902636486ae222a4a083b39c3885822bf5ddf23",
+        "published_frozen_inputs": "c79969265bb3606ef8bcc00d983eeceb5afeda0a5ea85e726d8af4838944a66d",
+        "schedule": "6f37953e4e4a747dbaa25ffee8d85670841468ce75eaa1a642ff4a22a0c308d0"
+      },
+      "status": "resolved"
+    },
+    {
+      "evidence_source": "nflverse_play_by_play",
+      "first_score_play_id": 1698.0,
+      "first_score_qtr": 2.0,
+      "game_id": "2026_04_IND_WAS",
+      "graded_at": "2026-10-21T04:18:50Z",
+      "identity_source": "nflverse_player_stats",
+      "outcome_kind": "offense_skill",
+      "pending_reason": null,
+      "player_settlements": {
+        "00-0030279": {
+          "scored_first": null,
+          "status": "void"
+        },
+        "00-0031588": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0032268": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0032951": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0033217": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0033699": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0035021": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0035535": {
+          "scored_first": null,
+          "status": "void"
+        },
+        "00-0035659": {
+          "scored_first": null,
+          "status": "void"
+        },
+        "00-0035710": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0036223": {
+          "scored_first": 1.0,
+          "status": "settled"
+        },
+        "00-0036626": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0036628": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0037292": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0037742": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0037809": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038997": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039355": {
+          "scored_first": null,
+          "status": "void"
+        },
+        "00-0039816": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039912": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040128": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040164": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040242": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0041040": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0041096": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0041125": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0041132": {
+          "scored_first": 0.0,
+          "status": "settled"
+        }
+      },
+      "scorer_name": "Jonathan Taylor",
+      "scorer_on_board": true,
+      "scorer_player_id": "00-0036223",
+      "scorer_team": "IND",
+      "settlements_updated_at": "2026-10-21T04:18:50Z",
+      "source_hashes": {
+        "play_by_play": "ac1ba62d5981675ae8a70393a5114c8364451516f686ec6ce7a7f89252b761b8",
+        "player_identity": "6127e058f26441991c370527b7d47532ff5bae64452c79a253296e34d269c174",
+        "published_frozen_inputs": "c79969265bb3606ef8bcc00d983eeceb5afeda0a5ea85e726d8af4838944a66d",
+        "schedule": "c7811eb39b1734e41adb775e1bf91a23a94baf80ac5bab2006080f1fd5dc5525"
+      },
+      "status": "resolved"
+    },
+    {
+      "evidence_source": "nflverse_play_by_play",
+      "first_score_play_id": 1863.0,
+      "first_score_qtr": 2.0,
+      "game_id": "2026_04_JAX_CIN",
+      "graded_at": "2026-10-21T04:18:50Z",
+      "identity_source": "nflverse_player_stats",
+      "outcome_kind": "offense_skill",
+      "pending_reason": null,
+      "player_settlements": {
+        "00-0032104": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0033526": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0034613": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0034829": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0034960": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0035631": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0036410": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0036442": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0036590": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0036900": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0036971": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038597": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038606": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038611": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038935": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039814": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039893": {
+          "scored_first": 1.0,
+          "status": "settled"
+        },
+        "00-0040208": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040238": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040718": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040719": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040785": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0041084": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0041100": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0041503": {
+          "scored_first": 0.0,
+          "status": "settled"
+        }
+      },
+      "scorer_name": "Brian Thomas Jr.",
+      "scorer_on_board": true,
+      "scorer_player_id": "00-0039893",
+      "scorer_team": "JAX",
+      "settlements_updated_at": "2026-10-21T04:18:50Z",
+      "source_hashes": {
+        "play_by_play": "0d1da3a1e0158adafd7b4c66485f18a5e051b3c6b65e43bd0eea9f436664b532",
+        "player_identity": "d2883aa55764a9924778b53b6bcffda0b90d0133dcf824b67e470a20ae73e31c",
+        "published_frozen_inputs": "c79969265bb3606ef8bcc00d983eeceb5afeda0a5ea85e726d8af4838944a66d",
+        "schedule": "057c81d2632a42742505f36622359e01fccc7889a350af25eb8056d0813da518"
+      },
+      "status": "resolved"
+    },
+    {
+      "evidence_source": "nflverse_play_by_play",
+      "first_score_play_id": 373.0,
+      "first_score_qtr": 1.0,
+      "game_id": "2026_04_KC_LV",
+      "graded_at": "2026-10-21T04:18:50Z",
+      "identity_source": "nflverse_player_stats",
+      "outcome_kind": "offense_skill",
+      "pending_reason": null,
+      "player_settlements": {
+        "00-0029604": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0030506": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0033873": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0034365": {
+          "scored_first": 1.0,
+          "status": "settled"
+        },
+        "00-0035891": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0036637": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0037093": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0037291": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0037304": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038104": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038134": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038519": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038563": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039066": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039067": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039338": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039407": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039894": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040078": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040081": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040122": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040646": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040878": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040890": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040894": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0041013": {
+          "scored_first": 0.0,
+          "status": "settled"
+        }
+      },
+      "scorer_name": "Ian Thomas",
+      "scorer_on_board": true,
+      "scorer_player_id": "00-0034365",
+      "scorer_team": "LV",
+      "settlements_updated_at": "2026-10-21T04:18:50Z",
+      "source_hashes": {
+        "play_by_play": "30ceb275695d89cb5cc9284eb3e7026bbfcbf8243b6b7301b1f6b9086d88f109",
+        "player_identity": "09256b0127051ed661c0b04586f38acc11dfa9a4fa91c19654edcfe258c4fdd5",
+        "published_frozen_inputs": "c79969265bb3606ef8bcc00d983eeceb5afeda0a5ea85e726d8af4838944a66d",
+        "schedule": "778d5aef92b9f7bff9f224553fb31d7823f67dcd9006429dc26f31359133af46"
+      },
+      "status": "resolved"
+    },
+    {
+      "evidence_source": "nflverse_play_by_play",
+      "first_score_play_id": 530.0,
+      "first_score_qtr": 1.0,
+      "game_id": "2026_04_LAC_SEA",
+      "graded_at": "2026-10-21T04:18:50Z",
+      "identity_source": "nflverse_player_stats",
+      "outcome_kind": "offense_skill",
+      "pending_reason": null,
+      "player_settlements": {
+        "00-0033576": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0033908": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0034272": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0034869": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0035125": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0036355": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0037545": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038454": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038543": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038544": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038573": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038797": {
+          "scored_first": 1.0,
+          "status": "settled"
+        },
+        "00-0039299": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039391": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039489": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039793": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039915": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040189": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040648": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040666": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040727": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040739": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0041512": {
+          "scored_first": null,
+          "status": "void"
+        },
+        "00-0041550": {
+          "scored_first": null,
+          "status": "void"
+        }
+      },
+      "scorer_name": "Emanuel Wilson",
+      "scorer_on_board": true,
+      "scorer_player_id": "00-0038797",
+      "scorer_team": "SEA",
+      "settlements_updated_at": "2026-10-21T04:18:50Z",
+      "source_hashes": {
+        "play_by_play": "cecdea931e877b52fd23ee31bdea31cc0691df2b0529bbc062a705e1d540e847",
+        "player_identity": "dcb360d43c54f8999420b03a8c7e50c80102464aef1a3d71aaecd79cd52b321b",
+        "published_frozen_inputs": "c79969265bb3606ef8bcc00d983eeceb5afeda0a5ea85e726d8af4838944a66d",
+        "schedule": "7ceee69b2b69e49b66de04449d6cc281efef341da8b96b3de8ece010ee74f37d"
+      },
+      "status": "resolved"
+    },
+    {
+      "evidence_source": "nflverse_play_by_play",
+      "first_score_play_id": 1605.0,
+      "first_score_qtr": 2.0,
+      "game_id": "2026_04_LA_PHI",
+      "graded_at": "2026-10-21T04:18:50Z",
+      "identity_source": "nflverse_player_stats",
+      "outcome_kind": "offense_skill",
+      "pending_reason": null,
+      "player_settlements": {
+        "00-0026498": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0030061": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0031381": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0033110": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0033246": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0034844": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0035662": {
+          "scored_first": null,
+          "status": "void"
+        },
+        "00-0036244": {
+          "scored_first": null,
+          "status": "void"
+        },
+        "00-0036389": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0036912": {
+          "scored_first": null,
+          "status": "void"
+        },
+        "00-0036980": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0037132": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0037840": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038359": {
+          "scored_first": null,
+          "status": "void"
+        },
+        "00-0038393": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038498": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038555": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039074": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039075": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039738": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039746": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040024": {
+          "scored_first": 1.0,
+          "status": "settled"
+        },
+        "00-0040590": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040867": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0041415": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0041510": {
+          "scored_first": 0.0,
+          "status": "settled"
+        }
+      },
+      "scorer_name": "Darius Cooper",
+      "scorer_on_board": true,
+      "scorer_player_id": "00-0040024",
+      "scorer_team": "PHI",
+      "settlements_updated_at": "2026-10-21T04:18:50Z",
+      "source_hashes": {
+        "play_by_play": "0893c8305024bd9a72ddb5a22b2211ab1aa1ca27b831a748ee84edda6c0bf957",
+        "player_identity": "339210ae595ccaf8a99b4c366b97edc05847b0d197f66cacc8e36eed9b7e7777",
+        "published_frozen_inputs": "c79969265bb3606ef8bcc00d983eeceb5afeda0a5ea85e726d8af4838944a66d",
+        "schedule": "384c5ace29ff5bc7d5faf5d8111905e000bfb7de360c76878665d250a311c722"
+      },
+      "status": "resolved"
+    },
+    {
+      "evidence_source": "nflverse_play_by_play",
+      "first_score_play_id": 3132.0,
+      "first_score_qtr": 3.0,
+      "game_id": "2026_04_MIA_MIN",
+      "graded_at": "2026-10-21T04:18:50Z",
+      "identity_source": "nflverse_player_stats",
+      "outcome_kind": "offense_skill",
+      "pending_reason": null,
+      "player_settlements": {
+        "00-0033293": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0035228": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0035229": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0036259": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0036322": {
+          "scored_first": null,
+          "status": "void"
+        },
+        "00-0036425": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0037252": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0037666": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038128": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038994": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039874": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039880": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040154": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040198": {
+          "scored_first": 1.0,
+          "status": "settled"
+        },
+        "00-0040506": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0041077": {
+          "scored_first": null,
+          "status": "void"
+        },
+        "00-0041104": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0041524": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0041525": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0041529": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0041579": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "sleeper:13516": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "sleeper:14026": {
+          "scored_first": 0.0,
+          "status": "settled"
+        }
+      },
+      "scorer_name": "Ollie Gordon II",
+      "scorer_on_board": true,
+      "scorer_player_id": "00-0040198",
+      "scorer_team": "MIA",
+      "settlements_updated_at": "2026-10-21T04:18:50Z",
+      "source_hashes": {
+        "play_by_play": "8c4d00fced1e15a63a8c122c7cceff5a9bb5443ccd9b719c63e82ab6edc6e1c5",
+        "player_identity": "071601bba1ee2ba6e4b78e070022d0614e86f3086862bdb30a0cce1f968d3fdc",
+        "published_frozen_inputs": "c79969265bb3606ef8bcc00d983eeceb5afeda0a5ea85e726d8af4838944a66d",
+        "schedule": "bff1174d2b341d4b85eb35f5544eaa63b6dcf6c3dfd5ae9224badb18e85730ab"
+      },
+      "status": "resolved"
+    },
+    {
+      "evidence_source": "nflverse_play_by_play",
+      "first_score_play_id": 484.0,
+      "first_score_qtr": 1.0,
+      "game_id": "2026_04_NE_BUF",
+      "graded_at": "2026-10-21T04:18:50Z",
+      "identity_source": "nflverse_player_stats",
+      "outcome_kind": "offense_skill",
+      "pending_reason": null,
+      "player_settlements": {
+        "00-0033090": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0033555": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0034827": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0034857": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0035500": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0035537": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0035689": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0036187": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0036875": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0036988": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0037248": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0037261": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0037816": {
+          "scored_first": 1.0,
+          "status": "settled"
+        },
+        "00-0038564": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038621": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038933": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039851": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039875": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039901": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040131": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040194": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040556": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040563": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040734": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0041395": {
+          "scored_first": 0.0,
+          "status": "settled"
+        }
+      },
+      "scorer_name": "Romeo Doubs",
+      "scorer_on_board": true,
+      "scorer_player_id": "00-0037816",
+      "scorer_team": "NE",
+      "settlements_updated_at": "2026-10-21T04:18:50Z",
+      "source_hashes": {
+        "play_by_play": "7c9d4a2114e9074af5247d70cc836e4f72d28c02c6da40e8e81b2f81527c121e",
+        "player_identity": "c7e0f5fd3bda632bf2d644aa8ecb75658078a99058fd0e5876b0a53ca7841dff",
+        "published_frozen_inputs": "c79969265bb3606ef8bcc00d983eeceb5afeda0a5ea85e726d8af4838944a66d",
+        "schedule": "187a1d49e9e234e561d06d83fa31910d587f9126dbe6437b0114e479b91fc8a8"
+      },
+      "status": "resolved"
+    },
+    {
+      "evidence_source": "nflverse_play_by_play",
+      "first_score_play_id": 1010.0,
+      "first_score_qtr": 1.0,
+      "game_id": "2026_04_NYJ_CHI",
+      "graded_at": "2026-10-21T04:18:50Z",
+      "identity_source": "nflverse_player_stats",
+      "outcome_kind": "offense_skill",
+      "pending_reason": null,
+      "player_settlements": {
+        "00-0030565": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0032464": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0036275": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0036290": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0036842": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0037740": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0037755": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0037805": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039021": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039451": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039794": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039798": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039919": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040126": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040236": {
+          "scored_first": 1.0,
+          "status": "settled"
+        },
+        "00-0040277": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040735": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0041032": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0041051": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0041558": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "sleeper:13825": {
+          "scored_first": 0.0,
+          "status": "settled"
+        }
+      },
+      "scorer_name": "Kyle Monangai",
+      "scorer_on_board": true,
+      "scorer_player_id": "00-0040236",
+      "scorer_team": "CHI",
+      "settlements_updated_at": "2026-10-21T04:18:50Z",
+      "source_hashes": {
+        "play_by_play": "1aa296039a4cc0c76212bd0a9972c29aa90f531e30ed79839b3b3b917f8531f1",
+        "player_identity": "034d72d457dc6e2d3d74a44f6c8ada8d53a8e7138f875aadd681c041ef30cb70",
+        "published_frozen_inputs": "c79969265bb3606ef8bcc00d983eeceb5afeda0a5ea85e726d8af4838944a66d",
+        "schedule": "798de9eccf3af00d30c6efd3eccd701d6834320f33bda844fef631a727cf0aec"
+      },
+      "status": "resolved"
+    },
+    {
+      "evidence_source": "nflverse_play_by_play",
+      "first_score_play_id": 675.0,
+      "first_score_qtr": 1.0,
+      "game_id": "2026_04_PIT_CLE",
+      "graded_at": "2026-10-21T04:18:50Z",
+      "identity_source": "nflverse_player_stats",
+      "outcome_kind": "offense_skill",
+      "pending_reason": null,
+      "player_settlements": {
+        "00-0023459": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0033537": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0033757": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0035594": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0035640": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0036252": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0036407": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0036862": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0036894": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0037228": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038409": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038558": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038710": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038794": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039739": {
+          "scored_first": 1.0,
+          "status": "settled"
+        },
+        "00-0039920": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040466": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040663": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040782": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040784": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0041037": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0041131": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0041397": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0041398": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0041489": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0041490": {
+          "scored_first": null,
+          "status": "void"
+        },
+        "00-0041547": {
+          "scored_first": 0.0,
+          "status": "settled"
+        }
+      },
+      "scorer_name": "Roman Wilson",
+      "scorer_on_board": true,
+      "scorer_player_id": "00-0039739",
+      "scorer_team": "PIT",
+      "settlements_updated_at": "2026-10-21T04:18:50Z",
+      "source_hashes": {
+        "play_by_play": "e2c2536a7facf3cf53cce9e55ed22269049a5fb9249b739fb0e2575edc1ae9a1",
+        "player_identity": "b189eccb6b75709525c47c11fc5e36d92d3889e1e16f2594c486bbdcc235ed58",
+        "published_frozen_inputs": "c79969265bb3606ef8bcc00d983eeceb5afeda0a5ea85e726d8af4838944a66d",
+        "schedule": "398448a980be0775482327a9ac0ad59567b7ff76186901bff149d67a00a7891e"
+      },
+      "status": "resolved"
+    },
+    {
+      "evidence_source": "nflverse_play_by_play",
+      "first_score_play_id": 224.0,
+      "first_score_qtr": 1.0,
+      "game_id": "2026_04_TEN_BAL",
+      "graded_at": "2026-10-21T04:18:50Z",
+      "identity_source": "nflverse_player_stats",
+      "outcome_kind": "offense_skill",
+      "pending_reason": null,
+      "player_settlements": {
+        "00-0032398": {
+          "scored_first": null,
+          "status": "void"
+        },
+        "00-0032764": {
+          "scored_first": 1.0,
+          "status": "settled"
+        },
+        "00-0034753": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0034796": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0034798": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0034837": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0034975": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0035261": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0036550": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0037594": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038115": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0038117": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039032": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039064": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039792": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0039796": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040075": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040170": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040584": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040676": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040705": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040886": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0040887": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "00-0041438": {
+          "scored_first": 0.0,
+          "status": "settled"
+        },
+        "sleeper:13324": {
+          "scored_first": 0.0,
+          "status": "settled"
+        }
+      },
+      "scorer_name": "Derrick Henry",
+      "scorer_on_board": true,
+      "scorer_player_id": "00-0032764",
+      "scorer_team": "BAL",
+      "settlements_updated_at": "2026-10-21T04:18:50Z",
+      "source_hashes": {
+        "play_by_play": "c664eca59e7206c4c2fc718a7e1b22bd5aa4a0c76cbc92e64eaf7079379b2480",
+        "player_identity": "8f0c6e046923d8d84198ff6d55988fc1718098400c201d22ed72457c217ef455",
+        "published_frozen_inputs": "c79969265bb3606ef8bcc00d983eeceb5afeda0a5ea85e726d8af4838944a66d",
+        "schedule": "19b86993800fab2c45e3f4da6e022a5d724947d7aedee24f09e7c45c66a04cca"
+      },
+      "status": "resolved"
+    }
+  ],
+  "published_frozen_inputs_sha256": "c79969265bb3606ef8bcc00d983eeceb5afeda0a5ea85e726d8af4838944a66d",
+  "schema_version": 1,
+  "season": 2026,
+  "source_release": "anytime_td_2026_week04_ngs_live.csv",
+  "week": 4
+}

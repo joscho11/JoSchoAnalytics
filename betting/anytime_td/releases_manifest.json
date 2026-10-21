@@ -32,7 +32,7 @@
     },
     {
       "csv": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week04_ngs_live.csv",
-      "csv_sha256": "dfddc1ac63ee7b018f421040756f8ea1dff9168bcc74bb874cd578fed09ece5d",
+      "csv_sha256": "27ccba2de66ca65c1e03695e8e96966d31a22d44c968d6795e8965aa08e6f68f",
       "metadata": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week04_ngs_live.json",
       "metadata_sha256": "a4fbb35219d02907a0c1ba0533615dbc8a0c670f76fb474256b0c72a2e90c9b3",
       "model_version": "td_product_ngs_44_frozen_2025_v1",
@@ -42,7 +42,7 @@
     },
     {
       "csv": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week05_ngs_live.csv",
-      "csv_sha256": "4828a9722f99f5622e093ae1317b7202bb5c8b51c0f9ee0a334118d5c0454707",
+      "csv_sha256": "50572af44eedc60f75e5580b95be0d08c1711f873794e464ed6ce3a48dc039f2",
       "metadata": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week05_ngs_live.json",
       "metadata_sha256": "bfb0c2f9d6299c86a7430797c4dc28905a47aa3c0fa0fd7b5e6a687b3805f623",
       "model_version": "td_product_ngs_44_frozen_2025_v1",
@@ -61,14 +61,14 @@
       "week": 6
     },
     {
-      "season": 2026,
-      "week": 7,
       "csv": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week07_ngs_live_draftkings_week07_20261020.csv",
-      "metadata": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week07_ngs_live_draftkings_week07_20261020.json",
       "csv_sha256": "e8fbbafc893fe38d360be88467a2d11d4616acc313823d55e7bc19cbf01dd7ed",
+      "metadata": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week07_ngs_live_draftkings_week07_20261020.json",
       "metadata_sha256": "e6418cf87c6b7e23c49dfa8a6e95abd17b2764467ffd77099948aee6a0c9c200",
+      "model_version": "td_product_ngs_44_frozen_2025_v1",
       "prediction_mode": "live",
-      "model_version": "td_product_ngs_44_frozen_2025_v1"
+      "season": 2026,
+      "week": 7
     }
   ],
   "schema_version": 1
