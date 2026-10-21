@@ -538,8 +538,12 @@ def test_preview_phone_grid_keeps_ranking_columns():
     assert page.PREVIEW_PHONE_RANK_COLUMNS == [
         "#", "Player", "Proj Pts", "Actual Pts", "Finish", "Opponent", "Health",
     ]
-    inside_phone = ["#", "Player", "Proj Pts", "Actual Pts", "Finish"]
-    assert sum(page._WF_PHONE_WIDTHS[column] for column in inside_phone) <= 358
+    # Grids with actuals use the compact widths: a 360px phone has a ~334px grid.
+    for inside_phone in (
+        ["#", "Player", "Proj Pts", "Actual Pts", "Finish"],
+        ["#", "Player", "Opponent", "Proj Pts", "Actual Pts"],
+    ):
+        assert sum(page._WF_PHONE_ACTUALS_WIDTHS[column] for column in inside_phone) <= 330
 
 
 def test_week_one_phone_grid_keeps_sleeper_beside_model_projection():
@@ -554,6 +558,31 @@ def test_week_one_phone_grid_keeps_sleeper_beside_model_projection():
     assert page._preview_phone_columns(available, show_sleeper=False) == [
         "#", "Player", "Opponent", "Proj Pts", "Health", "Actual Pts",
     ]
+
+
+def test_phone_grids_with_actuals_get_short_headers_and_tight_widths():
+    desktop = {
+        name: st.column_config.NumberColumn(name, format="%.1f", help=f"{name} help")
+        for name in ("#", "Player", "Opponent", "Proj Pts", "Actual Pts", "Finish", "Health")
+    }
+
+    with_actuals = weekly._phone_column_config(
+        ["#", "Player", "Proj Pts", "Actual Pts", "Finish", "Opponent"], desktop
+    )
+    assert {k: v["label"] for k, v in with_actuals.items()} == {
+        "#": "#", "Player": "Player", "Proj Pts": "Proj", "Actual Pts": "Actual",
+        "Finish": "Finish", "Opponent": "Opp",
+    }
+    assert with_actuals["Actual Pts"]["width"] == 56 and with_actuals["Finish"]["width"] == 50
+    assert with_actuals["Proj Pts"]["help"] == "Proj Pts help"
+    assert with_actuals["#"]["pinned"] is True and with_actuals["Player"]["pinned"] is True
+
+    # No actuals (pregame, Week 7): headers and widths are exactly what they were.
+    pregame = weekly._phone_column_config(["#", "Player", "Opponent", "Proj Pts"], desktop)
+    assert {k: v["label"] for k, v in pregame.items()} == {
+        "#": "#", "Player": "Player", "Opponent": "Opponent", "Proj Pts": "Proj Pts",
+    }
+    assert [pregame[k]["width"] for k in pregame] == [36, 140, 60, 60]
 
 
 def test_phone_column_config_preserves_desktop_help_and_formats():
@@ -746,6 +775,14 @@ def test_week06_graded_release_shows_ranking_scorecard_and_rank_columns(tmp_path
     columns = list(desktop.columns)
     assert columns[columns.index("Actual Pts") + 1:][:3] == ["Our Rk", "Finish", "Rk Δ"]
     assert list(phone.columns) == ["#", "Player", "Proj Pts", "Actual Pts", "Finish", "Opponent"]
+    phone_grid = next(d for d in at.dataframe if list(d.value.columns) == list(phone.columns))
+    phone_cfg = json.loads(phone_grid.proto.columns)
+    assert [phone_cfg[c]["label"] for c in ("Proj Pts", "Actual Pts", "Finish")] == ["Proj", "Actual", "Finish"]
+    # Everything up to Finish fits a 360px phone's ~334px grid, so Finish needs no scrolling.
+    assert sum(phone_cfg[c]["width"] for c in ("#", "Player", "Proj Pts", "Actual Pts", "Finish")) <= 330
+    card_grid = next(d for d in at.dataframe if {"Position", "Who"} <= set(d.value.columns))
+    card_cfg = json.loads(card_grid.proto.columns)
+    assert sum(card_cfg[c]["width"] for c in ("Position", "Who", "Top-tier hits", "Avg miss", "Rank corr")) <= 330
     assert (desktop["Rk Δ"] == desktop["Our Rk"] - desktop["Finish"]).all()
     # Half-PPR default: the QB tab is sorted by the same projection that sets Our Rk.
     assert desktop["#"].tolist() == desktop["Our Rk"].tolist()
@@ -1121,12 +1158,13 @@ def _column_help(at, column, *, has_column):
 def test_actual_players_note_matches_how_the_actuals_arrived():
     live = weekly._actual_players_note(settled=False, scored=False)
     assert live == (
-        "Blank = missing from the box-score feed. Players who did not play are removed from this board."
+        "A cell showing None is missing from the box-score feed. "
+        "Players who did not play are removed from this board."
     )
     settled = weekly._actual_players_note(settled=True, scored=False)
     assert settled == (
         "Players who did not play stay on this board at 0.0 points. "
-        "A blank yardage cell means no box-score row. "
+        "A yardage cell showing None means no box-score row. "
         "Players listed Out or Doubtful at kickoff are not on the board."
     )
     scored = weekly._actual_players_note(settled=True, scored=True)
@@ -1170,6 +1208,7 @@ def test_live_feed_tooltips_keep_saying_non_players_are_removed(tmp_path):
 
     text = _column_help(at, "Actual Pts", has_column="Off EPA")
     assert text.endswith(
-        "Blank = missing from the box-score feed. Players who did not play are removed from this board."
+        "A cell showing None is missing from the box-score feed. "
+        "Players who did not play are removed from this board."
     )
     assert "stay on this board" not in text

@@ -65,6 +65,13 @@ _WF_PHONE_WIDTHS = {
     "#": 36, "Player": 140, "Opponent": 60, "Proj Pts": 60,
     "Health": 46, "Actual Pts": 64, "Sleeper": 56, "Finish": 52,
 }
+# Once a phone grid carries actuals it gets short headers and tighter widths. The
+# columns up to Finish (or Actual Pts on the older demo grid) total about 324px, so
+# they stay inside the ~334px grid of a 360px phone instead of clipping the last one.
+_WF_PHONE_ACTUALS_WIDTHS = {
+    **_WF_PHONE_WIDTHS, "#": 30, "Opponent": 56, "Proj Pts": 48, "Actual Pts": 56, "Finish": 50,
+}
+_WF_PHONE_ACTUALS_LABELS = {"Opponent": "Opp", "Proj Pts": "Proj", "Actual Pts": "Actual"}
 PREVIEW_PROJECTED_COLUMNS = {
     "QB": ["Proj Pass Yds", "Proj Rush Yds"],
     "RB": ["Proj Rush Yds", "Proj Rec Yds"],
@@ -503,13 +510,20 @@ def _preview_phone_columns(available_columns, *, show_sleeper: bool) -> list[str
 
 
 def _phone_column_config(phone_keep: list[str], desktop_config: dict) -> dict:
-    """Reuse each desktop column's content and override only phone width/pinning."""
+    """Reuse each desktop column's content and override only phone width/pinning.
+
+    A grid that carries Actual Pts also gets the short headers and tighter widths.
+    """
+    with_actuals = "Actual Pts" in phone_keep
+    widths = _WF_PHONE_ACTUALS_WIDTHS if with_actuals else _WF_PHONE_WIDTHS
     phone_config = {}
     for col in phone_keep:
-        if col not in desktop_config or col not in _WF_PHONE_WIDTHS:
+        if col not in desktop_config or col not in widths:
             continue
         config = dict(desktop_config[col])
-        config["width"] = _WF_PHONE_WIDTHS[col]
+        config["width"] = widths[col]
+        if with_actuals and col in _WF_PHONE_ACTUALS_LABELS:
+            config["label"] = _WF_PHONE_ACTUALS_LABELS[col]
         if col in {"#", "Player"}:
             config["pinned"] = True
         phone_config[col] = config
@@ -699,13 +713,13 @@ def _actual_players_note(*, settled: bool, scored: bool) -> str:
     """
     if not settled:
         return (
-            "Blank = missing from the box-score feed. "
+            "A cell showing None is missing from the box-score feed. "
             "Players who did not play are removed from this board."
         )
     counted = " and count as misses in the ranking scorecard" if scored else ""
     return (
         f"Players who did not play stay on this board at 0.0 points{counted}. "
-        "A blank yardage cell means no box-score row. "
+        "A yardage cell showing None means no box-score row. "
         "Players listed Out or Doubtful at kickoff are not on the board."
     )
 
@@ -773,15 +787,15 @@ def _accuracy_table(
     }
     phone_config = {
         label: (
-            column_config.NumberColumn(label, format="%d", width=48, alignment="left")
-            if numeric_label else column_config.TextColumn(label, width=60)
+            column_config.NumberColumn(label, format="%d", width=44, alignment="left")
+            if numeric_label else column_config.TextColumn(label, width=56)
         ),
-        "Who": column_config.TextColumn("Who", width=62),
+        "Who": column_config.TextColumn("Who", width=56),
         "Top-tier hits": column_config.TextColumn(
-            "Top-tier hits", width=92, alignment="right", help=_HITS_HELP
+            "Top-tier hits", width=82, alignment="right", help=_HITS_HELP
         ),
-        "Avg miss": column_config.NumberColumn("Avg miss", format="%.2f", width=64, help=_MISS_HELP),
-        "Rank corr": column_config.NumberColumn("Rank corr", format="%.2f", width=70, help=_CORR_HELP),
+        "Avg miss": column_config.NumberColumn("Avg miss", format="%.2f", width=60, help=_MISS_HELP),
+        "Rank corr": column_config.NumberColumn("Rank corr", format="%.2f", width=68, help=_CORR_HELP),
     }
     dataframe_phone_desktop(
         fantasy_accuracy.scorecard_display(rows, label=label, column=column),
