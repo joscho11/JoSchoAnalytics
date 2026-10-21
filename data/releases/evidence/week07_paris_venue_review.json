@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "captured_at_utc": "2026-10-21T00:52:55Z",
+  "game": {
+    "game_id": "2026_07_PIT_NO",
+    "away_team": "PIT",
+    "designated_home_team": "NO",
+    "neutral_site": true,
+    "stadium": "Stade de France",
+    "city": "Saint-Denis, Paris region, France",
+    "stadium_id": "PAR00",
+    "roof": "Fixed roof covering spectator stands",
+    "playing_field_uncovered": true,
+    "venue_is_indoor": false
+  },
+  "sources": [
+    {
+      "publisher": "NFL",
+      "url": "https://www.nfl.com/games/steelers-at-saints-2026-reg-7?tab=overview",
+      "fact": "Game Center lists Pittsburgh at New Orleans and names Stade de France in Saint-Denis as the location."
+    },
+    {
+      "publisher": "Pittsburgh Steelers",
+      "url": "https://www.steelers.com/news/steelers-to-play-saints-in-2026-nfl-paris-game",
+      "fact": "Official announcement says the Steelers play the Saints at Stade de France in Paris."
+    },
+    {
+      "publisher": "UEFA",
+      "url": "https://www.uefa.com/uefaeuro/history/news/0253-0d7f4d3f2630-7422e2d220b1-1000--stade-de-france/",
+      "fact": "Stadium roof was designed to protect spectators while leaving the pitch uncovered."
+    },
+    {
+      "publisher": "Stade de France",
+      "url": "https://www.stadefrance.com/en/stadium/our-history",
+      "fact": "Stadium authority describes the elliptical roof as protecting the stands."
+    }
+  ],
+  "user_resolution": "Keep New Orleans as designated home; mark the Paris game neutral; treat the uncovered field as outdoor.",
+  "active_build_id": "predictions-2026w07-e87f9d325375",
+  "active_artifact_sha256": "e87f9d3253755d3b05808b4ed387eb357f1c9d656d9627caaadc25e654db4405",
+  "corrected_candidate_artifact_sha256": "78696e1ed2577f1f1bc29f873de94f353699d69a8739445136ffe77ab11c34e8",
+  "corrected_candidate_edge": -0.7082964964128049,
+  "prior_active_edge": -1.2663826348650715,
+  "correction_changes": [
+    "venue_is_indoor"
+  ],
+  "unchanged_games": 13,
+  "tuesday_snapshot_sha256": "8aed73a1260443d31d0b2ef5f9628421a4e66cc8a8356a4f45d363c998e8eb19",
+  "independent_input_audit_path": "spread_v3_prod/artifacts/week07_input_verification_v2/week07_input_verification_v2.json",
+  "candidate_release_audit_path": "spread_v3_prod/artifacts/week07_input_verification_v2/week07_corrected_candidate_release_audit.json"
+}
