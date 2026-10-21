@@ -82,8 +82,9 @@ FIRST_TD_DESKTOP_COLS = [
     "#", "Player", "Pos", "Opp", "Model First TD Odds", "Book First TD Odds",
     "Expected Return", "Hit",
 ]
+# Expected Return is the sort key, so on a phone it sits first among the panning columns.
 FIRST_TD_PHONE_COLS = [
-    "#", "Player", "Model First TD Odds", "Book First TD Odds", "Expected Return", "Hit",
+    "#", "Player", "Expected Return", "Model First TD Odds", "Book First TD Odds", "Hit",
 ]
 # No historical first-TD book prices exist anywhere in this workspace for any
 # season, unlike 2+ TD which at least has a demo comparison. There is no
@@ -515,9 +516,10 @@ def _render_published_board_rankings(raw: pd.DataFrame, source: Path, season: in
         st.dataframe(table, hide_index=True)
 
 
-def _first_td_v3_paper(scoped: pd.DataFrame, price_cap: int | None) -> dict:
+def _first_td_v3_paper(scoped: pd.DataFrame, cap_state: tuple[bool, int | None]) -> dict:
     """Score frozen v3 picks with the shared tracker: fixed rule, 1U each."""
-    if price_cap:
+    available, price_cap = cap_state
+    if available:
         def qualifies(frame):
             return tracker.qualifies_first_td_best_value_v3(
                 frame["_model_probability"], frame["_book_price"], price_cap=price_cap,
@@ -539,7 +541,7 @@ def _first_td_v3_paper(scoped: pd.DataFrame, price_cap: int | None) -> dict:
 
 
 def _render_first_td_v3_scope(
-    scoped: pd.DataFrame, decisions: list[dict], key: str, scope: str, price_cap: int | None,
+    scoped: pd.DataFrame, decisions: list[dict], key: str, scope: str, cap_state: tuple[bool, int | None],
 ) -> None:
     zero_picks = sum(int(game.get("selected_bet_count", 0)) == 0 for game in decisions)
     if scoped.empty:
@@ -549,7 +551,7 @@ def _render_first_td_v3_scope(
         )
         return
     _render_scorecard_metrics(
-        _first_td_v3_paper(scoped, price_cap), "first", key,
+        _first_td_v3_paper(scoped, cap_state), "first", key,
         f"{scope} · frozen best-value picks · {len(decisions)} game decisions.",
     )
     st.caption(f"Frozen picks: {len(scoped)} · games with no qualifying player: {zero_picks}.")
@@ -558,11 +560,10 @@ def _render_first_td_v3_scope(
 def _render_first_td_best_value_v3(season: int, week: int, releases: dict[tuple[int, int], Path]) -> None:
     """Show the immutable best-value First TD paper ledger: one pick per game, tracked from Week 7."""
     st.markdown("#### Best-value picks · one per game")
-    cap = tracker.first_td_v3_price_cap()
-    cap_text = f"+{cap}" if cap else "the frozen cap"
+    cap_state = tracker.first_td_v3_cap_state()
     st.caption(
         "One paper unit on each game's best value: the player with the highest expected return at the quoted "
-        f"DraftKings price, only when that return is above zero and the price is {cap_text} or shorter. "
+        f"DraftKings price, only when that return is above zero{tracker.first_td_v3_cap_phrase()}. "
         "Picks are frozen before kickoff, and results are tracked from Week 7 on. "
         "The sample is small, so early results mostly reflect luck. This tracks a rule; it does not prove an edge."
     )
@@ -588,10 +589,10 @@ def _render_first_td_best_value_v3(season: int, week: int, releases: dict[tuple[
     week_decisions = [game for game in season_decisions if int(game.get("week", week)) == int(week)]
     _render_first_td_v3_scope(
         season_bets, season_decisions, f"first-td-v3-season-{season}-{week}",
-        f"Season to date, from Week {first_td_v3.FIRST_V3_WEEK}", cap,
+        f"Season to date, from Week {first_td_v3.FIRST_V3_WEEK}", cap_state,
     )
     _render_first_td_v3_scope(
-        week_bets, week_decisions, f"first-td-v3-week-{season}-{week}", f"Week {week}", cap,
+        week_bets, week_decisions, f"first-td-v3-week-{season}-{week}", f"Week {week}", cap_state,
     )
 
 
@@ -750,7 +751,7 @@ def _render_scorecards(priced, season, releases, *, market="anytime") -> None:
             historical = _load_retrospective_first_td_tally(paths, modified_at, week)
             if historical["graded"]:
                 st.caption(
-                    "Earlier Weeks 1–3 retrospective outcomes only · a listed scorer was identifiable in "
+                    "Earlier Weeks 1 to 3 retrospective outcomes only · a listed scorer was identifiable in "
                     f"{historical['hits']} of {historical['graded']} settled games. These releases had no "
                     "NGS First TD probabilities, so the tally is excluded from paper betting and model accuracy."
                 )
@@ -1720,6 +1721,20 @@ def _first_td_phone_column_config() -> dict:
     return cfg
 
 
+def _attach_first_td_v3(raw: pd.DataFrame, source: Path, meta: dict) -> tuple[pd.DataFrame, str | None]:
+    """Attach v3 probabilities and picks; on any failure leave the v3 cells blank."""
+    try:
+        return attach_first_td_v3(raw, source, metadata=meta if meta.get("first_td_candidate_mass") else None), None
+    except Exception:
+        blank = raw.copy()
+        blank["p_first_v3"] = float("nan")
+        blank["first_td_v3_pick"] = False
+        return blank, (
+            "The sharpened First TD probabilities are unavailable for this release, so the Model and "
+            "Expected Return cells and the picks are blank. DraftKings prices are still shown."
+        )
+
+
 def _frame_uses_v3(df: pd.DataFrame) -> bool:
     """True for boards that carry First TD v3 probabilities (2026 Week 7 on)."""
     return "p_first_v3" in df.columns
@@ -1750,7 +1765,7 @@ def _render_week_recommended(
         st.info(
             "Expected return is the model's estimate of average profit per unit at the quoted DraftKings price. "
             "First TD prices carry a large built-in margin, so most players are negative. Each game's pick is "
-            "its highest expected return, if that is above zero and the price is within the cap. Picks are "
+            f"its highest expected return, if that is above zero{tracker.first_td_v3_cap_phrase()}. Picks are "
             "frozen before kickoff and results are tracked from Week 7 on. Published-board Top-1 and Top-3 "
             "results are shown above and are tracked separately."
         )
@@ -1766,10 +1781,16 @@ def _render_week_recommended(
             + f". This view is forward-looking tracking only, not evidence of "
             "accuracy or profitability."
         )
-    st.caption(
-        f"Every {market_label} {'pick' if first_v3 else 'candidate'} across this week's matchups: {rule_text}. "
-        f"Sorted by {'expected return' if show_first_td else 'value gap'}, highest first."
-    )
+    if first_v3:
+        st.caption(
+            f"First TD picks across this week's matchups. Rule: {rule_text}. "
+            "Sorted by expected return, highest first."
+        )
+    else:
+        st.caption(
+            f"Every {market_label} candidate across this week's matchups: {rule_text}. "
+            f"Sorted by {'expected return' if show_first_td else 'value gap'}, highest first."
+        )
     price_column = "first_amer" if show_first_td else "two_plus_amer"
     if price_column in board_priced:
         all_game_ids = set(board_priced.game_id.astype(str))
@@ -1817,8 +1838,9 @@ def _render_week_recommended(
         )
         if first_v3 and model_ready:
             st.caption(
-                "A game shows no pick when no player has a positive expected return at a price "
-                "within the cap. Open a matchup to see every priced player."
+                "A game shows no pick when no player has a positive expected return"
+                + (" at a price within the cap" if tracker.first_td_v3_cap_state() != (True, None) else "")
+                + ". Open a matchup to see every priced player."
             )
         elif model_ready and not book_ready:
             st.caption(
@@ -1897,8 +1919,9 @@ def _board(
 
 
 def _reading_guide() -> None:
+    first_rule = tracker.rule_description("first")
     with st.expander("How to read this board"):
-        st.markdown("""
+        st.markdown(f"""
 Chance a skill player scores a rushing or receiving touchdown. Passing TDs are
 out. This is not even money: a typical quote is around one in five, so misses
 will outnumber hits. The 2025 demo uses the earlier model. Over full 2025 the sportsbooks were still about 0.08% more
@@ -1940,26 +1963,27 @@ than a 15% one, so it mostly flagged players where a small model error reads
 as a huge edge.
 
 **First TD.** This is a different kind of probability than Anytime or 2+:
-exactly one player can score a game's first touchdown, so it is a
-competing-risk allocation across both rosters, not a per-player marginal
-chance. Our model splits each game's mass proportionally to each player's
-Anytime TD rate, scaled by the historical rate an offensive skill player
-scores first at all (roughly 94% of games; the rest go to defense, special
-teams, or no score). The sportsbook's First TD price is de-vigged within the
-game, since first touchdown is a genuine one-winner market (unlike the
-Yes-only Anytime quote). Weeks 1–3 of the 2026 NGS retrospective release have
-no First TD probabilities because the complete scorer pool could not be
-verified. Their partly mapped scorer outcomes are shown as coverage only, not
-NGS accuracy or a betting record. The tracker counts only rows with model
-probabilities and captured sportsbook prices, so treat this view as
-entertainment, not a proven edge, even more so than 2+ TD. Because
-p_first values within a game are not independent (they split a fixed pool,
-not separate coin flips) and real bell-cow players already show a
-persistent -5pp to -8pp gap vs DraftKings' price, First TD keeps a wider
-+3.0pp gap rule. Since 2026-09-19 it also requires a positive expected
-return at the book's actual, vigged price: the de-vigged gap alone can
-still clear on a bet that loses money at the real price, since First TD's
-raw prices sum to about 121% per game, not 100%.
+exactly one player can score a game's first touchdown, so it is a share of one
+fixed pool across both rosters, not a per-player chance. Our model splits each
+game's pool by each player's Anytime TD rate, scaled by the historical rate an
+offensive skill player scores first at all (roughly 94% of games; the rest go to
+defense, special teams, or no score). From Week 7 the split uses a setting fit on
+past seasons and frozen before the games. DraftKings' First TD prices carry a
+large built-in margin: the raw implied chances in a game add up to well over
+100%, so the average bet loses money before any edge. **Expected Return** is the
+model's estimate of average profit per unit at the quoted price (model chance
+times the payout, minus 1), so most rows are negative. Rows sort by it, highest
+first.
+
+**Best-value picks (from Week 7).** For each game the tracker picks one player:
+{first_rule}. Each pick is 1U, frozen before kickoff and
+tracked from Week 7 on. The sample is small, so early results mostly reflect
+luck; this tracks a rule and is not a proven edge. Weeks 1 to 6 were tracked
+under an earlier rule (a +3.0pp gap against the de-vigged price AND a positive
+expected return) and keep that record. Weeks 1 to 3 of the 2026 NGS
+retrospective release have no First TD probabilities because the complete
+scorer pool could not be verified; their partly mapped scorer outcomes are
+shown as coverage only, not NGS accuracy or a betting record.
 
 The cards show one four-metric set for season to date through the selected
 week and another for that week alone. Each set tracks 1U candidates: settled/open
@@ -1970,9 +1994,9 @@ of the P&L. After five settled games and 20 settled bets, the board also shows a
 approximate 95% ROI range from a deterministic game-block bootstrap. It is an
 empirical uncertainty range, not a guarantee. Anytime uses a +1.0pp value-gap
 rule, 2+ TD needs the model at least 1.25x the price with the price at least
-2%, and First TD needs a +3.0pp gap AND a positive expected return at the
-real price. Each shows its own cards when prices and graded outcomes are
-available.
+2%, and First TD uses the best-value rule above from Week 7 (Weeks 1 to 6 used
+the earlier gap rule). Each shows its own cards when prices and graded outcomes
+are available.
 Live weeks are organized by matchup, then by team (for example, NE vs SEA with
 separate NE and SEA boards).
         """)
@@ -2054,6 +2078,9 @@ def render() -> None:
     manifest = _DIR / MANIFEST_NAME
     csv_cache_key = (source.stat().st_mtime_ns, manifest.stat().st_mtime_ns if manifest.is_file() else 0)
     raw = _load_csv(str(source), csv_cache_key)
+    v3_issue = None
+    if first_td_v3.uses_first_td_v3(season, week) and not retrospective:
+        raw, v3_issue = _attach_first_td_v3(raw, source, meta)
     missing_markets = _missing_scheduled_markets(raw, season, week)
     if missing_markets:
         st.warning("No published touchdown prices for: " + ", ".join(missing_markets) + ".")
@@ -2115,7 +2142,7 @@ def render() -> None:
             color=("orange" if retrospective or not is_live else
                    "blue" if completed_week else "green"),
         )
-        st.caption("Priced players only. Sorted by the active market's Value Gap (highest first). " +
+        st.caption("Priced players only. Anytime and 2+ TD sort by Value Gap, First TD by Expected Return, highest first. " +
                    (f"Cumulative 2026 Week {week} release." if is_live else "2025 weeks 10-17 demo."))
     matchups = list(_matchup_groups(board_priced))
     if not matchups:
@@ -2154,15 +2181,14 @@ def render() -> None:
                     "game_id",
                 ].nunique()
             )
-            st.warning(
-                "Full market unavailable. No-vig probabilities and value gaps are unavailable; raw prices, published-board rankings, and eligible actual-price paper tracking remain available."
-            )
             st.caption(f"First TD prices appear in {first_games} of {raw.game_id.nunique()} published matchups.")
+    if show_first_td and v3_issue:
+        st.warning(v3_issue)
 
     if show_first_td and season == LIVE_SEASON and not retrospective:
         _render_published_board_rankings(raw, source, season, week)
-        if week >= 7:
-            _render_first_td_actual_ev_v2(season, week, releases)
+        if first_td_v3.uses_first_td_v3(season, week):
+            _render_first_td_best_value_v3(season, week, releases)
 
     if pool_eligible:
         # 2+ TD and First TD: "Recommended" (every candidate across the week)
@@ -2264,11 +2290,18 @@ def render() -> None:
                 "This matchup has no captured First TD price. Published-board model ranks and verified outcomes "
                 "remain visible above; it is excluded from paper betting."
             )
+        elif first_td_prices_available and _frame_uses_v3(matchup):
+            st.caption(
+                "First TD view: the model's chance, DraftKings' quoted price and the expected return at that price. "
+                "Expected return is the model's estimate, and First TD prices carry a large built-in margin, so most "
+                "rows are negative. The highlighted row is the game's pick under the frozen rule; picks are frozen "
+                "before kickoff and tracked from Week 7 on."
+            )
         elif first_td_prices_available:
             st.caption(
-                "First TD view: frozen model probability and raw sportsbook price. A no-vig comparison appears only "
-                "when the full within-game quote pool is verified. The legacy strategy remains accessible below; "
-                "the experimental actual-price strategy is shown above."
+                "First TD view: the model's chance, DraftKings' quoted price and the expected return at that price. "
+                "A no-vig comparison is added when the full within-game market was captured. Highlighted rows follow "
+                "the earlier value-gap rule used for Weeks 1 to 6."
             )
         elif display_only_first_td:
             st.info(
@@ -2282,7 +2315,9 @@ def render() -> None:
                 "First TD sportsbook prices are not available for this release "
                 "yet. The model probability is shown where this release has one."
             )
-        _render_scorecards(priced, season, releases, market="first")
+        if not _frame_uses_v3(priced):
+            # From Week 7 the v3 card above replaces the earlier First TD cards.
+            _render_scorecards(priced, season, releases, market="first")
     elif show_two_plus:
         st.info(
             "Important: 2+ TD predictions have no historical backtest yet. "
@@ -2347,11 +2382,14 @@ def render() -> None:
         if recommended_only and shown_total == 0:
             st.caption("No players clear the candidate rule for this matchup and market.")
         if pool_eligible and shown_total:
-            pool_market = "first" if show_first_td else "two_plus"
+            first_v3 = show_first_td and _frame_uses_v3(matchup)
+            pool_market = "first" if first_v3 else "first_legacy" if show_first_td else "two_plus"
             rule_text = tracker.rule_description(pool_market)
             display = _first_td_display(matchup) if show_first_td else _two_plus_display(matchup)
             n_recommended = int(display["_candidate"].sum())
-            if n_recommended:
+            if n_recommended and first_v3:
+                st.caption(f"Highlighted rows are this matchup's pick under the frozen rule ({rule_text}).")
+            elif n_recommended:
                 st.caption(
                     f"Highlighted rows clear the rule ({rule_text}); "
                     f"{n_recommended} in this matchup."

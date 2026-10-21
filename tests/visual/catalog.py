@@ -241,6 +241,16 @@ SCENES: tuple[Scene, ...] = (
         must_contain=("Touchdown Props", "First TD"),
     ),
     _s(
+        "first_td_view_w07",
+        "credibility",
+        "anytime-tds",
+        query="atd_year=2026&atd_week=7",
+        action="atd_first_td_view",
+        viewports=ALL_VIEWPORTS,
+        must_contain=("Touchdown Props", "First TD"),
+        must_not_contain=("first_td_actual_ev_v2", "Full market unavailable"),
+    ),
+    _s(
         "two_plus_td_view",
         "credibility",
         "anytime-tds",
@@ -302,6 +312,16 @@ SCENES: tuple[Scene, ...] = (
         action="atd_w06_first_buf_lv",
         viewports=NARROW,
         must_contain=("Touchdown Props", "First TD", "BUF vs LV"),
+    ),
+    _s(
+        "first_td_w07_cin_bal",
+        "credibility",
+        "anytime-tds",
+        query="atd_year=2026&atd_week=7",
+        action="atd_w07_first_cin_bal",
+        viewports=NARROW,
+        must_contain=("Touchdown Props", "First TD", "CIN vs BAL"),
+        must_not_contain=("first_td_actual_ev_v2", "Full market unavailable"),
     ),
     _s(
         "two_plus_td_w06_buf_lv",

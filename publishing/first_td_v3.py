@@ -33,15 +33,16 @@ FIRST_V3_WEEK = 7
 # A release-supplied p_first_v3 must match the lambda-derived value this closely.
 MASS_MISMATCH_TOLERANCE = 1e-9
 _MAX_K = 10.0
-# The model repository names the cap in its params file; accept its spellings.
-_CAP_KEYS = ("price_cap_american", "price_cap", "cap_american", "cap")
+# The model repository's params file names the cap `cap_american` (null means no cap);
+# the other spellings are accepted too.
+_CAP_KEYS = ("cap_american", "price_cap_american", "price_cap", "cap")
 
 
 @dataclass(frozen=True)
 class FirstTdV3Params:
     k: float
     p_offense: float
-    price_cap: int
+    price_cap: int | None  # longest allowed American price; None means no cap
     sha256: str
 
 
@@ -102,7 +103,10 @@ def load_params(path: str | Path | None = None) -> FirstTdV3Params:
     p_offense = _finite(payload.get("p_offense_2026"), "p_offense_2026")
     if not 0 < p_offense <= 1:
         raise PublicationError("First TD v3 params: p_offense_2026 must be a probability in (0, 1]")
-    caps = {_cap_value(payload[key]) for key in _CAP_KEYS if key in payload}
+    caps = {
+        None if payload[key] is None else _cap_value(payload[key])
+        for key in _CAP_KEYS if key in payload
+    }
     if not caps:
         raise PublicationError(
             "First TD v3 params have no price cap (expected one of: " + ", ".join(_CAP_KEYS) + ")"

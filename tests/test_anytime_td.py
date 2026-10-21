@@ -1,4 +1,6 @@
 """Anytime TDs demo page. Hermetic APP_OFFLINE=1."""
+import hashlib
+import json
 import os
 import re
 import sys
@@ -16,6 +18,18 @@ _SITE_PAGES = _HERE / "site_pages"
 sys.path.insert(0, str(_HERE))
 
 import page_anytime_td as page
+from publishing import first_td_v3
+from publishing.td_releases import read_td_release
+
+
+@pytest.fixture
+def v3_params(tmp_path, monkeypatch):
+    """Point the page at TEST v3 params. The real frozen file is fitted in the model repository."""
+    path = tmp_path / "v3_params" / "params.json"
+    path.parent.mkdir()
+    path.write_text(json.dumps({"k": 1.5, "p_offense_2026": 0.94, "price_cap_american": 2500}), encoding="utf-8")
+    monkeypatch.setattr(first_td_v3, "PARAMS_PATH", path)
+    return path
 
 
 def _render(tmp_path, week=None):
@@ -149,20 +163,81 @@ def test_week07_defaults_to_the_current_release_and_week05_history_still_renders
     assert any("Week 7" in str(item.value) for item in at.markdown)
 
 
-def test_week07_first_td_shows_rankings_and_actual_price_strategy_separately(tmp_path):
+def _first_td_text(at):
+    parts = [item.value for item in list(at.markdown) + list(at.warning) + list(at.info) + list(at.caption)]
+    return " ".join(str(part) for part in parts)
+
+
+def _ev_numbers(table):
+    return [int(cell.rstrip("%")) for cell in table["Expected Return"] if re.fullmatch(r"[+-]?\d+%", str(cell))]
+
+
+def test_week07_first_td_shows_rankings_and_the_best_value_card(tmp_path, v3_params):
     at = _render(tmp_path, week=7)
     releases = page.available_releases()
     at.segmented_control(key="atd_view_2026_7").set_value("First TD").run()
+    if page._week_is_complete(pd.read_csv(releases[(2026, 7)]), 2026, 7):
+        at.selectbox(key="atd_props_matchup_2026_7").set_value(page.RECOMMENDED_LABEL).run()
     assert not at.exception, at.exception
     assert not at.error, [item.value for item in at.error]
     headings = " ".join(str(item.value) for item in at.markdown)
-    copy = headings + " " + " ".join(str(item.value) for item in at.warning)
+    copy = _first_td_text(at)
     assert "Published board rankings" in headings
-    assert "first_td_actual_ev_v2" in headings
-    assert "Full market unavailable" in copy
+    assert "#### Best-value picks" in headings
+    assert "first_td_actual_ev_v2" not in copy and "Experimental paper strategy" not in copy
+    assert "Full market unavailable" not in copy
     assert "no-vig pending" not in copy.lower()
+    assert all("probabilities are unavailable" not in str(w.value) for w in at.warning)
     assert any({"Matchup", "Top 1", "Top 3"} <= set(frame.value.columns) for frame in at.dataframe)
+    # Recommended lists one pick per priced game, best expected return first
+    boards = [frame.value for frame in at.dataframe if "Expected Return" in frame.value.columns]
+    assert boards
+    picks = boards[0]
+    assert 1 <= len(picks) <= 6 and picks["Book First TD Odds"].str.contains("implied").all()
+    evs = _ev_numbers(picks)
+    assert evs and evs == sorted(evs, reverse=True) and all(value >= 0 for value in evs)
 
+
+def test_week07_first_td_leaves_v3_cells_blank_with_a_warning_when_params_are_missing(tmp_path, monkeypatch):
+    monkeypatch.setattr(first_td_v3, "PARAMS_PATH", tmp_path / "absent" / "params.json")
+    at = _render(tmp_path, week=7)
+    at.segmented_control(key="atd_view_2026_7").set_value("First TD").run()
+    at.selectbox(key="atd_props_matchup_2026_7").set_value("CIN vs BAL").run()
+    assert not at.exception, at.exception
+    assert not at.error, [item.value for item in at.error]
+    assert any("sharpened First TD probabilities are unavailable" in str(w.value) for w in at.warning)
+    board = next(frame.value for frame in at.dataframe if "Expected Return" in frame.value.columns)
+    assert board["Expected Return"].eq("").all() and board["Model First TD Odds"].eq("").all()
+    assert board["Book First TD Odds"].str.contains("implied").all()
+    assert "Full market unavailable" not in _first_td_text(at)
+
+
+def test_week06_first_td_postgame_view_is_unchanged_apart_from_sort_order(tmp_path):
+    at = _render(tmp_path, week=6)
+    at.segmented_control(key="atd_view_2026_6").set_value("First TD").run()
+    assert not at.exception, at.exception
+    assert not at.error, [item.value for item in at.error]
+    assert at.selectbox(key="atd_props_matchup_2026_6").value == page.ALL_RESULTS_LABEL
+    headings = " ".join(str(item.value) for item in at.markdown)
+    assert "Published board rankings" in headings and "All First TD results across matchups" in headings
+    copy = _first_td_text(at)
+    assert "#### Best-value picks" not in copy and "Full market unavailable" not in copy
+    assert not at.warning
+    boards = [frame.value for frame in at.dataframe if "Expected Return" in frame.value.columns]
+    assert len(boards) >= 28    # one desktop and one phone table per team
+    for board in boards:
+        assert "Hit" in board.columns
+        assert set(board["Hit"]) <= {"Yes", "No", "Void", "Awaiting evidence", ""}
+        evs = _ev_numbers(board)
+        assert evs == sorted(evs, reverse=True)
+    # sorted by return, not alphabetically by name (the Weeks 5 and 6 bug with no no-vig prices)
+    names = [[p.split(" · ")[0] for p in board["Player"]] for board in boards]
+    assert any(group != sorted(group) for group in names)
+    assert any(board["Hit"].eq("Yes").any() for board in boards)
+
+
+def test_week05_all_three_markets_still_render_and_first_td_recommended_stays_on_candidates(tmp_path):
+    releases = page.available_releases()
     markets = {
         "Anytime TD": "Book ATTD Odds",
         "2+ TD": "Book 2+ TD Odds",
@@ -193,7 +268,7 @@ def test_week07_first_td_shows_rankings_and_actual_price_strategy_separately(tmp
             first_table = first_tables[0]
             assert len(first_table) == len(expected)
             assert not first_table["Model First TD Odds"].astype(str).str.contains("Pending").any()
-            assert not first_table["First TD Value Gap"].astype(str).str.contains("Pending").any()
+            assert not first_table["Expected Return"].astype(str).str.contains("Pending").any()
             blob = " ".join(str(item.value) for item in list(at.info) + list(at.markdown) + list(at.caption))
             assert "Captured First TD prices awaiting verification" not in blob
             assert "Recommended First TD players this week" in blob
@@ -366,7 +441,7 @@ def test_first_td_toggle_renders_priced_matchup(tmp_path):
     columns = set(at.dataframe[0].value.columns)
     assert {
         "#", "Player", "Pos", "Opp", "Model First TD Odds",
-        "Book First TD Odds", "First TD Value Gap",
+        "Book First TD Odds", "Expected Return",
     } <= columns
     book_values = at.dataframe[0].value["Book First TD Odds"]
     assert book_values.ne("Not implemented yet").all()
@@ -494,9 +569,82 @@ def test_first_td_display_shape_and_ordering():
         "scored_first": [None, None, None],
     })
     table = page._first_td_display(df)
-    assert list(table["Player"]) == ["Alpha · AAA", "Gamma · BBB", "Beta · AAA"]
-    assert table.loc[0, "_value"] > table.loc[1, "_value"] > table.loc[2, "_value"]
+    # Alpha returns +20%; Beta and Gamma both return -20%, so the larger model chance (Beta) goes first
+    assert list(table["Player"]) == ["Alpha · AAA", "Beta · AAA", "Gamma · BBB"]
+    assert list(table["Expected Return"]) == ["+20%", "-20%", "-20%"]
+    assert table.loc[0, "_ev"] > table.loc[1, "_ev"] >= table.loc[2, "_ev"]
     assert table.loc[0, "_candidate"]
+    assert list(table["Book First TD Odds"])[0] == "+500 · 16.7% implied · no-vig 15.0%"
+    assert list(table["_book_phone"])[0] == "+500 · 16.7% implied"
+
+
+def test_first_td_display_sorts_by_expected_return_not_name_when_no_vig_is_missing():
+    names = ["Zed", "Yan", "Xia", "Wes"]
+    df = pd.DataFrame({
+        "player_id": ["p4", "p3", "p2", "p1"],
+        "player_display_name": names,
+        "team": ["AAA"] * 4, "position": ["WR"] * 4, "opponent_team": ["BBB"] * 4,
+        "game_id": ["2026_07_AAA_BBB"] * 4,
+        "p_first": [0.10, 0.20, 0.05, 0.30],
+        "book_first_p_devigged": [None] * 4,
+        "first_amer": [1000, 400, 2500, 200],
+        "scored_first": [None] * 4,
+    })
+    table = page._first_td_display(df)
+    # decimal 11, 5, 26, 3 give returns +10%, 0%, +30%, -10%; alphabetical order would be Wes, Xia, Yan, Zed
+    assert [value.split(" · ")[0] for value in table["Player"]] == ["Xia", "Zed", "Yan", "Wes"]
+    assert list(table["Expected Return"]) == ["+30%", "+10%", "0%", "-10%"]
+
+
+def test_first_td_display_without_a_price_sorts_by_model_chance_then_player_id():
+    df = pd.DataFrame({
+        "player_id": ["p3", "p2", "p1", "p0"],
+        "player_display_name": ["Aaa", "Bbb", "Ccc", "Ddd"],
+        "team": ["AAA"] * 4, "position": ["WR"] * 4, "opponent_team": ["BBB"] * 4,
+        "p_first": [0.10, 0.20, 0.10, float("nan")],
+        "first_amer": [None] * 4,
+        "scored_first": [None] * 4,
+    })
+    table = page._first_td_display(df)
+    # chance first (0.20), then the 0.10 tie by player_id (p1 before p3), unknown chance last
+    assert [value.split(" · ")[0] for value in table["Player"]] == ["Bbb", "Ccc", "Aaa", "Ddd"]
+    assert list(table["Expected Return"]) == ["", "", "", ""]
+
+
+def test_first_td_display_v3_uses_the_sharpened_probability_and_game_pick():
+    df = pd.DataFrame({
+        "player_id": ["p1", "p2", "p3"],
+        "player_display_name": ["One", "Two", "Three"],
+        "team": ["AAA"] * 3, "position": ["WR"] * 3, "opponent_team": ["BBB"] * 3,
+        "game_id": ["2026_07_AAA_BBB"] * 3,
+        "p_first": [0.20, 0.20, 0.20],
+        "p_first_v3": [0.30, float("nan"), 0.10],
+        "first_td_v3_pick": [False, False, True],
+        "bet_eligible": [True, True, True],
+        "first_amer": [400, 400, 900],
+        "scored_first": [None] * 3,
+    })
+    table = page._first_td_display(df).set_index("Player")
+    assert list(table.index)[:2] == ["One · AAA", "Three · AAA"]          # 0.30 * 5 - 1 = +50%, 0.10 * 10 - 1 = 0%
+    assert table.loc["One · AAA", "Expected Return"] == "+50%"
+    assert table.loc["Two · AAA", "Expected Return"] == "" and table.loc["Two · AAA", "Model First TD Odds"] == ""
+    # the highlight is the selector's game-level pick, not an expected-return threshold
+    assert table["_candidate"].to_dict() == {"One · AAA": False, "Two · AAA": False, "Three · AAA": True}
+
+
+def test_first_td_style_colors_expected_return_and_marks_the_pick():
+    df = pd.DataFrame({
+        "player_id": ["p1", "p2"],
+        "player_display_name": ["One", "Two"],
+        "team": ["AAA", "AAA"], "position": ["WR", "WR"], "opponent_team": ["BBB", "BBB"],
+        "p_first": [0.30, 0.05], "p_first_v3": [0.30, 0.05], "first_td_v3_pick": [True, False],
+        "first_amer": [400, 400], "scored_first": [None, None],
+    })
+    display = page._first_td_display(df)
+    styles = page._first_td_style(display)(display[page.FIRST_TD_DESKTOP_COLS[:-1]])
+    assert "#B7F7D0" in styles.loc[0, "Expected Return"]          # highlighted pick
+    assert styles.loc[1, "Expected Return"] == "color: #F08A8A; font-weight: 700"
+    assert "border-left: 3px solid #35D08A" in styles.loc[0, "Player"]
 
 
 def test_amer_display_abbreviates_only_past_ten_thousand():
@@ -722,7 +870,7 @@ def test_ineligible_rows_carry_no_history_tag_on_every_market():
     assert not attd.loc["Rookie", "_candidate"]
     for frame, col in (
         (page._two_plus_display(priced), "2+ TD Value Gap"),
-        (page._first_td_display(priced), "First TD Value Gap"),
+        (page._first_td_display(priced), "Expected Return"),
     ):
         by_name = frame.set_index(frame["Player"].str.split(" · ").str[0])
         assert by_name.loc["Rookie", col].endswith(" · no history")
@@ -1415,7 +1563,41 @@ def test_rule_description_for_each_market():
     two_plus_text = tracker.rule_description("two_plus")
     assert "1.25x" in two_plus_text and "2%" in two_plus_text
     first_text = tracker.rule_description("first")
-    assert "3.0pp" in first_text and "expected return" in first_text
+    assert "one pick per game" in first_text and "highest expected return" in first_text
+    assert "3.0pp" not in first_text
+    legacy_text = tracker.rule_description("first_legacy")
+    assert "3.0pp" in legacy_text and "expected return" in legacy_text
+
+
+def test_v3_rule_text_and_qualifier_read_the_cap_from_the_frozen_params(tmp_path, monkeypatch):
+    import attd_tracker as tracker
+
+    monkeypatch.setattr(first_td_v3, "PARAMS_PATH", tmp_path / "absent.json")
+    assert tracker.FIRST_TD_V3_PRICE_CAP is None
+    assert "the frozen cap" in tracker.rule_description("first")
+    # no cap available: fail closed
+    assert not tracker.qualifies_first_td_best_value_v3(pd.Series([0.9]), pd.Series([300])).any()
+    params = tmp_path / "params.json"
+    params.write_text(json.dumps({"k": 1.5, "p_offense_2026": 0.94, "price_cap_american": 2500}), encoding="utf-8")
+    monkeypatch.setattr(first_td_v3, "PARAMS_PATH", params)
+    assert tracker.FIRST_TD_V3_PRICE_CAP == 2500
+    assert "+2500 or shorter" in tracker.rule_description("first")
+    assert tracker.first_td_v3_cap_state() == (True, 2500)
+    # params that set no cap: nothing is excluded for price and the rule text drops the clause
+    params.write_text(json.dumps({"k": 1.1, "p_offense_2026": 0.94, "cap_american": None}), encoding="utf-8")
+    assert tracker.first_td_v3_cap_state() == (True, None)
+    assert "shorter" not in tracker.rule_description("first")
+    assert tracker.qualifies_first_td_best_value_v3(pd.Series([0.30]), pd.Series([9000])).all()
+    params.write_text(json.dumps({"k": 1.5, "p_offense_2026": 0.94, "price_cap_american": 2500}), encoding="utf-8")
+    qualifies = tracker.qualifies_first_td_best_value_v3(
+        pd.Series([0.30, 0.30, 0.04, 0.0401, float("nan")]),
+        pd.Series([300, 300, 2500, 2600, 300]),
+    )
+    # row 2: exactly at the cap but 0.04 * 26 - 1 = +4%; row 3: positive return but past the cap
+    assert list(qualifies) == [True, True, True, False, False]
+    assert list(tracker.qualifies_first_td_best_value_v3(
+        pd.Series([0.50, 0.50]), pd.Series([300, 200]), price_cap=250,
+    )) == [False, True]
 
 
 def test_first_td_display_candidate_requires_positive_ev_not_just_the_gap():
@@ -1448,8 +1630,10 @@ def test_first_td_display_shows_raw_price_when_full_market_is_unavailable():
         "scored_first": None,
     }])
     display = page._first_td_display(rows)
-    assert "+400 · Full market unavailable" in display.loc[0, "Book First TD Odds"]
-    assert display.loc[0, "First TD Value Gap"] == "Full market unavailable"
+    assert display.loc[0, "Book First TD Odds"] == "+400 · 20.0% implied"
+    assert display.loc[0, "_book_phone"] == "+400 · 20.0% implied"
+    assert display.loc[0, "Expected Return"] == "0%"
+    assert "Full market unavailable" not in " ".join(display.astype(str).to_numpy().ravel())
 
 
 def test_two_plus_season_tracker_uses_ratio_qualifier_not_flat_gap():
@@ -1480,3 +1664,84 @@ def test_two_plus_season_tracker_uses_ratio_qualifier_not_flat_gap():
     )
     assert flat["summary"]["bets"] == 2
     assert ratio["summary"]["bets"] == 1
+
+
+# ---------------------------------------------------------------------------
+# Weeks 1 to 6 are history: the First TD v3 work must not move them.
+# Snapshots taken on 2026-10-20, before the v3 edits.
+# ---------------------------------------------------------------------------
+
+# Manifest hashes of the retrospective releases. Weeks 4 to 6 are re-graded in place by the
+# grading job (it rewrites the settlement columns and refreshes the manifest hash, as it did for
+# Weeks 4 and 5 in "Auto: grade published releases"), so those weeks are pinned by the hash of
+# everything except the grading columns below instead.
+LEGACY_RETROSPECTIVE_MANIFEST_SHA256 = {
+    1: "dc3eada6dca75f089d73f6e0724d8e810db83ecb57b6e3730048b75a0e05195e",
+    2: "278787fad6587a6714c598e3656c52b164b74323c0ffe543beb30edc1c633060",
+    3: "dc121b8b3d5719cea4b39c33af7c6a42d3fe4064cb59f24eb00c6eab211b1cea",
+}
+LEGACY_CONTENT_SHA256 = {
+    1: "cae46bbaade6b2f69c932c7b7eeaec17092ddfbd15ef95d212f0c408ffda7e62",
+    2: "15874b9fb26e667ec29b6ee01dd00ae7298ed6d9f67f5b57ef1cc10ba4f0b227",
+    3: "e87124e6d43ea725d40ca4f5fb2dd45ba478b0dfe9690c26bfef92cac1f2cf4c",
+    4: "f8716d198565dea0384ebafc8080d2a559e2843b2538f7de9e6802b955bb887a",
+    5: "57a6e08d47c8db3cc9273f656ac2c67c6380a708fb98eff9c8a97b542bbcd220",
+    6: "961434ef11df93f725e5d1a2edbcec2d5ff9b607ce3170057317341fbc62647d",
+}
+_NO_BETS = {"bets": 0, "settled_bets": 0, "void_bets": 0, "open_bets": 0, "wins": 0, "losses": 0,
+            "stake_units": 0.0, "net_units": 0.0, "roi": None}
+_LOST_3 = {"bets": 3, "settled_bets": 3, "void_bets": 0, "open_bets": 0, "wins": 0, "losses": 3,
+           "stake_units": 3.0, "net_units": -3.0, "roi": -1.0}
+_LOST_6 = {"bets": 6, "settled_bets": 6, "void_bets": 0, "open_bets": 0, "wins": 0, "losses": 6,
+           "stake_units": 6.0, "net_units": -6.0, "roi": -1.0}
+LEGACY_FIRST_TD_WEEK_SUMMARY = {1: _NO_BETS, 2: _NO_BETS, 3: _NO_BETS, 4: _LOST_3, 5: _LOST_3, 6: _NO_BETS}
+LEGACY_FIRST_TD_SEASON_SUMMARY = {5: _LOST_6, 6: _LOST_6}
+_SUMMARY_KEYS = tuple(_NO_BETS)
+_GRADING_COLUMN_PREFIXES = ("scored_", "settlement_status_")
+
+
+def _content_sha256(path) -> str:
+    frame = pd.read_csv(path)
+    keep = [c for c in frame.columns if not c.startswith(_GRADING_COLUMN_PREFIXES) and c != "status"]
+    return hashlib.sha256(frame[keep].to_csv(index=False, lineterminator="\n").encode("utf-8")).hexdigest()
+
+
+def _legacy_summary(frame) -> dict:
+    summary = page._tracker_for_market(frame, "first")["summary"]
+    return {key: summary[key] for key in _SUMMARY_KEYS}
+
+
+def test_week_1_to_6_releases_are_unchanged():
+    from publishing.td_releases import canonical_td_releases
+
+    releases = canonical_td_releases(page._DIR)
+    for week in range(1, 7):
+        entry = releases[(2026, week)]
+        assert hashlib.sha256(entry["csv_path"].read_bytes()).hexdigest() == entry["csv_sha256"]
+        assert _content_sha256(entry["csv_path"]) == LEGACY_CONTENT_SHA256[week], f"Week {week} prices or probabilities moved"
+    for week, expected in LEGACY_RETROSPECTIVE_MANIFEST_SHA256.items():
+        assert releases[(2026, week)]["csv_sha256"] == expected
+
+
+def test_week_1_to_6_legacy_first_td_tracker_summaries_are_unchanged():
+    from publishing.td_releases import canonical_td_releases
+
+    releases = canonical_td_releases(page._DIR)
+    for week, expected in LEGACY_FIRST_TD_WEEK_SUMMARY.items():
+        frame = page.priced_rows(read_td_release(releases[(2026, week)]["csv_path"]))
+        assert _legacy_summary(frame) == expected, f"Week {week} legacy First TD record moved"
+    paths = tuple(str(releases[(2026, week)]["csv_path"]) for week in range(1, 7))
+    for through, expected in LEGACY_FIRST_TD_SEASON_SUMMARY.items():
+        frame = page.tracker.aggregate_published_csvs(paths)
+        frame = frame[pd.to_numeric(frame["week"], errors="coerce").le(through)]
+        assert _legacy_summary(frame) == expected
+
+
+def test_legacy_cards_keep_their_old_rule_text(tmp_path):
+    at = _render(tmp_path, week=4)
+    at.segmented_control(key="atd_view_2026_4").set_value("First TD").run()
+    at.selectbox(key="atd_props_matchup_2026_4").set_value(page.RECOMMENDED_LABEL).run()
+    assert not at.exception, at.exception
+    captions = " ".join(str(c.value) for c in at.caption)
+    assert "fixed rule: +3.0pp value gap AND a positive expected return" in captions
+    assert "#### Best-value picks" not in " ".join(str(item.value) for item in at.markdown)

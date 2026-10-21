@@ -143,14 +143,20 @@ def _freeze_ledger(
     source_extra: Mapping[str, str] | None = None,
     decision_extra: Mapping[str, object] | None = None,
     result_extra: Mapping[str, object] | None = None,
+    skip_started_games: bool = False,
 ) -> dict:
     """Freeze one decision per priced game of a live release into a week ledger.
 
     A game with published First TD prices is locked even when it has zero
-    selections. An existing game decision is immutable and is skipped before any
-    time check, because a game that already kicked off was locked before kickoff.
-    Games without prices remain available for a later pregame release. The
-    function is idempotent. ``decide_game`` is the only strategy-specific step.
+    selections. An existing game decision is immutable: it is skipped before any
+    time check (a game that already kicked off was locked before kickoff), and a
+    later release's re-priced rows for it are never compared or applied. Only a
+    re-run on the same release is checked, and it raises when a frozen game's
+    inputs changed. A new game is frozen only before its kickoff; at or past
+    kickoff it raises, or with ``skip_started_games`` it is refused and reported
+    while the other games are still frozen (slate by slate). Games without
+    prices remain available for a later pregame release. The function is
+    idempotent. ``decide_game`` is the only strategy-specific step.
     """
     name = f"First TD {version}"
     source = Path(release_path).resolve()
@@ -195,6 +201,7 @@ def _freeze_ledger(
         }
     locked = {str(item["game_id"]): item for item in payload["games"]}
     added = []
+    refused_started: list[str] = []
     skipped = 0
     all_selected = 0
     all_zero = 0
@@ -206,6 +213,16 @@ def _freeze_ledger(
         if priced.empty:
             continue
         game_id = str(game_id)
+        existing = locked.get(game_id)
+        if existing and existing.get("source_release") != csv_rel:
+            # Frozen from an earlier release. Later pastes re-price and re-score the
+            # slate, so the frozen decision stands and is not compared with new rows.
+            if published_at < _timestamp(
+                existing.get("release_published_at_et"), label="prior release", version=version,
+            ):
+                raise PublicationError(f"{name} snapshot arrived out of order for {game_id}")
+            skipped += 1
+            continue
         kickoff_value = kickoff_by_game.get(game_id)
         if kickoff_value is None:
             raise PublicationError(f"{name} is missing kickoff time for {game_id}")
@@ -233,19 +250,16 @@ def _freeze_ledger(
             "model_mass_sha256": str(mass["record_sha256"]),
             **dict(source_extra or {}),
         }))
-        existing = locked.get(game_id)
         if existing:
-            if existing.get("source_release") == csv_rel:
-                if existing.get("frozen_inputs_sha256") != source_hash:
-                    raise PublicationError(f"Frozen {name} inputs changed for {game_id}")
-            elif published_at < _timestamp(
-                existing.get("release_published_at_et"), label="prior release", version=version,
-            ):
-                raise PublicationError(f"{name} snapshot arrived out of order for {game_id}")
+            if existing.get("frozen_inputs_sha256") != source_hash:
+                raise PublicationError(f"Frozen {name} inputs changed for {game_id}")
             skipped += 1
             continue
 
         if not published_at < kickoff or not frozen_at < kickoff:
+            if skip_started_games:
+                refused_started.append(game_id)
+                continue
             raise PublicationError(f"{name} prices must be frozen before {game_id} kickoff")
         if "snapped_at_et" not in priced or priced.snapped_at_et.isna().any():
             raise PublicationError(f"{name} is missing quote capture time for {game_id}")
@@ -306,6 +320,7 @@ def _freeze_ledger(
         "skipped_locked_games": skipped,
         "selected_bets": all_selected,
         "zero_pick_games": all_zero,
+        **({"refused_started_games": refused_started} if skip_started_games else {}),
         **dict(result_extra or {}),
     }
 
@@ -511,8 +526,8 @@ def evaluate_first_td_best_value_v3(
     unavailable), the decimal price, ``expected_return = q * decimal - 1``, an
     ``exclusion`` reason (empty when the row is simply not the best value) and
     ``pick`` for the single selected player. Exclusions keep v2's reasons and add
-    ``model_mass_mismatch`` and ``price_above_cap``. No complete-pool or no-vig
-    requirement applies.
+    ``model_mass_mismatch`` and ``price_above_cap`` (only when the params set a cap).
+    No complete-pool or no-vig requirement applies.
     """
     intact = first_td_v3.frozen_mass_is_intact(mass)
     derived = first_td_v3.derived_probabilities(mass, params) if intact else {}
@@ -557,7 +572,7 @@ def evaluate_first_td_best_value_v3(
                 reason = "invalid_american_price"
         expected_return = q * decimal - 1.0 if decimal is not None and math.isfinite(q) else float("nan")
         if not reason and priced and expected_return > 0.0:
-            if float(price) > params.price_cap:
+            if params.price_cap is not None and float(price) > params.price_cap:
                 reason = "price_above_cap"
             else:
                 candidates.append((-expected_return, -q, player_id, position))
@@ -631,9 +646,12 @@ def freeze_first_td_best_value_v3(
     """Freeze the v3 best-value pick (at most one per game) for this live release.
 
     The ledger folder holds a copy of the model repository's params file; its
-    digest is part of every game's ``frozen_inputs_sha256``. A game already
-    locked is skipped, a changed input or params copy raises "inputs changed",
-    and a game at or past kickoff is refused (never retroactive).
+    digest is part of every game's ``frozen_inputs_sha256``. It works slate by
+    slate: run it on each new release of the week and it adds the newly priced
+    games that have not kicked off, leaves every frozen game untouched, raises
+    "inputs changed" if a frozen game's inputs or the params copy changed, and
+    refuses (lists in ``refused_started_games``, never freezes) any new game at
+    or past kickoff.
     """
     ledger_dir = Path(ledger_root) if ledger_root is not None else DEFAULT_LEDGER_ROOT_V3
     params = first_td_v3.load_params(
@@ -661,6 +679,7 @@ def freeze_first_td_best_value_v3(
         source_extra={"params_sha256": params.sha256},
         decision_extra={"params_sha256": params.sha256},
         result_extra={"params_sha256": params.sha256},
+        skip_started_games=True,
     )
 
 

@@ -142,16 +142,30 @@ def qualifies_first_td_actual_ev(model_probability, book_price):
     return (valid_model & valid_price & model.mul(decimal).sub(1.0).gt(0.0)).fillna(False).astype(bool)
 
 
-def first_td_v3_price_cap() -> int | None:
-    """The frozen First TD v3 long-shot cap (an American price) from params.json.
+def first_td_v3_cap_state() -> tuple[bool, int | None]:
+    """(params available, cap) for the frozen First TD v3 params copy.
 
-    None while the frozen params copy is missing or invalid, so every v3 check
-    fails closed instead of guessing a cap.
+    The cap is the longest allowed American price. (True, None) means the params
+    set no cap; (False, None) means the params copy is missing or invalid, so
+    every v3 check fails closed instead of guessing a cap.
     """
     try:
-        return first_td_v3.load_params().price_cap
+        return True, first_td_v3.load_params().price_cap
     except PublicationError:
-        return None
+        return False, None
+
+
+def first_td_v3_price_cap() -> int | None:
+    """The frozen v3 price cap, or None when there is none or the params are unavailable."""
+    return first_td_v3_cap_state()[1]
+
+
+def first_td_v3_cap_phrase() -> str:
+    """Plain-language cap clause for copy, e.g. " and the price is +599 or shorter"."""
+    available, cap = first_td_v3_cap_state()
+    if not available:
+        return " and the price is within the frozen cap"
+    return f" and the price is +{cap} or shorter" if cap is not None else ""
 
 
 def __getattr__(name: str):
@@ -162,21 +176,27 @@ def __getattr__(name: str):
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
-def qualifies_first_td_best_value_v3(model_probability, book_price, *, price_cap=None):
+_PARAMS_CAP = object()
+
+
+def qualifies_first_td_best_value_v3(model_probability, book_price, *, price_cap=_PARAMS_CAP):
     """First TD v3 pick test for one quote: strictly positive expected return at
     the actual captured price, and a price no longer than the frozen cap.
 
     The one-pick-per-game choice among qualifiers is made by the freeze
     (publishing.first_td_strategy); this is the per-quote part of the rule.
-    `price_cap` defaults to the cap in the frozen params copy; with no cap
-    available nothing qualifies.
+    `price_cap` defaults to the cap in the frozen params copy; None means no
+    cap. With the params copy unavailable nothing qualifies.
     """
-    cap = first_td_v3_price_cap() if price_cap is None else price_cap
     qualified = qualifies_first_td_actual_ev(model_probability, book_price)
-    if cap is None:
-        return qualified & False
+    if price_cap is _PARAMS_CAP:
+        available, price_cap = first_td_v3_cap_state()
+        if not available:
+            return qualified & False
+    if price_cap is None:
+        return qualified
     price = pd.to_numeric(book_price, errors="coerce").astype("float64")
-    return (qualified & price.le(float(cap))).fillna(False).astype(bool)
+    return (qualified & price.le(float(price_cap))).fillna(False).astype(bool)
 
 
 def rule_description(market: str) -> str:
@@ -191,12 +211,10 @@ def rule_description(market: str) -> str:
             f"price, with that price at least {100 * TWO_PLUS_PRICE_FLOOR:.0f}%"
         )
     if market == "first":
-        cap = first_td_v3_price_cap()
-        cap_text = f"+{cap}" if cap else "the frozen cap"
         return (
             "one pick per game: the player with the highest expected return at the "
-            "book's actual price, only if that return is above zero and the price is "
-            f"{cap_text} or shorter"
+            "book's actual price, only if that return is above zero"
+            + first_td_v3_cap_phrase()
         )
     if market == "first_legacy":
         return (

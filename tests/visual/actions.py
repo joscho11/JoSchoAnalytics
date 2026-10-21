@@ -196,6 +196,11 @@ _W06_MATCHUP_VIEWS = {
     "atd_w06_first_buf_lv": ("First TD", "BUF vs LV"),
     "atd_w06_two_plus_buf_lv": ("2+ TD", "BUF vs LV"),
 }
+# Week 7 is the first board under the First TD v3 rule; the picker is the same combobox.
+_W07_MATCHUP_VIEWS = {
+    "atd_w07_first_cin_bal": ("First TD", "CIN vs BAL"),
+}
+_W06_MATCHUP_VIEWS = {**_W06_MATCHUP_VIEWS, **_W07_MATCHUP_VIEWS}
 for _name, (_market, _matchup) in _W06_MATCHUP_VIEWS.items():
     ACTIONS[_name] = (
         lambda page, market=_market, matchup=_matchup:

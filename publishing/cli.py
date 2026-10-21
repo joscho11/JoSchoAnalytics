@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -50,9 +51,11 @@ def _now_et() -> str:
 def _freeze_first_td_v3(root: Path, season: int, week: int) -> dict:
     """Freeze the v3 best-value picks for the active TD release of one week.
 
-    Freeze time is now (Eastern). A game that has not been frozen yet is
-    refused at or after its kickoff, so a decision is never made retroactively.
-    The frozen params copy must sit in the v3 ledger folder.
+    Run it on each new release of the week (slate by slate). Freeze time is now
+    (Eastern). Newly priced games that have not kicked off are added; frozen
+    games stay untouched; a game not yet frozen is refused at or after its
+    kickoff and listed, so a decision is never made retroactively. The frozen
+    params copy must sit in the v3 ledger folder.
     """
     if not uses_first_td_v3(season, week):
         raise PublicationError("First TD v3 tracking starts with the 2026 Week 7 board")
@@ -355,7 +358,14 @@ def main(argv=None) -> int:
                     )
                 )
         elif args.command == "freeze-first-td-v3":
-            _print(_freeze_first_td_v3(root, args.season, args.week))
+            result = _freeze_first_td_v3(root, args.season, args.week)
+            _print(result)
+            if result.get("refused_started_games"):
+                print(
+                    "WARNING: not frozen, already at or past kickoff: "
+                    + ", ".join(result["refused_started_games"]),
+                    file=sys.stderr,
+                )
         elif args.command == "bootstrap":
             _print(_bootstrap(root))
         return 0
