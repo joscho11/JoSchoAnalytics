@@ -1091,99 +1091,99 @@
       "pending_reason": null,
       "player_settlements": {
         "00-0032464": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0033090": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0035676": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0036275": {
           "scored_first": 1.0,
           "status": "settled"
         },
         "00-0036290": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0036875": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0038564": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0038621": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0039021": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0039851": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0039918": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0039919": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0040126": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0040131": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0040277": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0040556": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0040563": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0040734": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0040735": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0041051": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0041395": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0041558": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         }
       },
       "scorer_name": "D'Andre Swift",
       "scorer_on_board": true,
       "scorer_player_id": "00-0036275",
       "scorer_team": "CHI",
-      "settlements_updated_at": "2026-10-23T04:54:30Z",
+      "settlements_updated_at": "2026-10-23T11:43:22Z",
       "source_hashes": {
         "play_by_play": "b4816e26f748e33c2505bad9dad0c0fa91b537da3647ae36b8e5331dce4c1d7b",
         "player_identity": "4ae0083edbd034aaa6093f41de6c767c489336e43b86fc2289e2612b95a9ce9a",
