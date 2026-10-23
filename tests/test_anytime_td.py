@@ -196,6 +196,7 @@ def test_week07_first_td_shows_rankings_and_the_best_value_card(tmp_path, v3_par
     assert 1 <= len(picks) <= 6 and picks["Book First TD Odds"].str.contains("implied").all()
     evs = _ev_numbers(picks)
     assert evs and evs == sorted(evs, reverse=True) and all(value >= 0 for value in evs)
+    assert picks["#"].tolist() == list(range(1, len(picks) + 1))   # numbered within the pick list
 
 
 def test_week07_first_td_leaves_v3_cells_blank_with_a_warning_when_params_are_missing(tmp_path, monkeypatch):
@@ -630,6 +631,22 @@ def test_first_td_display_v3_uses_the_sharpened_probability_and_game_pick():
     assert table.loc["Two · AAA", "Expected Return"] == "" and table.loc["Two · AAA", "Model First TD Odds"] == ""
     # the highlight is the selector's game-level pick, not an expected-return threshold
     assert table["_candidate"].to_dict() == {"One · AAA": False, "Two · AAA": False, "Three · AAA": True}
+
+
+def test_first_td_display_explains_a_positive_return_that_the_cap_rules_out():
+    df = pd.DataFrame({
+        "player_id": ["p1", "p2"],
+        "player_display_name": ["Long", "Pick"],
+        "team": ["AAA"] * 2, "position": ["WR"] * 2, "opponent_team": ["BBB"] * 2,
+        "game_id": ["2026_07_AAA_BBB"] * 2,
+        "p_first": [0.05, 0.2], "p_first_v3": [0.05, 0.2],
+        "first_td_v3_pick": [False, True], "first_td_v3_over_cap": [True, False],
+        "bet_eligible": [True, True], "first_amer": [4500, 450], "scored_first": [None, None],
+    })
+    table = page._first_td_display(df).set_index("Player")
+    assert table.loc["Long · AAA", "Expected Return"] == "+130% · over cap"
+    assert table.loc["Pick · AAA", "Expected Return"] == "+10%"
+    assert not table.loc["Long · AAA", "_candidate"] and table.loc["Pick · AAA", "_candidate"]
 
 
 def test_first_td_style_colors_expected_return_and_marks_the_pick():

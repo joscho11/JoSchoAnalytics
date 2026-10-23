@@ -514,6 +514,12 @@ def test_v3_attach_adds_probability_and_the_single_game_pick(tmp_path):
     assert out.p_first_v3.iloc[:3].tolist() == [0.5, 0.25, 0.25]   # unpriced player still has a chance
     assert out.p_first_v3.iloc[3:].isna().all()                      # no intact mass: blank
     assert out.first_td_v3_pick.tolist() == [False, True, False, False]
+    assert out.first_td_v3_over_cap.tolist() == [False, False, False, False]
+    capped = strategy.attach_first_td_v3(
+        board, metadata=metadata, params_path=_write_params(tmp_path / "cap.json", k=1.0, p_offense=1.0, cap=400),
+    )
+    assert capped.first_td_v3_over_cap.tolist() == [False, True, False, False]   # b is +500, positive, over +400
+    assert capped.first_td_v3_pick.tolist() == [False, False, False, False]
     assert "p_first_v3" not in board.columns                         # input untouched
     with pytest.raises(PublicationError, match="not found"):
         strategy.attach_first_td_v3(board, metadata=metadata, params_path=tmp_path / "nope.json")

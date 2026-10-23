@@ -726,13 +726,14 @@ def attach_first_td_v3(
     metadata: Mapping | None = None,
     params_path: str | Path | None = None,
 ) -> pd.DataFrame:
-    """Add ``p_first_v3`` and ``first_td_v3_pick`` to a release board for display.
+    """Add ``p_first_v3``, ``first_td_v3_pick`` and ``first_td_v3_over_cap`` for display.
 
     ``p_first_v3`` is each player's v3 probability from the release's frozen
     candidate mass (NaN where a game has no intact mass or the release's own
     ``p_first_v3`` disagrees). ``first_td_v3_pick`` marks the one player per game
     the freeze rule would select, so the highlight matches the tracked pick even
-    when a matchup is shown one team at a time. Raises PublicationError when the
+    when a matchup is shown one team at a time. ``first_td_v3_over_cap`` marks
+    positive-return quotes the price cap rules out. Raises PublicationError when the
     params copy or the release metadata cannot be read; the caller leaves the
     cells blank.
     """
@@ -749,13 +750,16 @@ def attach_first_td_v3(
     out = frame.copy()
     q_values = np.full(len(out), np.nan)
     picks = np.zeros(len(out), dtype=bool)
+    over_cap = np.zeros(len(out), dtype=bool)
     if "game_id" in out and len(out):
         for game_id, positions in out.groupby(out.game_id.astype(str), sort=False).indices.items():
             table = evaluate_first_td_best_value_v3(out.iloc[positions], masses.get(game_id), params)
             q_values[positions] = table.q.to_numpy()
             picks[positions] = table.pick.to_numpy()
+            over_cap[positions] = table.exclusion.eq("price_above_cap").to_numpy()
     out["p_first_v3"] = q_values
     out["first_td_v3_pick"] = picks
+    out["first_td_v3_over_cap"] = over_cap
     return out
 
 

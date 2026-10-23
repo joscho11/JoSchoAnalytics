@@ -1,0 +1,129 @@
+{
+  "cap_american": 599,
+  "cap_rule": {
+    "all_rows_median_r": 1.3217982560365793,
+    "band_median_r": [
+      1.3699103704432025,
+      1.3242284241716782,
+      1.2477899210681989,
+      1.3697385028953015,
+      1.3626857010704854,
+      1.2884375713275302
+    ],
+    "band_n": [
+      38,
+      73,
+      109,
+      147,
+      131,
+      300
+    ],
+    "bands": [
+      "<= +599",
+      "+600 to +999",
+      "+1000 to +1499",
+      "+1500 to +2499",
+      "+2500 to +3999",
+      ">= +4000"
+    ],
+    "floor_applied": true,
+    "games": 35,
+    "min_band_rows": 30,
+    "price_rows": 798,
+    "price_rule": "price <= cap_american (American odds, inclusive); null means no cap",
+    "run_bands": [],
+    "weeks": [
+      5,
+      6,
+      7
+    ]
+  },
+  "fit": {
+    "bootstrap": {
+      "resamples": 2000,
+      "seed": 0,
+      "unit": "game"
+    },
+    "k_grid": [
+      0.8,
+      2.5,
+      0.01
+    ],
+    "lambda_sources": {
+      "34_feature": "first_td/artifacts/walk_forward_lambda_2021_2025.parquet",
+      "ngs_only": "outputs/research/td_ngs_production_20261002/walkforward_predictions.parquet (ngs_only, active rows)"
+    },
+    "metric": "mean per-game multinomial log loss on the first TD winner, residual bucket kept",
+    "p_offense": "build_baseline.walk_forward_constants per season; 2026 = constant_as_of(labels, 2026)",
+    "train_seasons_34_feature": [
+      2021,
+      2022,
+      2023,
+      2024
+    ],
+    "train_seasons_ngs_only": [
+      2023,
+      2024
+    ]
+  },
+  "k": 1.1,
+  "k_fit": {
+    "34_feature_2021_2024": 1.1,
+    "ngs_only_2023_2024": 1.39
+  },
+  "notebook": "first_td/notebooks/EXP_first_td_v3_sharpen.ipynb",
+  "notebook_sha256": "cc1273984862c26f447c4ad26659b110cab20f594104224d6cee3a82be68955b",
+  "notebook_sha256_scope": "code cells 1 to 6 (setup through the cap) of the unexecuted notebook, joined by newlines",
+  "p_offense_2026": 0.9397384877771461,
+  "schema_version": 1,
+  "ship_gate": {
+    "checks": {
+      "1": {
+        "ci95_diff": [
+          -0.009024186302729064,
+          0.00525810398686325
+        ],
+        "diff": -0.0019839960400174694,
+        "family": "34-feature",
+        "k": 1.1,
+        "logloss_k": 2.8331228322651127,
+        "logloss_k1": 2.83510682830513,
+        "n_games": 256,
+        "passed": true,
+        "share_boot_better": 0.723
+      },
+      "2": {
+        "ci95_diff": [
+          -0.029579838480010393,
+          0.02363550692190379
+        ],
+        "diff": -0.0033433173653912725,
+        "family": "ngs_only",
+        "k": 1.39,
+        "logloss_k": 2.8251674496872337,
+        "logloss_k1": 2.8285107670526255,
+        "n_games": 255,
+        "passed": true,
+        "share_boot_better": 0.6
+      },
+      "3": {
+        "ci95_diff": [
+          -0.012238968802298422,
+          0.001410137521253477
+        ],
+        "diff": -0.005539533925604694,
+        "family": "ngs_only",
+        "k": 1.1,
+        "logloss_k": 2.822971233127021,
+        "logloss_k1": 2.8285107670526255,
+        "n_games": 255,
+        "passed": true,
+        "share_boot_better": 0.9425
+      }
+    },
+    "holdout_season": 2025,
+    "passed": true,
+    "rule": "all three checks must have mean per-game log loss below k = 1; otherwise k = 1"
+  },
+  "strategy_id": "first_td_best_value_v3"
+}

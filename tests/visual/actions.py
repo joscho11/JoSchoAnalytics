@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import re
+import time
 from pathlib import Path
 
 from playwright_support import wait_for_app
@@ -145,6 +146,19 @@ def atd_two_plus_view(page) -> None:
 def atd_select_week06_matchup(page, market: str, matchup: str) -> None:
     _click_segment(page, market)
     combo = page.get_by_role("combobox", name="Matchup")
+    if market != "Anytime TD":
+        # The 2+ TD / First TD picker replaces the Anytime one on the next rerun and
+        # starts on Recommended or All results. Wait for it, or a slow runner drives
+        # the stale Anytime picker and the new one then resets the choice.
+        def picker_value():
+            try:
+                return combo.input_value(timeout=1_500)
+            except Exception:  # the picker is briefly absent while the page reruns
+                return None
+
+        deadline = time.monotonic() + 30
+        while picker_value() not in ("Recommended", "All results") and time.monotonic() < deadline:
+            page.wait_for_timeout(250)
     combo.click()
     combo.press("ArrowDown")
     combo.fill(matchup)

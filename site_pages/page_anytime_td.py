@@ -67,9 +67,10 @@ PHONE_WIDTHS = {
     "ATTD Value Gap": 190,
     "Hit": 150,
     # First TD book cells read "+1200 · 7.7% implied" (20 characters), wider than
-    # the Anytime "+89.1k · 100.0%" worst case; Expected Return is a short "+12%".
+    # the Anytime "+89.1k · 100.0%" worst case; Expected Return is a short "+12%" that
+    # may carry a tag such as " · over cap".
     "Book First TD Odds": 176,
-    "Expected Return": 96,
+    "Expected Return": 140,
 }
 TWO_PLUS_DESKTOP_COLS = [
     "#", "Player", "Pos", "Opp", "Model 2+ TD Odds", "Book 2+ TD Odds",
@@ -1235,6 +1236,18 @@ def _signed_pct(value) -> str:
     return f"{rounded:+d}%" if rounded else "0%"
 
 
+def _first_td_tags(ranked: pd.DataFrame, uses_v3: bool) -> list[str]:
+    """Eligibility tags, plus " · over cap" on v3 quotes the price cap rules out.
+
+    A positive expected return that is not highlighted needs a reason on the row.
+    """
+    tags = _eligibility_tags(ranked)
+    if uses_v3 and "first_td_v3_over_cap" in ranked:
+        over = ranked["first_td_v3_over_cap"].fillna(False).astype(bool).to_numpy()
+        tags = [" · over cap" if flag and not tag else tag for flag, tag in zip(over, tags)]
+    return tags
+
+
 def _first_td_display(df: pd.DataFrame, *, include_unpriced: bool = False) -> pd.DataFrame:
     """First TD is a competing-risk allocation, not a per-player marginal price.
 
@@ -1309,7 +1322,7 @@ def _first_td_display(df: pd.DataFrame, *, include_unpriced: bool = False) -> pd
         "Book First TD Odds": [value or "Not implemented yet" for value in book_desktop],
         "Expected Return": [
             _with_tag(value, tag)
-            for value, tag in zip(expected_return, _eligibility_tags(ranked))
+            for value, tag in zip(expected_return, _first_td_tags(ranked, uses_v3))
         ],
         "Hit": hit,
         "_p": ranked["_q"].astype(float),
@@ -1679,11 +1692,12 @@ def _first_td_column_config() -> dict:
         ),
         "Expected Return": st.column_config.TextColumn(
             "Expected Return",
-            width=140,
+            width=170,
             help=(
                 "The model's estimate of average profit per unit staked at the quoted DraftKings price: "
                 "model chance times the payout, minus 1. First TD prices carry a large built-in margin, "
-                "so most players show a negative number. It is an estimate, not a promise."
+                "so most players show a negative number. A row tagged over cap has a positive estimate but a "
+                "price longer than the cap, so it is not picked. It is an estimate, not a promise."
             ),
         ),
         "Hit": st.column_config.TextColumn(
@@ -1729,6 +1743,7 @@ def _attach_first_td_v3(raw: pd.DataFrame, source: Path, meta: dict) -> tuple[pd
         blank = raw.copy()
         blank["p_first_v3"] = float("nan")
         blank["first_td_v3_pick"] = False
+        blank["first_td_v3_over_cap"] = False
         return blank, (
             "The sharpened First TD probabilities are unavailable for this release, so the Model and "
             "Expected Return cells and the picks are blank. DraftKings prices are still shown."
@@ -1885,6 +1900,8 @@ def _board(
         phone_config = _phone_column_config()
     if recommended_only:
         table = table[table["_candidate"]].reset_index(drop=True)
+        # "#" is the row number in this list, so a one-row pick list starts at 1.
+        table["#"] = range(1, len(table) + 1)
     if table.empty:
         return 0
     if phone_show_opp and "Opp" not in phone_cols:
