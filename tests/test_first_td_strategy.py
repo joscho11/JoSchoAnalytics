@@ -766,3 +766,79 @@ def test_v3_freeze_cli_freezes_the_active_release_and_reports_errors(tmp_path, m
     # tracking starts with Week 7
     assert cli.main(["--root", str(tmp_path), "freeze-first-td-v3", "--season", "2026", "--week", "6"]) == 1
     assert "starts with the 2026 Week 7" in capsys.readouterr().out
+
+
+# ---------------------------------------------------------------------------
+# A week with several releases: frozen picks stay put and settle from the active release
+# ---------------------------------------------------------------------------
+
+def test_v3_attach_follows_the_frozen_pick_for_frozen_games_only(tmp_path):
+    params_path = _write_params(tmp_path / "params.json", k=1.0, p_offense=1.0, cap=2500)
+    board = pd.concat([_rows("g1", G1), _rows("g2", G2)], ignore_index=True)
+    metadata = {"first_td_candidate_mass": {
+        "g1": _record("g1", {pid: lam for pid, lam, *_ in G1}),
+        "g2": _record("g2", {pid: lam for pid, lam, *_ in G2}),
+    }}
+    live = strategy.attach_first_td_v3(board, metadata=metadata, params_path=params_path)
+    assert live[live.first_td_v3_pick].player_id.tolist() == ["b", "e"]
+    # g1 was frozen with "c" from an earlier release; g2 is not frozen yet (live rule applies)
+    frozen = strategy.attach_first_td_v3(
+        board, metadata=metadata, params_path=params_path, frozen_picks={"g1": frozenset({"c"})},
+    )
+    assert frozen[frozen.first_td_v3_pick].player_id.tolist() == ["c", "e"]
+    # a frozen zero-pick game highlights nobody, even if a later paste would pick someone
+    none = strategy.attach_first_td_v3(
+        board, metadata=metadata, params_path=params_path, frozen_picks={"g1": frozenset(), "g2": frozenset()},
+    )
+    assert not none.first_td_v3_pick.any()
+
+
+def test_v3_frozen_pick_ids_come_from_the_verified_ledger(tmp_path):
+    _freeze(tmp_path, _first_release(tmp_path))
+    assert strategy.frozen_pick_ids_v3(2026, 7, ledger_root=_v3_dir(tmp_path)) == {
+        "g1": frozenset({"b"}), "g2": frozenset({"e"}), "g3": frozenset(),
+    }
+    assert strategy.frozen_pick_ids_v3(2026, 8, ledger_root=_v3_dir(tmp_path)) == {}
+    ledger = _ledger(tmp_path)
+    ledger["games"][0]["bets"] = []                      # edited by hand: checksum no longer matches
+    _ledger_file(tmp_path).write_text(json.dumps(ledger), encoding="utf-8")
+    with pytest.raises(PublicationError, match="checksum"):
+        strategy.frozen_pick_ids_v3(2026, 7, ledger_root=_v3_dir(tmp_path))
+
+
+def test_v3_picks_settle_from_the_active_release_and_unfinished_games_stay_open(tmp_path):
+    from site_pages import attd_tracker as tracker
+
+    _freeze(tmp_path, _first_release(tmp_path))        # frozen from the first release: picks b (g1) and e (g2)
+    before = _ledger_file(tmp_path).read_bytes()
+    # A later paste becomes the active release. It re-scores the slate, and the grader has
+    # settled g1 (b scored first) while g2 has not been played.
+    second = _write_release(
+        tmp_path, "slate_b",
+        {"g1": [("a", 0.4, 120, True), ("b", 0.3, 450, True)], "g2": G2, "g3": G3},
+        publish="2026-10-21T09:00:00", snapped="2026-10-21 08:52:00", kickoffs={g: FAR for g in ("g1", "g2", "g3")},
+    )
+    board = pd.read_csv(second)
+    board["scored_first"] = float("nan")
+    board["settlement_status_first"] = "open"
+    in_g1 = board.game_id.eq("g1")
+    board.loc[in_g1, "settlement_status_first"] = "settled"
+    board.loc[in_g1, "scored_first"] = board.loc[in_g1, "player_id"].eq("b").astype(float)
+    board.to_csv(second, index=False, lineterminator="\n")
+    _register(tmp_path, second)
+
+    bets, _ = strategy.load_first_td_best_value_v3(ledger_root=_v3_dir(tmp_path), releases={(2026, 7): second})
+    by_player = bets.set_index("player_id")
+    assert by_player.loc["b", "settlement_status_first"] == "settled" and by_player.loc["b", "scored_first"] == 1.0
+    assert by_player.loc["e", "settlement_status_first"] == "open" and pd.isna(by_player.loc["e", "scored_first"])
+    paper = tracker.season_tracker(
+        bets, model_probability_col="p_first_v3", book_probability_col=None, book_price_col="first_amer",
+        outcome_col="scored_first", eligibility_col="bet_eligible_first_best_value_v3",
+        qualifies=lambda f: tracker.qualifies_first_td_best_value_v3(
+            f["_model_probability"], f["_book_price"], price_cap=2500,
+        ),
+    )["summary"]
+    assert (paper["wins"], paper["losses"], paper["open_bets"]) == (1, 0, 1)
+    assert paper["net_units"] == pytest.approx(5.0)        # b was frozen at +500
+    # the frozen ledger never moved while the active release changed underneath it
+    assert _ledger_file(tmp_path).read_bytes() == before

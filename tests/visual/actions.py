@@ -14,6 +14,18 @@ FIXTURE_LEAGUE_ID = "1255197436951932928"
 OFFLINE_LEAGUE_ID = "111111111111111111"
 
 
+def _wait_until_fresh(page) -> None:
+    """Streamlit keeps the previous run's elements, dimmed and marked stale, until the
+    rerun replaces them. A capture taken then shows a half-old page."""
+    try:
+        page.wait_for_function(
+            "() => document.querySelectorAll('[data-stale=\"true\"]').length === 0",
+            timeout=15_000,
+        )
+    except Exception:
+        pass
+
+
 def _click_option(page, label: str) -> None:
     """Streamlit segmented controls flip between button, radio, and button-group."""
     pattern = re.compile(rf"^{re.escape(label)}$")
@@ -22,14 +34,17 @@ def _click_option(page, label: str) -> None:
         if loc.count():
             loc.first.click()
             wait_for_app(page)
+            _wait_until_fresh(page)
             return
     group = page.locator('[data-testid="stButtonGroup"]').filter(has_text=label)
     if group.count():
         group.first.get_by_text(label, exact=True).click()
         wait_for_app(page)
+        _wait_until_fresh(page)
         return
     page.get_by_text(label, exact=True).first.click()
     wait_for_app(page)
+    _wait_until_fresh(page)
 
 
 def _click_segment(page, label: str) -> None:

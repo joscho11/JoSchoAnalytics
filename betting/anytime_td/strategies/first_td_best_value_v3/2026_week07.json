@@ -23,6 +23,27 @@
     },
     {
       "bets": [],
+      "decision_sha256": "8c46e9122da565bba5ea43bd34903ebcaf7ce98803894b5a7fb2fd7968c14186",
+      "decision_status": "frozen",
+      "exclusion_counts": {
+        "identity_history_or_availability_exclusion": 1,
+        "price_above_cap": 3
+      },
+      "frozen_at_et": "2026-10-23T14:07:13.594731-04:00",
+      "frozen_inputs_sha256": "70578fccb68065e8ff81d289b21b9f2f585c6eba44a6e57436476ecaad610375",
+      "game_id": "2026_07_CLE_TEN",
+      "kickoff_et": "2026-10-25T13:00:00-04:00",
+      "params_sha256": "4f07948c1c53bc8f868ae1772e67647b7d478d968595f8f1bf3cf59997242cd0",
+      "quotes_captured_at_et": "2026-10-22T19:36:30-04:00",
+      "release_published_at_et": "2026-10-22T19:47:23.518587-04:00",
+      "selected_bet_count": 0,
+      "source_metadata_sha256": "139a5bdad37b787f52806b9c0cfc9556ab0117b0d7080c8327eb9db9e8343867",
+      "source_model_bundle_sha256": "ec6171e5902a84b5986edd68adca7b8703006c8f8b57b020597dbc29fd0daac7",
+      "source_model_version": "td_product_ngs_44_frozen_2025_v1",
+      "source_release": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week07_ngs_live_thursday_draftkings_week07_20261022T193630ET.csv"
+    },
+    {
+      "bets": [],
       "decision_sha256": "2999755fe77aa1315070743e811bce146a8ecdb5c856e125b35c2c9e75c5eebc",
       "decision_status": "frozen",
       "exclusion_counts": {
@@ -40,6 +61,27 @@
       "source_model_bundle_sha256": "ec6171e5902a84b5986edd68adca7b8703006c8f8b57b020597dbc29fd0daac7",
       "source_model_version": "td_product_ngs_44_frozen_2025_v1",
       "source_release": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week07_ngs_live_draftkings_week07_20261020.csv"
+    },
+    {
+      "bets": [],
+      "decision_sha256": "1cf05b37d9fdcbe1d5d6ee599e8fe4047a4625a917f39ef9b8ee4fadc02de3c3",
+      "decision_status": "frozen",
+      "exclusion_counts": {
+        "identity_history_or_availability_exclusion": 1,
+        "price_above_cap": 4
+      },
+      "frozen_at_et": "2026-10-23T14:07:13.594731-04:00",
+      "frozen_inputs_sha256": "aa857f217d3b10460d962103d16c8d7bce28077d3f8da9f2f8267b9a46f20104",
+      "game_id": "2026_07_DEN_ARI",
+      "kickoff_et": "2026-10-25T16:05:00-04:00",
+      "params_sha256": "4f07948c1c53bc8f868ae1772e67647b7d478d968595f8f1bf3cf59997242cd0",
+      "quotes_captured_at_et": "2026-10-22T19:36:30-04:00",
+      "release_published_at_et": "2026-10-22T19:47:23.518587-04:00",
+      "selected_bet_count": 0,
+      "source_metadata_sha256": "139a5bdad37b787f52806b9c0cfc9556ab0117b0d7080c8327eb9db9e8343867",
+      "source_model_bundle_sha256": "ec6171e5902a84b5986edd68adca7b8703006c8f8b57b020597dbc29fd0daac7",
+      "source_model_version": "td_product_ngs_44_frozen_2025_v1",
+      "source_release": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week07_ngs_live_thursday_draftkings_week07_20261022T193630ET.csv"
     },
     {
       "bets": [],
@@ -63,6 +105,27 @@
     },
     {
       "bets": [],
+      "decision_sha256": "ed12bcb95e19c332d423745cfaefe116b01bf004c0702918b0d57680847b5e06",
+      "decision_status": "frozen",
+      "exclusion_counts": {
+        "identity_history_or_availability_exclusion": 1,
+        "price_above_cap": 2
+      },
+      "frozen_at_et": "2026-10-23T14:07:13.594731-04:00",
+      "frozen_inputs_sha256": "b989cb91142af9ae01329821505892b69992402a63721d8686d155ede43ff6d2",
+      "game_id": "2026_07_IND_MIN",
+      "kickoff_et": "2026-10-25T13:00:00-04:00",
+      "params_sha256": "4f07948c1c53bc8f868ae1772e67647b7d478d968595f8f1bf3cf59997242cd0",
+      "quotes_captured_at_et": "2026-10-22T19:36:30-04:00",
+      "release_published_at_et": "2026-10-22T19:47:23.518587-04:00",
+      "selected_bet_count": 0,
+      "source_metadata_sha256": "139a5bdad37b787f52806b9c0cfc9556ab0117b0d7080c8327eb9db9e8343867",
+      "source_model_bundle_sha256": "ec6171e5902a84b5986edd68adca7b8703006c8f8b57b020597dbc29fd0daac7",
+      "source_model_version": "td_product_ngs_44_frozen_2025_v1",
+      "source_release": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week07_ngs_live_thursday_draftkings_week07_20261022T193630ET.csv"
+    },
+    {
+      "bets": [],
       "decision_sha256": "136b7fe721dd8762e6007391d4935f7d2eff5ebf040a13b7e890435324a45e78",
       "decision_status": "frozen",
       "exclusion_counts": {
@@ -80,6 +143,60 @@
       "source_model_bundle_sha256": "ec6171e5902a84b5986edd68adca7b8703006c8f8b57b020597dbc29fd0daac7",
       "source_model_version": "td_product_ngs_44_frozen_2025_v1",
       "source_release": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week07_ngs_live_draftkings_week07_20261020.csv"
+    },
+    {
+      "bets": [
+        {
+          "decimal_odds": 5.75,
+          "expected_return": 0.10939017378419269,
+          "first_amer": 475,
+          "opponent_team": "LV",
+          "p_first_v3": 0.1929374215276857,
+          "player_display_name": "Kyren Williams",
+          "player_id": "00-0037840",
+          "stake_units": 1.0,
+          "team": "LA"
+        }
+      ],
+      "decision_sha256": "b41ea30a3f3c7abd555b2a573aa497f4ea5e58b548d5de1c0135434926ec0485",
+      "decision_status": "frozen",
+      "exclusion_counts": {
+        "identity_history_or_availability_exclusion": 2,
+        "price_above_cap": 2
+      },
+      "frozen_at_et": "2026-10-23T14:07:13.594731-04:00",
+      "frozen_inputs_sha256": "8be563124e2ac9a4182943403c1a77f31308396c1b3416c44814bec19100a110",
+      "game_id": "2026_07_LA_LV",
+      "kickoff_et": "2026-10-25T16:25:00-04:00",
+      "params_sha256": "4f07948c1c53bc8f868ae1772e67647b7d478d968595f8f1bf3cf59997242cd0",
+      "quotes_captured_at_et": "2026-10-22T19:36:30-04:00",
+      "release_published_at_et": "2026-10-22T19:47:23.518587-04:00",
+      "selected_bet_count": 1,
+      "source_metadata_sha256": "139a5bdad37b787f52806b9c0cfc9556ab0117b0d7080c8327eb9db9e8343867",
+      "source_model_bundle_sha256": "ec6171e5902a84b5986edd68adca7b8703006c8f8b57b020597dbc29fd0daac7",
+      "source_model_version": "td_product_ngs_44_frozen_2025_v1",
+      "source_release": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week07_ngs_live_thursday_draftkings_week07_20261022T193630ET.csv"
+    },
+    {
+      "bets": [],
+      "decision_sha256": "314afe52845e49fe06587f835a5bab5c928736ba0f2e83bb3464c4f3602d0a28",
+      "decision_status": "frozen",
+      "exclusion_counts": {
+        "identity_history_or_availability_exclusion": 1,
+        "price_above_cap": 6
+      },
+      "frozen_at_et": "2026-10-23T14:07:13.594731-04:00",
+      "frozen_inputs_sha256": "d1733e024ad76f76e70ef37281b00ba97eaa2689c074d7ae6efee4c073301f60",
+      "game_id": "2026_07_MIA_NYJ",
+      "kickoff_et": "2026-10-25T13:00:00-04:00",
+      "params_sha256": "4f07948c1c53bc8f868ae1772e67647b7d478d968595f8f1bf3cf59997242cd0",
+      "quotes_captured_at_et": "2026-10-22T19:36:30-04:00",
+      "release_published_at_et": "2026-10-22T19:47:23.518587-04:00",
+      "selected_bet_count": 0,
+      "source_metadata_sha256": "139a5bdad37b787f52806b9c0cfc9556ab0117b0d7080c8327eb9db9e8343867",
+      "source_model_bundle_sha256": "ec6171e5902a84b5986edd68adca7b8703006c8f8b57b020597dbc29fd0daac7",
+      "source_model_version": "td_product_ngs_44_frozen_2025_v1",
+      "source_release": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week07_ngs_live_thursday_draftkings_week07_20261022T193630ET.csv"
     },
     {
       "bets": [],
@@ -100,6 +217,26 @@
       "source_model_bundle_sha256": "ec6171e5902a84b5986edd68adca7b8703006c8f8b57b020597dbc29fd0daac7",
       "source_model_version": "td_product_ngs_44_frozen_2025_v1",
       "source_release": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week07_ngs_live_draftkings_week07_20261020.csv"
+    },
+    {
+      "bets": [],
+      "decision_sha256": "f686dd6bfa937af5c0d5f97b3a94ac883ffb848047a7b6f1966cf24455612b19",
+      "decision_status": "frozen",
+      "exclusion_counts": {
+        "price_above_cap": 4
+      },
+      "frozen_at_et": "2026-10-23T14:07:13.594731-04:00",
+      "frozen_inputs_sha256": "d920801dd9eb39f2210c3b2f4b989cfd7fb96cff74585d8bf3eeb489a071a8f8",
+      "game_id": "2026_07_NYG_HOU",
+      "kickoff_et": "2026-10-25T13:00:00-04:00",
+      "params_sha256": "4f07948c1c53bc8f868ae1772e67647b7d478d968595f8f1bf3cf59997242cd0",
+      "quotes_captured_at_et": "2026-10-22T19:36:30-04:00",
+      "release_published_at_et": "2026-10-22T19:47:23.518587-04:00",
+      "selected_bet_count": 0,
+      "source_metadata_sha256": "139a5bdad37b787f52806b9c0cfc9556ab0117b0d7080c8327eb9db9e8343867",
+      "source_model_bundle_sha256": "ec6171e5902a84b5986edd68adca7b8703006c8f8b57b020597dbc29fd0daac7",
+      "source_model_version": "td_product_ngs_44_frozen_2025_v1",
+      "source_release": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week07_ngs_live_thursday_draftkings_week07_20261022T193630ET.csv"
     },
     {
       "bets": [
@@ -133,9 +270,49 @@
       "source_model_bundle_sha256": "ec6171e5902a84b5986edd68adca7b8703006c8f8b57b020597dbc29fd0daac7",
       "source_model_version": "td_product_ngs_44_frozen_2025_v1",
       "source_release": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week07_ngs_live_draftkings_week07_20261020.csv"
+    },
+    {
+      "bets": [],
+      "decision_sha256": "c6b4f1c6baee8a4f18cf9449a148d174daefc0b3e3a893e478226d5754df8245",
+      "decision_status": "frozen",
+      "exclusion_counts": {
+        "price_above_cap": 5
+      },
+      "frozen_at_et": "2026-10-23T14:07:13.594731-04:00",
+      "frozen_inputs_sha256": "340de6e4856a1e87850f984cb2eb6be2a71d9a8be635ed153cc5a0f2a3315d4a",
+      "game_id": "2026_07_SF_ATL",
+      "kickoff_et": "2026-10-25T13:00:00-04:00",
+      "params_sha256": "4f07948c1c53bc8f868ae1772e67647b7d478d968595f8f1bf3cf59997242cd0",
+      "quotes_captured_at_et": "2026-10-22T19:36:30-04:00",
+      "release_published_at_et": "2026-10-22T19:47:23.518587-04:00",
+      "selected_bet_count": 0,
+      "source_metadata_sha256": "139a5bdad37b787f52806b9c0cfc9556ab0117b0d7080c8327eb9db9e8343867",
+      "source_model_bundle_sha256": "ec6171e5902a84b5986edd68adca7b8703006c8f8b57b020597dbc29fd0daac7",
+      "source_model_version": "td_product_ngs_44_frozen_2025_v1",
+      "source_release": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week07_ngs_live_thursday_draftkings_week07_20261022T193630ET.csv"
+    },
+    {
+      "bets": [],
+      "decision_sha256": "f01b3f3333d6d678c593d954bd7b62caf47ff16c460bae569637158fa414ef9a",
+      "decision_status": "frozen",
+      "exclusion_counts": {
+        "price_above_cap": 1
+      },
+      "frozen_at_et": "2026-10-23T14:07:13.594731-04:00",
+      "frozen_inputs_sha256": "66e28447f1168993751f17a67c3368beb5b10fa025bc9d64754e30e0802929ca",
+      "game_id": "2026_07_TB_CAR",
+      "kickoff_et": "2026-10-25T13:00:00-04:00",
+      "params_sha256": "4f07948c1c53bc8f868ae1772e67647b7d478d968595f8f1bf3cf59997242cd0",
+      "quotes_captured_at_et": "2026-10-22T19:36:30-04:00",
+      "release_published_at_et": "2026-10-22T19:47:23.518587-04:00",
+      "selected_bet_count": 0,
+      "source_metadata_sha256": "139a5bdad37b787f52806b9c0cfc9556ab0117b0d7080c8327eb9db9e8343867",
+      "source_model_bundle_sha256": "ec6171e5902a84b5986edd68adca7b8703006c8f8b57b020597dbc29fd0daac7",
+      "source_model_version": "td_product_ngs_44_frozen_2025_v1",
+      "source_release": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week07_ngs_live_thursday_draftkings_week07_20261022T193630ET.csv"
     }
   ],
-  "ledger_sha256": "b6f7600259791f9b7ae01f40d3d9ce651264e49b93cdc6cc2e524c748f13aeb6",
+  "ledger_sha256": "8ad1699cd442d60c56664ad36ab6e4e640d835f31856fdb52dac1381195ef68f",
   "rule": "at most one pick per game: the eligible quoted player with the highest model_probability * decimal_odds - 1, only if above 0 and priced at or below the frozen price cap; 1 unit",
   "schema_version": 1,
   "season": 2026,

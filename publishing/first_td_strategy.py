@@ -698,6 +698,27 @@ def load_first_td_best_value_v3(
     )
 
 
+def frozen_pick_ids_v3(
+    season: int, week: int, *, ledger_root: str | Path | None = None,
+) -> dict[str, frozenset[str]]:
+    """Frozen v3 pick player ids by game id for one week (an empty set is a zero-pick game).
+
+    Reads only the verified week ledger. The board uses it so a game frozen from an
+    earlier release keeps its frozen pick highlighted, however a later paste re-scores it.
+    """
+    ledger_dir = Path(ledger_root) if ledger_root is not None else DEFAULT_LEDGER_ROOT_V3
+    path = ledger_dir / f"{int(season)}_week{int(week):02d}.json"
+    if not path.is_file():
+        return {}
+    payload = _read_strategy_file(
+        path, season=int(season), week=int(week), strategy_id=STRATEGY_ID_V3, version="v3",
+    )
+    return {
+        str(game["game_id"]): frozenset(str(bet["player_id"]) for bet in game.get("bets", []))
+        for game in payload["games"]
+    }
+
+
 def kickoffs_from_release(frame: pd.DataFrame) -> dict[str, str]:
     """Earliest kickoff per game from a release's ``kickoff_et`` column.
 
@@ -725,6 +746,7 @@ def attach_first_td_v3(
     *,
     metadata: Mapping | None = None,
     params_path: str | Path | None = None,
+    frozen_picks: Mapping[str, frozenset[str]] | None = None,
 ) -> pd.DataFrame:
     """Add ``p_first_v3``, ``first_td_v3_pick`` and ``first_td_v3_over_cap`` for display.
 
@@ -733,7 +755,8 @@ def attach_first_td_v3(
     ``p_first_v3`` disagrees). ``first_td_v3_pick`` marks the one player per game
     the freeze rule would select, so the highlight matches the tracked pick even
     when a matchup is shown one team at a time. ``first_td_v3_over_cap`` marks
-    positive-return quotes the price cap rules out. Raises PublicationError when the
+    positive-return quotes the price cap rules out. For a game in ``frozen_picks`` the
+    pick flag follows the frozen decision instead of the live rule. Raises PublicationError when the
     params copy or the release metadata cannot be read; the caller leaves the
     cells blank.
     """
@@ -756,6 +779,8 @@ def attach_first_td_v3(
             table = evaluate_first_td_best_value_v3(out.iloc[positions], masses.get(game_id), params)
             q_values[positions] = table.q.to_numpy()
             picks[positions] = table.pick.to_numpy()
+            if frozen_picks is not None and game_id in frozen_picks:
+                picks[positions] = table.player_id.isin(frozen_picks[game_id]).to_numpy()
             over_cap[positions] = table.exclusion.eq("price_above_cap").to_numpy()
     out["p_first_v3"] = q_values
     out["first_td_v3_pick"] = picks

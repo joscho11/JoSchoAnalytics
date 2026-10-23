@@ -21,6 +21,7 @@ from publishing import first_td_v3
 from publishing.td_releases import MANIFEST_NAME, canonical_td_releases, read_td_release
 from publishing.first_td_strategy import (
     attach_first_td_v3,
+    frozen_pick_ids_v3,
     load_first_td_best_value_v3,
     published_board_rankings,
 )
@@ -565,7 +566,8 @@ def _render_first_td_best_value_v3(season: int, week: int, releases: dict[tuple[
     st.caption(
         "One paper unit on each game's best value: the player with the highest expected return at the quoted "
         f"DraftKings price, only when that return is above zero{tracker.first_td_v3_cap_phrase()}. "
-        "Picks are frozen before kickoff, and results are tracked from Week 7 on. "
+        "Picks are frozen before kickoff, a frozen game keeps its pick when a later paste re-prices it, "
+        "and results are tracked from Week 7 on. "
         "The sample is small, so early results mostly reflect luck. This tracks a rule; it does not prove an edge."
     )
     try:
@@ -1735,10 +1737,22 @@ def _first_td_phone_column_config() -> dict:
     return cfg
 
 
-def _attach_first_td_v3(raw: pd.DataFrame, source: Path, meta: dict) -> tuple[pd.DataFrame, str | None]:
-    """Attach v3 probabilities and picks; on any failure leave the v3 cells blank."""
+def _attach_first_td_v3(
+    raw: pd.DataFrame, source: Path, meta: dict, season: int, week: int,
+) -> tuple[pd.DataFrame, str | None]:
+    """Attach v3 probabilities and picks; on any failure leave the v3 cells blank.
+
+    A game already frozen keeps its frozen pick highlighted even when a later
+    release re-scores it; only games not yet frozen show the live rule's pick.
+    """
     try:
-        return attach_first_td_v3(raw, source, metadata=meta if meta.get("first_td_candidate_mass") else None), None
+        try:
+            frozen = frozen_pick_ids_v3(season, week)
+        except Exception:
+            frozen = None  # the card reports an unreadable ledger; the board falls back to the live rule
+        return attach_first_td_v3(
+            raw, source, metadata=meta if meta.get("first_td_candidate_mass") else None, frozen_picks=frozen,
+        ), None
     except Exception:
         blank = raw.copy()
         blank["p_first_v3"] = float("nan")
@@ -2097,7 +2111,7 @@ def render() -> None:
     raw = _load_csv(str(source), csv_cache_key)
     v3_issue = None
     if first_td_v3.uses_first_td_v3(season, week) and not retrospective:
-        raw, v3_issue = _attach_first_td_v3(raw, source, meta)
+        raw, v3_issue = _attach_first_td_v3(raw, source, meta, season, week)
     missing_markets = _missing_scheduled_markets(raw, season, week)
     if missing_markets:
         st.warning("No published touchdown prices for: " + ", ".join(missing_markets) + ".")

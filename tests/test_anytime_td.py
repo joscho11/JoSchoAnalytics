@@ -24,10 +24,19 @@ from publishing.td_releases import read_td_release
 
 @pytest.fixture
 def v3_params(tmp_path, monkeypatch):
-    """Point the page at TEST v3 params. The real frozen file is fitted in the model repository."""
+    """Point the page at a copy of the frozen v3 params (TEST values if the file is absent).
+
+    A release that already carries p_first_v3 must agree with the params it was scored
+    with, so the Week 7 board only has v3 cells when the copy mirrors the frozen file.
+    """
     path = tmp_path / "v3_params" / "params.json"
     path.parent.mkdir()
-    path.write_text(json.dumps({"k": 1.5, "p_offense_2026": 0.94, "price_cap_american": 2500}), encoding="utf-8")
+    frozen = first_td_v3.V3_DIR / first_td_v3.PARAMS_FILENAME
+    path.write_text(
+        frozen.read_text(encoding="utf-8") if frozen.is_file()
+        else json.dumps({"k": 1.5, "p_offense_2026": 0.94, "price_cap_american": 2500}),
+        encoding="utf-8",
+    )
     monkeypatch.setattr(first_td_v3, "PARAMS_PATH", path)
     return path
 
@@ -1762,3 +1771,22 @@ def test_legacy_cards_keep_their_old_rule_text(tmp_path):
     captions = " ".join(str(c.value) for c in at.caption)
     assert "fixed rule: +3.0pp value gap AND a positive expected return" in captions
     assert "#### Best-value picks" not in " ".join(str(item.value) for item in at.markdown)
+
+
+def test_week07_board_highlights_the_frozen_pick_not_a_later_release_rescoring(tmp_path, v3_params, monkeypatch):
+    from publishing.td_releases import read_td_release
+
+    releases = page.available_releases()
+    board = read_td_release(releases[(2026, 7)])
+    pit = board[board.game_id.eq("2026_07_PIT_NO") & pd.to_numeric(board.first_amer, errors="coerce").notna()]
+    other = pit[pit.player_display_name.ne("Jaylen Warren")].iloc[0]
+    monkeypatch.setattr(page, "frozen_pick_ids_v3", lambda season, week: {"2026_07_PIT_NO": frozenset({str(other.player_id)})})
+    at = _render(tmp_path, week=7)
+    at.segmented_control(key="atd_view_2026_7").set_value("First TD").run()
+    if page._week_is_complete(pd.read_csv(releases[(2026, 7)]), 2026, 7):
+        at.selectbox(key="atd_props_matchup_2026_7").set_value(page.RECOMMENDED_LABEL).run()
+    assert not at.exception, at.exception
+    boards = [frame.value for frame in at.dataframe if "Expected Return" in frame.value.columns]
+    picks = boards[0]["Player"].tolist()
+    assert f"{other.player_display_name} · {page.public_team_abbr(other.team)}" in picks
+    assert not any(name.startswith("Jaylen Warren") for name in picks)   # the live rule's pick, not frozen
