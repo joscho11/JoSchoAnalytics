@@ -590,6 +590,16 @@ def _render_first_td_best_value_v3(season: int, week: int, releases: dict[tuple[
         season_bets = bets[in_season & weeks.le(int(week))].copy()
         week_bets = bets[in_season & weeks.eq(int(week))].copy()
     week_decisions = [game for game in season_decisions if int(game.get("week", week)) == int(week)]
+    if len(week_decisions) == len(season_decisions):
+        # The week is a subset of the season, so equal counts mean the same frozen games
+        # (the first tracked week): one card carries both scopes instead of repeating it.
+        both = f"Season to date and Week {week}"
+        if int(week) == first_td_v3.FIRST_V3_WEEK:
+            both += " (first tracked week)"
+        _render_first_td_v3_scope(
+            season_bets, season_decisions, f"first-td-v3-season-{season}-{week}", both, cap_state,
+        )
+        return
     _render_first_td_v3_scope(
         season_bets, season_decisions, f"first-td-v3-season-{season}-{week}",
         f"Season to date, from Week {first_td_v3.FIRST_V3_WEEK}", cap_state,

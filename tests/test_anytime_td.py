@@ -1790,3 +1790,112 @@ def test_week07_board_highlights_the_frozen_pick_not_a_later_release_rescoring(t
     picks = boards[0]["Player"].tolist()
     assert f"{other.player_display_name} · {page.public_team_abbr(other.team)}" in picks
     assert not any(name.startswith("Jaylen Warren") for name in picks)   # the live rule's pick, not frozen
+
+
+# ---------------------------------------------------------------------------
+# First TD v3 tracker cards: one card while the season and the week are the same games.
+# ---------------------------------------------------------------------------
+
+def _synthetic_v3_ledger(weeks):
+    """weeks: {week: (pick_outcomes, zero_pick_games)}; each pick is +450, outcome 1 wins and 0 loses."""
+    bets, games = [], []
+    for week, (outcomes, zero_pick_games) in weeks.items():
+        for index, outcome in enumerate(outcomes):
+            game_id = f"2026_{week:02d}_P{index}"
+            games.append({"game_id": game_id, "season": 2026, "week": week, "selected_bet_count": 1})
+            bets.append({
+                "player_id": f"p{week}{index}", "first_amer": 450, "p_first_v3": 0.25,
+                "season": 2026, "week": week, "game_id": game_id,
+                "bet_eligible_first_best_value_v3": True,
+                "scored_first": outcome, "settlement_status_first": "settled",
+            })
+        for index in range(zero_pick_games):
+            games.append({
+                "game_id": f"2026_{week:02d}_Z{index}", "season": 2026, "week": week, "selected_bet_count": 0,
+            })
+    return pd.DataFrame(bets), {"strategy_id": "first_td_best_value_v3", "games": games}
+
+
+def _render_v3_card(tmp_path, monkeypatch, weeks, week):
+    ledger = _synthetic_v3_ledger(weeks)
+    monkeypatch.setattr(page, "load_first_td_best_value_v3", lambda releases=None: ledger)
+    harness = tmp_path / "h_first_td_v3_card.py"
+    harness.write_text(
+        f"import sys; sys.path[:0] = [r'{_HERE}', r'{_SITE_PAGES}']\n"
+        f"import page_anytime_td as p\np._render_first_td_best_value_v3(2026, {week}, {{}})\n",
+        encoding="utf-8",
+    )
+    at = AppTest.from_file(str(harness), default_timeout=180).run()
+    assert not at.exception, at.exception
+    assert not at.error, [e.value for e in at.error]
+    return at
+
+
+def _tracker_captions(at):
+    return [str(c.value) for c in at.caption if str(c.value).startswith("First TD paper tracker")]
+
+
+def _metric_values(at):
+    return [(str(m.label), str(m.value)) for m in at.metric]
+
+
+def test_first_td_v3_week07_with_only_week07_frozen_shows_one_tracker_card(tmp_path, v3_params, monkeypatch):
+    at = _render_v3_card(tmp_path, monkeypatch, {7: ([1, 0], 3)}, week=7)
+    cards = _tracker_captions(at)
+    assert len(cards) == 1, cards
+    assert cards[0].startswith("First TD paper tracker · Season to date and Week 7 (first tracked week) · ")
+    assert "5 game decisions" in cards[0]
+    assert not any("Season to date, from Week" in c or c.startswith("First TD paper tracker · Week 7") for c in cards)
+    # the numbers are the same ones the two identical cards used to show
+    assert _metric_values(at) == [
+        ("Net units", "+3.5U"), ("ROI", "+175.0%"), ("Record", "1-1"), ("Approx. 95% ROI range", "Pending"),
+    ]
+    frozen = [str(c.value) for c in at.caption if str(c.value).startswith("Frozen picks:")]
+    assert frozen == ["Frozen picks: 2 · games with no qualifying player: 3."]
+
+
+def test_first_td_v3_week07_view_ignores_a_later_frozen_week(tmp_path, v3_params, monkeypatch):
+    at = _render_v3_card(tmp_path, monkeypatch, {7: ([1, 0], 3), 8: ([0], 4)}, week=7)
+    cards = _tracker_captions(at)
+    assert len(cards) == 1 and "Season to date and Week 7 (first tracked week)" in cards[0]
+    assert ("Net units", "+3.5U") in _metric_values(at) and len(at.metric) == 4
+
+
+def test_first_td_v3_week08_keeps_the_season_card_and_the_week_card(tmp_path, v3_params, monkeypatch):
+    at = _render_v3_card(tmp_path, monkeypatch, {7: ([1, 0], 3), 8: ([0], 4)}, week=8)
+    cards = _tracker_captions(at)
+    assert len(cards) == 2, cards
+    assert cards[0].startswith("First TD paper tracker · Season to date, from Week 7 · ")
+    assert "10 game decisions" in cards[0]
+    assert cards[1].startswith("First TD paper tracker · Week 8 · ") and "5 game decisions" in cards[1]
+    assert not any("Season to date and Week" in c for c in cards)
+    assert _metric_values(at) == [
+        ("Net units", "+2.5U"), ("ROI", "+83.3%"), ("Record", "1-2"), ("Approx. 95% ROI range", "Pending"),
+        ("Net units", "-1.0U"), ("ROI", "-100.0%"), ("Record", "0-1"), ("Approx. 95% ROI range", "Pending"),
+    ]
+    frozen = [str(c.value) for c in at.caption if str(c.value).startswith("Frozen picks:")]
+    assert frozen == [
+        "Frozen picks: 3 · games with no qualifying player: 7.",
+        "Frozen picks: 1 · games with no qualifying player: 4.",
+    ]
+
+
+def test_first_td_v3_a_single_later_week_is_one_card_without_the_first_week_note(tmp_path, v3_params, monkeypatch):
+    at = _render_v3_card(tmp_path, monkeypatch, {8: ([1], 2)}, week=8)
+    cards = _tracker_captions(at)
+    assert len(cards) == 1 and "Season to date and Week 8 · " in cards[0]
+    assert "first tracked week" not in cards[0]
+
+
+def test_week07_first_td_page_renders_one_v3_tracker_card(tmp_path, v3_params):
+    at = _render(tmp_path, week=7)
+    at.segmented_control(key="atd_view_2026_7").set_value("First TD").run()
+    assert not at.exception, at.exception
+    assert not at.error, [item.value for item in at.error]
+    cards = [str(c.value) for c in at.caption if "frozen best-value picks" in str(c.value)]
+    assert len(cards) == 1 and "Season to date and Week 7 (first tracked week)" in cards[0]
+    bets, ledger = page.load_first_td_best_value_v3(releases=page.available_releases())
+    week_games = [g for g in ledger["games"] if int(g["week"]) == 7]
+    zero = sum(int(g["selected_bet_count"]) == 0 for g in week_games)
+    frozen = [str(c.value) for c in at.caption if str(c.value).startswith("Frozen picks:")]
+    assert frozen == [f"Frozen picks: {int(pd.to_numeric(bets.week).eq(7).sum())} · games with no qualifying player: {zero}."]
