@@ -534,16 +534,17 @@ def test_preview_phone_grid_keeps_ranking_columns():
         "#", "Player", "Opponent", "Proj Pts", "Health", "Actual Pts",
     ]
     assert set(page.PREVIEW_SIMPLE_COLUMNS).issubset(page.PREVIEW_PHONE_COLUMNS)
-    # Postgame with a Finish rank: it follows Actual Pts and stays inside a 390px grid.
-    assert page.PREVIEW_PHONE_RANK_COLUMNS == [
-        "#", "Player", "Proj Pts", "Actual Pts", "Finish", "Opponent", "Health",
+    # Postgame 2026 grid: no "#" counter, so Player has room for the longest "Name - TEAM".
+    assert page.PREVIEW_PHONE_POSTGAME_COLUMNS == [
+        "Player", "Proj Pts", "Actual Pts", "Finish", "Opponent", "Health",
     ]
-    # Grids with actuals use the compact widths: a 360px phone has a ~334px grid.
-    for inside_phone in (
-        ["#", "Player", "Proj Pts", "Actual Pts", "Finish"],
-        ["#", "Player", "Opponent", "Proj Pts", "Actual Pts"],
-    ):
-        assert sum(page._WF_PHONE_ACTUALS_WIDTHS[column] for column in inside_phone) <= 330
+    # A 360px phone has a ~334px grid. Everything that must be visible has to fit in it.
+    postgame = ["Player", "Proj Pts", "Actual Pts", "Finish"]
+    assert sum(page._WF_PHONE_POSTGAME_WIDTHS[column] for column in postgame) <= 330
+    assert page._WF_PHONE_POSTGAME_WIDTHS["Player"] >= 180
+    # The 2025 demo grids with actuals keep their "#" and the compact widths.
+    demo = ["#", "Player", "Opponent", "Proj Pts", "Actual Pts"]
+    assert sum(page._WF_PHONE_ACTUALS_WIDTHS[column] for column in demo) <= 330
 
 
 def test_week_one_phone_grid_keeps_sleeper_beside_model_projection():
@@ -648,11 +649,14 @@ def test_postgame_rank_columns_follow_actual_pts_only_when_requested():
         "#", "Player", "Opponent", "Proj Pts", "Actual Pts", "Our Rk", "Finish", "Rk Δ",
         "Actual Rush Yds", "Actual Rec Yds",
     ]
-    # The phone grid keeps Finish (right after Actual Pts) and drops Our Rk and Rk Δ, and
-    # only when the table has Finish. Without it the phone list is unchanged.
+    # The postgame phone grid drops "#", Our Rk and Rk Δ and keeps Finish right after Actual
+    # Pts when the table has it. Outside a postgame 2026 grid the phone list is unchanged.
     with_ranks = ["#", "Player", "Opponent", "Proj Pts", "Actual Pts", "Our Rk", "Finish", "Rk Δ"]
-    assert weekly._preview_phone_columns(with_ranks, show_sleeper=False) == [
-        "#", "Player", "Proj Pts", "Actual Pts", "Finish", "Opponent",
+    assert weekly._preview_phone_columns(with_ranks, show_sleeper=False, postgame=True) == [
+        "Player", "Proj Pts", "Actual Pts", "Finish", "Opponent",
+    ]
+    assert weekly._preview_phone_columns(with_ranks[:5], show_sleeper=False, postgame=True) == [
+        "Player", "Proj Pts", "Actual Pts", "Opponent",
     ]
     assert weekly._preview_phone_columns(with_ranks[:5], show_sleeper=False) == [
         "#", "Player", "Opponent", "Proj Pts", "Actual Pts",
@@ -774,12 +778,24 @@ def test_week06_graded_release_shows_ranking_scorecard_and_rank_columns(tmp_path
     phone = next(f for f in frames if "Finish" in f.columns and "Rk Δ" not in f.columns)
     columns = list(desktop.columns)
     assert columns[columns.index("Actual Pts") + 1:][:3] == ["Our Rk", "Finish", "Rk Δ"]
-    assert list(phone.columns) == ["#", "Player", "Proj Pts", "Actual Pts", "Finish", "Opponent"]
+    assert list(phone.columns) == ["Player", "Proj Pts", "Actual Pts", "Finish", "Opponent"]
     phone_grid = next(d for d in at.dataframe if list(d.value.columns) == list(phone.columns))
     phone_cfg = json.loads(phone_grid.proto.columns)
     assert [phone_cfg[c]["label"] for c in ("Proj Pts", "Actual Pts", "Finish")] == ["Proj", "Actual", "Finish"]
-    # Everything up to Finish fits a 360px phone's ~334px grid, so Finish needs no scrolling.
-    assert sum(phone_cfg[c]["width"] for c in ("#", "Player", "Proj Pts", "Actual Pts", "Finish")) <= 330
+    # Player plus Proj, Actual and Finish fit a 360px phone's ~334px grid with no side-scroll,
+    # and Player is wide enough for the longest "Name - TEAM".
+    assert sum(phone_cfg[c]["width"] for c in ("Player", "Proj Pts", "Actual Pts", "Finish")) <= 330
+    assert phone_cfg["Player"]["width"] >= 180
+    # The desktop and tablet grid gives Player a fixed 200px instead of letting it truncate.
+    assert json.loads(next(d for d in at.dataframe if "Rk Δ" in d.value.columns).proto.columns)["Player"]["width"] == 200
+    # The banner no longer implies Sleeper is only a Week 1 pregame comparison.
+    banner = next(str(i.value) for i in at.success if str(i.value).startswith("Live 2026"))
+    assert banner == (
+        "Live 2026. Our model scores the players. The Week 1 board shows Sleeper beside ours, "
+        "and settled weeks add a scorecard comparing our rankings with Sleeper's. Completed "
+        "releases show settled fantasy points, and later revisions change future games only."
+    )
+    assert "\u2014" not in banner and "\u2013" not in banner
     card_grid = next(d for d in at.dataframe if {"Position", "Who"} <= set(d.value.columns))
     card_cfg = json.loads(card_grid.proto.columns)
     assert sum(card_cfg[c]["width"] for c in ("Position", "Who", "Top-tier hits", "Avg miss", "Rank corr")) <= 330
@@ -816,7 +832,7 @@ def test_rank_columns_sit_between_actual_pts_and_live_actual_yardage(tmp_path):
         "#", "Player", "Opponent", "Proj Pts", "Actual Pts", "Our Rk", "Finish", "Rk Δ",
         "Actual Pass Yds", "Actual Rush Yds",
     ]
-    assert list(phone.columns) == ["#", "Player", "Proj Pts", "Actual Pts", "Finish", "Opponent"]
+    assert list(phone.columns) == ["Player", "Proj Pts", "Actual Pts", "Finish", "Opponent"]
     assert desktop.loc[desktop["Player"].str.startswith("Josh Allen"), "Actual Pass Yds"].iloc[0] == 250
 
 
@@ -1140,7 +1156,7 @@ def test_standard_scoring_actual_pts_are_filled_when_the_live_feed_supplies_rece
     half = next(f.value for f in at.dataframe if "Rk Δ" in f.value.columns)
     at = next(w for w in at.segmented_control if w.key == "wf_scoring").set_value("Standard").run()
     assert not at.exception, at.exception
-    standard = next(f.value for f in at.dataframe if "Rk Δ" in f.value.columns)
+    standard = next(f.value for f in at.dataframe if {"#", "Actual Pts"} <= set(f.value.columns))
 
     # Standard drops the half point per reception: 3 receptions each is 1.5 fewer points.
     assert standard["Actual Pts"].notna().all()
@@ -1212,3 +1228,64 @@ def test_live_feed_tooltips_keep_saying_non_players_are_removed(tmp_path):
         "Players who did not play are removed from this board."
     )
     assert "stay on this board" not in text
+
+
+def _desktop_grid_columns(at):
+    return list(next(d for d in at.dataframe if "#" in d.value.columns).value.columns)
+
+
+def test_rank_columns_show_only_in_half_ppr_and_other_formats_get_a_caption(tmp_path):
+    note = (
+        "Rank columns follow half-PPR, the format we grade in. "
+        "Switch Scoring format to Half-PPR to see them."
+    )
+    at = _render_weekly(tmp_path)
+    at = next(w for w in at.selectbox if w.key == "wf_week").set_value(6).run()
+    assert {"Our Rk", "Finish", "Rk Δ"} <= set(_desktop_grid_columns(at))
+    assert note not in [str(c.value) for c in at.caption]
+
+    for mode in ("PPR", "Standard"):
+        at = next(w for w in at.segmented_control if w.key == "wf_scoring").set_value(mode).run()
+        assert not at.exception, at.exception
+        columns = _desktop_grid_columns(at)
+        assert not {"Our Rk", "Finish", "Rk Δ"} & set(columns), (mode, columns)
+        assert "Actual Pts" in columns
+        assert [str(c.value) for c in at.caption].count(note) == 1
+        # The scorecard stays: it is labeled half-PPR already.
+        assert _scorecard_shown(at) and len(at.metric) == 3
+        # The postgame phone grid stays Player-first with room for the name.
+        phone = next(d for d in at.dataframe if "#" not in d.value.columns and "Actual Pts" in d.value.columns)
+        assert list(phone.value.columns) == ["Player", "Proj Pts", "Actual Pts", "Opponent"]
+
+    at = next(w for w in at.segmented_control if w.key == "wf_scoring").set_value("Half-PPR").run()
+    assert {"Our Rk", "Finish", "Rk Δ"} <= set(_desktop_grid_columns(at))
+    assert note not in [str(c.value) for c in at.caption]
+
+
+def test_pregame_and_demo_grids_keep_their_player_column_and_no_rank_caption(tmp_path):
+    at = _render_weekly(tmp_path)
+    grid = next(d for d in at.dataframe if "Player" in d.value.columns)
+    assert "width" not in json.loads(grid.proto.columns)["Player"]
+    assert not any("Rank columns follow half-PPR" in str(c.value) for c in at.caption)
+
+
+def test_metric_help_strings_are_short_enough_for_a_phone_tooltip():
+    for text in (weekly._HITS_HELP, weekly._MISS_HELP, weekly._CORR_HELP):
+        assert len(text) <= 120, text
+        assert "\u2014" not in text and "\u2013" not in text
+
+
+def test_tooltip_width_cap_lives_only_in_the_phone_media_query():
+    import re
+
+    import mobile
+
+    css = mobile._CSS
+    rule = 'max-width:calc(100vw - 32px) !important;'
+    assert css.count(rule) == 1
+    block = re.search(
+        r"@media \(max-width: 640px\)\{\s*\[data-testid=\"stTooltipContent\"\]\{[^}]*"
+        + re.escape(rule) + r"[^}]*\}\s*\}",
+        css,
+    )
+    assert block, "the stTooltipContent cap must sit inside @media (max-width: 640px)"

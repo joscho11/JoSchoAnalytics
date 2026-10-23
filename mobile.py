@@ -1185,6 +1185,15 @@ details summary{
 }
 
 
+/* 11b. Help tooltips. Streamlit caps the tooltip at calc(100% - 32px), but "100%" is its
+   parent, which can be ~1000px wide inside a stretched layout. A long help string then
+   rendered as one line running off the right edge. Cap it at the viewport instead so
+   the text wraps on screen. */
+@media (max-width: 640px){
+  [data-testid="stTooltipContent"]{ max-width:calc(100vw - 32px) !important; }
+}
+
+
 /* Labeled scatters: hide the unlabeled phone copy on desktop. Paired with the
    max-width 640 hide of the named copy inside the phones block above. */
 @media (min-width: 641px){

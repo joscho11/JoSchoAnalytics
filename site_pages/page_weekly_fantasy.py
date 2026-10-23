@@ -51,10 +51,11 @@ PREVIEW_PHONE_SLEEPER_COLUMNS = [
 # The older 2025 demo layout. Actual Pts comes before Health so that, once a week's
 # actuals are in, they are not pushed past the right edge of a 390px grid.
 LEGACY_PHONE_COLUMNS = ["#", "Player", "Opponent", "Proj Pts", "Actual Pts", "Health"]
-# Postgame with a Finish rank: Proj Pts, Actual Pts and Finish fill a 390px phone
-# grid, so Opponent follows them instead of pushing Finish past the right edge.
-PREVIEW_PHONE_RANK_COLUMNS = [
-    "#", "Player", "Proj Pts", "Actual Pts", "Finish", "Opponent", "Health",
+# Postgame 2026 grid, with or without the rank columns. The "#" counter goes so Player
+# can show the longest "Name - TEAM". Proj Pts, Actual Pts and Finish stay in view and
+# Opponent scrolls in.
+PREVIEW_PHONE_POSTGAME_COLUMNS = [
+    "Player", "Proj Pts", "Actual Pts", "Finish", "Opponent", "Health",
 ]
 # The phone table had no explicit column_config of its own (dataframe_phone_desktop's
 # fallback just filters the desktop config down to these columns, none of which carry
@@ -72,6 +73,10 @@ _WF_PHONE_ACTUALS_WIDTHS = {
     **_WF_PHONE_WIDTHS, "#": 30, "Opponent": 56, "Proj Pts": 48, "Actual Pts": 56, "Finish": 50,
 }
 _WF_PHONE_ACTUALS_LABELS = {"Opponent": "Opp", "Proj Pts": "Proj", "Actual Pts": "Actual"}
+# Postgame grid: Player 186 plus Proj, Actual and Finish totals 328px, still inside the grid.
+_WF_PHONE_POSTGAME_WIDTHS = {
+    **_WF_PHONE_ACTUALS_WIDTHS, "Player": 186, "Proj Pts": 44, "Actual Pts": 52, "Finish": 46,
+}
 PREVIEW_PROJECTED_COLUMNS = {
     "QB": ["Proj Pass Yds", "Proj Rush Yds"],
     "RB": ["Proj Rush Yds", "Proj Rec Yds"],
@@ -498,24 +503,31 @@ def _preview_table_columns(
     return columns
 
 
-def _preview_phone_columns(available_columns, *, show_sleeper: bool) -> list[str]:
+def _preview_phone_columns(
+    available_columns, *, show_sleeper: bool, postgame: bool = False,
+) -> list[str]:
     """Keep the Week 1 benchmark, or the postgame Finish rank, next to our projection."""
     if show_sleeper:
         preferred = PREVIEW_PHONE_SLEEPER_COLUMNS
-    elif "Finish" in available_columns:
-        preferred = PREVIEW_PHONE_RANK_COLUMNS
+    elif postgame:
+        preferred = PREVIEW_PHONE_POSTGAME_COLUMNS
     else:
         preferred = PREVIEW_PHONE_COLUMNS
     return [column for column in preferred if column in available_columns]
 
 
-def _phone_column_config(phone_keep: list[str], desktop_config: dict) -> dict:
+def _phone_column_config(
+    phone_keep: list[str], desktop_config: dict, *, postgame: bool = False,
+) -> dict:
     """Reuse each desktop column's content and override only phone width/pinning.
 
-    A grid that carries Actual Pts also gets the short headers and tighter widths.
+    A grid that carries Actual Pts also gets the short headers and tighter widths, and
+    the postgame grid gives Player the room it needs.
     """
     with_actuals = "Actual Pts" in phone_keep
     widths = _WF_PHONE_ACTUALS_WIDTHS if with_actuals else _WF_PHONE_WIDTHS
+    if postgame:
+        widths = _WF_PHONE_POSTGAME_WIDTHS
     phone_config = {}
     for col in phone_keep:
         if col not in desktop_config or col not in widths:
@@ -733,17 +745,16 @@ def _two_decimals(value) -> str:
 
 
 _HITS_HELP = (
-    "Players our projections put in the starter tier at each position "
-    f"(top {_tier_text(fantasy_accuracy.HIT_K)}) who finished in that tier. "
-    "Sleeper's own top tier is scored the same way."
+    f"Players we put in the starter tier ({_tier_text(fantasy_accuracy.HIT_K)}) who finished "
+    "there. Sleeper is scored the same way."
 )
-_MISS_HELP = (
-    "Average gap in fantasy points between a projection and what the player scored. "
-    "Lower is better."
-)
+_MISS_HELP = "Average gap, in points, between projection and actual score. Lower is better."
 _CORR_HELP = (
-    "How closely a projection's order matches the order players finished, "
-    "from -1 to 1. Higher is better."
+    "How closely the projected order matches the finish order, from -1 to 1. Higher is better."
+)
+_RANK_COLUMNS_NOTE = (
+    "Rank columns follow half-PPR, the format we grade in. "
+    "Switch Scoring format to Half-PPR to see them."
 )
 
 
@@ -1029,9 +1040,10 @@ def render():
         live_format_preview = (int(season), int(week)) == LIVE_FORMAT_PREVIEW
         if int(season) >= LIVE_FROM_SEASON:
             st.success(
-                "Live 2026. Our model scores the players; the pregame Week 1 board also "
-                "includes Sleeper for comparison. Completed releases show settled fantasy "
-                "points, and later revisions change future games only."
+                "Live 2026. Our model scores the players. The Week 1 board shows Sleeper "
+                "beside ours, and settled weeks add a scorecard comparing our rankings with "
+                "Sleeper's. Completed releases show settled fantasy points, and later "
+                "revisions change future games only."
             )
         elif live_format_preview:
             st.info(
@@ -1138,6 +1150,9 @@ def render():
                 accuracy_error = err
         accuracy_ready = accuracy_card is not None and not accuracy_card.empty
         _dnp_note = _actual_players_note(settled=bool(_graded_actuals), scored=accuracy_ready)
+        # Ranks are graded in half-PPR, so under another format they would contradict Proj
+        # and Actual Pts. Show them only in half-PPR and explain under the table.
+        ranks_shown = accuracy_ready and scoring == DEFAULT_SCORING
 
         # The preview exercises the live 2026 surface, which has no legacy agent cards.
         fantasy_analysis = None
@@ -1443,7 +1458,7 @@ def render():
                     display["Actual Pts"] = points_from_half_ppr(
                         _actual_raw, display["player_id"].map(_actual_recs), scoring
                     ).round(1)
-                    if accuracy_ready:
+                    if ranks_shown:
                         keys = display["player_id"].astype(str)
                         for column, source in (
                             ("Our Rk", "our_rank"), ("Finish", "finish_rank"),
@@ -1480,7 +1495,7 @@ def render():
                             show_more_info,
                             actuals_in=True,
                             actual_detail=True,
-                            rank_columns=accuracy_ready,
+                            rank_columns=ranks_shown,
                         )
                     elif actual_detail_available and has_qb_stats:
                         display["Actual Pass Yds"] = pd.to_numeric(display["player_id"].map(actual_qb_pass_yds), errors="coerce")
@@ -1500,7 +1515,7 @@ def render():
                         tbl_cols = base_cols + ["Actual Pts", "Actual Receptions", "Actual Rec Yds"]
                     else:
                         tbl_cols = base_cols + ["Actual Pts"]
-                        if accuracy_ready:
+                        if ranks_shown:
                             tbl_cols += PREVIEW_RANK_COLUMNS
                 else:
                     tbl_cols = base_cols
@@ -1514,6 +1529,7 @@ def render():
                     "#":          st.column_config.NumberColumn("#", format="%d", width=50, pinned=True,   # grid minimum; pinned = grow 0, so it keeps that exact width
                                       help="Row number in this table as currently sorted and filtered — a counter to keep your place, not a ranking."),
                     "Player":     st.column_config.TextColumn("Player",
+                                      width=200 if accuracy_ready else None,   # room for the longest "Name - TEAM"
                                       help="Player name and NFL team."),
                     "Opponent":   st.column_config.TextColumn("Opponent",
                                       help="This week's opponent. '@' = away game, 'vs' = home game. Note: column sorts alphabetically — meaningful numeric sort not available for matchup labels."),
@@ -1572,7 +1588,7 @@ def render():
                                           help=f"Actual receiving yards recorded in this game. {_dnp_note}")
                         col_config["Actual Receptions"] = st.column_config.NumberColumn("Actual Receptions", format="%.1f",
                                           help=f"Actual number of receptions recorded in this game. {_dnp_note}")
-                    if accuracy_ready:
+                    if ranks_shown:
                         col_config["Our Rk"] = st.column_config.NumberColumn("Our Rk", format="%d",
                                           help=f"Where we ranked him at {pos} this week, by our half-PPR projection. 1 = highest projection.")
                         col_config["Finish"] = st.column_config.NumberColumn("Finish", format="%d",
@@ -1582,7 +1598,7 @@ def render():
 
                 if preview_layout:
                     phone_keep = _preview_phone_columns(
-                        tbl.columns, show_sleeper=_show_slp,
+                        tbl.columns, show_sleeper=_show_slp, postgame=accuracy_ready,
                     )
                 else:
                     phone_keep = [col for col in LEGACY_PHONE_COLUMNS if col in tbl.columns]
@@ -1594,12 +1610,16 @@ def render():
                     width="stretch",
                     height=TABLE_HEIGHT,
                     column_config=col_config,
-                    phone_column_config=_phone_column_config(phone_keep, col_config),
+                    phone_column_config=_phone_column_config(
+                        phone_keep, col_config, postgame=accuracy_ready and preview_layout,
+                    ),
                     key=(
                         f"wf_grid_{pos}_{season}_{week}_{player_search}_{len(tbl)}_"
                         f"{scoring}_{'detail' if show_more_info else 'simple'}"
                     ),
                 )
+                if accuracy_ready and not ranks_shown:
+                    st.caption(_RANK_COLUMNS_NOTE)
 
                 # ── Agent Analysis ────────────────────────────────────────────
                 if fantasy_analysis and pos in fantasy_analysis:
