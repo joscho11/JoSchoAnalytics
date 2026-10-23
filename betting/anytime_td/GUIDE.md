@@ -48,8 +48,9 @@ five, so misses will outnumber hits. That is the bet, not a broken model.
 | ATTD Value Gap | Book-minus-model American-odds gap plus model-minus-book percentage differential |
 | Hit | Did they score a rushing or receiving TD? |
 
-First TD view columns swap in Model/Book/Value Gap for the first-touchdown
-market and keep Hit (did they score the game's first touchdown).
+The First TD view has no value gap. Its columns are Model First TD Odds, Book
+First TD Odds, Expected Return, and Hit (did they score the game's first
+touchdown).
 
 On a phone the grid keeps #, Player, Model, Book, Value, and Hit. Position tabs swipe.
 Live boards are grouped by matchup and then team (for example, NE vs SEA,
@@ -69,26 +70,34 @@ There is no historical 2+ TD backtest and no published 2+ TD test results yet.
 Treat the 2+ probabilities and paper-betting cards as forward-looking tracking
 only, not evidence of model accuracy or profitability.
 
-**First TD** exposes model First TD odds, DraftKings' First TD
-price (de-vigged within the game), and the First TD value gap for players
-with a listed First TD price. First TD is a fundamentally different kind of
-probability than Anytime or 2+ TD: exactly one player can score a game's
-first touchdown, so the model allocates each game's probability mass
-proportionally to Anytime TD rate across the whole candidate pool, scaled
-by the historical rate an offensive skill player scores first at all
-(pooled 2021-2025: about 94.3% of games; the rest go to defense, special
-teams, or no score in that game). The book side is genuinely de-vigged
-within each game (proportional normalization across every quoted player),
-unlike the Yes-only Anytime quote, because First TD is a real one-winner
-market. There is no historical First TD backtest of any kind anywhere in
-this project, for any season -- only a forward live-week board. Treat this
-view as entertainment more than the 2+ TD view, not evidence of model
-accuracy or profitability.
+**First TD** exposes my model's First TD odds, DraftKings' First TD price with
+the chance that price implies, and an **Expected Return** for players with a
+listed First TD price. Expected return is my model's chance times the decimal
+payout (stake included), minus 1: the average profit per unit staked if my
+chance were exactly right.
+
+First TD is a different kind of probability than Anytime or 2+ TD: exactly one
+player can score a game's first touchdown, so the model splits one pool per
+game. A player's share is his portion of the game's expected rushing plus
+receiving touchdowns (passing touchdowns are credited to the receiver), raised
+to a power k = 1.1, which sharpens the split slightly toward favorites. That
+share is scaled by 0.9397, the chance an offensive skill player scores first at
+all; the rest goes to defense, special teams, or no score. The model does not
+predict which team scores first. Weeks 1 to 6 and the published `p_first`
+column use k = 1 (no sharpening). `p_first_v3` is the sharpened column, used
+from Week 7.
+
+The board sorts by expected return at the quoted DraftKings price, highest
+first. The book cell shows DraftKings' implied percentage, which includes the
+book's margin. A no-vig percentage (the book's chance with the margin removed)
+appears only on desktop, and only when a complete quote pool was captured. The
+older First TD "value gap" column is gone. Treat this view as entertainment,
+not evidence that the model works or pays.
 
 **Display-only games.** NE vs SEA and SF vs LA (both completed before either
 market had a published DraftKings price) are kept visible in the 2+ TD and
 First TD views as fun, model-only look-backs: Model odds and Hit show real
-values, Book odds and the value gap show "Not implemented yet," and any
+values, Book odds show "Not implemented yet," no value figure is computed, and any
 graded outcome is counted only in a results-only tally, never in betting
 W-L, units, ROI, or a backtest. This is the same treatment both markets give
 any other completed matchup without a published price for that market;
@@ -108,11 +117,12 @@ When there are at least five settled games and 20 settled bets, the page shows
 an **Approx. 95% ROI range** from 10,000 deterministic game-block bootstrap
 resamples. This is an empirical uncertainty range, not a guarantee.
 
-The 2+ TD and First TD candidate rules changed on 2026-09-19 (Joseph's
-direction), each has its own Net units, ROI, record, and uncertainty cards,
-and those cards remain pending until DraftKings prices and graded outcomes
-(`scored_two_plus` / `scored_first`) exist for that market. Results-only
-outcomes are shown separately and are never treated as historical bets.
+The 2+ TD rule changed on 2026-09-19 at my direction, and the First TD rule
+changed again for Week 7. Each market has its own Net units, ROI, record, and
+uncertainty cards, and those cards remain pending until DraftKings prices and
+graded outcomes (`scored_two_plus` / `scored_first`) exist for that market.
+Results-only outcomes are shown separately and are never treated as historical
+bets.
 
 - **2+ TD** was a flat +0.5pp gap; it now requires the model probability to
   be at least 1.25x DraftKings' implied probability, with that implied
@@ -120,19 +130,38 @@ outcomes are shown separately and are never treated as historical bets.
   is a 50% relative edge on a 1% price and a 3% relative edge on a 15%
   price), and the 2026-09-19 board's 37 flagged players under the old rule
   skewed almost entirely to long shots. `attd_tracker.qualifies_two_plus_ratio`.
-- **First TD** keeps its wider +3.0pp gap but now also requires a positive
-  expected return at DraftKings' actual, vigged price (model probability x
-  decimal odds - 1 > 0). The gap alone compares to the price with DraftKings'
-  vig stripped out, but a real bet pays the vigged price -- First TD's raw
-  implied probabilities sum to about 121% per game, not 100%. Confirmed
-  example: Christian McCaffrey cleared the +3.0pp de-vigged gap on the 2026
-  Week 2 board (24.6% model vs 21.1% de-vigged) but the real +295 price
-  implies 25.3%, a -3% expected return by the model's own number.
-  `attd_tracker.qualifies_first_td_ev`.
+- **First TD best-value rule**, tracked from Week 7. Each game gets at most one
+  pick: the quoted player with the highest expected return, only if that
+  return is above zero and the price is +599 or shorter. Each pick is a flat
+  1 unit. I freeze picks game by game before kickoff with
+  `python -m publishing.cli freeze-first-td-v3 --season 2026 --week N`, run
+  after every paste. A frozen game keeps its pick even if a later paste
+  re-prices it, and a game that has started is refused. The strategy id is
+  `first_td_best_value_v3`. The +599 cap is the floor of the cap rule, not a
+  finding: no price band shows DraftKings hiding less margin.
+- **First TD, Weeks 1 to 6** keep the earlier rule on their cards: a gap of at
+  least 3.0 percentage points against the no-vig price AND a positive expected
+  return at the real price (`attd_tracker.qualifies_first_td_ev`). An interim
+  "actual EV" rule (every positive-return quote, `first_td_actual_ev_v2`) was
+  retired before any Week 7 game kicked off and was never tracked.
 
 Neither 2+ TD nor First TD has a price-history backtest to validate its rule
 against (no 2+ or First TD price archive exists anywhere in this project for
 any season), so both rules are a design choice, not a demonstrated edge.
+
+First TD results:
+
+- In an earlier check, DraftKings' full 2026 First TD pools implied about 131%
+  to 134%. That excess is the book's margin, and it is about the same at every
+  price.
+- Sharpening (k = 1.1) lowered log loss (a score for probabilities, lower is
+  better) on the 2025 holdout of 256 games by a few thousandths. Every
+  interval includes zero, so the gain is within noise.
+- A retrospective replay on Weeks 2 to 6 lost about 59% for the interim v2 rule
+  (343 bets, 5 hits) and about 51% for v3 (8 bets, 1 hit). That proves nothing
+  either way.
+- Proving a 5% edge at +1000 prices would take about 16,000 bets.
+- Nothing here is a proven edge.
 
 Why +1.0pp: +0.5pp and +1.0pp were the two thresholds fixed before the 2025
 holdout was scored. On the deployed product model +1.0pp was 1,428 bets, +117.31U,
@@ -179,11 +208,14 @@ slate. The canonical input is `td_count_model_beta/live/2026_week01_<slate>.csv`
 with `season`, `week`, `kickoff_et`, `snapped_at_et`, `book`, `player`, `team`,
 `opponent`, and `yes_amer`. The parser/publisher also preserves the optional
 `first_amer` and `two_plus_amer` DraftKings prices. All three are American
-odds. No Odds API is called. `first_amer` now also feeds the First TD view's
-lambda-share model probability and its within-game de-vig of the book price
-(`td_count_model_beta/first_td/src/publish_site_columns.py` computes
-`p_first` and `book_first_p_devigged` from the same release before it is
-copied into this public directory).
+odds. No Odds API is called. `first_amer` is the First TD price. The First TD
+model probability does not come from the quoted set. It comes from the frozen
+candidate mass saved in the release metadata (every skill player's expected
+touchdowns in the game, quoted or not).
+`td_count_model_beta/first_td/src/publish_site_columns.py` computes the flat
+`p_first` from that mass and, only when a complete quote pool was captured, the
+no-vig `book_first_p_devigged`, before the release is copied into this public
+directory. The site derives `p_first_v3` from the same frozen mass.
 
 The publisher normalizes names using the explicit alias file when needed,
 checks the Week 1 schedule, timestamps, odds, duplicates, and player-game
@@ -233,6 +265,9 @@ order, with alphabetical ordering for simultaneous games.
 |---|---|
 | `anytime_td/` | Frozen 2025 week CSVs plus `meta.json` |
 | `anytime_td/strategy_backtest_2025_draftkings.json` | Audited historical +0.5pp DraftKings strategy result |
+| `anytime_td/strategies/first_td_best_value_v3/` | Frozen v3 params (`params.json`) and the weekly First TD pick ledgers |
+| `anytime_td/strategies/first_td_actual_ev_v2/` | Retired interim rule, marked by `SUPERSEDED.json`; never tracked |
+| `../publishing/first_td_strategy.py`, `first_td_v3.py` | Freeze and settle logic, and the sharpened-share formula |
 | `../site_pages/page_anytime_td.py` | Comparison board |
 | `../tests/test_anytime_td.py` | Offline AppTest |
 
