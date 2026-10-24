@@ -20,6 +20,10 @@ ET = ZoneInfo("America/New_York")
 UTC = timezone.utc
 SEASON = 2027
 THRESHOLD = 8.5
+# v2 makes predictions the product: a card is valid with no sportsbook line at all.
+# Metadata carries `line_snapshot_status` so the page can say why no ATS plays show.
+CARD_SCHEMA_VERSION = "cbb_daily_card_v2"
+LINE_SNAPSHOT_STATUSES = frozenset({"official", "unavailable", "rejected"})
 MODEL_HASH = "f83da7ac2015f8c23dfa41d52d5a2b1325ec0a7cad3e3b03e53bc2c957d27800"
 FEATURE_HASH = "c08adcfed32f497bf98dbea61b203bb2df5d5a5b0554f02b135cd7b3eb1bf89f"
 BENCHMARK_HASH = "7b038b0e82196fe88d5bd4c57b5834f7c7d3f3d3df5d50a31f5c7ac4284b2930"
@@ -145,12 +149,18 @@ def _date(value: object) -> str:
 def validate_card_candidate(artifact: str | Path, metadata: str | Path | dict) -> dict:
     path = Path(artifact)
     meta = _read_metadata(metadata)
-    required_meta = {"schema_version", "product", "season", "game_date_et", "status", "artifact_sha256", "expected_rows", "model_hash", "feature_hash", "historical_benchmark_hash", "policy_hash", "threshold", "prediction_run_hash"}
+    required_meta = {"schema_version", "product", "season", "game_date_et", "status", "artifact_sha256", "expected_rows", "model_hash", "feature_hash", "historical_benchmark_hash", "policy_hash", "threshold", "prediction_run_hash", "line_snapshot_status"}
     missing = sorted(required_meta - set(meta))
+    if "schema_version" in meta and meta["schema_version"] != CARD_SCHEMA_VERSION:
+        # Checked before the missing-field list so a v1 card gets a clear reason.
+        raise PublicationError(f"unsupported CBB daily card metadata contract: schema_version {meta['schema_version']!r}, expected {CARD_SCHEMA_VERSION!r}")
     if missing:
         raise PublicationError("CBB card metadata missing: " + ", ".join(missing))
-    if meta["schema_version"] != "cbb_daily_card_v1" or meta["product"] != "cbb_daily_spreads":
+    if meta["product"] != "cbb_daily_spreads":
         raise PublicationError("unsupported CBB daily card metadata contract")
+    snapshot_status = meta["line_snapshot_status"]
+    if not isinstance(snapshot_status, str) or snapshot_status not in LINE_SNAPSHOT_STATUSES:
+        raise PublicationError("CBB line_snapshot_status must be one of: " + ", ".join(sorted(LINE_SNAPSHOT_STATUSES)))
     if int(meta["season"]) != SEASON or _date(meta["game_date_et"]) != str(meta["game_date_et"]):
         raise PublicationError("CBB daily card is not bound to season 2027 and a valid ET date")
     if meta["model_hash"] != MODEL_HASH or meta["feature_hash"] != FEATURE_HASH or meta["historical_benchmark_hash"] != BENCHMARK_HASH or meta["policy_hash"] != POLICY_HASH:
@@ -200,8 +210,13 @@ def validate_card_candidate(artifact: str | Path, metadata: str | Path | dict) -
     missing_line = frame["market_status"].astype(str).eq("missing_line")
     if not (available | missing_line).all():
         raise PublicationError("unknown CBB market_status")
-    if len(frame) and not available.any():
-        raise PublicationError("a nonempty CBB spread card requires at least one valid official line")
+    # A card whose rows are all `missing_line` is a valid predictions-only card. The
+    # snapshot status must agree with the rows: "official" if and only if at least
+    # one game carries an available (validated, pre-tip, 08:45-09:00 ET) line.
+    if snapshot_status != "official" and available.any():
+        raise PublicationError(f"a CBB card with line_snapshot_status {snapshot_status!r} must not contain available lines")
+    if snapshot_status == "official" and not available.any():
+        raise PublicationError("an official CBB line snapshot requires at least one available line")
     if available.any():
         spread = pd.to_numeric(frame.loc[available, "market_home_spread"], errors="coerce")
         margin = pd.to_numeric(frame.loc[available, "market_home_margin"], errors="coerce")
@@ -437,6 +452,6 @@ def cbb_status(*, root: str | Path | None = None) -> dict:
 
 
 __all__ = [
-    "CARD_COLUMNS", "RESULT_COLUMNS", "cbb_release_root", "load_cbb_manifest", "load_cbb_card", "load_cbb_results", "cbb_status",
+    "CARD_SCHEMA_VERSION", "LINE_SNAPSHOT_STATUSES", "CARD_COLUMNS", "RESULT_COLUMNS", "cbb_release_root", "load_cbb_manifest", "load_cbb_card", "load_cbb_results", "cbb_status",
     "validate_card_candidate", "publish_card_candidate", "publish_result_candidate", "rollback_cbb_card", "rollback_cbb_results",
 ]

@@ -9,3 +9,9 @@ fantasy/optimizer_projections/** -text
 betting/anytime_td/releases_manifest.json text eol=lf
 betting/anytime_td/releases/**/*.csv text eol=lf
 betting/anytime_td/releases/**/*.json text eol=lf
+
+# CBB daily manifests, cards, and results are verified by sha256 against the
+# exact bytes served by Streamlit Cloud. Keep the whole release tree LF so a
+# Windows checkout with core.autocrlf=true cannot rewrite a CSV during a
+# rebase and break those hashes.
+data/releases/cbb_daily/** text eol=lf

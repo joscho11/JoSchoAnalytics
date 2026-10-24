@@ -25,7 +25,7 @@ NAV_ROUTES = {
     "help": "Help & Guide",
     "rookie-board": "Rookie Board",
     "season-totals": "Season Totals",
-    "college-basketball": "Daily spreads (Beta)",
+    "college-basketball": "Daily predictions (Beta)",
 }
 
 LAYERS = (
@@ -192,7 +192,7 @@ SCENES: tuple[Scene, ...] = (
         "cbb_daily_empty",
         "publishing",
         "college-basketball",
-        must_contain=("College basketball daily spreads", "No official College Basketball daily card"),
+        must_contain=("College basketball daily predictions", "No official College Basketball daily card", "2026-27 season"),
     ),
     _s(
         "anytime_tds",

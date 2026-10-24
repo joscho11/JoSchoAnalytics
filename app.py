@@ -112,7 +112,7 @@ rb_pg = st.Page(_lazy_render("page_rookie_board"), title="Rookie Board", icon=":
                 url_path="rookie-board")
 fut_pg = st.Page(_lazy_render("page_futures"), title="Season Totals (Beta)", icon=":material/bar_chart:",
                  url_path="season-totals")
-cbb_pg = st.Page(_lazy_render("page_cbb_daily"), title="Daily spreads (Beta)", icon=":material/sports_basketball:",
+cbb_pg = st.Page(_lazy_render("page_cbb_daily"), title="Daily predictions (Beta)", icon=":material/sports_basketball:",
                  url_path="college-basketball")
 
 # cross-link registry (design 4g) — populated before nav.run() so pages can link

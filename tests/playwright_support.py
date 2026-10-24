@@ -15,6 +15,7 @@ from pathlib import Path
 _REPO = Path(__file__).resolve().parents[1]
 _VISUAL_DIR = _REPO / "tests" / "visual"
 LH_FIXTURE = _VISUAL_DIR / "fixtures" / "league_history.json"
+CBB_EMPTY_FIXTURE = _VISUAL_DIR / "fixtures" / "cbb_daily_empty"
 FROZEN_TODAY = "2026-08-24"
 
 ST_BREAKPOINT_SM = 576
@@ -125,6 +126,9 @@ def streamlit_env() -> dict:
     env = {**os.environ, "APP_OFFLINE": "1", "PYTHONIOENCODING": "utf-8"}
     env.setdefault("APP_TODAY", FROZEN_TODAY)
     env.setdefault("JSA_VISUAL_LH_FIXTURE", str(LH_FIXTURE))
+    # The CBB page must render its empty state here even after real daily cards land
+    # in data/releases/cbb_daily/. cbb_daily_data honors this only when APP_OFFLINE=1.
+    env.setdefault("JSA_CBB_FIXTURE_DIR", str(CBB_EMPTY_FIXTURE))
     return env
 
 
