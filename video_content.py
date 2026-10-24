@@ -483,4 +483,13 @@ VIDEOS = [
         "tiktok_url": "https://www.tiktok.com/@joschoanalytics/video/7689903321368349982",
         "video_id": "7689903321368349982",
     },
+    {
+        "slug": "parker-washington-2026",
+        "title": "Parker Washington Breakdown",
+        "subtitle": "2026 · WR, Jacksonville Jaguars",
+        "date": "2026-10-24",
+        "section": "in-season",
+        "tiktok_url": "https://www.tiktok.com/@joschoanalytics/video/7700046705084927262",
+        "video_id": "7700046705084927262",
+    },
 ]
