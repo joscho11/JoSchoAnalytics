@@ -286,8 +286,43 @@ def _sorted_for_display(card: pd.DataFrame) -> pd.DataFrame:
     return shown.sort_values(["_tip", "home_team"], kind="mergesort", na_position="last")
 
 
+COVERAGE_REASONS = {
+    "start_time_tbd": "with no confirmed start time",
+    "invalid_tipoff": "with a start time that could not be read",
+    "not_d1_v_d1": "not Division I vs Division I",
+    "already_started": "already started when predictions were made",
+    "missing_neutral_site": "with the game site not confirmed",
+}
+OTHER_REASON = "with other data gaps"
+
+
+def _coverage_caption(metadata: dict) -> str | None:
+    """Say how many scheduled games the card covers, when the card records it and some were left out."""
+    coverage = metadata.get("coverage")
+    if not isinstance(coverage, dict):
+        return None
+    try:
+        scheduled, predicted = int(coverage["scheduled_games"]), int(coverage["predicted_games"])
+        excluded = int(coverage["excluded_games"])
+        reasons = {str(key): int(value) for key, value in dict(coverage.get("excluded_by_reason") or {}).items() if int(value) > 0}
+    except (KeyError, TypeError, ValueError):
+        return None
+    if excluded <= 0:
+        return None
+    by_label: dict[str, int] = {}
+    for reason, count in reasons.items():
+        label = COVERAGE_REASONS.get(reason, OTHER_REASON)
+        by_label[label] = by_label.get(label, 0) + count
+    parts = [f"{count} {label}" for label, count in sorted(by_label.items(), key=lambda item: (-item[1], item[0]))]
+    caption = f"Showing {predicted} of {scheduled} games on the schedule."
+    return f"{caption} Not shown: {', '.join(parts)}." if parts else caption
+
+
 def _render_day(selected: str, card: pd.DataFrame, metadata: dict, state: dict, day_final: pd.DataFrame) -> None:
     st.subheader(f"Predictions for {_format_day(selected)}")
+    coverage_caption = _coverage_caption(metadata)
+    if coverage_caption:
+        st.caption(coverage_caption)
     status = str(metadata.get("status", state.get("status", "published"))).replace("_", " ").title()
     with st.container(horizontal=True, vertical_alignment="center"):
         st.badge(status, icon=":material/verified:", color="green")
@@ -469,7 +504,7 @@ def render():
     st.title("College basketball daily predictions")
     st.badge("Beta", icon=":material/science:", color="blue")
     st.caption("Model predictions for men’s Division I games, posted each morning before tip-off. Data provided by CollegeBasketballData.com.")
-    st.info("Each card shows who the model expects to win, by how many points, and how likely that win is. The model works from team and game data only. It never sees sportsbook lines.")
+    st.info("Each card shows who the model expects to win, by how many points, and how likely that win is. The model works from team and game data only. It never sees sportsbook lines. Early in the season the model leans on last season's results, so predictions are less certain until teams have played more games.")
 
     try:
         manifest = cbb_daily_data.load_manifest()

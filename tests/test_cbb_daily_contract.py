@@ -271,3 +271,61 @@ def test_card_rollback_pointer_still_works_for_a_predictions_only_correction(tmp
     assert rollback_cbb_card("2026-11-02", root=tmp_path)["build_id"] == first["build_id"]
     with pytest.raises(PublicationError):
         rollback_cbb_results("2026-11-02", root=tmp_path)
+
+
+def _coverage(predicted: int, **overrides) -> dict:
+    coverage = {
+        "scheduled_games": predicted + 5, "predicted_games": predicted, "excluded_games": 5,
+        "excluded_by_reason": {"start_time_tbd": 3, "not_d1_v_d1": 2},
+    }
+    coverage.update(overrides)
+    return coverage
+
+
+def test_card_with_valid_coverage_is_accepted_and_stored(tmp_path):
+    coverage = _coverage(2)
+    artifact, metadata = _card(tmp_path, [_unlined_row("g1"), _unlined_row("g2", home_team_id="h2", away_team_id="a2")], line_snapshot_status="unavailable", coverage=coverage)
+    assert validate_card_candidate(artifact, metadata)["metadata"]["coverage"] == coverage
+    publish_card_candidate(artifact, metadata, root=tmp_path)
+    _, stored, _ = load_cbb_card("2026-11-02", root=tmp_path)
+    assert stored["coverage"] == coverage
+
+
+def test_coverage_is_optional(tmp_path):
+    artifact, metadata = _card(tmp_path, [_lined_row()])
+    assert "coverage" not in metadata and validate_card_candidate(artifact, metadata)
+
+
+def test_empty_card_may_carry_coverage(tmp_path):
+    coverage = {"scheduled_games": 4, "predicted_games": 0, "excluded_games": 4, "excluded_by_reason": {"not_d1_v_d1": 4}}
+    artifact, metadata = _empty_candidate(tmp_path)
+    metadata["coverage"] = coverage
+    assert validate_card_candidate(artifact, metadata)["frame"].empty
+    metadata["coverage"] = _coverage(1)
+    with pytest.raises(PublicationError, match="predicted_games does not match"):
+        validate_card_candidate(artifact, metadata)
+
+
+@pytest.mark.parametrize("bad, message", [
+    (_coverage(1, predicted_games=2, scheduled_games=7), "predicted_games does not match"),
+    (_coverage(1, scheduled_games=7), "scheduled_games must equal"),
+    (_coverage(1, excluded_by_reason={"start_time_tbd": 3}), "must sum to excluded_games"),
+    (_coverage(1, excluded_games=-5, scheduled_games=-4, excluded_by_reason={"a": -5}), "non-negative"),
+    (_coverage(1, excluded_games=5.0), "non-negative"),
+    (_coverage(1, excluded_games=True, scheduled_games=2, excluded_by_reason={"a": 1}), "non-negative"),
+    (_coverage(1, scheduled_games="6"), "non-negative"),
+    (_coverage(1, excluded_by_reason={7: 3, "not_d1_v_d1": 2}), "reason names"),
+    (_coverage(1, excluded_by_reason={"": 3, "not_d1_v_d1": 2}), "reason names"),
+    (_coverage(1, excluded_by_reason={"start_time_tbd": 3.0, "not_d1_v_d1": 2}), "reason names"),
+    (_coverage(1, excluded_by_reason=[3, 2]), "reason names"),
+    ({k: v for k, v in _coverage(1).items() if k != "excluded_by_reason"}, "exactly"),
+    ({**_coverage(1), "extra": 1}, "exactly"),
+    ("80 of 181", "must be an object"),
+    (None, "must be an object"),
+])
+def test_invalid_coverage_is_rejected(tmp_path, bad, message):
+    artifact, metadata = _card(tmp_path, [_unlined_row("g1")], line_snapshot_status="unavailable", coverage=bad)
+    with pytest.raises(PublicationError, match=message):
+        validate_card_candidate(artifact, metadata)
+    with pytest.raises(PublicationError):
+        publish_card_candidate(artifact, metadata, root=tmp_path)

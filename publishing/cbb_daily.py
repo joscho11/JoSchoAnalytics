@@ -146,6 +146,30 @@ def _date(value: object) -> str:
         raise PublicationError("game_date_et must be YYYY-MM-DD") from exc
 
 
+def _count(value: object) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool) and value >= 0
+
+
+def _validate_coverage(coverage: object, rows: int) -> None:
+    """Optional v2 metadata: how many scheduled games the card covers, and why the rest are missing."""
+    if not isinstance(coverage, dict):
+        raise PublicationError("CBB card coverage must be an object")
+    keys = {"scheduled_games", "predicted_games", "excluded_games", "excluded_by_reason"}
+    if set(coverage) != keys:
+        raise PublicationError("CBB card coverage must have exactly: " + ", ".join(sorted(keys)))
+    reasons = coverage["excluded_by_reason"]
+    if not all(_count(coverage[key]) for key in keys - {"excluded_by_reason"}):
+        raise PublicationError("CBB card coverage counts must be non-negative integers")
+    if not isinstance(reasons, dict) or not all(isinstance(key, str) and key and _count(count) for key, count in reasons.items()):
+        raise PublicationError("CBB card coverage excluded_by_reason must map reason names to non-negative integers")
+    if coverage["predicted_games"] != rows:
+        raise PublicationError("CBB card coverage predicted_games does not match the card row count")
+    if coverage["scheduled_games"] != coverage["predicted_games"] + coverage["excluded_games"]:
+        raise PublicationError("CBB card coverage scheduled_games must equal predicted_games plus excluded_games")
+    if sum(reasons.values()) != coverage["excluded_games"]:
+        raise PublicationError("CBB card coverage excluded_by_reason must sum to excluded_games")
+
+
 def validate_card_candidate(artifact: str | Path, metadata: str | Path | dict) -> dict:
     path = Path(artifact)
     meta = _read_metadata(metadata)
@@ -173,6 +197,8 @@ def validate_card_candidate(artifact: str | Path, metadata: str | Path | dict) -
     frame = _read_card(path)
     if int(meta["expected_rows"]) != len(frame):
         raise PublicationError("CBB daily card row count does not match metadata")
+    if "coverage" in meta:
+        _validate_coverage(meta["coverage"], len(frame))
     if "expected_game_ids" in meta:
         expected_ids = sorted(str(value) for value in (meta.get("expected_game_ids") or []))
         observed_ids = sorted(str(value) for value in frame["game_id"].dropna().tolist()) if "game_id" in frame else []

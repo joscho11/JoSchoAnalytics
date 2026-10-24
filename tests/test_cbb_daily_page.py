@@ -75,7 +75,7 @@ def _row(index: int, game: tuple, *, lines: bool, day: date = DAY) -> dict:
     return row
 
 
-def _publish_card(root: Path, *, lines: bool, games=GAMES, day: date = DAY, status: str | None = None, name: str = "card.csv") -> dict:
+def _publish_card(root: Path, *, lines: bool, games=GAMES, day: date = DAY, status: str | None = None, name: str = "card.csv", coverage: dict | None = None) -> dict:
     rows = [_row(i + 1, game, lines=lines, day=day) for i, game in enumerate(games)]
     if status is None:
         status = "official" if any(r["market_status"] == "available" for r in rows) else "unavailable"
@@ -89,6 +89,8 @@ def _publish_card(root: Path, *, lines: bool, games=GAMES, day: date = DAY, stat
         "prediction_run_hash": "pred", "line_snapshot_status": status, "prediction_at_utc": _utc(8.3333, day),
         "attribution": "Data provided by CollegeBasketballData.com", **HASHES,
     }
+    if coverage is not None:
+        metadata["coverage"] = coverage
     return publish_card_candidate(artifact, metadata, root=root)
 
 
@@ -396,3 +398,54 @@ def test_prediction_summary_matches_a_hand_computation():
     assert summary["margin_mae"] == pytest.approx((2 + 9 + 5 + 2) / 4)
     assert summary["total_mae"] == pytest.approx((2 + 10 + 2 + 5) / 4)
     assert page._prediction_summary(frame.iloc[0:0]) == {"games": 0}
+
+
+def _coverage(predicted: int, reasons: dict[str, int]) -> dict:
+    excluded = sum(reasons.values())
+    return {"scheduled_games": predicted + excluded, "predicted_games": predicted, "excluded_games": excluded, "excluded_by_reason": reasons}
+
+
+def _coverage_captions(at: AppTest) -> list[str]:
+    return [str(c.value) for c in at.caption if str(c.value).startswith("Showing ")]
+
+
+def test_coverage_caption_says_how_much_of_the_schedule_is_shown(tmp_path, render):
+    reasons = {"not_d1_v_d1": 41, "start_time_tbd": 60, "invalid_tipoff": 2, "already_started": 1, "missing_neutral_site": 3, "weird_new_reason": 4, "another_new_one": 1}
+    _publish_card(tmp_path, lines=False, coverage=_coverage(len(GAMES), reasons))
+    captions = _coverage_captions(render())
+    assert captions == [
+        f"Showing 6 of {6 + 112} games on the schedule. Not shown: 60 with no confirmed start time, 41 not Division I vs Division I, "
+        "5 with other data gaps, 3 with the game site not confirmed, 2 with a start time that could not be read, 1 already started when predictions were made."
+    ]
+    assert "—" not in captions[0] and "–" not in captions[0]
+
+
+def test_coverage_caption_sits_under_the_predictions_header(tmp_path, render):
+    _publish_card(tmp_path, lines=False, coverage=_coverage(len(GAMES), {"start_time_tbd": 2}))
+    at = render()
+    tree = [str(getattr(e, "value", "")) for e in at.main]
+    header_at = tree.index("Predictions for Monday, November 2")
+    assert tree[header_at + 1] == f"Showing 6 of 8 games on the schedule. Not shown: 2 with no confirmed start time."
+
+
+def test_coverage_caption_absent_or_zero_excluded_shows_nothing(tmp_path, render):
+    _publish_card(tmp_path, lines=False)
+    assert not _coverage_captions(render())
+    _publish_card(tmp_path / "zero", lines=False, coverage=_coverage(len(GAMES), {}))
+    assert not _coverage_captions(render(tmp_path / "zero"))
+
+
+def test_coverage_caption_survives_long_school_names(tmp_path, render):
+    games = [("Southern Illinois Edwardsville", "Miami (OH)", -2.5, 143.0, None, 19.0, False), ("Northern Illinois", "Texas A&M-Corpus Christi", 3.1, 145.5, None, 20.0, False)]
+    _publish_card(tmp_path, lines=False, games=games, coverage=_coverage(2, {"start_time_tbd": 60, "not_d1_v_d1": 41}))
+    at = render()
+    assert _coverage_captions(at) == ["Showing 2 of 103 games on the schedule. Not shown: 60 with no confirmed start time, 41 not Division I vs Division I."]
+    assert any(c.startswith("**Miami (OH) by 2.5**") for c in _game_cards(at))
+    assert "Miami (OH) at Southern Illinois Edwardsville · 7:00 PM ET" in [str(c.value) for c in at.caption]
+
+
+def test_intro_warns_that_early_season_predictions_are_less_certain(tmp_path, render):
+    expected = "Early in the season the model leans on last season's results, so predictions are less certain until teams have played more games."
+    assert expected in [str(i.value) for i in render(tmp_path / "nothing-published", today=None).info][0]
+    _publish_card(tmp_path, lines=False)
+    assert expected in [str(i.value) for i in render().info][0]
