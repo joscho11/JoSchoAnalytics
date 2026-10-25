@@ -144,12 +144,21 @@ def test_catalog_sections():
         LATEST_LEAGUE_HISTORY_VIDEO_SLUG,
     ]
     assert grouped["Predictions & weekly"] == [
+        "week-7-picks-2026",
+        "week-6-picks-2026",
         "week-5-model-gaps-2026",
         "week-4-model-gaps-2026",
     ]
     expected_in_season = [
+        "college-basketball-preview-2026",
+        "graphs-of-the-week-04",
+        "graphs-of-the-week-03",
+        "vikings-2026",
+        "bryce-young-2026",
         "graphs-of-the-week-02",
         "graphs-of-the-week-01",
+        "fourth-down-analytics-part-3",
+        "fourth-down-analytics-part-2",
         "latest-video-2026-09-24",
         "wr-te-advanced-stats",
         "rb-advanced-stats-part-2",

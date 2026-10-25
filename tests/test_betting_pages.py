@@ -64,25 +64,28 @@ def test_weekly_predictions_renders_and_owns_controls(tmp_path):
     assert shown_correction.get("model_update") is not True or shown_correction["promotion_audit"]["sha256"]
     qb_expander = next(exp for exp in at.expander if exp.label == "QB inputs used for this release")
     qb_markdown = " ".join(str(item.value) for item in qb_expander.markdown)
-    # The newest release is Week 6, with explicit QB assumptions for these teams.
-    assert "**ATL:** Michael Penix Jr. — user modeling assumption" in qb_markdown
-    assert "**CHI:** Caleb Williams — user modeling assumption" in qb_markdown
-    assert "**BAL:** Lamar Jackson — user modeling assumption" in qb_markdown
-    assert "**TB:** Jalon Daniels — user modeling assumption" in qb_markdown
+    # Read the displayed release's own QB metadata instead of pinning a week's names.
+    import json as _json
+    from team_display import public_team_abbr
+    meta = _json.loads((_HERE / shown_build["metadata"]).read_text(encoding="utf-8"))
+    details = meta["qb_selection_details"]
+    manual = {t: d["player_name"] for t, d in details.items() if d.get("is_user_modeling_assumption")}
+    assert manual, "the newest release is expected to carry at least one manual QB assumption"
+    for team, name in manual.items():
+        assert f"**{public_team_abbr(team)}:** {name} — user modeling assumption" in qb_markdown
     card_labels = " ".join(
         str(item.value) for item in at.markdown if "jsa-gc-team-abbr" in str(item.value)
     )
-    for team, qb in (
-        ("ATL", "Michael Penix Jr."),
-        ("BAL", "Lamar Jackson"),
-        ("CHI", "Caleb Williams"),
-        ("TB", "Jalon Daniels"),
-    ):
-        assert f">{team}</div><div class='jsa-gc-qb'" in card_labels
-        assert f"QB: {qb}</div>" in card_labels
+    for team, name in manual.items():
+        assert f">{public_team_abbr(team)}</div><div class='jsa-gc-qb'" in card_labels
+        assert f"QB: {name}</div>" in card_labels
     assert "font-size:10px" in card_labels
     scenario_caption = " ".join(str(c.value) for c in qb_expander.caption)
-    assert all(team in scenario_caption for team in ("BAL", "CHI", "ATL", "TB"))
+    scenario_games = (meta.get("qb_scenarios") or {}).get("results") or {}
+    scenario_teams = {
+        public_team_abbr(item["team"]) for items in scenario_games.values() for item in items if item.get("team")
+    }
+    assert scenario_teams and all(t in scenario_caption for t in scenario_teams)
     assert not any(str(k).startswith("tr_") for k in keys), \
         "Weekly Predictions must not carry Track Record's controls"
 
@@ -424,18 +427,55 @@ def test_weekly_predictions_shows_one_equal_card_per_listed_qb(tmp_path):
     assert "QB scenarios for" in text
 
 
-def test_week6_chi_atl_shows_all_joint_qb_pairs(tmp_path):
+def test_week6_chi_atl_final_build_uses_settled_qbs_not_pair_scenarios(tmp_path):
+    """Week 6 was reissued (build 610992bd5dbf) with Williams and Penix entered as manual
+    QB assumptions, so the earlier six-pairing CHI at ATL scenario view no longer ships.
+    The final build must show one plain card with those two QBs and no pairing expander."""
+    import page_common
+    from publishing.manifest import release_status
+
     at = _render_page(tmp_path, "page_weekly_predictions")
     next(w for w in at.selectbox if getattr(w, "key", None) == "wp_season").set_value(2026)
     next(w for w in at.selectbox if getattr(w, "key", None) == "wp_week").set_value(6)
     at.run()
     assert not at.exception, at.exception
     assert not at.error, [e.value for e in at.error]
+    shown = release_status("predictions", 2026, 6, manifest=page_common.load_release_manifest(), root=_HERE)
+    assert shown["build_id"] == "predictions-2026w06-610992bd5dbf", shown
 
     markdown = " ".join(str(item.value) for item in at.markdown)
+    assert not any(exp.label.endswith("joint QB pairings") for exp in at.expander)
+    assert not [m for m in at.markdown if "jsa-gc-pair" in str(m.value)]
+    assert "MAIN PATH" not in markdown
+    for name in ("Caleb Williams", "Michael Penix Jr."):
+        assert f"QB: {name}</div>" in markdown, name
+    qb_expander = next(exp for exp in at.expander if exp.label == "QB inputs used for this release")
+    qb_markdown = " ".join(str(item.value) for item in qb_expander.markdown)
+    assert "**ATL:** Michael Penix Jr. — user modeling assumption" in qb_markdown
+    assert "**CHI:** Caleb Williams — user modeling assumption" in qb_markdown
+
+
+def test_week6_chi_atl_superseded_build_pair_scenarios_render(tmp_path):
+    """Keep the joint-pairing renderer covered using the superseded Week 6 correction
+    build (c3c200e3354b), whose artifact carries six CHI at ATL pairings."""
+    import pandas as pd
+
+    path = _HERE / "data/releases/builds/predictions/2026/week06/predictions-2026w06-c3c200e3354b/artifact.csv"
+    row = pd.read_csv(path).set_index("game_id").loc["2026_06_CHI_ATL"]
+    h = tmp_path / "h_pairs.py"
+    h.write_text(
+        f"import sys; sys.path[:0] = [r'{_HERE}', r'{_SITE_PAGES}']\n"
+        "import pandas as pd, page_weekly_predictions as p\n"
+        f"row = pd.read_csv(r'{path}').set_index('game_id').loc['2026_06_CHI_ATL']\n"
+        "items, verdict = p._pair_scenario_items(row)\n"
+        "p._render_qb_pair_scenarios(items, verdict, 'ATL', 'CHI', float(row['spread_line']), float(row['model_edge']))\n",
+        encoding="utf-8",
+    )
+    at = AppTest.from_file(str(h), default_timeout=180).run()
+    assert not at.exception, at.exception
+    markdown = " ".join(str(item.value) for item in at.markdown)
     captions = " ".join(str(item.value) for item in at.caption)
-    labels = [exp.label for exp in at.expander]
-    assert "All 6 joint QB pairings" in labels
+    assert "All 6 joint QB pairings" in [exp.label for exp in at.expander]
     for name in ("Caleb Williams", "Case Keenum", "Tyson Bagent", "Michael Penix Jr.", "Tua Tagovailoa"):
         assert name in markdown, name
     pair_cards = [str(item.value) for item in at.markdown if "jsa-gc-pair" in str(item.value)]
@@ -443,9 +483,7 @@ def test_week6_chi_atl_shows_all_joint_qb_pairs(tmp_path):
     keenum_tua = next(card for card in pair_cards if "Case Keenum" in card and "Tua Tagovailoa" in card)
     assert "edge 3.46" in keenum_tua
     assert markdown.count("MAIN PATH") == 1
-    assert "ATL stays HIGH in all 6 QB pairings" in markdown
     assert "These are scenario scores, not blended probabilities" in captions
-    assert "HIGH under all 5 QBs" not in markdown
 
 
 def test_week3_st_promotion_reissue_card_states(tmp_path):

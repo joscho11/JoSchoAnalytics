@@ -221,7 +221,7 @@ def test_runtime_separation_no_training_dependency():
     banned = {"sklearn", "lightgbm", "xgboost", "scipy", "joblib", "numpy", "nflreadpy",
               "m4_engine", "papermill", "torch", "season_totals_v2_prod"}
     assert not (imported & banned)
-    assert imported <= {"json", "pathlib", "pandas", "streamlit"}
+    assert imported <= {"json", "pathlib", "pandas", "streamlit", "team_display"}
 
 
 def test_no_dash_pause_glyphs_in_page_copy():

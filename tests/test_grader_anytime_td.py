@@ -11,9 +11,15 @@ from publishing.grader import grade_anytime_td_file, load_reviewed_td_settlement
 
 def test_public_registry_preserves_v1_decisions_with_market_scoped_evidence():
     registry = load_reviewed_td_settlements(_SITE)
-    assert len(registry) == 39
+    # The registry grows as later weeks are reviewed; the original 39 Week 1
+    # v1 decisions (commit 96ee410) must stay present, void and carry hash evidence.
+    v1 = {key: value for key, value in registry.items() if key[:2] == (2026, 1)}
+    assert len(v1) == 39
+    assert len(registry) >= 39
     assert {key[4] for key in registry} == {"anytime", "two_plus", "first"}
-    assert all(value["status"] == "void" and value["evidence"].get("source_sha256") for value in registry.values())
+    assert all(value["status"] == "void" and value["evidence"] for value in registry.values())
+    assert all(value["evidence"].get("source_sha256") for value in v1.values())
+    assert all(value["evidence"].get("source_url") for key, value in registry.items() if key not in v1)
 
 
 def _inputs(path: Path):
