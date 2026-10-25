@@ -44,6 +44,102 @@ HOLDOUT_2026 = {
     "total_mae": 13.779392510067217,
 }
 NO_SNAPSHOT_NOTICE = "No official sportsbook line snapshot for this date, so no ATS plays are shown."
+# The intro is one visible sentence; the rest sits one tap away so a phone shows the games without a long scroll.
+INTRO_VISIBLE = "Each card shows who the model expects to win, by how many points, and how likely that win is."
+INTRO_MORE = (
+    "The model works from team and game data only. It never sees sportsbook lines. "
+    "Early in the season the model leans on last season's results, so predictions are less certain until teams have played more games."
+)
+HOWTO_LABEL = "How to read these cards"
+PAGE_KEY = "cbb-page"
+HOWTO_KEY = "cbb-howto"
+STATUS_KEY = "cbb-status"
+CARD_KEY_PREFIX = "cbb-card-"
+BENCHMARK_SLUG = "cbb-benchmark"
+
+# Presentation only. Every rule hangs off a cbb-* key (or the View / Card date / search widget keys), so no other page changes.
+# Phones: tighter vertical rhythm so the View menu and the first game card sit near the top, 44px controls, 16px control
+# text (iOS zooms the page when a focused field is smaller), 12px minimum text. Wider screens: equal-height card pairs.
+_CSS = """
+<style>
+[data-testid="stLayoutWrapper"]:has(> .st-key-cbb-keyboard) { display: none !important; }
+/* The win probability stays whole: a long team name wraps inside its own bold run, never between "95%" and "win". */
+.st-key-cbb-page [class*="st-key-cbb-card-"] > [data-testid="stElementContainer"]:first-child p {
+  display: flex; flex-wrap: wrap; align-items: baseline; column-gap: .3em;
+}
+.st-key-cbb-page [class*="st-key-cbb-card-"] p { text-wrap: pretty; }
+.st-key-cbb-howto [data-testid="stMarkdownContainer"] p { font-size: .9rem; line-height: 1.5; }
+.st-key-cbb-howto summary { width: 100% !important; box-sizing: border-box !important; }
+/* Phones, portrait or landscape: a tighter vertical rhythm. */
+@media (max-width: 640px), (max-height: 500px) and (orientation: landscape) {
+  .st-key-cbb-page { gap: .7rem !important; }
+  .st-key-cbb-page h1 { padding-top: .25rem !important; padding-bottom: .45rem !important; }
+  .st-key-cbb-page h2, .st-key-cbb-page h3 { padding-top: .6rem !important; padding-bottom: .25rem !important; }
+  .st-key-cbb-page [data-testid="stAlertContainer"] { padding: .5rem .75rem !important; }
+  .st-key-cbb-status { row-gap: .15rem !important; }
+}
+/* Touch screens (any width): 44px controls, and 16px text in them so iOS does not zoom the page on focus. */
+@media (max-width: 640px), (pointer: coarse) {
+  .st-key-cbb-howto summary { min-height: 2.75rem !important; }
+  .st-key-cbb_card_date [role="group"], .st-key-cbb_view [role="group"],
+  .st-key-cbb_team_search [data-testid="stTextInputRootElement"] { min-height: 2.75rem !important; }
+  .st-key-cbb_card_date input, .st-key-cbb_view input, .st-key-cbb_team_search input { font-size: 16px !important; }
+}
+/* Landscape phones are short: trim the desktop title and heading sizes and the top padding. */
+@media (max-height: 500px) and (orientation: landscape) {
+  [data-testid="stMainBlockContainer"]:has(.st-key-cbb-page) { padding-top: 4rem !important; }
+  .st-key-cbb-page h1 { font-size: 1.9rem !important; line-height: 1.2 !important; }
+  .st-key-cbb-page h2 { font-size: 1.45rem !important; line-height: 1.25 !important; }
+  .st-key-cbb-page h3 { font-size: 1.2rem !important; line-height: 1.3 !important; }
+}
+/* Metric tiles on phones: rows keep their own height (the shared rule makes every row as tall as the tallest) and no text under 12px. */
+@media (max-width: 640px) {
+  .st-key-cbb-page [class*="st-key-jsa-metric-even-cbb"]:has(> [data-testid="stElementContainer"] [data-testid="stMetric"]) { grid-auto-rows: auto !important; }
+  .st-key-cbb-page [data-testid="stMetricDelta"], .st-key-cbb-page [data-testid="stMetricDelta"] * { font-size: .78rem !important; }
+}
+/* Two cards side by side share one row height: let each link in the column chain grow (a percentage height would switch off the column stretch). */
+@media (min-width: 641px) {
+  .st-key-cbb-page [data-testid="stColumn"]:has([class*="st-key-cbb-card-"]) { display: flex; flex-direction: column; }
+  .st-key-cbb-page [data-testid="stColumn"]:has([class*="st-key-cbb-card-"]) > [data-testid="stVerticalBlock"],
+  .st-key-cbb-page [data-testid="stColumn"]:has([class*="st-key-cbb-card-"]) > [data-testid="stVerticalBlock"] > [data-testid="stLayoutWrapper"],
+  .st-key-cbb-page [class*="st-key-cbb-card-"] { flex: 1 1 auto; }
+  .st-key-cbb-page [class*="st-key-cbb-card-"] > [data-testid="stElementContainer"]:last-child { margin-top: auto; }
+}
+</style>
+"""
+
+# A text-type combobox raises the on-screen keyboard when tapped. The View menu cannot be typed into, so tell the
+# browser it needs no keyboard. The team search is typed into, so it gets a Search key and no autocorrect (a phone
+# keyboard turns "Gonzaga" into "Gonzales"). Attributes are reapplied whenever Streamlit redraws the widgets.
+_NO_KEYBOARD_JS = """
+<script>
+(function () {
+  if (!document.querySelector('.st-key-cbb-keyboard')) { return; }
+  var queued = false;
+  function set(el, name, value) {
+    if (el.getAttribute(name) !== value) { el.setAttribute(name, value); }
+  }
+  function apply() {
+    queued = false;
+    var keyboardRoot = document.querySelector('.st-key-cbb-keyboard');
+    var pageRoot = document.querySelector('.st-key-cbb-page');
+    if (!keyboardRoot || !pageRoot) { return; }
+    pageRoot.querySelectorAll('input[role="combobox"][aria-label="View"]').forEach(function (el) { set(el, 'inputmode', 'none'); });
+    pageRoot.querySelectorAll('input[aria-label="Find a team"]').forEach(function (el) {
+      set(el, 'enterkeyhint', 'search'); set(el, 'autocorrect', 'off'); set(el, 'autocapitalize', 'off'); set(el, 'spellcheck', 'false');
+    });
+  }
+  if (!window.__cbbNoKeyboardObserver) {
+    window.__cbbNoKeyboardObserver = new MutationObserver(function () {
+      if (!queued) { queued = true; window.requestAnimationFrame(apply); }
+    });
+    window.__cbbNoKeyboardObserver.observe(document.body, { childList: true, subtree: true });
+  }
+  apply();
+})();
+</script>
+"""
+
 
 
 def _wilson(wins: int, losses: int) -> tuple[float | None, float | None]:
@@ -328,7 +424,8 @@ def _is_play(row: pd.Series) -> bool:
 
 def _render_game_card(row: pd.Series, final_by_game: dict[str, pd.Series], threshold: float = THRESHOLD) -> None:
     game = _matchup(row)
-    with st.container(border=True):
+    card_key = CARD_KEY_PREFIX + re.sub(r"[^A-Za-z0-9]+", "-", str(row.get("game_id")))
+    with st.container(border=True, key=card_key, gap="xsmall"):
         st.markdown(f"**{_tag(game['winner'], game['winner_rank'])} by {game['by']:.1f}** · {_format_probability(game['probability'])} win probability")
         st.markdown(
             f"Predicted score: {_md(game['winner'])} {game['winner_score']:.1f}, {_md(game['loser'])} {game['loser_score']:.1f}  \n"
@@ -477,13 +574,15 @@ def _start_day(selected: str) -> None:
         del st.session_state[VIEW_KEY]
 
 
-def _render_day(selected: str, card: pd.DataFrame, metadata: dict, state: dict, day_final: pd.DataFrame) -> None:
+def _render_day(selected: str, card: pd.DataFrame, metadata: dict, state: dict, day_final: pd.DataFrame, notes=None) -> None:
+    """One day's card. ``notes`` is the "How to read these cards" box, where the menu and sort captions go (inline when None)."""
+    notes = notes if notes is not None else st.container()
     st.subheader(f"Predictions for {_format_day(selected)}")
     coverage_caption = _coverage_caption(metadata)
     if coverage_caption:
         st.caption(coverage_caption)
     status = str(metadata.get("status", state.get("status", "published"))).replace("_", " ").title()
-    with st.container(horizontal=True, vertical_alignment="center"):
+    with st.container(horizontal=True, vertical_alignment="center", key=STATUS_KEY):
         st.badge(status, icon=":material/verified:", color="green")
         st.caption(f"{_plural(len(card), 'game', 'games')} · predictions made {_format_stamp(metadata.get('prediction_at_utc'))}")
     summary = _prediction_summary(day_final)
@@ -504,11 +603,12 @@ def _render_day(selected: str, card: pd.DataFrame, metadata: dict, state: dict, 
         st.session_state[VIEW_KEY] = _default_view(options)
     query = _query()
     view = st.selectbox("View", views, format_func=labels.__getitem__, key=VIEW_KEY, filter_mode=None, disabled=bool(query))
-    st.caption(_view_caption(top25, conference_order))
-    if games["_has_line"].any():
-        st.caption("Games are listed by gap: how far the model's predicted margin is from the sportsbook line, largest first. Games with no line follow, by tip time.")
-    else:
-        st.caption("No sportsbook line is available for this date, so games are listed by tip time.")
+    with notes:
+        st.caption(_view_caption(top25, conference_order))
+        if games["_has_line"].any():
+            st.caption("Games are listed by gap: how far the model's predicted margin is from the sportsbook line, largest first. Games with no line follow, by tip time.")
+        else:
+            st.caption("No sportsbook line is available for this date, so games are listed by tip time.")
 
     st.text_input("Find a team", key=SEARCH_KEY, placeholder="Type a team name")
     if query:
@@ -610,7 +710,7 @@ def _render_ats_shadow(card: pd.DataFrame, metadata: dict, results: pd.DataFrame
     for _, row in plays.iterrows():
         pick_home = str(row["ats_pick"]) == "home"
         spread = float(row["market_home_spread"]) * (1 if pick_home else -1)
-        with st.container(border=True):
+        with st.container(border=True, gap="xsmall"):
             st.markdown(f"**Shadow pick: {_md(_pick_name(row))} {_format_spread(spread)}**")
             st.caption(
                 f"{_md(row['away_team'])} at {_md(row['home_team'])} · model gap {_format_edge(float(row['_edge']), threshold)}"
@@ -644,10 +744,17 @@ def _render_ats_record(graded_history: pd.DataFrame) -> None:
         if timeline["game_date_et"].nunique() >= 2:
             chart = timeline.set_index("game_date_et")[["ats_rate"]].rename(columns={"ats_rate": "ATS win rate"})
             chart["Illustrative -110 break-even"] = BREAK_EVEN
-            st.line_chart(chart, y=["ATS win rate", "Illustrative -110 break-even"])
+            st.line_chart(chart, y=["ATS win rate", "Illustrative -110 break-even"], color=["#35D08A", "#93A0B1"], height=260)
         else:
             st.caption("The running chart appears once graded plays from a second day are in.")
         st.caption("Practical implication: the interval and reference line show whether the current live sample is distinguishable from break-even. This does not establish tradability because sample size is small and historical lines were not point-in-time verified.")
+
+
+def _benchmark_for_phone(table: pd.DataFrame) -> pd.DataFrame:
+    """The benchmark table turned on its side: one column per period, the same cell text as the wide grid."""
+    shown = table.set_index("Period").astype(object).map(lambda value: f"{value:g}" if isinstance(value, float) else str(value))
+    shown.index.name = None
+    return shown.T
 
 
 def _render_benchmark_context() -> None:
@@ -657,15 +764,31 @@ def _render_benchmark_context() -> None:
         {"Period": "2022–2025 OOF", "Record": "344–267–0", "Graded": 611, "ATS rate": 0.5630, "Wilson 95%": "52.34%–60.18%"},
         {"Period": "Season 2026", "Record": "87–64–0", "Graded": 151, "ATS rate": 0.5762, "Wilson 95%": "49.64%–65.21%"},
     ])
-    st.dataframe(history_table, hide_index=True, use_container_width=True)
+    # Both copies render and CSS shows one (mobile.py, jsa-table-*): the five-column grid overflows a phone, so phones get
+    # the same cells with periods across the top and fields down the side.
+    with st.container(key=f"jsa-table-desktop-{BENCHMARK_SLUG}"):
+        st.dataframe(history_table, hide_index=True, width="stretch")
+    with st.container(key=f"jsa-table-phone-{BENCHMARK_SLUG}"):
+        st.dataframe(_benchmark_for_phone(history_table), width="stretch")
     st.caption("The 2026 descriptive interval includes 50%, so it did not clear the historical confidence gate; the frozen policy remains exploratory shadow-only.")
 
 
 def render():
+    st.html(_CSS)  # style only: lands in the event container, takes no space
+    with st.container(key="cbb-keyboard"):
+        st.html(_NO_KEYBOARD_JS, unsafe_allow_javascript=True)
+    with st.container(key=PAGE_KEY):
+        _render_page()
+
+
+def _render_page() -> None:
     st.title("College basketball daily predictions")
     st.badge("Beta", icon=":material/science:", color="blue")
     st.caption("Model predictions for men’s Division I games, posted each morning before tip-off. Data provided by CollegeBasketballData.com.")
-    st.info("Each card shows who the model expects to win, by how many points, and how likely that win is. The model works from team and game data only. It never sees sportsbook lines. Early in the season the model leans on last season's results, so predictions are less certain until teams have played more games.")
+    st.info(INTRO_VISIBLE)
+    notes = st.expander(HOWTO_LABEL, key=HOWTO_KEY)
+    with notes:
+        st.markdown(INTRO_MORE)
 
     try:
         manifest = cbb_daily_data.load_manifest()
@@ -701,7 +824,7 @@ def render():
         except Exception as exc:
             results = None
             st.warning(f"Results for this date could not be verified, so they are not shown: {exc}")
-        _render_day(selected, card, metadata, state, _prediction_frame(card, results))
+        _render_day(selected, card, metadata, state, _prediction_frame(card, results), notes)
 
     _render_prediction_record(prediction_history)
     if card is not None:

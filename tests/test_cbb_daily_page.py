@@ -32,6 +32,8 @@ NOTICE = "No official sportsbook line snapshot for this date, so no ATS plays ar
 PRESEASON = {"poll": "AP Top 25", "poll_date": "2026-10-20", "week": 1, "source": "static_snapshot"}
 WEEKLY = {"poll": "AP Top 25", "poll_date": "2026-11-09", "week": 3, "source": "cbbd"}
 BADGE = ":orange-badge[8.5+ gap, exploratory]"
+HOWTO = "How to read these cards"
+INTRO_VISIBLE = "Each card shows who the model expects to win, by how many points, and how likely that win is."
 
 # team -> (CBBD conference short name, AP rank or None). Two teams share #25 because ties are legal.
 TEAMS = {
@@ -187,6 +189,11 @@ def render(tmp_path, monkeypatch):
         loader.clear()
 
 
+def _expander_labels(at: AppTest) -> list[str]:
+    """The page has exactly one expander, the "How to read these cards" box. Never an all-games list."""
+    return [str(e.label) for e in at.expander]
+
+
 def _all_text(at: AppTest) -> str:
     parts: list[str] = []
     for kind in ("title", "header", "subheader", "markdown", "caption", "info", "warning", "success", "error"):
@@ -270,7 +277,7 @@ def test_cbb_page_predictions_only_shows_team_names(tmp_path, render):
     for name in ("Kansas", "Duke", "UCLA", "Oregon", "Michigan State", "Wisconsin", "Gonzaga", "Saint Mary's (CA)"):
         assert name in text
     assert NOTICE in [str(info.value) for info in at.info]
-    assert not _pick_cards(at) and not _badges(at) and len(at.expander) == 0
+    assert not _pick_cards(at) and not _badges(at) and _expander_labels(at) == [HOWTO]
     captions = [str(c.value) for c in at.caption]
     assert "No sportsbook line is available for this date, so games are listed by tip time." in captions
     assert not any(caption.startswith("Games are listed by gap") for caption in captions)
@@ -296,7 +303,7 @@ def test_cbb_page_predictions_only_shows_team_names(tmp_path, render):
     assert "UCLA" not in " ".join(_pick_cards(at))
     assert "+8.50" not in text and "Gap 8.50" not in text
     assert not re.search(r"\b(HOME|AWAY)\b", text)
-    assert "ATS plays are shown" not in text and len(at.expander) == 0
+    assert "ATS plays are shown" not in text and _expander_labels(at) == [HOWTO]
     assert "All games on this card" not in text and "model edge" not in text.lower()
 
 
@@ -538,9 +545,168 @@ def test_coverage_caption_survives_long_school_names(tmp_path, render):
 
 def test_intro_warns_that_early_season_predictions_are_less_certain(tmp_path, render):
     expected = "Early in the season the model leans on last season's results, so predictions are less certain until teams have played more games."
-    assert expected in [str(i.value) for i in render(tmp_path / "nothing-published", today=None).info][0]
+
+    def inside_the_box(at) -> str:
+        assert at.expander[0].label == HOWTO
+        return " ".join(str(m.value) for m in at.expander[0].markdown)
+
+    assert expected in inside_the_box(render(tmp_path / "nothing-published", today=None))
     _publish_card(tmp_path, lines=False)
-    assert expected in [str(i.value) for i in render().info][0]
+    assert expected in inside_the_box(render())
+
+
+def test_intro_is_one_visible_sentence_and_the_rest_sits_in_how_to_read(tmp_path, render):
+    """Phones show the games without a long scroll: one sentence stays up, every other intro fact moves into the expander."""
+    _publish_card(tmp_path, lines=True)
+    at = render()
+    assert [str(info.value) for info in at.info if str(info.value) == INTRO_VISIBLE] == [INTRO_VISIBLE]
+    assert _expander_labels(at) == [HOWTO]
+    inside = [str(m.value) for m in at.expander[0].markdown] + [str(c.value) for c in at.expander[0].caption]
+    text = " ".join(inside)
+    for fact in ("The model works from team and game data only.", "It never sees sportsbook lines.", "less certain until teams have played more games."):
+        assert fact in text
+    # The menu and sort captions are in the box too, so none of those facts was dropped.
+    assert CAPTION_PRESEASON in text and "Games are listed by gap" in text
+    outside = " ".join(str(c.value) for c in at.caption)
+    assert "It never sees sportsbook lines." not in " ".join(str(i.value) for i in at.info)
+    assert "Data provided by CollegeBasketballData.com" in outside
+
+
+def _block_keys(node) -> list[str]:
+    from streamlit.testing.v1.element_tree import Block
+
+    keys: list[str] = []
+    for child in node.children.values():
+        if isinstance(child, Block):
+            # A keyed container's proto id ends with its key: "$$ID-<hash>-<key>".
+            block_id = str(getattr(child.proto, "id", "") or "")
+            if block_id.startswith("$$ID-"):
+                keys.append(block_id.split("-", 2)[2])
+            keys += _block_keys(child)
+    return keys
+
+
+def test_page_cards_and_sections_have_scoped_layout_keys(tmp_path, render):
+    """The phone layout hangs off cbb-* keys, so keep the layout roots stable."""
+    _publish_card(tmp_path, lines=True)
+    at = render()
+    keys = _block_keys(at.main)
+    assert {"cbb-page", "cbb-status", "cbb-keyboard"} <= set(keys)  # the expander's key is not visible to AppTest, the browser run confirmed it
+    card_keys = [key for key in keys if key.startswith("cbb-card-")]
+    assert len(card_keys) == len(_game_cards(at)) and len(set(card_keys)) == len(card_keys)
+    assert {"cbb_view", "cbb_card_date", "cbb_team_search"} <= {w.key for w in at.selectbox} | {w.key for w in at.text_input}
+
+
+def test_view_menu_and_search_are_set_up_for_a_phone_keyboard(tmp_path, render):
+    """The CBB view and search controls stay available to the page."""
+    _publish_card(tmp_path, lines=True)
+    at = render()
+    view, search = at.selectbox(key="cbb_view"), at.text_input(key="cbb_team_search")
+    assert view.label == "View" and search.label == "Find a team"
+    assert view.key == "cbb_view" and search.key == "cbb_team_search"
+
+
+def test_cbb_phone_geometry_and_keyboard_attributes_in_browser(browser, tmp_path, monkeypatch):
+    """Check rendered control geometry and keyboard behavior, not CSS source strings."""
+    from playwright_support import free_port, open_route, start_streamlit, stop_process, wait_for_app, wait_for_port, wait_for_stable_layout
+
+    _publish_card(tmp_path, lines=True)
+    monkeypatch.setenv("APP_OFFLINE", "1")
+    monkeypatch.setenv("JSA_CBB_FIXTURE_DIR", str(tmp_path))
+    port = free_port()
+    proc = start_streamlit(port)
+    context = browser.new_context(
+        viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True,
+        color_scheme="dark", device_scale_factor=1, reduced_motion="reduce",
+    )
+    try:
+        wait_for_port(proc, port)
+        page = context.new_page()
+        open_route(page, f"http://127.0.0.1:{port}", "college-basketball")
+        wait_for_stable_layout(page)
+
+        def assert_controls():
+            return page.evaluate("""() => {
+              const root = document.querySelector('.st-key-cbb-page');
+              const view = document.querySelector('.st-key-cbb_view input[role="combobox"]');
+              const search = document.querySelector('.st-key-cbb_team_search input');
+              const groupHeight = key => {
+                const el = document.querySelector('.st-key-' + key + ' [role="group"]');
+                return el ? el.getBoundingClientRect().height : 0;
+              };
+              const searchBox = document.querySelector('.st-key-cbb_team_search [data-testid="stTextInputRootElement"]');
+              const summary = document.querySelector('.st-key-cbb-howto summary');
+              const fontSizes = [...(root?.querySelectorAll('*') || [])]
+                .filter(el => el.childElementCount === 0 && el.textContent.trim())
+                .map(el => parseFloat(getComputedStyle(el).fontSize));
+              return {
+                hasRoot: !!root, viewMode: view?.getAttribute('inputmode'),
+                searchAttrs: search && ['enterkeyhint','autocorrect','autocapitalize','spellcheck']
+                  .map(name => search.getAttribute(name)),
+                viewHeight: groupHeight('cbb_view'), dateHeight: groupHeight('cbb_card_date'),
+                searchHeight: searchBox?.getBoundingClientRect().height,
+                summaryHeight: summary?.getBoundingClientRect().height,
+                viewFont: view && parseFloat(getComputedStyle(view).fontSize),
+                searchFont: search && parseFloat(getComputedStyle(search).fontSize),
+                minText: Math.min(...fontSizes), viewport: document.documentElement.clientWidth,
+                scrollWidth: document.documentElement.scrollWidth,
+              };
+            }""")
+
+        def assert_phone_contract():
+            metrics = assert_controls()
+            assert metrics["hasRoot"]
+            assert metrics["viewMode"] == "none"
+            assert metrics["searchAttrs"] == ["search", "off", "off", "false"]
+            assert all(metrics[name] >= 44 for name in ("viewHeight", "dateHeight", "searchHeight", "summaryHeight")), metrics
+            assert metrics["viewFont"] >= 16 and metrics["searchFont"] >= 16, metrics
+            assert metrics["minText"] >= 12, metrics
+            assert metrics["scrollWidth"] <= metrics["viewport"], metrics
+
+        assert_phone_contract()
+        search = page.get_by_placeholder("Type a team name")
+        search.fill("Gonzaga")
+        search.press("Enter")
+        wait_for_app(page)
+        wait_for_stable_layout(page)
+        assert_phone_contract()
+        assert search.input_value() == "Gonzaga"
+        first_card_top = page.locator('[class*="st-key-cbb-card-"]').first.bounding_box()["y"]
+        assert first_card_top < 844, first_card_top
+
+        page.evaluate("window.__cbbObserverBeforeNav = window.__cbbNoKeyboardObserver")
+        drawer = page.locator('[data-testid="stExpandSidebarButton"]')
+        drawer.evaluate("element => element.click()")
+        page.locator('[data-testid="stSidebarNavLink"]').filter(has_text="Home").click()
+        page.wait_for_function("!document.querySelector('.st-key-cbb-page')")
+        wait_for_app(page)
+        page.locator('[data-testid="stSidebarNavLink"]').filter(has_text="Daily predictions").click()
+        page.wait_for_function("!!document.querySelector('.st-key-cbb-page')")
+        wait_for_app(page)
+        wait_for_stable_layout(page)
+        assert_phone_contract()
+        assert page.evaluate("window.__cbbNoKeyboardObserver === window.__cbbObserverBeforeNav")
+    finally:
+        context.close()
+        stop_process(proc)
+
+
+def test_benchmark_has_a_phone_copy_with_the_same_cells(tmp_path, render):
+    """The five-column grid overflows a phone, so phones get the same cells turned on their side. The wide grid is untouched."""
+    _publish_card(tmp_path, lines=False)
+    frames = [frame.value for frame in render().dataframe]
+    phone = next(frame for frame in frames if list(frame.columns) == ["2022–2025 OOF", "Season 2026"])
+    assert phone.to_dict() == {
+        "2022–2025 OOF": {"Record": "344–267–0", "Graded": "611", "ATS rate": "0.563", "Wilson 95%": "52.34%–60.18%"},
+        "Season 2026": {"Record": "87–64–0", "Graded": "151", "ATS rate": "0.5762", "Wilson 95%": "49.64%–65.21%"},
+    }
+    assert any(list(frame.columns) == ["Period", "Record", "Graded", "ATS rate", "Wilson 95%"] for frame in frames)
+
+
+def test_how_to_read_box_says_when_there_is_no_line(tmp_path, render):
+    _publish_card(tmp_path, lines=False)
+    at = render()
+    assert "No sportsbook line is available for this date, so games are listed by tip time." in [str(c.value) for c in at.expander[0].caption]
 
 
 # ---- View menu: Top 25 and conferences -------------------------------------------------------------
@@ -576,7 +742,7 @@ def test_view_menu_lists_top_25_then_conferences_in_file_order(tmp_path, render)
     assert menu.label == "View" and list(menu.options) == ALL_SIX_MENU
     assert menu.value == "Top 25"
     # No "All games" view anywhere: every game is reached through Top 25 or a conference.
-    assert not any(re.search(r"\ball\b", label.lower()) for label in menu.options) and len(at.expander) == 0
+    assert not any(re.search(r"\ball\b", label.lower()) for label in menu.options) and _expander_labels(at) == [HOWTO]
     assert _view_keys(at)[0] == "Top 25"
     # SWAC, Pac-12 and the other file entries with no game that day stay out of the menu.
     assert all(label.split(" (")[0] in {"Top 25", "Big 12", "Big Ten", "ACC", "West Coast", "Mid-American", "Southland", "Ohio Valley"} for label in menu.options)
@@ -745,7 +911,7 @@ def test_there_is_no_all_games_list_and_the_ats_section_keeps_plays_record_and_b
     _publish_results(tmp_path, entry, {1: (80, 70), 2: (70, 66), 3: (80, 70), 4: (70, 71), 5: (70, 68), 6: None})
     at = render(select=DAY.isoformat())
     text = _all_text(at)
-    assert len(at.expander) == 0 and "All games on this card" not in text
+    assert _expander_labels(at) == [HOWTO] and "All games on this card" not in text
     assert sorted(_pick_cards(at)) == ["**Shadow pick: Michigan State -3**", "**Shadow pick: Ohio +0.25**"]
     assert "2 wins · 0 losses · 0 pushes · ATS rate 100.0%" in text
     assert "Historical benchmark context" in [str(s.value) for s in at.subheader]
