@@ -1,0 +1,147 @@
+{
+  "calibration": {
+    "QB": [
+      4.9315,
+      0.8072
+    ],
+    "RB": [
+      1.1044,
+      1.1639
+    ],
+    "TE": [
+      0.9123,
+      1.3261
+    ],
+    "WR": [
+      1.3809,
+      1.237
+    ]
+  },
+  "ceiling_p85": {
+    "QB": 8.41,
+    "RB": 5.22,
+    "TE": 3.85,
+    "WR": 5.31
+  },
+  "games": [
+    {
+      "date": "2026-10-22",
+      "teams": [
+        "CHI",
+        "NE"
+      ]
+    },
+    {
+      "date": "2026-10-25",
+      "teams": [
+        "ARI",
+        "DEN"
+      ]
+    },
+    {
+      "date": "2026-10-25",
+      "teams": [
+        "ATL",
+        "SF"
+      ]
+    },
+    {
+      "date": "2026-10-25",
+      "teams": [
+        "BAL",
+        "CIN"
+      ]
+    },
+    {
+      "date": "2026-10-25",
+      "teams": [
+        "CAR",
+        "TB"
+      ]
+    },
+    {
+      "date": "2026-10-25",
+      "teams": [
+        "CLE",
+        "TEN"
+      ]
+    },
+    {
+      "date": "2026-10-25",
+      "teams": [
+        "DET",
+        "GB"
+      ]
+    },
+    {
+      "date": "2026-10-25",
+      "teams": [
+        "HOU",
+        "NYG"
+      ]
+    },
+    {
+      "date": "2026-10-25",
+      "teams": [
+        "IND",
+        "MIN"
+      ]
+    },
+    {
+      "date": "2026-10-25",
+      "teams": [
+        "KC",
+        "SEA"
+      ]
+    },
+    {
+      "date": "2026-10-25",
+      "teams": [
+        "LA",
+        "LV"
+      ]
+    },
+    {
+      "date": "2026-10-25",
+      "teams": [
+        "MIA",
+        "NYJ"
+      ]
+    },
+    {
+      "date": "2026-10-25",
+      "teams": [
+        "NO",
+        "PIT"
+      ]
+    },
+    {
+      "date": "2026-10-26",
+      "teams": [
+        "DAL",
+        "PHI"
+      ]
+    }
+  ],
+  "generated_at_utc": "2026-10-25T13:24:30.064111+00:00",
+  "method": "Interim per-position affine calibration onto DraftKings Classic points, not the trained direct-DK model. See module docstring for the fit and its limits.",
+  "position_counts": {
+    "QB": 28,
+    "RB": 87,
+    "TE": 93,
+    "WR": 131
+  },
+  "producer_revision": "19d0e1ecc8731e91910e8f85447311e383d03272",
+  "product": "dfs_optimizer_v1",
+  "projection_csv_sha256": "5e810c7cd628494426549942069404cb1e827f4a61efaca7a251c53a5e79c513",
+  "projection_units": "direct_dk_points",
+  "row_count": 339,
+  "scoring": "draftkings_classic",
+  "season": 2026,
+  "source": "model",
+  "source_artifact": "data/releases/builds/fantasy/2026/week07/fantasy-2026w07-5e681118ed92/artifact.csv",
+  "source_artifact_sha256": "5e681118ed921c79c194b8fa382aa44307e8416ae9c4ce98eb02655f6fb3de8e",
+  "source_build_id": "fantasy-2026w07-5e681118ed92",
+  "synced_at_utc": "2026-10-25T13:24:30.104925+00:00",
+  "week": 7
+}
