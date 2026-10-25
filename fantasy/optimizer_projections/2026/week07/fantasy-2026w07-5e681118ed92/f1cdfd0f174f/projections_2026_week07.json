@@ -1,0 +1,181 @@
+{
+  "calibration": {
+    "QB": [
+      4.9315,
+      0.8072
+    ],
+    "RB": [
+      1.1044,
+      1.1639
+    ],
+    "TE": [
+      0.9123,
+      1.3261
+    ],
+    "WR": [
+      1.3809,
+      1.237
+    ]
+  },
+  "ceiling_p85": {
+    "QB": 8.41,
+    "RB": 5.22,
+    "TE": 3.85,
+    "WR": 5.31
+  },
+  "games": [
+    {
+      "date": "2026-10-22",
+      "teams": [
+        "CHI",
+        "NE"
+      ]
+    },
+    {
+      "date": "2026-10-25",
+      "teams": [
+        "ARI",
+        "DEN"
+      ]
+    },
+    {
+      "date": "2026-10-25",
+      "teams": [
+        "ATL",
+        "SF"
+      ]
+    },
+    {
+      "date": "2026-10-25",
+      "teams": [
+        "BAL",
+        "CIN"
+      ]
+    },
+    {
+      "date": "2026-10-25",
+      "teams": [
+        "CAR",
+        "TB"
+      ]
+    },
+    {
+      "date": "2026-10-25",
+      "teams": [
+        "CLE",
+        "TEN"
+      ]
+    },
+    {
+      "date": "2026-10-25",
+      "teams": [
+        "DET",
+        "GB"
+      ]
+    },
+    {
+      "date": "2026-10-25",
+      "teams": [
+        "HOU",
+        "NYG"
+      ]
+    },
+    {
+      "date": "2026-10-25",
+      "teams": [
+        "IND",
+        "MIN"
+      ]
+    },
+    {
+      "date": "2026-10-25",
+      "teams": [
+        "KC",
+        "SEA"
+      ]
+    },
+    {
+      "date": "2026-10-25",
+      "teams": [
+        "LA",
+        "LV"
+      ]
+    },
+    {
+      "date": "2026-10-25",
+      "teams": [
+        "MIA",
+        "NYJ"
+      ]
+    },
+    {
+      "date": "2026-10-25",
+      "teams": [
+        "NO",
+        "PIT"
+      ]
+    },
+    {
+      "date": "2026-10-26",
+      "teams": [
+        "DAL",
+        "PHI"
+      ]
+    }
+  ],
+  "generated_at_utc": "2026-10-25T13:51:24.226264+00:00",
+  "method": "Interim per-position affine calibration onto DraftKings Classic points, not the trained direct-DK model. See module docstring for the fit and its limits.",
+  "override_applied_at_utc": "2026-10-25T13:53:20Z",
+  "position_counts": {
+    "QB": 29,
+    "RB": 87,
+    "TE": 93,
+    "WR": 131
+  },
+  "producer_revision": "f1cdfd0f174fb8190aac33f23e6a7b8d30befcb5",
+  "product": "dfs_optimizer_v1",
+  "projection_csv_sha256": "7d792f3a8193703b30dde8c821b2ac127d4593be582ca25f37f53bd52f2e31b3",
+  "projection_overrides": [
+    {
+      "availability_source": {
+        "name": "Baltimore Ravens official announcement",
+        "published_et": "2026-10-24 15:47",
+        "url": "https://www.baltimoreravens.com/news/lamar-jackson-out-against-bengals-week-7-tyler-huntley-third-straight-start"
+      },
+      "calibration": {
+        "intercept": 0.1475,
+        "p85_residual": 8.3,
+        "position": "QB",
+        "slope": 0.883,
+        "source": "sleeper"
+      },
+      "ceiling_pts": 21.17153,
+      "direct_dk_projection": 12.87153,
+      "opponent_team": "CIN",
+      "player_display_name": "Tyler Huntley",
+      "player_id": "sleeper:7083",
+      "position": "QB",
+      "projection_source": {
+        "capture_sha256": "7c63f35a1050f1962777281f08cca44b05721726eeb5b6ff7987163585f69e63",
+        "captured_at_utc": "2026-10-25T13:50:34Z",
+        "name": "Sleeper Week 7 QB projections",
+        "sleeper_player_id": "7083",
+        "url": "https://api.sleeper.com/projections/nfl/2026/7?season_type=regular&position%5B%5D=QB"
+      },
+      "reason": "The Weekly Fantasy release intentionally documents a BAL QB coverage gap. This single DFS-only row uses a current Sleeper Week 7 projection so Huntley is selectable without changing that fantasy release.",
+      "sleeper_half_ppr_projection": 14.41,
+      "team": "BAL",
+      "weekly_fantasy_artifact_unchanged": true
+    }
+  ],
+  "projection_units": "direct_dk_points",
+  "row_count": 340,
+  "scoring": "draftkings_classic",
+  "season": 2026,
+  "source": "model",
+  "source_artifact": "data/releases/builds/fantasy/2026/week07/fantasy-2026w07-5e681118ed92/artifact.csv",
+  "source_artifact_sha256": "5e681118ed921c79c194b8fa382aa44307e8416ae9c4ce98eb02655f6fb3de8e",
+  "source_build_id": "fantasy-2026w07-5e681118ed92",
+  "synced_at_utc": "2026-10-25T13:51:24.337366+00:00",
+  "week": 7
+}

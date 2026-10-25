@@ -39,7 +39,10 @@ def _render_pool_summary(pool: pd.DataFrame, summary: dict) -> None:
     with st.container(horizontal=True, key="jsa-metric-even-dfs"):
         st.metric("Players", f"{len(pool):,}", border=True)
         st.metric("Eligible", f"{len(eligible):,}", border=True)
-        st.metric("Model coverage", f"{coverage:.1f}%", border=True)
+        coverage_label = (
+            "Projection coverage" if pool.attrs.get("projection_overrides") else "Model coverage"
+        )
+        st.metric(coverage_label, f"{coverage:.1f}%", border=True)
         st.metric("Excluded", f"{excluded:,}", border=True)
     games = public_matchup_text(", ".join(summary.get("games", []))) or "Game metadata unavailable"
     dst_note = pool.attrs.get("dst_caption", "DST: DraftKings average (no game line)")
@@ -277,6 +280,9 @@ def render():
 
     active_fantasy, _active_fantasy_path = runtime.active_fantasy_source()
     published_projection = runtime.active_projection_path(active_fantasy)
+    published_metadata = (
+        runtime.projection_metadata(published_projection) if published_projection else None
+    )
     salary_upload = st.file_uploader(
         "DraftKings salary CSV",
         type=["csv"],
@@ -393,6 +399,8 @@ def render():
     try:
         pool = pipeline.build_pool(BytesIO(salary_bytes), BytesIO(projection_bytes))
         summary = pipeline.slate_summary(pool)
+        if projection_upload is None and published_metadata:
+            pool.attrs["projection_overrides"] = published_metadata.get("projection_overrides", [])
     except (KeyError, ValueError, pd.errors.ParserError) as exc:
         st.error(f"Slate validation failed: {exc}", icon=":material/error:")
         return
@@ -419,6 +427,25 @@ def render():
         f"{pool.attrs['projection_season']} Week {pool.attrs['projection_week']} · direct DK points"
     )
     if projection_upload is None:
+        projection_overrides = (published_metadata or {}).get("projection_overrides", [])
+        if projection_overrides:
+            override_notes = []
+            for override in projection_overrides:
+                source = (override.get("projection_source") or {}).get(
+                    "name", "a sourced projection"
+                )
+                mean = pd.to_numeric(override.get("direct_dk_projection"), errors="coerce")
+                ceiling = pd.to_numeric(override.get("ceiling_pts"), errors="coerce")
+                if pd.notna(mean) and pd.notna(ceiling):
+                    override_notes.append(
+                        f"{override.get('player_display_name', 'Player')}: {mean:.1f} mean / "
+                        f"{ceiling:.1f} ceiling DK points from {source}, calibrated to DK points"
+                    )
+            if override_notes:
+                st.caption(
+                    "Projection source note: " + "; ".join(override_notes)
+                    + ". Other players use the published Weekly Fantasy model."
+                )
         st.caption(
             "Using the published artifact — see \"What this beta does — and does not "
             "do\" above for how Week 1 vs Week 2 projections are built.",
