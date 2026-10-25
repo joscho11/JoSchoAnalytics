@@ -12,10 +12,28 @@ Predictions lead. Every game on a card carries a predicted score, margin, total,
 winner and win probability, and the page shows them with team names. The score
 model is universal and never consumes the spread.
 
+A "View" menu picks which of the day's games are on screen, ESPN style. There is no
+"All games" view, so every game must be in Top 25 or in at least one conference.
+
+- **Menu:** "Top 25 (N games)" first, then each conference that has a game that day, in the order of
+  `data/cbb/conference_order_2027.json`, labelled like "SEC (6 games)". A blank or unlisted
+  conference goes under "Other", last.
+- **Membership:** Top 25 is a game with either team ranked. A conference view is a game with
+  either team in that conference, so a cross-conference game appears in both views.
+- **Default:** Top 25. With no poll, or no ranked team playing, the default is the first listed
+  conference. The date picker resets a stale choice: the search box is cleared, a Top 25 choice
+  goes back to that day's default, and a conference choice stays only if the new day has it.
+- **Sort, in every view:** absolute gap (`model_edge`) descending for games with a line, then
+  games with no line by tip time, then home team. The gap is how far the model's predicted margin is from
+  the sportsbook line. Each card shows `Line: Kentucky -5.5 · Gap 1.90 toward Kentucky` (the line names the
+  team it favors; the gap names the team the model leans to relative to the line) or `No line yet`, and
+  plays carry an "8.5+ gap, exploratory" badge. Ranked teams show `#N` before the name.
+- **Search:** a non-empty team search looks through all of the day's games and ignores the view.
+
 Below the games sits an exploratory ATS shadow (8.5-point policy). A provider-neutral
 median CBBD spread is joined after prediction. A game becomes a shadow pick only when
-the absolute model edge is at least 8.5 points. Spreads are shown exactly as collected
-(for example -3.25, -3, PK) and edges to two decimals, so an edge of +8.46 is never
+the absolute model gap is at least 8.5 points. Spreads are shown exactly as collected
+(for example -3.25, -3, PK) and gaps to two decimals, so a gap of +8.46 is never
 displayed as an 8.5-point play. This is not a promise of betting success and it failed
 its own 2026 gate. Historical benchmark results are descriptive and do not prove when
 a line became available. Live records use genuine timestamped snapshots only.
@@ -52,6 +70,57 @@ Rules for a non-empty card:
 - Every `missing_line` row must be marked `line_unavailable`.
 
 An empty `no_games_scheduled` card accepts any of the three status values.
+
+## Optional fields: conferences, AP ranks and the poll
+
+The producer writes four optional row columns and one optional metadata field. The schema
+stays `cbb_daily_card_v2` and an older card without them still loads (every game then
+falls under "Other" and Top 25 is empty). The validator checks only what is present.
+
+| Field | Meaning | Rule |
+|---|---|---|
+| `home_conference`, `away_conference` | CBBD conference short name, for example `SEC`, `A-10`, `Pac-12` | read as text; blank is allowed; a purely numeric value is rejected |
+| `home_rank`, `away_rank` | AP Top 25 rank | blank or a whole number from 1 to 25; ties are legal (two #25s); the CSV prints `3`, not `3.0` |
+| `top25` (metadata) | the poll behind the ranks: `{"poll": "AP Top 25", "poll_date": "YYYY-MM-DD", "week": int or null, "source": "cbbd" or "static_snapshot"}`, or `null` when no poll was available | any rank needs a non-null `top25`; `week == 1` is shown as "(preseason)" |
+
+Each pair of columns must be both present or both absent. The page caption reads
+"Top 25: AP poll of {date} (preseason). Conference order: WarrenNolan.com conference ranking,
+snapshot of {captured_on}."
+
+Coverage describes Division I games only. The producer no longer counts `not_d1_v_d1`
+exclusions, and the page also subtracts any such count from an older card and never names it,
+so the caption reads "Showing 80 of 119 Division I games on the schedule. Not shown: 39 with no
+confirmed start time."
+
+## Conference order file
+
+`data/cbb/conference_order_2027.json` sets the order of the conference entries in the View menu.
+It is a repo file read by `cbb_daily_data.load_conference_order()`, not part of a release, and
+`JSA_CBB_FIXTURE_DIR` never replaces it.
+
+- `order`: the 32 conference names exactly as WarrenNolan.com lists them, best ranked first.
+- `aliases`: CBBD short name to display name, only where they differ (`A-10` to `Atlantic 10`,
+  `WCC` to `West Coast`, and so on). Every alias must point at a name in `order`, and all 32 CBBD
+  short names for 2027 must resolve to a listed conference (a test checks this).
+- `source`, `captured_on` (ISO date) and `note`.
+- If the file is missing or malformed the page falls back to alphabetical order, and says so in
+  the caption. It never fails the page.
+
+**Refresh by hand once NCAA NET starts (about early December).** Before then the order carries
+last season's values onto this season's lineups.
+
+1. Open https://www.warrennolan.com/basketball/2027/net-conference and read the conference
+   names from top to bottom.
+2. Replace `order` with them. Keep each name as the site spells it, and keep all 32.
+3. Add an `aliases` entry for any name that differs from the CBBD short name. Keep the existing ones.
+4. Set `captured_on` to today's date and adjust `note`.
+5. Run `python -m pytest tests/test_cbb_daily_contract.py tests/test_cbb_daily_page.py`, commit the
+   file, and push.
+
+Source and terms: WarrenNolan.com's robots.txt allows crawling and the site publishes no terms
+for reuse. This file is a short hand-copied list of conference names in ranked order, not a
+scrape run by code, and the page credits the source in its caption. Check the site's terms
+again before copying anything beyond that list.
 
 ## Results for a predictions-only card
 

@@ -41,6 +41,14 @@ CARD_COLUMNS = (
     "model_hash", "feature_hash", "policy_hash", "prediction_run_hash",
     "ats_card_run_hash",
 )
+# Optional card columns, written by the producer when it knows them. A card without them still
+# loads; a card with one half of a pair is rejected. Ranks are the AP Top 25 (1-25, blank when unranked).
+OPTIONAL_CARD_COLUMNS = ("home_conference", "away_conference", "home_rank", "away_rank")
+CONFERENCE_COLUMNS = ("home_conference", "away_conference")
+RANK_COLUMNS = ("home_rank", "away_rank")
+TOP25_POLL = "AP Top 25"
+TOP25_SOURCES = frozenset({"cbbd", "static_snapshot"})
+MAX_RANK = 25
 RESULT_COLUMNS = (
     "game_id", "game_date_et", "home_score", "away_score",
     "actual_home_margin", "actual_cover_margin", "ats_result",
@@ -121,7 +129,10 @@ def _read_metadata(value: str | Path | dict) -> dict:
 
 
 def _read_card(path: str | Path) -> pd.DataFrame:
-    return pd.read_csv(path, dtype={"game_id": "string", "home_team_id": "string", "away_team_id": "string"})
+    return pd.read_csv(path, dtype={
+        "game_id": "string", "home_team_id": "string", "away_team_id": "string",
+        "home_conference": "string", "away_conference": "string",
+    })
 
 
 def _timestamp(value: object, field: str) -> datetime:
@@ -170,6 +181,59 @@ def _validate_coverage(coverage: object, rows: int) -> None:
         raise PublicationError("CBB card coverage excluded_by_reason must sum to excluded_games")
 
 
+def _validate_top25(top25: object) -> None:
+    """Optional metadata: which poll supplied the ranks. ``None`` means no poll was available."""
+    if top25 is None:
+        return
+    keys = {"poll", "poll_date", "week", "source"}
+    if not isinstance(top25, dict) or set(top25) != keys:
+        raise PublicationError("CBB card top25 must be null or an object with exactly: " + ", ".join(sorted(keys)))
+    if top25["poll"] != TOP25_POLL:
+        raise PublicationError(f"CBB card top25 poll must be {TOP25_POLL!r}")
+    poll_date = top25["poll_date"]
+    try:
+        valid_date = isinstance(poll_date, str) and datetime.fromisoformat(poll_date).date().isoformat() == poll_date
+    except ValueError:
+        valid_date = False
+    if not valid_date:
+        raise PublicationError("CBB card top25 poll_date must be YYYY-MM-DD")
+    week = top25["week"]
+    # CBBD numbers its poll weeks itself, so any whole number from 0 up is accepted; the page only reads week 1 as preseason.
+    if week is not None and not (isinstance(week, int) and not isinstance(week, bool) and week >= 0):
+        raise PublicationError("CBB card top25 week must be null or a non-negative integer")
+    if top25["source"] not in TOP25_SOURCES:
+        raise PublicationError("CBB card top25 source must be one of: " + ", ".join(sorted(TOP25_SOURCES)))
+
+
+def _blank(series: pd.Series) -> pd.Series:
+    return series.isna() | series.astype(str).str.strip().eq("")
+
+
+def _validate_card_extras(frame: pd.DataFrame, meta: dict) -> None:
+    """Optional conference, rank and poll fields. Validates only what is present."""
+    columns = set(frame.columns)
+    for pair in (CONFERENCE_COLUMNS, RANK_COLUMNS):
+        if len(columns.intersection(pair)) == 1:
+            raise PublicationError("CBB card columns come in home/away pairs: " + ", ".join(pair))
+    top25 = meta.get("top25")
+    _validate_top25(top25)
+    for name in CONFERENCE_COLUMNS:
+        if name not in columns:
+            continue
+        values = frame.loc[~_blank(frame[name]), name]
+        if not all(isinstance(value, str) for value in values) or values.astype(str).str.strip().str.fullmatch(r"[0-9.]+").any():
+            raise PublicationError(f"CBB card {name} must hold conference names, not numbers")
+    for name in RANK_COLUMNS:
+        if name not in columns:
+            continue
+        present = ~_blank(frame[name])
+        ranks = pd.to_numeric(frame.loc[present, name], errors="coerce")
+        if ranks.isna().any() or not np.isfinite(ranks).all() or (ranks != np.floor(ranks)).any() or not ranks.between(1, MAX_RANK).all():
+            raise PublicationError(f"CBB card {name} must be blank or a whole number from 1 to {MAX_RANK}")
+        if present.any() and top25 is None:
+            raise PublicationError("CBB card ranks require top25 poll metadata")
+
+
 def validate_card_candidate(artifact: str | Path, metadata: str | Path | dict) -> dict:
     path = Path(artifact)
     meta = _read_metadata(metadata)
@@ -214,6 +278,7 @@ def validate_card_candidate(artifact: str | Path, metadata: str | Path | dict) -
         raise PublicationError("CBB daily card game IDs must be unique and nonempty")
     if frame["home_team_id"].isna().any() or frame["away_team_id"].isna().any() or frame["home_team"].isna().any() or frame["away_team"].isna().any() or frame["home_team"].astype(str).str.strip().eq("").any() or frame["away_team"].astype(str).str.strip().eq("").any():
         raise PublicationError("CBB daily card team identities and names are required")
+    _validate_card_extras(frame, meta)
     if len(frame) == 0:
         if meta["status"] != "no_games_scheduled":
             raise PublicationError("empty CBB daily card must be marked no_games_scheduled")
@@ -478,6 +543,6 @@ def cbb_status(*, root: str | Path | None = None) -> dict:
 
 
 __all__ = [
-    "CARD_SCHEMA_VERSION", "LINE_SNAPSHOT_STATUSES", "CARD_COLUMNS", "RESULT_COLUMNS", "cbb_release_root", "load_cbb_manifest", "load_cbb_card", "load_cbb_results", "cbb_status",
+    "CARD_SCHEMA_VERSION", "LINE_SNAPSHOT_STATUSES", "CARD_COLUMNS", "OPTIONAL_CARD_COLUMNS", "RESULT_COLUMNS", "cbb_release_root", "load_cbb_manifest", "load_cbb_card", "load_cbb_results", "cbb_status",
     "validate_card_candidate", "publish_card_candidate", "publish_result_candidate", "rollback_cbb_card", "rollback_cbb_results",
 ]

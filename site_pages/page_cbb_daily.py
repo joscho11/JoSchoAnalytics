@@ -1,9 +1,11 @@
 """College Basketball daily predictions (public, Beta).
 
 Predictions lead the page. Every published card carries a score, margin, total,
-winner and win probability for each game. The 8.5-point ATS shadow policy sits
-below the games, labeled exploratory. It has plays only on days whose card
-metadata says ``line_snapshot_status == "official"``.
+winner and win probability for each game. A "View" menu shows the day's games as
+the AP Top 25 or one conference at a time (a game between two conferences is in
+both), largest gap between the model and the line first. The 8.5-point ATS shadow
+policy sits below the games, labeled exploratory. It has plays only on days whose
+card metadata says ``line_snapshot_status == "official"``.
 """
 from __future__ import annotations
 
@@ -24,6 +26,11 @@ BREAK_EVEN = 0.5238
 THRESHOLD = 8.5
 FINAL_STATES = frozenset({"win", "loss", "push", "no_play"})
 SEARCH_KEY = "cbb_team_search"
+VIEW_KEY = "cbb_view"
+DAY_KEY = "cbb_view_day"
+TOP25 = "Top 25"
+OTHER = "Other"
+MAX_RANK = 25
 # Averages over fewer finished games than this swing too much to read as a track record.
 MIN_GAMES_TO_READ = 300
 # The 2026 holdout: scored once by the frozen model (no retraining, no recalibration)
@@ -93,6 +100,15 @@ def _format_stamp(value: object) -> str:
     return local.strftime("%a %b ") + str(local.day) + ", " + str(local.hour % 12 or 12) + local.strftime(":%M %p ET")
 
 
+def _format_short_date(day: object) -> str | None:
+    """An ISO date as ``Oct 24, 2026``, or None when it is not a date."""
+    try:
+        parsed = datetime.fromisoformat(str(day))
+    except ValueError:
+        return None
+    return f"{parsed:%b} {parsed.day}, {parsed.year}"
+
+
 def _format_day(day: str) -> str:
     try:
         parsed = datetime.fromisoformat(str(day))
@@ -109,9 +125,9 @@ def _format_spread(value: float) -> str:
 
 
 def _format_edge(value: float, threshold: float = THRESHOLD) -> str:
-    """Model edge to two decimals, never rounded up onto the play threshold.
+    """Model gap (the card's ``model_edge``) to two decimals, never rounded up onto the play threshold.
 
-    An edge of 8.496 is not a play, so it must not display as +8.50.
+    A gap of 8.496 is not a play, so it must not display as +8.50.
     """
     shown = round(float(value), 2)
     if abs(value) < threshold <= abs(shown):
@@ -134,8 +150,24 @@ def _plural(count: int, singular: str, plural: str) -> str:
     return f"{count} {singular if count == 1 else plural}"
 
 
+def _rank(value: object) -> int | None:
+    """An AP rank 1-25 from a card cell, or None for blank, unranked or out-of-range."""
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    if not math.isfinite(number) or number != int(number) or not 1 <= int(number) <= MAX_RANK:
+        return None
+    return int(number)
+
+
+def _tag(name: str, rank: int | None) -> str:
+    """A team name for display, with ``#N `` in front when the team is ranked."""
+    return f"#{rank} {_md(name)}" if rank else _md(name)
+
+
 def _query() -> str:
-    """The team search box, shared by the game cards and the ATS list."""
+    """The team search box. A non-empty query searches every game of the day, whatever the view."""
     return str(st.session_state.get(SEARCH_KEY) or "").strip().lower()
 
 
@@ -234,9 +266,12 @@ def _matchup(row: pd.Series) -> dict:
     home_score = float(row["predicted_home_score"])
     away_score = float(row["predicted_away_score"])
     home_wins = margin > 0 or (margin == 0 and p_home >= 0.5)
+    home_rank, away_rank = _rank(row.get("home_rank")), _rank(row.get("away_rank"))
     return {
         "home": home, "away": away, "home_wins": home_wins,
+        "home_rank": home_rank, "away_rank": away_rank,
         "winner": home if home_wins else away,
+        "winner_rank": home_rank if home_wins else away_rank,
         "loser": away if home_wins else home,
         "winner_score": home_score if home_wins else away_score,
         "loser_score": away_score if home_wins else home_score,
@@ -249,7 +284,7 @@ def _matchup(row: pd.Series) -> dict:
 
 def _game_caption(row: pd.Series, game: dict) -> str:
     joiner = "vs" if game["neutral"] else "at"
-    parts = [f"{_md(game['away'])} {joiner} {_md(game['home'])}", _format_clock(row.get("tipoff_utc"))]
+    parts = [f"{_tag(game['away'], game['away_rank'])} {joiner} {_tag(game['home'], game['home_rank'])}", _format_clock(row.get("tipoff_utc"))]
     if game["neutral"]:
         parts.append("Neutral site")
     return " · ".join(parts)
@@ -266,38 +301,147 @@ def _final_line(game: dict, final: pd.Series, predicted_margin: float) -> str:
     return f"Final: {score} · {verdict}"
 
 
-def _render_game_card(row: pd.Series, final_by_game: dict[str, pd.Series]) -> None:
+def _line_row(row: pd.Series, game: dict, threshold: float) -> str:
+    """The sportsbook line and the model's gap from it, for example ``Line: Kentucky -5.5 · Gap 1.90 toward Kentucky``.
+
+    ``market_home_spread`` is the HOME team's spread, so a negative number means the home team is
+    favored. The line names whichever team it favors, and the gap (``model_edge``, positive toward
+    the home team) names the team the model leans to relative to the line.
+    """
+    if not _flag(row.get("_has_line")):
+        return "No line yet"
+    spread, edge = float(row["market_home_spread"]), float(row["model_edge"])
+    if abs(spread) < 1e-9:
+        line = "Line: pick'em"
+    else:
+        favored = game["home"] if spread < 0 else game["away"]
+        line = f"Line: {_md(favored)} {_format_spread(-abs(spread))}"
+    gap = _format_edge(abs(edge), threshold).lstrip("+")
+    if float(gap) == 0:
+        return f"{line} · Gap {gap}"
+    return f"{line} · Gap {gap} toward {_md(game['home'] if edge > 0 else game['away'])}"
+
+
+def _is_play(row: pd.Series) -> bool:
+    return _flag(row.get("_has_line")) and str(row.get("ats_pick")) in {"home", "away"}
+
+
+def _render_game_card(row: pd.Series, final_by_game: dict[str, pd.Series], threshold: float = THRESHOLD) -> None:
     game = _matchup(row)
     with st.container(border=True):
-        st.markdown(f"**{_md(game['winner'])} by {game['by']:.1f}** · {_format_probability(game['probability'])} win probability")
+        st.markdown(f"**{_tag(game['winner'], game['winner_rank'])} by {game['by']:.1f}** · {_format_probability(game['probability'])} win probability")
         st.markdown(
             f"Predicted score: {_md(game['winner'])} {game['winner_score']:.1f}, {_md(game['loser'])} {game['loser_score']:.1f}  \n"
             f"Predicted total: {game['total']:.1f}"
         )
+        if _is_play(row):
+            # Beside the line on a wide card so two cards side by side keep the same height; wraps below it on a phone.
+            with st.container(horizontal=True, vertical_alignment="center"):
+                st.markdown(_line_row(row, game, threshold))
+                st.badge(f"{threshold:g}+ gap, exploratory", color="orange")
+        else:
+            st.markdown(_line_row(row, game, threshold))
         final = final_by_game.get(str(row.get("game_id")))
         if final is not None:
             st.markdown(_final_line(game, final, float(row["predicted_margin"])))
         st.caption(_game_caption(row, game))
 
 
-def _sorted_for_display(card: pd.DataFrame) -> pd.DataFrame:
-    shown = card.copy()
-    shown["_tip"] = pd.to_datetime(shown["tipoff_utc"], utc=True, errors="coerce")
-    return shown.sort_values(["_tip", "home_team"], kind="mergesort", na_position="last")
+def _conference_names(card: pd.DataFrame, column: str) -> pd.Series:
+    if column not in card:
+        return pd.Series("", index=card.index, dtype="object")
+    return card[column].astype("string").fillna("").str.strip().astype(object)
+
+
+def _prepare(card: pd.DataFrame, official: bool, conference_order: dict) -> pd.DataFrame:
+    """The card plus helper columns: who has a line and the gap, tip time, AP ranks, and each team's conference group.
+
+    A line counts only on an official-snapshot day, so a card whose metadata lost its status
+    shows no lines, no gaps and no plays.
+    """
+    games = card.copy()
+    edge = pd.to_numeric(games["model_edge"], errors="coerce")
+    spread = pd.to_numeric(games["market_home_spread"], errors="coerce")
+    games["_has_line"] = bool(official) & games["market_status"].astype(str).eq("available") & edge.notna() & spread.notna()
+    games["_gap"] = edge.abs().where(games["_has_line"])
+    games["_tip"] = pd.to_datetime(games["tipoff_utc"], utc=True, errors="coerce")
+    aliases = conference_order["aliases"] if conference_order["available"] else {}
+    raw = {side: _conference_names(games, f"{side}_conference") for side in ("home", "away")}
+    if conference_order["available"]:
+        known = set(conference_order["order"])
+    else:
+        known = {name for names in raw.values() for name in names if name}
+    for side in ("home", "away"):
+        resolved = raw[side].map(lambda name: aliases.get(name, name))
+        games[f"_{side}_group"] = resolved.where(resolved.isin(known), OTHER)
+        games[f"_{side}_ranked"] = games[f"{side}_rank"].map(_rank).notna() if f"{side}_rank" in games else False
+    games["_ranked"] = games["_home_ranked"] | games["_away_ranked"]
+    return games
+
+
+def _view_options(games: pd.DataFrame, conference_order: dict) -> list[tuple[str, int]]:
+    """Menu entries as (view, game count): Top 25, then each conference with a game in file order, then Other.
+
+    Without the order file the conferences go alphabetically. A game between two conferences counts in both.
+    """
+    present = set(games["_home_group"]) | set(games["_away_group"])
+    names = conference_order["order"] if conference_order["available"] else sorted(present - {OTHER}, key=str.casefold)
+    views = [name for name in names if name in present] + ([OTHER] if OTHER in present else [])
+    options = [(TOP25, int(games["_ranked"].sum()))]
+    options += [(name, int(((games["_home_group"] == name) | (games["_away_group"] == name)).sum())) for name in views]
+    return options
+
+
+def _default_view(options: list[tuple[str, int]]) -> str:
+    """Top 25 when a ranked team plays, otherwise the first conference on the menu."""
+    return TOP25 if options[0][1] or len(options) == 1 else options[1][0]
+
+
+def _in_view(games: pd.DataFrame, view: str) -> pd.DataFrame:
+    if view == TOP25:
+        return games[games["_ranked"]]
+    return games[(games["_home_group"] == view) | (games["_away_group"] == view)]
+
+
+def _sorted_for_display(games: pd.DataFrame) -> pd.DataFrame:
+    """Largest gap first for games with a line, then games without one by tip time, then home team."""
+    return games.sort_values(
+        ["_has_line", "_gap", "_tip", "home_team"], ascending=[False, False, True, True], kind="mergesort", na_position="last",
+    )
+
+
+def _poll_text(top25: object) -> str | None:
+    """``AP poll of Oct 20, 2026 (preseason)`` from the card's poll metadata, or None when there is no poll."""
+    if not isinstance(top25, dict):
+        return None
+    when = _format_short_date(top25.get("poll_date"))
+    if when is None:
+        return None
+    return f"AP poll of {when}" + (" (preseason)" if top25.get("week") == 1 else "")
+
+
+def _view_caption(top25: object, conference_order: dict) -> str:
+    poll = _poll_text(top25)
+    first = f"Top 25: {poll}." if poll else "Top 25: no AP poll is available for this date."
+    if not conference_order["available"]:
+        return f"{first} Conference order: alphabetical, because the conference ranking list could not be loaded."
+    snapshot = _format_short_date(conference_order.get("captured_on"))
+    return f"{first} Conference order: WarrenNolan.com conference ranking" + (f", snapshot of {snapshot}." if snapshot else ".")
 
 
 COVERAGE_REASONS = {
     "start_time_tbd": "with no confirmed start time",
     "invalid_tipoff": "with a start time that could not be read",
-    "not_d1_v_d1": "not Division I vs Division I",
     "already_started": "already started when predictions were made",
     "missing_neutral_site": "with the game site not confirmed",
 }
 OTHER_REASON = "with other data gaps"
+# The page covers Division I games only. Current cards no longer count other games; an older card might.
+NON_D1_REASON = "not_d1_v_d1"
 
 
 def _coverage_caption(metadata: dict) -> str | None:
-    """Say how many scheduled games the card covers, when the card records it and some were left out."""
+    """Say how many scheduled Division I games the card covers, when the card records it and some were left out."""
     coverage = metadata.get("coverage")
     if not isinstance(coverage, dict):
         return None
@@ -307,6 +451,8 @@ def _coverage_caption(metadata: dict) -> str | None:
         reasons = {str(key): int(value) for key, value in dict(coverage.get("excluded_by_reason") or {}).items() if int(value) > 0}
     except (KeyError, TypeError, ValueError):
         return None
+    non_d1 = reasons.pop(NON_D1_REASON, 0)
+    scheduled, excluded = scheduled - non_d1, excluded - non_d1
     if excluded <= 0:
         return None
     by_label: dict[str, int] = {}
@@ -314,8 +460,21 @@ def _coverage_caption(metadata: dict) -> str | None:
         label = COVERAGE_REASONS.get(reason, OTHER_REASON)
         by_label[label] = by_label.get(label, 0) + count
     parts = [f"{count} {label}" for label, count in sorted(by_label.items(), key=lambda item: (-item[1], item[0]))]
-    caption = f"Showing {predicted} of {scheduled} games on the schedule."
+    caption = f"Showing {predicted} of {scheduled} Division I games on the schedule."
     return f"{caption} Not shown: {', '.join(parts)}." if parts else caption
+
+
+def _start_day(selected: str) -> None:
+    """Drop the search and any Top 25 choice when the card date changes, so neither carries over stale.
+
+    A conference choice survives if the new date has that conference; ``_render_day`` resets it when not.
+    """
+    if st.session_state.get(DAY_KEY) == selected:
+        return
+    st.session_state[DAY_KEY] = selected
+    st.session_state[SEARCH_KEY] = ""
+    if st.session_state.get(VIEW_KEY) == TOP25:
+        del st.session_state[VIEW_KEY]
 
 
 def _render_day(selected: str, card: pd.DataFrame, metadata: dict, state: dict, day_final: pd.DataFrame) -> None:
@@ -333,18 +492,44 @@ def _render_day(selected: str, card: pd.DataFrame, metadata: dict, state: dict, 
             st.metric("Games finished", f"{summary['games']} of {len(card)}", border=True)
             st.metric("Winner picks correct", f"{summary['correct']} of {summary['games']}", f"{summary['winner_rate']:.0%}", delta_color="gray", delta_arrow="off", border=True)
 
+    official = str(metadata.get("line_snapshot_status") or "") == "official"
+    threshold = float(metadata.get("threshold", THRESHOLD))
+    top25 = metadata.get("top25")
+    conference_order = cbb_daily_data.load_conference_order()
+    games = _prepare(card, official, conference_order)
+    options = _view_options(games, conference_order)
+    views = [view for view, _ in options]
+    labels = {view: f"{view} ({_plural(count, 'game', 'games')})" for view, count in options}
+    if st.session_state.get(VIEW_KEY) not in views:
+        st.session_state[VIEW_KEY] = _default_view(options)
+    query = _query()
+    view = st.selectbox("View", views, format_func=labels.__getitem__, key=VIEW_KEY, filter_mode=None, disabled=bool(query))
+    st.caption(_view_caption(top25, conference_order))
+    if games["_has_line"].any():
+        st.caption("Games are listed by gap: how far the model's predicted margin is from the sportsbook line, largest first. Games with no line follow, by tip time.")
+    else:
+        st.caption("No sportsbook line is available for this date, so games are listed by tip time.")
+
     st.text_input("Find a team", key=SEARCH_KEY, placeholder="Type a team name")
-    shown = _matches(_sorted_for_display(card), _query())
+    if query:
+        st.caption("Searching all of this date's games. Clear the box to use the View menu again.")
+        shown = _matches(games, query)
+    else:
+        shown = _in_view(games, view)
     if shown.empty:
-        st.info("No games match that search.")
+        if query:
+            st.info("No games match that search.")
+        elif view == TOP25:
+            st.info("No ranked team plays on this date." if _poll_text(top25) else "The AP Top 25 poll is not available for this date, so there are no ranked teams to show.")
         return
+    shown = _sorted_for_display(shown)
     final_by_game = {str(row["game_id"]): row for _, row in day_final.iterrows()} if not day_final.empty else {}
     rows = [row for _, row in shown.iterrows()]
     # Two across on a wide screen. Streamlit stacks the columns on a phone, in the same order.
     for start in range(0, len(rows), 2):
         for column, row in zip(st.columns(2), rows[start:start + 2]):
             with column:
-                _render_game_card(row, final_by_game)
+                _render_game_card(row, final_by_game, threshold)
 
 
 def _render_prediction_record(predictions: pd.DataFrame) -> None:
@@ -385,21 +570,6 @@ def _outcome(result_by_game: dict[str, str], game_id: str) -> str:
     return graded.title() if graded in {"win", "loss", "push"} else "Pending"
 
 
-def _shadow_lines(lined: pd.DataFrame, unlined: pd.DataFrame, threshold: float, result_by_game: dict[str, str]) -> list[str]:
-    """One plain-text line per game. Text wraps on a phone and stays readable to a screen reader."""
-    lines = []
-    for _, row in lined.iterrows():
-        pick = _pick_name(row)
-        verdict = "No play" if pick is None else f"**Shadow pick: {_md(pick)}** ({_outcome(result_by_game, str(row.get('game_id'))).lower()})"
-        lines.append(
-            f"- {_md(row['away_team'])} at {_md(row['home_team'])} · {_md(row['home_team'])} {_format_spread(float(row['market_home_spread']))}"
-            f" · model edge {_format_edge(float(row['model_edge']), threshold)} · {verdict}"
-        )
-    for _, row in unlined.iterrows():
-        lines.append(f"- {_md(row['away_team'])} at {_md(row['home_team'])} · No line")
-    return lines
-
-
 def _render_ats_shadow(card: pd.DataFrame, metadata: dict, results: pd.DataFrame | None, ats_history: pd.DataFrame) -> None:
     status = str(metadata.get("line_snapshot_status") or "unavailable")
     threshold = float(metadata.get("threshold", THRESHOLD))
@@ -417,8 +587,7 @@ def _render_ats_shadow(card: pd.DataFrame, metadata: dict, results: pd.DataFrame
         return
     market = card["market_status"].astype(str)
     lined = card[market.eq("available")].copy()
-    unlined = card[~market.eq("available")].copy()
-    lined["_edge"] = pd.to_numeric(lined["model_edge"], errors="coerce")
+    lined["_edge"] = pd.to_numeric(lined["model_edge"], errors="coerce")  # the card's model_edge column is the gap
     lined["_abs_edge"] = lined["_edge"].abs()
     lined["_play"] = lined["ats_pick"].astype(str).isin({"home", "away"})
     lined = lined.sort_values(["_play", "_abs_edge"], ascending=[False, False], kind="mergesort")
@@ -437,28 +606,20 @@ def _render_ats_shadow(card: pd.DataFrame, metadata: dict, results: pd.DataFrame
         st.metric("Shadow picks", int(len(plays)), border=True)
         st.metric("Season shadow record", f"{wins}-{losses}-{pushes}" if not ats_history.empty else "No graded games", border=True)
     if plays.empty:
-        st.caption(f"No game reached the {threshold:g}-point edge on this card, so there are no shadow picks.")
+        st.caption(f"No game reached the {threshold:g}-point gap on this card, so there are no shadow picks.")
     for _, row in plays.iterrows():
         pick_home = str(row["ats_pick"]) == "home"
         spread = float(row["market_home_spread"]) * (1 if pick_home else -1)
         with st.container(border=True):
             st.markdown(f"**Shadow pick: {_md(_pick_name(row))} {_format_spread(spread)}**")
             st.caption(
-                f"{_md(row['away_team'])} at {_md(row['home_team'])} · model edge {_format_edge(float(row['_edge']), threshold)}"
+                f"{_md(row['away_team'])} at {_md(row['home_team'])} · model gap {_format_edge(float(row['_edge']), threshold)}"
                 f" · result: {_outcome(result_by_game, str(row.get('game_id'))).lower()}"
             )
     st.caption(
-        "Model edge is the model's predicted margin minus the margin the spread implies, from the home team's side. A positive edge favors the home team "
-        f"and a negative edge favors the away team. A game becomes a shadow pick only when its edge reaches {threshold:g} points in either direction."
+        "Model gap is the model's predicted margin minus the margin the spread implies, from the home team's side. A positive gap favors the home team "
+        f"and a negative gap favors the away team. A game becomes a shadow pick only when its gap reaches {threshold:g} points in either direction."
     )
-    query = _query()
-    lined_shown, unlined_shown = _matches(lined, query), _matches(unlined, query)
-    with st.expander(f"All games on this card ({len(lined)} with a line, {len(unlined)} without)"):
-        lines = _shadow_lines(lined_shown, _sorted_for_display(unlined_shown) if not unlined_shown.empty else unlined_shown, threshold, result_by_game)
-        if lines:
-            st.markdown("\n".join(lines))
-        else:
-            st.caption("No games match that search.")
 
 
 def _render_ats_record(graded_history: pd.DataFrame) -> None:
@@ -522,6 +683,7 @@ def render():
     if default != today:
         st.warning(f"Showing the latest official card from {latest}; today’s card has not been published.")
     selected = st.selectbox("Card date", dates, index=dates.index(default), key="cbb_card_date")
+    _start_day(selected)
     state = manifest.get("dates", {}).get(selected, {})
     ats_history, prediction_history = _load_history(manifest, dates)
 

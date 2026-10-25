@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import pandas as pd
@@ -8,6 +9,7 @@ from publishing.cbb_daily import (
     CARD_COLUMNS,
     CARD_SCHEMA_VERSION,
     LINE_SNAPSHOT_STATUSES,
+    OPTIONAL_CARD_COLUMNS,
     RESULT_COLUMNS,
     cbb_status,
     load_cbb_card,
@@ -26,12 +28,14 @@ MODEL_HASH = "f83da7ac2015f8c23dfa41d52d5a2b1325ec0a7cad3e3b03e53bc2c957d27800"
 FEATURE_HASH = "c08adcfed32f497bf98dbea61b203bb2df5d5a5b0554f02b135cd7b3eb1bf89f"
 BENCHMARK_HASH = "7b038b0e82196fe88d5bd4c57b5834f7c7d3f3d3df5d50a31f5c7ac4284b2930"
 POLICY_HASH = "79f5b87a552e2fbfd72e0578e500a1525cd492542e39d04850cb40da1d60a66d"
+TOP25 = {"poll": "AP Top 25", "poll_date": "2026-10-20", "week": 1, "source": "static_snapshot"}
 
 
 def _lined_row(game_id: str = "g1", **overrides) -> dict:
     """An `available` row: a pre-tip official line captured at 09:00 ET on game day."""
-    row = {column: "" for column in CARD_COLUMNS}
+    row = {column: "" for column in CARD_COLUMNS + OPTIONAL_CARD_COLUMNS}
     row.update({
+        "home_conference": "SEC", "away_conference": "A-10", "home_rank": 3, "away_rank": "",
         "game_id": game_id, "season": 2027, "game_date_et": "2026-11-02", "tipoff_utc": "2026-11-02T20:00:00Z",
         "home_team_id": "h", "home_team": "Home", "away_team_id": "a", "away_team": "Away",
         "neutral_site": False, "conference_game": True, "predicted_home_score": 80.0,
@@ -61,9 +65,10 @@ def _unlined_row(game_id: str = "g2", **overrides) -> dict:
     return row
 
 
-def _card(tmp_path: Path, rows: list[dict], *, line_snapshot_status: str | None = "official", name: str = "card.csv", **meta):
+def _card(tmp_path: Path, rows: list[dict], *, line_snapshot_status: str | None = "official", name: str = "card.csv", columns=None, **meta):
+    """Write a card. Rows carry the optional conference and rank columns unless ``columns`` names another set."""
     artifact = tmp_path / name
-    pd.DataFrame(rows, columns=CARD_COLUMNS).to_csv(artifact, index=False, lineterminator="\n")
+    pd.DataFrame(rows, columns=columns or CARD_COLUMNS + OPTIONAL_CARD_COLUMNS).to_csv(artifact, index=False, lineterminator="\n")
     metadata = {
         "schema_version": CARD_SCHEMA_VERSION, "product": "cbb_daily_spreads", "season": 2027,
         "game_date_et": "2026-11-02", "status": "published" if rows else "no_games_scheduled",
@@ -71,7 +76,7 @@ def _card(tmp_path: Path, rows: list[dict], *, line_snapshot_status: str | None 
         "expected_game_ids": [row["game_id"] for row in rows], "model_hash": MODEL_HASH,
         "feature_hash": FEATURE_HASH, "historical_benchmark_hash": BENCHMARK_HASH,
         "policy_hash": POLICY_HASH, "threshold": 8.5, "prediction_run_hash": "pred",
-        "line_snapshot_status": line_snapshot_status,
+        "line_snapshot_status": line_snapshot_status, "top25": dict(TOP25),
     }
     if line_snapshot_status is None:
         del metadata["line_snapshot_status"]
@@ -329,3 +334,208 @@ def test_invalid_coverage_is_rejected(tmp_path, bad, message):
         validate_card_candidate(artifact, metadata)
     with pytest.raises(PublicationError):
         publish_card_candidate(artifact, metadata, root=tmp_path)
+
+
+# ---- Optional conference, rank and top25 fields ---------------------------------------------------
+
+def _extras_card(tmp_path: Path, rows: list[dict], *, name: str = "extras.csv", **meta):
+    return _card(tmp_path, rows, line_snapshot_status="unavailable", name=name, **meta)
+
+
+def _plain(game_id: str = "g1", **overrides) -> dict:
+    return _unlined_row(game_id, **overrides)
+
+
+def test_card_with_conferences_ranks_and_top25_is_accepted_and_round_trips(tmp_path):
+    rows = [
+        _plain("g1", home_conference="SEC", away_conference="A-10", home_rank=3, away_rank=25),
+        _plain("g2", home_team_id="h2", away_team_id="a2", home_conference="", away_conference="Pac-12", home_rank="", away_rank=""),
+    ]
+    artifact, metadata = _extras_card(tmp_path, rows)
+    checked = validate_card_candidate(artifact, metadata)
+    assert checked["metadata"]["top25"] == TOP25
+    publish_card_candidate(artifact, metadata, root=tmp_path)
+    frame, stored, _ = load_cbb_card("2026-11-02", root=tmp_path)
+    assert stored["top25"] == TOP25
+    assert frame["home_conference"].tolist()[0] == "SEC" and frame["away_conference"].tolist() == ["A-10", "Pac-12"]
+    assert pd.isna(frame.loc[1, "home_conference"]), "a blank conference stays blank, never the text 'nan'"
+    assert frame["home_rank"].tolist()[0] == 3 and pd.isna(frame.loc[1, "home_rank"])
+    written = pd.read_csv(artifact, dtype=str, keep_default_na=False)
+    assert written["home_rank"].tolist() == ["3", ""] and written["away_rank"].tolist() == ["25", ""], "the CSV prints 3, not 3.0"
+
+
+def test_ties_are_legal_and_conferences_may_be_blank(tmp_path):
+    rows = [
+        _plain("g1", home_conference="", away_conference="", home_rank=25, away_rank=25),
+        _plain("g2", home_team_id="h2", away_team_id="a2", home_rank=25, away_rank=1),
+    ]
+    artifact, metadata = _extras_card(tmp_path, rows)
+    assert validate_card_candidate(artifact, metadata)["frame"][["home_rank", "away_rank"]].stack().tolist() == [25, 25, 25, 1]
+
+
+def test_card_without_the_optional_columns_still_validates_and_loads(tmp_path):
+    """A card written before these fields existed has no extra columns and no top25, and is still valid."""
+    artifact, metadata = _card(tmp_path, [_unlined_row()], line_snapshot_status="unavailable", columns=CARD_COLUMNS)
+    del metadata["top25"]
+    checked = validate_card_candidate(artifact, metadata)
+    assert not set(OPTIONAL_CARD_COLUMNS) & set(checked["frame"].columns)
+    publish_card_candidate(artifact, metadata, root=tmp_path)
+    frame, stored, _ = load_cbb_card("2026-11-02", root=tmp_path)
+    assert len(frame) == 1 and "top25" not in stored
+
+
+def test_top25_may_be_null_when_no_rank_is_on_the_card(tmp_path):
+    artifact, metadata = _extras_card(tmp_path, [_plain(home_rank="", away_rank="")], top25=None)
+    assert validate_card_candidate(artifact, metadata)["metadata"]["top25"] is None
+
+
+@pytest.mark.parametrize("home, away", [(0, ""), (26, ""), ("", 100), (2.5, ""), (-1, ""), ("", "abc"), (1, 0)])
+def test_ranks_must_be_blank_or_a_whole_number_from_1_to_25(tmp_path, home, away):
+    artifact, metadata = _extras_card(tmp_path, [_plain(home_rank=home, away_rank=away)])
+    with pytest.raises(PublicationError, match="rank must be blank or a whole number from 1 to 25"):
+        validate_card_candidate(artifact, metadata)
+    with pytest.raises(PublicationError):
+        publish_card_candidate(artifact, metadata, root=tmp_path)
+
+
+def test_a_rank_requires_a_top25_poll(tmp_path):
+    artifact, metadata = _extras_card(tmp_path, [_plain(home_rank=3)], top25=None)
+    with pytest.raises(PublicationError, match="ranks require top25"):
+        validate_card_candidate(artifact, metadata)
+    artifact, metadata = _extras_card(tmp_path, [_plain(home_rank=3)], name="no-key.csv")
+    del metadata["top25"]
+    with pytest.raises(PublicationError, match="ranks require top25"):
+        validate_card_candidate(artifact, metadata)
+
+
+@pytest.mark.parametrize("keep", [
+    [c for c in CARD_COLUMNS + OPTIONAL_CARD_COLUMNS if c != "away_rank"],
+    [c for c in CARD_COLUMNS + OPTIONAL_CARD_COLUMNS if c != "home_rank"],
+    [c for c in CARD_COLUMNS + OPTIONAL_CARD_COLUMNS if c != "away_conference"],
+    [c for c in CARD_COLUMNS + OPTIONAL_CARD_COLUMNS if c != "home_conference"],
+])
+def test_extra_columns_come_in_home_away_pairs(tmp_path, keep):
+    artifact, metadata = _extras_card(tmp_path, [_plain()], columns=tuple(keep))
+    with pytest.raises(PublicationError, match="come in home/away pairs"):
+        validate_card_candidate(artifact, metadata)
+
+
+@pytest.mark.parametrize("bad, message", [
+    ("AP Top 25", "must be null or an object"),
+    ([], "must be null or an object"),
+    ({k: v for k, v in TOP25.items() if k != "week"}, "exactly"),
+    ({**TOP25, "extra": 1}, "exactly"),
+    ({**TOP25, "poll": "Coaches Poll"}, "poll must be 'AP Top 25'"),
+    ({**TOP25, "poll_date": "10/20/2026"}, "poll_date must be YYYY-MM-DD"),
+    ({**TOP25, "poll_date": "2026-13-40"}, "poll_date must be YYYY-MM-DD"),
+    ({**TOP25, "poll_date": "2026-10-20T00:00:00"}, "poll_date must be YYYY-MM-DD"),
+    ({**TOP25, "poll_date": None}, "poll_date must be YYYY-MM-DD"),
+    ({**TOP25, "week": -1}, "week must be null or a non-negative integer"),
+    ({**TOP25, "week": "1"}, "week must be null or a non-negative integer"),
+    ({**TOP25, "week": True}, "week must be null or a non-negative integer"),
+    ({**TOP25, "week": 1.5}, "week must be null or a non-negative integer"),
+    ({**TOP25, "source": "espn"}, "source must be one of"),
+    ({**TOP25, "source": None}, "source must be one of"),
+])
+def test_a_bad_top25_is_rejected(tmp_path, bad, message):
+    artifact, metadata = _extras_card(tmp_path, [_plain(home_rank="", away_rank="")], top25=bad)
+    with pytest.raises(PublicationError, match=message):
+        validate_card_candidate(artifact, metadata)
+
+
+@pytest.mark.parametrize("week, source", [(None, "cbbd"), (0, "cbbd"), (1, "static_snapshot"), (14, "cbbd")])
+def test_top25_accepts_a_null_or_whole_number_week_and_both_sources(tmp_path, week, source):
+    artifact, metadata = _extras_card(tmp_path, [_plain(home_rank=7)], top25={**TOP25, "week": week, "source": source})
+    assert validate_card_candidate(artifact, metadata)["metadata"]["top25"]["source"] == source
+
+
+def test_a_conference_column_that_holds_numbers_is_rejected(tmp_path):
+    artifact, metadata = _extras_card(tmp_path, [_plain(home_conference="12", away_conference="SEC")])
+    with pytest.raises(PublicationError, match="home_conference must hold conference names"):
+        validate_card_candidate(artifact, metadata)
+
+
+def test_an_empty_card_may_carry_the_poll_and_a_bad_poll_still_fails(tmp_path):
+    artifact, metadata = _card(tmp_path, [], line_snapshot_status="unavailable")
+    assert validate_card_candidate(artifact, metadata)["frame"].empty
+    metadata["top25"] = {**TOP25, "source": "espn"}
+    with pytest.raises(PublicationError, match="source must be one of"):
+        validate_card_candidate(artifact, metadata)
+
+
+# ---- data/cbb/conference_order_2027.json -----------------------------------------------------------
+
+CBBD_2027_SHORT_NAMES = [
+    "A-10", "ACC", "ASUN", "Am. East", "American", "Big 12", "Big East", "Big Sky", "Big South", "Big Ten", "Big West", "CAA", "CUSA",
+    "Horizon", "Ivy", "Metro", "MAC", "MEAC", "MVC", "Mountain West", "NEC", "OVC", "Patriot", "SEC", "SWAC", "SoCon", "Southland",
+    "Summit", "Sun Belt", "UAC", "WCC", "Pac-12",
+]
+CONFERENCE_ORDER_FILE = Path(__file__).resolve().parents[1] / "data" / "cbb" / "conference_order_2027.json"
+
+
+def _conference_order() -> dict:
+    return json.loads(CONFERENCE_ORDER_FILE.read_text(encoding="utf-8"))
+
+
+def test_conference_order_file_has_32_unique_names_in_the_warrennolan_order():
+    data = _conference_order()
+    order = data["order"]
+    assert len(order) == 32 and len(set(order)) == 32
+    assert order[:6] == ["SEC", "Big 12", "Big Ten", "ACC", "Big East", "Pac-12"] and order[-3:] == ["America East", "SWAC", "MEAC"]
+    assert data["source"] == "https://www.warrennolan.com/basketball/2027/net-conference"
+    assert data["captured_on"] == "2026-10-24"
+    assert "NET" in data["note"] and "refresh" in data["note"].lower()
+
+
+def test_every_alias_points_at_a_name_in_the_order():
+    data = _conference_order()
+    assert data["aliases"] and all(target in data["order"] for target in data["aliases"].values())
+    assert not set(data["aliases"]) & set(data["order"]), "an alias key is a CBBD name that differs from its display name"
+    assert len(set(data["aliases"].values())) == len(data["aliases"])
+
+
+def test_all_32_cbbd_2027_conference_names_resolve_to_one_listed_conference_each():
+    data = _conference_order()
+    assert len(CBBD_2027_SHORT_NAMES) == 32 and len(set(CBBD_2027_SHORT_NAMES)) == 32
+    resolved = [data["aliases"].get(name, name) for name in CBBD_2027_SHORT_NAMES]
+    assert all(name in data["order"] for name in resolved), [n for n in resolved if n not in data["order"]]
+    assert sorted(resolved) == sorted(data["order"]), "the 32 CBBD names map one to one onto the 32 listed conferences"
+
+
+def test_conference_order_file_has_no_em_or_en_dashes():
+    text = CONFERENCE_ORDER_FILE.read_text(encoding="utf-8")
+    assert chr(0x2014) not in text and chr(0x2013) not in text
+
+
+def test_the_loader_reads_the_repo_file_and_fails_soft(tmp_path, monkeypatch):
+    import cbb_daily_data
+
+    cbb_daily_data.load_conference_order.clear()
+    loaded = cbb_daily_data.load_conference_order()
+    assert loaded["available"] and loaded["order"] == _conference_order()["order"] and loaded["captured_on"] == "2026-10-24"
+    # The release fixture directory never replaces it, even with the offline flag set.
+    monkeypatch.setenv("APP_OFFLINE", "1")
+    monkeypatch.setenv("JSA_CBB_FIXTURE_DIR", str(tmp_path))
+    cbb_daily_data.load_conference_order.clear()
+    assert cbb_daily_data.load_conference_order()["available"]
+
+    def read(payload: object) -> dict:
+        path = tmp_path / "order.json"
+        path.write_text(payload if isinstance(payload, str) else json.dumps(payload), encoding="utf-8")
+        monkeypatch.setattr(cbb_daily_data, "CONFERENCE_ORDER_PATH", path)
+        cbb_daily_data.load_conference_order.clear()
+        return cbb_daily_data.load_conference_order()
+
+    unavailable = {"order": [], "aliases": {}, "captured_on": None, "source": None, "available": False}
+    monkeypatch.setattr(cbb_daily_data, "CONFERENCE_ORDER_PATH", tmp_path / "does-not-exist.json")
+    cbb_daily_data.load_conference_order.clear()
+    assert cbb_daily_data.load_conference_order() == unavailable
+    assert read("{not json") == unavailable
+    assert read([]) == unavailable
+    assert read({"order": []}) == unavailable
+    assert read({"order": ["A", "A"]}) == unavailable
+    assert read({"order": ["A", "B"], "aliases": {"a": "C"}}) == unavailable
+    assert read({"order": ["A", "B"], "captured_on": "not a date"}) == unavailable
+    good = read({"order": ["A", "B"], "aliases": {"a": "A"}, "captured_on": "2026-10-24"})
+    assert good["available"] and good["order"] == ["A", "B"] and good["aliases"] == {"a": "A"}
+    cbb_daily_data.load_conference_order.clear()
