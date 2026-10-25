@@ -1,0 +1,648 @@
+{
+  "artifact_name": "projections_2026_week07.csv",
+  "artifact_sha256": "5e681118ed921c79c194b8fa382aa44307e8416ae9c4ce98eb02655f6fb3de8e",
+  "expected_gsis_id_sha256": "1701eac596183b80998a987bc82baaa2e54d1842f8984de2fa9a61ae35bdb8dd",
+  "expected_player_ids_sha256": "e58709e63a59531b31bfee7e9e175da2ada566fd008369648bb30754fd0aebd1",
+  "expected_rows": 339,
+  "expected_sleeper_id_sha256": "522fae22ff29032cd7f84760c9627a659fddd8c869eb871d978c9f28a5a3b1a5",
+  "expected_teams": [
+    "ARI",
+    "ATL",
+    "BAL",
+    "CAR",
+    "CHI",
+    "CIN",
+    "CLE",
+    "DAL",
+    "DEN",
+    "DET",
+    "GB",
+    "HOU",
+    "IND",
+    "KC",
+    "LA",
+    "LV",
+    "MIA",
+    "MIN",
+    "NE",
+    "NO",
+    "NYG",
+    "NYJ",
+    "PHI",
+    "PIT",
+    "SEA",
+    "SF",
+    "TB",
+    "TEN"
+  ],
+  "identity_aliases": [
+    "gsis_id",
+    "sleeper_id"
+  ],
+  "legacy_bootstrap": false,
+  "manual_qb_assumptions": [],
+  "model_version": "weekly-fantasy-v2-l1_wipe_prior_share_ranks-ad79f409f0b3",
+  "position_counts": {
+    "QB": 28,
+    "RB": 87,
+    "TE": 93,
+    "WR": 131
+  },
+  "produced_at": "2026-10-25T13:07:44Z",
+  "product": "fantasy",
+  "release_review": {
+    "active_build_baseline": {
+      "artifact_path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\JoSchoAnalytics\\data\\releases\\builds\\fantasy\\2026\\week07\\fantasy-2026w07-ddcc57424a64\\artifact.csv",
+      "artifact_sha256": "ddcc57424a6428cb957a19bf6e60b2a70aec6bc350c18cc7a899fd7f384e1e3b",
+      "build_id": "fantasy-2026w07-ddcc57424a64",
+      "produced_at": "2026-10-22T23:51:40Z",
+      "producer_baseline_run": "week07_thursday_confirmed_out_20261022_v1"
+    },
+    "baltimore_qb_exception": {
+      "missing": true,
+      "position": "QB",
+      "reason": "No projected BAL QB in frozen Week 7 source; do not inject an unprojected player.",
+      "team": "BAL"
+    },
+    "candidate_comparison": {
+      "added_player_ids": [
+        "00-0034775",
+        "00-0037525",
+        "00-0038977",
+        "00-0040162"
+      ],
+      "baseline_rows": 352,
+      "candidate_rows": 339,
+      "override_review": {
+        "already_out_confirmations": [
+          "Ben Skowronek PIT WR",
+          "Eli Heidenreich PIT RB"
+        ],
+        "incremental_status_change": "Treyton Welch NO TE, none to Out",
+        "qb_changes": 0
+      },
+      "projection_changed_cells": 225,
+      "projection_changed_player_ids": [
+        "00-0026498",
+        "00-0029892",
+        "00-0030061",
+        "00-0030279",
+        "00-0030506",
+        "00-0030565",
+        "00-0031236",
+        "00-0031503",
+        "00-0031610",
+        "00-0032392",
+        "00-0032394",
+        "00-0032764",
+        "00-0032951",
+        "00-0033077",
+        "00-0033110",
+        "00-0033217",
+        "00-0033246",
+        "00-0033280",
+        "00-0033288",
+        "00-0033293",
+        "00-0033375",
+        "00-0033439",
+        "00-0033537",
+        "00-0033589",
+        "00-0033854",
+        "00-0033873",
+        "00-0033881",
+        "00-0033906",
+        "00-0033921",
+        "00-0034348",
+        "00-0034351",
+        "00-0034383",
+        "00-0034753",
+        "00-0034829",
+        "00-0034837",
+        "00-0034844",
+        "00-0034975",
+        "00-0034981",
+        "00-0035021",
+        "00-0035208",
+        "00-0035228",
+        "00-0035229",
+        "00-0035406",
+        "00-0035594",
+        "00-0035631",
+        "00-0035644",
+        "00-0035662",
+        "00-0035700",
+        "00-0035710",
+        "00-0036040",
+        "00-0036158",
+        "00-0036223",
+        "00-0036244",
+        "00-0036259",
+        "00-0036265",
+        "00-0036309",
+        "00-0036322",
+        "00-0036358",
+        "00-0036407",
+        "00-0036410",
+        "00-0036422",
+        "00-0036425",
+        "00-0036442",
+        "00-0036550",
+        "00-0036554",
+        "00-0036555",
+        "00-0036556",
+        "00-0036613",
+        "00-0036630",
+        "00-0036825",
+        "00-0036842",
+        "00-0036849",
+        "00-0036876",
+        "00-0036887",
+        "00-0036900",
+        "00-0036919",
+        "00-0036924",
+        "00-0036970",
+        "00-0036980",
+        "00-0036997",
+        "00-0037005",
+        "00-0037091",
+        "00-0037120",
+        "00-0037132",
+        "00-0037238",
+        "00-0037239",
+        "00-0037247",
+        "00-0037252",
+        "00-0037258",
+        "00-0037292",
+        "00-0037311",
+        "00-0037614",
+        "00-0037666",
+        "00-0037740",
+        "00-0037741",
+        "00-0037755",
+        "00-0037805",
+        "00-0037834",
+        "00-0037840",
+        "00-0038041",
+        "00-0038098",
+        "00-0038115",
+        "00-0038120",
+        "00-0038128",
+        "00-0038129",
+        "00-0038134",
+        "00-0038394",
+        "00-0038400",
+        "00-0038498",
+        "00-0038519",
+        "00-0038542",
+        "00-0038547",
+        "00-0038551",
+        "00-0038608",
+        "00-0038618",
+        "00-0038705",
+        "00-0038710",
+        "00-0038728",
+        "00-0038738",
+        "00-0038783",
+        "00-0038794",
+        "00-0038839",
+        "00-0038951",
+        "00-0038976",
+        "00-0038994",
+        "00-0038997",
+        "00-0039032",
+        "00-0039050",
+        "00-0039062",
+        "00-0039064",
+        "00-0039074",
+        "00-0039075",
+        "00-0039150",
+        "00-0039163",
+        "00-0039356",
+        "00-0039359",
+        "00-0039361",
+        "00-0039365",
+        "00-0039373",
+        "00-0039410",
+        "00-0039451",
+        "00-0039491",
+        "00-0039530",
+        "00-0039589",
+        "00-0039738",
+        "00-0039751",
+        "00-0039792",
+        "00-0039794",
+        "00-0039796",
+        "00-0039798",
+        "00-0039811",
+        "00-0039814",
+        "00-0039849",
+        "00-0039868",
+        "00-0039874",
+        "00-0039880",
+        "00-0039890",
+        "00-0039894",
+        "00-0039917",
+        "00-0039920",
+        "00-0039923",
+        "00-0040024",
+        "00-0040075",
+        "00-0040124",
+        "00-0040138",
+        "00-0040154",
+        "00-0040170",
+        "00-0040172",
+        "00-0040177",
+        "00-0040179",
+        "00-0040187",
+        "00-0040198",
+        "00-0040208",
+        "00-0040215",
+        "00-0040237",
+        "00-0040506",
+        "00-0040509",
+        "00-0040583",
+        "00-0040584",
+        "00-0040590",
+        "00-0040644",
+        "00-0040663",
+        "00-0040705",
+        "00-0040730",
+        "00-0040736",
+        "00-0040743",
+        "00-0040782",
+        "00-0040784",
+        "00-0040785",
+        "00-0040867",
+        "00-0040870",
+        "00-0040878",
+        "00-0040887",
+        "00-0040890",
+        "00-0041013",
+        "00-0041032",
+        "00-0041037",
+        "00-0041041",
+        "00-0041044",
+        "00-0041048",
+        "00-0041052",
+        "00-0041067",
+        "00-0041069",
+        "00-0041077",
+        "00-0041094",
+        "00-0041104",
+        "00-0041116",
+        "00-0041125",
+        "00-0041131",
+        "00-0041132",
+        "00-0041133",
+        "00-0041251",
+        "00-0041267",
+        "00-0041436",
+        "00-0041472",
+        "00-0041511",
+        "00-0041523",
+        "00-0041524",
+        "00-0041525",
+        "00-0041529",
+        "00-0041547",
+        "00-0041579",
+        "sleeper:13324",
+        "sleeper:13433",
+        "sleeper:13516"
+      ],
+      "removed_player_ids": [
+        "00-0035685",
+        "00-0036862",
+        "00-0036912",
+        "00-0037085",
+        "00-0037746",
+        "00-0037801",
+        "00-0038393",
+        "00-0039067",
+        "00-0039405",
+        "00-0039518",
+        "00-0039816",
+        "00-0039847",
+        "00-0040078",
+        "00-0040128",
+        "00-0040129",
+        "00-0041027",
+        "00-0041490"
+      ],
+      "status_changed_cells": 36,
+      "status_changed_player_ids": [
+        "00-0033293",
+        "00-0033906",
+        "00-0034837",
+        "00-0034844",
+        "00-0035021",
+        "00-0035208",
+        "00-0035229",
+        "00-0035662",
+        "00-0036265",
+        "00-0036309",
+        "00-0036550",
+        "00-0036613",
+        "00-0036842",
+        "00-0036849",
+        "00-0036876",
+        "00-0037091",
+        "00-0038120",
+        "00-0038705",
+        "00-0038951",
+        "00-0038994",
+        "00-0039032",
+        "00-0039075",
+        "00-0039356",
+        "00-0039890",
+        "00-0039917",
+        "00-0040198",
+        "00-0040784",
+        "00-0040867",
+        "00-0040878",
+        "00-0041069",
+        "00-0041077",
+        "00-0041116",
+        "00-0041133",
+        "00-0041472",
+        "00-0041523",
+        "sleeper:13324"
+      ]
+    },
+    "capture_requested_utc": "2026-10-25T12:56:26Z",
+    "edition": "Sunday pre-kickoff",
+    "model_version": "weekly-fantasy-v2-l1_wipe_prior_share_ranks-ad79f409f0b3",
+    "official_research_findings": {
+      "already_out_thursday": [
+        "Ben Skowronek PIT WR (00-0036862 / 7757)",
+        "Eli Heidenreich PIT RB (00-0041490 / 13423)"
+      ],
+      "board_effect": {
+        "already_out_confirmations": 2,
+        "incremental_status_change": "Treyton Welch none to Out",
+        "qb_changes": 0
+      },
+      "confirmed_inactive": [
+        "Ben Skowronek PIT WR",
+        "Eli Heidenreich PIT RB",
+        "Treyton Welch NO TE (00-0039518 / 12079)"
+      ],
+      "cutoff_note": "Only sources verified by 08:54 ET; no later 1 PM game inactive lists used.",
+      "injury_status_url": "https://www.nfl.com/injuries/league/2026/reg7",
+      "no_new_injury_designations_vs_thursday": true,
+      "published_et": "2026-10-25 08:00",
+      "source": "Steelers.com inactive report",
+      "url": "https://www.steelers.com/news/steelers-inactives-for-week-7-at-saints",
+      "verified_cutoff_et": "2026-10-25 08:54"
+    },
+    "qb_policy": "frozen model default; no manual QB override",
+    "season": 2026,
+    "sleeper_projection_sha256": "d5509ca7f9ed9a70e9cf9ef149ccc9f199a08866d7050f0e35563e88358c4d27",
+    "source_provenance": {
+      "active_thursday_artifact": {
+        "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\JoSchoAnalytics\\data\\releases\\builds\\fantasy\\2026\\week07\\fantasy-2026w07-ddcc57424a64\\artifact.csv",
+        "sha256": "ddcc57424a6428cb957a19bf6e60b2a70aec6bc350c18cc7a899fd7f384e1e3b"
+      },
+      "sunday_directory": {
+        "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\sleeper\\gameday\\2026-10-25_sunday_20261025T085626ET.json",
+        "sha256": "c0581ef0350008da1222af44cfa3d5c51907b8d85edc8b5c2e6e88c0b9be9e57"
+      },
+      "sunday_lineup_override": {
+        "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\news\\2026_w07_sunday_lineup_overrides_20261025T085626ET.csv",
+        "sha256": "34bf453aad1fd887e91498173519dea6f9f58397e23f2bf3463d5b3acb1ddd1f"
+      },
+      "thursday_forward_baseline": {
+        "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\weekly_projections_v2_prod\\independent_model\\outputs\\week07_thursday_confirmed_out_20261022_v1\\forward_2026_week07.parquet",
+        "sha256": "12751eeec9f4480792d54710a9ca535f9a2cac79cb1918096addaccee34d184b"
+      },
+      "tuesday_directory": {
+        "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\sleeper\\tuesday\\2026_w07.json",
+        "sha256": "494986a41e3e69143a5e25c783e490b3b09b858a96fe9105f0a51b7007364c6d"
+      },
+      "tuesday_market": {
+        "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_rebuild\\tuesday_0900\\2026_w07.json",
+        "sha256": "8aed73a1260443d31d0b2ef5f9628421a4e66cc8a8356a4f45d363c998e8eb19"
+      },
+      "tuesday_projections": {
+        "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\sleeper\\tuesday\\2026_w07_projections.json",
+        "sha256": "d5509ca7f9ed9a70e9cf9ef149ccc9f199a08866d7050f0e35563e88358c4d27"
+      }
+    },
+    "started_game_lock": {
+      "candidate_forward": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\weekly_projections_v2_prod\\independent_model\\outputs\\week07_sunday_20261025_v1\\forward_2026_week07.parquet",
+      "forward_and_public_rows_exact": true,
+      "game_ids": [
+        "2026_07_NE_CHI"
+      ],
+      "source_forward": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\weekly_projections_v2_prod\\independent_model\\outputs\\week07_thursday_confirmed_out_20261022_v1\\forward_2026_week07.parquet"
+    },
+    "week": 7
+  },
+  "schema_version": 1,
+  "season": 2026,
+  "team_position_counts": {
+    "ARI": {
+      "QB": 1,
+      "RB": 2,
+      "TE": 2,
+      "WR": 5
+    },
+    "ATL": {
+      "QB": 1,
+      "RB": 1,
+      "TE": 3,
+      "WR": 4
+    },
+    "BAL": {
+      "QB": 0,
+      "RB": 3,
+      "TE": 4,
+      "WR": 5
+    },
+    "CAR": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 5,
+      "WR": 5
+    },
+    "CHI": {
+      "QB": 1,
+      "RB": 2,
+      "TE": 3,
+      "WR": 5
+    },
+    "CIN": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 4,
+      "WR": 5
+    },
+    "CLE": {
+      "QB": 1,
+      "RB": 4,
+      "TE": 3,
+      "WR": 6
+    },
+    "DAL": {
+      "QB": 1,
+      "RB": 4,
+      "TE": 3,
+      "WR": 4
+    },
+    "DEN": {
+      "QB": 1,
+      "RB": 2,
+      "TE": 4,
+      "WR": 5
+    },
+    "DET": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 4
+    },
+    "GB": {
+      "QB": 1,
+      "RB": 4,
+      "TE": 3,
+      "WR": 5
+    },
+    "HOU": {
+      "QB": 1,
+      "RB": 2,
+      "TE": 5,
+      "WR": 6
+    },
+    "IND": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 4,
+      "WR": 5
+    },
+    "KC": {
+      "QB": 1,
+      "RB": 2,
+      "TE": 3,
+      "WR": 4
+    },
+    "LA": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 4,
+      "WR": 4
+    },
+    "LV": {
+      "QB": 1,
+      "RB": 4,
+      "TE": 3,
+      "WR": 5
+    },
+    "MIA": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 4,
+      "WR": 6
+    },
+    "MIN": {
+      "QB": 1,
+      "RB": 5,
+      "TE": 3,
+      "WR": 5
+    },
+    "NE": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 4
+    },
+    "NO": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 4
+    },
+    "NYG": {
+      "QB": 2,
+      "RB": 4,
+      "TE": 2,
+      "WR": 4
+    },
+    "NYJ": {
+      "QB": 1,
+      "RB": 4,
+      "TE": 4,
+      "WR": 6
+    },
+    "PHI": {
+      "QB": 1,
+      "RB": 2,
+      "TE": 4,
+      "WR": 5
+    },
+    "PIT": {
+      "QB": 1,
+      "RB": 5,
+      "TE": 3,
+      "WR": 3
+    },
+    "SEA": {
+      "QB": 1,
+      "RB": 2,
+      "TE": 2,
+      "WR": 4
+    },
+    "SF": {
+      "QB": 1,
+      "RB": 4,
+      "TE": 2,
+      "WR": 4
+    },
+    "TB": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 4,
+      "WR": 4
+    },
+    "TEN": {
+      "QB": 1,
+      "RB": 4,
+      "TE": 3,
+      "WR": 5
+    }
+  },
+  "team_position_gap_exceptions": [
+    {
+      "position": "QB",
+      "reason": "The captured Week 7 Sleeper projection universe contains no Baltimore QB row; use the frozen model default and do not inject an unprojected player.",
+      "source_sha256": "d5509ca7f9ed9a70e9cf9ef149ccc9f199a08866d7050f0e35563e88358c4d27",
+      "team": "BAL"
+    }
+  ],
+  "tuesday_sleeper_projection_signal": {
+    "players": [],
+    "policy": "A numeric current-week Sleeper projection plus an exact Out/Doubtful Sleeper directory label is a provisional Tuesday signal, not confirmation of play.",
+    "row_count": 0,
+    "source": {
+      "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\sleeper\\tuesday\\2026_w07_projections.json",
+      "requested_utc": "2026-10-20T22:54:14Z",
+      "sha256": "d5509ca7f9ed9a70e9cf9ef149ccc9f199a08866d7050f0e35563e88358c4d27"
+    }
+  },
+  "validation": {
+    "checks": {
+      "artifact_sha256": "5e681118ed921c79c194b8fa382aa44307e8416ae9c4ce98eb02655f6fb3de8e",
+      "produced_at_utc": "2026-10-25T13:07:44Z",
+      "scheduled_teams": 28,
+      "team_position_cells": 111,
+      "team_position_gap_exceptions": 1
+    },
+    "errors": [],
+    "ok": true,
+    "product": "fantasy",
+    "row_count": 339,
+    "warnings": [
+      "16 projections are below zero; retained as a model diagnostic",
+      "documented team-position coverage gaps: BAL QB"
+    ]
+  },
+  "week": 7
+}
