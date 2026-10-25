@@ -107,18 +107,19 @@ def test_tournament_mode_without_ceiling_falls_back_cleanly():
     at = _upload_inputs(_run())
     objective = next(widget for widget in at.segmented_control if widget.key == "dfs_objective")
     assert objective.options == ["Cash (expected points)", "Tournament (ceiling)"]
-    assert objective.value == "Tournament (ceiling)"
-    assert any("no `ceiling_pts` column" in item.value for item in at.warning)
+    assert objective.value == "Cash (expected points)"
+    assert objective.disabled
+    assert any("Tournament mode is unavailable" in item.value for item in at.caption)
+    assert not any("ceiling_pts" in item.value for item in at.caption)
     assert any(button.label == "Optimize lineup" for button in at.button)
 
 
 def test_cash_mode_is_available_and_selectable():
     at = _upload_inputs(_run())
     objective = next(widget for widget in at.segmented_control if widget.key == "dfs_objective")
-    assert objective.value == "Tournament (ceiling)"
+    assert objective.value == "Cash (expected points)"
     at = objective.set_value("Cash (expected points)").run()
     assert not at.exception, at.exception
-    assert not any("no `ceiling_pts` column" in item.value for item in at.warning)
 
 
 def test_failed_resolve_clears_the_previous_download():

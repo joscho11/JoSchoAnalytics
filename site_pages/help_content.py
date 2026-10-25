@@ -39,6 +39,8 @@ class FAQItem:
     question: str
     keywords: tuple[str, ...]
     render: Callable[[], None]
+    # Inline items draw their own top-level sections instead of sitting inside one expander.
+    inline: bool = False
 
     def matches(self, query: str) -> bool:
         haystack = " ".join((self.topic, self.question, *self.keywords)).lower()
@@ -134,7 +136,9 @@ def _render_states() -> None:
 **Live** means the page is using the current season's published release or
 tracking artifact. **Demo** means an older season is retained for explanation
 and historical context. **Experimental** means the page is tracking an idea
-without a validated edge claim. **Seasonal** means a product is most useful in
+without a validated edge claim. **Beta** means a page is live but still being
+tested, so its numbers can change and it carries no validated-performance claim.
+**Seasonal** means a product is most useful in
 one part of the NFL calendar, such as the Draft Board before drafts.
 
 Every product page carries its own freshness note. Read that note before using
@@ -510,7 +514,7 @@ def _render_model_rundowns() -> None:
 FAQS = (
     FAQItem("Site Guide", "What is JoScho Analytics?", ("about", "purpose", "advice"), _render_what_is_jsa),
     FAQItem("Site Guide", "Which page should I use?", ("directory", "pages", "products", "navigation"), _render_page_directory),
-    FAQItem("Site Guide", "What do Live, Demo, Experimental, and Seasonal mean?", ("status", "current", "historical", "beta"), _render_states),
+    FAQItem("Site Guide", "What do Live, Demo, Experimental, Beta, and Seasonal mean?", ("status", "current", "historical", "beta"), _render_states),
     FAQItem("Site Guide", "How often do pages update, and when do values lock?", ("freshness", "cadence", "kickoff", "release", "immutable"), _render_updates_and_locks),
     FAQItem("Site Guide", "How do filters and shareable URLs work?", ("season", "week", "min edge", "query", "url"), _render_filters_and_urls),
     FAQItem("Site Guide", "How does League History work?", ("sleeper", "espn", "yahoo", "cbs", "cookies", "credentials", "league id"), _render_league_history),
@@ -532,7 +536,7 @@ FAQS = (
     FAQItem("Models & Data", "How does a published model become a page?", ("pipeline", "features", "training", "holdout", "walk-forward", "artifact", "grading"), _render_pipeline),
     FAQItem("Models & Data", "How should I read the evaluation metrics?", ("mae", "rank correlation", "auc", "ats", "confidence interval", "feature importance"), _render_metrics),
     FAQItem("Models & Data", "What data does the site use, and what are the limits?", ("sources", "nflreadpy", "data", "limitations", "missing"), _render_limits_and_data),
-    FAQItem("Models & Data", "How do the product-specific models work?", ("spread", "season totals", "draft board", "weekly fantasy", "dfs", "anytime td", "rookie", "charts", "shap", "xgboost", "lightgbm"), _render_model_rundowns),
+    FAQItem("Models & Data", "How do the product-specific models work?", ("spread", "season totals", "draft board", "weekly fantasy", "dfs", "anytime td", "rookie", "charts", "shap", "xgboost", "lightgbm"), _render_model_rundowns, True),
 )
 
 

@@ -1058,8 +1058,8 @@ def _render_load_form(provider: str = "Sleeper", access: str = "Public"):
                     )
         history_depth = st.segmented_control(
             "History depth",
-            ["Recent 3 seasons", "All linked seasons"],
-            default="Recent 3 seasons",
+            ["Last 3 seasons", "All available seasons"],
+            default="Last 3 seasons",
             required=True,
             key="lh_history_depth",
             help=(
@@ -1570,7 +1570,7 @@ def render():
             cbs_token=_cbs_token_input,
         )
         if _form_error is None:
-            _submitted_limit = 3 if _history_depth == "Recent 3 seasons" else None
+            _submitted_limit = 3 if _history_depth == "Last 3 seasons" else None
             st.session_state["lh_loaded_league_id"] = _submitted_lid
             st.session_state["lh_loaded_provider"] = _provider_input
             st.session_state["lh_loaded_espn_season"] = (
@@ -1632,7 +1632,7 @@ def render():
                     st.info(
                         "Enter your ESPN league ID, most recent season, SWID, and espn_s2 "
                         "values, then select Load league history.  \n\n"
-                        "Recent 3 seasons is the faster default. Private results stay only "
+                        "Last 3 seasons is the faster default. Private results stay only "
                         "in your current browser session; the credential fields are cleared "
                         "after the import. Find the ID in your ESPN URL as the leagueId value."
                     )
@@ -1640,7 +1640,7 @@ def render():
                     st.info(
                         "Enter your public ESPN league ID and its most recent season, then select "
                         "Load league history.  \n\n"
-                        "Recent 3 seasons is the faster default. ESPN weekly rosters are a larger "
+                        "Last 3 seasons is the faster default. ESPN weekly rosters are a larger "
                         "pull than Sleeper, so the first import can take 10-25 seconds per season; "
                         "the same seasons are instant for an hour.  \n\n"
                         "Find the ID in your ESPN URL as the leagueId value."
@@ -1650,7 +1650,7 @@ def render():
                     st.info(
                         "Enter your Yahoo league ID, most recent season, Y cookie, and T cookie "
                         "values, then select Load league history.  \n\n"
-                        "Recent 3 seasons is the faster default. Private results stay only "
+                        "Last 3 seasons is the faster default. Private results stay only "
                         "in your current browser session; the credential fields are cleared "
                         "after the import. Find the ID after /f1/ in your Yahoo URL."
                     )
@@ -1658,7 +1658,7 @@ def render():
                     st.info(
                         "Enter your public Yahoo league ID and its most recent season, then select "
                         "Load league history.  \n\n"
-                        "Recent 3 seasons is the faster default. Yahoo weekly rosters are a larger "
+                        "Last 3 seasons is the faster default. Yahoo weekly rosters are a larger "
                         "pull than Sleeper, so the first import can take 10-25 seconds per season; "
                         "the same seasons are instant for an hour.  \n\n"
                         "Find the ID after /f1/ in your Yahoo URL."
@@ -1667,7 +1667,7 @@ def render():
                 st.info(
                     "Enter your CBS league ID, most recent season, and access token, "
                     "then select Load league history.  \n\n"
-                    "Recent 3 seasons is the faster default. Private results stay only "
+                    "Last 3 seasons is the faster default. Private results stay only "
                     "in your current browser session; the token field is cleared after "
                     "the import. Find the ID as the subdomain of "
                     "https://{ID}.football.cbssports.com."
@@ -1675,7 +1675,7 @@ def render():
             else:
                 st.info(
                     "Enter your Sleeper league ID, then select Load league history.  \n\n"
-                    "Recent 3 seasons is the faster default; choose All linked seasons when you "
+                    "Last 3 seasons is the faster default; choose All available seasons when you "
                     "need the complete archive. A 3-year league is usually about 6-12 seconds. "
                     "A 10-year league can take about 40. The same seasons are instant for an "
                     "hour after that.  \n\n"
@@ -2019,7 +2019,7 @@ def render():
                     _title_delta = None
                     if _title_names:
                         _title_delta = (
-                            f"{int(_title_n)} championships"
+                            f"{int(_title_n)} " + ("championship" if int(_title_n) == 1 else "championships")
                             + (" each" if len(_title_names) > 1 else "")
                         )
                     _win_delta = None
@@ -2098,10 +2098,10 @@ def render():
                          _toilet_app_delta, "No consolation finals", "0 toilet-bowl games"),
                         ("Lowest Scoring Team", _low_names, _low_delta,
                          (
-                             "Need 3 seasons"
+                             "—"
                              if _season_filter == "All Time" else "No scores yet"
                          ),
-                         None),
+                         ("Needs 3+ seasons" if _season_filter == "All Time" else None)),
                     ]
                     with st.container(key="jsa-lh-leaderboard-cards"):
                         for _row in (_cards[:4], _cards[4:]):
@@ -3284,7 +3284,7 @@ def render():
                         with _d2:
                             st.metric(
                                 "Scoring vs League",
-                                f"{_profile['avg_above_league']:+.2f} pts/wk",
+                                f"{_profile['avg_above_league']:+.1f}/wk",
                                 f"rank #{int(_profile['scoring_rank'])}/{_peer_count}",
                                 delta_color="off", delta_arrow="off", border=True,
                             )
@@ -3305,7 +3305,7 @@ def render():
                             )
                         with _d4:
                             st.metric(
-                                "Postseason Résumé", f"{_titles} titles",
+                                "Postseason Résumé", f"{_titles} {'title' if _titles == 1 else 'titles'}",
                                 f"{_titles + _runner_ups} finals · {_playoff_apps} playoff apps",
                                 delta_color="off", delta_arrow="off", border=True,
                             )
@@ -3407,16 +3407,19 @@ def render():
                                     f"win rate came in {_best_winning_season['Season']}; matchup timing and close "
                                     "games changed the record"
                                 )
+                            _multi_season = len(_trajectory_df) >= 2
                             _trend_meaning = (
                                 f"weekly scoring relative to the league improved by {_trend_delta:+.2f} points "
                                 "from the first completed season to the latest"
                                 if _trend_delta >= 0 else
                                 f"weekly scoring relative to the league fell by {abs(_trend_delta):.2f} points "
                                 "from the first completed season to the latest"
+                            ) if _multi_season else ""
+                            _trend_sentence = (
+                                f" Across the full timeline, {_trend_meaning}." if _multi_season else ""
                             )
                             st.markdown(
-                                f" **What it means:** For **{_sel_mgr}**, {_peak_meaning}. Across the full "
-                                f"timeline, {_trend_meaning}. Bars measure performance against each season's "
+                                f" **What it means:** For **{_sel_mgr}**, {_peak_meaning}.{_trend_sentence} Bars measure performance against each season's "
                                 "own scoring environment, so the direction is not inflated by league-wide scoring changes."
                             )
                     else:

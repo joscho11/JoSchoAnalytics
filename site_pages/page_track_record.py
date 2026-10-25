@@ -353,6 +353,12 @@ def render():
                 _profit_metric("Profit (HIGH + MED)", _hm_w, _hm_l, _profit_hm)
                 _profit_metric("Profit (all picks)", _a_w, _a_l, _profit_all)
 
+        if not live and _has_ct:
+            st.caption(
+                "HIGH and HIGH + MED profit use the three-model consensus tier. The edge "
+                "cards above use the point gap alone, so their records can differ."
+            )
+
         st.space("small")
 
         # Day-of-week performance

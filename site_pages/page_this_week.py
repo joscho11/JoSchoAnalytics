@@ -8,13 +8,17 @@ pages show. Import-safe: no st.* at import time.
 """
 from __future__ import annotations
 
+from datetime import datetime
+
 import pandas as pd
 import streamlit as st
 
 import dashboard_data
 import nav_registry
 import page_common
+from dashboard_utils import ats_record_parts, format_ats_record
 from live_2026 import BREAKEVEN, LIVE_SEASON, row_display_high, season_high_record
+from publishing.manifest import release_status as _manifest_release_status
 from team_display import public_team_abbr
 
 
@@ -34,9 +38,42 @@ def _current_week() -> tuple[int, int]:
         return LIVE_SEASON, 1
 
 
-def _release_status(product: str, season: int, week: int, fallback_caption: str) -> None:
+def _friendly_date(value) -> str:
+    """'2026-10-21T00:54:34Z' -> 'Wed Oct 21'. Unparseable input is returned as-is."""
     try:
-        page_common.render_release_status(product, int(season), int(week))
+        parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return str(value)
+    return f"{parsed:%a %b} {parsed.day}"
+
+
+def _release_status(product: str, season: int, week: int, fallback_caption: str) -> None:
+    """Badge + plain-language detail from the release manifest (no raw ISO stamps)."""
+    try:
+        manifest = page_common.load_release_manifest()
+        state = _manifest_release_status(
+            product, int(season), int(week), manifest=manifest, root=page_common._HERE
+        )
+        st.badge(state["status"], icon=state["icon"], color=state["color"])
+        if state.get("published_at"):
+            st.caption(f"Validated {_friendly_date(state['published_at'])}")
+        else:
+            st.caption(state["detail"])
+        nxt = (manifest.get("products", {}).get(product, {}) or {}).get("next_release") or {}
+        try:
+            n_season, n_week = int(nxt["season"]), int(nxt["week"])
+        except (KeyError, TypeError, ValueError):
+            return
+        if state["status"] == "Published" and (n_season, n_week) != (int(season), int(week)):
+            upcoming = _manifest_release_status(
+                product, n_season, n_week, manifest=manifest, root=page_common._HERE
+            )
+            if upcoming["status"] == "Published":
+                st.caption(f"Next: {n_season} Week {n_week} is published.")
+            elif upcoming["status"] == "Scheduled":
+                st.caption(f"Next: {n_season} Week {n_week} is scheduled.")
+            else:
+                st.caption(f"Next: {n_season} Week {n_week} projections are not out yet.")
     except Exception:
         st.caption(fallback_caption)
 
@@ -58,14 +95,24 @@ def _high_this_week(preds, season: int, week: int):
     return int(mask.sum()), games
 
 
+def _correct_col(df) -> str:
+    if "ens_model_correct" in df.columns and df["ens_model_correct"].notna().any():
+        return "ens_model_correct"
+    return "model_correct"
+
+
 def _record_metric(preds) -> None:
     try:
         wins, n, pct = season_high_record(preds)
+        losses, pushes = n - wins, 0
+        sdf = preds[(preds["season"] == LIVE_SEASON) & preds["actual_margin"].notna()]
+        hdf = sdf[sdf.apply(row_display_high, axis=1)]
+        _, _, pushes, _ = ats_record_parts(hdf, _correct_col(sdf))
     except Exception:
         return
     if n > 0 and pct is not None:
         st.metric(
-            f"{LIVE_SEASON} HIGH picks (ATS)", f"{wins}/{n}", f"{pct}%",
+            f"{LIVE_SEASON} HIGH picks (ATS)", format_ats_record(wins, losses, pushes), f"{pct}%",
             delta_color="green" if pct >= BREAKEVEN * 100 else "red",
             delta_arrow="off", border=True,
         )

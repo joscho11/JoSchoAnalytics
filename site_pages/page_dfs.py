@@ -227,13 +227,14 @@ def render():
     with st.container(horizontal=True, vertical_alignment="center"):
         st.badge("Beta", icon=":material/science:", color="orange")
         st.caption(
-            "DraftKings NFL Classic. Calibrated DK-point projections. "
+            "DraftKings NFL Classic. Projections converted to DK points. "
             "Integer lineup under the $50,000 cap."
         )
     st.warning(
-        "**Beta.** Cash optimizes expected points; Tournament optimizes an "
-        "85th-percentile player ceiling. Neither mode models stacking, ownership, or "
-        "the full DraftKings player pool. Treat every lineup as a starting point, not a play.",
+        "Cash optimizes expected points; Tournament optimizes an "
+        "85th-percentile player ceiling when ceiling data is published. Neither mode models "
+        "stacking, ownership, or the full DraftKings player pool. Treat every lineup as a "
+        "starting point, not a play.",
         icon=":material/science:",
     )
     with st.expander("What this beta does — and does not do", expanded=False):
@@ -303,6 +304,9 @@ def render():
             season = int(active_fantasy["season"])
             week = int(active_fantasy["week"])
             if published_projection is not None:
+                if published_metadata:
+                    season = int(published_metadata["season"])
+                    week = int(published_metadata["week"])
                 st.caption(f"Verified DFS projections ready for {season} Week {week}.")
             else:
                 st.caption(f"Fantasy projections are published for {season} Week {week}; DFS conversion is pending.")
@@ -364,32 +368,34 @@ def render():
     # so most players miss their projection and a few blow past it. A winning
     # GPP lineup is roughly 4x salary per $1000, about 200 points, which the
     # mean objective cannot reach by construction.
+    _probe = pd.read_csv(BytesIO(projection_bytes))
+    has_ceiling = "ceiling_pts" in _probe.columns and bool(_probe["ceiling_pts"].notna().any())
+    if not has_ceiling:
+        st.session_state["dfs_objective"] = "Cash (expected points)"
     objective = st.segmented_control(
         "Objective",
         options=["Cash (expected points)", "Tournament (ceiling)"],
-        default="Tournament (ceiling)",
+        default="Tournament (ceiling)" if has_ceiling else "Cash (expected points)",
         key="dfs_objective",
+        disabled=not has_ceiling,
         help=(
             "Cash builds the highest expected score. Tournament swaps in an "
             "85th-percentile outcome per player, which is what a first-place "
             "lineup actually needs. Ceiling models neither stacking nor "
             "ownership, so it is a starting point for a GPP, not a full one."
         ),
-    ) or "Tournament (ceiling)"
-    use_ceiling = objective.startswith("Tournament")
+    ) or "Cash (expected points)"
+    if not has_ceiling:
+        st.caption(
+            "Tournament mode is unavailable: this projection file has no upside (ceiling) "
+            "projections, so the lineup is built on expected points."
+        )
+    use_ceiling = has_ceiling and objective.startswith("Tournament")
     if use_ceiling:
         _pf = pd.read_csv(BytesIO(projection_bytes))
-        if "ceiling_pts" in _pf.columns and _pf["ceiling_pts"].notna().any():
-            _pf["projected_pts"] = pd.to_numeric(_pf["ceiling_pts"], errors="coerce")
-            projection_bytes = _pf.to_csv(index=False).encode("utf-8")
-            projection_label = f"{projection_label} (ceiling)"
-        else:
-            st.warning(
-                "This projection file has no `ceiling_pts` column, so Tournament "
-                "mode falls back to expected points.",
-                icon=":material/warning:",
-            )
-            use_ceiling = False
+        _pf["projected_pts"] = pd.to_numeric(_pf["ceiling_pts"], errors="coerce")
+        projection_bytes = _pf.to_csv(index=False).encode("utf-8")
+        projection_label = f"{projection_label} (ceiling)"
 
     source_key = runtime.source_digest(salary_bytes, projection_bytes)
     if st.session_state.get("dfs_input_key") != source_key:
@@ -423,7 +429,8 @@ def render():
             pool.loc[stale_team, "exclusion_reason"] = "excluded:team_mismatch"
 
     st.caption(
-        f"Projection source: `{projection_label}` · "
+        f"Projection source: {'your uploaded file' if projection_upload is not None else 'published weekly artifact'}"
+        f"{' (ceiling)' if use_ceiling else ''} · "
         f"{pool.attrs['projection_season']} Week {pool.attrs['projection_week']} · direct DK points"
     )
     if projection_upload is None:

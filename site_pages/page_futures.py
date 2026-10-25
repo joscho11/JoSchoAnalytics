@@ -24,7 +24,7 @@ _EVIDENCE = _HERE / "futures" / "published" / "evidence.json"
 
 HIGH_COL = "High Confidence"
 HIGH_YES = "\u2705"
-HIGH_NO = "\u274c"
+HIGH_NO = "-"
 BAR_PCT = 52.4
 # Phone grid: same columns as desktop, shorter headers, every column pinned
 # so Glide cannot shunt Team to the right. 50px is Glide's hard minimum.
@@ -56,7 +56,7 @@ VS_HELP = "Projection minus posted. Positive means the model is above the number
 HIGH_HELP = (
     f"{HIGH_YES} means high confidence: the projection is at least 1 full win off the "
     f"posted number. {HIGH_NO} means we still show a projection but it is not a "
-    "high-confidence call."
+    "high-confidence call (no pick)."
 )
 METHOD = """
 **Model.** Fifteen structural inputs plus the posted win total in a ridge fit.
@@ -213,12 +213,19 @@ def _render_hero(high: dict) -> None:
 
     with st.container(key="jsa-st-hero"):
         c1, c2, c3 = st.columns(3)
-        c1.metric("High confidence record", f"{wins}/{n}", f"{pct:.2f}% correct")
-        c2.metric("2026 high confidence calls", str(n_fwd), f"{gap:.0f}+ win gap rule")
+        c1.metric(
+            "High confidence record", f"{wins}/{n}", f"{pct:.2f}% correct",
+            delta_color="gray", delta_arrow="off",
+        )
+        c2.metric(
+            "2026 high confidence calls", str(n_fwd), f"{gap:.0f}+ win gap rule",
+            delta_color="gray", delta_arrow="off",
+        )
         c3.metric(
             "One-sided 95% Wilson lower",
             f"{wilson:.2f}%",
-            f"below the {BAR_PCT:.1f}% bar",
+            f"does not clear the {BAR_PCT:.1f}% bar",
+            delta_color="orange", delta_arrow="off",
         )
 
 
@@ -251,15 +258,24 @@ def _render_2026_high_phone(picks: pd.DataFrame) -> None:
         )
 
 
+def _render_caveat(ev: dict) -> None:
+    """Posted-total caveat, shown next to the HIGH calls."""
+    if not ev or "mae_model" not in ev or "mae_market" not in ev:
+        return
+    mae_gap = float(ev["mae_model"]) - float(ev["mae_market"])
+    st.caption(
+        f"The all-team projection does not beat the posted win total on "
+        f"average (+{mae_gap:.4f} wins vs the posted number on held-out seasons, "
+        f"backtested, not live-validated)."
+    )
+
+
 def _render_footnote(ev: dict, label: str) -> None:
     high = ev.get("ou_high") or {}
     wilson = 100.0 * float(high.get("wilson_lower") or 0.0)
-    mae_gap = float(ev["mae_model"]) - float(ev["mae_market"])
     st.caption(
-        f"{label} The all-team projection does not beat the posted win total on "
-        f"average (+{mae_gap:.4f} wins vs the posted number on held-out seasons, "
-        f"backtested, not live-validated). High-confidence one-sided 95% Wilson "
-        f"lower: {wilson:.2f}% (under the {BAR_PCT:.1f}% bar)."
+        f"{label} High-confidence one-sided 95% Wilson lower: {wilson:.2f}% "
+        f"(does not clear the {BAR_PCT:.1f}% bar)."
     )
 
 
@@ -368,6 +384,7 @@ def render():
             _render_2026_high_cards(picks)
         with st.container(key="jsa-st-high-phone"):
             _render_2026_high_phone(picks)
+        _render_caveat(ev)
 
     st.markdown("#### All 32 team projections")
     totals_cfg = _totals_column_config()

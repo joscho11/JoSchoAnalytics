@@ -8,6 +8,10 @@ import page_common
 
 
 def _render_item(item: help_content.FAQItem) -> None:
+    if item.inline:
+        # The model rundowns hold their own expanders; nesting them hid every explanation.
+        item.render()
+        return
     with st.expander(item.question):
         item.render()
 
@@ -60,7 +64,7 @@ def render() -> None:
     query = st.text_input(
         "Search Help & Guide",
         key="help_search",
-        placeholder="Try: half-PPR, HIGH, EPA, ADP, break-even, or league history",
+        placeholder="Try: half-PPR, HIGH, EPA, ADP",
         help="Search questions, topic names, and keywords.",
     ).strip()
     topic = _topic_selector()

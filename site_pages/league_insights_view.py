@@ -525,22 +525,22 @@ def _render_player_facts(
     )
     if best_start is not None:
         c2.metric(
-            "Best start", best_start["player_name"], f"{best_start['points']:.1f} pts",
+            "Best start", best_start["player_name"],
+            f"{best_start['points']:.1f} pts · {best_start['season']} Wk {int(best_start['week'])}",
             help=(
                 f"Single highest scoring week as a starter in a real matchup. {window_note} "
                 "Bye weeks and empty matchup slots are excluded."
             ),
         )
-        c2.caption(f"{best_start['season']} Week {int(best_start['week'])}")
     if bench_high is not None:
         c3.metric(
-            "Biggest bench regret", bench_high["player_name"], f"{bench_high['points']:.1f} pts",
+            "Biggest bench regret", bench_high["player_name"],
+            f"{bench_high['points']:.1f} pts · {bench_high['season']} Wk {int(bench_high['week'])}",
             help=(
                 f"Highest scoring week left on the bench during a real matchup. {window_note} "
                 "This is one week, not a season-long ranking."
             ),
         )
-        c3.caption(f"{bench_high['season']} Week {int(bench_high['week'])}")
     c4.metric(
         "Most weekly MVPs", weekly_mvp, f"Led {manager_name} {weekly_mvp_count} times",
         help=(

@@ -61,6 +61,9 @@ def _embed_src(video_id: str) -> str:
 def _tiktok_embed(video_id: str, url: str) -> None:
     # Official player kit, not the oEmbed card. No oEmbed fetch, no embed.js.
     # Offline, TikTok's own unavailable state shows inside the dark frame.
+    # The iframe cannot report a failed load to the server, so offer the link first: if the
+    # embed stays blank (blocked or offline), the viewer still has a direct way to the video.
+    st.caption(f"Video blank? [Open it on TikTok]({url}).")
     with st.container(key="jsa-filmroom-player"):
         st.iframe(_embed_src(video_id), height=_EMBED_HEIGHT)
 

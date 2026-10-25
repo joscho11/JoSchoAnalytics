@@ -144,8 +144,6 @@ def help_open_ats(page) -> None:
 def help_scroll_models(page) -> None:
     page.get_by_text("Models & Data", exact=True).click()
     wait_for_app(page)
-    page.get_by_text("How do the product-specific models work?", exact=True).click()
-    wait_for_app(page)
     page.get_by_text("How the models work", exact=True).scroll_into_view_if_needed()
     wait_for_app(page)
 

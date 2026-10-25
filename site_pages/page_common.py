@@ -9,6 +9,8 @@ import importlib
 import importlib.util
 import json
 import os
+import re
+from datetime import datetime
 from pathlib import Path
 
 import streamlit as st
@@ -42,6 +44,20 @@ def track_record_default_season(fallback: int = 2025) -> int:
     )
 
 
+_ISO_STAMP = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z")
+
+
+def _humanize_stamps(text: str) -> str:
+    """Replace raw ISO release timestamps with a short date such as 'Wed Oct 21'."""
+    def _fmt(match):
+        try:
+            d = datetime.fromisoformat(match.group(0).replace("Z", "+00:00"))
+            return f"{d:%a %b} {d.day}"
+        except ValueError:
+            return match.group(0)
+    return _ISO_STAMP.sub(_fmt, text)
+
+
 def render_release_status(product: str, season: int, week: int) -> dict:
     """Render the selected week's state from the validated release manifest."""
     manifest = load_release_manifest()
@@ -49,7 +65,7 @@ def render_release_status(product: str, season: int, week: int) -> dict:
         product, season, week, manifest=manifest, root=_HERE
     )
     st.badge(state["status"], icon=state["icon"], color=state["color"])
-    st.caption(state["detail"])
+    st.caption(_humanize_stamps(state["detail"]))
     next_release = manifest.get("products", {}).get(product, {}).get("next_release") or {}
     try:
         next_season, next_week = int(next_release["season"]), int(next_release["week"])
@@ -64,7 +80,7 @@ def render_release_status(product: str, season: int, week: int) -> dict:
             product, next_season, next_week, manifest=manifest, root=_HERE
         )
         st.caption(
-            f"Next: {next_season} Week {next_week} · {upcoming['status']}. {upcoming['detail']}"
+            f"Next: {next_season} Week {next_week} · {upcoming['status']}. {_humanize_stamps(upcoming['detail'])}"
         )
     return state
 

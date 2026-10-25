@@ -137,10 +137,10 @@ def test_league_history_renders_and_lands_empty(tmp_path):
     assert any(b.label == "Load league history" for b in at.button), \
         "League History must require an explicit Load action"
     depth = next(w for w in at.segmented_control if w.key == "lh_history_depth")
-    assert depth.value == "Recent 3 seasons"
+    assert depth.value == "Last 3 seasons"
     info = " ".join(str(i.value) for i in at.info)
     assert "Enter your Sleeper league ID" in info, "resting-state prompt must be shown"
-    assert "Recent 3 seasons" in info
+    assert "Last 3 seasons" in info
     markdown = " ".join(str(item.value) for item in at.markdown)
     assert "Copy League ID" in markdown
     assert "at the end of the page URL" in markdown
@@ -1186,7 +1186,7 @@ def test_rookie_board_excludes_direct_pff_fields_and_explains_availability(tmp_p
     )
     assert list(phone.columns) == [
         "#", "Player", "Pos", "Pick", "Full Hit-%",
-        "Proj (season ½-PPR)", "Diff vs Sleeper",
+        "Proj (season ½-PPR)", "Sleeper Proj", "Diff vs Sleeper",
     ]
 
     for watch in tables:

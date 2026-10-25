@@ -515,7 +515,16 @@ def _render_published_board_rankings(raw: pd.DataFrame, source: Path, season: in
     st.caption("Top-1 and Top-3 counts use resolved games only. These are published-board rankings, separate from paper betting record and ROI.")
     if not table.empty:
         table = table.rename(columns={"Game": "Matchup"})
-        st.dataframe(table, hide_index=True)
+        phone_cols = [c for c in ("Matchup", "Top 1", "Top 3", "First TD result") if c in table.columns]
+        widths = {"Matchup": 84, "Top 1": 110, "Top 3": 110, "First TD result": 120}
+        phone_cfg = {
+            c: st.column_config.TextColumn(c, width=widths[c], pinned=(c == "Matchup"))
+            for c in phone_cols
+        }
+        dataframe_phone_desktop(
+            table, table[phone_cols], slug=f"atd-rankings-{season}-{week}",
+            hide_index=True, phone_column_config=phone_cfg,
+        )
 
 
 def _first_td_v3_paper(scoped: pd.DataFrame, cap_state: tuple[bool, int | None]) -> dict:
@@ -627,6 +636,26 @@ def _published_live_paths(releases: dict[tuple[int, int], Path]) -> tuple[tuple[
 
 def _pct(value) -> str:
     return "—" if value is None or pd.isna(value) else f"{100 * float(value):+.1f}%"
+
+
+def _loss_css(key: str, units, roi) -> None:
+    """Color negative Net units / ROI values red and shrink the ROI range value."""
+    rules = []
+    for idx, value in ((1, units), (2, roi)):
+        if value is not None and not pd.isna(value) and float(value) < 0:
+            rules.append(
+                f'.st-key-jsa-metric-even-atd-{key} > [data-testid="stElementContainer"]:nth-child({idx})'
+                ' [data-testid="stMetricValue"], '
+                f'.st-key-jsa-metric-even-atd-{key} > [data-testid="stElementContainer"]:nth-child({idx})'
+                ' [data-testid="stMetricValue"] *{color:#d64545 !important}'
+            )
+    rules.append(
+        f'.st-key-jsa-metric-even-atd-{key} > [data-testid="stElementContainer"]:nth-child(4)'
+        ' [data-testid="stMetricValue"], '
+        f'.st-key-jsa-metric-even-atd-{key} > [data-testid="stElementContainer"]:nth-child(4)'
+        ' [data-testid="stMetricValue"] *{font-size:1.1rem !important}'
+    )
+    st.markdown("<style>" + "".join(rules) + "</style>", unsafe_allow_html=True)
 
 
 def _roi_range_value(ci: dict) -> str:
@@ -796,6 +825,7 @@ def _render_scorecard_metrics(paper: dict, market: str, key: str, scope: str) ->
     result = paper["summary"]
     ci = paper["ci"]
     st.caption(f"{_MARKET_LABELS[market]} paper tracker · {scope}")
+    _loss_css(key, result["net_units"] if result["bets"] else None, result["roi"])
     with st.container(horizontal=True, key=f"jsa-metric-even-atd-{key}"):
         st.metric("Net units", f"{result['net_units']:+.1f}U" if result["bets"] else "—", border=True)
         st.metric("ROI", _pct(result["roi"]), border=True)
@@ -803,14 +833,14 @@ def _render_scorecard_metrics(paper: dict, market: str, key: str, scope: str) ->
             "Record", f"{result['wins']}-{result['losses']}" if result["bets"] else "No bets",
             delta=(f"{result['open_bets']} open · {result['void_bets']} void"
                    if result["bets"] else "No qualifying picks"),
-            delta_color="off", border=True,
+            delta_color="off", delta_arrow="off", border=True,
         )
-        st.metric("Approx. 95% ROI range", _roi_range_value(ci), border=True)
+        st.metric("Plausible ROI range (95%)", _roi_range_value(ci), border=True)
     if ci["available"]:
         st.caption("Empirical uncertainty range, not a guarantee.")
     elif result["settled_bets"]:
         st.caption(
-            "Approx. 95% ROI range is pending until at least 5 settled games "
+            "Plausible ROI range (95%) is pending until at least 5 settled games "
             "and 20 settled paper bets are available."
         )
     elif result["bets"]:
@@ -878,6 +908,7 @@ def _render_single_scorecards(
                 f"model {model_version} · "
                 f"candidate rule: {rule_text} · 1U per candidate."
             )
+            _loss_css(f"{prediction_mode}-{model_version}", result["net_units"], result["roi"])
             with st.container(horizontal=True, key=f"jsa-metric-even-atd-{prediction_mode}-{model_version}"):
                 st.metric("Net units", f"{result['net_units']:+.1f}U", border=True)
                 st.metric("ROI", _pct(result["roi"]), border=True)
@@ -886,14 +917,15 @@ def _render_single_scorecards(
                     f"{result['wins']}-{result['losses']}",
                     delta=f"{result['open_bets']} open · {result['void_bets']} void",
                     delta_color="off",
+                    delta_arrow="off",
                     border=True,
                 )
-                st.metric("Approx. 95% ROI range", _roi_range_value(ci), border=True)
+                st.metric("Plausible ROI range (95%)", _roi_range_value(ci), border=True)
             if ci["available"]:
                 st.caption("Empirical uncertainty range, not a guarantee.")
             else:
                 st.caption(
-                    "Approx. 95% ROI range is pending until at least 5 settled games "
+                    "Plausible ROI range (95%) is pending until at least 5 settled games "
                     "and 20 settled paper bets are available."
                 )
             calib = paper.get("calibration")
@@ -994,6 +1026,10 @@ def _live_metadata(season: int = LIVE_SEASON, week: int = 1) -> dict:
     return metadata[-1][1]
 
 
+def _n_final(count: int) -> str:
+    return f"{count} final game" + ("" if count == 1 else "s")
+
+
 def _grading_stamp_caption(season: int, week: int) -> str:
     """One line saying when Anytime, 2+ TD and First TD results were last refreshed.
 
@@ -1010,7 +1046,7 @@ def _grading_stamp_caption(season: int, week: int) -> str:
     text = (
         f"Results last updated {moment.strftime('%a %b')} {moment.day}, "
         f"{moment.strftime('%I:%M %p').lstrip('0')} ET. Anytime TD, 2+ TD and First TD "
-        f"are graded together. {int(stamp.get('final_games', 0))} final games in this week."
+        f"are graded together. {_n_final(int(stamp.get('final_games', 0)))} in this week."
     )
     waiting = int(stamp.get("awaiting_stat_rows", 0) or 0)
     if waiting:
@@ -2084,28 +2120,34 @@ def render() -> None:
             week_kwargs["index"] = weeks.index(default_week)
         week = int(controls[1].selectbox("Week", weeks, **week_kwargs))
         page_common.sync_query_value("atd_week", week)
-        search = controls[2].text_input("Search player", placeholder="Barkley, Jefferson", key="atd_search")
+        search = controls[2].text_input("Search player", placeholder="Search player, e.g. Barkley", key="atd_search")
+        st.markdown(
+            "<style>.st-key-atd_search input::placeholder{opacity:.45 !important}</style>",
+            unsafe_allow_html=True,
+        )
     available = releases | {(DEMO_SEASON, w): p for w, p in demo.items()}
     meta = {}
     retrospective = False
+    notes: list[str] = []
     if season == LIVE_SEASON:
-        st.caption(
+        notes.append(
             "Live 2026 prices are manually copied from US sportsbook pages when available. "
             "The source is shown for each matchup. No odds API is used."
         )
         meta = _live_metadata(season, week)
         retrospective = meta.get("prediction_mode") == "retrospective"
         if meta:
-            if meta.get("prediction_mode") == "retrospective":
-                st.caption("Retrospective reconstruction; historical input availability unverified. "
-                           "These probabilities were recomputed after the games, and were not published picks before kickoff.")
+            if retrospective:
+                notes.append("Retrospective reconstruction; historical input availability unverified. "
+                             "These probabilities were recomputed after the games, and were not published picks before kickoff.")
             book_value = meta.get("book", [])
             books = ", ".join(book_value) if isinstance(book_value, list) else str(book_value)
-            st.caption(f"Latest paste: {books or 'manual paste'} · Captured: {meta.get('capture_max', 'unknown')}")
+            notes.append(f"Latest paste: {books or 'manual paste'} · Captured: {meta.get('capture_max', 'unknown')}")
         graded_line = _grading_stamp_caption(season, week)
         if graded_line:
-            st.caption(graded_line)
+            notes.append(graded_line)
     _reading_guide()
+    status_slot = st.container()
 
     if (season, week) not in available:
         if season == LIVE_SEASON:
@@ -2114,6 +2156,21 @@ def render() -> None:
         else:
             st.info(f"{season} Week {week} does not have a published board yet.")
         return
+
+    view = st.segmented_control(
+        "Market",
+        options=["Anytime TD", "2+ TD", "First TD"],
+        default="Anytime TD",
+        key=f"atd_view_{season}_{week}",
+        help="Anytime TD is our chance a skill player scores a rushing or "
+             "receiving TD. 2+ TD and First TD are separate, less-tested markets.",
+    )
+    if view is None:
+        # A segmented_control can be deselected back to no selection; treat
+        # that the same as the base Anytime TD view rather than crashing on
+        # a None market label below.
+        view = "Anytime TD"
+    notes_slot = st.container()
 
     source = available[(season, week)]
     manifest = _DIR / MANIFEST_NAME
@@ -2127,11 +2184,11 @@ def render() -> None:
         st.warning("No published touchdown prices for: " + ", ".join(missing_markets) + ".")
     unresolved_count = int(meta.get("unresolved_player_count") or 0)
     if unresolved_count:
-        st.caption(
+        notes.append(
             f"{unresolved_count} pasted player name(s) could not be mapped to the player universe and were left out of the modeled board."
         )
     if meta.get("capture_window_warning"):
-        st.caption("Pasted prices were captured across a wide time window and may reflect different market moments.")
+        notes.append("Pasted prices were captured across a wide time window and may reflect different market moments.")
     need = [
         "player_display_name", "position", "team", "opponent_team",
         "p_ge1", "p_book", "fair_amer", "book_amer", "scored_anytime",
@@ -2153,21 +2210,25 @@ def render() -> None:
         )]
 
     model_pending = int(board_priced.p_ge1.isna().sum())
-    st.caption(f"{len(board_priced)} priced · all positions")
+    notes.append(f"{len(board_priced)} priced · all positions")
     if (~_bet_eligibility(board_priced)).any():
-        st.caption(
+        notes.append(
             "\"no history\" rows have no prior NFL form for the model to read, so their "
             "gap is a guess and they are never highlighted."
         )
     if retrospective and model_pending:
-        st.caption(
+        notes.append(
             f"{model_pending} quoted rows have no reproducible retrospective probability; "
             "they are excluded from performance scorecards."
         )
     elif pending_caption := _pending_replacement_caption(model_pending):
-        st.caption(pending_caption)
+        notes.append(pending_caption)
+    with notes_slot:
+        with st.expander("Data notes", expanded=False, icon=":material/info:"):
+            for note in notes:
+                st.caption(note)
     completed_week = _week_is_complete(raw, season, week)
-    with st.container(horizontal=True, vertical_alignment="center"):
+    with status_slot, st.container(horizontal=True, vertical_alignment="center"):
         is_live = season == LIVE_SEASON
         if retrospective:
             badge = "Retrospective"
@@ -2191,19 +2252,6 @@ def render() -> None:
         return
     matchup_key = f"atd_matchup_{season}_{week}"
 
-    view = st.segmented_control(
-        "Market",
-        options=["Anytime TD", "2+ TD", "First TD"],
-        default="Anytime TD",
-        key=f"atd_view_{season}_{week}",
-        help="Anytime TD is our chance a skill player scores a rushing or "
-             "receiving TD. 2+ TD and First TD are separate, less-tested markets.",
-    )
-    if view is None:
-        # A segmented_control can be deselected back to no selection; treat
-        # that the same as the base Anytime TD view rather than crashing on
-        # a None market label below.
-        view = "Anytime TD"
     show_two_plus = view == "2+ TD"
     show_first_td = view == "First TD"
     pool_eligible = show_two_plus or show_first_td
@@ -2397,7 +2445,9 @@ def render() -> None:
         st.caption(
             ("Showing only" if recommended_only else "Highlighted rows are")
             + " 1U paper-bet candidates: raw ATTD Value Gap of at least "
-            f"+{100 * tracker.ATTD_VALUE_THRESHOLD:.1f} percentage point."
+            f"+{100 * tracker.ATTD_VALUE_THRESHOLD:.1f} percentage point. "
+            "ATTD Value Gap (Anytime TD value gap) is how many percentage points higher "
+            "our modeled chance is than the sportsbook's implied chance."
         )
 
     st.markdown(f"#### {label}")

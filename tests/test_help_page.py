@@ -169,7 +169,6 @@ def test_help_covers_live_model_rundowns(tmp_path):
         "How does a published model become a page?",
         "How should I read the evaluation metrics?",
         "What data does the site use, and what are the limits?",
-        "How do the product-specific models work?",
         "How the 2026 spread model works",
         "How weekly fantasy projections are built",
     ):

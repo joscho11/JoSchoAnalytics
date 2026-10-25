@@ -87,11 +87,11 @@ def test_anytime_td_renders_and_owns_controls(tmp_path):
     assert any(getattr(w, "key", None) == f"atd_view_{latest[0]}_{latest[1]}" for w in at.segmented_control)
     assert any(getattr(w, "key", None) == "atd_search" for w in at.text_input)
     metric_labels = {str(metric.label) for metric in at.metric}
-    assert {"Net units", "ROI", "Record", "Approx. 95% ROI range"} <= metric_labels
+    assert {"Net units", "ROI", "Record", "Plausible ROI range (95%)"} <= metric_labels
     if latest == (2026, 4):
         assert len(at.metric) == 8
         assert all(sum(str(metric.label) == label for metric in at.metric) == 2
-                   for label in ("Net units", "ROI", "Record", "Approx. 95% ROI range"))
+                   for label in ("Net units", "ROI", "Record", "Plausible ROI range (95%)"))
         captions = " ".join(str(c.value) for c in at.caption)
         headings = " ".join(str(item.value) for item in at.markdown)
         assert "Selected week" in captions
@@ -1848,7 +1848,7 @@ def test_first_td_v3_week07_with_only_week07_frozen_shows_one_tracker_card(tmp_p
     assert not any("Season to date, from Week" in c or c.startswith("First TD paper tracker · Week 7") for c in cards)
     # the numbers are the same ones the two identical cards used to show
     assert _metric_values(at) == [
-        ("Net units", "+3.5U"), ("ROI", "+175.0%"), ("Record", "1-1"), ("Approx. 95% ROI range", "Pending"),
+        ("Net units", "+3.5U"), ("ROI", "+175.0%"), ("Record", "1-1"), ("Plausible ROI range (95%)", "Pending"),
     ]
     frozen = [str(c.value) for c in at.caption if str(c.value).startswith("Frozen picks:")]
     assert frozen == ["Frozen picks: 2 · games with no qualifying player: 3."]
@@ -1870,8 +1870,8 @@ def test_first_td_v3_week08_keeps_the_season_card_and_the_week_card(tmp_path, v3
     assert cards[1].startswith("First TD paper tracker · Week 8 · ") and "5 game decisions" in cards[1]
     assert not any("Season to date and Week" in c for c in cards)
     assert _metric_values(at) == [
-        ("Net units", "+2.5U"), ("ROI", "+83.3%"), ("Record", "1-2"), ("Approx. 95% ROI range", "Pending"),
-        ("Net units", "-1.0U"), ("ROI", "-100.0%"), ("Record", "0-1"), ("Approx. 95% ROI range", "Pending"),
+        ("Net units", "+2.5U"), ("ROI", "+83.3%"), ("Record", "1-2"), ("Plausible ROI range (95%)", "Pending"),
+        ("Net units", "-1.0U"), ("ROI", "-100.0%"), ("Record", "0-1"), ("Plausible ROI range (95%)", "Pending"),
     ]
     frozen = [str(c.value) for c in at.caption if str(c.value).startswith("Frozen picks:")]
     assert frozen == [

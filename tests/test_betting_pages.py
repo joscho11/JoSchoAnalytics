@@ -137,7 +137,7 @@ def test_week1_scorecard_and_track_record_use_graded_corrected_release(tmp_path,
     assert metrics["ATS record"] == "6-10-0"
     assert not any("Retrospective model correction" in str(w.value) for w in weekly.warning)
     assert not any("Retrospective model update" in str(c.value) for c in weekly.caption)
-    assert any("Week 1 ATS record: **6-10-0**" in str(s.value) for s in weekly.success)
+    assert any("Week 1 ATS record: **6-10-0**" in str(s.value) for s in weekly.info)
     week2 = next(w for w in weekly.selectbox if getattr(w, "key", None) == "wp_week")
     week2.set_value(2)
     weekly.run()

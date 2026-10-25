@@ -222,15 +222,19 @@ def _fantasy_season_week_controls(
         week_kwargs = {"key": "wf_week"}
         if not seeded and "wf_week" not in st.session_state:
             week_kwargs["index"] = weeks.index(want) if want in weeks else 0
-        week = int(cols[1].selectbox("Week", weeks, **week_kwargs))
+        week = int(cols[1].selectbox(
+            "Week", weeks,
+            format_func=lambda n: f"Week {n}" if (season, n) in available else f"Week {n} · Not yet scheduled",
+            **week_kwargs,
+        ))
         page_common.sync_query_value("wf_week", week)
     return season, week
 
 
 def _coming_soon_copy(season: int, week: int) -> str:
     return (
-        f"{season} Week {week} projections are not published yet. They land later "
-        "this week. Fantasy is published as immutable revisions: each game's rows "
+        f"{season} Week {week} projections are not published yet. They appear here "
+        "once the week is scheduled and the release is ready. Fantasy is published as immutable revisions: each game's rows "
         "lock at kickoff while future games remain eligible for the next revision. "
         "Switch Season to 2025 for a demo of this board."
     )
@@ -998,29 +1002,32 @@ def render():
     selected_metadata, selected_grading = _selected_build_details(
         release_state, season=season, week=week
     )
-    if int(season) >= LIVE_FROM_SEASON:
-        postgame = bool(selected_grading.get("complete"))
-        st.badge(
-            "Postgame" if postgame else "Pregame",
-            icon=":material/check_circle:" if postgame else ":material/schedule:",
-            color="green" if postgame else "blue",
-        )
+    has_board = (season, week) in available
+    if int(season) < LIVE_FROM_SEASON and has_board:
+        st.badge("DEMO", icon=":material/science:", color="orange")
     public_note = (selected_metadata.get("release_review") or {}).get("public_note")
     if public_note:
         st.warning(str(public_note))
     published_at = release_state.get("published_at") if release_state else None
     last_updated = _format_last_updated(published_at)
+    status_bits = []
+    if int(season) >= LIVE_FROM_SEASON and has_board:
+        status_bits.append("Postgame" if selected_grading.get("complete") else "Pregame")
     if last_updated:
-        st.badge(last_updated, icon=":material/update:", color="gray")
-    scoring = st.segmented_control(
-        "Scoring format", list(SCORING_MODES), default=DEFAULT_SCORING,
-        key="wf_scoring", help="Choose how reception points are counted.",
-    ) or DEFAULT_SCORING
-    st.caption(
-        f"Scoring view: **{scoring}**. Projection points recalculate from receptions; "
-        "live slim artifacts use position-level reception estimates when individual "
-        "reception projections are not included."
-    )
+        status_bits.append(last_updated)
+    if status_bits:
+        st.caption(" · ".join(status_bits))
+    scoring = DEFAULT_SCORING
+    if has_board:
+        scoring = st.segmented_control(
+            "Scoring format", list(SCORING_MODES), default=DEFAULT_SCORING,
+            key="wf_scoring", help="Choose how reception points are counted.",
+        ) or DEFAULT_SCORING
+        st.caption(
+            f"Scoring view: **{scoring}**. Projection points recalculate from receptions; "
+            "live slim artifacts use position-level reception estimates when individual "
+            "reception projections are not included."
+        )
 
     st.subheader(f"Week {week} · {season} season")
 
@@ -1181,7 +1188,7 @@ def render():
                     accuracy_error, "Ranking accuracy is not available for this release."
                 )
         else:
-            st.caption("Games not yet played · actual stats appear after the week's results are in.")
+            st.caption("Actual stats appear after the week's results are in.")
 
         if _show_sleeper_comparison(season, week, actuals_in=actuals_in):
             st.info(
@@ -1620,6 +1627,7 @@ def render():
                 )
                 if accuracy_ready and not ranks_shown:
                     st.caption(_RANK_COLUMNS_NOTE)
+                st.caption("Health: ✅ healthy · 🟡 questionable · ⚠️ doubtful · ❌ out (Sleeper status label).")
 
                 # ── Agent Analysis ────────────────────────────────────────────
                 if fantasy_analysis and pos in fantasy_analysis:

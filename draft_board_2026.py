@@ -1120,6 +1120,21 @@ def _blank_missing_talent(series: pd.Series, decimals: int) -> pd.Series:
     return series.map(_one)
 
 
+# Desktop pixel widths so full labels (plus sort arrow and help icon) are never cut mid-word.
+_DESKTOP_WIDTHS = {
+    "adp_half_ppr": 115,
+    "pos_rank": 120,
+    "sleeper_proj_pos_rank": 215,
+    "sleeper_gap": 110,
+    "model_proj_pos_rank": 205,
+    "model_gap": 105,
+    "sleeper_proj": 115,
+    "model_proj": 110,
+    "nfl_talent": 150,
+    "college_talent": 165,
+}
+
+
 def _column_config(active_sort_key: str | None = None, ascending: bool = True,
                    market: str = DEFAULT_ADP_MARKET):
     """Build the table config and visibly mark the active numeric sort key."""
@@ -1130,6 +1145,8 @@ def _column_config(active_sort_key: str | None = None, ascending: bool = True,
             arrow = "↑" if ascending else "↓"
             label = f"{arrow} {label}"
             help_ = f"Current sort field ({'low to high' if ascending else 'high to low'}). {help_}"
+        if key in _DESKTOP_WIDTHS:
+            extra = {**extra, "width": _DESKTOP_WIDTHS[key]}
         if key in _TALENT_KEYS:
             extra = {k: v for k, v in extra.items() if k != "format"}
             # Displayed as text so missing scores stay blank, not the word None.

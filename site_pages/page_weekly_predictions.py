@@ -575,10 +575,15 @@ def render():
         _banner_suffix = f" ({_n_final} of {_n_total} games settled)" if _partial else ""
         if wins + losses > 0 or pushes > 0:
             _pct_txt = f" ({pct:.0f}%)" if pct is not None else ""
-            st.success(
+            _banner = (
                 f"{'Some results are in!' if _partial else 'Results are in!'} Week {week} ATS record: "
                 f"**{format_ats_record(wins, losses, pushes)}**{_pct_txt}{_banner_suffix}"
             )
+            # Green only for a winning record; 50% or worse stays neutral.
+            if pct is not None and pct > 50:
+                st.success(_banner)
+            else:
+                st.info(_banner)
         else:
             st.info("Games not yet played. Check back after the week's results are in.")
     else:
@@ -669,6 +674,18 @@ def render():
                 st.metric("ATS record", "Pending", border=True)
         else:
             st.metric("ATS record", "Pending", border=True)
+        if live and results_in and not week_df.empty:
+            _hm = week_df.apply(_public_high, axis=1)
+            if _hm.any():
+                hw, hl, hp, hpct = ats_record_parts(week_df[_hm], _correct_col)
+                st.metric(
+                    "HIGH record",
+                    format_ats_record(hw, hl, hp),
+                    format_ats_metric_delta(hpct, hp) if (hw + hl > 0 or hp > 0) else "No graded picks",
+                    delta_color=("green" if (hpct or 0) >= 52.4 else "red") if hw + hl > 0 else "gray",
+                    delta_arrow="off",
+                    border=True,
+                )
 
     st.divider()
 

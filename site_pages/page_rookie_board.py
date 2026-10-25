@@ -88,8 +88,34 @@ _COLS = {
 }
 _PHONE_SHOW = [
     "#", "Player", "Pos", "Pick", "Full Hit-%",
-    "Proj (season ½-PPR)", "Diff vs Sleeper",
+    "Proj (season ½-PPR)", "Sleeper Proj", "Diff vs Sleeper",
 ]
+_PHONE_LABELS = {"Pos": "Pos", "Pick": "Pick", "Full Hit-%": "Hit%", "Proj (season ½-PPR)": "Proj",
+                 "Sleeper Proj": "Sleeper", "Diff vs Sleeper": "Diff"}
+_PHONE_WIDTHS = {"Pos": 50, "Pick": 50, "Full Hit-%": 52, "Proj (season ½-PPR)": 52,
+                 "Sleeper Proj": 60, "Diff vs Sleeper": 52}
+
+
+def _phone_config(desktop_cfg: dict) -> dict:
+    """Phone grid config: same help/format as desktop, short labels, pinned compact widths."""
+    cfg = {}
+    for col in _PHONE_SHOW:
+        spec = desktop_cfg.get(col)
+        if col == "#" or col not in _PHONE_LABELS:
+            if spec is not None:
+                cfg[col] = spec
+            continue
+        fmt = {"Pick": "%d"}.get(col, "%.0f")
+        if col == "Diff vs Sleeper":
+            fmt = "%+.0f"
+        if col in ("Pos",):
+            cfg[col] = st.column_config.TextColumn(_PHONE_LABELS[col], width=_PHONE_WIDTHS[col], pinned=True)
+            continue
+        help_ = getattr(spec, "get", lambda *_: None)("help") if spec is not None else None
+        cfg[col] = st.column_config.NumberColumn(
+            _PHONE_LABELS[col], format=fmt, width=_PHONE_WIDTHS[col], pinned=True,
+            help=help_)
+    return cfg
 
 
 @st.cache_data(ttl=3600)
@@ -341,7 +367,8 @@ def render():
     st.caption("A per-position hit-probability score for drafted rookies — plus season-total "
                "projections for RB/WR/TE, a college talent score covering all four positions, "
                "and college/athletic percentiles.")
-    st.warning("**Backtested, not live-validated.** " + DISCLOSURE)
+    # DISCLOSURE opens with the same "Backtested, not live-validated" phrase; show it once.
+    st.warning(DISCLOSURE.replace("Backtested, not live-validated", "**Backtested, not live-validated**", 1))
 
     avail = [c for c in _CLASSES if not _load(c).empty]
     if not avail:
@@ -360,6 +387,10 @@ def render():
     df = df.sort_values("hit_prob_full", ascending=False)
     df = df.copy()
     df["team"] = df["team"].map(canon_team)
+    # Numeric dtype (NaN) so blank cells render empty, not the string "None".
+    for _c in ("projection", "sleeper", "diff", "talent_score"):
+        if _c in df.columns:
+            df[_c] = pd.to_numeric(df[_c], errors="coerce").astype(float)
     show = df[[c for c in _COLS if c in df.columns]].rename(columns=_COLS)
     # Row counter for the table as currently sorted and filtered — a reading aid only.
     show.insert(0, "#", range(1, len(show) + 1))
@@ -406,6 +437,7 @@ def render():
         slug="rookie-board",
         hide_index=True, width="stretch", height=min(720, 60 + 35 * len(show)),
         column_config=_rookie_cfg,
+        phone_column_config=_phone_config(_rookie_cfg),
     )
     model_available = int(show["Proj (season ½-PPR)"].notna().sum())
     sleeper_available = int(show["Sleeper Proj"].notna().sum())
