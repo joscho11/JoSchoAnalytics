@@ -5,10 +5,10 @@
       "first_score_play_id": null,
       "first_score_qtr": null,
       "game_id": "2026_07_CIN_BAL",
-      "graded_at": "2026-10-25T13:24:52Z",
+      "graded_at": "2026-10-25T20:54:00Z",
       "identity_source": "play_by_play_player_id",
       "outcome_kind": null,
-      "pending_reason": "game_not_final",
+      "pending_reason": "play_by_play_missing_or_incomplete",
       "player_settlements": {
         "00-0032394": {
           "scored_first": null,
@@ -115,7 +115,7 @@
         "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
         "player_identity": "4b130fa3efde3a8464be1d72d40336749dbc516a7c10235cc94f801bf138b152",
         "published_frozen_inputs": "f184ff3051f8da1df401942559a03fe297e06f2d709d2413cd51388bc9b319cf",
-        "schedule": "173093acc350e46a82e686613fb1d0c123f44684766f1e8c2ccaf22fe0d63e9d"
+        "schedule": "1db0ab0a438a59f34d447161973f6360d7db47113956656be41e918ba7c0a9b4"
       },
       "status": "pending"
     },
@@ -124,10 +124,10 @@
       "first_score_play_id": null,
       "first_score_qtr": null,
       "game_id": "2026_07_CLE_TEN",
-      "graded_at": "2026-10-25T13:24:52Z",
+      "graded_at": "2026-10-25T20:54:00Z",
       "identity_source": "play_by_play_player_id",
       "outcome_kind": null,
-      "pending_reason": "game_not_final",
+      "pending_reason": "play_by_play_missing_or_incomplete",
       "player_settlements": {
         "00-0033537": {
           "scored_first": null,
@@ -238,7 +238,7 @@
         "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
         "player_identity": "4b130fa3efde3a8464be1d72d40336749dbc516a7c10235cc94f801bf138b152",
         "published_frozen_inputs": "f184ff3051f8da1df401942559a03fe297e06f2d709d2413cd51388bc9b319cf",
-        "schedule": "5a6876cede73d3cf0185042652c4150cb066dfa0282753da24f81f2a1af0202e"
+        "schedule": "48837634d9c0876299bd57487ad62b48c801997e2d1f04b9eceaa5ce731e1adc"
       },
       "status": "pending"
     },
@@ -592,10 +592,10 @@
       "first_score_play_id": null,
       "first_score_qtr": null,
       "game_id": "2026_07_IND_MIN",
-      "graded_at": "2026-10-25T13:24:52Z",
+      "graded_at": "2026-10-25T20:54:00Z",
       "identity_source": "play_by_play_player_id",
       "outcome_kind": null,
-      "pending_reason": "game_not_final",
+      "pending_reason": "play_by_play_missing_or_incomplete",
       "player_settlements": {
         "00-0030279": {
           "scored_first": null,
@@ -714,7 +714,7 @@
         "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
         "player_identity": "4b130fa3efde3a8464be1d72d40336749dbc516a7c10235cc94f801bf138b152",
         "published_frozen_inputs": "f184ff3051f8da1df401942559a03fe297e06f2d709d2413cd51388bc9b319cf",
-        "schedule": "42e14add663054b134a4a873fa9bd71089517eebf660e4713e6df1ff8ac9cd80"
+        "schedule": "e48e412befed9164e249cbe9c1f11df22daeb37dafbf47da13b74777700bec56"
       },
       "status": "pending"
     },
@@ -957,10 +957,10 @@
       "first_score_play_id": null,
       "first_score_qtr": null,
       "game_id": "2026_07_MIA_NYJ",
-      "graded_at": "2026-10-25T13:24:52Z",
+      "graded_at": "2026-10-25T20:54:00Z",
       "identity_source": "play_by_play_player_id",
       "outcome_kind": null,
-      "pending_reason": "game_not_final",
+      "pending_reason": "play_by_play_missing_or_incomplete",
       "player_settlements": {
         "00-0030565": {
           "scored_first": null,
@@ -1087,7 +1087,7 @@
         "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
         "player_identity": "4b130fa3efde3a8464be1d72d40336749dbc516a7c10235cc94f801bf138b152",
         "published_frozen_inputs": "f184ff3051f8da1df401942559a03fe297e06f2d709d2413cd51388bc9b319cf",
-        "schedule": "7eb9ccfc712fc988e483c90a8259c5d00ff0ce4ce1ad9d1fbbc868dc30bbba63"
+        "schedule": "079ddaf6c8ff567b34ec5b7ccbdc6737ac629f4289d73c95f598911d9b89ef3e"
       },
       "status": "pending"
     },
@@ -1208,10 +1208,10 @@
       "first_score_play_id": null,
       "first_score_qtr": null,
       "game_id": "2026_07_NYG_HOU",
-      "graded_at": "2026-10-25T13:24:52Z",
+      "graded_at": "2026-10-25T20:54:00Z",
       "identity_source": "play_by_play_player_id",
       "outcome_kind": null,
-      "pending_reason": "game_not_final",
+      "pending_reason": "play_by_play_missing_or_incomplete",
       "player_settlements": {
         "00-0031484": {
           "scored_first": null,
@@ -1322,7 +1322,7 @@
         "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
         "player_identity": "4b130fa3efde3a8464be1d72d40336749dbc516a7c10235cc94f801bf138b152",
         "published_frozen_inputs": "f184ff3051f8da1df401942559a03fe297e06f2d709d2413cd51388bc9b319cf",
-        "schedule": "48ffe36accaf4fac065d1c9ab5b4bbf030a1d36a63756ea17bc40b204a375ad4"
+        "schedule": "86b11f5def794605febd4019c48f9d23019630b2cb3d7dfc80dc28fe213839e8"
       },
       "status": "pending"
     },
@@ -1331,10 +1331,10 @@
       "first_score_play_id": null,
       "first_score_qtr": null,
       "game_id": "2026_07_PIT_NO",
-      "graded_at": "2026-10-25T13:24:52Z",
+      "graded_at": "2026-10-25T20:54:00Z",
       "identity_source": "play_by_play_player_id",
       "outcome_kind": null,
-      "pending_reason": "game_not_final",
+      "pending_reason": "play_by_play_missing_or_incomplete",
       "player_settlements": {
         "00-0023459": {
           "scored_first": null,
@@ -1445,7 +1445,7 @@
         "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
         "player_identity": "4b130fa3efde3a8464be1d72d40336749dbc516a7c10235cc94f801bf138b152",
         "published_frozen_inputs": "f184ff3051f8da1df401942559a03fe297e06f2d709d2413cd51388bc9b319cf",
-        "schedule": "e7bd4d45ca510e4c054a5e44870182e8609eddc540d2b8384c3ac4adf9211e00"
+        "schedule": "68addcbe7351fdc8274bf68a62ceb01428a3c69accdb1e8fdb58a477f0504840"
       },
       "status": "pending"
     },
@@ -1454,10 +1454,10 @@
       "first_score_play_id": null,
       "first_score_qtr": null,
       "game_id": "2026_07_SF_ATL",
-      "graded_at": "2026-10-25T13:24:52Z",
+      "graded_at": "2026-10-25T20:54:00Z",
       "identity_source": "play_by_play_player_id",
       "outcome_kind": null,
-      "pending_reason": "game_not_final",
+      "pending_reason": "play_by_play_missing_or_incomplete",
       "player_settlements": {
         "00-0029892": {
           "scored_first": null,
@@ -1548,7 +1548,7 @@
         "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
         "player_identity": "4b130fa3efde3a8464be1d72d40336749dbc516a7c10235cc94f801bf138b152",
         "published_frozen_inputs": "f184ff3051f8da1df401942559a03fe297e06f2d709d2413cd51388bc9b319cf",
-        "schedule": "8613dda459533749cf4da20eaf7021b700f3337d37151674a22337f15e089ca3"
+        "schedule": "ebb20acbe9acf6deea2101467a9eea42860606baecab7b23990114e8c646d819"
       },
       "status": "pending"
     },
@@ -1557,10 +1557,10 @@
       "first_score_play_id": null,
       "first_score_qtr": null,
       "game_id": "2026_07_TB_CAR",
-      "graded_at": "2026-10-25T13:24:52Z",
+      "graded_at": "2026-10-25T20:54:00Z",
       "identity_source": "play_by_play_player_id",
       "outcome_kind": null,
-      "pending_reason": "game_not_final",
+      "pending_reason": "play_by_play_missing_or_incomplete",
       "player_settlements": {
         "00-0031610": {
           "scored_first": null,
@@ -1671,7 +1671,7 @@
         "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
         "player_identity": "4b130fa3efde3a8464be1d72d40336749dbc516a7c10235cc94f801bf138b152",
         "published_frozen_inputs": "f184ff3051f8da1df401942559a03fe297e06f2d709d2413cd51388bc9b319cf",
-        "schedule": "644d3ccb54c83c31b76ffcd811691d07e57a9267c87c2dbc39333f23f5e216d5"
+        "schedule": "2ac39c2727b93bd5c174c90f500a2503fb2aebcc577aab7de87945d4c23c3f53"
       },
       "status": "pending"
     }
