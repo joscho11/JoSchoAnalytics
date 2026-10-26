@@ -1,0 +1,125 @@
+{
+  "season": 2026,
+  "week": 7,
+  "mode": "tournament_ceiling",
+  "engine_version": "0.2.3",
+  "projection_sha256": "5e810c7cd628494426549942069404cb1e827f4a61efaca7a251c53a5e79c513",
+  "salary_sha256": "ff049d6e5bb64cfa287cb79511a96f8f85c9e6fe38207ca7bc22765ad238564d",
+  "field": {
+    "median": 112,
+    "top": 201
+  },
+  "lineups": [
+    {
+      "label": "Optimizer lineup",
+      "kind": "untouched",
+      "exclusions": [],
+      "total_actual": 124.12,
+      "total_ceiling": 187.29,
+      "total_mean": 144.81,
+      "salary": 49900,
+      "top_pct": 27,
+      "players": [
+        {
+          "slot": "QB",
+          "player": "C.J. Stroud",
+          "pos": "QB",
+          "team": "HOU",
+          "salary": 5700,
+          "ceiling": 29.68,
+          "mean": 21.27,
+          "actual": 16.52,
+          "own": "18%"
+        },
+        {
+          "slot": "RB",
+          "player": "Christian McCaffrey",
+          "pos": "RB",
+          "team": "SF",
+          "salary": 7600,
+          "ceiling": 28.87,
+          "mean": 23.65,
+          "actual": 22.0,
+          "own": "39%"
+        },
+        {
+          "slot": "RB",
+          "player": "Aaron Jones Sr.",
+          "pos": "RB",
+          "team": "MIN",
+          "salary": 6200,
+          "ceiling": 21.59,
+          "mean": 16.37,
+          "actual": 3.6,
+          "own": "8%"
+        },
+        {
+          "slot": "WR",
+          "player": "Amon-Ra St. Brown",
+          "pos": "WR",
+          "team": "DET",
+          "salary": 7800,
+          "ceiling": 26.34,
+          "mean": 21.03,
+          "actual": 27.2,
+          "own": "19%"
+        },
+        {
+          "slot": "WR",
+          "player": "Zay Flowers",
+          "pos": "WR",
+          "team": "BAL",
+          "salary": 6900,
+          "ceiling": 22.85,
+          "mean": 17.54,
+          "actual": 30.7,
+          "own": "4%"
+        },
+        {
+          "slot": "WR",
+          "player": "Tank Dell",
+          "pos": "WR",
+          "team": "HOU",
+          "salary": 3300,
+          "ceiling": 13.76,
+          "mean": 8.45,
+          "actual": 5.5,
+          "own": "<1%"
+        },
+        {
+          "slot": "TE",
+          "player": "Sam LaPorta",
+          "pos": "TE",
+          "team": "DET",
+          "salary": 4800,
+          "ceiling": 18.33,
+          "mean": 14.48,
+          "actual": 2.8,
+          "own": "13%"
+        },
+        {
+          "slot": "FLEX",
+          "player": "Tucker Kraft",
+          "pos": "TE",
+          "team": "GB",
+          "salary": 4700,
+          "ceiling": 18.05,
+          "mean": 14.2,
+          "actual": 14.8,
+          "own": "21%"
+        },
+        {
+          "slot": "DST",
+          "player": "Jets",
+          "pos": "DST",
+          "team": "NYJ",
+          "salary": 2900,
+          "ceiling": 7.82,
+          "mean": 7.82,
+          "actual": 1.0,
+          "own": "14%"
+        }
+      ]
+    }
+  ]
+}
