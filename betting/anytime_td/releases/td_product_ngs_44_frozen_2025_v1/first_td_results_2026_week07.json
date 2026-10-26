@@ -2,13 +2,13 @@
   "games": [
     {
       "evidence_source": "nflverse_play_by_play",
-      "first_score_play_id": null,
-      "first_score_qtr": null,
+      "first_score_play_id": 132.0,
+      "first_score_qtr": 1.0,
       "game_id": "2026_07_CIN_BAL",
-      "graded_at": "2026-10-25T20:54:00Z",
-      "identity_source": "play_by_play_player_id",
-      "outcome_kind": null,
-      "pending_reason": "play_by_play_missing_or_incomplete",
+      "graded_at": "2026-10-26T04:51:29Z",
+      "identity_source": "nflverse_player_stats",
+      "outcome_kind": "offense_skill",
+      "pending_reason": null,
       "player_settlements": {
         "00-0032394": {
           "scored_first": null,
@@ -59,8 +59,8 @@
           "status": "awaiting_evidence"
         },
         "00-0039064": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 1.0,
+          "status": "settled"
         },
         "00-0039792": {
           "scored_first": null,
@@ -107,27 +107,28 @@
           "status": "awaiting_evidence"
         }
       },
-      "scorer_name": null,
-      "scorer_on_board": null,
-      "scorer_player_id": null,
-      "scorer_team": null,
+      "scorer_name": "Zay Flowers",
+      "scorer_on_board": true,
+      "scorer_player_id": "00-0039064",
+      "scorer_team": "BAL",
+      "settlements_updated_at": "2026-10-26T04:51:29Z",
       "source_hashes": {
-        "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
-        "player_identity": "4b130fa3efde3a8464be1d72d40336749dbc516a7c10235cc94f801bf138b152",
+        "play_by_play": "e356d69fe65d4f6e194b7c542910b5ffcb1720cbe2d0bd1ebb3e4e811b368d89",
+        "player_identity": "76faebc8e3ca5e07cf88fdfd1ecdc837fa35ed8a3522354bcded69e871f6daab",
         "published_frozen_inputs": "f184ff3051f8da1df401942559a03fe297e06f2d709d2413cd51388bc9b319cf",
         "schedule": "1db0ab0a438a59f34d447161973f6360d7db47113956656be41e918ba7c0a9b4"
       },
-      "status": "pending"
+      "status": "resolved"
     },
     {
       "evidence_source": "nflverse_play_by_play",
-      "first_score_play_id": null,
-      "first_score_qtr": null,
+      "first_score_play_id": 186.0,
+      "first_score_qtr": 1.0,
       "game_id": "2026_07_CLE_TEN",
-      "graded_at": "2026-10-25T20:54:00Z",
-      "identity_source": "play_by_play_player_id",
-      "outcome_kind": null,
-      "pending_reason": "play_by_play_missing_or_incomplete",
+      "graded_at": "2026-10-26T04:51:29Z",
+      "identity_source": "nflverse_player_stats",
+      "outcome_kind": "offense_skill",
+      "pending_reason": null,
       "player_settlements": {
         "00-0033537": {
           "scored_first": null,
@@ -138,8 +139,8 @@
           "status": "awaiting_evidence"
         },
         "00-0035261": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 1.0,
+          "status": "settled"
         },
         "00-0036407": {
           "scored_first": null,
@@ -230,24 +231,25 @@
           "status": "awaiting_evidence"
         }
       },
-      "scorer_name": null,
-      "scorer_on_board": null,
-      "scorer_player_id": null,
-      "scorer_team": null,
+      "scorer_name": "Tony Pollard",
+      "scorer_on_board": true,
+      "scorer_player_id": "00-0035261",
+      "scorer_team": "TEN",
+      "settlements_updated_at": "2026-10-26T04:51:29Z",
       "source_hashes": {
-        "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
-        "player_identity": "4b130fa3efde3a8464be1d72d40336749dbc516a7c10235cc94f801bf138b152",
+        "play_by_play": "943c146bd8a6e835373e41862e175e2eef5e36d6d9d52e832fbdae4a0fd2f9f7",
+        "player_identity": "c8e0412148c2baa8052a1fe24f1a297a377a71e03f4dcdd9443c55bc0288796a",
         "published_frozen_inputs": "f184ff3051f8da1df401942559a03fe297e06f2d709d2413cd51388bc9b319cf",
         "schedule": "48837634d9c0876299bd57487ad62b48c801997e2d1f04b9eceaa5ce731e1adc"
       },
-      "status": "pending"
+      "status": "resolved"
     },
     {
       "evidence_source": "nflverse_play_by_play",
       "first_score_play_id": null,
       "first_score_qtr": null,
       "game_id": "2026_07_DAL_PHI",
-      "graded_at": "2026-10-25T13:24:52Z",
+      "graded_at": "2026-10-26T04:51:29Z",
       "identity_source": "play_by_play_player_id",
       "outcome_kind": null,
       "pending_reason": "game_not_final",
@@ -355,7 +357,7 @@
       "scorer_team": null,
       "source_hashes": {
         "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
-        "player_identity": "4b130fa3efde3a8464be1d72d40336749dbc516a7c10235cc94f801bf138b152",
+        "player_identity": "166b30f0df38a67cf944e2ff3ed099dec8f4ea6f27452ae8701d37280b7a34d8",
         "published_frozen_inputs": "f184ff3051f8da1df401942559a03fe297e06f2d709d2413cd51388bc9b319cf",
         "schedule": "0fa56324f04866dfc6f5768c5958239ccc803fd963ceb96f935ababf61d7c5e4"
       },
@@ -363,13 +365,13 @@
     },
     {
       "evidence_source": "nflverse_play_by_play",
-      "first_score_play_id": null,
-      "first_score_qtr": null,
+      "first_score_play_id": 1903.0,
+      "first_score_qtr": 2.0,
       "game_id": "2026_07_DEN_ARI",
-      "graded_at": "2026-10-25T13:24:52Z",
-      "identity_source": "play_by_play_player_id",
-      "outcome_kind": null,
-      "pending_reason": "game_not_final",
+      "graded_at": "2026-10-26T04:51:29Z",
+      "identity_source": "nflverse_player_stats",
+      "outcome_kind": "offense_skill",
+      "pending_reason": null,
       "player_settlements": {
         "00-0033119": {
           "scored_first": null,
@@ -440,8 +442,8 @@
           "status": "awaiting_evidence"
         },
         "00-0039732": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 1.0,
+          "status": "settled"
         },
         "00-0039868": {
           "scored_first": null,
@@ -460,27 +462,28 @@
           "status": "awaiting_evidence"
         }
       },
-      "scorer_name": null,
-      "scorer_on_board": null,
-      "scorer_player_id": null,
-      "scorer_team": null,
+      "scorer_name": "Bo Nix",
+      "scorer_on_board": true,
+      "scorer_player_id": "00-0039732",
+      "scorer_team": "DEN",
+      "settlements_updated_at": "2026-10-26T04:51:29Z",
       "source_hashes": {
-        "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
-        "player_identity": "4b130fa3efde3a8464be1d72d40336749dbc516a7c10235cc94f801bf138b152",
+        "play_by_play": "ca09c1c9d222f2359f7cdb57ce09c9a3a3262218d0dec882764c297c20fff88c",
+        "player_identity": "dfd0b059132b72105f87ea5f96c39e631b383c62c301620512e37ecc6b5a72d8",
         "published_frozen_inputs": "f184ff3051f8da1df401942559a03fe297e06f2d709d2413cd51388bc9b319cf",
-        "schedule": "4066cd938bb062f2e33e669416ef250901c1077f0c48db9a785cb41c4efb2cfa"
+        "schedule": "b1d907300e2f4161b6c8fb7481228e0289381b4b11e2258ed6243bcdd1d9464f"
       },
-      "status": "pending"
+      "status": "resolved"
     },
     {
       "evidence_source": "nflverse_play_by_play",
-      "first_score_play_id": null,
-      "first_score_qtr": null,
+      "first_score_play_id": 482.0,
+      "first_score_qtr": 1.0,
       "game_id": "2026_07_GB_DET",
-      "graded_at": "2026-10-25T13:24:52Z",
-      "identity_source": "play_by_play_player_id",
-      "outcome_kind": null,
-      "pending_reason": "game_not_final",
+      "graded_at": "2026-10-26T04:51:29Z",
+      "identity_source": "nflverse_player_stats",
+      "outcome_kind": "offense_skill",
+      "pending_reason": null,
       "player_settlements": {
         "00-0033106": {
           "scored_first": null,
@@ -515,8 +518,8 @@
           "status": "awaiting_evidence"
         },
         "00-0037240": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 1.0,
+          "status": "settled"
         },
         "00-0037524": {
           "scored_first": null,
@@ -575,27 +578,28 @@
           "status": "awaiting_evidence"
         }
       },
-      "scorer_name": null,
-      "scorer_on_board": null,
-      "scorer_player_id": null,
-      "scorer_team": null,
+      "scorer_name": "Jameson Williams",
+      "scorer_on_board": true,
+      "scorer_player_id": "00-0037240",
+      "scorer_team": "DET",
+      "settlements_updated_at": "2026-10-26T04:51:29Z",
       "source_hashes": {
-        "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
-        "player_identity": "4b130fa3efde3a8464be1d72d40336749dbc516a7c10235cc94f801bf138b152",
+        "play_by_play": "9355334b2a2b14601e96cf7a4d4235c322054673bdeb23462a04f9602337500d",
+        "player_identity": "264ffa1960d7d73e561cb6d4af1d6a0e4622f59c889a35205ac8b3552f7be5bd",
         "published_frozen_inputs": "f184ff3051f8da1df401942559a03fe297e06f2d709d2413cd51388bc9b319cf",
-        "schedule": "dcee9b10e50f1a6bdbf111dbe4cec496c0bb30873611182a9347f5233bc3f748"
+        "schedule": "1b9ae1dbf899b1251a2c50ef728d5b3c4eaf1e91ee1508071629b8a76e72d5b2"
       },
-      "status": "pending"
+      "status": "resolved"
     },
     {
       "evidence_source": "nflverse_play_by_play",
-      "first_score_play_id": null,
-      "first_score_qtr": null,
+      "first_score_play_id": 290.0,
+      "first_score_qtr": 1.0,
       "game_id": "2026_07_IND_MIN",
-      "graded_at": "2026-10-25T20:54:00Z",
-      "identity_source": "play_by_play_player_id",
-      "outcome_kind": null,
-      "pending_reason": "play_by_play_missing_or_incomplete",
+      "graded_at": "2026-10-26T04:51:29Z",
+      "identity_source": "nflverse_player_stats",
+      "outcome_kind": "offense_skill",
+      "pending_reason": null,
       "player_settlements": {
         "00-0030279": {
           "scored_first": null,
@@ -634,8 +638,8 @@
           "status": "awaiting_evidence"
         },
         "00-0036223": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 1.0,
+          "status": "settled"
         },
         "00-0036259": {
           "scored_first": null,
@@ -706,27 +710,28 @@
           "status": "awaiting_evidence"
         }
       },
-      "scorer_name": null,
-      "scorer_on_board": null,
-      "scorer_player_id": null,
-      "scorer_team": null,
+      "scorer_name": "Jonathan Taylor",
+      "scorer_on_board": true,
+      "scorer_player_id": "00-0036223",
+      "scorer_team": "IND",
+      "settlements_updated_at": "2026-10-26T04:51:29Z",
       "source_hashes": {
-        "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
-        "player_identity": "4b130fa3efde3a8464be1d72d40336749dbc516a7c10235cc94f801bf138b152",
+        "play_by_play": "2dd6a41eeb8bd98491859c93337f510dcf67edf0392d597c35c9f05002ebb284",
+        "player_identity": "6127e058f26441991c370527b7d47532ff5bae64452c79a253296e34d269c174",
         "published_frozen_inputs": "f184ff3051f8da1df401942559a03fe297e06f2d709d2413cd51388bc9b319cf",
         "schedule": "e48e412befed9164e249cbe9c1f11df22daeb37dafbf47da13b74777700bec56"
       },
-      "status": "pending"
+      "status": "resolved"
     },
     {
       "evidence_source": "nflverse_play_by_play",
-      "first_score_play_id": null,
-      "first_score_qtr": null,
+      "first_score_play_id": 1637.0,
+      "first_score_qtr": 2.0,
       "game_id": "2026_07_KC_SEA",
-      "graded_at": "2026-10-25T13:24:52Z",
-      "identity_source": "play_by_play_player_id",
-      "outcome_kind": null,
-      "pending_reason": "game_not_final",
+      "graded_at": "2026-10-26T04:51:29Z",
+      "identity_source": "nflverse_player_stats",
+      "outcome_kind": "offense_skill",
+      "pending_reason": null,
       "player_settlements": {
         "00-0030506": {
           "scored_first": null,
@@ -765,8 +770,8 @@
           "status": "awaiting_evidence"
         },
         "00-0038543": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 1.0,
+          "status": "settled"
         },
         "00-0038797": {
           "scored_first": null,
@@ -817,27 +822,28 @@
           "status": "awaiting_evidence"
         }
       },
-      "scorer_name": null,
-      "scorer_on_board": null,
-      "scorer_player_id": null,
-      "scorer_team": null,
+      "scorer_name": "Jaxon Smith-Njigba",
+      "scorer_on_board": true,
+      "scorer_player_id": "00-0038543",
+      "scorer_team": "SEA",
+      "settlements_updated_at": "2026-10-26T04:51:29Z",
       "source_hashes": {
-        "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
-        "player_identity": "4b130fa3efde3a8464be1d72d40336749dbc516a7c10235cc94f801bf138b152",
+        "play_by_play": "caa95f186afd7c65c61c3780df91a0972d05b1dbcc74c4e0b3f5f7504a89e441",
+        "player_identity": "c99151a5a6f1a542bd586e7f60aa3cc6432ba94bbb1011a6a6bdfb70917b1a3e",
         "published_frozen_inputs": "f184ff3051f8da1df401942559a03fe297e06f2d709d2413cd51388bc9b319cf",
-        "schedule": "955f689376105d173a9d57a34424f0c59f51119bdaee6b85995b62903cd8733a"
+        "schedule": "ea2eac2d0c438206fce39ce0cc558e1b5bdf87b5b5293059a26c9dcc7a605b74"
       },
-      "status": "pending"
+      "status": "resolved"
     },
     {
       "evidence_source": "nflverse_play_by_play",
-      "first_score_play_id": null,
-      "first_score_qtr": null,
+      "first_score_play_id": 639.0,
+      "first_score_qtr": 1.0,
       "game_id": "2026_07_LA_LV",
-      "graded_at": "2026-10-25T13:24:52Z",
-      "identity_source": "play_by_play_player_id",
-      "outcome_kind": null,
-      "pending_reason": "game_not_final",
+      "graded_at": "2026-10-26T04:51:29Z",
+      "identity_source": "nflverse_player_stats",
+      "outcome_kind": "offense_skill",
+      "pending_reason": null,
       "player_settlements": {
         "00-0026498": {
           "scored_first": null,
@@ -892,8 +898,8 @@
           "status": "awaiting_evidence"
         },
         "00-0039074": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 1.0,
+          "status": "settled"
         },
         "00-0039075": {
           "scored_first": null,
@@ -940,27 +946,28 @@
           "status": "awaiting_evidence"
         }
       },
-      "scorer_name": null,
-      "scorer_on_board": null,
-      "scorer_player_id": null,
-      "scorer_team": null,
+      "scorer_name": "Davis Allen",
+      "scorer_on_board": true,
+      "scorer_player_id": "00-0039074",
+      "scorer_team": "LA",
+      "settlements_updated_at": "2026-10-26T04:51:29Z",
       "source_hashes": {
-        "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
-        "player_identity": "4b130fa3efde3a8464be1d72d40336749dbc516a7c10235cc94f801bf138b152",
+        "play_by_play": "4209e00a46a87700241cf4000e6c3c465e4f6f38ce0884852979efec4e72e2c1",
+        "player_identity": "31a33fd75b6b8657e712877e5cf917f17ec3cc6ddd00a3230baaf250b73318fa",
         "published_frozen_inputs": "f184ff3051f8da1df401942559a03fe297e06f2d709d2413cd51388bc9b319cf",
-        "schedule": "0c264e1c6ebf59b009504a005bdd81a075ab21d446aa47ffb0831bed026f98ed"
+        "schedule": "d1a76353be086f75c2cd5c841bdee74d9ef873a3eb3969a1a23bdf3e4d7fa713"
       },
-      "status": "pending"
+      "status": "resolved"
     },
     {
       "evidence_source": "nflverse_play_by_play",
-      "first_score_play_id": null,
-      "first_score_qtr": null,
+      "first_score_play_id": 213.0,
+      "first_score_qtr": 1.0,
       "game_id": "2026_07_MIA_NYJ",
-      "graded_at": "2026-10-25T20:54:00Z",
-      "identity_source": "play_by_play_player_id",
-      "outcome_kind": null,
-      "pending_reason": "play_by_play_missing_or_incomplete",
+      "graded_at": "2026-10-26T04:51:29Z",
+      "identity_source": "nflverse_player_stats",
+      "outcome_kind": "offense_skill",
+      "pending_reason": null,
       "player_settlements": {
         "00-0030565": {
           "scored_first": null,
@@ -1059,8 +1066,8 @@
           "status": "awaiting_evidence"
         },
         "00-0041523": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 1.0,
+          "status": "settled"
         },
         "00-0041524": {
           "scored_first": null,
@@ -1079,17 +1086,18 @@
           "status": "awaiting_evidence"
         }
       },
-      "scorer_name": null,
-      "scorer_on_board": null,
-      "scorer_player_id": null,
-      "scorer_team": null,
+      "scorer_name": "Caleb Douglas",
+      "scorer_on_board": true,
+      "scorer_player_id": "00-0041523",
+      "scorer_team": "MIA",
+      "settlements_updated_at": "2026-10-26T04:51:29Z",
       "source_hashes": {
-        "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
-        "player_identity": "4b130fa3efde3a8464be1d72d40336749dbc516a7c10235cc94f801bf138b152",
+        "play_by_play": "2fdb53bdeb8b6ee0eb657156378512f9e66db54e841d50fa13aef1d6e68315d6",
+        "player_identity": "190c9c999dc517616e254ceea0d44981e1bdf73a63108cd9ddf2e080ebea53df",
         "published_frozen_inputs": "f184ff3051f8da1df401942559a03fe297e06f2d709d2413cd51388bc9b319cf",
         "schedule": "079ddaf6c8ff567b34ec5b7ccbdc6737ac629f4289d73c95f598911d9b89ef3e"
       },
-      "status": "pending"
+      "status": "resolved"
     },
     {
       "evidence_source": "nflverse_play_by_play",
@@ -1205,13 +1213,13 @@
     },
     {
       "evidence_source": "nflverse_play_by_play",
-      "first_score_play_id": null,
-      "first_score_qtr": null,
+      "first_score_play_id": 525.0,
+      "first_score_qtr": 1.0,
       "game_id": "2026_07_NYG_HOU",
-      "graded_at": "2026-10-25T20:54:00Z",
-      "identity_source": "play_by_play_player_id",
-      "outcome_kind": null,
-      "pending_reason": "play_by_play_missing_or_incomplete",
+      "graded_at": "2026-10-26T04:51:29Z",
+      "identity_source": "nflverse_player_stats",
+      "outcome_kind": "offense_skill",
+      "pending_reason": null,
       "player_settlements": {
         "00-0031484": {
           "scored_first": null,
@@ -1278,8 +1286,8 @@
           "status": "awaiting_evidence"
         },
         "00-0039384": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 1.0,
+          "status": "settled"
         },
         "00-0039847": {
           "scored_first": null,
@@ -1314,27 +1322,28 @@
           "status": "awaiting_evidence"
         }
       },
-      "scorer_name": null,
-      "scorer_on_board": null,
-      "scorer_player_id": null,
-      "scorer_team": null,
+      "scorer_name": "Tyrone Tracy Jr.",
+      "scorer_on_board": true,
+      "scorer_player_id": "00-0039384",
+      "scorer_team": "NYG",
+      "settlements_updated_at": "2026-10-26T04:51:29Z",
       "source_hashes": {
-        "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
-        "player_identity": "4b130fa3efde3a8464be1d72d40336749dbc516a7c10235cc94f801bf138b152",
+        "play_by_play": "8326f853f6f7e4caaf134b80e4f2ef6fcf8cda5344c0828f4e02eceeef4ef1bc",
+        "player_identity": "dc0db5f9ba5c84b8ef09a2c33be8f1a33d2f48f638e7c5f2e4afe6598eb5da1e",
         "published_frozen_inputs": "f184ff3051f8da1df401942559a03fe297e06f2d709d2413cd51388bc9b319cf",
         "schedule": "86b11f5def794605febd4019c48f9d23019630b2cb3d7dfc80dc28fe213839e8"
       },
-      "status": "pending"
+      "status": "resolved"
     },
     {
       "evidence_source": "nflverse_play_by_play",
-      "first_score_play_id": null,
-      "first_score_qtr": null,
+      "first_score_play_id": 1426.0,
+      "first_score_qtr": 2.0,
       "game_id": "2026_07_PIT_NO",
-      "graded_at": "2026-10-25T20:54:00Z",
-      "identity_source": "play_by_play_player_id",
-      "outcome_kind": null,
-      "pending_reason": "play_by_play_missing_or_incomplete",
+      "graded_at": "2026-10-26T04:51:29Z",
+      "identity_source": "nflverse_player_stats",
+      "outcome_kind": "offense_skill",
+      "pending_reason": null,
       "player_settlements": {
         "00-0023459": {
           "scored_first": null,
@@ -1389,8 +1398,8 @@
           "status": "awaiting_evidence"
         },
         "00-0038558": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 1.0,
+          "status": "settled"
         },
         "00-0039424": {
           "scored_first": null,
@@ -1437,27 +1446,28 @@
           "status": "awaiting_evidence"
         }
       },
-      "scorer_name": null,
-      "scorer_on_board": null,
-      "scorer_player_id": null,
-      "scorer_team": null,
+      "scorer_name": "Darnell Washington",
+      "scorer_on_board": true,
+      "scorer_player_id": "00-0038558",
+      "scorer_team": "PIT",
+      "settlements_updated_at": "2026-10-26T04:51:29Z",
       "source_hashes": {
-        "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
-        "player_identity": "4b130fa3efde3a8464be1d72d40336749dbc516a7c10235cc94f801bf138b152",
+        "play_by_play": "451f5dbee9bb31f9c9e552a1e6153c727f33985400616d0543beac71b5887940",
+        "player_identity": "af0a9e3e1177ac84a666efeb45c5186c1bc3456a807a889c2a24aa41c8c89945",
         "published_frozen_inputs": "f184ff3051f8da1df401942559a03fe297e06f2d709d2413cd51388bc9b319cf",
         "schedule": "68addcbe7351fdc8274bf68a62ceb01428a3c69accdb1e8fdb58a477f0504840"
       },
-      "status": "pending"
+      "status": "resolved"
     },
     {
       "evidence_source": "nflverse_play_by_play",
-      "first_score_play_id": null,
-      "first_score_qtr": null,
+      "first_score_play_id": 305.0,
+      "first_score_qtr": 1.0,
       "game_id": "2026_07_SF_ATL",
-      "graded_at": "2026-10-25T20:54:00Z",
-      "identity_source": "play_by_play_player_id",
-      "outcome_kind": null,
-      "pending_reason": "play_by_play_missing_or_incomplete",
+      "graded_at": "2026-10-26T04:51:29Z",
+      "identity_source": "nflverse_player_stats",
+      "outcome_kind": "offense_skill",
+      "pending_reason": null,
       "player_settlements": {
         "00-0029892": {
           "scored_first": null,
@@ -1472,8 +1482,8 @@
           "status": "awaiting_evidence"
         },
         "00-0033280": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 1.0,
+          "status": "settled"
         },
         "00-0033288": {
           "scored_first": null,
@@ -1540,27 +1550,28 @@
           "status": "awaiting_evidence"
         }
       },
-      "scorer_name": null,
-      "scorer_on_board": null,
-      "scorer_player_id": null,
-      "scorer_team": null,
+      "scorer_name": "Christian McCaffrey",
+      "scorer_on_board": true,
+      "scorer_player_id": "00-0033280",
+      "scorer_team": "SF",
+      "settlements_updated_at": "2026-10-26T04:51:29Z",
       "source_hashes": {
-        "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
-        "player_identity": "4b130fa3efde3a8464be1d72d40336749dbc516a7c10235cc94f801bf138b152",
+        "play_by_play": "9a57a6d2554e01e706db83e951ff0c87642d3652ae516a9c3e5845cac9ec637a",
+        "player_identity": "9cdca45e8f5fb35b8f732a7d0a832df3d427ec303b8ed62141a59307d3b4452b",
         "published_frozen_inputs": "f184ff3051f8da1df401942559a03fe297e06f2d709d2413cd51388bc9b319cf",
         "schedule": "ebb20acbe9acf6deea2101467a9eea42860606baecab7b23990114e8c646d819"
       },
-      "status": "pending"
+      "status": "resolved"
     },
     {
       "evidence_source": "nflverse_play_by_play",
-      "first_score_play_id": null,
-      "first_score_qtr": null,
+      "first_score_play_id": 365.0,
+      "first_score_qtr": 1.0,
       "game_id": "2026_07_TB_CAR",
-      "graded_at": "2026-10-25T20:54:00Z",
-      "identity_source": "play_by_play_player_id",
-      "outcome_kind": null,
-      "pending_reason": "play_by_play_missing_or_incomplete",
+      "graded_at": "2026-10-26T04:51:29Z",
+      "identity_source": "nflverse_player_stats",
+      "outcome_kind": "offense_skill",
+      "pending_reason": null,
       "player_settlements": {
         "00-0031610": {
           "scored_first": null,
@@ -1627,8 +1638,8 @@
           "status": "awaiting_evidence"
         },
         "00-0039361": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 1.0,
+          "status": "settled"
         },
         "00-0039491": {
           "scored_first": null,
@@ -1663,17 +1674,18 @@
           "status": "awaiting_evidence"
         }
       },
-      "scorer_name": null,
-      "scorer_on_board": null,
-      "scorer_player_id": null,
-      "scorer_team": null,
+      "scorer_name": "Bucky Irving",
+      "scorer_on_board": true,
+      "scorer_player_id": "00-0039361",
+      "scorer_team": "TB",
+      "settlements_updated_at": "2026-10-26T04:51:29Z",
       "source_hashes": {
-        "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
-        "player_identity": "4b130fa3efde3a8464be1d72d40336749dbc516a7c10235cc94f801bf138b152",
+        "play_by_play": "ea037aa817096d6f7fc3f95e32eea17385ed766804dfe5edcef7a14dd15be0ca",
+        "player_identity": "293e28040fa6d17feed2439507407245888b4d4c3e9479881cca094d8b90fe50",
         "published_frozen_inputs": "f184ff3051f8da1df401942559a03fe297e06f2d709d2413cd51388bc9b319cf",
         "schedule": "2ac39c2727b93bd5c174c90f500a2503fb2aebcc577aab7de87945d4c23c3f53"
       },
-      "status": "pending"
+      "status": "resolved"
     }
   ],
   "published_frozen_inputs_sha256": "f184ff3051f8da1df401942559a03fe297e06f2d709d2413cd51388bc9b319cf",
