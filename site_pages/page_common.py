@@ -10,6 +10,7 @@ import importlib.util
 import json
 import os
 import re
+import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -268,7 +269,16 @@ def reload_if_stale(module, *, require=()):
                 pyc.unlink()
             except OSError:
                 pass
-        module = importlib.reload(module)
+        parent = module.__name__.rpartition(".")[0]
+        try:
+            if parent and parent not in sys.modules:
+                # importlib.reload raises "parent not in sys.modules" for a dotted
+                # module whose package was purged from the warm process.
+                importlib.import_module(parent)
+            module = importlib.reload(module)
+        except ImportError:
+            # A failed reload must never take the whole app down; keep the loaded copy.
+            pass
     module.__joscho_source_mtime_ns__ = mtime
     return module
 

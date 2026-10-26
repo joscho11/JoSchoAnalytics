@@ -265,3 +265,27 @@ if __name__ == "__main__":
     test_shared_modules_import_safe()
     test_nonselected_pages_are_lazy_imported()
     print("OK  nav: Home default, Betting then Fantasy, empty sidebar, Venmo header, footer actions")
+
+
+def test_reload_if_stale_survives_missing_parent_package(tmp_path, monkeypatch):
+    """A dotted module whose parent package left sys.modules must not crash the app."""
+    import sys
+    import types
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "site_pages"))
+    try:
+        import page_common
+    finally:
+        sys.path.pop(0)
+    pkg_dir = tmp_path / "ghostpkg"
+    pkg_dir.mkdir()
+    (pkg_dir / "mod.py").write_text("X = 1\n", encoding="utf-8")
+    monkeypatch.syspath_prepend(str(tmp_path))
+    import importlib
+
+    mod = importlib.import_module("ghostpkg.mod")
+    sys.modules.pop("ghostpkg", None)
+    mod.__joscho_source_mtime_ns__ = -1  # force the stale path
+    out = page_common.reload_if_stale(mod)
+    assert isinstance(out, types.ModuleType) and out.X == 1
+    sys.modules.pop("ghostpkg.mod", None)
