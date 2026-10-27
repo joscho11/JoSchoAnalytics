@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
 _HERE = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_HERE))
@@ -148,6 +149,66 @@ def test_2026_high_qualifies_off_median_and_shop_cannot_promote():
     row["tuesday_median_spread_line"] = 3.5
     row["tuesday_spread_line"] = 4.0
     assert row_display_high(row)
+
+
+@pytest.mark.parametrize("verdict", ["blend_no_high", "blend_split_no_high"])
+def test_blend_no_high_verdict_blocks_numeric_high_and_drop(verdict):
+    row = pd.Series({
+        "ens_predicted_margin": 3.5,
+        "tuesday_median_spread_line": 0.0,
+        "tuesday_spread_line": -0.5,
+        "qb_scenario_verdict": verdict,
+        "consensus_tier": "",
+        "season": 2026,
+        "week": 8,
+    })
+    assert row_qualifying_edge(row) == 3.5
+    assert not row_display_high(row)
+    assert not row_high_dropped(row)
+
+    # A split ticket never qualified, so a smaller live gap is not a demotion.
+    row["live_spread_line"] = 1.0
+    assert not row_display_high(row)
+    assert not row_high_dropped(row)
+
+
+def test_blend_high_keeps_tuesday_threshold_and_live_demotion():
+    row = pd.Series({
+        "ens_predicted_margin": 3.5,
+        "tuesday_median_spread_line": 0.0,
+        "qb_scenario_verdict": "blend_high",
+        "consensus_tier": "HIGH",
+        "season": 2026,
+        "week": 8,
+    })
+    assert row_display_high(row)
+    assert not row_high_dropped(row)
+
+    row["live_spread_line"] = 1.0
+    assert not row_display_high(row)
+    assert row_high_dropped(row)
+
+    # A verdict cannot override an under-threshold Tuesday gap or promote live.
+    row["tuesday_median_spread_line"] = 1.0
+    row["live_spread_line"] = 0.0
+    assert not row_display_high(row)
+    assert not row_high_dropped(row)
+
+
+@pytest.mark.parametrize("verdict", [None, float("nan"), "", "high_all_clear", "high_split", "scenario_high_only", "no_high"])
+def test_legacy_qb_verdicts_keep_numeric_high_rules(verdict):
+    row = pd.Series({
+        "ens_predicted_margin": 3.5,
+        "tuesday_median_spread_line": 0.0,
+        "qb_scenario_verdict": verdict,
+        "season": 2026,
+        "week": 8,
+    })
+    assert row_display_high(row)
+    assert not row_high_dropped(row)
+    row["live_spread_line"] = 1.0
+    assert not row_display_high(row)
+    assert row_high_dropped(row)
 
 
 def test_one_sided_wilson_claim_matches_locked_book():

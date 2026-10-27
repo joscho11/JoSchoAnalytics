@@ -201,6 +201,8 @@ def row_game_type(row) -> str:
 
 
 def row_display_high(row) -> bool:
+    if str(row.get("qb_scenario_verdict", "")).strip() in {"blend_no_high", "blend_split_no_high"}:
+        return False
     return display_high(
         row_pred(row),
         row_qualifying_spread(row),
@@ -212,6 +214,8 @@ def row_display_high(row) -> bool:
 
 
 def row_high_dropped(row) -> bool:
+    if str(row.get("qb_scenario_verdict", "")).strip() in {"blend_no_high", "blend_split_no_high"}:
+        return False
     return high_dropped(
         row_pred(row),
         row_qualifying_spread(row),
