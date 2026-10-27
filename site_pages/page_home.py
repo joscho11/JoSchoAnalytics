@@ -37,8 +37,14 @@ def render() -> None:
         "limits, results, and source code."
     )
 
+    season_start = board_refresh_season_start()
+    preseason = app_today() < season_start
     with st.container(horizontal=True, vertical_alignment="center"):
-        st.badge("2026 preseason", icon=":material/calendar_today:", color="orange")
+        st.badge(
+            "2026 preseason" if preseason else "2026 regular season",
+            icon=":material/calendar_today:",
+            color="orange" if preseason else "green",
+        )
         st.badge("Public methodology", icon=":material/code:", color="green")
         st.badge("No paid picks", icon=":material/verified:", color="blue")
 
@@ -55,8 +61,7 @@ def render() -> None:
             with st.container(border=True, height="stretch"):
                 st.markdown("### Check the NFL slate")
                 st.caption(
-                    "Review every matchup and the Tuesday HIGH betting card. Week 1 "
-                    "matchups are already published."
+                    "Review every matchup and the Tuesday HIGH betting card for the published week."
                 )
                 _page_link(
                     "weekly-predictions",
@@ -85,8 +90,7 @@ def render() -> None:
     if _rec:
         st.markdown(_rec)
 
-    season_start = board_refresh_season_start()
-    if app_today() < season_start:
+    if preseason:
         st.info(
             "The site is in preseason mode. The Draft Board, Week 1 matchups, weekly fantasy rankings, and DFS projections are live. "
             "The DFS Optimizer still needs the DraftKings salary CSV for the contest. "

@@ -143,7 +143,7 @@ SCENES: tuple[Scene, ...] = (
         "home",
         "credibility",
         "",
-        must_contain=("JoScho Analytics", "No paid picks", "preseason"),
+        must_contain=("JoScho Analytics", "No paid picks"),
     ),
     _s(
         "track_record_2025",
