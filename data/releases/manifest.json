@@ -25,7 +25,7 @@
   },
   "products": {
     "fantasy": {
-      "active_build": "fantasy-2026w07-5e681118ed92",
+      "active_build": "fantasy-2026w08-4ca7131976bc",
       "builds": {
         "fantasy-2025w10-33a7de4ef33f": {
           "artifact": "data/releases/builds/fantasy/2025/week10/fantasy-2025w10-33a7de4ef33f/artifact.csv",
@@ -930,6 +930,36 @@
             ]
           },
           "week": 7
+        },
+        "fantasy-2026w08-4ca7131976bc": {
+          "artifact": "data/releases/builds/fantasy/2026/week08/fantasy-2026w08-4ca7131976bc/artifact.csv",
+          "build_id": "fantasy-2026w08-4ca7131976bc",
+          "metadata": "data/releases/builds/fantasy/2026/week08/fantasy-2026w08-4ca7131976bc/metadata.json",
+          "model_version": "weekly-fantasy-v2-l1_wipe_prior_share_ranks-ad79f409f0b3",
+          "produced_at": "2026-10-27T17:37:46Z",
+          "product": "fantasy",
+          "published_at": "2026-10-27T17:38:18Z",
+          "row_count": 366,
+          "season": 2026,
+          "sha256": "4ca7131976bc5b6989213a3840576078bfe8c157af33673ff9d44c9459b4e192",
+          "status": "Published",
+          "validation": {
+            "checks": {
+              "artifact_sha256": "4ca7131976bc5b6989213a3840576078bfe8c157af33673ff9d44c9459b4e192",
+              "produced_at_utc": "2026-10-27T17:37:46Z",
+              "scheduled_teams": 28,
+              "team_position_cells": 112,
+              "team_position_gap_exceptions": 0
+            },
+            "errors": [],
+            "ok": true,
+            "product": "fantasy",
+            "row_count": 366,
+            "warnings": [
+              "18 projections are below zero; retained as a model diagnostic"
+            ]
+          },
+          "week": 8
         }
       },
       "next_release": {
@@ -938,7 +968,7 @@
         "status": "Awaiting projections",
         "week": 8
       },
-      "previous_build": "fantasy-2026w07-ddcc57424a64"
+      "previous_build": "fantasy-2026w07-5e681118ed92"
     },
     "predictions": {
       "active_build": "predictions-2026w08-b151fa1e4230",
@@ -13798,5 +13828,5 @@
     }
   },
   "schema_version": 1,
-  "updated_at": "2026-10-27T16:53:22Z"
+  "updated_at": "2026-10-27T17:38:18Z"
 }

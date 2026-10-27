@@ -69,6 +69,16 @@
       "prediction_mode": "live",
       "season": 2026,
       "week": 7
+    },
+    {
+      "season": 2026,
+      "week": 8,
+      "csv": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week08_ngs_live_draftkings_week08_20261027.csv",
+      "metadata": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week08_ngs_live_draftkings_week08_20261027.json",
+      "csv_sha256": "6d962765c3cc267489b8cf6cee1bdbb06d5a5fa0344f88674f35597a1314db1f",
+      "metadata_sha256": "443f053af16cdc7c9c4251849329ba3d9b25ca6bf8c965b1fcc0f476a601b73a",
+      "prediction_mode": "live",
+      "model_version": "td_product_ngs_44_frozen_2025_v1"
     }
   ],
   "schema_version": 1
