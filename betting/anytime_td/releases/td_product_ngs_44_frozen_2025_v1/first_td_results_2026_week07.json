@@ -246,13 +246,13 @@
     },
     {
       "evidence_source": "nflverse_play_by_play",
-      "first_score_play_id": null,
-      "first_score_qtr": null,
+      "first_score_play_id": 385.0,
+      "first_score_qtr": 1.0,
       "game_id": "2026_07_DAL_PHI",
-      "graded_at": "2026-10-26T04:51:29Z",
-      "identity_source": "play_by_play_player_id",
-      "outcome_kind": null,
-      "pending_reason": "game_not_final",
+      "graded_at": "2026-10-27T05:09:40Z",
+      "identity_source": "nflverse_player_stats",
+      "outcome_kind": "offense_skill",
+      "pending_reason": null,
       "player_settlements": {
         "00-0033077": {
           "scored_first": null,
@@ -267,8 +267,8 @@
           "status": "awaiting_evidence"
         },
         "00-0034844": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 1.0,
+          "status": "settled"
         },
         "00-0035662": {
           "scored_first": null,
@@ -351,17 +351,18 @@
           "status": "awaiting_evidence"
         }
       },
-      "scorer_name": null,
-      "scorer_on_board": null,
-      "scorer_player_id": null,
-      "scorer_team": null,
+      "scorer_name": "Saquon Barkley",
+      "scorer_on_board": true,
+      "scorer_player_id": "00-0034844",
+      "scorer_team": "PHI",
+      "settlements_updated_at": "2026-10-27T05:09:40Z",
       "source_hashes": {
-        "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
-        "player_identity": "166b30f0df38a67cf944e2ff3ed099dec8f4ea6f27452ae8701d37280b7a34d8",
+        "play_by_play": "38a1be6f8808a08c94a9cea016d16c4e13c3d79f1daf6dacda04f24da5bce7ed",
+        "player_identity": "aaf53b5355ece2fc59c0f0c0f4a793973f85217a09820b573a1f8fdf16a3dd97",
         "published_frozen_inputs": "f184ff3051f8da1df401942559a03fe297e06f2d709d2413cd51388bc9b319cf",
-        "schedule": "0fa56324f04866dfc6f5768c5958239ccc803fd963ceb96f935ababf61d7c5e4"
+        "schedule": "9fbad12f3a60cab59629792cf01811b47f436f5c3b4d91839729021794fd4644"
       },
-      "status": "pending"
+      "status": "resolved"
     },
     {
       "evidence_source": "nflverse_play_by_play",

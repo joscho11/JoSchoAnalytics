@@ -1,15 +1,15 @@
 {
   "artifact": "data/releases/results/fantasy/2026/week07/fantasy-2026w07-5e681118ed92-graded.csv",
-  "artifact_sha256": "b2eca80672bfc4b886ceb6b650caf147f9618db8ca5f956c7d2fc5790c2ce97b",
-  "complete": false,
-  "final_games": 13,
-  "graded_at": "2026-10-26T04:51:24Z",
-  "graded_rows": 260,
-  "missing_actuals": 79,
+  "artifact_sha256": "d84bffa78ff91bab9e4ea4e88ff3671b0cfd4dd45db044b6720e9b357cdf92b0",
+  "complete": true,
+  "final_games": 14,
+  "graded_at": "2026-10-27T05:09:36Z",
+  "graded_rows": 339,
+  "missing_actuals": 0,
   "product": "fantasy",
   "schema_version": 1,
   "season": 2026,
   "source_build": "fantasy-2026w07-5e681118ed92",
   "week": 7,
-  "zero_filled_after_complete_feed": false
+  "zero_filled_after_complete_feed": true
 }
