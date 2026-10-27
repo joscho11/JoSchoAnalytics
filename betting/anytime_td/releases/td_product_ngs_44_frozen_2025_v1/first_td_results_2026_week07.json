@@ -255,107 +255,107 @@
       "pending_reason": null,
       "player_settlements": {
         "00-0033077": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0033246": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0034351": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0034844": {
           "scored_first": 1.0,
           "status": "settled"
         },
         "00-0035662": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0036358": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0036912": {
           "scored_first": null,
           "status": "awaiting_evidence"
         },
         "00-0036980": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0036997": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0037120": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0037132": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0037247": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0037258": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0038041": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0038393": {
           "scored_first": null,
           "status": "awaiting_evidence"
         },
         "00-0038400": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0038547": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0038705": {
           "scored_first": null,
-          "status": "awaiting_evidence"
+          "status": "void"
         },
         "00-0038738": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0039062": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0039410": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0039530": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0040024": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0040867": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         }
       },
       "scorer_name": "Saquon Barkley",
       "scorer_on_board": true,
       "scorer_player_id": "00-0034844",
       "scorer_team": "PHI",
-      "settlements_updated_at": "2026-10-27T05:09:40Z",
+      "settlements_updated_at": "2026-10-27T12:16:44Z",
       "source_hashes": {
         "play_by_play": "38a1be6f8808a08c94a9cea016d16c4e13c3d79f1daf6dacda04f24da5bce7ed",
         "player_identity": "aaf53b5355ece2fc59c0f0c0f4a793973f85217a09820b573a1f8fdf16a3dd97",
