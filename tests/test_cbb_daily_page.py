@@ -437,6 +437,32 @@ def test_empty_state_names_the_2026_27_season(tmp_path, render):
     assert not at.error
 
 
+def test_early_season_note_shows_for_a_november_card(tmp_path, render):
+    import page_cbb_daily
+
+    _publish_card(tmp_path, lines=False, day=date(2026, 11, 2))
+    at = render(today=date(2026, 11, 2))
+    notes = [str(c.value) for c in at.caption if str(c.value) == page_cbb_daily.EARLY_SEASON_NOTE]
+    assert len(notes) == 1
+    assert "Predicted totals are least reliable then." in " ".join(str(m.value) for m in at.expander[0].markdown)
+
+
+def test_early_season_note_is_hidden_for_a_december_card(tmp_path, render):
+    import page_cbb_daily
+
+    _publish_card(tmp_path, lines=False, day=date(2026, 12, 2))
+    at = render(today=date(2026, 12, 2))
+    assert _game_cards(at)
+    assert page_cbb_daily.EARLY_SEASON_NOTE not in [str(c.value) for c in at.caption]
+
+
+def test_early_season_note_is_absent_from_the_empty_state(tmp_path, render):
+    import page_cbb_daily
+
+    at = render(tmp_path / "nothing-published", today=None)
+    assert page_cbb_daily.EARLY_SEASON_NOTE not in [str(c.value) for c in at.caption]
+
+
 def test_page_copy_has_no_em_or_en_dashes_outside_the_frozen_benchmark(tmp_path, render):
     _publish_card(tmp_path, lines=True)
     entry_text = "\n".join(_across_views(render(), _all_text).values())

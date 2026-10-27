@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import math
 import re
-from datetime import datetime
+from datetime import date, datetime
 from zoneinfo import ZoneInfo
 
 import numpy as np
@@ -48,7 +48,13 @@ NO_SNAPSHOT_NOTICE = "No official sportsbook line snapshot for this date, so no 
 INTRO_VISIBLE = "Each card shows who the model expects to win, by how many points, and how likely that win is."
 INTRO_MORE = (
     "The model works from team and game data only. It never sees sportsbook lines. "
-    "Early in the season the model leans on last season's results, so predictions are less certain until teams have played more games."
+    "Early in the season the model leans on last season's results, so predictions are less certain until teams have played more games. Predicted totals are least reliable then."
+)
+# Last season's priors dominate until teams have played several games.
+EARLY_SEASON_THROUGH = date(2026, 11, 30)
+EARLY_SEASON_NOTE = (
+    "Early season: these predictions lean on last season's results. Predicted totals sit close to a league average "
+    "and have run below sportsbook totals, so treat them as rough until teams have played a few games."
 )
 HOWTO_LABEL = "How to read these cards"
 PAGE_KEY = "cbb-page"
@@ -610,6 +616,8 @@ def _render_day(selected: str, card: pd.DataFrame, metadata: dict, state: dict, 
         else:
             st.caption("No sportsbook line is available for this date, so games are listed by tip time.")
 
+    if not query and date.fromisoformat(str(selected)[:10]) <= EARLY_SEASON_THROUGH:
+        st.caption(EARLY_SEASON_NOTE)
     st.text_input("Find a team", key=SEARCH_KEY, placeholder="Type a team name")
     if query:
         st.caption("Searching all of this date's games. Clear the box to use the View menu again.")
