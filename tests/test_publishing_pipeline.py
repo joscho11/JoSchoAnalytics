@@ -974,26 +974,173 @@ def test_anytime_td_grading_handles_the_real_publisher_schema_end_to_end(tmp_pat
     assert set(site_columns).issubset(graded.columns)
 
 
-def test_blend_verdict_governs_high_tier(tmp_path):
-    # Row 1 has |edge| == 3.0, so the plain rule would require HIGH.
-    artifact, _, schedule = _prediction_candidate(tmp_path)
-    base = pd.read_csv(artifact)
-
-    def run(verdict, tier):
-        rows = base.copy()
+def _blend_prediction_report(
+    tmp_path, scenarios, *, verdict="blend_high", tier="HIGH", edge=-3.0,
+    ensemble_edge=None, omit_verdict=False, week=1,
+):
+    artifact, _, schedule = _prediction_candidate(tmp_path, week=week)
+    rows = pd.read_csv(artifact)
+    rows["qb_scenarios"] = ""
+    rows.loc[1, "qb_scenarios"] = json.dumps(scenarios) if not isinstance(scenarios, str) else scenarios
+    if not omit_verdict:
         rows["qb_scenario_verdict"] = ""
         rows.loc[1, "qb_scenario_verdict"] = verdict
-        rows.loc[1, "consensus_tier"] = tier
-        rows.to_csv(artifact, index=False)
-        metadata = build_candidate_metadata(
-            "predictions", artifact, season=2026, week=1,
-            model_version="spread-v3-blend-test", produced_at="2026-09-08T13:00:00Z",
-        )
-        return [e for e in validate_candidate(artifact, metadata, schedule=schedule).errors if "HIGH tier" in e]
+    rows.loc[1, "consensus_tier"] = tier
+    rows.loc[1, "model_edge"] = edge
+    rows.loc[1, "predicted_margin"] = edge + 1.5
+    rows.loc[1, "tuesday_spread_line"] = 1.5
+    if ensemble_edge is not None:
+        rows["ens_model_edge"] = rows["model_edge"]
+        rows.loc[1, "ens_model_edge"] = ensemble_edge
+    rows.to_csv(artifact, index=False)
+    metadata = build_candidate_metadata(
+        "predictions", artifact, season=2026, week=week,
+        model_version="spread-v3-blend-test", produced_at="2026-09-08T13:00:00Z",
+    )
+    return validate_candidate(artifact, metadata, schedule=schedule)
 
-    assert not run("", "HIGH")
-    assert not run("blend_split_no_high", "")
-    assert run("blend_split_no_high", "HIGH")
-    assert not run("blend_high", "HIGH")
-    assert run("blend_high", "")
-    assert run("blend_no_high", "HIGH")
+
+def _qb_candidates(edges=(-4.0, -2.0), probabilities=(0.5, 0.5)):
+    return [
+        {"player_id": f"QB-{index}", "team": "LA", "probability": probability, "edge": edge}
+        for index, (edge, probability) in enumerate(zip(edges, probabilities))
+    ]
+
+
+@pytest.mark.parametrize("verdict,tier,edges,edge,valid", [
+    ("blend_split_no_high", "", (-8, 2), -3, True),
+    ("blend_split_no_high", "HIGH", (-8, 2), -3, False),
+    ("blend_high", "HIGH", (-4, -2), -3, True),
+    ("blend_high", "", (-4, -2), -3, False),
+    ("blend_no_high", "", (-2, -2), -2, True),
+    ("blend_no_high", "HIGH", (-2, -2), -2, False),
+])
+def test_blend_verdict_governs_high_tier(tmp_path, verdict, tier, edges, edge, valid):
+    report = _blend_prediction_report(tmp_path, _qb_candidates(edges), verdict=verdict, tier=tier, edge=edge)
+    assert report.ok is valid, report.errors
+    if not valid:
+        assert any("HIGH tier" in error for error in report.errors)
+
+
+@pytest.mark.parametrize("scenarios", [None, "", "not JSON", "{}", [], [{}], [1, 2], [{}, 2]])
+def test_blend_requires_candidate_json_list(tmp_path, scenarios):
+    report = _blend_prediction_report(tmp_path, scenarios)
+    assert any("JSON list of at least two candidate objects" in error for error in report.errors)
+
+
+@pytest.mark.parametrize("verdict,omit_verdict", [
+    ("blend_future", False), ("", False), (None, False), ("high_all_clear", False), ("", True),
+])
+def test_blend_rejects_unknown_or_missing_verdict(tmp_path, verdict, omit_verdict):
+    report = _blend_prediction_report(tmp_path, _qb_candidates(), verdict=verdict, omit_verdict=omit_verdict)
+    assert any("unsupported qb_scenario_verdict" in error or "require a supported blend verdict" in error for error in report.errors)
+
+
+@pytest.mark.parametrize("field,value,message", [
+    ("probability", None, "probability must be a finite number"),
+    ("probability", "0.5", "probability must be a finite number"),
+    ("probability", True, "probability must be a finite number"),
+    ("probability", -0.1, "probability must be a finite number"),
+    ("probability", 1.1, "probability must be a finite number"),
+    ("probability", float("nan"), "probability must be a finite number"),
+    ("probability", float("inf"), "probability must be a finite number"),
+    ("probability", 0.4, "probabilities must sum to 1"),
+    ("edge", None, "edge must be a finite number"),
+    ("edge", "-4.0", "edge must be a finite number"),
+    ("edge", True, "edge must be a finite number"),
+    ("edge", float("nan"), "edge must be a finite number"),
+    ("edge", float("inf"), "edge must be a finite number"),
+    ("player_id", None, "player_id must be a nonempty string"),
+    ("player_id", " ", "player_id must be a nonempty string"),
+    ("player_id", 42, "player_id must be a nonempty string"),
+    ("player_id", "QB-1", "duplicate candidate"),
+    ("team", "BUF", "candidate team must match"),
+    ("team", "SF", "all candidates must belong to one team"),
+])
+def test_blend_rejects_invalid_candidate_evidence(tmp_path, field, value, message):
+    scenarios = _qb_candidates()
+    scenarios[0][field] = value
+    report = _blend_prediction_report(tmp_path, scenarios)
+    assert any(message in error for error in report.errors), report.errors
+
+
+@pytest.mark.parametrize("field", ["player_id", "team", "probability", "edge"])
+def test_blend_rejects_missing_candidate_fields(tmp_path, field):
+    scenarios = _qb_candidates()
+    del scenarios[0][field]
+    report = _blend_prediction_report(tmp_path, scenarios)
+    assert not report.ok
+    assert any("candidate 1" in error for error in report.errors)
+
+
+@pytest.mark.parametrize("ensemble", [False, True])
+def test_blend_recomputes_official_edge_including_ensemble_alias(tmp_path, ensemble):
+    report = _blend_prediction_report(
+        tmp_path, _qb_candidates(), edge=-3.0 if ensemble else -3.1,
+        ensemble_edge=-3.1 if ensemble else None,
+    )
+    assert any("must equal probability-weighted edge -3" in error for error in report.errors)
+
+
+@pytest.mark.parametrize("edges,probabilities,verdict", [
+    ((-8, 2), (0.5, 0.5), "blend_split_no_high"),
+    ((-8, 0), (0.5, 0.5), "blend_split_no_high"),
+    ((0, 0), (0.5, 0.5), "blend_no_high"),
+    ((-4, -2), (0.5, 0.5), "blend_high"),
+    ((4, 2), (0.5, 0.5), "blend_high"),
+    ((-2, -2), (0.5, 0.5), "blend_no_high"),
+    ((-6, 1), (0.25, 0.75), "blend_split_no_high"),
+    ((-20, 5), (0.2, 0.8), "blend_no_high"),
+    ((-1, -1, -1, -1, -1), (0.2,) * 5, "blend_no_high"),
+    ((-20, 0), (0.2, 0.8), "blend_no_high"),
+    ((-1, -6), (0.2, 0.8), "blend_high"),
+    ((100, -3), (0, 1), "blend_high"),
+])
+def test_blend_verdict_is_derived_from_significant_candidate_signs(tmp_path, edges, probabilities, verdict):
+    edge = sum(p * e for p, e in zip(probabilities, edges))
+    report = _blend_prediction_report(
+        tmp_path, _qb_candidates(edges, probabilities), verdict=verdict,
+        tier="HIGH" if verdict == "blend_high" else "", edge=edge,
+    )
+    assert report.ok, report.errors
+    wrong_verdict = "blend_no_high" if verdict == "blend_high" else "blend_high"
+    bad = _blend_prediction_report(
+        tmp_path, _qb_candidates(edges, probabilities), verdict=wrong_verdict,
+        tier="HIGH" if wrong_verdict == "blend_high" else "", edge=edge,
+    )
+    assert any("disagrees with candidates" in error for error in bad.errors), bad.errors
+
+
+def test_blend_probability_sum_tolerance(tmp_path):
+    report = _blend_prediction_report(tmp_path, _qb_candidates(probabilities=(0.5000004, 0.5)), edge=-3.0000016)
+    assert report.ok, report.errors
+    report = _blend_prediction_report(tmp_path, _qb_candidates(probabilities=(0.500002, 0.5)))
+    assert any("probabilities must sum to 1" in error for error in report.errors)
+
+
+def test_blend_three_qb_roundoff_preserves_producer_threshold(tmp_path):
+    scenarios = _qb_candidates(
+        edges=(2.529902370527555, 3.924407374213576, 2.7214058098427123),
+        probabilities=(0.3556137293273062, 0.28819201292765423, 0.3561942577450395),
+    )
+    edge = sum(item["probability"] * item["edge"] for item in scenarios)
+    assert edge == 2.9999999999999996
+    report = _blend_prediction_report(tmp_path, scenarios, edge=edge, verdict="blend_no_high", tier="")
+    assert report.ok, report.errors
+
+
+def test_blend_week18_regular_season_cannot_be_high(tmp_path):
+    report = _blend_prediction_report(tmp_path, _qb_candidates(), week=18)
+    assert any("HIGH tier" in error for error in report.errors)
+    report = _blend_prediction_report(tmp_path, _qb_candidates(), week=18, tier="")
+    assert report.ok, report.errors
+
+
+@pytest.mark.parametrize("verdict", ["", "high_all_clear", "high_split", "scenario_high_only", "no_high"])
+def test_ordinary_and_legacy_scenarios_keep_numeric_high_rule(tmp_path, verdict):
+    # Legacy paths carry no probabilities, so the published numeric rule remains unchanged.
+    legacy = [{key: value for key, value in item.items() if key != "probability"} for item in _qb_candidates()]
+    report = _blend_prediction_report(tmp_path, legacy if verdict else "", verdict=verdict)
+    assert report.ok, report.errors
+    report = _blend_prediction_report(tmp_path, legacy if verdict else "", verdict=verdict, tier="")
+    assert any("HIGH tier" in error for error in report.errors)

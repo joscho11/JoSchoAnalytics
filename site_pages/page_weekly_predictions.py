@@ -350,10 +350,10 @@ def _scenario_verdict_html(items: list[dict], verdict: str) -> str:
             "#00c853", "#1a3a1a",
             "Blended pick is HIGH: every QB with a real chance of starting points the same way",
         ),
-        "blend_no_high": ("#93A0B1", "#1e2a3a", "Blended gap is under 3.0 points, not HIGH"),
+        "blend_no_high": ("#93A0B1", "#1e2a3a", "Blended pick does not meet the HIGH requirements"),
         "blend_split_no_high": (
             "#ff9800", "#3a2a12",
-            "QBs point opposite ways, so the blended pick is not HIGH",
+            "QBs do not all back the blended side, so the pick is not HIGH",
         ),
     }.get(verdict)
     if not text:

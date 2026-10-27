@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import math
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -27,6 +28,8 @@ PREDICTION_EXECUTION_REQUIRED = {
     "tuesday_median_spread_line", "consensus_tier",
 }
 PREDICTION_HIGH_GAP = 3.0
+BLEND_VERDICTS = {"blend_high", "blend_no_high", "blend_split_no_high"}
+BLEND_SIDE_PROBABILITY = 0.25
 FANTASY_REQUIRED = {
     "player_id", "player_display_name", "position", "team", "opponent_team",
     "season", "week", "projected_pts",
@@ -135,6 +138,107 @@ def _first_kickoff(schedule: pd.DataFrame) -> datetime | None:
     return min(values) if values else None
 
 
+def _validate_qb_blends(report: ValidationReport, frame: pd.DataFrame) -> None:
+    """Verify blend evidence independently of the private candidate producer."""
+    if not {"qb_scenarios", "qb_scenario_verdict"} & set(frame):
+        return
+
+    def finite_number(value: object) -> float | None:
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            return None
+        try:
+            number = float(value)
+        except (OverflowError, ValueError):
+            return None
+        return number if math.isfinite(number) else None
+
+    for row in frame.to_dict(orient="records"):
+        prefix = f"QB blend {row['game_id']}: "
+        raw_verdict = row.get("qb_scenario_verdict")
+        verdict = "" if pd.isna(raw_verdict) else str(raw_verdict).strip()
+        is_blend = verdict.startswith("blend_")
+        raw = row.get("qb_scenarios")
+        try:
+            scenarios = json.loads(raw) if isinstance(raw, str) and raw.strip() else None
+        except (ValueError, TypeError):
+            scenarios = None
+        probability_payload = isinstance(scenarios, list) and any(
+            isinstance(item, dict) and "probability" in item for item in scenarios
+        )
+        if is_blend and verdict not in BLEND_VERDICTS:
+            report.errors.append(prefix + f"unsupported qb_scenario_verdict {verdict!r}")
+            continue
+        if not is_blend:
+            if probability_payload:
+                report.errors.append(prefix + "probability-bearing qb_scenarios require a supported blend verdict")
+            continue
+        if not isinstance(scenarios, list) or len(scenarios) < 2 or any(
+            not isinstance(item, dict) for item in scenarios
+        ):
+            report.errors.append(prefix + "qb_scenarios must be a JSON list of at least two candidate objects")
+            continue
+
+        candidates = []
+        seen_ids = set()
+        teams = set()
+        invalid = False
+        for index, item in enumerate(scenarios, start=1):
+            player = item.get("player_id")
+            team = item.get("team")
+            probability = finite_number(item.get("probability"))
+            candidate_edge = finite_number(item.get("edge"))
+            problem = None
+            if not isinstance(player, str) or not player.strip() or player.strip().lower() in {"nan", "none", "null"}:
+                problem = "player_id must be a nonempty string"
+            elif player.strip() in seen_ids:
+                problem = f"duplicate candidate player_id {player!r}"
+            elif not isinstance(team, str) or team not in {row["home_team"], row["away_team"]}:
+                problem = "candidate team must match home_team or away_team"
+            elif probability is None or not 0 <= probability <= 1:
+                problem = "probability must be a finite number in [0, 1]"
+            elif candidate_edge is None:
+                problem = "edge must be a finite number"
+            if problem:
+                report.errors.append(prefix + f"candidate {index}: {problem}")
+                invalid = True
+                continue
+            seen_ids.add(player.strip())
+            teams.add(team)
+            candidates.append((probability, candidate_edge))
+        if invalid:
+            continue
+        if len(teams) != 1:
+            report.errors.append(prefix + "all candidates must belong to one team; joint blends are unsupported")
+            continue
+        if abs(sum(p for p, _ in candidates) - 1.0) > 1e-6:
+            report.errors.append(prefix + "candidate probabilities must sum to 1 (tolerance 1e-6)")
+            continue
+        try:
+            # Use the producer's ordered sum so the strict 3.0 threshold agrees
+            # even when a three-QB blend lands one floating-point step below it.
+            blended = sum(p * candidate_edge for p, candidate_edge in candidates)
+        except OverflowError:
+            blended = math.inf
+        if not math.isfinite(blended):
+            report.errors.append(prefix + "probability-weighted edge must be finite")
+            continue
+        for column in ("model_edge", "ens_model_edge"):
+            if column not in row or (column == "ens_model_edge" and pd.isna(row[column])):
+                continue
+            official = pd.to_numeric(row[column], errors="coerce")
+            if not math.isfinite(official) or abs(official - blended) > 1e-5:
+                report.errors.append(prefix + f"{column} must equal probability-weighted edge {blended:.6g}")
+        signs = {int(np.sign(candidate_edge)) for p, candidate_edge in candidates if p >= BLEND_SIDE_PROBABILITY}
+        if len(signs) > 1:
+            expected = "blend_split_no_high"
+        elif signs and next(iter(signs)) != 0 and next(iter(signs)) == int(np.sign(blended)) and abs(blended) >= PREDICTION_HIGH_GAP:
+            expected = "blend_high"
+        else:
+            expected = "blend_no_high"
+        if verdict != expected:
+            report.errors.append(prefix + f"qb_scenario_verdict {verdict!r} disagrees with candidates; expected {expected!r}")
+
+
 def _validate_predictions(
     report: ValidationReport,
     frame: pd.DataFrame,
@@ -147,6 +251,7 @@ def _validate_predictions(
     if missing:
         report.errors.append(f"predictions missing columns: {', '.join(missing)}")
         return
+    _validate_qb_blends(report, frame)
     if "mode" in frame.columns:
         gameday = frame["mode"].astype("string").str.lower().eq("gameday")
         if gameday.any() and int(metadata.get("season", 0)) >= 2026:

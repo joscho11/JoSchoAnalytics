@@ -634,8 +634,8 @@ def test_blended_scenario_row_renders_probabilities_verdicts_and_official_label(
     assert "chance he starts" not in page._scenario_card_html({**items[0], "probability": "bad"}, "BUF", -3.0)
 
     assert "Blended pick is HIGH" in page._scenario_verdict_html(items, "blend_high")
-    assert "Blended gap is under 3.0 points, not HIGH" in page._scenario_verdict_html(items, "blend_no_high")
-    assert "QBs point opposite ways" in page._scenario_verdict_html(items, "blend_split_no_high")
+    assert "Blended pick does not meet the HIGH requirements" in page._scenario_verdict_html(items, "blend_no_high")
+    assert "QBs do not all back the blended side" in page._scenario_verdict_html(items, "blend_split_no_high")
     # Old verdicts still render exactly as before.
     assert "No HIGH under any listed QB" in page._scenario_verdict_html(items, "no_high")
 
@@ -668,7 +668,7 @@ def test_blended_scenario_game_shows_context_caption_and_official_expander(monke
     joined = " ".join(seen)
     assert "QB paths are shown for context" in joined
     assert joined.count("50% chance he starts") == 2
-    assert "QBs point opposite ways" in joined
+    assert "QBs do not all back the blended side" in joined
     seen.clear()
     page._render_qb_scenarios(items, "high_split", "BUF", "BAL", -3.0)
     assert "QB paths are shown for context" not in " ".join(seen)
