@@ -1,0 +1,14 @@
+{
+  "artifact": "data/releases/results/predictions/2026/week02/predictions-2026w02-cdcf3f96e5e7-graded.csv",
+  "artifact_sha256": "a707b914632b12c23886e5f0a4902bf23ef498e55e52f0425a5fdaa105e1387b",
+  "complete": true,
+  "final_games": 16,
+  "graded_at": "2026-10-27T19:13:39Z",
+  "graded_rows": 16,
+  "product": "predictions",
+  "pushes": 0,
+  "schema_version": 1,
+  "season": 2026,
+  "source_build": "predictions-2026w02-cdcf3f96e5e7",
+  "week": 2
+}
