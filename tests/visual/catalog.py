@@ -157,7 +157,7 @@ SCENES: tuple[Scene, ...] = (
         "credibility",
         "track-record",
         query="tr_season=2026",
-        must_contain=("Live 2026", "Retrospective model corrections are included in this season record: Week 1, Week 2"),
+        must_contain=("Live 2026",),
     ),
     _s(
         "help",

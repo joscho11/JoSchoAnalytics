@@ -972,3 +972,28 @@ def test_anytime_td_grading_handles_the_real_publisher_schema_end_to_end(tmp_pat
 
     # Every real SITE_COLUMNS field must still be present after grading.
     assert set(site_columns).issubset(graded.columns)
+
+
+def test_blend_verdict_governs_high_tier(tmp_path):
+    # Row 1 has |edge| == 3.0, so the plain rule would require HIGH.
+    artifact, _, schedule = _prediction_candidate(tmp_path)
+    base = pd.read_csv(artifact)
+
+    def run(verdict, tier):
+        rows = base.copy()
+        rows["qb_scenario_verdict"] = ""
+        rows.loc[1, "qb_scenario_verdict"] = verdict
+        rows.loc[1, "consensus_tier"] = tier
+        rows.to_csv(artifact, index=False)
+        metadata = build_candidate_metadata(
+            "predictions", artifact, season=2026, week=1,
+            model_version="spread-v3-blend-test", produced_at="2026-09-08T13:00:00Z",
+        )
+        return [e for e in validate_candidate(artifact, metadata, schedule=schedule).errors if "HIGH tier" in e]
+
+    assert not run("", "HIGH")
+    assert not run("blend_split_no_high", "")
+    assert run("blend_split_no_high", "HIGH")
+    assert not run("blend_high", "HIGH")
+    assert run("blend_high", "")
+    assert run("blend_no_high", "HIGH")

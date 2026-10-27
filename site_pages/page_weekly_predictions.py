@@ -81,7 +81,11 @@ def _live_notice():
             "capture from 09:00-21:00 ET. The selected source and any fallback reason are recorded "
             "with the release. "
             "One input counts each team's non-QB starters on regular injured reserve "
-            "from its previous game's roster, so it is known before Tuesday."
+            "from its previous game's roster, so it is known before Tuesday. "
+            "The QB inputs are trained on the QB who actually started each game. When a team's "
+            "starter is unsettled, the official pick is the average of the listed QBs' scores, "
+            "weighted by each QB's chance of starting, and it is HIGH only if every QB with at "
+            "least a 25% chance points the same way."
         )
 
 
@@ -120,10 +124,6 @@ def _live_model_context(release_state: dict) -> dict[str, str]:
                     **correction,
                     "qb_selection_details": current_qbs,
                     "qb_selections": current_ids,
-                    "qb_uncertainty_flags": (
-                        correction.get("qb_uncertainty_flags")
-                        or payload.get("qb_uncertainty_flags") or {}
-                    ),
                     "qb_selection_policy": (
                         correction.get("qb_selection_policy")
                         or payload.get("qb_selection_policy")
@@ -140,6 +140,14 @@ def _live_model_context(release_state: dict) -> dict[str, str]:
         for team, details in current_qbs.items()
         if isinstance(details, dict) and str(details.get("player_name", "")).strip()
     }
+    # A blended game has no single assumed starter, so name every weighted QB.
+    for items in ((correction.get("qb_scenarios") or {}).get("results") or {}).values():
+        blended = [item for item in items or [] if item.get("probability") is not None]
+        if blended:
+            qb_names[str(blended[0]["team"])] = " / ".join(
+                f"{str(item['player_name']).split()[-1]} {float(item['probability']) * 100:.0f}%"
+                for item in blended
+            )
     previous_id = correction.get("supersedes_build_id")
     previous = state.get("builds", {}).get(str(previous_id), {})
     previous_correction = previous.get("correction") or {}
@@ -187,26 +195,12 @@ def _live_model_context(release_state: dict) -> dict[str, str]:
                 note += f"; previous release used {prior_name}"
             qb_notes.append(f"- **{public_team_abbr(team)}:** {name} — {note}")
         st.markdown("\n".join(qb_notes))
-        flagged = [
-            row for row in ((correction.get("qb_uncertainty_flags") or {}).get("teams") or []) if row.get("flag")
-        ]
-        if flagged:
-            st.caption(
-                "Automatic uncertain-QB flag: the QB the model uses did not finish a close game last week. "
-                "It is an extra model input; the QB numbers are kept."
-            )
-            st.markdown(
-                "\n".join(
-                    f"- **{public_team_abbr(row['team'])}:** {row.get('reason', '')}"
-                    for row in flagged
-                )
-            )
         scenario_teams = (correction.get("qb_scenarios") or {}).get("teams") or []
         if scenario_teams:
             st.caption(
                 "QB scenarios for " + ", ".join(public_team_abbr(team) for team in scenario_teams)
-                + ": each listed QB is scored as the certain starter on the matchup card. "
-                "They are shown for planning and are not part of the model's official pick."
+                + ": the official pick blends the listed QBs, weighted by each one's chance of starting. "
+                "Each QB's own path is shown on the matchup card for context."
             )
     return qb_names
 
@@ -247,6 +241,26 @@ _PAIR_SCENARIO_HEADERS = {
         "padding:1px 6px;font-size:11px;color:#93A0B1'>HIGH only under some QB pairs</span>"
     ),
 }
+
+
+_BLEND_VERDICTS = frozenset({"blend_high", "blend_no_high", "blend_split_no_high"})
+
+
+def _is_blended(verdict: str) -> bool:
+    """True when the official row for this game is the probability-weighted QB blend."""
+    return verdict in _BLEND_VERDICTS
+
+
+def _probability_label(item: dict) -> str:
+    """'50% chance he starts' from a scenario's probability, or '' for builds that predate it."""
+    value = item.get("probability")
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return ""
+    if pd.isna(number) or not 0.0 <= number <= 1.0:
+        return ""
+    return f"{number * 100:.0f}% chance he starts"
 
 
 def _signed(value) -> str:
@@ -298,17 +312,22 @@ def _scenario_card_html(item: dict, home: str, spread: float) -> str:
     model_home_line = -(edge + float(spread))  # sportsbook style for the home team, like the card's PREDICTED column
     badge = (
         "<span style='background:#1a3a1a;border:1px solid #00c853;border-radius:4px;padding:1px 6px;"
-        "font-size:11px;color:#00c853;font-weight:700'>HIGH</span>"
+        "font-size:11px;color:#00c853;font-weight:700'>HIGH if he starts</span>"
         if high else "<span style='font-size:11px;color:#93A0B1'>under 3.0, not HIGH</span>"
     )
     note = (
         "<div style='font-size:11px;color:#ff9800;margin-top:4px'>no QB history, neutral</div>"
         if item.get("features_neutralized") else ""
     )
+    chance = _probability_label(item)
+    chance_html = (
+        f"<div style='font-size:12px;color:#ccc;margin-top:2px'>{_html.escape(chance)}</div>" if chance else ""
+    )
     return (
         f"<div class='jsa-gc-scen' style='background:{background};border:1.5px solid {color};border-radius:8px;"
         f"padding:10px 12px;height:100%'>"
         f"<div style='font-weight:800;font-size:14px;color:#fff'>{_html.escape(str(item.get('player_name', '')))}</div>"
+        f"{chance_html}"
         f"<div style='font-size:13px;color:{color};font-weight:700;margin-top:6px'>Pick: {_html.escape(picked)}</div>"
         f"<div style='font-size:12px;color:#ccc;margin-top:2px'>Edge {abs(edge):.2f} points</div>"
         f"<div style='font-size:12px;color:#93A0B1;margin-top:2px'>Model line: {_html.escape(str(home))} {_signed(model_home_line)}</div>"
@@ -327,6 +346,15 @@ def _scenario_verdict_html(items: list[dict], verdict: str) -> str:
             f"HIGH under {clears} of {total} QBs, but not under the default QB, not a bet",
         ),
         "no_high": ("#93A0B1", "#1e2a3a", "No HIGH under any listed QB"),
+        "blend_high": (
+            "#00c853", "#1a3a1a",
+            "Blended pick is HIGH: every QB with a real chance of starting points the same way",
+        ),
+        "blend_no_high": ("#93A0B1", "#1e2a3a", "Blended gap is under 3.0 points, not HIGH"),
+        "blend_split_no_high": (
+            "#ff9800", "#3a2a12",
+            "QBs point opposite ways, so the blended pick is not HIGH",
+        ),
     }.get(verdict)
     if not text:
         return ""
@@ -391,7 +419,13 @@ def _render_qb_scenarios(items: list[dict], verdict: str, home: str, away: str, 
         f"<div style='font-size:12px;color:#93A0B1;margin:2px 0 6px'>Tuesday line: "
         f"<b style='color:#ccc'>{_html.escape(public_team_abbr(home))} {_signed(-float(spread))}</b> &nbsp;|&nbsp; "
         f"<b style='color:#ccc'>{_html.escape(public_team_abbr(away))} {_signed(float(spread))}</b>. "
-        "The starter is not settled, so each card scores the game with that QB as the starter.</div>",
+        + (
+            "The starter is not settled. The official pick blends the QBs below by their chance of starting; "
+            "QB paths are shown for context."
+            if _is_blended(verdict) else
+            "The starter is not settled, so each card scores the game with that QB as the starter."
+        )
+        + "</div>",
         unsafe_allow_html=True,
     )
     for team in dict.fromkeys(str(item.get("team", "")) for item in items):
@@ -427,8 +461,15 @@ def _render_qb_pair_scenarios(items: list[dict], verdict: str, home: str, away: 
         )
 
 
-def _official_row_label(rec_team, edge, tier) -> str:
-    """Name for the collapsed original scorecard on a game that shows QB scenarios."""
+def _official_row_label(rec_team, edge, tier, blended: bool = False) -> str:
+    """Name for the original scorecard on a game that shows QB scenarios."""
+    if blended:
+        if not rec_team or pd.isna(edge) or edge == 0:
+            return "Blended pick (official)"
+        return (
+            f"Blended pick (official): {public_team_abbr(rec_team)} {abs(float(edge)):.2f} points"
+            f"{', HIGH' if str(tier) == 'HIGH' else ''}"
+        )
     if not rec_team or pd.isna(edge) or edge == 0:
         return "Official model row (used for the season record)"
     return (
@@ -906,7 +947,7 @@ def render():
             if _pair_items and _pair_verdict in _PAIR_SCENARIO_HEADERS:
                 is_high = False
                 tier_html = _PAIR_SCENARIO_HEADERS[_pair_verdict]
-            elif _scen_items and _scen_verdict in _SCENARIO_HEADERS:
+            elif _scen_items and _scen_verdict in _SCENARIO_HEADERS and not _is_blended(_scen_verdict):
                 # the official row can be HIGH while the listed QBs disagree; the header follows the scenarios
                 is_high = False
                 tier_html = _SCENARIO_HEADERS[_scen_verdict]
@@ -939,7 +980,10 @@ def render():
                 elif _scen_items:
                     _render_qb_scenarios(_scen_items, _scen_verdict, home, away, spread)
                 _official_ctx = (
-                    st.expander(_official_row_label(rec_team, edge, tier), expanded=False)
+                    st.expander(
+                        _official_row_label(rec_team, edge, tier, blended=_is_blended(_scen_verdict)),
+                        expanded=_is_blended(_scen_verdict),
+                    )
                     if _has_qb_scenarios else contextlib.nullcontext()
                 )
                 with _official_ctx:

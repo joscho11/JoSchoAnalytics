@@ -118,13 +118,13 @@ def test_help_site_org_and_paused_copy(tmp_path):
 def test_help_states_live_high_wilson_claim(tmp_path):
     at = _render(tmp_path, topic="Betting", open_question="What win rate is needed")
     md = " ".join(str(m.value) for m in at.markdown)
-    assert "261/449" in md
-    assert "58.13%" in md
-    assert "54.26%" in md
-    assert "10 pushes among 459 HIGH labels" in md
-    assert "moved from the previous model's 246/430" in md
+    assert "251/437" in md
+    assert "57.44%" in md
+    assert "53.51%" in md
+    assert "9 pushes among 446 HIGH labels" in md
+    assert "moved from the previous model's 261/449" in md
     assert "not statistically established either way" in md
-    assert "46 core features and 49 fitted inputs" in md
+    assert "44 core features and 47 fitted inputs" in md
     assert "non-QB" in md and "regular injured reserve" in md
     assert "223/390" not in md
     assert "the Sunday 11:20 p.m. ET and Tuesday snapshots" in md

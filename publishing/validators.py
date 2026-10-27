@@ -236,6 +236,12 @@ def _validate_predictions(
                     "game_type", pd.Series("REG", index=frame.index)
                 ).fillna("REG").astype(str)
                 expected_high = expected_high & ~game_type.eq("REG")
+            if "qb_scenario_verdict" in frame:
+                verdict = frame["qb_scenario_verdict"].fillna("").astype(str).str.strip()
+                is_blend = verdict.str.startswith("blend_")
+                expected_high = expected_high.where(
+                    ~is_blend, verdict.eq("blend_high") & expected_high
+                )
             tier_mismatch = tiers.eq("HIGH").ne(expected_high)
             if tier_mismatch.any():
                 bad = frame.loc[tier_mismatch, "game_id"].astype(str).tolist()

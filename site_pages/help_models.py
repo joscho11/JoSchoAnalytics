@@ -97,17 +97,17 @@ def _spread_2026():
     with st.expander("How the 2026 spread model works"):
         st.markdown(f"""
 Each week the model guesses the **margin leftover versus the first valid Tuesday market capture (09:00-15:30 ET)**.
-It is a Ridge regression with **46 core features and 49 fitted inputs**. It removes
+It is a Ridge regression with **44 core features and 47 fitted inputs**. It removes
 the five general injury-availability features and vacated snaps, while retaining
-the four QB features. It adds one injured-reserve input: each team's count of
+three QB features. Those QB features are trained on the quarterback who actually took
+the first dropback of each game, using only stats known before that game, which is the
+same kind of input the live model gets. The model has no uncertain-QB flag. It adds one injured-reserve input: each team's count of
 non-QB starters on regular injured reserve, taken from the team's roster for its
 previous game, so it uses only information available before the Tuesday prediction.
 The model sees the home count minus the away count. A starter played at least 50% of offensive or
 defensive snaps for that team in any of his last three games (or averaged 50% for that team last
 season if he has not played for it this season). Snaps with another team are not counted, and
-designated-to-return players are not counted. Two more inputs mark a team whose QB did not finish
-a close game last week (another passer took a dropback after his last one while the score was
-within 16 points); only that automatic rule sets them.
+designated-to-return players are not counted.
 The three market features are Sunday 11:20 p.m. ET-to-Tuesday
 spread movement, Sunday-to-Tuesday total movement, and the Tuesday moneyline-spread
 gap; three missingness flags are fitted with the model. The Tuesday US median is
@@ -131,6 +131,12 @@ separately and used for grading, matching the benchmark's execution rule. Bettin
 game is not the claim. Week 1 is now graded on the Track Record page; the live 2026
 sample is still early and should not be read as a long-run performance claim.
 This is Tuesday line value, not closing-line value.
+
+**When a team's starting QB is unsettled,** the model scores the game once for each
+listed QB. The official pick is the average of those scores, weighted by how likely each QB
+is to start. The official pick is HIGH only if that average gap is 3.0 or more points and
+every QB with at least a 25% chance of starting points the same way. The separate QB paths
+are shown for context and do not change the official pick.
 
 The public spread release uses the first valid Tuesday market capture from 09:00-15:30 ET. Published matchups appear on Weekly Predictions as releases become available.
         """)

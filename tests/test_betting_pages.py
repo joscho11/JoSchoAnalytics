@@ -68,9 +68,8 @@ def test_weekly_predictions_renders_and_owns_controls(tmp_path):
     import json as _json
     from team_display import public_team_abbr
     meta = _json.loads((_HERE / shown_build["metadata"]).read_text(encoding="utf-8"))
-    details = meta["qb_selection_details"]
+    details = meta.get("qb_selection_details") or {}  # actual-starter builds carry no QB selection block
     manual = {t: d["player_name"] for t, d in details.items() if d.get("is_user_modeling_assumption")}
-    assert manual, "the newest release is expected to carry at least one manual QB assumption"
     for team, name in manual.items():
         assert f"**{public_team_abbr(team)}:** {name} — user modeling assumption" in qb_markdown
     card_labels = " ".join(
@@ -85,7 +84,8 @@ def test_weekly_predictions_renders_and_owns_controls(tmp_path):
     scenario_teams = {
         public_team_abbr(item["team"]) for items in scenario_games.values() for item in items if item.get("team")
     }
-    assert scenario_teams and all(t in scenario_caption for t in scenario_teams)
+    # Scenario games are not guaranteed in every release; when present the caption names the teams.
+    assert all(t in scenario_caption for t in scenario_teams)
     assert not any(str(k).startswith("tr_") for k in keys), \
         "Weekly Predictions must not carry Track Record's controls"
 
@@ -137,17 +137,17 @@ def test_week1_scorecard_and_track_record_use_graded_corrected_release(tmp_path,
     weekly.run()
     assert not weekly.exception, weekly.exception
     metrics = {str(m.label): str(m.value) for m in weekly.metric}
-    assert metrics["ATS record"] == "6-10-0"
+    assert metrics["ATS record"] == "7-9-0"
     assert not any("Retrospective model correction" in str(w.value) for w in weekly.warning)
     assert not any("Retrospective model update" in str(c.value) for c in weekly.caption)
-    assert any("Week 1 ATS record: **6-10-0**" in str(s.value) for s in weekly.info)
+    assert any("Week 1 ATS record: **7-9-0**" in str(s.value) for s in weekly.info)
     week2 = next(w for w in weekly.selectbox if getattr(w, "key", None) == "wp_week")
     week2.set_value(2)
     weekly.run()
     assert not weekly.exception, weekly.exception
     assert next(w for w in weekly.selectbox if w.key == "wp_week").value == 2
     week2_metrics = {str(m.label): str(m.value) for m in weekly.metric}
-    assert week2_metrics["ATS record"] == "9-7-0"
+    assert week2_metrics["ATS record"] == "8-8-0"
     assert week2_metrics["HIGH picks"] == "3"
     assert not any("Retrospective model correction" in str(w.value) for w in weekly.warning)
     assert not any("Retrospective model update" in str(c.value) for c in weekly.caption)
@@ -156,8 +156,8 @@ def test_week1_scorecard_and_track_record_use_graded_corrected_release(tmp_path,
     weekly.run()
     assert not weekly.exception, weekly.exception
     week3_metrics = {str(m.label): str(m.value) for m in weekly.metric}
-    assert week3_metrics["ATS record"] == "10-4-2"
-    assert any("Week 3 ATS record: **10-4-2**" in str(s.value) for s in weekly.success)
+    assert week3_metrics["ATS record"] == "9-5-2"
+    assert any("Week 3 ATS record: **9-5-2**" in str(s.value) for s in weekly.success)
     assert any("➖ PUSH" in str(m.value) for m in weekly.markdown)
 
     import dashboard_data
@@ -193,8 +193,6 @@ def test_week1_scorecard_and_track_record_use_graded_corrected_release(tmp_path,
     assert (int(corrected_weeks["model_correct"].sum()), len(corrected_weeks)) == (15, 32)
     assert (wins, settled) == (int(graded_2026["model_correct"].sum()), len(graded_2026))
     assert pushes == int(push_mask(finals_2026).sum())
-    track_warnings = " ".join(str(w.value) for w in track.warning)
-    assert "Retrospective model corrections are included in this season record: Week 1, Week 2" in track_warnings
     # Week 1 and Week 2 contribute eight graded HIGH picks; later weeks may add more.
     high_wins, high_losses, high_pushes = (
         int(part) for part in track_metrics["HIGH (Tuesday 3+ points)"].split("-")
@@ -283,12 +281,12 @@ def test_weekly_predictions_live_2026_banner(tmp_path):
     notice_copy = successes + " " + " ".join(str(m.value) for m in at.markdown)
     assert "Live 2026" in notice_copy
     assert "one-sided 95%" in notice_copy and "Wilson lower bound" in notice_copy
-    assert "261/449" in notice_copy
-    assert "58.13%" in notice_copy
-    assert "54.26%" in notice_copy
-    assert "10 pushes among 459 HIGH labels" in notice_copy
+    assert "251/437" in notice_copy
+    assert "57.44%" in notice_copy
+    assert "53.51%" in notice_copy
+    assert "9 pushes among 446 HIGH labels" in notice_copy
     # The refit note: record moved from the previous model's, and said not to be distinguishable.
-    assert "moved from the previous model's 246/430" in notice_copy
+    assert "moved from the previous model's 261/449" in notice_copy
     assert "not statistically established either way" in notice_copy
     assert "regular injured reserve" in notice_copy
     assert "223/390" not in notice_copy
@@ -401,6 +399,8 @@ if __name__ == "__main__":
 
 
 def test_weekly_predictions_shows_one_equal_card_per_listed_qb(tmp_path):
+    """The 2026 actual-starter rebuild (Weeks 1-8) removed QB scenario/pairing cards:
+    every game shows exactly one card with one QB per team and no unsettled-starter view."""
     at = _render_page(tmp_path, "page_weekly_predictions")
     season = next(w for w in at.selectbox if getattr(w, "key", None) == "wp_season")
     season.set_value(2026)
@@ -409,22 +409,14 @@ def test_weekly_predictions_shows_one_equal_card_per_listed_qb(tmp_path):
     at.run()
     assert not at.exception, at.exception
     markdown = " ".join(str(item.value) for item in at.markdown)
-    assert "The starter is not settled" in markdown
-    # SEA: Lock or Darnold. CHI: Caleb Williams, Bagent or Keenum. One card each, all shown at once.
-    for name in ("Drew Lock", "Sam Darnold", "Caleb Williams", "Tyson Bagent", "Case Keenum"):
-        assert name in markdown, name
-    assert markdown.count("Model line:") >= 5 and "Pick:" in markdown
-    # The verdict is one plain line; which one depends on the published numbers.
-    assert ("HIGH under all 3 QBs" in markdown) or ("QB split: HIGH under" in markdown)
-    assert "&mdash;" not in markdown and "—" not in markdown.split("The starter is not settled", 1)[1][:3000]
-    # The original scorecard is still there for the record, collapsed.
-    labels = [exp.label for exp in at.expander]
-    assert any(label.startswith("Official model row for the season record") for label in labels), labels
+    assert "The starter is not settled" not in markdown
+    assert "QB SPLIT" not in markdown
+    assert markdown.count("jsa-gc-meta") >= 16
     expander = next(exp for exp in at.expander if exp.label == "QB inputs used for this release")
     text = " ".join(str(item.value) for item in expander.markdown) + " " + " ".join(str(c.value) for c in expander.caption)
-    assert "Automatic uncertain-QB flag" in text
-    assert "**CHI:**" in text and "left before the end of" in text
-    assert "QB scenarios for" in text
+    assert "Automatic uncertain-QB flag" not in text
+    assert "QB scenarios for" not in text
+    assert "**CHI:** Caleb Williams" in text
 
 
 def test_week6_chi_atl_final_build_uses_settled_qbs_not_pair_scenarios(tmp_path):
@@ -441,7 +433,7 @@ def test_week6_chi_atl_final_build_uses_settled_qbs_not_pair_scenarios(tmp_path)
     assert not at.exception, at.exception
     assert not at.error, [e.value for e in at.error]
     shown = release_status("predictions", 2026, 6, manifest=page_common.load_release_manifest(), root=_HERE)
-    assert shown["build_id"] == "predictions-2026w06-610992bd5dbf", shown
+    assert shown["build_id"] == "predictions-2026w06-9832281cdeab", shown
 
     markdown = " ".join(str(item.value) for item in at.markdown)
     assert not any(exp.label.endswith("joint QB pairings") for exp in at.expander)
@@ -514,14 +506,14 @@ def test_week3_st_promotion_reissue_card_states(tmp_path):
 
     manifest = page_common.load_release_manifest()
     predictions = manifest["products"]["predictions"]
-    week3_build_id = "predictions-2026w03-c98a61b8420d"
+    week3_build_id = "predictions-2026w03-6ac0c411ac45"
     # Week 4+ publishes move the active pointer off Week 3, so pin the build the page
     # resolves for Week 3 instead of the active one. This is the same pin as before, by week.
     shown = release_status("predictions", 2026, 3, manifest=manifest, root=_HERE)
     assert shown["build_id"] == week3_build_id, shown
     build = predictions["builds"][week3_build_id]
-    assert build["model_version"].endswith("-b4a325000b7a")
-    assert "started_games_held" not in build["correction"]
+    assert build["model_version"].endswith("actual-starter-0c213b99e845")
+    assert "started_games_held" not in (build.get("correction") or {})
 
     def plain(html_text: str) -> str:
         return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html_text.replace("&nbsp;", " "))).strip()
@@ -534,22 +526,12 @@ def test_week3_st_promotion_reissue_card_states(tmp_path):
             cards[f"{match.group(1)} @ {match.group(2)}"] = html_text
     assert len(cards) == 16, sorted(cards)
 
-    assert "HIGH PICK" in cards["CIN @ PIT"] and "jsa-gc-high" in cards["CIN @ PIT"]
-    assert "HIGH PICK" not in cards["HOU @ IND"]
-    assert sum("HIGH PICK" in html_text for html_text in cards.values()) == 1
-
-    split = cards["PHI @ CHI"]
-    assert "QB SPLIT" in split and "HIGH PICK" not in split and "jsa-gc-high" not in split
+    high = {name for name, html_text in cards.items() if "HIGH PICK" in html_text}
+    assert high == {"CIN @ PIT", "LV @ NO"}, sorted(high)
+    assert "jsa-gc-high" in cards["CIN @ PIT"]
     joined = " ".join(markdown)
-    assert "QB split: HIGH under 1 of 3 QBs, pass until the starter is known" in joined
-    assert "HIGH under all 3 QBs" not in joined
-    for name in ("Caleb Williams", "Tyson Bagent", "Case Keenum"):
-        assert name in joined, name
-    assert joined.count("under 3.0, not HIGH") >= 2 + 2  # Bagent, Keenum, and both SEA quarterbacks
-    assert "No HIGH under any listed QB" in joined  # SEA at WAS
-
-    fresh = cards["ATL @ GB"]
-    assert "HIGH PICK" not in fresh and "QB SPLIT" not in fresh
+    assert not any("QB SPLIT" in html_text for html_text in cards.values())
+    assert "QB split: HIGH under" not in joined
 
     captions = " ".join(str(c.value) for c in at.caption)
     assert build["model_version"] in captions
@@ -579,10 +561,10 @@ def test_week4_qb_paths_and_card_states(tmp_path):
 
     manifest = page_common.load_release_manifest()
     shown = release_status("predictions", 2026, 4, manifest=manifest, root=_HERE)
-    week4_build_id = "predictions-2026w04-f3e67139da16"
+    week4_build_id = "predictions-2026w04-a3ed73dbc7b4"
     assert shown["build_id"] == week4_build_id, shown
     build = manifest["products"]["predictions"]["builds"][shown["build_id"]]
-    assert build["model_version"].endswith("-b4a325000b7a")
+    assert build["model_version"].endswith("actual-starter-0c213b99e845")
 
     def plain(html_text: str) -> str:
         return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html_text.replace("&nbsp;", " "))).strip()
@@ -595,14 +577,12 @@ def test_week4_qb_paths_and_card_states(tmp_path):
             cards[f"{match.group(1)} @ {match.group(2)}"] = html_text
     assert len(cards) == 16, sorted(cards)
     high = {name for name, html_text in cards.items() if "HIGH PICK" in html_text}
-    assert high == {"DAL @ HOU", "DEN @ SF", "ATL @ NO", "NYJ @ CHI"}, sorted(high)
-    for name in ("IND @ WAS", "GB @ TB"):
-        assert "HIGH PICK" not in cards[name] and "QB SPLIT" not in cards[name], name
+    assert high == {"ARI @ NYG", "ATL @ NO", "DEN @ SF"}, sorted(high)
+    assert not any("QB SPLIT" in html_text for html_text in cards.values())
 
     joined = " ".join(markdown)
-    for name in ("Marcus Mariota", "Jayden Daniels", "Caleb Williams", "Tyson Bagent", "Case Keenum"):
-        assert name in joined, name
-    assert joined.count("No HIGH under any listed QB") >= 1  # IND at WAS
+    assert "Case Keenum" in joined  # CHI manual assumption
+    assert "The starter is not settled" not in joined
 
 
 def test_scenario_verdict_lines_are_plain_for_every_case():
@@ -620,4 +600,75 @@ def test_scenario_verdict_lines_are_plain_for_every_case():
         {"player_name": "Caleb Williams", "side": "HOME (CHI)", "edge": 4.39, "clears_high": True}, "CHI", -3.0
     )
     assert "Caleb Williams" in card and "Pick: CHI" in card and "Edge 4.39 points" in card
-    assert "Model line: CHI -1.4" in card and ">HIGH<" in card
+    assert "Model line: CHI -1.4" in card and ">HIGH if he starts<" in card
+
+
+def test_blended_scenario_row_renders_probabilities_verdicts_and_official_label():
+    """Synthetic blended row (new model): no live release needed. Old builds keep the old verdicts."""
+    import importlib
+    import json as _json
+
+    sys.path.insert(0, str(_SITE_PAGES))
+    page = importlib.import_module("page_weekly_predictions")
+    scenarios = [
+        {"team": "BAL", "player_name": "Lamar Jackson", "side": "HOME (BUF)", "edge": 4.1,
+         "clears_high": True, "probability": 0.5},
+        {"team": "BAL", "player_name": "Cooper Rush", "side": "HOME (BUF)", "edge": 2.2,
+         "clears_high": False, "probability": 0.5},
+    ]
+    row = {
+        "qb_scenarios": _json.dumps(scenarios),
+        "qb_scenario_verdict": "blend_no_high",
+        "default_qb_edge": 4.1,
+        "default_qb_recommendation": "BUF",
+    }
+    items, verdict = page._scenario_items(row)
+    assert verdict == "blend_no_high" and len(items) == 2 and page._is_blended(verdict)
+    assert not page._is_blended("high_split")
+
+    card = page._scenario_card_html(items[0], "BUF", -3.0)
+    assert "Lamar Jackson" in card and "50% chance he starts" in card
+    # Historical items without a probability keep the old card.
+    legacy = page._scenario_card_html({k: v for k, v in items[0].items() if k != "probability"}, "BUF", -3.0)
+    assert "chance he starts" not in legacy
+    assert "chance he starts" not in page._scenario_card_html({**items[0], "probability": "bad"}, "BUF", -3.0)
+
+    assert "Blended pick is HIGH" in page._scenario_verdict_html(items, "blend_high")
+    assert "Blended gap is under 3.0 points, not HIGH" in page._scenario_verdict_html(items, "blend_no_high")
+    assert "QBs point opposite ways" in page._scenario_verdict_html(items, "blend_split_no_high")
+    # Old verdicts still render exactly as before.
+    assert "No HIGH under any listed QB" in page._scenario_verdict_html(items, "no_high")
+
+    assert page._official_row_label("BUF", -3.4, "HIGH", blended=True) == "Blended pick (official): BUF 3.40 points, HIGH"
+    assert page._official_row_label("BUF", -2.0, "PASS", blended=True).startswith("Blended pick (official)")
+    assert page._official_row_label("BUF", -3.4, "HIGH").startswith("Official model row for the season record")
+    for text in (page._scenario_verdict_html(items, v) for v in ("blend_high", "blend_no_high", "blend_split_no_high")):
+        assert "—" not in text and "&mdash;" not in text
+
+
+def test_blended_scenario_game_shows_context_caption_and_official_expander(monkeypatch):
+    """Drive _render_qb_scenarios with a stub Streamlit to confirm the blend caption text."""
+    import importlib
+
+    sys.path.insert(0, str(_SITE_PAGES))
+    page = importlib.import_module("page_weekly_predictions")
+    seen = []
+
+    class _Col:
+        def markdown(self, html_text, **_kw):
+            seen.append(html_text)
+
+    monkeypatch.setattr(page.st, "markdown", lambda html_text, **_kw: seen.append(html_text))
+    monkeypatch.setattr(page.st, "columns", lambda n: [_Col() for _ in range(n)])
+    items = [
+        {"team": "BAL", "player_name": "Lamar Jackson", "side": "HOME (BUF)", "edge": 4.1, "clears_high": True, "probability": 0.5},
+        {"team": "BAL", "player_name": "Cooper Rush", "side": "HOME (BUF)", "edge": 2.2, "clears_high": False, "probability": 0.5},
+    ]
+    page._render_qb_scenarios(items, "blend_split_no_high", "BUF", "BAL", -3.0)
+    joined = " ".join(seen)
+    assert "QB paths are shown for context" in joined
+    assert joined.count("50% chance he starts") == 2
+    assert "QBs point opposite ways" in joined
+    seen.clear()
+    page._render_qb_scenarios(items, "high_split", "BUF", "BAL", -3.0)
+    assert "QB paths are shown for context" not in " ".join(seen)

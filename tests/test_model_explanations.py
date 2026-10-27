@@ -49,30 +49,30 @@ def test_live_eval_numbers_match_published_books():
     audit = json.loads(me._HIGH_AUDIT_PATH.read_text(encoding="utf-8"))
     benchmark = audit["historical"]["high"]
     assert audit["model"]["high_threshold_points"] == 3.0
-    assert audit["report_id"] == "qb_ir_scoped_flag_market_ridge_st_net_v1"
-    assert audit["model"]["feature_contract"] == "46 core features, 49 fitted inputs"
-    assert benchmark["pick_rows"] == 459
-    assert benchmark["wins"] == 261
-    assert benchmark["graded_n"] == 449
-    assert benchmark["pushes"] == 10
+    assert audit["report_id"] == "qb_ir_actual_starter_market_ridge_v1"
+    assert audit["model"]["feature_contract"] == "44 core features, 47 fitted inputs"
+    assert benchmark["pick_rows"] == 446
+    assert benchmark["wins"] == 251
+    assert benchmark["graded_n"] == 437
+    assert benchmark["pushes"] == 9
     assert benchmark["wilson_lower_one_sided_95"] == LIVE_HIGH_WILSON_LOWER
     assert [(r["season"], r["wins"], r["n"]) for r in me.SPREAD_HIGH_BY_SEASON] == [
-        (2021, 82, 136),
-        (2022, 49, 93),
-        (2023, 55, 89),
-        (2024, 34, 59),
+        (2021, 82, 134),
+        (2022, 46, 92),
+        (2023, 48, 82),
+        (2024, 34, 57),
         (2025, 41, 72),
     ]
-    assert sum(r["wins"] for r in me.SPREAD_HIGH_BY_SEASON) == 261
-    assert sum(r["n"] for r in me.SPREAD_HIGH_BY_SEASON) == 449
+    assert sum(r["wins"] for r in me.SPREAD_HIGH_BY_SEASON) == 251
+    assert sum(r["n"] for r in me.SPREAD_HIGH_BY_SEASON) == 437
     assert all(len(value) == 64 for value in audit["source_hashes"].values())
-    # v6 is the special-teams net two-sided EPA promotion; v5 (the f4f09df2 bundle) stays on disk as history.
+    # v7 is the actual-starter QB promotion; v6 and v5 stay on disk as history.
     assert audit["source_hashes"]["candidate_bundle_sha256"] == (
-        "b4a325000b7a8982f092402528e415177f64ad3193ab9e8bb392cfa28f726d61"
+        "0c213b99e84560f7a5d4e6e777403068ae5e87a8973b6595cb8947ba53b27ed1"
     )
-    assert audit["model"]["model_version"].endswith("-b4a325000b7a")
-    assert audit["promotion_audit"]["path"].endswith("st_net_reissue_week03_v1.json")
-    assert round(audit["historical"]["regular_season_volume"]["fire_rate"], 4) == 0.3498
+    assert audit["model"]["model_version"].endswith("-0c213b99e845")
+    assert audit["promotion_audit"]["path"].endswith("actual_starter_promotion_v1.json")
+    assert round(audit["historical"]["regular_season_volume"]["fire_rate"], 4) == 0.3386
     assert (me.HERE / "betting" / "market_model_benchmark_v5.json").is_file()
 
     evidence = json.loads(
