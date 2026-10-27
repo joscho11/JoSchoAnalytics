@@ -444,7 +444,7 @@ def test_early_season_note_shows_for_a_november_card(tmp_path, render):
     at = render(today=date(2026, 11, 2))
     notes = [str(c.value) for c in at.caption if str(c.value) == page_cbb_daily.EARLY_SEASON_NOTE]
     assert len(notes) == 1
-    assert "Predicted totals are least reliable then." in " ".join(str(m.value) for m in at.expander[0].markdown)
+    assert "Treat predicted totals as rough estimates then." in " ".join(str(m.value) for m in at.expander[0].markdown)
 
 
 def test_early_season_note_is_hidden_for_a_december_card(tmp_path, render):

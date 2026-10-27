@@ -48,13 +48,13 @@ NO_SNAPSHOT_NOTICE = "No official sportsbook line snapshot for this date, so no 
 INTRO_VISIBLE = "Each card shows who the model expects to win, by how many points, and how likely that win is."
 INTRO_MORE = (
     "The model works from team and game data only. It never sees sportsbook lines. "
-    "Early in the season the model leans on last season's results, so predictions are less certain until teams have played more games. Predicted totals are least reliable then."
+    "Early in the season the model leans on last season's results, so predictions are less certain until teams have played more games. Treat predicted totals as rough estimates then."
 )
 # Last season's priors dominate until teams have played several games.
 EARLY_SEASON_THROUGH = date(2026, 11, 30)
 EARLY_SEASON_NOTE = (
-    "Early season: these predictions lean on last season's results. Predicted totals sit close to a league average "
-    "and have run below sportsbook totals, so treat them as rough until teams have played a few games."
+    "Early season: these predictions rely heavily on last season's results. "
+    "Treat predicted totals as rough estimates until teams have played more games."
 )
 HOWTO_LABEL = "How to read these cards"
 PAGE_KEY = "cbb-page"
