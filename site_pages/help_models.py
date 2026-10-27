@@ -135,8 +135,8 @@ This is Tuesday line value, not closing-line value.
 **When a team's starting QB is unsettled,** the model scores the game once for each
 listed QB. The official pick is the average of those scores, weighted by how likely each QB
 is to start. The official pick is HIGH only if that average gap is 3.0 or more points and
-every QB with at least a 25% chance of starting points the same way. The separate QB paths
-are shown for context and do not change the official pick.
+every QB with at least a 25% chance of starting points the same way. The 2026 board shows
+one official pick and hides individual QB projection paths.
 
 The public spread release uses the first valid Tuesday market capture from 09:00-15:30 ET. Published matchups appear on Weekly Predictions as releases become available.
         """)

@@ -90,6 +90,35 @@ def test_weekly_predictions_renders_and_owns_controls(tmp_path):
         "Weekly Predictions must not carry Track Record's controls"
 
 
+def test_2026_board_shows_two_decimal_margins_and_no_individual_qb_paths(tmp_path):
+    at = _render_page(tmp_path, "page_weekly_predictions")
+    next(w for w in at.selectbox if getattr(w, "key", None) == "wp_season").set_value(2026)
+    next(w for w in at.selectbox if getattr(w, "key", None) == "wp_week").set_value(8)
+    at.run()
+    assert not at.exception, at.exception
+    assert not at.error, [e.value for e in at.error]
+
+    markdown = [str(item.value) for item in at.markdown]
+    joined = " ".join(markdown)
+    cards = [item for item in markdown if "jsa-gc-meta" in item]
+    assert len(cards) == 14
+    assert not any("jsa-gc-scen" in item or "jsa-gc-pair" in item for item in markdown)
+    assert "HIGH if he starts" not in joined
+    assert "Official prediction uses the probability-weighted QB blend" in " ".join(
+        str(item.value) for item in at.caption
+    )
+    assert any(
+        exp.label == "Blended pick (official): BUF 2.70 points" for exp in at.expander
+    )
+
+    # NYJ's raw edge is 2.982, so the card must show enough precision to explain why it is not HIGH.
+    jets = next(card for card in cards if "LV @ NYJ" in card)
+    assert "HIGH PICK" not in jets
+    assert "jsa-gc-high" not in jets
+    assert ">-3.98</div>" in joined
+    assert ">-1.0</div>" in joined
+
+
 def test_weekly_prediction_team_cell_escapes_release_names():
     from page_weekly_predictions import _team_cell_html
 
@@ -411,6 +440,7 @@ def test_weekly_predictions_shows_one_equal_card_per_listed_qb(tmp_path):
     markdown = " ".join(str(item.value) for item in at.markdown)
     assert "The starter is not settled" not in markdown
     assert "QB SPLIT" not in markdown
+    assert "jsa-gc-scen" not in markdown and "jsa-gc-pair" not in markdown
     assert markdown.count("jsa-gc-meta") >= 16
     expander = next(exp for exp in at.expander if exp.label == "QB inputs used for this release")
     text = " ".join(str(item.value) for item in expander.markdown) + " " + " ".join(str(c.value) for c in expander.caption)
@@ -437,6 +467,7 @@ def test_week6_chi_atl_final_build_uses_settled_qbs_not_pair_scenarios(tmp_path)
 
     markdown = " ".join(str(item.value) for item in at.markdown)
     assert not any(exp.label.endswith("joint QB pairings") for exp in at.expander)
+    assert "jsa-gc-scen" not in markdown and "jsa-gc-pair" not in markdown
     assert not [m for m in at.markdown if "jsa-gc-pair" in str(m.value)]
     assert "MAIN PATH" not in markdown
     for name in ("Caleb Williams", "Michael Penix Jr."):
@@ -519,6 +550,7 @@ def test_week3_st_promotion_reissue_card_states(tmp_path):
         return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html_text.replace("&nbsp;", " "))).strip()
 
     markdown = [str(item.value) for item in at.markdown]
+    assert not any("jsa-gc-scen" in item or "jsa-gc-pair" in item for item in markdown)
     cards = {}
     for html_text in markdown:
         if "jsa-gc-meta" in html_text:
@@ -538,8 +570,8 @@ def test_week3_st_promotion_reissue_card_states(tmp_path):
     assert "games that had kicked off keep their published rows" not in captions
 
 
-def test_week4_qb_paths_and_card_states(tmp_path):
-    """Week 4 QB paths and card states from the published Week 4 release.
+def test_week4_qb_card_states_hide_individual_paths(tmp_path):
+    """Week 4 keeps the official cards and hides individual QB paths.
 
     TB starts Jalon Daniels (manual). WAS (Mariota default, Daniels path) and CHI (Keenum default,
     Williams and Bagent paths) carry QB scenarios. IND at WAS has no path clearing HIGH; NYJ at
@@ -570,6 +602,7 @@ def test_week4_qb_paths_and_card_states(tmp_path):
         return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html_text.replace("&nbsp;", " "))).strip()
 
     markdown = [str(item.value) for item in at.markdown]
+    assert not any("jsa-gc-scen" in item or "jsa-gc-pair" in item for item in markdown)
     cards = {}
     for html_text in markdown:
         if "jsa-gc-meta" in html_text:
@@ -646,29 +679,26 @@ def test_blended_scenario_row_renders_probabilities_verdicts_and_official_label(
         assert "—" not in text and "&mdash;" not in text
 
 
-def test_blended_scenario_game_shows_context_caption_and_official_expander(monkeypatch):
-    """Drive _render_qb_scenarios with a stub Streamlit to confirm the blend caption text."""
+def test_blended_scenario_summary_hides_individual_paths(monkeypatch):
+    """The 2026 board shows the official blend status without individual QB scores."""
     import importlib
 
     sys.path.insert(0, str(_SITE_PAGES))
     page = importlib.import_module("page_weekly_predictions")
     seen = []
 
-    class _Col:
-        def markdown(self, html_text, **_kw):
-            seen.append(html_text)
-
     monkeypatch.setattr(page.st, "markdown", lambda html_text, **_kw: seen.append(html_text))
-    monkeypatch.setattr(page.st, "columns", lambda n: [_Col() for _ in range(n)])
+    monkeypatch.setattr(page.st, "caption", lambda caption: seen.append(caption))
     items = [
         {"team": "BAL", "player_name": "Lamar Jackson", "side": "HOME (BUF)", "edge": 4.1, "clears_high": True, "probability": 0.5},
         {"team": "BAL", "player_name": "Cooper Rush", "side": "HOME (BUF)", "edge": 2.2, "clears_high": False, "probability": 0.5},
     ]
-    page._render_qb_scenarios(items, "blend_split_no_high", "BUF", "BAL", -3.0)
+    page._render_blend_summary(items, "blend_split_no_high")
     joined = " ".join(seen)
-    assert "QB paths are shown for context" in joined
-    assert joined.count("50% chance he starts") == 2
+    assert "Official prediction uses the probability-weighted QB blend" in joined
+    assert "individual QB projections are hidden" in joined
+    assert "Lamar Jackson" not in joined and "Cooper Rush" not in joined
     assert "QBs do not all back the blended side" in joined
     seen.clear()
-    page._render_qb_scenarios(items, "high_split", "BUF", "BAL", -3.0)
-    assert "QB paths are shown for context" not in " ".join(seen)
+    page._render_blend_summary(items, "high_split")
+    assert not seen

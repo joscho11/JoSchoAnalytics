@@ -198,9 +198,9 @@ def _live_model_context(release_state: dict) -> dict[str, str]:
         scenario_teams = (correction.get("qb_scenarios") or {}).get("teams") or []
         if scenario_teams:
             st.caption(
-                "QB scenarios for " + ", ".join(public_team_abbr(team) for team in scenario_teams)
-                + ": the official pick blends the listed QBs, weighted by each one's chance of starting. "
-                "Each QB's own path is shown on the matchup card for context."
+                "QB scenario inputs for " + ", ".join(public_team_abbr(team) for team in scenario_teams)
+                + ". The board shows one official release pick and hides individual QB projection paths. "
+                "When starter probabilities are available, the official pick is their weighted blend."
             )
     return qb_names
 
@@ -363,6 +363,16 @@ def _scenario_verdict_html(items: list[dict], verdict: str) -> str:
         f"<div style='margin:8px 0 10px'><span class='jsa-gc-verdict' style='background:{background};border:1px solid {color};"
         f"border-radius:4px;padding:3px 10px;font-size:12px;font-weight:700;color:{color}'>{_html.escape(label)}</span></div>"
     )
+
+
+def _render_blend_summary(items: list[dict], verdict: str) -> None:
+    """Show the official blend status without exposing individual QB score paths."""
+    if not _is_blended(verdict):
+        return
+    st.caption("Official prediction uses the probability-weighted QB blend; individual QB projections are hidden.")
+    verdict_html = _scenario_verdict_html(items, verdict)
+    if verdict_html:
+        st.markdown(verdict_html, unsafe_allow_html=True)
 
 
 def _pair_scenario_card_html(item: dict, home: str, away: str, spread: float) -> str:
@@ -816,10 +826,10 @@ def render():
         else:
             filtered_df = _sort_matchups_by_gap(filtered_df, _primary_edge)
 
-        def fmt(val):
+        def fmt(val, decimals=1):
             if val is None or pd.isna(val):
                 return "—"
-            return f"{val:+.1f}"
+            return f"{val:+.{decimals}f}"
 
         def name_style(is_rec):
             weight = "700" if is_rec else "400"
@@ -866,8 +876,8 @@ def render():
             # to match how the SPREAD column is displayed. Internally `predicted` is the model's
             # home_margin estimate (positive = home wins), so we negate for the home team's display
             # and pass through for the away team.
-            top_predicted = fmt(-predicted)
-            bot_predicted = fmt(predicted)
+            top_predicted = fmt(-predicted, decimals=2)
+            bot_predicted = fmt(predicted, decimals=2)
 
             if pd.isna(edge) or edge == 0:
                 rec_team  = None
@@ -973,12 +983,8 @@ def render():
                     unsafe_allow_html=True
                 )
 
-                if _pair_items:
-                    _render_qb_pair_scenarios(
-                        _pair_items, _pair_verdict, home, away, spread, float(edge)
-                    )
-                elif _scen_items:
-                    _render_qb_scenarios(_scen_items, _scen_verdict, home, away, spread)
+                if _is_blended(_scen_verdict):
+                    _render_blend_summary(_scen_items, _scen_verdict)
                 _official_ctx = (
                     st.expander(
                         _official_row_label(rec_team, edge, tier, blended=_is_blended(_scen_verdict)),
@@ -1037,9 +1043,6 @@ def render():
                     b1.markdown(stat_box(bot_spread),                       unsafe_allow_html=True)
                     b2.markdown(stat_box(bot_predicted, is_rec=bot_is_rec), unsafe_allow_html=True)
                     b4.markdown(bet_box(bot_name, rec_color) if bot_is_rec else empty_box(), unsafe_allow_html=True)
-
-                    if _scen_items:
-                        st.space(8)
 
                 if _show_agent:
                     game_key  = f"{home}_{away}"
