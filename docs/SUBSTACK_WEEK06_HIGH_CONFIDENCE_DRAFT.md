@@ -1,5 +1,7 @@
 # Week 6 high-confidence picks: Bills -5.5 leads my card
 
+> Historical editorial draft for the October 2026 Week 6 slate. The picks and records below describe that dated card, not current recommendations or release status. See the [documentation index](README.md) for current product guides.
+
 *Buffalo, Dallas, Atlanta and Philadelphia clear my three-point HIGH threshold. These are my plays and the inputs behind them.*
 
 Buffalo leads my Week 6 card. Four of the 14 games received the HIGH label, with Dallas and Atlanta as my underdog plays and Philadelphia as my moneyline play.

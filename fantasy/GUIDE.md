@@ -1,18 +1,22 @@
 # Weekly fantasy projections
 
-Status: checked against the as-of rebuild (`asof_rebuild.json`, 2026-09-01), site code, and release contract. The reconciled causal bundle is promoted privately for the Week 2 launch; the public Week 1 build remains immutable.
+The current release is selected through `data/releases/manifest.json`. Because
+the active week advances over the season, use `python -m publishing.cli status`
+for the current public release and grading state.
 
-The current weekly fantasy product is built in `weekly_projections_v2_prod`, a separate private repository. This public repository owns candidate validation, immutable releases, the website, and the frozen 2025 demo. Week 2 is scheduled and will be published only after matching pregame snapshots pass validation.
+The weekly fantasy product is built in `weekly_projections_v2_prod`, a separate private repository. This public repository owns candidate validation, immutable releases, the website, and the frozen 2025 demo.
 
 ## Current 2026 system
 
-The production recipe is `l1_wipe_prior_share_ranks`. One LightGBM, 95 features: last-four usage and opportunity, team and opponent context, availability, and role ranks. It predicts this week's half-PPR points. Injury and practice status lock at that game's kickoff. It produces the top 180 player projections for each released week.
+The production recipe is `l1_wipe_prior_share_ranks`. One LightGBM, 95 features: last-four usage and opportunity, team and opponent context, availability, and role ranks. It predicts this week's half-PPR points. Injury and practice status lock at that game's kickoff. The producer publishes player projections for each released week.
 
 Sleeper projections are an evaluation benchmark, not a model feature. The producer can publish without Sleeper data. Benchmark coverage is reported separately so a missing market snapshot cannot change the model inputs.
 
 The producer writes a candidate CSV and SHA-256 sidecar. The public [publishing contract](../publishing/README.md) validates the schema, coverage, source metadata, and sidecar before copying the candidate into `data/releases/builds/`. The site reads the active manifest pointer. Direct writes into `fantasy/fantasy_projections/` are retired for 2026. The promoted model version is `weekly-fantasy-v2-l1_wipe_prior_share_ranks-ad79f409f0b3`.
 
-2026 Week 5 is the active public release. Its complete postgame grade is stored separately under `data/releases/results/fantasy/2026/week05`; the published projection build remains immutable.
+Each active release and its latest complete grade are recorded separately in
+`data/releases/manifest.json`. Published projection builds remain immutable as
+grading results arrive.
 
 ## Locked evaluation
 

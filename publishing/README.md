@@ -1,7 +1,8 @@
 # Weekly publication contract
 
-Status: checked against the current CLI, validators, manifest, and grading workflow on 2026-10-13.
-The active 2026 Week 5 fantasy release has a complete postgame grade: 347 player rows across 15 final games.
+This guide describes the CLI and workflow behavior checked on 2026-10-28.
+Release weeks change over the season. Read the checked-in manifest or run
+`python -m publishing.cli status` for the current pointers and grading status.
 
 This package is the only public write boundary for spread predictions and weekly
 fantasy projections. Producer repositories write candidates to their own `outputs/`
@@ -41,6 +42,10 @@ artifact fails closed and cannot become the default.
 
 Run from the JoSchoAnalytics directory. If `--schedule` is omitted for a live
 candidate, the CLI obtains the season schedule through `nflreadpy` before validating.
+`validate` is read-only apart from any provider schedule fetch. `publish` stores
+a validated immutable build and, unless `--no-activate` is given, advances the
+product's active manifest pointer. A passing candidate is not published until
+the validation has succeeded.
 
 ```powershell
 python -m publishing.cli publish `
@@ -65,6 +70,12 @@ python -m publishing.cli rollback --product predictions
 python -m publishing.cli rollback --product fantasy --build-id <build-id>
 ```
 
+`status` only reads the manifest. `schedule`, `rollback`, and `bootstrap` write
+the manifest. `grade` and `grade-published` write result overlays separately
+from the frozen prediction files; without explicit local inputs, grading may
+fetch schedules or player stats through the configured data package. Review
+the command and its inputs before running it against the working checkout.
+
 Rollback only changes the manifest pointer and re-verifies the stored artifact hash.
 It does not copy over or delete any build. Regrading unchanged inputs is idempotent,
 so the scheduled workflow creates no commit when results have not changed.
@@ -72,6 +83,6 @@ so the scheduled workflow creates no commit when results have not changed.
 ## Bootstrap baseline
 
 `python -m publishing.cli bootstrap` registers validated immutable copies of the
-2025 Weeks 10–17 demo data, activates Week 10 for both products, schedules the
-prediction Week 1 target, and leaves fantasy Week 1 awaiting its candidate. It does
-not modify the legacy tracker or fantasy CSVs.
+2025 Weeks 10–17 demo data and writes the manifest pointers and schedule state.
+It does not modify the legacy tracker or fantasy CSVs. Treat this as an
+initialization command, not a routine status check.

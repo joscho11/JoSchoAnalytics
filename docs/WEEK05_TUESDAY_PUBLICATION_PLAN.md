@@ -1,5 +1,7 @@
 # Week 5 Tuesday website publication: Luna implementation brief
 
+> Historical planning snapshot prepared October 6, 2026 for NFL Week 5. This brief records the intended work and evidence available then; it is not the current release procedure or project status. See the [documentation index](README.md) and [publishing guide](../publishing/README.md) for current references.
+
 Prepared October 6, 2026. Target: NFL 2026 Week 5. This is a plan; no captures,
 prediction runs, activation, or deployment were performed while preparing it.
 

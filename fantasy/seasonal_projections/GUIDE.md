@@ -1,6 +1,8 @@
 # Seasonal projections on this site
 
-Status: checked against the Draft Board page and ADP refresh on 2026-08-24.
+The Draft Board's current behavior is defined by the page code and the files
+listed below. ADP overlays are refreshable inputs; their contents can change
+independently of this guide.
 
 This public folder is the Draft Board's operational surface: the frozen 2014-2026
 season dataset the board keys on, the daily Sleeper, ESPN, and Yahoo ADP overlays, and the

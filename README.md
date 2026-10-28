@@ -1,80 +1,55 @@
 # JoScho Analytics
 
-JoScho Analytics is a source-available Streamlit site for NFL betting analysis, fantasy football projections, and league-history research. I publish the assumptions, results, and limits beside the products. This repository is the website plus checked release artifacts. Training code and serialized models live in private producer repositories.
+JoScho Analytics is a source-available Streamlit site for football and basketball analysis, fantasy projections, and league-history research. This public repository contains the site, validated release artifacts, and evaluation evidence. Model training and private source data live in separate producer repositories.
 
 **Live site:** [joschoanalytics.streamlit.app](https://joschoanalytics.streamlit.app)
 
-## How to read this repo
+## Current site
 
-```text
-app.py                 Streamlit entrypoint and nav
-site_pages/            One module per page
-dashboard_*.py         Shared data loaders and chrome
-publishing/            Validate a producer CSV, freeze it, grade it
-data/releases/         Immutable published builds + active manifest
-betting/               Spread display rules and graded trackers
-fantasy/               Draft, rookie, talent, and 2025 weekly demo CSVs
-futures/published/     Season Totals CSV + evidence
-tests/                 Offline page tests and the public-boundary scanner
-```
+The app has 14 routes, grouped in the navigation as Betting, Fantasy, College Basketball, and More:
 
-A page should load CSV or JSON. If a change needs a `.pkl`, it belongs in a private producer, not here.
-
-## Website coverage
-
-| Page | What it covers |
+| Route | Purpose |
 |---|---|
-| **Home** | Site status, release timing, and links to the main products. |
-| **Draft Board** | A 180-player 2026 board with independent season projections, Sleeper, ESPN, or Yahoo ADP, or Model Draft Rank order, plus positional ranks, rank gaps, and talent context. |
-| **Rookie Board** | Rookie hit probabilities, season projections, college production, and athletic context. |
-| **Weekly Fantasy** | Half-PPR and stat projections for QB, RB, WR, and TE. Actual results appear after games finish. |
-| **DFS Optimizer** | DraftKings NFL Classic lineup builder. Upload a salary CSV plus a checked direct-DK projection file. Not a performance claim. |
-| **Anytime TDs** | Live 2026 comparison board plus the 2025 Weeks 10-17 demo. Rushing and receiving TD chances versus manually pasted DraftKings prices. For fun. Not a proven edge. |
-| **Weekly Predictions** | NFL spread predictions, market comparisons, model confidence, and release status. |
-| **Track Record** | Graded against-the-spread results, confidence tiers, model comparisons, streaks, and betting simulations. |
-| **Season Totals** | Win projections for all 32 teams compared with posted season totals. |
-| **League History** | Sleeper, ESPN, and Yahoo league records, rivalries, manager profiles, draft habits, roster production, and league-wide trends. |
-| **Film Room** | Short video breakdowns with written analysis and links to the related product. |
-| **Help & Guide** | Betting definitions, model summaries, feature explanations, confidence rules, and product limitations. |
+| Home | Site status and product links. |
+| This Week | Upcoming NFL slate and weekly context. |
+| Weekly Predictions | NFL spread predictions, market comparisons, and release status. |
+| Touchdown Props (Beta) | Anytime and first-touchdown comparisons with posted prices. |
+| Track Record | Graded spread results and historical comparisons. |
+| Season Totals (Beta) | NFL team win projections compared with posted totals. |
+| Weekly Fantasy (Beta) | Weekly player projections and postgame grading. |
+| DFS Optimizer (Beta) | DraftKings Classic lineup builder using checked projection files. |
+| Draft Board | 2026 season projections, market ranks, and descriptive talent context. |
+| Rookie Board | Rookie hit probabilities, projections, college production, and athletic context. |
+| Daily predictions (Beta) | College basketball score predictions and exploratory market comparisons. |
+| Film Room | Short video breakdowns with written analysis. |
+| League History | Sleeper, ESPN, and Yahoo league records and manager trends. |
+| Help & Guide | Plain-language product methods, definitions, and limitations. |
 
-## Models and publication
+The checked-in manifest was last updated October 27, 2026. It points to active 2026 spread and fantasy builds for Week 8, with Week 7 as the latest grading pointer for both. The touchdown release manifest also includes Week 8. For live status, use the manifest files and `python -m publishing.cli status`; weekly status changes more often than this README.
 
-The site covers five published product families:
+The College Basketball page and release contract are implemented, but this checkout contains no published daily card manifest, so a released card was not verified locally.
 
-- **NFL spreads:** an independent margin estimate compared with the sportsbook line. The site separates the live 2026 record from the 2025 demo.
-- **Game and season totals:** a 2025 experimental game-total demo plus a separate 32-team season-win product.
-- **Weekly fantasy:** the active 2026 release is Week 6, built from one half-PPR LightGBM and locked at each game's kickoff. Week 5 has a complete postgame grade; the prediction snapshot remains immutable. The 2025 weeks 10-17 on the page are a prior-model demo.
-- **DFS optimizer:** DraftKings Classic lineups from checked direct-DK projection files. No published projection edge.
-- **Anytime TDs:** the latest live 2026 board (Week 6 Tuesday edition) plus the 2025 demo, using manually pasted US-book Yes prices. For fun. Not a proven edge.
-- **Draft and rookie analysis:** season projections, market ranks, rookie hit probabilities, and descriptive NFL and college talent scores.
+## Models and evidence
 
-Live spread and weekly-fantasy producers submit candidate files to this repository. The code in `publishing/` validates schemas, coverage, timestamps, hashes, and model versions before it creates an immutable release. The site reads those releases. The grading workflow writes results without changing the original prediction.
+The current spread product uses the Sunday-to-Tuesday market Ridge, model version `spread-v3-prod-sunday-tuesday-market-actual-starter-0c213b99e845`. Its current historical benchmark is a 2021–2025 chronological walk-forward: 251 wins and 186 losses among 437 graded HIGH picks, with 9 pushes among 446 labels (57.44% ATS; one-sided 95% Wilson lower bound 53.51%). Tuesday US median lines select HIGH at a 3-point threshold; the best captured Tuesday quote is used for display and grading. This measures historical Tuesday line performance, not closing-line value, and does not establish future profitability or a proven edge.
 
-## Codebase map
+The older 64.2% headline was retracted after a pregame feature leak. The corrected archived in-repository HIGH book is 129/238 (54.20%; Wilson lower bound 47.86%), below the roughly 52.4% break-even rate at -110. The old result and the 2026 walk-forward are different evidence sets; neither supports claiming a guaranteed or proven betting edge. See the [betting guide](betting/GUIDE.md) and [Track Record](https://joschoanalytics.streamlit.app/track-record) for methods and graded evidence.
+
+Weekly fantasy, spread predictions, and touchdown boards are released from producer candidates through `publishing/`. Validators check contracts and hashes before builds are activated. Grading is stored separately from the original prediction or projection. The site reads CSV and JSON artifacts; it does not load serialized model files.
+
+## Repository map
 
 | Path | Contents |
 |---|---|
-| `app.py` | Streamlit entrypoint and navigation. |
-| `site_pages/` | One module per visible page. |
-| `dashboard_*.py`, `mobile.py`, `theme_redesign.py` | Shared data loading, UI components, responsive styles, and site chrome. |
-| `publishing/` | Candidate validation, immutable releases, manifests, grading, rollback, and CLI commands. |
-| `data/releases/` | Published build artifacts and the active release manifest. |
-| `betting/` | Display rules, graded trackers, and Help-page calibration. |
-| `fantasy/` | Published weekly, draft, rookie, and talent CSVs. |
-| `futures/` | Published season-win projections and their evidence file. |
-| `film_room.py`, `video_content.py`, `video_breakdowns/` | Video registry and written breakdowns. |
-| `tests/` | Unit, contract, offline page-render, responsive, visual, publication, and public-boundary tests. |
-| `.github/workflows/` | CI, release grading, and board market refreshes. |
+| `app.py`, `site_pages/` | Streamlit entrypoint and lazily loaded routes. |
+| `publishing/` | Candidate validation, immutable releases, manifests, grading, rollback, and CLI. |
+| `data/releases/` | Published builds, active pointers, and grading results. |
+| `betting/`, `fantasy/`, `futures/` | Display rules, frozen/demo data, and published product artifacts. |
+| `film_room.py`, `video_content.py`, `video_breakdowns/` | Film Room registry and scripts. |
+| `tests/`, `.github/workflows/` | Offline tests, visual checks, CI, and scheduled release maintenance. |
+| `docs/` | Product contracts, historical plans, and editorial drafts. |
 
-Read [AGENTS.md](AGENTS.md) before changing production data paths. It documents the active sources, frozen files, and test contracts.
-
-## Evidence and limits
-
-Sportsbooks charge enough margin that a bettor needs about a 52.4% win rate at standard `-110` odds to break even. Backtests can overstate performance, so the site labels backtested, demo, experimental, and live results as separate evidence.
-
-I retracted the old 64.2% spread-model claim after finding a pregame feature leak. The archived in-repo HIGH book is 129/238, or 54.2017%, Wilson lower bound 47.8551%. That result does not demonstrate an edge over break-even. The current clean 2021-2025 Tuesday benchmark, scored with injury reports legal as of Tuesday 9:00 ET, is 295/521 = 56.62% ATS at the best US Tuesday number, Wilson lower bound 53.03%. The historical tickets use a 2.5-point median-line cut; their median grade was 291/521 = 55.85%, Wilson 52.25%. Starting in 2026, the Tuesday US median drives the model, pick, edge, and HIGH flag; the chosen best US Tuesday quote is displayed separately and used for grading. The superseded prior-production benchmark was 302/535 = 56.45%, Wilson 52.90%. The prior named cut of 3 was 246/442 = 55.66%, Wilson 51.75%. This is Tuesday line value, not closing-line value. The earlier 192/336 = 57.14% figure used same-week injury reports that postdate Tuesday and is withdrawn. The prior as-of 75/25 book was 155/290. The Track Record page shows the graded evidence used for current decisions.
-
-The site provides research and published outputs, not paid picks or financial advice. Sports betting involves risk.
+See [AGENTS.md](AGENTS.md) before changing production data paths. The [documentation index](docs/README.md) points to current guides and labels historical material.
 
 ## Run locally
 
@@ -86,26 +61,13 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-Streamlit serves the app at `http://localhost:8501`.
-
-Use the test dependency set for development:
+For offline tests, install `requirements-test.txt`, set `APP_OFFLINE=1`, then run:
 
 ```bash
-pip install -r requirements-test.txt
-python -m pytest tests/test_public_boundary.py tests/test_site_nav.py -q
+python -m pytest tests/test_site_nav.py tests/test_public_boundary.py -q
 ```
 
-Set `APP_OFFLINE=1` when running page tests without network access. CI uses the same offline path for dashboard coverage. The Playwright job screenshots every major route at phone, tablet, and desktop widths (`pytest tests/test_visual_regression.py`). Refresh committed baselines with `--update-visual`.
-
-## Guides
-
-- [Betting](betting/README.md)
-- [Anytime TDs](betting/anytime_td/GUIDE.md)
-- [Weekly fantasy](fantasy/GUIDE.md)
-- [Talent scores](fantasy/talent/README.md)
-- [Rookie Board](fantasy/rookie/README.md)
-- [Draft Board](fantasy/seasonal_projections/GUIDE.md)
-- [Publication system](publishing/README.md)
+The visual suite uses Playwright and Chromium. See [visual test instructions](tests/visual/README.md); screenshot baselines should be refreshed only for intentional visual changes using the documented Linux Chromium environment.
 
 ## License
 

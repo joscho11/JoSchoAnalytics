@@ -1,5 +1,7 @@
 # Week 7 spread picks: three HIGH edges after a rough 0-4
 
+> Historical editorial draft for the October 2026 Week 7 slate. The picks and records below describe that dated card, not current recommendations or release status. See the [documentation index](README.md) for current product guides.
+
 *Tennessee, Indianapolis and Houston clear the model's three-point cutoff. Last week, all four HIGH picks missed.*
 
 Last week hurt. My published Week 6 card went 2-12 against the spread, and all four HIGH picks lost. Buffalo won its game but missed -5.5 by 2.5 points. I can't call that week anything but a miss.

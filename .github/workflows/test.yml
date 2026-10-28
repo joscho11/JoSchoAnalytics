@@ -69,6 +69,18 @@ jobs:
           tests/test_publishing_pipeline.py
           tests/test_cbb_daily_contract.py
           tests/test_cbb_daily_page.py
+          tests/test_anytime_td.py
+          tests/test_attd_tracker_accounting.py
+          tests/test_first_td_strategy.py
+          tests/test_grader_anytime_td.py
+          tests/test_grader_first_td.py
+          tests/test_league_insights_view.py
+          tests/test_public_td_manifest_portability.py
+          tests/test_release_update_workflow.py
+          tests/test_sync_optimizer_projection.py
+          tests/test_td_grading_dispatch.py
+          tests/test_td_release_manifest.py
+          tests/test_team_display.py
           tests/test_visual_regression.py
 
   responsive:
@@ -151,4 +163,16 @@ jobs:
           tests/test_yahoo_adp.py
           tests/test_cbb_daily_contract.py
           tests/test_cbb_daily_page.py
+          tests/test_anytime_td.py
+          tests/test_attd_tracker_accounting.py
+          tests/test_first_td_strategy.py
+          tests/test_grader_anytime_td.py
+          tests/test_grader_first_td.py
+          tests/test_league_insights_view.py
+          tests/test_public_td_manifest_portability.py
+          tests/test_release_update_workflow.py
+          tests/test_sync_optimizer_projection.py
+          tests/test_td_grading_dispatch.py
+          tests/test_td_release_manifest.py
+          tests/test_team_display.py
           tests/test_visual_regression.py

@@ -264,38 +264,42 @@ def test_ga_beacon_does_not_block_the_render(tmp_path):
     from streamlit.testing.v1 import AppTest
 
     harness = tmp_path / "ga_harness.py"
-    harness.write_text(
-        "import sys, time, json\n"
-        f"sys.path[:0] = [r'{_ROOT}']\n"
-        "import streamlit as st\n"
-        "import dashboard_chrome as chrome\n"
-        "chrome._OFFLINE = False\n"
-        "chrome._ga_creds = lambda: ('G-TEST', 'SECRET')\n"
-        "sent = {}\n"
-        "class _Req:\n"
-        "    @staticmethod\n"
-        "    def post(url, params=None, json=None, timeout=None):\n"
-        "        time.sleep(2.0)\n"
-        "        sent.update(url=url, params=params, body=json, timeout=timeout)\n"
-        "chrome.req = _Req\n"
-        "t0 = time.perf_counter()\n"
-        "chrome.send_ga_event('page_view')\n"
-        "st.text(f'elapsed={time.perf_counter() - t0:.4f}')\n"
-        "time.sleep(2.6)\n"
-        "st.text('sent=' + json.dumps(sorted(sent)))\n"
-        "st.text('event=' + str((sent.get('body') or {}).get('events', [{}])[0].get('name')))\n"
-        "st.text('timeout=' + str(sent.get('timeout')))\n",
-        encoding="utf-8",
-    )
+    captured = tmp_path / "ga_post.json"
+    source = [
+        "import importlib.util, sys, time, json as json_lib",
+        f"sys.path[:0] = [r'{_ROOT}']",
+        "import streamlit as st",
+        f"spec = importlib.util.spec_from_file_location('dashboard_chrome_ga_test', r'{_ROOT / 'dashboard_chrome.py'}')",
+        "chrome = importlib.util.module_from_spec(spec)",
+        "spec.loader.exec_module(chrome)",
+        "chrome._OFFLINE = False",
+        "chrome._ga_creds = lambda: ('G-TEST', 'SECRET')",
+        "class _Req:",
+        "    @staticmethod",
+        "    def post(url, params=None, json=None, timeout=None):",
+        "        time.sleep(2.0)",
+        f"        with open(r'{captured}', 'w', encoding='utf-8') as stream:",
+        "            stream.write(json_lib.dumps({'url': url, 'params': params, 'body': json, 'timeout': timeout}))",
+        "chrome.req = _Req",
+        "t0 = time.perf_counter()",
+        "chrome.send_ga_event('page_view')",
+        "st.text(f'elapsed={time.perf_counter() - t0:.4f}')",
+    ]
+    harness.write_text("\n".join(source) + "\n", encoding="utf-8")
     at = AppTest.from_file(str(harness), default_timeout=120).run()
     assert not at.exception, at.exception
     texts = [str(t.value) for t in at.text]
     elapsed = float(next(t for t in texts if t.startswith("elapsed=")).split("=")[1])
     assert elapsed < 0.3, f"send_ga_event blocked the render for {elapsed:.3f}s"
     # ...and the beacon still actually goes out, with the same endpoint contract
-    assert "event=page_view" in texts, texts
-    assert "timeout=3" in texts, texts
-    assert '"body"' in next(t for t in texts if t.startswith("sent=")), texts
+    deadline = time.monotonic() + 5.0
+    while not captured.is_file() and time.monotonic() < deadline:
+        time.sleep(0.01)
+    assert captured.is_file(), "the background GA request did not finish within five seconds"
+    request = json.loads(captured.read_text(encoding="utf-8"))
+    assert request["body"]["events"][0]["name"] == "page_view"
+    assert request["timeout"] == 3
+    assert request["url"] == "https://www.google-analytics.com/mp/collect"
 
 
 def test_app_renders_clean_with_telemetry_enabled(monkeypatch, tmp_path):

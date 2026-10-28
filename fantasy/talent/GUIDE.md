@@ -1,6 +1,6 @@
 # NFL Talent Score and College Talent Score guide
 
-*Current wiring checked 2026-08-21. The shipped score artifacts remain frozen at
+*The shipped score artifacts remain frozen at
 the 2026-07-27 per-position migration. There are eight dedicated score CSVs, one
 for each NFL and college position. The Draft Board and Rookie Board read those
 files. Build code is private; this repository does not retrain talent scores.

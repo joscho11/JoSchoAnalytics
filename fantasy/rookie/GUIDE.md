@@ -1,6 +1,8 @@
 # Rookie Board guide
 
-Status: checked against the current board builder, artifacts, and site page on 2026-08-21.
+This guide describes the shipped board contract and the research evidence
+behind its hit probabilities. The page reads the checked-in board artifacts;
+it does not retrain the research model when rendered.
 
 ## 1. What I'm trying to do
 

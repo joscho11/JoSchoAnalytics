@@ -1,5 +1,7 @@
 # Week 5 high-confidence bets: Colts +2.5 leads my card
 
+> Historical editorial draft for the October 2026 Week 5 slate. The picks and records below describe that dated card, not current recommendations or release status. See the [documentation index](README.md) for current product guides.
+
 *Four HIGH picks, plus an Atlanta matchup that depends on Baltimore’s quarterback.*
 
 Indianapolis is my biggest model edge this week. The market had the Colts getting 2.5 points in Pittsburgh, while my model projected them to win by 2.23. That gives me a 4.73-point gap, the largest on my Week 5 card.

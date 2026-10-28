@@ -1,5 +1,7 @@
 # Week 6 Thursday TD Props: Luna implementation plan
 
+> Historical planning snapshot prepared October 15, 2026 for NFL Week 6. This brief records the intended work and evidence available then; it is not the current release procedure or project status. See the [documentation index](README.md), [touchdown props guide](../betting/anytime_td/GUIDE.md), and [publishing guide](../publishing/README.md) for current references.
+
 Prepared October 15, 2026, for Joseph. This document is the canonical handoff.
 Planning only: no odds releases, projections, activation, or deployment were run.
 

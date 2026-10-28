@@ -3,6 +3,7 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import sys
 from pathlib import Path
 
@@ -41,8 +42,11 @@ def v3_params(tmp_path, monkeypatch):
     return path
 
 
-def _render(tmp_path, week=None):
+def _render(tmp_path, week=None, releases_dir=None, monkeypatch=None):
     seed_week = "" if week is None else f"import streamlit as st; st.session_state['atd_week'] = {week}\n"
+    if releases_dir is not None:
+        assert monkeypatch is not None
+        monkeypatch.setattr(page, "_DIR", releases_dir)
     harness = tmp_path / "h_anytime_td.py"
     harness.write_text(
         f"import sys; sys.path[:0] = [r'{_HERE}', r'{_SITE_PAGES}']\n"
@@ -164,12 +168,36 @@ def test_week04_pit_cle_renders_all_three_markets(tmp_path):
             assert "45 of 47 settled games" in captions
 
 
-def test_week07_defaults_to_the_current_release_and_week05_history_still_renders(tmp_path):
-    at = _render(tmp_path)
+def test_defaults_to_latest_isolated_release_and_prior_week_remains_available(tmp_path, monkeypatch):
+    releases_dir = tmp_path / "isolated_td_releases"
+    bundle_dir = releases_dir / "releases" / "test_bundle"
+    bundle_dir.mkdir(parents=True)
+    manifest_entries = []
+    for week in (5, 6):
+        source_entry = page.canonical_td_releases(page._DIR)[(2026, week)]
+        csv_name = f"week{week:02d}.csv"
+        metadata_name = f"week{week:02d}.json"
+        shutil.copy2(source_entry["csv_path"], bundle_dir / csv_name)
+        shutil.copy2(source_entry["metadata_path"], bundle_dir / metadata_name)
+        manifest_entries.append({
+            "season": 2026,
+            "week": week,
+            "csv": f"releases/test_bundle/{csv_name}",
+            "metadata": f"releases/test_bundle/{metadata_name}",
+            "prediction_mode": source_entry["prediction_mode"],
+            "model_version": source_entry["model_version"],
+        })
+    (releases_dir / page.MANIFEST_NAME).write_text(
+        json.dumps({"schema_version": 1, "releases": manifest_entries}),
+        encoding="utf-8",
+    )
+
+    at = _render(tmp_path, releases_dir=releases_dir, monkeypatch=monkeypatch)
     releases = page.available_releases()
-    assert page.default_release(list(releases)) == (2026, 7)
-    assert any(w.key == "atd_week" and w.value == 7 for w in at.selectbox)
-    assert any("Week 7" in str(item.value) for item in at.markdown)
+    assert set(releases) == {(2026, 5), (2026, 6)}
+    assert page.default_release(list(releases)) == (2026, 6)
+    assert any(w.key == "atd_week" and w.value == 6 for w in at.selectbox)
+    assert any("Week 6" in str(item.value) for item in at.markdown)
 
 
 def _first_td_text(at):

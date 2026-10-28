@@ -150,6 +150,7 @@ def test_catalog_sections():
         "week-4-model-gaps-2026",
     ]
     expected_in_season = [
+        "parker-washington-2026",
         "college-basketball-preview-2026",
         "graphs-of-the-week-04",
         "graphs-of-the-week-03",

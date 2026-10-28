@@ -1,13 +1,26 @@
 # Anytime TDs
 
-The tab defaults to the latest published 2026 live comparison board. It also keeps the 2025 Weeks 10-17 demo selectable from the Year and
-Week controls.
+The tab defaults to the latest published 2026 live comparison board. It also
+keeps the 2025 Weeks 10-17 demo selectable from the Year and Week controls.
 The model compares my chance a skill player scores a rushing or receiving
 touchdown with a sportsbook Yes price. Passing touchdowns are out. The page is
 for fun, not a proven edge. Bet responsibly.
 
-Training lives in the private `td_count_model_beta` repo. This public tree only
-ships CSV.
+Training and candidate generation live in the private `td_count_model_beta`
+repo. This public tree contains frozen CSV releases, metadata, and the release
+manifest. For the current release, use the manifest at
+`betting/anytime_td/releases_manifest.json`; the site, paper tracker, and
+scheduled graders resolve releases from it. This guide was checked against the
+local files on 2026-10-28. The latest checked-in board is Week 8, with 101 rows.
+Its metadata records four unresolved pasted names and marks all First TD quote
+pools unverified. Those rows do not establish complete quote coverage.
+
+The checked Week 8 release uses `live_product_ngs_44`, model version
+`td_product_ngs_44_frozen_2025_v1` (bundle SHA-256
+`ec6171e5902a84b5986edd68adca7b8703006c8f8b57b020597dbc29fd0daac7`). Weeks
+1-3 in the manifest are retrospective reconstructions; Weeks 4-8 are live
+releases. The model bundle is frozen in the private producer. A release's
+presence on the board is not evidence of predictive accuracy or profitability.
 
 ## Canonical releases and reconstructed results
 
@@ -163,26 +176,28 @@ First TD results:
 - Nothing here is a proven edge.
 
 Why +1.0pp: +0.5pp and +1.0pp were the two thresholds fixed before the 2025
-holdout was scored. On the deployed product model +1.0pp was 1,428 bets, +117.31U,
+holdout was scored. On the 35-feature product model, +1.0pp was 1,428 bets, +117.31U,
 +8.21% ROI (-8.51% to +25.49%), against +0.5pp at 1,605 bets, +6.83% (-9.12% to
 +23.61%). Both intervals cross zero, so this is a choice between two
 indistinguishable rules, not a demonstrated edge. The season-to-date cards
 re-score every published 2026 week under the current rule, so Week 1 is now
 counted at +1.0pp.
 
-The audited 2025 DraftKings strategy artifact is
-`strategy_backtest_2025_draftkings.json`. It records the fixed +0.5pp result,
-threshold scan, controls, drawdown, and bootstrap settings for the anytime-TD
-market; it does not contain a 2+ TD backtest. The research 34-feature arm and
-the deployed 35-feature product arm are separate evidence bases: the product
-holdout is 1,605 bets, +109.6U, +6.83% ROI, with a game-block interval that
-crosses zero. The older +10.95% result belongs to the research artifact and
-must not be presented as the live-product result.
+The 2025 DraftKings results below belong to older model and evaluation
+artifacts. They are retrospective research, not a measured result for the
+current `live_product_ngs_44` release. The separate 35-feature product holdout
+also predates that NGS 44 bundle: 1,605 bets, +109.6U, +6.83% ROI, with an
+uncertainty interval that crosses zero. Neither result demonstrates a
+profitable live strategy. The historical strategy artifact
+`strategy_backtest_2025_draftkings.json` records the fixed +0.5pp threshold,
+controls, drawdown, and bootstrap settings; it contains no 2+ TD backtest.
 
-## How it scored in 2025
+## Historical 2025 research and demo results
 
-Product arm: 34 locked usage features plus that week's Sleeper half-PPR
-projection. The anytime price is not an input.
+These results were computed with the pre-NGS product/research setup: 34 locked
+usage features plus the relevant week's Sleeper half-PPR projection. The
+Anytime TD price was not an input. They describe that historical evaluation,
+not the model bundle used by current 2026 releases.
 
 | Slice | Priced rows | Result |
 |---|---:|---|
@@ -203,7 +218,7 @@ and labeled with their actual lead time. A live publish is refused once any
 game in the requested slate has started. Retrospective scoring is allowed only
 with an explicit isolated output directory and cannot write the public board.
 For Sunday slates, the expected handoff is early Sunday morning before the
-slate. The canonical input is `td_count_model_beta/live/2026_week01_<slate>.csv`
+slate. The canonical input is `td_count_model_beta/live/2026_week<week>_<slate>.csv`
 with `season`, `week`, `kickoff_et`, `snapped_at_et`, `book`, `player`, `team`,
 `opponent`, and `yes_amer`. The parser/publisher also preserves the optional
 `first_amer` and `two_plus_amer` DraftKings prices. All three are American
@@ -217,14 +232,14 @@ no-vig `book_first_p_devigged`, before the release is copied into this public
 directory. The site derives `p_first_v3` from the same frozen mass.
 
 The publisher normalizes names using the explicit alias file when needed,
-checks the Week 1 schedule, timestamps, odds, duplicates, and player-game
+checks the requested week's schedule, timestamps, odds, duplicates, and player-game
 coverage, then writes a frozen per-slate release. Unmatched pasted names are
 reported in release metadata and excluded from scoring rather than silently
 fuzzy-matched. Defense and the synthetic "No Touchdown Scorer" row are not
 skill-player predictions.
 
-Each successful slate is appended to
-`betting/anytime_td/anytime_td_2026_week01.csv`. Existing game prediction and
+Each successful slate is appended to its season and week release under
+`betting/anytime_td/`. Existing game prediction and
 price fields remain byte-for-byte frozen; changing a frozen price requires the
 explicit replacement flag and creates `replacement_audit.jsonl`. A missing
 paste leaves that slate off the board. Pregame `Hit` and scored totals stay
@@ -244,14 +259,14 @@ From `td_count_model_beta`, convert a copied DraftKings text page (or prepare
 the canonical CSV directly), then publish predictions:
 
 ```text
-python scripts/parse_draftkings_text.py <pasted-text.txt> live/2026_week01_<slate>.csv --snapped-at "YYYY-MM-DD HH:MM"
-python scripts/publish_live_week.py live/2026_week01_<slate>.csv <slate>
+python scripts/parse_draftkings_text.py <pasted-text.txt> live/2026_week<week>_<slate>.csv --snapped-at "YYYY-MM-DD HH:MM"
+python scripts/publish_live_week.py live/2026_week<week>_<slate>.csv <slate>
 ```
 
-The publisher fits the live product arm on the rebuilt historical artifact
-(the 34 locked features plus the current-week Sleeper half-PPR projection),
-scores only players quoted by that paste, and copies the cumulative CSV into
-this public directory. Attach results later through the grading workflow. The
+The private publisher uses the frozen `live_product_ngs_44` product bundle,
+scores the quoted players for that slate, and copies the cumulative CSV and
+metadata into this public directory. It does not fit a model during a live
+publish. Attach results later through the grading workflow. The
 workflow marks a game final only after the schedule has final scores and the
 player-stat feed covers both teams (or every quoted player); otherwise its rows
 remain pending rather than being backfilled with zeros. After a matchup is
