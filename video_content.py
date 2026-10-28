@@ -501,4 +501,13 @@ VIDEOS = [
         "tiktok_url": "https://www.tiktok.com/@joschoanalytics/video/7701378201070734623",
         "video_id": "7701378201070734623",
     },
+    {
+        "slug": "jahmyr-gibbs-rigging-fantasy",
+        "title": "Jahmyr Gibbs Is Rigging Fantasy!",
+        "subtitle": "2026 · RB, Detroit Lions",
+        "date": "2026-10-28",
+        "section": "in-season",
+        "tiktok_url": "https://www.tiktok.com/@joschoanalytics/video/7701509163825794334",
+        "video_id": "7701509163825794334",
+    },
 ]
