@@ -492,4 +492,13 @@ VIDEOS = [
         "tiktok_url": "https://www.tiktok.com/@joschoanalytics/video/7700046705084927262",
         "video_id": "7700046705084927262",
     },
+    {
+        "slug": "graphs-of-the-week-05",
+        "title": "Graphs of the Week 05: NFL Week 7",
+        "subtitle": "2026 · Week 7 · NFL graphs + NBA bonus",
+        "date": "2026-10-27",
+        "section": "in-season",
+        "tiktok_url": "https://www.tiktok.com/@joschoanalytics/video/7701378201070734623",
+        "video_id": "7701378201070734623",
+    },
 ]
