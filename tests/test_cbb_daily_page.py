@@ -59,7 +59,7 @@ def _utc(hour: float, day: date = DAY) -> str:
     return local.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def _row(index: int, game: tuple, *, lines: bool, day: date = DAY) -> dict:
+def _row(index: int, game: tuple, *, lines: bool, day: date = DAY, catch_up: bool = False) -> dict:
     home, away, margin, total, spread, tip, neutral = game
     home_score, away_score = (total + margin) / 2, (total - margin) / 2
     row = {column: "" for column in CARD_COLUMNS + OPTIONAL_CARD_COLUMNS}
@@ -75,7 +75,13 @@ def _row(index: int, game: tuple, *, lines: bool, day: date = DAY) -> dict:
         "predicted_winner": "home" if margin > 0 else "away", "home_win_probability": round(1 / (1 + math.exp(-0.18 * margin)), 6),
         "prediction_at_utc": _utc(8.3333, day), "prediction_run_hash": "pred", **HASHES,
     })
-    if lines and spread is not None:
+    if lines and spread is not None and catch_up:
+        row.update({
+            "market_home_spread": spread, "market_home_margin": -spread, "provider_count": 5, "market_status": "late_available",
+            "model_edge": "", "ats_pick": "no_play_late_snapshot", "ats_status": "late_not_graded",
+            "line_retrieved_at_utc": _utc(9.5, day), "decision_time_utc": _utc(9.5, day), "ats_card_run_hash": "",
+        })
+    elif lines and spread is not None:
         edge = row["predicted_margin"] + spread
         pick = "home" if edge >= 8.5 else ("away" if edge <= -8.5 else "no_play_below_threshold")
         row.update({
@@ -93,11 +99,11 @@ def _row(index: int, game: tuple, *, lines: bool, day: date = DAY) -> dict:
 
 
 def _publish_card(root: Path, *, lines: bool, games=GAMES, day: date = DAY, status: str | None = None, name: str = "card.csv", coverage: dict | None = None,
-                  top25: dict | None = PRESEASON, extras: bool = True) -> dict:
+                  top25: dict | None = PRESEASON, extras: bool = True, catch_up: bool = False, mixed: bool = False) -> dict:
     """Publish a card. ``extras=False`` writes the older card shape: no conference or rank columns, no ``top25``."""
-    rows = [_row(i + 1, game, lines=lines, day=day) for i, game in enumerate(games)]
+    rows = [_row(i + 1, game, lines=lines, day=day, catch_up=catch_up or (mixed and i == 1)) for i, game in enumerate(games)]
     if status is None:
-        status = "official" if any(r["market_status"] == "available" for r in rows) else "unavailable"
+        status = "mixed" if mixed else "catch_up" if catch_up and any(r["market_status"] == "late_available" for r in rows) else "official" if any(r["market_status"] == "available" for r in rows) else "unavailable"
     root.mkdir(parents=True, exist_ok=True)
     artifact = root / f"{day.isoformat()}-{name}"
     pd.DataFrame(rows, columns=CARD_COLUMNS + (OPTIONAL_CARD_COLUMNS if extras else ())).to_csv(artifact, index=False, lineterminator="\n")
@@ -110,6 +116,8 @@ def _publish_card(root: Path, *, lines: bool, games=GAMES, day: date = DAY, stat
     }
     if extras:
         metadata["top25"] = top25
+    if catch_up or mixed:
+        metadata["line_retrieved_at_utc"] = _utc(9.5, day)
     if coverage is not None:
         metadata["coverage"] = coverage
     return publish_card_candidate(artifact, metadata, root=root)
@@ -305,6 +313,36 @@ def test_cbb_page_predictions_only_shows_team_names(tmp_path, render):
     assert not re.search(r"\b(HOME|AWAY)\b", text)
     assert "ATS plays are shown" not in text and _expander_labels(at) == [HOWTO]
     assert "All games on this card" not in text and "model edge" not in text.lower()
+
+
+def test_catch_up_spreads_are_visible_but_never_shown_as_picks(tmp_path, render):
+    _publish_card(tmp_path, lines=True, catch_up=True)
+    at = render()
+    assert not at.error, [error.value for error in at.error]
+    by_view = _across_views(at, _card_lines)
+    lines = {line for found in by_view.values() for line in found}
+    assert "Line: Kansas -3.25 · recovery snapshot" in lines
+    assert "Line: Michigan State -3 · recovery snapshot" in lines
+    assert "No line yet" in lines
+    text = "\n".join(_across_views(at, _all_text).values())
+    assert "Recovery spreads are shown for context only and are not scored." in text
+    assert not _pick_cards(at) and not _badges(at)
+    assert "Shadow pick" not in text and "model gap" not in text.lower()
+    assert any("captured Mon Nov 2, 9:30 AM ET" in str(c.value) and "not graded" in str(c.value) for c in at.caption)
+
+
+def test_mixed_card_preserves_official_picks_and_shows_recovery_context(tmp_path, render):
+    _publish_card(tmp_path, lines=True, mixed=True)
+    at = render()
+    assert not at.error, [error.value for error in at.error]
+    lines = {line for found in _across_views(at, _card_lines).values() for line in found}
+    assert "Line: Kansas -3.25 · Gap 0.95 toward Kansas" in lines
+    assert "Line: UCLA -3.5 · recovery snapshot" in lines
+    text = "\n".join(_across_views(at, _all_text).values())
+    assert "Recovery spreads are shown for context only and are not scored." in text
+    assert any("captured Mon Nov 2, 9:30 AM ET" in str(c.value) for c in at.caption)
+    assert any(metric.label == "Season shadow record" for metric in at.metric)
+    assert not any("UCLA" in pick or "Oregon" in pick for pick in _pick_cards(at))
 
 
 def test_rejected_snapshot_notice_names_the_reason(tmp_path, render):

@@ -5,7 +5,7 @@ winner and win probability for each game. A "View" menu shows the day's games as
 the AP Top 25 or one conference at a time (a game between two conferences is in
 both), largest gap between the model and the line first. The 8.5-point ATS shadow
 policy sits below the games, labeled exploratory. It has plays only on days whose
-card metadata says ``line_snapshot_status == "official"``.
+card metadata says the row is ``available`` under an official or mixed snapshot.
 """
 from __future__ import annotations
 
@@ -410,6 +410,14 @@ def _line_row(row: pd.Series, game: dict, threshold: float) -> str:
     favored. The line names whichever team it favors, and the gap (``model_edge``, positive toward
     the home team) names the team the model leans to relative to the line.
     """
+    if _flag(row.get("_has_late_line")):
+        spread = float(row["market_home_spread"])
+        if abs(spread) < 1e-9:
+            line = "Line: pick'em"
+        else:
+            favored = game["home"] if spread < 0 else game["away"]
+            line = f"Line: {_md(favored)} {_format_spread(-abs(spread))}"
+        return f"{line} · recovery snapshot"
     if not _flag(row.get("_has_line")):
         return "No line yet"
     spread, edge = float(row["market_home_spread"]), float(row["model_edge"])
@@ -456,16 +464,17 @@ def _conference_names(card: pd.DataFrame, column: str) -> pd.Series:
     return card[column].astype("string").fillna("").str.strip().astype(object)
 
 
-def _prepare(card: pd.DataFrame, official: bool, conference_order: dict) -> pd.DataFrame:
+def _prepare(card: pd.DataFrame, official: bool, conference_order: dict, catch_up: bool = False) -> pd.DataFrame:
     """The card plus helper columns: who has a line and the gap, tip time, AP ranks, and each team's conference group.
 
-    A line counts only on an official-snapshot day, so a card whose metadata lost its status
-    shows no lines, no gaps and no plays.
+    Official rows can carry gaps and picks. Recovery rows can show spread context only. A card
+    whose metadata lost its status shows no lines, no gaps and no plays.
     """
     games = card.copy()
     edge = pd.to_numeric(games["model_edge"], errors="coerce")
     spread = pd.to_numeric(games["market_home_spread"], errors="coerce")
     games["_has_line"] = bool(official) & games["market_status"].astype(str).eq("available") & edge.notna() & spread.notna()
+    games["_has_late_line"] = bool(catch_up) & games["market_status"].astype(str).eq("late_available") & spread.notna()
     games["_gap"] = edge.abs().where(games["_has_line"])
     games["_tip"] = pd.to_datetime(games["tipoff_utc"], utc=True, errors="coerce")
     aliases = conference_order["aliases"] if conference_order["available"] else {}
@@ -597,11 +606,13 @@ def _render_day(selected: str, card: pd.DataFrame, metadata: dict, state: dict, 
             st.metric("Games finished", f"{summary['games']} of {len(card)}", border=True)
             st.metric("Winner picks correct", f"{summary['correct']} of {summary['games']}", f"{summary['winner_rate']:.0%}", delta_color="gray", delta_arrow="off", border=True)
 
-    official = str(metadata.get("line_snapshot_status") or "") == "official"
+    snapshot_status = str(metadata.get("line_snapshot_status") or "")
+    official = snapshot_status in {"official", "mixed"}
+    catch_up = snapshot_status in {"catch_up", "mixed"}
     threshold = float(metadata.get("threshold", THRESHOLD))
     top25 = metadata.get("top25")
     conference_order = cbb_daily_data.load_conference_order()
-    games = _prepare(card, official, conference_order)
+    games = _prepare(card, official, conference_order, catch_up)
     options = _view_options(games, conference_order)
     views = [view for view, _ in options]
     labels = {view: f"{view} ({_plural(count, 'game', 'games')})" for view, count in options}
@@ -611,8 +622,12 @@ def _render_day(selected: str, card: pd.DataFrame, metadata: dict, state: dict, 
     view = st.selectbox("View", views, format_func=labels.__getitem__, key=VIEW_KEY, filter_mode=None, disabled=bool(query))
     with notes:
         st.caption(_view_caption(top25, conference_order))
-        if games["_has_line"].any():
+        if games["_has_line"].any() and games["_has_late_line"].any():
+            st.caption(f"Official lines are listed by gap. Recovery spreads captured {_format_stamp(metadata.get('line_retrieved_at_utc'))} are shown for context only and are not graded. Games without a line follow, by tip time.")
+        elif games["_has_line"].any():
             st.caption("Games are listed by gap: how far the model's predicted margin is from the sportsbook line, largest first. Games with no line follow, by tip time.")
+        elif games["_has_late_line"].any():
+            st.caption(f"Recovery spreads captured {_format_stamp(metadata.get('line_retrieved_at_utc'))} are shown for context only and are not graded. Games are listed by tip time.")
         else:
             st.caption("No sportsbook line is available for this date, so games are listed by tip time.")
 
@@ -687,9 +702,13 @@ def _render_ats_shadow(card: pd.DataFrame, metadata: dict, results: pd.DataFrame
         f"differ by {threshold:g} points or more. The model never sees the spread. This is a research experiment, not betting advice, "
         "and it did not pass its own 2026 test."
     )
-    if status != "official":
+    if status == "mixed":
+        st.info("Recovery spreads are shown for context only and are not scored.")
+    elif status != "official":
         if status == "rejected":
             st.info(f"{NO_SNAPSHOT_NOTICE} The snapshot we collected did not pass our checks.")
+        elif status == "catch_up":
+            st.info("Recovery spreads are shown for context only and are not scored.")
         else:
             st.info(NO_SNAPSHOT_NOTICE)
         return

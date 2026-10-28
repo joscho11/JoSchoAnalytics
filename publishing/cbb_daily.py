@@ -23,7 +23,7 @@ THRESHOLD = 8.5
 # v2 makes predictions the product: a card is valid with no sportsbook line at all.
 # Metadata carries `line_snapshot_status` so the page can say why no ATS plays show.
 CARD_SCHEMA_VERSION = "cbb_daily_card_v2"
-LINE_SNAPSHOT_STATUSES = frozenset({"official", "unavailable", "rejected"})
+LINE_SNAPSHOT_STATUSES = frozenset({"official", "catch_up", "mixed", "unavailable", "rejected"})
 MODEL_HASH = "f83da7ac2015f8c23dfa41d52d5a2b1325ec0a7cad3e3b03e53bc2c957d27800"
 FEATURE_HASH = "c08adcfed32f497bf98dbea61b203bb2df5d5a5b0554f02b135cd7b3eb1bf89f"
 BENCHMARK_HASH = "7b038b0e82196fe88d5bd4c57b5834f7c7d3f3d3df5d50a31f5c7ac4284b2930"
@@ -282,6 +282,8 @@ def validate_card_candidate(artifact: str | Path, metadata: str | Path | dict) -
     if len(frame) == 0:
         if meta["status"] != "no_games_scheduled":
             raise PublicationError("empty CBB daily card must be marked no_games_scheduled")
+        if snapshot_status in {"catch_up", "mixed"}:
+            raise PublicationError(f"empty CBB daily card cannot use line_snapshot_status {snapshot_status!r}")
         return {"metadata": meta, "frame": frame, "artifact_sha256": digest}
     if meta["status"] != "published":
         raise PublicationError("nonempty CBB daily card must be marked published")
@@ -298,13 +300,12 @@ def validate_card_candidate(artifact: str | Path, metadata: str | Path | dict) -
         raise PublicationError("CBB score, margin, and total are incoherent")
     _validate_timestamp_column(frame, "prediction_at_utc")
     available = frame["market_status"].astype(str).eq("available")
+    late_available = frame["market_status"].astype(str).eq("late_available")
     missing_line = frame["market_status"].astype(str).eq("missing_line")
-    if not (available | missing_line).all():
+    if not (available | late_available | missing_line).all():
         raise PublicationError("unknown CBB market_status")
-    # A card whose rows are all `missing_line` is a valid predictions-only card. The
-    # snapshot status must agree with the rows: "official" if and only if at least
-    # one game carries an available (validated, pre-tip, 08:45-09:00 ET) line.
-    if snapshot_status != "official" and available.any():
+    # Official rows can carry ATS picks. Recovery rows carry spreads for context only.
+    if snapshot_status not in {"official", "mixed"} and available.any():
         raise PublicationError(f"a CBB card with line_snapshot_status {snapshot_status!r} must not contain available lines")
     if snapshot_status == "official" and not available.any():
         raise PublicationError("an official CBB line snapshot requires at least one available line")
@@ -325,6 +326,35 @@ def validate_card_candidate(artifact: str | Path, metadata: str | Path | dict) -
             local_time = local.time().replace(tzinfo=None)
             if local.date().isoformat() != str(meta["game_date_et"]) or not (datetime.min.time().replace(hour=8, minute=45) <= local_time <= datetime.min.time().replace(hour=9, minute=0)) or retrieved >= tipoff.to_pydatetime():
                 raise PublicationError("CBB line capture must be official 08:45–09:00 ET and pre-tip")
+    if late_available.any():
+        # A delayed model prediction can use a still-valid 08:45–09:00 snapshot as context;
+        # these rows remain no-play even when the line itself was captured in the official window.
+        if snapshot_status not in {"catch_up", "mixed"} or (snapshot_status == "catch_up" and available.any()):
+            raise PublicationError("recovery spreads require catch_up status and cannot mix with official ATS lines")
+        spread = pd.to_numeric(frame.loc[late_available, "market_home_spread"], errors="coerce")
+        margin = pd.to_numeric(frame.loc[late_available, "market_home_margin"], errors="coerce")
+        providers = pd.to_numeric(frame.loc[late_available, "provider_count"], errors="coerce")
+        edge = pd.to_numeric(frame.loc[late_available, "model_edge"], errors="coerce")
+        if spread.isna().any() or margin.isna().any() or providers.isna().any() or not np.isfinite(spread).all() or not np.isfinite(margin).all() or not np.isfinite(providers).all() or (providers < 1).any():
+            raise PublicationError("recovery spreads must have finite lines and provider counts")
+        if not np.allclose(margin, -spread, atol=1e-6) or edge.notna().any():
+            raise PublicationError("recovery spreads cannot carry ATS edges")
+        if frame.loc[late_available, "ats_pick"].astype(str).ne("no_play_late_snapshot").any() or frame.loc[late_available, "ats_status"].astype(str).ne("late_not_graded").any():
+            raise PublicationError("recovery spreads must be marked as not graded")
+        if frame.loc[late_available, "ats_card_run_hash"].fillna("").astype(str).str.strip().ne("").any():
+            raise PublicationError("recovery spreads cannot reference an ATS card")
+        line_times = _validate_timestamp_column(frame.loc[late_available], "line_retrieved_at_utc")
+        for retrieved, tipoff in zip(line_times, tip.loc[late_available]):
+            local = retrieved.astimezone(ET)
+            local_time = local.time().replace(tzinfo=None)
+            if local.date().isoformat() != str(meta["game_date_et"]) or not (datetime.min.time().replace(hour=8, minute=45) <= local_time <= datetime.min.time().replace(hour=11, minute=0)) or retrieved >= tipoff.to_pydatetime():
+                raise PublicationError("recovery spread capture must be 08:45–11:00 ET and pre-tip")
+    if snapshot_status == "catch_up" and not late_available.any():
+        raise PublicationError("a catch_up CBB card requires at least one recovery spread")
+    if snapshot_status == "mixed" and (not available.any() or not late_available.any()):
+        raise PublicationError("a mixed CBB card requires both official lines and recovery spreads")
+    if snapshot_status not in {"official", "catch_up", "mixed"} and (available | late_available).any():
+        raise PublicationError(f"a CBB card with line_snapshot_status {snapshot_status!r} must not contain spreads")
     if missing_line.any() and frame.loc[missing_line, "ats_status"].astype(str).eq("line_unavailable").eq(False).any():
         raise PublicationError("missing-line rows must be marked line_unavailable")
     return {"metadata": meta, "frame": frame, "artifact_sha256": digest}

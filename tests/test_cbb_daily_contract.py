@@ -65,6 +65,17 @@ def _unlined_row(game_id: str = "g2", **overrides) -> dict:
     return row
 
 
+def _late_row(game_id: str = "g1", **overrides) -> dict:
+    row = _lined_row(game_id)
+    row.update({
+        "market_status": "late_available", "model_edge": "", "ats_pick": "no_play_late_snapshot",
+        "ats_status": "late_not_graded", "line_retrieved_at_utc": "2026-11-02T14:30:00Z",
+        "decision_time_utc": "2026-11-02T14:30:00Z", "ats_card_run_hash": "",
+    })
+    row.update(overrides)
+    return row
+
+
 def _card(tmp_path: Path, rows: list[dict], *, line_snapshot_status: str | None = "official", name: str = "card.csv", columns=None, **meta):
     """Write a card. Rows carry the optional conference and rank columns unless ``columns`` names another set."""
     artifact = tmp_path / name
@@ -90,7 +101,7 @@ def _empty_candidate(tmp_path: Path, line_snapshot_status: str = "unavailable"):
 
 def test_card_schema_version_is_pinned_to_v2():
     assert CARD_SCHEMA_VERSION == "cbb_daily_card_v2"
-    assert LINE_SNAPSHOT_STATUSES == {"official", "unavailable", "rejected"}
+    assert LINE_SNAPSHOT_STATUSES == {"official", "catch_up", "mixed", "unavailable", "rejected"}
 
 
 def test_no_game_card_is_valid_and_publishable(tmp_path):
@@ -102,10 +113,17 @@ def test_no_game_card_is_valid_and_publishable(tmp_path):
     assert cbb_status(root=tmp_path)["latest_date"] == "2026-11-02"
 
 
-@pytest.mark.parametrize("status", sorted(LINE_SNAPSHOT_STATUSES))
+@pytest.mark.parametrize("status", sorted(LINE_SNAPSHOT_STATUSES - {"catch_up", "mixed"}))
 def test_empty_card_accepts_every_snapshot_status(tmp_path, status):
     artifact, metadata = _empty_candidate(tmp_path, status)
     assert validate_card_candidate(artifact, metadata)["frame"].empty
+
+
+@pytest.mark.parametrize("status", ["catch_up", "mixed"])
+def test_empty_card_rejects_snapshot_statuses_that_require_lines(tmp_path, status):
+    artifact, metadata = _empty_candidate(tmp_path, status)
+    with pytest.raises(PublicationError, match="empty CBB daily card cannot use line_snapshot_status"):
+        validate_card_candidate(artifact, metadata)
 
 
 def test_exact_threshold_card_is_valid(tmp_path):
@@ -134,6 +152,38 @@ def test_official_card_may_carry_games_without_a_line(tmp_path):
     rows = [_lined_row("g1"), _unlined_row("g2", home_team="Early", away_team="Tip", home_team_id="h2", away_team_id="a2")]
     artifact, metadata = _card(tmp_path, rows, line_snapshot_status="official")
     assert validate_card_candidate(artifact, metadata)["frame"]["market_status"].tolist() == ["available", "missing_line"]
+
+
+def test_catch_up_card_carries_spreads_without_shadow_picks(tmp_path):
+    artifact, metadata = _card(tmp_path, [_late_row()], line_snapshot_status="catch_up")
+    checked = validate_card_candidate(artifact, metadata)
+    row = checked["frame"].iloc[0]
+    assert row["market_status"] == "late_available"
+    assert row["ats_pick"] == "no_play_late_snapshot" and row["ats_status"] == "late_not_graded"
+    assert pd.isna(pd.to_numeric(row["model_edge"], errors="coerce"))
+
+
+def test_mixed_card_keeps_official_picks_and_unscored_recovery_spreads(tmp_path):
+    artifact, metadata = _card(tmp_path, [_lined_row("official-game"), _late_row("recovered-game")], line_snapshot_status="mixed")
+    checked = validate_card_candidate(artifact, metadata)
+    assert checked["frame"]["market_status"].tolist() == ["available", "late_available"]
+    entry = publish_card_candidate(artifact, metadata, root=tmp_path / "published")
+    frame, saved_meta, _ = load_cbb_card("2026-11-02", root=tmp_path / "published")
+    assert entry["status"] == "published" and saved_meta["line_snapshot_status"] == "mixed"
+    assert frame.loc[0, "ats_pick"] == "home"
+    assert frame.loc[1, "ats_pick"] == "no_play_late_snapshot" and frame.loc[1, "ats_status"] == "late_not_graded"
+
+
+@pytest.mark.parametrize("overrides", [
+    {"line_retrieved_at_utc": "2026-11-02T13:00:00Z", "decision_time_utc": "2026-11-02T13:00:00Z"},
+    {"line_retrieved_at_utc": "2026-11-02T16:01:00Z", "decision_time_utc": "2026-11-02T16:01:00Z"},
+    {"tipoff_utc": "2026-11-02T14:30:00Z"},
+    {"ats_pick": "home", "ats_status": "candidate"},
+])
+def test_invalid_catch_up_spreads_are_rejected(tmp_path, overrides):
+    artifact, metadata = _card(tmp_path, [_late_row(**overrides)], line_snapshot_status="catch_up")
+    with pytest.raises(PublicationError):
+        validate_card_candidate(artifact, metadata)
 
 
 @pytest.mark.parametrize("status", ["unavailable", "rejected"])
@@ -262,6 +312,31 @@ def test_results_for_no_line_card_are_no_play(tmp_path):
         lying.to_csv(lying_path, index=False, lineterminator="\n")
         with pytest.raises(PublicationError, match="does not match the source card pick"):
             publish_result_candidate(lying_path, _results_metadata(card_entry, lying_path, 1), root=tmp_path)
+
+
+def test_mixed_recovery_spread_cannot_enter_the_graded_record(tmp_path):
+    artifact, metadata = _card(tmp_path, [_lined_row("official"), _late_row("recovery")], line_snapshot_status="mixed")
+    card_entry = publish_card_candidate(artifact, metadata, root=tmp_path)
+    results = pd.DataFrame([
+        {"game_id": "official", "game_date_et": "2026-11-02", "home_score": 82, "away_score": 70,
+         "actual_home_margin": 12, "actual_cover_margin": 10.5, "ats_result": "win",
+         "finalized_at_utc": "2026-11-03T03:00:00Z", "source_card_build_id": card_entry["build_id"]},
+        {"game_id": "recovery", "game_date_et": "2026-11-02", "home_score": 82, "away_score": 70,
+         "actual_home_margin": 12, "actual_cover_margin": "", "ats_result": "no_play",
+         "finalized_at_utc": "2026-11-03T03:00:00Z", "source_card_build_id": card_entry["build_id"]},
+    ], columns=RESULT_COLUMNS)
+    result_path = tmp_path / "mixed-results.csv"
+    results.to_csv(result_path, index=False, lineterminator="\n")
+    published = publish_result_candidate(result_path, _results_metadata(card_entry, result_path, 2), root=tmp_path)
+    stored = load_cbb_results("2026-11-02", root=tmp_path)
+    assert published["build_id"].startswith("cbb-results-2026-11-02-")
+    assert len(stored) == 2
+    assert stored.set_index("game_id").loc["recovery", "ats_result"] == "no_play"
+    results.loc[results["game_id"] == "recovery", "ats_result"] = "win"
+    lying_path = tmp_path / "mixed-results-win.csv"
+    results.to_csv(lying_path, index=False, lineterminator="\n")
+    with pytest.raises(PublicationError, match="does not match the source card pick"):
+        publish_result_candidate(lying_path, _results_metadata(card_entry, lying_path, 2), root=tmp_path)
 
 
 def test_card_rollback_pointer_still_works_for_a_predictions_only_correction(tmp_path):
