@@ -1,0 +1,766 @@
+{
+  "artifact_name": "projections_2026_week08.csv",
+  "artifact_sha256": "125d3dce28206cec8d186c436103d9c12a8aab5d897eb119117b506c8ef3f3b1",
+  "expected_gsis_id_sha256": "efac67c20e7b3fdd373add71a8c340b9f0b2f4b6732fe63e8168e36ad92a004a",
+  "expected_player_ids_sha256": "08bb76a161a43762c187a7dd49d8d53b78695210257331908112dcd41005105b",
+  "expected_rows": 366,
+  "expected_sleeper_id_sha256": "43bc835c72e37e0edb7f3c70169a8fc678f95bde9043eb9c041ad0a118abc4c4",
+  "expected_teams": [
+    "ARI",
+    "ATL",
+    "BAL",
+    "BUF",
+    "CAR",
+    "CHI",
+    "CIN",
+    "CLE",
+    "DAL",
+    "DEN",
+    "DET",
+    "GB",
+    "IND",
+    "JAX",
+    "KC",
+    "LA",
+    "LAC",
+    "LV",
+    "MIA",
+    "MIN",
+    "NE",
+    "NYJ",
+    "PHI",
+    "PIT",
+    "SEA",
+    "TB",
+    "TEN",
+    "WAS"
+  ],
+  "identity_aliases": [
+    "gsis_id",
+    "sleeper_id"
+  ],
+  "legacy_bootstrap": false,
+  "manual_qb_assumptions": [
+    {
+      "as_of_utc": "2026-10-27T18:00:00Z",
+      "game_id": "2026_08_BAL_BUF",
+      "player_id": "00-0034796",
+      "player_name": "Lamar Jackson",
+      "reason": "Joseph assumes Lamar plays; Sleeper lists Out; Jackson/Huntley 50/50 per qb_manual_uncertain",
+      "reported_injury_status": "Questionable",
+      "source": "user_manual_override",
+      "team": "BAL"
+    }
+  ],
+  "model_version": "weekly-fantasy-v2-l1_wipe_prior_share_ranks-ad79f409f0b3",
+  "position_counts": {
+    "QB": 28,
+    "RB": 94,
+    "TE": 96,
+    "WR": 148
+  },
+  "produced_at": "2026-10-29T16:25:57Z",
+  "product": "fantasy",
+  "release_review": {
+    "added": [
+      {
+        "player_display_name": "Jaydon Blue",
+        "player_id": "00-0040586",
+        "position": "RB",
+        "team": "PHI"
+      },
+      {
+        "player_display_name": "Nicholas Singleton",
+        "player_id": "00-0040886",
+        "position": "RB",
+        "team": "TEN"
+      },
+      {
+        "player_display_name": "Cam Grandy",
+        "player_id": "00-0039631",
+        "position": "TE",
+        "team": "CIN"
+      },
+      {
+        "player_display_name": "Dont'e Thornton Jr.",
+        "player_id": "00-0040581",
+        "position": "WR",
+        "team": "LV"
+      }
+    ],
+    "baseline_build_id": "fantasy-2026w08-4ca7131976bc",
+    "changed_common_players": 263,
+    "largest_changes": [
+      {
+        "change": -2.0618007390764905,
+        "player_display_name": "Emanuel Wilson",
+        "player_id": "00-0038797",
+        "position": "RB",
+        "projected_pts_thursday": 8.386500328608573,
+        "projected_pts_tuesday": 10.448301067685064
+      },
+      {
+        "change": -1.9514736350574236,
+        "player_display_name": "Braelon Allen",
+        "player_id": "00-0039794",
+        "position": "RB",
+        "projected_pts_thursday": 12.299450191300016,
+        "projected_pts_tuesday": 14.25092382635744
+      },
+      {
+        "change": -1.5268872879623823,
+        "player_display_name": "Zonovan Knight",
+        "player_id": "00-0037157",
+        "position": "RB",
+        "projected_pts_thursday": 4.988963342795396,
+        "projected_pts_tuesday": 6.515850630757778
+      },
+      {
+        "change": -1.5082710269784947,
+        "player_display_name": "Makai Lemon",
+        "player_id": "00-0040867",
+        "position": "WR",
+        "projected_pts_thursday": 4.248000716323811,
+        "projected_pts_tuesday": 5.756271743302306
+      },
+      {
+        "change": -1.5081519907688934,
+        "player_display_name": "Tyler Allgeier",
+        "player_id": "00-0037263",
+        "position": "RB",
+        "projected_pts_thursday": 3.84361534577444,
+        "projected_pts_tuesday": 5.351767336543333
+      },
+      {
+        "change": -1.495227186865133,
+        "player_display_name": "Kyle Monangai",
+        "player_id": "00-0040236",
+        "position": "RB",
+        "projected_pts_thursday": 6.213695530945617,
+        "projected_pts_tuesday": 7.70892271781075
+      },
+      {
+        "change": -1.4660516047501466,
+        "player_display_name": "George Holani",
+        "player_id": "00-0039299",
+        "position": "RB",
+        "projected_pts_thursday": 1.6612478989464137,
+        "projected_pts_tuesday": 3.1272995036965603
+      },
+      {
+        "change": -1.4271129841540213,
+        "player_display_name": "Will Mallory",
+        "player_id": "00-0038394",
+        "position": "TE",
+        "projected_pts_thursday": 0.0829130560687298,
+        "projected_pts_tuesday": 1.5100260402227512
+      },
+      {
+        "change": -1.406820700440301,
+        "player_display_name": "Breece Hall",
+        "player_id": "00-0038120",
+        "position": "RB",
+        "projected_pts_thursday": 10.35144521753271,
+        "projected_pts_tuesday": 11.758265917973011
+      },
+      {
+        "change": -1.2403781759601271,
+        "player_display_name": "Calvin Ridley",
+        "player_id": "00-0034837",
+        "position": "WR",
+        "projected_pts_thursday": 1.4768911820923338,
+        "projected_pts_tuesday": 2.717269358052461
+      },
+      {
+        "change": 1.162182501271583,
+        "player_display_name": "Jeremiyah Love",
+        "player_id": "00-0041027",
+        "position": "RB",
+        "projected_pts_thursday": 6.963849989309538,
+        "projected_pts_tuesday": 5.801667488037955
+      },
+      {
+        "change": 1.1608713421456986,
+        "player_display_name": "Lamar Jackson",
+        "player_id": "00-0034796",
+        "position": "QB",
+        "projected_pts_thursday": 16.44069794639727,
+        "projected_pts_tuesday": 15.27982660425157
+      },
+      {
+        "change": -1.1480527593273104,
+        "player_display_name": "Kene Nwangwu",
+        "player_id": "00-0036842",
+        "position": "RB",
+        "projected_pts_thursday": 0.5336035738296643,
+        "projected_pts_tuesday": 1.6816563331569747
+      },
+      {
+        "change": -1.1204519715543473,
+        "player_display_name": "D'Andre Swift",
+        "player_id": "00-0036275",
+        "position": "RB",
+        "projected_pts_thursday": 11.1570381306763,
+        "projected_pts_tuesday": 12.277490102230647
+      },
+      {
+        "change": -1.0585761243167209,
+        "player_display_name": "Rashee Rice",
+        "player_id": "00-0039067",
+        "position": "WR",
+        "projected_pts_thursday": 7.527807699266676,
+        "projected_pts_tuesday": 8.586383823583397
+      }
+    ],
+    "policy": "refresh all future-game projections on requested updates, normally Tue/Thu/Sun",
+    "public_note": "Thursday full projection refresh uses fresh Sleeper projections and player statuses with the frozen model and Tuesday market. Baltimore QB remains Lamar Jackson assumed to play under the reviewed user override; the reported Sleeper status is preserved.",
+    "removed": [
+      {
+        "player_display_name": "Dameon Pierce",
+        "player_id": "00-0037258",
+        "position": "RB",
+        "team": "PHI"
+      },
+      {
+        "player_display_name": "Audric Estime",
+        "player_id": "00-0039373",
+        "position": "RB",
+        "team": "CLE"
+      },
+      {
+        "player_display_name": "Emari Demercado",
+        "player_id": "00-0038705",
+        "position": "RB",
+        "team": "DAL"
+      },
+      {
+        "player_display_name": "Erick All Jr.",
+        "player_id": "00-0039814",
+        "position": "TE",
+        "team": "CIN"
+      }
+    ],
+    "rows_after": 366,
+    "rows_before": 366,
+    "season": 2026,
+    "source_hashes": {
+      "directory": "83f0b60e0e95d8b9e485b9f7f0b7b06f3b90f681c60c50896bd1285005a170bf",
+      "projections": "94a5fc7681623b956c983a0b06fe76f1dfd6b868bab8e656ffa62f33799be6b3",
+      "qb_overrides": "09bd872b28a77fd3540d3e9d20ea13e823cd2bdf6a88af7d67de828825478e5c",
+      "tuesday_market": "3520430ad9d1a333867d03d018f7e24c2badc968e2013f777f27f3da8dd125d8"
+    },
+    "source_requested_utc": "2026-10-29T16:22:39Z",
+    "staleness_gate": {
+      "applicable": true,
+      "build_week": 8,
+      "checks": [
+        {
+          "limit": 0.0170863309352518,
+          "name": "prior_season_only_share",
+          "note": "passed via approved 2026 Week 8 exception; see exception block",
+          "passed": true,
+          "value": 0.03814713896457766
+        },
+        {
+          "limit": 0.0170863309352518,
+          "name": "stale_gap_share",
+          "note": "passed via approved 2026 Week 8 exception; see exception block",
+          "passed": true,
+          "value": 0.03814713896457766
+        },
+        {
+          "limit": 10.0,
+          "name": "median_days_since_last_game",
+          "passed": true,
+          "value": 7.0
+        },
+        {
+          "limit": 2,
+          "name": "days_rest_not_constant",
+          "passed": true,
+          "value": 8
+        },
+        {
+          "limit": 7,
+          "name": "player_stats_covers_week_7",
+          "passed": true,
+          "value": 7
+        },
+        {
+          "limit": 7,
+          "name": "ff_opportunity_covers_week_7",
+          "passed": true,
+          "value": 7
+        },
+        {
+          "limit": 7,
+          "name": "pbp_covers_week_7",
+          "passed": true,
+          "value": 7
+        },
+        {
+          "limit": 7,
+          "name": "snap_counts_covers_week_7",
+          "passed": true,
+          "value": 7
+        },
+        {
+          "limit": 7,
+          "name": "team_week_epa_covers_week_7",
+          "passed": true,
+          "value": 7
+        },
+        {
+          "limit": 8,
+          "name": "schedule_covers_build_week",
+          "passed": true,
+          "value": 18
+        },
+        {
+          "limit": 7,
+          "name": "ngs_receiving_covers_week_7_REPORT_ONLY",
+          "note": "informational; publication lag is expected, never blocks",
+          "passed": true,
+          "value": 7
+        },
+        {
+          "limit": 7,
+          "name": "ngs_rushing_covers_week_7_REPORT_ONLY",
+          "note": "informational; publication lag is expected, never blocks",
+          "passed": true,
+          "value": 7
+        },
+        {
+          "limit": 7,
+          "name": "qbr_covers_week_7_REPORT_ONLY",
+          "note": "informational; publication lag is expected, never blocks",
+          "passed": true,
+          "value": null
+        }
+      ],
+      "evaluated_rows": 367,
+      "exception": {
+        "approval_20261029": {
+          "additional_player_ids": [
+            "00-0040586",
+            "00-0039631",
+            "00-0040581"
+          ],
+          "approved_by": "Joseph",
+          "scope": "2026 Week 8 only; exactly three additions to original 11"
+        },
+        "limit_prior_season_only_share": 0.0170863309352518,
+        "limit_stale_gap_share": 0.0170863309352518,
+        "prior_season_only_share": 0.03814713896457766,
+        "reason": "Joseph-approved one-week exception; offender set equals exactly the approved rows",
+        "rows": [
+          {
+            "days_since_last_game": 672.0,
+            "player_display_name": "Nick Vannett",
+            "player_id": "00-0032394",
+            "team": "BAL"
+          },
+          {
+            "days_since_last_game": 2155.0,
+            "player_display_name": "Tyler Conklin",
+            "player_id": "00-0034439",
+            "team": "DET"
+          },
+          {
+            "days_since_last_game": 308.0,
+            "player_display_name": "Grant Calcaterra",
+            "player_id": "00-0037086",
+            "team": "PHI"
+          },
+          {
+            "days_since_last_game": 306.0,
+            "player_display_name": "Josh Whyle",
+            "player_id": "00-0038589",
+            "team": "GB"
+          },
+          {
+            "days_since_last_game": 309.0,
+            "player_display_name": "Zach Charbonnet",
+            "player_id": "00-0039165",
+            "team": "SEA"
+          },
+          {
+            "days_since_last_game": 312.0,
+            "player_display_name": "Ja'Tavion Sanders",
+            "player_id": "00-0039356",
+            "team": "CAR"
+          },
+          {
+            "days_since_last_game": 315.0,
+            "player_display_name": "Cam Grandy",
+            "player_id": "00-0039631",
+            "team": "CIN"
+          },
+          {
+            "days_since_last_game": 308.0,
+            "player_display_name": "David Martin-Robinson",
+            "player_id": "00-0039648",
+            "team": "TEN"
+          },
+          {
+            "days_since_last_game": 391.0,
+            "player_display_name": "Tip Reiman",
+            "player_id": "00-0039737",
+            "team": "ARI"
+          },
+          {
+            "days_since_last_game": 323.0,
+            "player_display_name": "Nick Kallerup",
+            "player_id": "00-0040058",
+            "team": "SEA"
+          },
+          {
+            "days_since_last_game": 392.0,
+            "player_display_name": "DJ Giddens",
+            "player_id": "00-0040179",
+            "team": "IND"
+          },
+          {
+            "days_since_last_game": 307.0,
+            "player_display_name": "Dont'e Thornton Jr.",
+            "player_id": "00-0040581",
+            "team": "LV"
+          },
+          {
+            "days_since_last_game": 371.0,
+            "player_display_name": "Jaydon Blue",
+            "player_id": "00-0040586",
+            "team": "PHI"
+          },
+          {
+            "days_since_last_game": 378.0,
+            "player_display_name": "Travis Hunter",
+            "player_id": "00-0040718",
+            "team": "JAX"
+          }
+        ],
+        "season": 2026,
+        "stale_gap_share": 0.03814713896457766,
+        "week": 8
+      },
+      "failures": [],
+      "passed": true,
+      "reference": {
+        "max_prior_only_share": 0.011390887290167866,
+        "max_stale_share": 0.011390887290167866,
+        "n_reference_rows": 1668
+      },
+      "replacement_rows_excluded_from_staleness_rates": 0
+    },
+    "week": 8
+  },
+  "rolling_refresh": {
+    "as_of_utc": "2026-10-29T16:25:49.713539+00:00",
+    "baseline_artifact_sha256": "4ca7131976bc5b6989213a3840576078bfe8c157af33673ff9d44c9459b4e192",
+    "baseline_build_id": "fantasy-2026w08-4ca7131976bc",
+    "baseline_forward_sha256": "a79dfdd5723da307ba11f3b93ab342b1c99531d30cec548a212855dd641fa96d",
+    "baseline_metadata_sha256": "cde2d7b9a4b4089ac740e9fb2de81a22019dbb572ff83f17c530b5fa9f3367f7",
+    "locked_game_ids": [],
+    "source_requested_utc": "2026-10-29T16:22:39Z"
+  },
+  "schema_version": 1,
+  "season": 2026,
+  "stale_gate_exception": {
+    "approval_20261029": {
+      "additional_player_ids": [
+        "00-0040586",
+        "00-0039631",
+        "00-0040581"
+      ],
+      "approved_by": "Joseph",
+      "scope": "2026 Week 8 only; exactly three additions to original 11"
+    },
+    "limit_prior_season_only_share": 0.0170863309352518,
+    "limit_stale_gap_share": 0.0170863309352518,
+    "prior_season_only_share": 0.03814713896457766,
+    "reason": "Joseph-approved one-week exception; offender set equals exactly the approved rows",
+    "rows": [
+      {
+        "days_since_last_game": 672.0,
+        "player_display_name": "Nick Vannett",
+        "player_id": "00-0032394",
+        "team": "BAL"
+      },
+      {
+        "days_since_last_game": 2155.0,
+        "player_display_name": "Tyler Conklin",
+        "player_id": "00-0034439",
+        "team": "DET"
+      },
+      {
+        "days_since_last_game": 308.0,
+        "player_display_name": "Grant Calcaterra",
+        "player_id": "00-0037086",
+        "team": "PHI"
+      },
+      {
+        "days_since_last_game": 306.0,
+        "player_display_name": "Josh Whyle",
+        "player_id": "00-0038589",
+        "team": "GB"
+      },
+      {
+        "days_since_last_game": 309.0,
+        "player_display_name": "Zach Charbonnet",
+        "player_id": "00-0039165",
+        "team": "SEA"
+      },
+      {
+        "days_since_last_game": 312.0,
+        "player_display_name": "Ja'Tavion Sanders",
+        "player_id": "00-0039356",
+        "team": "CAR"
+      },
+      {
+        "days_since_last_game": 315.0,
+        "player_display_name": "Cam Grandy",
+        "player_id": "00-0039631",
+        "team": "CIN"
+      },
+      {
+        "days_since_last_game": 308.0,
+        "player_display_name": "David Martin-Robinson",
+        "player_id": "00-0039648",
+        "team": "TEN"
+      },
+      {
+        "days_since_last_game": 391.0,
+        "player_display_name": "Tip Reiman",
+        "player_id": "00-0039737",
+        "team": "ARI"
+      },
+      {
+        "days_since_last_game": 323.0,
+        "player_display_name": "Nick Kallerup",
+        "player_id": "00-0040058",
+        "team": "SEA"
+      },
+      {
+        "days_since_last_game": 392.0,
+        "player_display_name": "DJ Giddens",
+        "player_id": "00-0040179",
+        "team": "IND"
+      },
+      {
+        "days_since_last_game": 307.0,
+        "player_display_name": "Dont'e Thornton Jr.",
+        "player_id": "00-0040581",
+        "team": "LV"
+      },
+      {
+        "days_since_last_game": 371.0,
+        "player_display_name": "Jaydon Blue",
+        "player_id": "00-0040586",
+        "team": "PHI"
+      },
+      {
+        "days_since_last_game": 378.0,
+        "player_display_name": "Travis Hunter",
+        "player_id": "00-0040718",
+        "team": "JAX"
+      }
+    ],
+    "season": 2026,
+    "stale_gap_share": 0.03814713896457766,
+    "week": 8
+  },
+  "team_position_counts": {
+    "ARI": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 2,
+      "WR": 4
+    },
+    "ATL": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 4
+    },
+    "BAL": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 4,
+      "WR": 6
+    },
+    "BUF": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 6
+    },
+    "CAR": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 5,
+      "WR": 5
+    },
+    "CHI": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 2,
+      "WR": 5
+    },
+    "CIN": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 4,
+      "WR": 5
+    },
+    "CLE": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 2,
+      "WR": 6
+    },
+    "DAL": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 5
+    },
+    "DEN": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 4,
+      "WR": 5
+    },
+    "DET": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 5
+    },
+    "GB": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 5
+    },
+    "IND": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 5,
+      "WR": 6
+    },
+    "JAX": {
+      "QB": 1,
+      "RB": 4,
+      "TE": 4,
+      "WR": 5
+    },
+    "KC": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 6
+    },
+    "LA": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 4,
+      "WR": 5
+    },
+    "LAC": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 7
+    },
+    "LV": {
+      "QB": 1,
+      "RB": 4,
+      "TE": 3,
+      "WR": 6
+    },
+    "MIA": {
+      "QB": 1,
+      "RB": 4,
+      "TE": 4,
+      "WR": 6
+    },
+    "MIN": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 5
+    },
+    "NE": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 4
+    },
+    "NYJ": {
+      "QB": 1,
+      "RB": 5,
+      "TE": 4,
+      "WR": 6
+    },
+    "PHI": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 4,
+      "WR": 7
+    },
+    "PIT": {
+      "QB": 1,
+      "RB": 6,
+      "TE": 3,
+      "WR": 5
+    },
+    "SEA": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 4
+    },
+    "TB": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 4,
+      "WR": 5
+    },
+    "TEN": {
+      "QB": 1,
+      "RB": 5,
+      "TE": 4,
+      "WR": 5
+    },
+    "WAS": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 4,
+      "WR": 5
+    }
+  },
+  "tuesday_sleeper_projection_signal": {
+    "players": [],
+    "policy": "A numeric current-week Sleeper projection plus an exact Out/Doubtful Sleeper directory label is a provisional Tuesday signal, not confirmation of play.",
+    "row_count": 0,
+    "source": {}
+  },
+  "validation": {
+    "checks": {
+      "artifact_sha256": "125d3dce28206cec8d186c436103d9c12a8aab5d897eb119117b506c8ef3f3b1",
+      "locked_fantasy_rows": 0,
+      "produced_at_utc": "2026-10-29T16:25:57Z",
+      "scheduled_teams": 28,
+      "team_position_cells": 112,
+      "team_position_gap_exceptions": 0
+    },
+    "errors": [],
+    "ok": true,
+    "product": "fantasy",
+    "row_count": 366,
+    "warnings": [
+      "30 projections are below zero; retained as a model diagnostic"
+    ]
+  },
+  "week": 8
+}

@@ -170,6 +170,7 @@ def publish_candidate(
         meta,
         schedule=schedule,
         allow_post_kickoff_correction=correction is not None,
+        root=root,
     )
     report.require_ok()
     build_id = _build_id(meta)

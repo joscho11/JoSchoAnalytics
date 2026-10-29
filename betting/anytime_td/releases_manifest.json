@@ -73,10 +73,10 @@
     {
       "season": 2026,
       "week": 8,
-      "csv": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week08_ngs_live_draftkings_week08_20261027.csv",
-      "metadata": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week08_ngs_live_draftkings_week08_20261027.json",
-      "csv_sha256": "6d962765c3cc267489b8cf6cee1bdbb06d5a5fa0344f88674f35597a1314db1f",
-      "metadata_sha256": "443f053af16cdc7c9c4251849329ba3d9b25ca6bf8c965b1fcc0f476a601b73a",
+      "csv": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week08_ngs_live_thursday_draftkings_week08_20261029T120908ET.csv",
+      "metadata": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week08_ngs_live_thursday_draftkings_week08_20261029T120908ET.json",
+      "csv_sha256": "a02f3adacdfc22eb50c38bacebd68cad33827611031cbb881588d8b27ec83447",
+      "metadata_sha256": "20a0732d68deba9bb13094a6787077978a79fd9bbc3cc211bebd1e36ca6a8c9b",
       "prediction_mode": "live",
       "model_version": "td_product_ngs_44_frozen_2025_v1"
     }

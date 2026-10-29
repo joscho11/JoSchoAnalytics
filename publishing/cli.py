@@ -310,6 +310,7 @@ def main(argv=None) -> int:
                 metadata,
                 schedule=source,
                 allow_post_kickoff_correction=correction is not None,
+                root=root,
             )
             _print(report.to_dict())
             return 0 if report.ok else 1

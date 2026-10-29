@@ -12,6 +12,7 @@ import pandas as pd
 
 from .contract import (
     PRODUCTS,
+    PublicationError,
     SCHEMA_VERSION,
     ValidationReport,
     canonical_values_hash,
@@ -591,6 +592,14 @@ def _validate_fantasy(
     report.checks["team_position_cells"] = int(
         sum(int(count > 0) for values in actual_team_positions.values() for count in values.values())
     )
+    if not metadata.get('legacy_bootstrap'):
+        first = _first_kickoff(sched)
+        try:
+            produced = parse_aware_datetime(metadata['produced_at'])
+            if first is not None and produced >= first and not metadata.get('rolling_refresh'):
+                report.errors.append('post-kickoff fantasy refresh requires verified rolling baseline')
+        except (KeyError, TypeError, ValueError):
+            pass  # The metadata checks report invalid production timestamps.
 
 
 def validate_candidate(
@@ -599,6 +608,7 @@ def validate_candidate(
     *,
     schedule: str | Path | pd.DataFrame | None = None,
     allow_post_kickoff_correction: bool = False,
+    root=None,
 ) -> ValidationReport:
     path = Path(artifact)
     try:
@@ -639,6 +649,60 @@ def validate_candidate(
         )
     elif report.product == "fantasy":
         _validate_fantasy(report, frame, meta, schedule_frame)
+        if meta.get('rolling_refresh'):
+            _validate_rolling_fantasy(report, path, meta, schedule_frame, root)
     elif report.product not in PRODUCTS:
         report.errors.append(f"unknown product {report.product!r}")
     return report
+
+
+def _validate_rolling_fantasy(report, artifact, metadata, schedule, root):
+    """Verify locked rows against an immutable build, never a producer path."""
+    from .manifest import load_manifest
+    from .paths import resolve_site_path
+    if schedule is None:
+        report.errors.append('rolling fantasy protection requires a schedule')
+        return
+    try:
+        rolling = metadata['rolling_refresh']
+        baseline = load_manifest(root, strict=True)['products']['fantasy']['builds'][rolling['baseline_build_id']]
+        if (int(baseline['season']), int(baseline['week'])) != (int(metadata['season']), int(metadata['week'])):
+            raise ValueError('rolling baseline season/week mismatch')
+        if baseline['model_version'] != metadata['model_version']:
+            raise ValueError('rolling refresh must retain the frozen model')
+        baseline_path = resolve_site_path(baseline['artifact'], root)
+        if sha256_file(baseline_path) != baseline['sha256'] or baseline['sha256'] != rolling['baseline_artifact_sha256']:
+            raise ValueError('rolling baseline artifact hash mismatch')
+        if sha256_file(resolve_site_path(baseline['metadata'], root)) != rolling['baseline_metadata_sha256']:
+            raise ValueError('rolling baseline metadata hash mismatch')
+        produced = parse_aware_datetime(metadata['produced_at'])
+        as_of = parse_aware_datetime(rolling['as_of_utc'])
+        requested = parse_aware_datetime(rolling['source_requested_utc'])
+        if requested > as_of or as_of > produced:
+            raise ValueError('rolling capture/build timestamp order is invalid')
+        slate = _schedule_week(schedule, int(metadata['season']), int(metadata['week']))
+        locked = set()
+        for game in slate.to_dict(orient='records'):
+            if not isinstance(game.get('gametime'), str) or not game['gametime'].strip():
+                raise ValueError('rolling refresh requires explicit actual kickoff times')
+            kickoff = _first_kickoff(pd.DataFrame([game]))
+            if kickoff is None:
+                raise ValueError('rolling refresh requires valid kickoff times')
+            if kickoff <= produced:
+                locked.add(str(game['game_id']))
+            elif requested >= kickoff:
+                raise ValueError('fresh capture is not before refreshed game kickoff')
+        if locked != set(map(str, rolling['locked_game_ids'])):
+            raise ValueError('rolling locked games disagree with production time')
+        old = pd.read_csv(baseline_path, dtype=str, keep_default_na=False)
+        new = pd.read_csv(artifact, dtype=str, keep_default_na=False)
+        if set(old.columns) != set(new.columns):
+            raise ValueError('rolling published columns changed')
+        columns = sorted(old.columns)
+        before = old.loc[old.game_id.isin(locked), columns].sort_values(['game_id','player_id']).reset_index(drop=True)
+        after = new.loc[new.game_id.isin(locked), columns].sort_values(['game_id','player_id']).reset_index(drop=True)
+        if not before.equals(after):
+            raise ValueError('started-game published rows changed, disappeared, or were added')
+        report.checks['locked_fantasy_rows'] = len(before)
+    except (KeyError, TypeError, ValueError, OSError, PublicationError) as exc:
+        report.errors.append(f'rolling fantasy protection failed: {exc}')
