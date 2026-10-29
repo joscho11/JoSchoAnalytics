@@ -280,6 +280,7 @@ def test_every_page_renders_offline_clean(tmp_path):
         harness = tmp_path / f"h_{module}.py"
         harness.write_text(
             f"import sys; sys.path[:0] = [r'{_HERE}', r'{_SITE_PAGES}']\n"
+            "import nav_registry; nav_registry.PAGES = {}\n"
             f"import {module} as page\npage.render()\n",
             encoding="utf-8",
         )
