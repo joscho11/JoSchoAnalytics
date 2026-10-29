@@ -143,7 +143,7 @@ SCENES: tuple[Scene, ...] = (
         "home",
         "credibility",
         "",
-        must_contain=("JoScho Analytics", "No paid picks"),
+        must_contain=("JoScho Analytics", "No paid picks", "TikTok", "YouTube"),
     ),
     _s(
         "track_record_2025",
@@ -163,7 +163,24 @@ SCENES: tuple[Scene, ...] = (
         "help",
         "credibility",
         "help",
-        must_contain=("Help & guide", "Site Guide", "Which page should I use?"),
+        must_contain=("Help & guide", "Site Guide", "Which page should I use?",
+                      "Watch site tour", "Watch League History guide"),
+    ),
+    _s(
+        "help_site_walkthrough",
+        "credibility",
+        "help",
+        query="guide=site-walkthrough",
+        viewports=NARROW,
+        must_contain=("A walk through the JoScho Analytics site", "Open walkthrough on TikTok"),
+    ),
+    _s(
+        "help_league_history_walkthrough",
+        "credibility",
+        "help",
+        query="guide=league-history-guide",
+        viewports=NARROW,
+        must_contain=("How to See Your League's History", "Open walkthrough on TikTok"),
     ),
     _s(
         "help_ats_open",
@@ -336,7 +353,15 @@ SCENES: tuple[Scene, ...] = (
         "film_room",
         "credibility",
         "film-room",
-        must_contain=("Film room",),
+        must_contain=("Help & guide", "Watch site tour"),
+    ),
+    _s(
+        "film_room_archived_analysis",
+        "credibility",
+        "film-room",
+        query="video=makai-lemon",
+        viewports=NARROW,
+        must_contain=("Makai Lemon: Rookie Receiver Profile", "archived analysis", "Watch on TikTok"),
     ),
     _s(
         "film_room_walkthrough",
@@ -344,7 +369,7 @@ SCENES: tuple[Scene, ...] = (
         "film-room",
         query="video=league-history-guide",
         viewports=NARROW,
-        must_contain=("Film room",),
+        must_contain=("Help & guide", "How to See Your League's History", "Open walkthrough on TikTok"),
     ),
     # ── 4. Fantasy workflow ──────────────────────────────────────────────
     _s(

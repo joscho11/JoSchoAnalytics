@@ -1,11 +1,10 @@
-"""Film Room: one player, title list, a single TikTok embed.
-
-Hermetic: APP_OFFLINE=1. Renders page_film_room directly, same pattern as
-test_site_nav.page harnesses.
-"""
+"""Offline regression coverage for retired Film Room bookmark compatibility."""
+import json
 import os
 import sys
 from pathlib import Path
+
+import pytest
 
 os.environ["APP_OFFLINE"] = "1"
 
@@ -13,400 +12,79 @@ from streamlit.testing.v1 import AppTest
 
 _HERE = Path(__file__).resolve().parents[1]
 _SITE_PAGES = _HERE / "site_pages"
-sys.path.insert(0, str(_HERE))
+sys.path[:0] = [str(_HERE), str(_SITE_PAGES)]
 
-from film_room import _embed_src, _sectioned_episodes  # noqa: E402
-from video_content import (  # noqa: E402
-    DEFAULT_VIDEO_SLUG,
-    INTRO_VIDEO,
-    LATEST_LEAGUE_HISTORY_VIDEO_SLUG,
-    VIDEO_SECTIONS,
-    VIDEOS,
-)
+from video_content import VIDEOS
 
 
-def _render(tmp_path):
-    harness = tmp_path / "h_film_room.py"
-    harness.write_text(
+def _harness(tmp_path, source):
+    path = tmp_path / "film_compatibility.py"
+    path.write_text(
         f"import sys; sys.path[:0] = [r'{_HERE}', r'{_SITE_PAGES}']\n"
-        "import page_film_room as page\npage.render()\n",
+        "import streamlit as st\n"
+        "import nav_registry\n"
+        + source,
         encoding="utf-8",
     )
-    at = AppTest.from_file(str(harness), default_timeout=180).run()
+    at = AppTest.from_file(str(path), default_timeout=90).run()
     assert not at.exception, at.exception
-    assert not at.error, [e.value for e in at.error]
+    assert not at.error, [error.value for error in at.error]
     return at
 
 
-def _newest():
-    return sorted(VIDEOS, key=lambda v: v.get("date") or "", reverse=True)[0]
+@pytest.mark.parametrize("slug", [None, "unknown-episode", "league-history-guide", "site-walkthrough"])
+def test_legacy_walkthrough_and_empty_links_switch_to_help(tmp_path, slug):
+    at = _harness(
+        tmp_path,
+        "import film_room\n"
+        "if not st.session_state.get('seeded'):\n"
+        "    st.session_state['seeded'] = True\n"
+        + (f"    st.query_params['video'] = {slug!r}\n" if slug else "")
+        + "def help_render():\n"
+        "    st.title('Help destination')\n"
+        "    st.json(dict(st.query_params))\n"
+        "help_page = st.Page(help_render, title='Help', url_path='help')\n"
+        "film_page = st.Page(film_room.render_film_room, title='Archive', default=True)\n"
+        "nav_registry.PAGES = {'help': help_page}\n"
+        "st.navigation([film_page, help_page], position='hidden').run()\n",
+    )
+    assert [title.value for title in at.title] == ["Help destination"]
+    expected = {"help_topic": "Site Guide"}
+    if slug in {"league-history-guide", "site-walkthrough"}:
+        expected["guide"] = slug
+    assert json.loads(at.json[0].value) == expected
+    assert not at.get("iframe")
 
 
-def _default():
-    return next(v for v in VIDEOS if v["slug"] == DEFAULT_VIDEO_SLUG)
+@pytest.mark.parametrize("slug", ["makai-lemon", "week-5-model-gaps-2026", "graphs-of-the-week-02"])
+def test_analysis_bookmark_preserves_only_selected_context(tmp_path, slug):
+    item = next(episode for episode in VIDEOS if episode["slug"] == slug)
+    at = _harness(
+        tmp_path,
+        f"st.query_params['video'] = {slug!r}\n"
+        "import film_room\n"
+        "film_room.render_film_room()\n",
+    )
+    assert [title.value for title in at.title] == [item["title"]]
+    captions = " ".join(str(caption.value) for caption in at.caption)
+    assert "Published" in captions and "publication date" in captions
+    assert "may have changed" in captions
+    links = list(at.get("link_button"))
+    assert len(links) == 1 and links[0].url == item["tiktok_url"]
+    assert not at.get("iframe")
+    assert not at.selectbox and not at.segmented_control
+    assert len(at.expander) == 1
+    assert at.expander[0].label == "Archived written breakdown"
+    assert not at.expander[0].proto.expanded
+    expected = (_HERE / "video_breakdowns" / item["breakdown_file"]).read_text(encoding="utf-8")
+    assert expected.strip() in [markdown.value for markdown in at.markdown]
 
 
-def _md(at):
-    return " ".join(str(m.value) for m in at.markdown)
-
-
-def test_embed_uses_dark_player_not_white_card():
-    src = _embed_src("7674314953565670687")
-    assert src == "https://www.tiktok.com/player/v1/7674314953565670687"
-    assert "embed/v2" not in src
-
-
-def test_catalog_size_and_expected_slugs():
-    slugs = {item["slug"] for item in VIDEOS}
-    assert len(VIDEOS) == len(slugs), "episode slugs must be unique"
-    assert "brian-thomas-jr" not in slugs
-    assert "site-walkthrough" in slugs
-    assert "league-history" not in slugs
-    assert "ladd-mcconkey" in slugs
-    assert "wandale-robinson" in slugs
-    assert "jonathan-taylor" in slugs
-    assert "jacory-croskey-merritt" in slugs
-    assert "derrick-henry" in slugs
-    assert "harrison-vs-wilson" in slugs
-    assert "davante-adams" in slugs
-    assert "chase-brown" in slugs
-    assert "kenneth-walker" in slugs
-    assert "jadarian-price" in slugs
-    assert "garrett-wilson" in slugs
-    assert "lamar-jackson" in slugs
-    assert "graphs-of-the-week-02" in slugs
-    assert "week-5-model-gaps-2026" in slugs
-    assert DEFAULT_VIDEO_SLUG == "league-history-guide"
-    assert DEFAULT_VIDEO_SLUG in slugs
-
-
-def test_default_is_league_history_guide(tmp_path):
-    at = _render(tmp_path)
-    default = _default()
-    newest = _newest()
-    md = _md(at)
-    assert default["title"] in md
-    assert newest["date"] >= default["date"]
-    assert newest["title"] not in md
-    assert "Welcome to JoScho Analytics" not in md
-    assert "A walk through the JoScho Analytics site" not in md
-    watch = [link for link in at.get("link_button") if link.label == "Watch on TikTok"]
-    assert len(watch) == 1, "only the selected video should render a Watch link"
-    assert watch[0].url == default["tiktok_url"]
-    assert default["video_id"] == "7676271983297940766"
-
-
-def _section_control(at):
-    return next(w for w in at.segmented_control if w.key == "film_room_section")
-
-
-def _episode_box(at):
-    return next(w for w in at.selectbox if w.label == "Episode")
-
-
-def test_picker_lists_every_episode_and_no_retired_intro(tmp_path):
-    at = _render(tmp_path)
-    labels = [str(b.label) for b in at.button]
-    assert not any("Start here" in lbl for lbl in labels)
-    assert INTRO_VIDEO is None
-    seen = set()
-    for key, _label in VIDEO_SECTIONS:
-        at = _section_control(at).set_value(key).run()
-        assert not at.exception, at.exception
-        seen.update(_episode_box(at).options)
+def test_registry_preserves_unique_bookmarks_and_breakdown_files():
+    slugs = [item["slug"] for item in VIDEOS]
+    assert len(slugs) == len(set(slugs))
+    assert {"league-history-guide", "site-walkthrough"} <= set(slugs)
     for item in VIDEOS:
-        assert item["title"] in seen
-    breakdowns = [b for b in at.button if "Full breakdown" in str(b.label)
-                  or "What is this?" in str(b.label)]
-    assert len(breakdowns) == 1
-    captions = {str(c.value) for c in at.caption}
-    assert _section_control(at).options == [
-        "Walkthroughs",
-        "Predictions",
-        "In-season",
-        "Draft",
-        "Players",
-    ]
-    assert "Archive" not in captions
-    assert not any(label in captions for _key, label in VIDEO_SECTIONS)
-
-
-def test_catalog_sections():
-    newest_first = sorted(
-        VIDEOS, key=lambda item: item.get("date") or "", reverse=True
-    )
-    grouped = {
-        label: [item["slug"] for item in items]
-        for label, items in _sectioned_episodes(newest_first)
-    }
-    assert grouped["Site walkthroughs"] == [
-        "site-walkthrough",
-        LATEST_LEAGUE_HISTORY_VIDEO_SLUG,
-    ]
-    assert grouped["Predictions & weekly"] == [
-        "week-7-picks-2026",
-        "week-6-picks-2026",
-        "week-5-model-gaps-2026",
-        "week-4-model-gaps-2026",
-    ]
-    expected_in_season = [
-        "parker-washington-2026",
-        "college-basketball-preview-2026",
-        "graphs-of-the-week-04",
-        "graphs-of-the-week-03",
-        "vikings-2026",
-        "bryce-young-2026",
-        "graphs-of-the-week-02",
-        "graphs-of-the-week-01",
-        "fourth-down-analytics-part-3",
-        "fourth-down-analytics-part-2",
-        "latest-video-2026-09-24",
-        "wr-te-advanced-stats",
-        "rb-advanced-stats-part-2",
-        "rb-advanced-stats-part-1",
-        "week-1-signal",
-        "chargers-week-1-loss",
-        "latest-video-2026-09-11",
-    ]
-    newest = _newest()
-    if newest["section"] == "in-season" and newest["slug"] not in expected_in_season:
-        expected_in_season.insert(0, newest["slug"])
-    assert grouped["In-season analysis"] == expected_in_season
-    assert grouped["Draft strategy & research"] == [
-        "rb-wr-draft-strategy",
-        "qb-te-draft-timing",
-        "draft-order",
-        "how-to-leverage-adp-wr",
-        "how-to-leverage-adp-rb",
-        "how-to-leverage-adp-te",
-        "how-to-leverage-adp-qb",
-        "how-to-leverage-adp-guide",
-    ]
-    assert grouped["Player breakdowns"] == [
-        "lamar-jackson",
-        "garrett-wilson",
-        "jadarian-price",
-        "chase-brown",
-        "kenneth-walker",
-        "davante-adams",
-        "harrison-vs-wilson",
-        "derrick-henry",
-        "jacory-croskey-merritt",
-        "jonathan-taylor",
-        "wandale-robinson",
-        "ladd-mcconkey",
-        "jameson-williams",
-        "jefferson-deep-dive",
-        "bijan-robinson-jahmyr-gibbs",
-        "makai-lemon",
-    ]
-    assert "Archive" not in grouped
-    assert newest_first[0]["slug"] == _newest()["slug"]
-
-
-def test_week_5_model_gaps_registration():
-    item = next(v for v in VIDEOS if v["slug"] == "week-5-model-gaps-2026")
-    assert item["video_id"] == "7694038078754671902"
-    assert item["tiktok_url"].endswith(f"/video/{item['video_id']}")
-    assert item["date"] == "2026-10-07"
-    assert item["section"] == "predictions"
-    assert (_HERE / "video_breakdowns" / item["breakdown_file"]).is_file()
-
-
-def test_week_5_model_gaps_plays_and_opens_its_breakdown(tmp_path):
-    at = _render(tmp_path)
-    at = _section_control(at).set_value("predictions").run()
-    assert not at.exception, at.exception
-    at = _episode_box(at).set_value("week-5-model-gaps-2026").run()
-    assert not at.exception, at.exception
-    assert not at.error, [e.value for e in at.error]
-    watch = [link for link in at.get("link_button") if link.label == "Watch on TikTok"]
-    assert len(watch) == 1
-    assert watch[0].url == (
-        "https://www.tiktok.com/@joschoanalytics/video/7694038078754671902"
-    )
-    md = _md(at)
-    assert "NFL Week 5 2026: Model Gaps" in md
-    breakdown = [b for b in at.button if "Full breakdown" in str(b.label)]
-    assert len(breakdown) == 1
-
-
-def test_graphs_of_the_week_02_registration():
-    item = next(v for v in VIDEOS if v["slug"] == "graphs-of-the-week-02")
-    assert item["video_id"] == "7693760435463458079"
-    assert item["tiktok_url"].endswith(f"/video/{item['video_id']}")
-    assert item["date"] == "2026-10-06"
-    assert (_HERE / "video_breakdowns" / item["breakdown_file"]).is_file()
-
-
-def test_graphs_of_the_week_02_plays_and_opens_its_breakdown(tmp_path):
-    at = _render(tmp_path)
-    at = _section_control(at).set_value("in-season").run()
-    assert not at.exception, at.exception
-    at = _episode_box(at).set_value("graphs-of-the-week-02").run()
-    assert not at.exception, at.exception
-    assert not at.error, [e.value for e in at.error]
-    watch = [link for link in at.get("link_button") if link.label == "Watch on TikTok"]
-    assert len(watch) == 1
-    assert watch[0].url == (
-        "https://www.tiktok.com/@joschoanalytics/video/7693760435463458079"
-    )
-    md = _md(at)
-    assert "Graphs of the Week 02: NFL Week 4" in md
-    breakdown = [b for b in at.button if "Full breakdown" in str(b.label)]
-    assert len(breakdown) == 1
-
-
-def test_every_episode_has_a_known_content_section():
-    active_sections = {key for key, _label in VIDEO_SECTIONS}
-    for item in VIDEOS:
-        assert item["section"] in active_sections, item["slug"]
-        assert not item.get("archived"), item["slug"]
-
-
-def test_switching_episode_swaps_the_embed(tmp_path):
-    at = _render(tmp_path)
-    default = _default()
-    other = next(v for v in VIDEOS if v["slug"] != default["slug"])
-    if other["section"] != default["section"]:
-        at = _section_control(at).set_value(other["section"]).run()
-        assert not at.exception, at.exception
-    at = _episode_box(at).set_value(other["slug"]).run()
-    assert not at.exception, at.exception
-    assert not at.error, [e.value for e in at.error]
-    watch = [link for link in at.get("link_button") if link.label == "Watch on TikTok"]
-    assert len(watch) == 1
-    assert watch[0].url == other["tiktok_url"]
-    assert watch[0].url != default["tiktok_url"]
-
-
-def test_shared_video_url_selects_episode(tmp_path):
-    other = next(v for v in VIDEOS if v["slug"] != DEFAULT_VIDEO_SLUG)
-    harness = tmp_path / "film_query.py"
-    harness.write_text(
-        f"import sys; sys.path[:0] = [r'{_HERE}', r'{_HERE / 'site_pages'}']\n"
-        "import streamlit as st\n"
-        f"st.query_params['video'] = {other['slug']!r}\n"
-        "import page_film_room as p\n"
-        "p.render()\n",
-        encoding="utf-8",
-    )
-    at = AppTest.from_file(str(harness), default_timeout=180).run()
-    assert not at.exception, at.exception
-    watch = [link for link in at.get("link_button") if link.label == "Watch on TikTok"]
-    assert len(watch) == 1 and watch[0].url == other["tiktok_url"]
-
-
-def test_breakdown_files_exist_when_provided():
-    for item in VIDEOS:
-        if item.get("breakdown_file"):
-            path = _HERE / "video_breakdowns" / item["breakdown_file"]
-            assert path.is_file(), item["slug"]
-        assert item["video_id"]
         assert item["video_id"] in item["tiktok_url"]
-
-
-def test_site_walkthrough_is_the_posted_tiktok():
-    item = next(v for v in VIDEOS if v["slug"] == "site-walkthrough")
-    assert item["video_id"] == "7676601401342037279"
-    assert item["date"] == "2026-08-21"
-    assert item["section"] == "site-walkthroughs"
-    assert item["tiktok_url"] == (
-        "https://www.tiktok.com/@joschoanalytics/video/7676601401342037279"
-    )
-
-
-def test_latest_league_history_guide_constant_still_points_at_the_walkthrough():
-    item = next(v for v in VIDEOS if v["slug"] == LATEST_LEAGUE_HISTORY_VIDEO_SLUG)
-    assert item["video_id"] == "7676271983297940766"
-    assert item["date"] == "2026-08-20"
-    assert item["section"] == "site-walkthroughs"
-
-
-def test_newest_episode_is_latest_video():
-    newest = _newest()
-    assert newest["date"] == max(item.get("date") or "" for item in VIDEOS)
-
-
-def test_breakdowns_and_registry_do_not_disclose_sleeper_mix():
-    phrases = ("25% sleeper", "75/25", "75% independent")
-    blob = " ".join(
-        (_HERE / "video_breakdowns" / item["breakdown_file"]).read_text(encoding="utf-8")
-        for item in VIDEOS if item.get("breakdown_file")
-    )
-    blob += " ".join(str(item.get("archive_note") or "") for item in VIDEOS)
-    lower = blob.lower()
-    for phrase in phrases:
-        assert phrase not in lower, f"Sleeper mix leaked into Film Room copy: {phrase}"
-
-
-_LIVE_SYNC_PROBE = '''
-import os, sys
-os.environ["APP_OFFLINE"] = "1"
-tmp, here, marker = sys.argv[1], sys.argv[2], sys.argv[3]
-sys.path[:0] = [tmp, here, os.path.join(here, "site_pages")]
-from pathlib import Path
-from streamlit.testing.v1 import AppTest
-
-harness = Path(tmp) / "h_probe.py"
-harness.write_text("import page_film_room as page" + chr(10) + "page.render()" + chr(10), encoding="utf-8")
-
-
-def seen_titles():
-    at = AppTest.from_file(str(harness), default_timeout=180).run()
-    assert not at.exception, at.exception
-    seg = next(w for w in at.segmented_control if w.key == "film_room_section")
-    titles = set()
-    for key in list(seg.options):
-        at = seg.set_value(key).run()
-        assert not at.exception, at.exception
-        titles.update(next(w for w in at.selectbox if w.label == "Episode").options)
-        seg = next(w for w in at.segmented_control if w.key == "film_room_section")
-    return titles
-
-
-before = seen_titles()
-vc = Path(tmp) / "video_content.py"
-text = vc.read_text(encoding="utf-8")
-entry = (
-    "    {" + chr(10)
-    + '        "slug": "live-sync-probe",' + chr(10)
-    + '        "title": "' + marker + '",' + chr(10)
-    + '        "subtitle": "probe",' + chr(10)
-    + '        "date": "2099-01-01",' + chr(10)
-    + '        "section": "player-breakdowns",' + chr(10)
-    + '        "tiktok_url": "https://www.tiktok.com/@joschoanalytics/video/1",' + chr(10)
-    + '        "video_id": "1",' + chr(10)
-    + '        "breakdown_file": "makai_lemon.md",' + chr(10)
-    + "    }," + chr(10)
-)
-vc.write_text(text.replace("VIDEOS = [" + chr(10), "VIDEOS = [" + chr(10) + entry, 1), encoding="utf-8")
-os.utime(vc, None)
-after = seen_titles()
-print("BEFORE_HAS_MARKER", marker in before)
-print("AFTER_HAS_MARKER", marker in after)
-'''
-
-
-def test_registry_edit_reaches_a_live_process(tmp_path):
-    """A registry-only push must show up in an already-running Cloud process.
-
-    Cloud copies the new video_content.py into a live interpreter. film_room
-    copies its names at import time and its own file did not change, so before
-    this was fixed the page kept serving the old list until a manual reboot.
-    """
-    import shutil
-    import subprocess
-
-    shutil.copy(_HERE / "film_room.py", tmp_path / "film_room.py")
-    shutil.copy(_HERE / "video_content.py", tmp_path / "video_content.py")
-    probe = tmp_path / "probe.py"
-    probe.write_text(_LIVE_SYNC_PROBE, encoding="utf-8")
-    marker = "Live Sync Probe Episode"
-    run = subprocess.run(
-        [sys.executable, str(probe), str(tmp_path), str(_HERE), marker],
-        capture_output=True, text=True, timeout=300,
-    )
-    assert run.returncode == 0, run.stderr[-2000:]
-    assert "BEFORE_HAS_MARKER False" in run.stdout
-    assert "AFTER_HAS_MARKER True" in run.stdout, run.stdout + run.stderr[-1000:]
+        if item.get("breakdown_file"):
+            assert (_HERE / "video_breakdowns" / item["breakdown_file"]).is_file()

@@ -14,6 +14,7 @@ import streamlit as st
 
 import dashboard_data
 import page_common
+import nav_registry
 from dashboard_utils import get_confidence, _md_to_html
 from dashboard_chrome import _OFFLINE, TABLE_HEIGHT, dataframe_phone_desktop, send_ga_event
 
@@ -1473,6 +1474,10 @@ def render():
 
     st.title("Fantasy league history")
     st.caption("Turn a Sleeper, ESPN, Yahoo, or CBS league into a multi-season manager and roster review.")
+    if (help_page := nav_registry.PAGES.get("help")) is not None:
+        st.page_link(help_page, label="Watch the League History guide", icon=":material/play_circle:",
+                     query_params={"help_topic": "Site Guide", "guide": "league-history-guide"})
+
 
     _provider_input = st.segmented_control(
         "League platform",

@@ -16,7 +16,7 @@ _SITE_PAGES = _HERE / "site_pages"
 sys.path.insert(0, str(_HERE))
 
 
-def _render(tmp_path, *, topic=None, search=None, fail_tracker=False, open_question=None):
+def _render(tmp_path, *, topic=None, search=None, guide=None, fail_tracker=False, open_question=None):
     h = tmp_path / "h_help.py"
     setup = (
         f"import sys; sys.path[:0] = [r'{_HERE}', r'{_SITE_PAGES}']\n"
@@ -24,6 +24,8 @@ def _render(tmp_path, *, topic=None, search=None, fail_tracker=False, open_quest
     )
     if topic:
         setup += f"st.query_params['help_topic'] = {topic!r}\n"
+    if guide:
+        setup += f"st.query_params['guide'] = {guide!r}\n"
     if search:
         setup += f"st.session_state['help_search'] = {search!r}\n"
     h.write_text(setup + "import page_help as p\np.render()\n", encoding="utf-8")
@@ -85,7 +87,7 @@ def test_league_history_help_deep_links_to_current_walkthrough(tmp_path):
         "url_path='film-room')\n"
         "help_page = st.Page(page_help.render, title='Help & Guide', "
         "url_path='help', default=True)\n"
-        "nav_registry.PAGES = {'film-room': film}\n"
+        "nav_registry.PAGES = {'help': help_page}\n"
         "st.navigation([help_page, film], position='hidden').run()\n",
         encoding="utf-8",
     )
@@ -97,7 +99,8 @@ def test_league_history_help_deep_links_to_current_walkthrough(tmp_path):
         if link.label == "Watch the League History walkthrough"
     ]
     assert len(links) == 1
-    assert links[0].query_string == "video=league-history-guide"
+    from urllib.parse import parse_qs
+    assert parse_qs(links[0].query_string) == {"help_topic": ["Site Guide"], "guide": ["league-history-guide"]}
 
 
 def test_help_site_org_and_paused_copy(tmp_path):
@@ -210,6 +213,72 @@ def test_help_static_content_survives_missing_tracker(tmp_path):
     at = _render(tmp_path, topic="Betting", fail_tracker=True)
     assert not at.exception, at.exception
     assert any("tracker statistics are unavailable" in str(i.value) for i in at.info)
+
+
+def test_league_history_context_links_to_selected_guide(tmp_path):
+    from urllib.parse import parse_qs
+    harness = tmp_path / "h_league_guide_link.py"
+    harness.write_text(
+        f"import sys; sys.path[:0] = [r'{_HERE}', r'{_SITE_PAGES}']\n"
+        "import streamlit as st\nimport nav_registry\nimport page_league_history\n"
+        "help_page = st.Page(lambda: None, title='Help & Guide', url_path='help')\n"
+        "league = st.Page(page_league_history.render, title='League History', default=True)\n"
+        "nav_registry.PAGES = {'help': help_page}\n"
+        "st.navigation([league, help_page], position='hidden').run()\n",
+        encoding="utf-8",
+    )
+    at = AppTest.from_file(str(harness), default_timeout=180).run()
+    assert not at.exception
+    links = [link for link in at.get("page_link") if link.label == "Watch the League History guide"]
+    assert len(links) == 1
+    assert parse_qs(links[0].query_string) == {"help_topic": ["Site Guide"], "guide": ["league-history-guide"]}
+
+
+
+def test_guides_are_opt_in_and_switch_one_player(tmp_path):
+    at = _render(tmp_path)
+    assert not at.get("iframe")
+    at = next(b for b in at.button if b.label == "Watch site tour").click().run()
+    frames = at.get("iframe")
+    assert len(frames) == 1
+    assert frames[0].proto.src == "https://www.tiktok.com/player/v1/7676601401342037279?autoplay=0"
+    at = next(b for b in at.button if b.label == "Watch League History guide").click().run()
+    frames = at.get("iframe")
+    assert len(frames) == 1
+    assert "7676271983297940766?autoplay=0" in frames[0].proto.src
+    assert not at.exception
+    links = [link for link in at.get("link_button") if link.label == "Open walkthrough on TikTok"]
+    assert len(links) == 1 and links[0].url.endswith("7676271983297940766")
+
+
+def test_guide_deep_links_override_stale_search_and_topic(tmp_path):
+    for slug, video_id in (("site-walkthrough", "7676601401342037279"),
+                           ("league-history-guide", "7676271983297940766")):
+        at = _render(tmp_path, topic="Football", search="half-PPR", guide=slug)
+        assert at.session_state["help_topic"] == "Site Guide"
+        assert at.session_state["help_search"] == ""
+        assert len(at.get("iframe")) == 1
+        assert video_id in at.get("iframe")[0].proto.src
+        assert any("Current written guide" == str(e.label) for e in at.expander)
+
+
+def test_removing_guide_query_unmounts_player(tmp_path):
+    at = _render(tmp_path)
+    at.query_params["guide"] = "site-walkthrough"
+    at.run()
+    assert len(at.get("iframe")) == 1
+    del at.query_params["guide"]
+    at.run()
+    assert not at.get("iframe")
+    assert not at.exception
+
+
+
+def test_invalid_guide_cannot_mount_arbitrary_player(tmp_path):
+    at = _render(tmp_path, guide="../../unknown")
+    assert not at.get("iframe")
+    assert "guide" not in at.query_params
+
 
 
 if __name__ == "__main__":

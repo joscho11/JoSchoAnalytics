@@ -1,14 +1,8 @@
-"""Registry of TikTok videos surfaced in the Film Room tab.
+"""Frozen compatibility registry for previously shared Film Room links.
 
-To add a video after posting it:
-  1. Append an entry to VIDEOS below (slug, title, subtitle, date, section, tiktok_url,
-     video_id).
-  2. Add breakdown_file and an in-depth markdown breakdown when supporting context is ready.
-The `video_id` is the number at the end of the TikTok URL (.../video/<id>).
-
-ORDER DOES NOT MATTER HERE. film_room.py sorts episodes by `date`, newest first
-within each section. Opening the tab loads DEFAULT_VIDEO_SLUG, not the newest
-episode. `date` is ISO (YYYY-MM-DD) and is the publish date shown on the player.
+New uploads live on the TikTok and YouTube profiles and need no site registration.
+The two website walkthroughs are selected in Help & Guide. Existing episode
+records and breakdown files are retained so old shared links remain useful.
 """
 
 # Optional channel intro. None until a replacement is posted. The old Welcome video

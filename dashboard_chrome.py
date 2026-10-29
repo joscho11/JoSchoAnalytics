@@ -352,9 +352,23 @@ aria-hidden="true">💙</span><span class="jsa-tip-label">Tip Jar — Venmo @JoS
         unsafe_allow_html=True)
 
 
+SOCIAL_PROFILES = (
+    ("TikTok", "https://www.tiktok.com/@joschoanalytics", "outbound_tiktok"),
+    ("YouTube", "https://www.youtube.com/@JoSchoAnalytics", "outbound_youtube"),
+)
+
+
+def render_social_links():
+    """Shared profile destinations for the homepage and footer."""
+    with st.container(horizontal=True, horizontal_alignment="center"):
+        for label, url, event in SOCIAL_PROFILES:
+            st.link_button(label, url, type="tertiary", on_click=send_ga_event, args=(event,))
+
+
 def render_footer():
     """Render public-code and Venmo support actions in normal page flow."""
     st.divider()
+    render_social_links()
     st.caption("This site publishes checked release artifacts. The website code is public.", text_alignment="center")
     with st.container(horizontal=True, horizontal_alignment="center"):
         email_signup.render_button(on_click=send_ga_event, type="tertiary")

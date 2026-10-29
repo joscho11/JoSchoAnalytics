@@ -6,6 +6,7 @@ import nav_registry
 from seasonal_config import app_today, board_refresh_season_start
 import dashboard_data
 import email_signup
+import dashboard_chrome as chrome
 import live_2026
 
 
@@ -110,7 +111,10 @@ def render() -> None:
         _page_link("dfs-optimizer", "DFS Optimizer", ":material/target:")
         _page_link("season-totals", "Season Totals", ":material/bar_chart:")
         _page_link("league-history", "League History", ":material/history:")
-        _page_link("film-room", "Film Room", ":material/movie:")
+
+
+    st.subheader("Follow JoScho Analytics")
+    chrome.render_social_links()
 
     email_signup.render_card()
 

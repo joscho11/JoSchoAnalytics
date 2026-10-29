@@ -1,4 +1,4 @@
-"""Film Room page wrapper for the shared analysis and site-walkthrough library."""
+"""Hidden compatibility route for previously shared Film Room links."""
 import importlib
 
 import streamlit as st
@@ -6,9 +6,6 @@ import streamlit as st
 import page_common
 import film_room as _film_room
 import video_content as _video_content
-
-# Analysis shorts and product walkthroughs share one canonical video library.
-HEADER = "Short analysis and site walkthroughs, each with the context behind it."
 
 
 def _fresh_film_room():
@@ -27,6 +24,4 @@ def _fresh_film_room():
 
 
 def render():
-    st.title("Film room")
-    st.caption(HEADER)
-    _fresh_film_room().render_film_room(show_header=False)
+    _fresh_film_room().render_film_room()

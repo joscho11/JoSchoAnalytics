@@ -1,61 +1,26 @@
 # A walk through the JoScho Analytics site
 
-*2026 · page-by-page tour of joschoanalytics.streamlit.app*
+Recorded August 21, 2026. The video shows an earlier version of the site. These written directions reflect the current page structure; use each product page for its latest release and evidence.
 
-**The one-liner:** Each tab has one job. Draft Board compares Model Proj to ADP. Weekly Fantasy is player-week projections. Weekly Predictions is the betting page, and HIGH is a 2.5-point disagreement with the Tuesday 9am line that still holds. Track Record and Season Totals post the sample and the confidence-interval floor next to the headline. Film Room, League History, and Help sit under More.
+## Find the right page
 
-Live-page updates since this recording: Draft Board can toggle Sleeper ADP or ESPN ADP. League History loads public and private ESPN leagues, and Yahoo on the live page. Yahoo is not in this video. Weekly Fantasy holdout is now MAE 4.999 vs Sleeper 5.188, rank 0.395 vs 0.402. Starting in 2026, the Tuesday US median drives the pick, edge, and 2.5-point HIGH cut; the best US Tuesday quote is displayed separately and used for grading.
+- **Home** introduces the site; **This Week** collects the current releases.
+- **Weekly Predictions** shows matchup margins, Tuesday HIGH qualification, and graded picks. **Track Record** shows the evidence behind the results.
+- **Touchdown Props** compares scorer probabilities with supplied book prices. It is a beta product.
+- **Weekly Fantasy** publishes player-week projections. **DFS Optimizer** builds DraftKings Classic lineups from checked projections. Both are beta products.
+- **Draft Board** compares preseason projections with Sleeper, ESPN, and Yahoo ADP. **Rookie Board** provides rookie projection context. Talent Scores describe talent; they are not ranking inputs.
+- **Season Totals** compares projected regular-season wins with posted totals. Read its separate evidence and limitations.
+- **League History** imports Sleeper, ESPN, Yahoo, and CBS leagues.
+- **Help & Guide** holds the two walkthroughs, football and fantasy explanations, and current model rundowns. Analysis videos are on TikTok; Film Room is retired.
 
----
+## Read current rules and results
 
-## 1. Draft Board and Rookie Board
+The recording's HIGH threshold, benchmark, and navigation are historical. The current spread HIGH threshold is **3.0 points** against the frozen Tuesday US median. The best captured quote is displayed separately and used for grading. Quarterback scenario qualification and current benchmark details are explained on Weekly Predictions and under **Help & Guide > Models & Data**.
 
-The 2026 Draft Board stacks Model Proj against published projections and ADP, plus an optional Talent Score that tries to describe talent after stripping opportunity and environment. Talent Score is context, not a ranking input.
+Use **Track Record** for graded results and **This Week** for available releases. No projection guarantees an individual result, and a model-market gap is not a claim about closing-line value.
 
-On 2021 to 2025, Model Proj beat ADP ordering in **5 of 6** seasons. That is an ordering result, not a guarantee that any one 2026 name is cheap.
+## Open the current pages
 
-Rookie Board shows this year's class plus prior years.
+[Weekly Predictions](/weekly-predictions) · [Track Record](/track-record) · [League History](/league-history) · [Model explanations](/help?help_topic=Models+%26+Data)
 
----
-
-## 2. Weekly Fantasy
-
-The 2026 weekly model was scored on a 2025 holdout of **3,060** player-weeks. MAE **4.999** vs Sleeper **5.188**. Rank **0.395** vs Sleeper **0.402**. Point error is a bit better. Ordering is a bit worse. That is a scoring-error comparison, not a start/sit oracle.
-
----
-
-## 3. Weekly Predictions and Track Record
-
-Every game gets a pick. HIGH means the model disagrees with the Tuesday 9:00 AM EST line by **2.5 or more** points, and the live line still holds that gap. If the gap falls under 2.5, HIGH comes off. Picks freeze Tuesday 9:00 AM EST.
-
-Frozen Tuesday HIGH benchmark, 2021-2025, injury reports as-of Tuesday 9:00 ET, median-triggered and scored at the best US Tuesday number: **302/535**, 56.45% ATS. The conservative end of a 95% interval on that sample is **52.90%**, above the **52.4%** break-even at -110. Starting in 2026, the same median-triggered, shop-graded contract applies. That is Tuesday line value, not closing-line value.
-
-The video may still say an older HIGH sample. The live pages are the book.
-
----
-
-## 4. Season Totals
-
-HIGH here is **1 or more** wins off the posted number. Historical HIGH: **64/108**, 59.3%. The 95% interval floor is **51.35%**, which is under 52.4%. The page does not claim an edge on posted season win totals.
-
----
-
-## 5. Film Room, League History, Help
-
-Film Room is the posted shorts plus written breakdowns. League History is a separate walkthrough: load a Sleeper or ESPN league and read its drafts, standings, and luck. Help & Guide answers page questions.
-
-The site URL in the video is joschoanalytics.streamlit.app. Code is on GitHub.
-
----
-
-## 6. What this does not prove
-
-- **That Model Proj will beat ADP in 2026.** Five of six is the historical ordering record.
-- **That HIGH is a lock.** 302/535 is the sample. The floor is 52.90%, above 52.4%. No 2026 games are graded yet.
-- **That Season Totals HIGH beats the posted number.** The interval floor is 51.35%.
-- **Closing-line value.** Track Record is the Tuesday freeze.
-- **Yahoo League History.** That importer is on the live page and is not in this video.
-
----
-
-*TikTok id `7676601401342037279`. Live Help and Weekly Predictions are the book. This is football analysis, not betting advice.*
+TikTok recording: `7676601401342037279`.

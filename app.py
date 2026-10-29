@@ -103,7 +103,7 @@ dfs_pg = st.Page(_lazy_render("page_dfs"), title="DFS Optimizer (Beta)", icon=":
 tr_pg = st.Page(_lazy_render("page_track_record"), title="Track Record", icon=":material/monitoring:",
                 url_path="track-record")
 film_pg = st.Page(_lazy_render("page_film_room"), title="Film Room", icon=":material/movie:",
-                  url_path="film-room")
+                  url_path="film-room", visibility="hidden")
 lh_pg = st.Page(_lazy_render("page_league_history"), title="League History", icon=":material/history:",
                 url_path="league-history")
 help_pg = st.Page(_lazy_render("page_help"), title="Help & Guide", icon=":material/help:",

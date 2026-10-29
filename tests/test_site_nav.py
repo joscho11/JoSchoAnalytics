@@ -83,6 +83,38 @@ def test_college_basketball_has_exactly_one_page():
     assert '_lazy_render("page_cbb_daily")' in src
 
 
+def test_film_room_remains_registered_but_hidden():
+    tree = ast.parse(Path(ENTRY).read_text(encoding="utf-8"))
+    film = next(
+        node.value for node in tree.body
+        if isinstance(node, ast.Assign)
+        and any(isinstance(target, ast.Name) and target.id == "film_pg"
+                for target in node.targets)
+    )
+    keywords = {item.arg: ast.literal_eval(item.value)
+                for item in film.keywords}
+    assert keywords["url_path"] == "film-room"
+    assert keywords["visibility"] == "hidden"
+    import nav_registry
+    at = _run()
+    assert "film-room" in nav_registry.PAGES
+    links = " ".join(str(getattr(link, "label", ""))
+                     for link in at.get("page_link"))
+    assert "Film Room" not in links
+
+
+def test_home_and_footer_share_verified_social_destinations():
+    import dashboard_chrome as chrome
+    assert [(label, url) for label, url, _ in chrome.SOCIAL_PROFILES] == [
+        ("TikTok", "https://www.tiktok.com/@joschoanalytics"),
+        ("YouTube", "https://www.youtube.com/@JoSchoAnalytics"),
+    ]
+    at = _run()
+    links = [item.proto for item in at.get("link_button")]
+    for label, url, _ in chrome.SOCIAL_PROFILES:
+        assert sum(item.label == label and item.url == url for item in links) == 2
+
+
 def test_sidebar_is_empty_and_footer_present():
     at = _run()
     # nav is position="top"; nothing writes to the sidebar -> empty

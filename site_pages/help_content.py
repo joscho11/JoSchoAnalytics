@@ -119,7 +119,6 @@ season-total products are separate systems; their numbers should not be mixed.
         ("draft-board", "Draft Board", "Preseason season-total projections beside current Sleeper, ESPN, and Yahoo ADP sources."),
         ("rookie-board", "Rookie Board", "Rookie hit probabilities and season-total projection context."),
         ("anytime-tds", "Touchdown Props", "Anytime, 2+, and First TD scorer probabilities beside book prices."),
-        ("film-room", "Film Room", "Short analysis videos, walkthroughs, and written context."),
         ("league-history", "League History", "Sleeper, ESPN, Yahoo, and CBS league imports and history views."),
     )
     for slug, label, description in pages:
@@ -199,24 +198,25 @@ They stay in the current browser session and are not logged or shared-cached.
 
 Public results are cached for an hour. A brand-new league can load with empty
 tabs until it has a draft or scored weeks. This page describes your league's
-history; it is not a prediction model. The Film Room walkthrough shows Sleeper
+history; it is not a prediction model. The League History walkthrough shows Sleeper
 and ESPN; Yahoo and CBS are on the live page and are not in that video.
         """
     )
     _page_link(
-        "film-room",
+        "help",
         "Watch the League History walkthrough",
         icon=":material/play_circle:",
-        query_params={"video": LATEST_LEAGUE_HISTORY_VIDEO_SLUG},
+        query_params={"help_topic": "Site Guide", "guide": LATEST_LEAGUE_HISTORY_VIDEO_SLUG},
     )
 
 
-def _render_film_room() -> None:
+def _render_video_guides() -> None:
     st.markdown(
         """
-Film Room contains short analysis videos, the site walkthrough, and the League
-History walkthrough. Choose a section and episode, then open the written
-breakdown when you want the assumptions and evidence behind the short.
+The two video guides at the top of Site Guide cover the site tour and League
+History. Choose a guide to load its player, or open it directly on TikTok.
+The recording dates identify older screens; current written steps appear below
+the selected player. Analysis videos live on TikTok.
         """
     )
 
@@ -519,7 +519,7 @@ FAQS = (
     FAQItem("Site Guide", "How often do pages update, and when do values lock?", ("freshness", "cadence", "kickoff", "release", "immutable"), _render_updates_and_locks),
     FAQItem("Site Guide", "How do filters and shareable URLs work?", ("season", "week", "min edge", "query", "url"), _render_filters_and_urls),
     FAQItem("Site Guide", "How does League History work?", ("sleeper", "espn", "yahoo", "cbs", "cookies", "credentials", "league id"), _render_league_history),
-    FAQItem("Site Guide", "What is the Film Room?", ("video", "walkthrough", "breakdown"), _render_film_room),
+    FAQItem("Site Guide", "Where are the video guides?", ("video", "walkthrough", "breakdown", "Film Room"), _render_video_guides),
     FAQItem("Football", "How does an NFL game become a score and a margin?", ("scoring", "possessions", "touchdown", "field goal", "game script"), _render_scoring),
     FAQItem("Football", "What is EPA?", ("expected points added", "efficiency", "play"), _render_epa),
     FAQItem("Football", "Why do injuries, rest, venue, and role matter?", ("availability", "quarterback", "depth chart", "context"), _render_injuries_context),
