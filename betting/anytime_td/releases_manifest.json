@@ -72,7 +72,7 @@
     },
     {
       "csv": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week08_ngs_live_thursday_draftkings_week08_20261029T181406ET.csv",
-      "csv_sha256": "9ded4880a70c61b8a75be933e0196bcc1f09efe3a4131beb7566a557d28e3042",
+      "csv_sha256": "cad4e92959e1133d7408588cc45c832c059e175b869637874fce7c0f185ae5cb",
       "metadata": "releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week08_ngs_live_thursday_draftkings_week08_20261029T181406ET.json",
       "metadata_sha256": "e8d53c9e3ebab8f672eaab0e997dfcee052ea25ee10b576b21d180ea607eb57a",
       "model_version": "td_product_ngs_44_frozen_2025_v1",

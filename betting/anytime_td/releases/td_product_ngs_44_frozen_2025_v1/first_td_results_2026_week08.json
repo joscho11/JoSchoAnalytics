@@ -371,111 +371,111 @@
       "pending_reason": null,
       "player_settlements": {
         "00-0031610": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0033589": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0033858": {
           "scored_first": null,
-          "status": "awaiting_evidence"
+          "status": "void"
         },
         "00-0035700": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0036264": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0036265": {
           "scored_first": null,
-          "status": "awaiting_evidence"
+          "status": "void"
         },
         "00-0036555": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0036825": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0037005": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0037091": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0037614": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0038098": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0038124": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0038589": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0038840": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0038996": {
           "scored_first": 1.0,
           "status": "settled"
         },
         "00-0039150": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0039356": {
           "scored_first": null,
-          "status": "awaiting_evidence"
+          "status": "void"
         },
         "00-0039491": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0039811": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0040009": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0040124": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0040187": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0040644": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         },
         "00-0040667": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 0.0,
+          "status": "settled"
         }
       },
       "scorer_name": "Tucker Kraft",
       "scorer_on_board": true,
       "scorer_player_id": "00-0038996",
       "scorer_team": "GB",
-      "settlements_updated_at": "2026-10-30T05:53:20Z",
+      "settlements_updated_at": "2026-10-30T12:59:37Z",
       "source_hashes": {
         "play_by_play": "e062194824f9121415ee14130964f22dec9480097635f0ad36299df926098d28",
         "player_identity": "0e7b040f65210207991ec039403d0a5dd8047fe083c1293e0a8538a999efadd8",
