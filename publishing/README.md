@@ -11,7 +11,7 @@ folder under `cowork_OS` is required.
 
 ## Release lifecycle
 
-1. `spread_v3_prod` or `weekly_projections_v2_prod` writes a weekly CSV plus
+1. `spread_v3_prod` or `nfl_fantasy_weekly_projections_v2_prod` writes a weekly CSV plus
    `<artifact>.metadata.json` sidecar.
 2. `publishing.cli publish` verifies the schema, season/week, identifiers,
    duplicates, finite values, model version, SHA-256, row and coverage claims,
@@ -53,8 +53,8 @@ python -m publishing.cli publish `
   --metadata ..\spread_v3_prod\outputs\predictions_2026_week01.metadata.json
 
 python -m publishing.cli publish `
-  --artifact ..\weekly_projections_v2_prod\independent_model\outputs\projections_2026_week01.csv `
-  --metadata ..\weekly_projections_v2_prod\independent_model\outputs\projections_2026_week01.metadata.json
+  --artifact ..\nfl_fantasy_weekly_projections_v2_prod\independent_model\outputs\projections_2026_week01.csv `
+  --metadata ..\nfl_fantasy_weekly_projections_v2_prod\independent_model\outputs\projections_2026_week01.metadata.json
 ```
 
 A validation failure returns exit code 1 and leaves the active and previous pointers

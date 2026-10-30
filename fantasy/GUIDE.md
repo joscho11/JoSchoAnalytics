@@ -4,7 +4,7 @@ The current release is selected through `data/releases/manifest.json`. Because
 the active week advances over the season, use `python -m publishing.cli status`
 for the current public release and grading state.
 
-The weekly fantasy product is built in `weekly_projections_v2_prod`, a separate private repository. This public repository owns candidate validation, immutable releases, the website, and the frozen 2025 demo.
+The weekly fantasy product is built in `nfl_fantasy_weekly_projections_v2_prod`, a separate private repository. This public repository owns candidate validation, immutable releases, the website, and the frozen 2025 demo.
 
 ## Current 2026 system
 
@@ -85,7 +85,7 @@ The Weekly Fantasy page reads those graded files when it renders, so each comple
 | `../site_pages/page_weekly_fantasy.py` | Release-backed weekly fantasy page |
 | `../site_pages/fantasy_accuracy.py` | Postgame scorecard definitions, shared by the page and its tests |
 
-Training for the 2026 weekly producer is in the private `weekly_projections_v2_prod` repository. This public tree does not ship notebooks or serialized models.
+Training for the 2026 weekly producer is in the private `nfl_fantasy_weekly_projections_v2_prod` repository. This public tree does not ship notebooks or serialized models.
 
 ## Reproducing the public state
 
