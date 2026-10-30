@@ -219,7 +219,7 @@ def test_runtime_separation_no_training_dependency():
         elif isinstance(node, ast.ImportFrom) and node.module:
             imported.add(node.module.split(".")[0])
     banned = {"sklearn", "lightgbm", "xgboost", "scipy", "joblib", "numpy", "nflreadpy",
-              "m4_engine", "papermill", "torch", "season_totals_v2_prod"}
+              "m4_engine", "papermill", "torch", "nfl_season_totals_v2_prod"}
     assert not (imported & banned)
     assert imported <= {"json", "pathlib", "pandas", "streamlit", "team_display"}
 
