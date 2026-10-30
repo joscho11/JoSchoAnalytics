@@ -6,7 +6,7 @@ The betting area contains the 2026 spread product, a frozen 2025 demo, and an ex
 
 ## Current 2026 spread product
 
-The live spread producer is `spread_v3_prod`, a separate private repository. It writes candidate predictions and a SHA-256 sidecar. This public repository validates those candidates, stores immutable builds, and activates them through the [publishing contract](../publishing/README.md).
+The live spread producer is `nfl_spread_v3_prod`, a separate private repository. It writes candidate predictions and a SHA-256 sidecar. This public repository validates those candidates, stores immutable builds, and activates them through the [publishing contract](../publishing/README.md).
 
 The 2026 display logic lives in `live_2026.py`:
 
@@ -75,7 +75,7 @@ Publication keeps prediction inputs immutable. Final scores and ATS results are 
 | `../site_pages/page_weekly_predictions.py` | Release-backed weekly spread page |
 | `../data/releases/` | Immutable published prediction builds |
 
-Training code for the live spread is in the private `spread_v3_prod` repository. This public tree does not ship notebooks or serialized models.
+Training code for the live spread is in the private `nfl_spread_v3_prod` repository. This public tree does not ship notebooks or serialized models.
 
 ## Anytime TDs
 

@@ -13,7 +13,7 @@ runtime and checked or user-supplied CSV artifacts; it does not generate project
 
 Private producers:
 
-- `spread_v3_prod` writes weekly spread candidates
+- `nfl_spread_v3_prod` writes weekly spread candidates
 - `weekly_projections_v2_prod` writes weekly fantasy candidates
 - `dfs_optimizer_v1_prod` writes verified direct-DK projection candidates
 - `td_count_model_beta` writes 2025 Anytime TD demo CSVs into `betting/anytime_td/`

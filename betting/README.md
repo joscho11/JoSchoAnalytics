@@ -1,6 +1,6 @@
 # Betting display
 
-This folder is website display data and rules. Training lives in `spread_v3_prod`.
+This folder is website display data and rules. Training lives in `nfl_spread_v3_prod`.
 
 | Path | Role |
 |---|---|

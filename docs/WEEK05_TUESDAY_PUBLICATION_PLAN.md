@@ -90,10 +90,10 @@ than allowing a single oversized cell. Public-repo rules prohibit notebooks ther
 
 Replace fixed participation assumptions with canonical schedule sets in:
 
-- `spread_v3_prod/src/tuesday_odds.py::_slate_week` (currently requires 16).
-- `spread_v3_prod/src/odds.py::validate_tuesday_snapshot` (currently requires 16).
-- `spread_v3_prod/src/forward.py::_read_slate` (currently requires 16).
-- `spread_v3_prod/src/forward.py` synthetic-state coverage (currently requires
+- `nfl_spread_v3_prod/src/tuesday_odds.py::_slate_week` (currently requires 16).
+- `nfl_spread_v3_prod/src/odds.py::validate_tuesday_snapshot` (currently requires 16).
+- `nfl_spread_v3_prod/src/forward.py::_read_slate` (currently requires 16).
+- `nfl_spread_v3_prod/src/forward.py` synthetic-state coverage (currently requires
   all 32 teams, although only 30 play this week).
 
 Require a nonempty, unique schedule slate, exact scheduled game/team coverage,
@@ -116,7 +116,7 @@ to its options; it is not the weekly forward command.
 ### 3. Recover Sunday odds once, then validate the authorized backup
 
 Implement a targeted helper, for example
-`spread_v3_prod/scripts/capture_paid_sunday.py --season 2026 --week 5 --out <path> --fallback <manual-path>`.
+`nfl_spread_v3_prod/scripts/capture_paid_sunday.py --season 2026 --week 5 --out <path> --fallback <manual-path>`.
 This is a new helper to implement, not an existing CLI. Use a separate immutable
 destination:
 `workspace/nfl/raw/odds_api_rebuild/sunday_1120_paid_recovery/2026_w05.json`.
@@ -154,7 +154,7 @@ generic historical timing guards. Do not add a broad cutoff bypass.
 
 The new helper must exit nonzero if neither source validates, and emit a JSON
 selection report containing `selected_path`, `selected_source`, validation status,
-source hash, and paid-attempt outcome. In the notebook, from `spread_v3_prod`,
+source hash, and paid-attempt outcome. In the notebook, from `nfl_spread_v3_prod`,
 set the selected path explicitly before the scoring stage:
 
 ```powershell
@@ -194,7 +194,7 @@ Week 4 player stats, opportunity, snap counts, PBP, schedule, and team EPA;
 preserve existing per-source missingness policies for auxiliary feeds.
 
 Then refresh the spread cache through
-`spread_v3_prod/scripts/refresh_current_pbp.py`. Its `fetch()` is isolated from
+`nfl_spread_v3_prod/scripts/refresh_current_pbp.py`. Its `fetch()` is isolated from
 validation/write logic, so prefer passing the just-captured PBP/schedule through
 that existing validation path to avoid another large pull. Keep full-week
 completeness, old-column/game retention, hash-bound backup, and atomic replacement.
@@ -215,7 +215,7 @@ Use new versioned producer output directories. From their respective roots:
 # weekly_projections_v2_prod
 & $producerPy independent_model\src\forward.py --season 2026 --week 5 --projections ..\workspace\nfl\raw\sleeper\tuesday\2026_w05_projections.json --directory ..\workspace\nfl\raw\sleeper\tuesday\2026_w05.json --lineup-overrides ..\workspace\nfl\raw\news\2026_w05_lineup_overrides.csv --out-dir independent_model\outputs\week05_live_v1
 
-# spread_v3_prod, after its patches and Sunday source selection
+# nfl_spread_v3_prod, after its patches and Sunday source selection
 & $producerPy src\tuesday_odds.py select --season 2026 --week 5
 $asOf = (Get-Date).ToUniversalTime().ToString('o')
 & $producerPy src\forward.py --season 2026 --week 5 --as-of $asOf --sunday-market $selectedSundayPath --out-dir outputs\week05_live_v1
@@ -242,7 +242,7 @@ table for that approval if no applicable Week 5 approval exists, then save the
 approved JSON; do not manufacture approval merely to satisfy the gate.
 
 ```powershell
-# spread_v3_prod, after the QB review gate
+# nfl_spread_v3_prod, after the QB review gate
 & $producerPy scripts\audit_forward_release.py --season 2026 --week 5 --out-dir outputs\week05_live_v1 --report artifacts\week05_input_review_v1.json --qb-approved artifacts\week05_qb_table_approved_v1.json
 ```
 
@@ -264,8 +264,8 @@ From `JoSchoAnalytics`:
 $schedule = '..\workspace\nfl\nfl_2026_schedule.csv'
 $fantasy = '..\weekly_projections_v2_prod\independent_model\outputs\week05_live_v1\projections_2026_week05.csv'
 $fantasyMeta = '..\weekly_projections_v2_prod\independent_model\outputs\week05_live_v1\projections_2026_week05.metadata.json'
-$spread = '..\spread_v3_prod\outputs\week05_live_v1\predictions_2026_week05.csv'
-$spreadMeta = '..\spread_v3_prod\outputs\week05_live_v1\predictions_2026_week05.metadata.json'
+$spread = '..\nfl_spread_v3_prod\outputs\week05_live_v1\predictions_2026_week05.csv'
+$spreadMeta = '..\nfl_spread_v3_prod\outputs\week05_live_v1\predictions_2026_week05.metadata.json'
 & $sitePy -m publishing.cli validate --artifact $fantasy --metadata $fantasyMeta --schedule $schedule
 & $sitePy -m publishing.cli validate --artifact $spread --metadata $spreadMeta --schedule $schedule
 ```
@@ -288,7 +288,7 @@ schedule CLI for the reviewed Week 5 target, rather than guessing a Week 6 date.
 Focused validation commands, from the indicated repos:
 
 ```powershell
-# spread_v3_prod: add the new bye-week/paid-Sunday tests to this bounded suite
+# nfl_spread_v3_prod: add the new bye-week/paid-Sunday tests to this bounded suite
 & $producerPy -m pytest tests\test_tuesday_odds.py tests\test_forward_release.py tests\test_qb_selection.py tests\test_release_qb_metadata.py -q
 # weekly_projections_v2_prod/independent_model
 & $producerPy -m pytest tests\test_current_season_capture.py tests\test_forward.py tests\test_lineup_overrides.py tests\test_sleeper_weekly.py -q

@@ -1,6 +1,6 @@
 """2026 live Tuesday-model display rules. Not the 2025 3-voter demo.
 
-Production lives in the private leftover Ridge (`spread_v3_prod`). For 2026
+Production lives in the private leftover Ridge (`nfl_spread_v3_prod`). For 2026
 releases, the Tuesday US median drives the model, pick, model edge, and HIGH
 flag. The best US Tuesday quote for that side is displayed separately and used
 for grading. A later market move alone cannot add HIGH; an explicitly published
