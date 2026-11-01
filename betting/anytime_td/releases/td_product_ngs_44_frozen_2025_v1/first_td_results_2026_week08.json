@@ -5,7 +5,7 @@
       "first_score_play_id": null,
       "first_score_qtr": null,
       "game_id": "2026_08_ARI_DAL",
-      "graded_at": "2026-11-01T15:47:44Z",
+      "graded_at": "2026-11-01T15:55:10Z",
       "identity_source": "play_by_play_player_id",
       "outcome_kind": null,
       "pending_reason": "game_not_final",
@@ -107,10 +107,9 @@
       "scorer_on_board": null,
       "scorer_player_id": null,
       "scorer_team": null,
-      "settlements_updated_at": "2026-11-01T15:47:44Z",
       "source_hashes": {
         "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
-        "player_identity": "935319017af4bee32ea315f0cbaa8e6e751a4fd85bba127d104d9ff51f81a971",
+        "player_identity": "93779b8f71f0711c669a1a2030b96b29d32da95e4b913472f7852b8ed6721d8c",
         "published_frozen_inputs": "6d9cf4212b947eae1786b4b17fc528181fd1b7ba36b7a8bfd7487612fd4bde54",
         "schedule": "ec6dde8a12787ce5848b939cc1bdbfd0e741052ffb388fd0068183e55476fbca"
       },
@@ -121,7 +120,7 @@
       "first_score_play_id": null,
       "first_score_qtr": null,
       "game_id": "2026_08_ATL_TB",
-      "graded_at": "2026-11-01T15:47:44Z",
+      "graded_at": "2026-11-01T15:55:10Z",
       "identity_source": "play_by_play_player_id",
       "outcome_kind": null,
       "pending_reason": "game_not_final",
@@ -225,7 +224,7 @@
       "scorer_team": null,
       "source_hashes": {
         "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
-        "player_identity": "935319017af4bee32ea315f0cbaa8e6e751a4fd85bba127d104d9ff51f81a971",
+        "player_identity": "93779b8f71f0711c669a1a2030b96b29d32da95e4b913472f7852b8ed6721d8c",
         "published_frozen_inputs": "6d9cf4212b947eae1786b4b17fc528181fd1b7ba36b7a8bfd7487612fd4bde54",
         "schedule": "afb3a7902dbb2fa6248a4e256bb65e927e204d445535436740257ddf7b6934eb"
       },
@@ -236,7 +235,7 @@
       "first_score_play_id": null,
       "first_score_qtr": null,
       "game_id": "2026_08_BAL_BUF",
-      "graded_at": "2026-11-01T15:47:44Z",
+      "graded_at": "2026-11-01T15:55:10Z",
       "identity_source": "play_by_play_player_id",
       "outcome_kind": null,
       "pending_reason": "game_not_final",
@@ -356,7 +355,7 @@
       "scorer_team": null,
       "source_hashes": {
         "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
-        "player_identity": "935319017af4bee32ea315f0cbaa8e6e751a4fd85bba127d104d9ff51f81a971",
+        "player_identity": "93779b8f71f0711c669a1a2030b96b29d32da95e4b913472f7852b8ed6721d8c",
         "published_frozen_inputs": "6d9cf4212b947eae1786b4b17fc528181fd1b7ba36b7a8bfd7487612fd4bde54",
         "schedule": "ed9da342262fcfac9480da7a8d2db00bd84301dc2baa0dc0bdcbaae57f373cc3"
       },
@@ -491,7 +490,7 @@
       "first_score_play_id": null,
       "first_score_qtr": null,
       "game_id": "2026_08_CHI_SEA",
-      "graded_at": "2026-11-01T15:47:44Z",
+      "graded_at": "2026-11-01T15:55:10Z",
       "identity_source": "play_by_play_player_id",
       "outcome_kind": null,
       "pending_reason": "game_not_final",
@@ -589,10 +588,9 @@
       "scorer_on_board": null,
       "scorer_player_id": null,
       "scorer_team": null,
-      "settlements_updated_at": "2026-11-01T15:47:44Z",
       "source_hashes": {
         "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
-        "player_identity": "935319017af4bee32ea315f0cbaa8e6e751a4fd85bba127d104d9ff51f81a971",
+        "player_identity": "93779b8f71f0711c669a1a2030b96b29d32da95e4b913472f7852b8ed6721d8c",
         "published_frozen_inputs": "6d9cf4212b947eae1786b4b17fc528181fd1b7ba36b7a8bfd7487612fd4bde54",
         "schedule": "ac9da8dc785a94cebbd44067407919a112b5cf4083b69a72c3438a49813c2be5"
       },
@@ -603,7 +601,7 @@
       "first_score_play_id": null,
       "first_score_qtr": null,
       "game_id": "2026_08_CLE_PIT",
-      "graded_at": "2026-11-01T15:47:44Z",
+      "graded_at": "2026-11-01T15:55:10Z",
       "identity_source": "play_by_play_player_id",
       "outcome_kind": null,
       "pending_reason": "game_not_final",
@@ -715,7 +713,7 @@
       "scorer_team": null,
       "source_hashes": {
         "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
-        "player_identity": "935319017af4bee32ea315f0cbaa8e6e751a4fd85bba127d104d9ff51f81a971",
+        "player_identity": "93779b8f71f0711c669a1a2030b96b29d32da95e4b913472f7852b8ed6721d8c",
         "published_frozen_inputs": "6d9cf4212b947eae1786b4b17fc528181fd1b7ba36b7a8bfd7487612fd4bde54",
         "schedule": "b712859365f0f96ff52193005a0c7d042b19d4fa87f9f7fa75c9987e2a6b7032"
       },
@@ -726,7 +724,7 @@
       "first_score_play_id": null,
       "first_score_qtr": null,
       "game_id": "2026_08_IND_JAX",
-      "graded_at": "2026-11-01T15:47:44Z",
+      "graded_at": "2026-11-01T15:55:10Z",
       "identity_source": "play_by_play_player_id",
       "outcome_kind": null,
       "pending_reason": "game_not_final",
@@ -852,10 +850,9 @@
       "scorer_on_board": null,
       "scorer_player_id": null,
       "scorer_team": null,
-      "settlements_updated_at": "2026-11-01T15:47:44Z",
       "source_hashes": {
         "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
-        "player_identity": "935319017af4bee32ea315f0cbaa8e6e751a4fd85bba127d104d9ff51f81a971",
+        "player_identity": "93779b8f71f0711c669a1a2030b96b29d32da95e4b913472f7852b8ed6721d8c",
         "published_frozen_inputs": "6d9cf4212b947eae1786b4b17fc528181fd1b7ba36b7a8bfd7487612fd4bde54",
         "schedule": "809b41bc895b41e18e33af1042d39d0ded62b4c6ac1a55b68b91e00bca6528b5"
       },
@@ -866,7 +863,7 @@
       "first_score_play_id": null,
       "first_score_qtr": null,
       "game_id": "2026_08_KC_DEN",
-      "graded_at": "2026-11-01T15:47:44Z",
+      "graded_at": "2026-11-01T15:55:10Z",
       "identity_source": "play_by_play_player_id",
       "outcome_kind": null,
       "pending_reason": "game_not_final",
@@ -984,10 +981,9 @@
       "scorer_on_board": null,
       "scorer_player_id": null,
       "scorer_team": null,
-      "settlements_updated_at": "2026-11-01T15:47:44Z",
       "source_hashes": {
         "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
-        "player_identity": "935319017af4bee32ea315f0cbaa8e6e751a4fd85bba127d104d9ff51f81a971",
+        "player_identity": "93779b8f71f0711c669a1a2030b96b29d32da95e4b913472f7852b8ed6721d8c",
         "published_frozen_inputs": "6d9cf4212b947eae1786b4b17fc528181fd1b7ba36b7a8bfd7487612fd4bde54",
         "schedule": "5c747124bd10bbd226248cd7225670abd3e4cc42cfaaefa1da8e82b3309d400c"
       },
@@ -998,7 +994,7 @@
       "first_score_play_id": null,
       "first_score_qtr": null,
       "game_id": "2026_08_LAC_LA",
-      "graded_at": "2026-11-01T15:47:44Z",
+      "graded_at": "2026-11-01T15:55:10Z",
       "identity_source": "play_by_play_player_id",
       "outcome_kind": null,
       "pending_reason": "game_not_final",
@@ -1116,10 +1112,9 @@
       "scorer_on_board": null,
       "scorer_player_id": null,
       "scorer_team": null,
-      "settlements_updated_at": "2026-11-01T15:47:44Z",
       "source_hashes": {
         "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
-        "player_identity": "935319017af4bee32ea315f0cbaa8e6e751a4fd85bba127d104d9ff51f81a971",
+        "player_identity": "93779b8f71f0711c669a1a2030b96b29d32da95e4b913472f7852b8ed6721d8c",
         "published_frozen_inputs": "6d9cf4212b947eae1786b4b17fc528181fd1b7ba36b7a8bfd7487612fd4bde54",
         "schedule": "1f2e1efc99b830009a0f153ab315e32b3db2c5ff95fb5fcb3d64ca82e9d461a4"
       },
@@ -1130,7 +1125,7 @@
       "first_score_play_id": null,
       "first_score_qtr": null,
       "game_id": "2026_08_LV_NYJ",
-      "graded_at": "2026-11-01T15:47:44Z",
+      "graded_at": "2026-11-01T15:55:10Z",
       "identity_source": "play_by_play_player_id",
       "outcome_kind": null,
       "pending_reason": "game_not_final",
@@ -1264,10 +1259,9 @@
       "scorer_on_board": null,
       "scorer_player_id": null,
       "scorer_team": null,
-      "settlements_updated_at": "2026-11-01T15:47:44Z",
       "source_hashes": {
         "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
-        "player_identity": "935319017af4bee32ea315f0cbaa8e6e751a4fd85bba127d104d9ff51f81a971",
+        "player_identity": "93779b8f71f0711c669a1a2030b96b29d32da95e4b913472f7852b8ed6721d8c",
         "published_frozen_inputs": "6d9cf4212b947eae1786b4b17fc528181fd1b7ba36b7a8bfd7487612fd4bde54",
         "schedule": "ce1407f3576fd826727ae5f294d4087017414c68dd7e6bbdd614ee9b6d43ab28"
       },
@@ -1278,7 +1272,7 @@
       "first_score_play_id": null,
       "first_score_qtr": null,
       "game_id": "2026_08_MIN_DET",
-      "graded_at": "2026-11-01T15:47:44Z",
+      "graded_at": "2026-11-01T15:55:10Z",
       "identity_source": "play_by_play_player_id",
       "outcome_kind": null,
       "pending_reason": "game_not_final",
@@ -1388,10 +1382,9 @@
       "scorer_on_board": null,
       "scorer_player_id": null,
       "scorer_team": null,
-      "settlements_updated_at": "2026-11-01T15:47:44Z",
       "source_hashes": {
         "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
-        "player_identity": "935319017af4bee32ea315f0cbaa8e6e751a4fd85bba127d104d9ff51f81a971",
+        "player_identity": "93779b8f71f0711c669a1a2030b96b29d32da95e4b913472f7852b8ed6721d8c",
         "published_frozen_inputs": "6d9cf4212b947eae1786b4b17fc528181fd1b7ba36b7a8bfd7487612fd4bde54",
         "schedule": "a10dc936380b28c7d633107301a0749fea41a86fdb6dafb3d380e059c94e438c"
       },
@@ -1402,7 +1395,7 @@
       "first_score_play_id": null,
       "first_score_qtr": null,
       "game_id": "2026_08_NE_MIA",
-      "graded_at": "2026-11-01T15:47:44Z",
+      "graded_at": "2026-11-01T15:55:10Z",
       "identity_source": "play_by_play_player_id",
       "outcome_kind": null,
       "pending_reason": "game_not_final",
@@ -1520,10 +1513,9 @@
       "scorer_on_board": null,
       "scorer_player_id": null,
       "scorer_team": null,
-      "settlements_updated_at": "2026-11-01T15:47:44Z",
       "source_hashes": {
         "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
-        "player_identity": "935319017af4bee32ea315f0cbaa8e6e751a4fd85bba127d104d9ff51f81a971",
+        "player_identity": "93779b8f71f0711c669a1a2030b96b29d32da95e4b913472f7852b8ed6721d8c",
         "published_frozen_inputs": "6d9cf4212b947eae1786b4b17fc528181fd1b7ba36b7a8bfd7487612fd4bde54",
         "schedule": "7906d89c502ea858d98e95433edcadad7ec89f1db78059155d46b22a8886bc7e"
       },
@@ -1534,7 +1526,7 @@
       "first_score_play_id": null,
       "first_score_qtr": null,
       "game_id": "2026_08_PHI_WAS",
-      "graded_at": "2026-11-01T15:47:44Z",
+      "graded_at": "2026-11-01T15:55:10Z",
       "identity_source": "play_by_play_player_id",
       "outcome_kind": null,
       "pending_reason": "game_not_final",
@@ -1652,10 +1644,9 @@
       "scorer_on_board": null,
       "scorer_player_id": null,
       "scorer_team": null,
-      "settlements_updated_at": "2026-11-01T15:47:44Z",
       "source_hashes": {
         "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
-        "player_identity": "935319017af4bee32ea315f0cbaa8e6e751a4fd85bba127d104d9ff51f81a971",
+        "player_identity": "93779b8f71f0711c669a1a2030b96b29d32da95e4b913472f7852b8ed6721d8c",
         "published_frozen_inputs": "6d9cf4212b947eae1786b4b17fc528181fd1b7ba36b7a8bfd7487612fd4bde54",
         "schedule": "5e5eacd9bb5bac68437afb727eb5d390597d1df35755ba2dcfba567d404fbac0"
       },
@@ -1666,7 +1657,7 @@
       "first_score_play_id": null,
       "first_score_qtr": null,
       "game_id": "2026_08_TEN_CIN",
-      "graded_at": "2026-11-01T15:47:44Z",
+      "graded_at": "2026-11-01T15:55:10Z",
       "identity_source": "play_by_play_player_id",
       "outcome_kind": null,
       "pending_reason": "game_not_final",
@@ -1786,7 +1777,7 @@
       "scorer_team": null,
       "source_hashes": {
         "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
-        "player_identity": "935319017af4bee32ea315f0cbaa8e6e751a4fd85bba127d104d9ff51f81a971",
+        "player_identity": "93779b8f71f0711c669a1a2030b96b29d32da95e4b913472f7852b8ed6721d8c",
         "published_frozen_inputs": "6d9cf4212b947eae1786b4b17fc528181fd1b7ba36b7a8bfd7487612fd4bde54",
         "schedule": "0236b217f82eca159bab4fcc435c4d65e2e4a3b5e16f7985143d6a6eccf9d31f"
       },

@@ -1,0 +1,15 @@
+{
+  "artifact": "data/releases/results/fantasy/2026/week08/fantasy-2026w08-399059b7cd21-graded.csv",
+  "artifact_sha256": "cad6161283947b415c1099af217547d6a087b8d2e04efb92cd37491425dcb2e7",
+  "complete": false,
+  "final_games": 1,
+  "graded_at": "2026-11-01T15:55:06Z",
+  "graded_rows": 21,
+  "missing_actuals": 337,
+  "product": "fantasy",
+  "schema_version": 1,
+  "season": 2026,
+  "source_build": "fantasy-2026w08-399059b7cd21",
+  "week": 8,
+  "zero_filled_after_complete_feed": false
+}
