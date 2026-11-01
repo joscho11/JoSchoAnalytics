@@ -1,0 +1,42 @@
+{
+  "run_id": "week08_sunday_20261101_v1",
+  "capture_time": "Sunday, Nov 1, 2026, about 9:30 AM ET (user-confirmed)",
+  "products": {
+    "weekly_fantasy": {
+      "active_build": "fantasy-2026w08-399059b7cd21",
+      "sha256": "399059b7cd212126447bf3f9b7127907f529a4ed76f68892ffb5d80a44588949",
+      "rows": 358,
+      "validation": "passed",
+      "locked_thursday_car_gb_rows": 26
+    },
+    "touchdown_props": {
+      "model": "td_product_ngs_44_frozen_2025_v1",
+      "csv_sha256": "9918837837185cee6b98db676cae93b822dc125feba47ae90585bc8db8e09295",
+      "metadata_sha256": "c72e3fea8f1dd95b9605fa4daebe2338cc4fe5c1f52a9e144c2a4ef05e44baa7",
+      "manifest_sha256": "1670407b37119ad42359e3d5669b1c2ce77f7a83100553f24cb368f7cdae9488",
+      "rows": 348,
+      "thursday_car_gb_rows_preserved": 25,
+      "first_td_results_sha256": "7d853bf3b3ea4863d59e730a8819ce71f54223bd7a9ee85a5b5870f9b7172145",
+      "first_td_ledger_sha256": "2a0893a62c311fa3eb384da68cf5ac611f5b1f927460fa9925848b6b64d4289d",
+      "first_td_status": "Frozen decisions retained, 1 pick and 13 no-pick decisions; Sunday quote completeness unverified."
+    },
+    "dfs_optimizer": {
+      "source_fantasy_build": "fantasy-2026w08-399059b7cd21",
+      "projection_csv_sha256": "74a41ae6c83f9bdfd29cb5323d1d31afc8276dff75e2552c0e02ffd382eaf73d",
+      "status": "verified Week 8 projections ready; salary upload was not provided, so no lineup was generated."
+    },
+    "prop_odds_archive": {
+      "status": "six DraftKings player-prop markets archived privately with raw captures, hashes, and parsed quote provenance",
+      "rows": 495,
+      "public_ui_or_model_inputs": "unchanged"
+    }
+  },
+  "checks": {
+    "publishing_cli_status": "passed",
+    "focused_release_and_site_tests": "36 passed",
+    "combined_previously_run_suite": "306 passed, 5 existing unrelated/date-sensitive failures, 147 deselected",
+    "visual_review": "Weekly Fantasy, TD/First TD, and DFS tabs inspected at desktop 1280x1200 and mobile 390x844; no clipping or page overflow observed. TD market table inspected at both widths.",
+    "active_manifests": "fantasy and TD pointers verified against candidate artifact hashes",
+    "push": "not performed"
+  }
+}
