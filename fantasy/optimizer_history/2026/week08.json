@@ -1,0 +1,125 @@
+{
+  "season": 2026,
+  "week": 8,
+  "mode": "tournament_ceiling",
+  "engine_version": "0.2.3",
+  "projection_sha256": "74a41ae6c83f9bdfd29cb5323d1d31afc8276dff75e2552c0e02ffd382eaf73d",
+  "salary_sha256": "877ced102e49d9486c3d83e6102164b45cb6a4cb6302f9862e1de093178899c3",
+  "field": {
+    "median": 121,
+    "top": 255
+  },
+  "lineups": [
+    {
+      "label": "Optimizer lineup",
+      "kind": "untouched",
+      "exclusions": [],
+      "total_actual": 97.86,
+      "total_ceiling": 182.33,
+      "total_mean": 138.39,
+      "salary": 50000,
+      "top_pct": 80,
+      "players": [
+        {
+          "slot": "QB",
+          "player": "Jacoby Brissett",
+          "pos": "QB",
+          "team": "ARI",
+          "salary": 5700,
+          "ceiling": 27.69,
+          "mean": 19.28,
+          "actual": 4.46,
+          "own": "9%"
+        },
+        {
+          "slot": "RB",
+          "player": "Javonte Williams",
+          "pos": "RB",
+          "team": "DAL",
+          "salary": 7300,
+          "ceiling": 24.88,
+          "mean": 19.66,
+          "actual": 6.7,
+          "own": "13%"
+        },
+        {
+          "slot": "RB",
+          "player": "Braelon Allen",
+          "pos": "RB",
+          "team": "NYJ",
+          "salary": 6100,
+          "ceiling": 22.28,
+          "mean": 17.06,
+          "actual": 26.3,
+          "own": "22%"
+        },
+        {
+          "slot": "WR",
+          "player": "Puka Nacua",
+          "pos": "WR",
+          "team": "LAR",
+          "salary": 8600,
+          "ceiling": 27.26,
+          "mean": 21.95,
+          "actual": 25.0,
+          "own": "16%"
+        },
+        {
+          "slot": "WR",
+          "player": "CeeDee Lamb",
+          "pos": "WR",
+          "team": "DAL",
+          "salary": 8100,
+          "ceiling": 26.69,
+          "mean": 21.38,
+          "actual": 12.8,
+          "own": "26%"
+        },
+        {
+          "slot": "WR",
+          "player": "Jordan Addison",
+          "pos": "WR",
+          "team": "MIN",
+          "salary": 5100,
+          "ceiling": 19.56,
+          "mean": 14.25,
+          "actual": 11.6,
+          "own": "2%"
+        },
+        {
+          "slot": "FLEX",
+          "player": "Travis Hunter",
+          "pos": "WR",
+          "team": "JAX",
+          "salary": 3100,
+          "ceiling": 13.57,
+          "mean": 8.26,
+          "actual": 0.5,
+          "own": "1%"
+        },
+        {
+          "slot": "TE",
+          "player": "Brenton Strange",
+          "pos": "TE",
+          "team": "JAX",
+          "salary": 4000,
+          "ceiling": 14.71,
+          "mean": 10.86,
+          "actual": 7.5,
+          "own": "13%"
+        },
+        {
+          "slot": "DST",
+          "player": "Chargers",
+          "pos": "DST",
+          "team": "LAC",
+          "salary": 2000,
+          "ceiling": 5.68,
+          "mean": 5.68,
+          "actual": 3.0,
+          "own": "6%"
+        }
+      ]
+    }
+  ]
+}
