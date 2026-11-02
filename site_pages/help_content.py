@@ -110,7 +110,9 @@ season-total products are separate systems; their numbers should not be mixed.
         """
     )
     pages = (
-        ("this-week", "This Week", "A compact hub for the current spread, fantasy, and touchdown-props releases."),
+        ("this-week", "This Week", "A compact hub for the current spread and fantasy releases."
+         if nav_registry.is_archived("anytime-tds") else
+         "A compact hub for the current spread, fantasy, and touchdown-props releases."),
         ("weekly-predictions", "Weekly Predictions", "NFL matchup margins, Tuesday HIGH qualification, and graded picks."),
         ("track-record", "Track Record", "Graded ATS results and the historical record by season and confidence tier."),
         ("season-totals", "Season Totals", "Team win projections compared with posted regular-season totals."),
@@ -122,6 +124,8 @@ season-total products are separate systems; their numbers should not be mixed.
         ("league-history", "League History", "Sleeper, ESPN, Yahoo, and CBS league imports and history views."),
     )
     for slug, label, description in pages:
+        if nav_registry.is_archived(slug):
+            continue
         _page_link(slug, f"{label} — {description}")
     st.caption(
         "Yahoo does not price every one of the 180 players on Draft Board; those "

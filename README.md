@@ -6,28 +6,28 @@ JoScho Analytics is a source-available Streamlit site for football and basketbal
 
 ## Current site
 
-The app has 14 routes, grouped in the navigation as Betting, Fantasy, College Basketball, and More:
+The app retains 14 routes. Active products are grouped in the navigation as Betting, Fantasy, and More. Touchdown Props and College Basketball are paused and hidden from navigation; their old URLs show a pause notice.
 
 | Route | Purpose |
 |---|---|
 | Home | Site status and product links. |
 | This Week | Upcoming NFL slate and weekly context. |
 | Weekly Predictions | NFL spread predictions, market comparisons, and release status. |
-| Touchdown Props (Beta) | Anytime and first-touchdown comparisons with posted prices. |
+| Touchdown Props (paused) | Retained URL with a pause notice; historical code and records preserved. |
 | Track Record | Graded spread results and historical comparisons. |
 | Season Totals (Beta) | NFL team win projections compared with posted totals. |
 | Weekly Fantasy (Beta) | Weekly player projections and postgame grading. |
 | DFS Optimizer (Beta) | DraftKings Classic lineup builder using checked projection files. |
 | Draft Board | 2026 season projections, market ranks, and descriptive talent context. |
 | Rookie Board | Rookie hit probabilities, projections, college production, and athletic context. |
-| Daily predictions (Beta) | College basketball score predictions and exploratory market comparisons. |
+| College Basketball predictions (paused) | Retained URL with a pause notice; historical code and records preserved. |
 | Film Room | Short video breakdowns with written analysis. |
 | League History | Sleeper, ESPN, and Yahoo league records and manager trends. |
 | Help & Guide | Plain-language product methods, definitions, and limitations. |
 
 The checked-in manifest was last updated October 27, 2026. It points to active 2026 spread and fantasy builds for Week 8, with Week 7 as the latest grading pointer for both. The touchdown release manifest also includes Week 8. For live status, use the manifest files and `python -m publishing.cli status`; weekly status changes more often than this README.
 
-The College Basketball page and release contract are implemented, but this checkout contains no published daily card manifest, so a released card was not verified locally.
+Weekly pasted TD odds logging continues privately without scoring new predictions or publishing new boards. See [product archive and restoration](docs/product_archive.md) for the logging boundary and restoration steps.
 
 ## Models and evidence
 
@@ -35,7 +35,7 @@ The current spread product uses the Sunday-to-Tuesday market Ridge, model versio
 
 The older 64.2% headline was retracted after a pregame feature leak. The corrected archived in-repository HIGH book is 129/238 (54.20%; Wilson lower bound 47.86%), below the roughly 52.4% break-even rate at -110. The old result and the 2026 walk-forward are different evidence sets; neither supports claiming a guaranteed or proven betting edge. See the [betting guide](betting/GUIDE.md) and [Track Record](https://joschoanalytics.streamlit.app/track-record) for methods and graded evidence.
 
-Weekly fantasy, spread predictions, and touchdown boards are released from producer candidates through `publishing/`. Validators check contracts and hashes before builds are activated. Grading is stored separately from the original prediction or projection. The site reads CSV and JSON artifacts; it does not load serialized model files.
+Weekly fantasy and spread predictions are released from producer candidates through `publishing/`. Existing touchdown releases and their grading are retained while public TD predictions are paused. Validators check contracts and hashes before builds are activated. Grading is stored separately from the original prediction or projection. The site reads CSV and JSON artifacts; it does not load serialized model files.
 
 ## Repository map
 

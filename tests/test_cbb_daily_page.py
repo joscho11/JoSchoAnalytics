@@ -677,8 +677,19 @@ def test_cbb_phone_geometry_and_keyboard_attributes_in_browser(browser, tmp_path
     _publish_card(tmp_path, lines=True)
     monkeypatch.setenv("APP_OFFLINE", "1")
     monkeypatch.setenv("JSA_CBB_FIXTURE_DIR", str(tmp_path))
+    # Exercise the retained renderer in an isolated test app, without exposing
+    # an archive bypass through production environment or query parameters.
+    harness = tmp_path / "restored_cbb_app.py"
+    harness.write_text(
+        f"import sys; sys.path[:0] = [{str(ROOT)!r}, {str(ROOT / 'site_pages')!r}]\n"
+        "import nav_registry, page_common, runpy\n"
+        "nav_registry = page_common.reload_if_stale(nav_registry)\n"
+        "nav_registry.ARCHIVED_PAGES = nav_registry.ARCHIVED_PAGES - {'college-basketball'}\n"
+        f"runpy.run_path({str(ROOT / 'app.py')!r}, run_name='__main__')\n",
+        encoding="utf-8",
+    )
     port = free_port()
-    proc = start_streamlit(port)
+    proc = start_streamlit(port, script_path=harness)
     context = browser.new_context(
         viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True,
         color_scheme="dark", device_scale_factor=1, reduced_motion="reduce",
@@ -719,7 +730,7 @@ def test_cbb_phone_geometry_and_keyboard_attributes_in_browser(browser, tmp_path
 
         def assert_phone_contract():
             metrics = assert_controls()
-            assert metrics["hasRoot"]
+            assert metrics["hasRoot"], page.locator('[data-testid="stMainBlockContainer"]').inner_text()
             assert metrics["viewMode"] == "none"
             assert metrics["searchAttrs"] == ["search", "off", "off", "false"]
             assert all(metrics[name] >= 44 for name in ("viewHeight", "dateHeight", "searchHeight", "summaryHeight")), metrics

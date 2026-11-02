@@ -132,10 +132,10 @@ def streamlit_env() -> dict:
     return env
 
 
-def start_streamlit(port: int) -> subprocess.Popen:
+def start_streamlit(port: int, *, script_path: str | Path = "app.py") -> subprocess.Popen:
     return subprocess.Popen(
         [
-            sys.executable, "-m", "streamlit", "run", "app.py",
+            sys.executable, "-m", "streamlit", "run", str(script_path),
             "--server.port", str(port),
             "--server.headless", "true",
             "--browser.gatherUsageStats", "false",

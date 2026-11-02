@@ -57,7 +57,7 @@ def test_default_is_home():
         f"Weekly Predictions must not be the default; titles={titles!r}"
     md = " ".join(str(m.value) for m in at.markdown)
     # Copy widened from "anytime TDs" once 2+ TD and First TD markets shipped.
-    assert "Compare touchdown props" in md
+    assert "Compare touchdown props" not in md
     links = " ".join(
         str(getattr(link, "label", "")) for link in at.get("page_link")
     )
@@ -76,11 +76,10 @@ def test_nav_groups_betting_then_fantasy():
     assert src.index('"Fantasy"') < src.index('"College Basketball"') < src.index('"More"')
 
 
-def test_college_basketball_has_exactly_one_page():
+def test_college_basketball_retains_lazy_route():
     src = Path(ENTRY).read_text(encoding="utf-8")
-    group = src.split('"College Basketball":', 1)[1].split('],', 1)[0]
-    assert group.count("cbb_pg") == 1
-    assert '_lazy_render("page_cbb_daily")' in src
+    assert '_lazy_render("page_cbb_daily", slug="college-basketball")' in src
+    assert 'url_path="college-basketball"' in src
 
 
 def test_film_room_remains_registered_but_hidden():

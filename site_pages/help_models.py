@@ -6,6 +6,8 @@ from pathlib import Path
 
 import streamlit as st
 
+import nav_registry
+
 _ROOT = Path(__file__).resolve().parents[1]
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
@@ -340,17 +342,21 @@ lineup still requires the DraftKings salary CSV for the contest.
 
 
 def _anytime_td():
-    with st.expander("How Touchdown Props works"):
-        st.markdown("""
-**Status: current live release plus historical demo. For fun. Do not bet this.**
+    archived = nav_registry.is_archived("anytime-tds")
+    label = "How Touchdown Props worked (historical, paused)" if archived else "How Touchdown Props works"
+    with st.expander(label):
+        if archived:
+            st.info("Historical methodology. Touchdown Props is paused; no new predictions are published.")
+            st.caption("The description below documents the archived board and its limitations.")
+        st.markdown(("**Status: historical methodology; public predictions paused.**" if archived else
+                     "**Status: current live release plus historical demo. For fun. Do not bet this.**") + """
 
-The live board is built from manually pasted US-book Yes prices. The page
-defaults to the current published 2026 release and keeps the historical demo
-selectable for context. New live slates are appended as Joseph supplies them; started-game rows are
-frozen, and no odds API is used.
+The board was built from manually pasted US-book Yes prices. Published 2026
+releases and the historical demo were selectable for context. Started-game rows
+were frozen, and no odds API was used.
 
-Use the **Market** control to switch between three touchdown-scorer markets.
-Only one renders at a time.
+The **Market** control switched between three touchdown-scorer markets.
+Only one rendered at a time.
 
 **Anytime TD.** The chance a skill player scores a **rushing or receiving**
 touchdown in that game. Passing touchdowns are out. The model is a Poisson

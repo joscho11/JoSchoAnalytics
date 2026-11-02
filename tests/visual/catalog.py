@@ -7,6 +7,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+import nav_registry
+
 ALL_VIEWPORTS = ("phone", "tablet", "desktop")
 NARROW = ("phone", "desktop")
 
@@ -531,3 +533,16 @@ SCENES: tuple[Scene, ...] = (
 
 def cases() -> list[tuple[Scene, str]]:
     return [(scene, viewport) for scene in SCENES for viewport in scene.viewports]
+
+
+# Preserve original product scenes above for restoration. Paused public routes
+# expose no market controls, including when old query parameters are present.
+SCENES = tuple(scene for scene in SCENES if not nav_registry.is_archived(scene.nav_route)) + tuple(
+    _s(
+        f"paused_{slug}", "credibility", slug,
+        query="atd_year=2026&atd_week=6" if slug == "anytime-tds" else "",
+        must_contain=("This product is paused", "Back to Home"),
+        must_not_contain=("Compare touchdown props", "No official College Basketball daily card"),
+    )
+    for slug in sorted(nav_registry.ARCHIVED_PAGES)
+)

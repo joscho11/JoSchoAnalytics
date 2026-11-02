@@ -5,13 +5,14 @@ Start with the project [README](../README.md) for the public site, current produ
 ## Current product and engineering guides
 
 - [NFL betting and spread evidence](../betting/GUIDE.md) and [betting data map](../betting/README.md)
-- [Anytime and touchdown props](../betting/anytime_td/GUIDE.md)
+- [Product archive, restoration, and weekly TD odds logging](product_archive.md)
+- [Anytime and touchdown props (public predictions paused)](../betting/anytime_td/GUIDE.md)
 - [Weekly fantasy](../fantasy/GUIDE.md) and [fantasy data map](../fantasy/README.md)
 - [Draft Board](../fantasy/seasonal_projections/GUIDE.md)
 - [Rookie Board](../fantasy/rookie/GUIDE.md) and [rookie data map](../fantasy/rookie/README.md)
 - [Talent scores](../fantasy/talent/GUIDE.md) and [talent data map](../fantasy/talent/README.md)
 - [Season Totals artifacts](../futures/README.md)
-- [College Basketball daily release contract](CBB_DAILY_RELEASES.md)
+- [College Basketball daily release contract (public predictions paused)](CBB_DAILY_RELEASES.md)
 - [Publishing system](../publishing/README.md)
 - [Visual test instructions](../tests/visual/README.md)
 

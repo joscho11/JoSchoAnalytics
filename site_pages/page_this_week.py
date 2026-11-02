@@ -1,5 +1,5 @@
 """This Week hub - the in-season landing that gathers the week's spread HIGH card,
-weekly fantasy, and anytime TDs into one place, each linking to its full page.
+weekly fantasy, and active products into one place, each linking to its full page.
 
 Summary + deep-links by design: it reuses the same release manifest and loaders as
 the individual pages (release_default_selection, render_release_status,
@@ -127,8 +127,9 @@ def render() -> None:
     st.title("This week")
     season, week = _current_week()
     st.caption(
-        f"{season} Week {week} in one place - the HIGH spread card, weekly fantasy, and "
-        "anytime TDs, each linking to the full page."
+        f"{season} Week {week} in one place - the HIGH spread card and weekly fantasy"
+        + ("." if nav_registry.is_archived("anytime-tds") else ", plus anytime TDs.")
+        + " Each links to the full page."
     )
 
     try:
@@ -163,12 +164,15 @@ def render() -> None:
             st.caption("Half-PPR and per-stat projections for QB, RB, WR, and TE.")
         _page_link("weekly-fantasy", "Open Weekly Fantasy", ":material/trophy:")
 
-    with st.container(border=True):
-        st.markdown("### Touchdown Props")
-        st.caption("Anytime, 2+, and First TD scorer chances next to the book. "
-                   "Not even money, for fun, not a proven edge.")
-        _page_link("anytime-tds", "Open Touchdown Props", ":material/sports_score:")
+    if not nav_registry.is_archived("anytime-tds"):
+        with st.container(border=True):
+            st.markdown("### Touchdown Props")
+            st.caption("Anytime, 2+, and First TD scorer chances next to the book. "
+                       "Not even money, for fun, not a proven edge.")
+            _page_link("anytime-tds", "Open Touchdown Props", ":material/sports_score:")
 
     st.caption("Spread numbers are Tuesday line value, not closing-line value. Fantasy "
-               "numbers are projections. Touchdown Props has live 2026 Anytime TD, "
-               "2+ TD, and First TD markets, plus a 2025 demo. Full method on Help & Guide.")
+               "numbers are projections. "
+               + ("Touchdown Props has live 2026 Anytime TD, 2+ TD, and First TD markets, plus a 2025 demo. "
+                  if not nav_registry.is_archived("anytime-tds") else "")
+               + "Full method on Help & Guide.")

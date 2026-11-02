@@ -68,9 +68,13 @@ def _refresh_cloud_synced_modules() -> None:
         sys.modules[name] = page_common.reload_if_stale(loaded)
 
 
-def _lazy_render(module_name: str):
+def _lazy_render(module_name: str, *, slug: str | None = None):
     """Return a page callable that imports its implementation only when selected."""
     def render():
+        if slug is not None and nav_registry.is_archived(slug):
+            # Do not import the archived product or load its prediction data.
+            importlib.import_module("page_paused").render(slug)
+            return
         _refresh_cloud_synced_modules()
         page_common = importlib.import_module("page_common")
         module = page_common.reload_if_stale(importlib.import_module(module_name))
@@ -85,6 +89,12 @@ st.set_page_config(page_title="JoScho Analytics | Sports analytics",
 chrome.inject_css()
 theme_redesign.inject()  # redesign preview skin (revertible) — remove this line to restore the stock look
 
+# Cloud may synchronize app.py into a warm interpreter that still holds the
+# previous navigation module. Refresh settings before building any page objects.
+nav_registry = importlib.import_module("page_common").reload_if_stale(
+    nav_registry, require=("ARCHIVED_PAGES", "is_archived")
+)
+
 # ── Pages — stable Home route plus product pages loaded only when selected ──
 home_pg = st.Page(_lazy_render("page_home"), title="Home", icon=":material/home:",
                   url_path="", default=True)
@@ -94,8 +104,9 @@ board_pg = st.Page(_lazy_render("page_draft_board"), title="Draft Board", icon="
                    url_path="draft-board")
 wp_pg = st.Page(_lazy_render("page_weekly_predictions"), title="Weekly Predictions", icon=":material/query_stats:",
                 url_path="weekly-predictions")
-atd_pg = st.Page(_lazy_render("page_anytime_td"), title="Touchdown Props (Beta)", icon=":material/sports_score:",
-                 url_path="anytime-tds")
+atd_pg = st.Page(_lazy_render("page_anytime_td", slug="anytime-tds"), title="Touchdown Props (Beta)", icon=":material/sports_score:",
+                 url_path="anytime-tds",
+                 visibility="hidden" if nav_registry.is_archived("anytime-tds") else "visible")
 wf_pg = st.Page(_lazy_render("page_weekly_fantasy"), title="Weekly Fantasy (Beta)", icon=":material/trophy:",
                 url_path="weekly-fantasy")
 dfs_pg = st.Page(_lazy_render("page_dfs"), title="DFS Optimizer (Beta)", icon=":material/target:",
@@ -112,8 +123,9 @@ rb_pg = st.Page(_lazy_render("page_rookie_board"), title="Rookie Board", icon=":
                 url_path="rookie-board")
 fut_pg = st.Page(_lazy_render("page_futures"), title="Season Totals (Beta)", icon=":material/bar_chart:",
                  url_path="season-totals")
-cbb_pg = st.Page(_lazy_render("page_cbb_daily"), title="Daily predictions (Beta)", icon=":material/sports_basketball:",
-                 url_path="college-basketball")
+cbb_pg = st.Page(_lazy_render("page_cbb_daily", slug="college-basketball"), title="Daily predictions (Beta)", icon=":material/sports_basketball:",
+                 url_path="college-basketball",
+                 visibility="hidden" if nav_registry.is_archived("college-basketball") else "visible")
 
 # cross-link registry (design 4g) — populated before nav.run() so pages can link
 nav_registry.PAGES = {
@@ -141,8 +153,8 @@ nav = st.navigation(
     {"": [home_pg, tw_pg],
      "Betting": [wp_pg, atd_pg, tr_pg, fut_pg],
      "Fantasy": [wf_pg, dfs_pg, board_pg, rb_pg],
-     "College Basketball": [cbb_pg],
-     "More": [film_pg, lh_pg, help_pg]},
+     **({"College Basketball": [cbb_pg]} if not nav_registry.is_archived("college-basketball") else {}),
+     "More": [film_pg, lh_pg, help_pg] + ([cbb_pg] if nav_registry.is_archived("college-basketball") else [])},
     position="top",
 )
 nav.run()

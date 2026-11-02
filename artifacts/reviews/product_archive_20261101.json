@@ -1,0 +1,82 @@
+{
+  "request": "Temporarily archive public TD and CBB products; retain private weekly pasted TD odds logging without prediction scoring/publication.",
+  "run_time": "2026-11-01T21:00:29.567792-05:00",
+  "baseline_commit": "ab794baeae807b56b97f1ab7f6fe08a53b435bff",
+  "deployment_stage": "committed awaiting human push",
+  "routes": {
+    "anytime-tds": "hidden; pause notice and Home link",
+    "college-basketball": "hidden; pause notice and Home link"
+  },
+  "scoring_performed": false,
+  "training_performed": false,
+  "release_activation_performed": false,
+  "data_changes": {
+    "protected_paths": [
+      "data",
+      "betting",
+      "fantasy",
+      "futures",
+      "publishing",
+      ".github"
+    ],
+    "changed_files": [],
+    "prediction_or_price_field_changes": 0,
+    "reason": "No release, model, odds, manifest, grading, or workflow files changed."
+  },
+  "serving_model_version": null,
+  "model_version_reason": "Not applicable: presentation-only archive; existing model and release artifacts untouched.",
+  "validation": {
+    "windows_offline_regression": {
+      "passed": 294,
+      "failed": 0,
+      "warnings": "Existing pandas FutureWarning in dashboard_data concat."
+    },
+    "linux_all_route_visual_capture": {
+      "passed": 123,
+      "failed": 0,
+      "mode": "--update-visual; all public routes/copy/layout rendered"
+    },
+    "linux_affected_pixel_comparison": {
+      "passed": 17,
+      "failed": 0,
+      "skipped": 0
+    },
+    "linux_responsive": {
+      "passed": 21,
+      "failed": 0,
+      "skipped": 0,
+      "note": "Passed standalone; initial combined run hit preexisting nested Playwright sync-fixture event-loop conflict."
+    },
+    "linux_archive_browser": {
+      "passed": 12,
+      "failed": 0,
+      "skipped": 0
+    },
+    "unaffected_head_comparison": {
+      "cases": [
+        "wp_published_2025w10",
+        "wf_published_2025w10",
+        "track_record_2025"
+      ],
+      "viewports": [
+        "phone",
+        "desktop"
+      ],
+      "identical_png_sha256": 6
+    },
+    "visual_review": {
+      "status": "passed",
+      "viewports": [
+        390,
+        768,
+        1440
+      ],
+      "reviewed": "Home, This Week, Help, historical methods, both paused routes; expanded TD methodology also reviewed on phone and desktop."
+    }
+  },
+  "known_preexisting_visual_limits": "Unrelated baselines are stale (including footer social links) and six unrelated scenes have no committed baseline. Restored 87 unrelated baseline PNGs and removed six newly generated unrelated baselines. Artifacts remain ignored. Only 17 affected screenshots retained.",
+  "rollback": "Revert the scoped archive commit. To resume one product later, remove its slug from nav_registry.ARCHIVED_PAGES and verify freshness and tests.",
+  "hosted_verification": null,
+  "hosted_verification_reason": "Human push and deployment have not occurred.",
+  "scoped_commit": "Commit containing this receipt: Archive TD and college basketball public pages"
+}
