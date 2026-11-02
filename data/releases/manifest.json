@@ -14,9 +14,9 @@
       "predictions": {
         "latest": {
           "build_id": "predictions-2026w08-8b05f2447a9f",
-          "final_games": 1,
-          "graded_at": "2026-10-30T05:53:17Z",
-          "graded_rows": 1,
+          "final_games": 9,
+          "graded_at": "2026-11-01T22:05:03Z",
+          "graded_rows": 9,
           "season": 2026,
           "week": 8
         }
@@ -18797,11 +18797,11 @@
           },
           "grading": {
             "artifact": "data/releases/results/predictions/2026/week08/predictions-2026w08-8b05f2447a9f-graded.csv",
-            "artifact_sha256": "635fbacf3c847e6b2549badcaa3467c53d68b0a497815f95f44e94c2ef5593d3",
+            "artifact_sha256": "6afabbd5a35a1b87dcf7ac49a6e76ace587774f17088dcd65649a67809d62e2f",
             "complete": false,
-            "final_games": 1,
-            "graded_at": "2026-10-30T05:53:17Z",
-            "graded_rows": 1,
+            "final_games": 9,
+            "graded_at": "2026-11-01T22:05:03Z",
+            "graded_rows": 9,
             "metadata": "data/releases/results/predictions/2026/week08/predictions-2026w08-8b05f2447a9f-graded.json",
             "product": "predictions",
             "pushes": 0,
@@ -18870,5 +18870,5 @@
     }
   },
   "schema_version": 1,
-  "updated_at": "2026-11-01T15:55:06Z"
+  "updated_at": "2026-11-01T22:05:03Z"
 }

@@ -2,13 +2,13 @@
   "games": [
     {
       "evidence_source": "nflverse_play_by_play",
-      "first_score_play_id": null,
-      "first_score_qtr": null,
+      "first_score_play_id": 839.0,
+      "first_score_qtr": 1.0,
       "game_id": "2026_08_ARI_DAL",
-      "graded_at": "2026-11-01T15:55:10Z",
+      "graded_at": "2026-11-01T22:05:09Z",
       "identity_source": "play_by_play_player_id",
-      "outcome_kind": null,
-      "pending_reason": "game_not_final",
+      "outcome_kind": "defense",
+      "pending_reason": null,
       "player_settlements": {
         "00-0033077": {
           "scored_first": null,
@@ -104,26 +104,26 @@
         }
       },
       "scorer_name": null,
-      "scorer_on_board": null,
-      "scorer_player_id": null,
-      "scorer_team": null,
+      "scorer_on_board": false,
+      "scorer_player_id": "00-0037282",
+      "scorer_team": "DAL",
       "source_hashes": {
-        "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
-        "player_identity": "93779b8f71f0711c669a1a2030b96b29d32da95e4b913472f7852b8ed6721d8c",
+        "play_by_play": "d8fa790d523c738b67d39c9107a990ba98c62b45880050e04d28ec0e0e73207d",
+        "player_identity": "935319017af4bee32ea315f0cbaa8e6e751a4fd85bba127d104d9ff51f81a971",
         "published_frozen_inputs": "6d9cf4212b947eae1786b4b17fc528181fd1b7ba36b7a8bfd7487612fd4bde54",
-        "schedule": "ec6dde8a12787ce5848b939cc1bdbfd0e741052ffb388fd0068183e55476fbca"
+        "schedule": "77f7ba9113f2204768653241bee21f0e33071fac0cebef18cee86f0fb51a4438"
       },
-      "status": "pending"
+      "status": "resolved"
     },
     {
       "evidence_source": "nflverse_play_by_play",
-      "first_score_play_id": null,
-      "first_score_qtr": null,
+      "first_score_play_id": 2455.0,
+      "first_score_qtr": 3.0,
       "game_id": "2026_08_ATL_TB",
-      "graded_at": "2026-11-01T15:55:10Z",
+      "graded_at": "2026-11-01T22:05:09Z",
       "identity_source": "play_by_play_player_id",
-      "outcome_kind": null,
-      "pending_reason": "game_not_final",
+      "outcome_kind": "defense",
+      "pending_reason": null,
       "player_settlements": {
         "00-0032392": {
           "scored_first": null,
@@ -186,8 +186,8 @@
           "status": "awaiting_evidence"
         },
         "00-0039361": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 1.0,
+          "status": "settled"
         },
         "00-0039589": {
           "scored_first": null,
@@ -219,26 +219,27 @@
         }
       },
       "scorer_name": null,
-      "scorer_on_board": null,
-      "scorer_player_id": null,
-      "scorer_team": null,
+      "scorer_on_board": true,
+      "scorer_player_id": "00-0039361",
+      "scorer_team": "TB",
+      "settlements_updated_at": "2026-11-01T22:05:09Z",
       "source_hashes": {
-        "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
-        "player_identity": "93779b8f71f0711c669a1a2030b96b29d32da95e4b913472f7852b8ed6721d8c",
+        "play_by_play": "86b2d4891d37296a54c0db642f25fab0ab26578b0a4998d50609ed3f46ee6e20",
+        "player_identity": "935319017af4bee32ea315f0cbaa8e6e751a4fd85bba127d104d9ff51f81a971",
         "published_frozen_inputs": "6d9cf4212b947eae1786b4b17fc528181fd1b7ba36b7a8bfd7487612fd4bde54",
-        "schedule": "afb3a7902dbb2fa6248a4e256bb65e927e204d445535436740257ddf7b6934eb"
+        "schedule": "683bce944a0fa1dfd46fb333f45e69b460e9d23bd1dcbeaf651cfbe3d3be9747"
       },
-      "status": "pending"
+      "status": "resolved"
     },
     {
       "evidence_source": "nflverse_play_by_play",
-      "first_score_play_id": null,
-      "first_score_qtr": null,
+      "first_score_play_id": 366.0,
+      "first_score_qtr": 1.0,
       "game_id": "2026_08_BAL_BUF",
-      "graded_at": "2026-11-01T15:55:10Z",
+      "graded_at": "2026-11-01T22:05:09Z",
       "identity_source": "play_by_play_player_id",
-      "outcome_kind": null,
-      "pending_reason": "game_not_final",
+      "outcome_kind": "defense",
+      "pending_reason": null,
       "player_settlements": {
         "00-0032394": {
           "scored_first": null,
@@ -261,8 +262,8 @@
           "status": "awaiting_evidence"
         },
         "00-0034857": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 1.0,
+          "status": "settled"
         },
         "00-0034975": {
           "scored_first": null,
@@ -350,16 +351,17 @@
         }
       },
       "scorer_name": null,
-      "scorer_on_board": null,
-      "scorer_player_id": null,
-      "scorer_team": null,
+      "scorer_on_board": true,
+      "scorer_player_id": "00-0034857",
+      "scorer_team": "BUF",
+      "settlements_updated_at": "2026-11-01T22:05:09Z",
       "source_hashes": {
-        "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
-        "player_identity": "93779b8f71f0711c669a1a2030b96b29d32da95e4b913472f7852b8ed6721d8c",
+        "play_by_play": "c064432813ddf5ecd4c11a39a8c3b531cfaf133ef177ab852f18cb680708dd5a",
+        "player_identity": "935319017af4bee32ea315f0cbaa8e6e751a4fd85bba127d104d9ff51f81a971",
         "published_frozen_inputs": "6d9cf4212b947eae1786b4b17fc528181fd1b7ba36b7a8bfd7487612fd4bde54",
-        "schedule": "ed9da342262fcfac9480da7a8d2db00bd84301dc2baa0dc0bdcbaae57f373cc3"
+        "schedule": "c67a70b578a7379207c83081251948a369c57e1e048c9a8b84d89c4415e743d3"
       },
-      "status": "pending"
+      "status": "resolved"
     },
     {
       "evidence_source": "nflverse_play_by_play",
@@ -598,13 +600,13 @@
     },
     {
       "evidence_source": "nflverse_play_by_play",
-      "first_score_play_id": null,
-      "first_score_qtr": null,
+      "first_score_play_id": 627.0,
+      "first_score_qtr": 1.0,
       "game_id": "2026_08_CLE_PIT",
-      "graded_at": "2026-11-01T15:55:10Z",
+      "graded_at": "2026-11-01T22:05:09Z",
       "identity_source": "play_by_play_player_id",
-      "outcome_kind": null,
-      "pending_reason": "game_not_final",
+      "outcome_kind": "defense",
+      "pending_reason": null,
       "player_settlements": {
         "00-0023459": {
           "scored_first": null,
@@ -627,8 +629,8 @@
           "status": "awaiting_evidence"
         },
         "00-0036139": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 1.0,
+          "status": "settled"
         },
         "00-0036407": {
           "scored_first": null,
@@ -708,26 +710,27 @@
         }
       },
       "scorer_name": null,
-      "scorer_on_board": null,
-      "scorer_player_id": null,
-      "scorer_team": null,
+      "scorer_on_board": true,
+      "scorer_player_id": "00-0036139",
+      "scorer_team": "PIT",
+      "settlements_updated_at": "2026-11-01T22:05:09Z",
       "source_hashes": {
-        "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
-        "player_identity": "93779b8f71f0711c669a1a2030b96b29d32da95e4b913472f7852b8ed6721d8c",
+        "play_by_play": "f314a395d232cf6e9a289a02296a65a5ab122207542685371cf3818080369cae",
+        "player_identity": "935319017af4bee32ea315f0cbaa8e6e751a4fd85bba127d104d9ff51f81a971",
         "published_frozen_inputs": "6d9cf4212b947eae1786b4b17fc528181fd1b7ba36b7a8bfd7487612fd4bde54",
-        "schedule": "b712859365f0f96ff52193005a0c7d042b19d4fa87f9f7fa75c9987e2a6b7032"
+        "schedule": "88dd91f969637124bb82bd5e2ce34aa6ac72af413e1c3fc04bfaabeb273c38be"
       },
-      "status": "pending"
+      "status": "resolved"
     },
     {
       "evidence_source": "nflverse_play_by_play",
-      "first_score_play_id": null,
-      "first_score_qtr": null,
+      "first_score_play_id": 475.0,
+      "first_score_qtr": 1.0,
       "game_id": "2026_08_IND_JAX",
-      "graded_at": "2026-11-01T15:55:10Z",
+      "graded_at": "2026-11-01T22:05:09Z",
       "identity_source": "play_by_play_player_id",
-      "outcome_kind": null,
-      "pending_reason": "game_not_final",
+      "outcome_kind": "defense",
+      "pending_reason": null,
       "player_settlements": {
         "00-0030279": {
           "scored_first": null,
@@ -802,8 +805,8 @@
           "status": "awaiting_evidence"
         },
         "00-0039893": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 1.0,
+          "status": "settled"
         },
         "00-0040128": {
           "scored_first": null,
@@ -847,16 +850,17 @@
         }
       },
       "scorer_name": null,
-      "scorer_on_board": null,
-      "scorer_player_id": null,
-      "scorer_team": null,
+      "scorer_on_board": true,
+      "scorer_player_id": "00-0039893",
+      "scorer_team": "JAX",
+      "settlements_updated_at": "2026-11-01T22:05:09Z",
       "source_hashes": {
-        "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
-        "player_identity": "93779b8f71f0711c669a1a2030b96b29d32da95e4b913472f7852b8ed6721d8c",
+        "play_by_play": "a241f9d15711ca343949ccfec7fc653a08eee7aba2a3b900e9bc8d93e204501e",
+        "player_identity": "935319017af4bee32ea315f0cbaa8e6e751a4fd85bba127d104d9ff51f81a971",
         "published_frozen_inputs": "6d9cf4212b947eae1786b4b17fc528181fd1b7ba36b7a8bfd7487612fd4bde54",
-        "schedule": "809b41bc895b41e18e33af1042d39d0ded62b4c6ac1a55b68b91e00bca6528b5"
+        "schedule": "c57da3772d9d67ec04fb9f913d5a6e962db62fbab56a7429660896d46077548e"
       },
-      "status": "pending"
+      "status": "resolved"
     },
     {
       "evidence_source": "nflverse_play_by_play",
@@ -1122,13 +1126,13 @@
     },
     {
       "evidence_source": "nflverse_play_by_play",
-      "first_score_play_id": null,
-      "first_score_qtr": null,
+      "first_score_play_id": 545.0,
+      "first_score_qtr": 1.0,
       "game_id": "2026_08_LV_NYJ",
-      "graded_at": "2026-11-01T15:55:10Z",
+      "graded_at": "2026-11-01T22:05:09Z",
       "identity_source": "play_by_play_player_id",
-      "outcome_kind": null,
-      "pending_reason": "game_not_final",
+      "outcome_kind": "defense",
+      "pending_reason": null,
       "player_settlements": {
         "00-0029604": {
           "scored_first": null,
@@ -1195,8 +1199,8 @@
           "status": "awaiting_evidence"
         },
         "00-0039338": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 1.0,
+          "status": "settled"
         },
         "00-0039407": {
           "scored_first": null,
@@ -1256,26 +1260,27 @@
         }
       },
       "scorer_name": null,
-      "scorer_on_board": null,
-      "scorer_player_id": null,
-      "scorer_team": null,
+      "scorer_on_board": true,
+      "scorer_player_id": "00-0039338",
+      "scorer_team": "LV",
+      "settlements_updated_at": "2026-11-01T22:05:09Z",
       "source_hashes": {
-        "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
-        "player_identity": "93779b8f71f0711c669a1a2030b96b29d32da95e4b913472f7852b8ed6721d8c",
+        "play_by_play": "98fb151578f178af2967935ec6da1d627779ea713b762c2ccd0efa24729aa6f8",
+        "player_identity": "935319017af4bee32ea315f0cbaa8e6e751a4fd85bba127d104d9ff51f81a971",
         "published_frozen_inputs": "6d9cf4212b947eae1786b4b17fc528181fd1b7ba36b7a8bfd7487612fd4bde54",
-        "schedule": "ce1407f3576fd826727ae5f294d4087017414c68dd7e6bbdd614ee9b6d43ab28"
+        "schedule": "5521ff29747c44f22c657c8ccdce4aa14da0ff13749cf7d979b6b59ecef72aae"
       },
-      "status": "pending"
+      "status": "resolved"
     },
     {
       "evidence_source": "nflverse_play_by_play",
-      "first_score_play_id": null,
-      "first_score_qtr": null,
+      "first_score_play_id": 1086.0,
+      "first_score_qtr": 2.0,
       "game_id": "2026_08_MIN_DET",
-      "graded_at": "2026-11-01T15:55:10Z",
+      "graded_at": "2026-11-01T22:05:09Z",
       "identity_source": "play_by_play_player_id",
-      "outcome_kind": null,
-      "pending_reason": "game_not_final",
+      "outcome_kind": "defense",
+      "pending_reason": null,
       "player_settlements": {
         "00-0031763": {
           "scored_first": null,
@@ -1306,8 +1311,8 @@
           "status": "awaiting_evidence"
         },
         "00-0036322": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 1.0,
+          "status": "settled"
         },
         "00-0036425": {
           "scored_first": null,
@@ -1379,16 +1384,17 @@
         }
       },
       "scorer_name": null,
-      "scorer_on_board": null,
-      "scorer_player_id": null,
-      "scorer_team": null,
+      "scorer_on_board": true,
+      "scorer_player_id": "00-0036322",
+      "scorer_team": "MIN",
+      "settlements_updated_at": "2026-11-01T22:05:09Z",
       "source_hashes": {
-        "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
-        "player_identity": "93779b8f71f0711c669a1a2030b96b29d32da95e4b913472f7852b8ed6721d8c",
+        "play_by_play": "98f874bc02b463cb9d1c1f4e9c77afaf4e00b64919fc6200bce986a182e5de5f",
+        "player_identity": "935319017af4bee32ea315f0cbaa8e6e751a4fd85bba127d104d9ff51f81a971",
         "published_frozen_inputs": "6d9cf4212b947eae1786b4b17fc528181fd1b7ba36b7a8bfd7487612fd4bde54",
-        "schedule": "a10dc936380b28c7d633107301a0749fea41a86fdb6dafb3d380e059c94e438c"
+        "schedule": "349b3e71bd3e3709416b4a6195146e62c3361f53e444b4c4ef7d504cee915f94"
       },
-      "status": "pending"
+      "status": "resolved"
     },
     {
       "evidence_source": "nflverse_play_by_play",
@@ -1654,13 +1660,13 @@
     },
     {
       "evidence_source": "nflverse_play_by_play",
-      "first_score_play_id": null,
-      "first_score_qtr": null,
+      "first_score_play_id": 517.0,
+      "first_score_qtr": 1.0,
       "game_id": "2026_08_TEN_CIN",
-      "graded_at": "2026-11-01T15:55:10Z",
+      "graded_at": "2026-11-01T22:05:09Z",
       "identity_source": "play_by_play_player_id",
-      "outcome_kind": null,
-      "pending_reason": "game_not_final",
+      "outcome_kind": "defense",
+      "pending_reason": null,
       "player_settlements": {
         "00-0033526": {
           "scored_first": null,
@@ -1675,8 +1681,8 @@
           "status": "awaiting_evidence"
         },
         "00-0035261": {
-          "scored_first": null,
-          "status": "awaiting_evidence"
+          "scored_first": 1.0,
+          "status": "settled"
         },
         "00-0035631": {
           "scored_first": null,
@@ -1772,16 +1778,17 @@
         }
       },
       "scorer_name": null,
-      "scorer_on_board": null,
-      "scorer_player_id": null,
-      "scorer_team": null,
+      "scorer_on_board": true,
+      "scorer_player_id": "00-0035261",
+      "scorer_team": "TEN",
+      "settlements_updated_at": "2026-11-01T22:05:09Z",
       "source_hashes": {
-        "play_by_play": "95d8f297c0a35c24a929983341bd655ed7b255c73c1bb54ad74f35c1866ed016",
-        "player_identity": "93779b8f71f0711c669a1a2030b96b29d32da95e4b913472f7852b8ed6721d8c",
+        "play_by_play": "b3ea4db5f4cebf45fcc7162ecaec7fe6561bf1bc1b45b2ed7845eb8c4f35ef38",
+        "player_identity": "935319017af4bee32ea315f0cbaa8e6e751a4fd85bba127d104d9ff51f81a971",
         "published_frozen_inputs": "6d9cf4212b947eae1786b4b17fc528181fd1b7ba36b7a8bfd7487612fd4bde54",
-        "schedule": "0236b217f82eca159bab4fcc435c4d65e2e4a3b5e16f7985143d6a6eccf9d31f"
+        "schedule": "9170488144e5abc5230344729520ee10d28bfbac2d5f9379b91bf31edf4a17df"
       },
-      "status": "pending"
+      "status": "resolved"
     }
   ],
   "published_frozen_inputs_sha256": "6d9cf4212b947eae1786b4b17fc528181fd1b7ba36b7a8bfd7487612fd4bde54",
