@@ -64,7 +64,9 @@ def _release_status(product: str, season: int, week: int, fallback_caption: str)
             n_season, n_week = int(nxt["season"]), int(nxt["week"])
         except (KeyError, TypeError, ValueError):
             return
-        if state["status"] == "Published" and (n_season, n_week) != (int(season), int(week)):
+        # next_release is set by `publishing.cli schedule` and can lag the
+        # live week; only point forward, never at an older week.
+        if state["status"] == "Published" and (n_season, n_week) > (int(season), int(week)):
             upcoming = _manifest_release_status(
                 product, n_season, n_week, manifest=manifest, root=page_common._HERE
             )

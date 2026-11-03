@@ -75,7 +75,7 @@ def render_release_status(product: str, season: int, week: int) -> dict:
     if (
         state["status"] == "Published"
         and next_season is not None
-        and (next_season, next_week) != (season, week)
+        and (next_season, next_week) > (int(season), int(week))
     ):
         upcoming = _manifest_release_status(
             product, next_season, next_week, manifest=manifest, root=_HERE
