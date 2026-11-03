@@ -110,23 +110,21 @@ season-total products are separate systems; their numbers should not be mixed.
         """
     )
     pages = (
-        ("this-week", "This Week", "A compact hub for the current spread and fantasy releases."
-         if nav_registry.is_archived("anytime-tds") else
-         "A compact hub for the current spread, fantasy, and touchdown-props releases."),
+        ("home", "Home", "The site's front door: what is published and where to start."),
+        ("this-week", "This Week", "A compact hub for the current spread and fantasy releases."),
         ("weekly-predictions", "Weekly Predictions", "NFL matchup margins, Tuesday HIGH qualification, and graded picks."),
-        ("track-record", "Track Record", "Graded ATS results and the historical record by season and confidence tier."),
-        ("season-totals", "Season Totals", "Team win projections compared with posted regular-season totals."),
-        ("weekly-fantasy", "Weekly Fantasy", "Current-week half-PPR player projections and supporting stats."),
-        ("dfs-optimizer", "DFS Optimizer", "DraftKings Classic lineup construction from checked direct-DK projections."),
-        ("draft-board", "Draft Board", "Preseason season-total projections beside current Sleeper, ESPN, and Yahoo ADP sources."),
+        ("track-record", "Track Record", "Graded ATS results by season, confidence tier, and day of the week."),
+        ("season-totals", "Season Totals (Beta)", "Team win projections compared with posted regular-season totals."),
+        ("weekly-fantasy", "Weekly Fantasy (Beta)", "Current-week player projections in Standard, Half-PPR, or PPR, with an optional projected-yards view for player props."),
+        ("dfs-optimizer", "DFS Optimizer (Beta)", "DraftKings Classic lineups from checked direct-DK projections, plus a History view of past lineups."),
+        ("draft-board", "Draft Board", "Preseason season-total projections beside Sleeper, ESPN, and Yahoo ADP."),
         ("rookie-board", "Rookie Board", "Rookie hit probabilities and season-total projection context."),
-        ("anytime-tds", "Touchdown Props", "Anytime, 2+, and First TD scorer probabilities beside book prices."),
         ("league-history", "League History", "Sleeper, ESPN, Yahoo, and CBS league imports and history views."),
+        ("help", "Help & Guide", "These answers, the two video walkthroughs, and the model rundowns."),
     )
     for slug, label, description in pages:
-        if nav_registry.is_archived(slug):
-            continue
-        _page_link(slug, f"{label} — {description}")
+        _page_link(slug, label)
+        st.caption(description)
     st.caption(
         "Yahoo does not price every one of the 180 players on Draft Board; those "
         "cells remain blank rather than being filled from another source."
@@ -142,7 +140,9 @@ and historical context. **Experimental** means the page is tracking an idea
 without a validated edge claim. **Beta** means a page is live but still being
 tested, so its numbers can change and it carries no validated-performance claim.
 **Seasonal** means a product is most useful in
-one part of the NFL calendar, such as the Draft Board before drafts.
+one part of the NFL calendar, such as the Draft Board before drafts. **Paused**
+means a product page now shows a paused notice instead of predictions. Its
+historical records are preserved, and no new predictions are published.
 
 Every product page carries its own freshness note. Read that note before using
 a number, especially when a page combines current and historical material.
@@ -179,6 +179,15 @@ Edge filter; the live 2026 page shows every game and highlights HIGH separately.
 If a shared URL points to a release that is no longer available, the page falls
 back to its current valid selection rather than inventing a result.
 
+Other pages have their own controls. Weekly Fantasy has a **Scoring format**
+control (Half-PPR by default), a **More info: projected yards for player props**
+toggle, and a player search. The DFS Optimizer switches between **Optimizer** and
+**History** and picks an **Objective**, Cash or Tournament. The Draft Board
+**Draft price** control chooses Sleeper ADP (the default), ESPN ADP, Yahoo ADP, or
+Model Draft Rank. Its projections are frozen at the freeze date and ADP refreshes
+are paused after it. League History loads one provider at a time and then filters
+every tab by **Season**: All Time or a single year.
+
 The site opens on **Home** every time. There is no sidebar; the top navigation
 holds the product pages.
         """
@@ -204,6 +213,21 @@ Public results are cached for an hour. A brand-new league can load with empty
 tabs until it has a draft or scored weeks. This page describes your league's
 history; it is not a prediction model. The League History walkthrough shows Sleeper
 and ESPN; Yahoo and CBS are on the live page and are not in that video.
+
+Once a league loads, the **Season** filter switches between All Time and one year,
+and six tabs are available:
+
+- **Draft & Roster Insights:** how drafts and roster moves played out.
+- **All-Time Leaderboard:** manager records for the selected season filter.
+- **Hall of Fame:** the league record book: the best, worst, closest, and strangest
+  games in the selected seasons.
+- **Rivalries:** head-to-head history between managers. The score band is green at
+  70 or higher, yellow from 50 to 69, and red under 50.
+- **Report Cards:** peer-ranked regular-season performance for each manager.
+  Postseason results are shown separately.
+- **Consistency & Luck:** regular season only. Expected wins come from all-play
+  probability, how often each weekly score would have beaten every other team that
+  week, so you can see how much the schedule helped or hurt.
         """
     )
     _page_link(
@@ -211,6 +235,23 @@ and ESPN; Yahoo and CBS are on the live page and are not in that video.
         "Watch the League History walkthrough",
         icon=":material/play_circle:",
         query_params={"help_topic": "Site Guide", "guide": LATEST_LEAGUE_HISTORY_VIDEO_SLUG},
+    )
+
+
+def _render_release_status() -> None:
+    st.markdown(
+        """
+Product pages carry a short status line under the title.
+
+- **Validated <date>:** the date the current release was published.
+- **Next: <season> Week N is published / scheduled / projections not out yet:** where
+  the next release stands. It is hidden when it would lag the week you selected.
+- **Pregame / Postgame:** on Weekly Fantasy, whether the selected week's games are
+  still ahead (Pregame) or graded (Postgame).
+- **Last updated:** when the most recent revision of that release was built.
+
+A status line describes the release, not the quality of any single number.
+        """
     )
 
 
@@ -380,6 +421,74 @@ not publish that claim.
     )
 
 
+def _render_qb_blend() -> None:
+    st.markdown(
+        """
+When a team's starting quarterback is unsettled, the model scores the game once for
+each listed QB. The **QB blend card** on Weekly Predictions summarizes those scores.
+The official pick is the average, weighted by how likely each QB is to start.
+Individual QB projection paths are hidden.
+
+The pill on the card says whether the blend qualifies:
+
+- **HIGH under all N QBs:** every listed QB points the same way and clears the HIGH gap.
+- **QB split:** HIGH under only some of the QBs, so pass until the starter is known.
+- **Blended pick is HIGH:** every QB with a real chance of starting backs the blended side.
+- **Blended pick does not meet the HIGH requirements:** the average gap is under the
+  HIGH threshold.
+- **QBs do not all back the blended side:** the pick is not HIGH.
+
+A QB split is a reason for caution, not a reason to trust either side.
+        """
+    )
+    _page_link("weekly-predictions", "Open Weekly Predictions")
+
+
+def _render_season_totals() -> None:
+    st.markdown(
+        """
+Season Totals (Beta) projects each team's regular-season wins and compares that
+number with the posted win total. The caption names the sportsbook and the date of
+the posted numbers.
+
+- **Hero record:** the held-out record of high-confidence calls, with a one-sided 95%
+  Wilson lower bound. The bound shows how low the true rate could plausibly be.
+- **Table columns:** #, Team, Proj Wins, Posted, vs posted (projection minus posted),
+  and High Confidence.
+- **High Confidence:** a check mark means the projection is at least 1 full win off
+  the posted number. Every other team still shows a projection.
+
+The all-team sheet does not beat the posted number on average. Treat High Confidence
+as the only flagged slice, and read the Models & Data rundown for the evidence.
+        """
+    )
+    _page_link("season-totals", "Open Season Totals")
+
+
+def _render_weekly_fantasy() -> None:
+    st.markdown(
+        """
+Weekly Fantasy is a current-week player projection page. Use the QB, RB, WR, and TE
+tabs, or **Search player** to jump to one name.
+
+- **Scoring format:** Standard, Half-PPR (the default), or PPR. Points recalculate from
+  receptions.
+- **More info: projected yards for player props:** adds projected yardage, an EPA rank,
+  the team's implied total, and a health column. It is context, not a pick.
+- **Health legend:** ✅ healthy, 🟡 questionable, ⚠️ doubtful, ❌ out, taken from Sleeper's
+  injury status.
+- **Ranking scorecard:** rank correlation by week, showing how well past orderings
+  tracked actual results.
+- **Actuals:** after games finish, the page shows what players scored beside the
+  projection.
+
+Check the release status line for Pregame or Postgame and the last-updated time
+before setting a lineup.
+        """
+    )
+    _page_link("weekly-fantasy", "Open Weekly Fantasy")
+
+
 def _render_uncertainty() -> None:
     st.markdown(
         """
@@ -400,7 +509,8 @@ def _render_half_ppr() -> None:
 Half-PPR gives **0.5 points per reception**, plus the usual yardage and
 touchdown scoring. Full PPR gives a full point per reception; standard scoring
 gives no reception bonus. The same player can rank differently across formats,
-so check the scoring system before comparing projections.
+so check the scoring system before comparing projections. Weekly Fantasy opens in
+Half-PPR and can switch to Standard or PPR with its **Scoring format** control.
         """
     )
 
@@ -441,6 +551,14 @@ The DFS Optimizer solves a DraftKings Classic lineup under the contest's salary
 and roster rules. It uses direct-DK projections from a checked artifact; it does
 not convert Weekly Fantasy half-PPR points into DK points. A valid lineup still
 requires the contest's salary CSV and late-news review.
+
+Choose an **Objective**. **Cash (expected points)** builds the lineup with the
+highest expected score. **Tournament (ceiling)** swaps in an upside estimate for
+each player, and it is unavailable when the projection file has no ceiling column.
+The **History** view shows the tournament lineup built before kickoff for each past
+week, scored with official DraftKings points and placed as a percentile against every
+lineup in one large DraftKings tournament field. One field per week is a small sample,
+not a win rate.
 
 The optimizer is a constrained research tool, not a claim that the lineup will
 beat a field.
@@ -519,10 +637,11 @@ def _render_model_rundowns() -> None:
 FAQS = (
     FAQItem("Site Guide", "What is JoScho Analytics?", ("about", "purpose", "advice"), _render_what_is_jsa),
     FAQItem("Site Guide", "Which page should I use?", ("directory", "pages", "products", "navigation"), _render_page_directory),
-    FAQItem("Site Guide", "What do Live, Demo, Experimental, Beta, and Seasonal mean?", ("status", "current", "historical", "beta"), _render_states),
+    FAQItem("Site Guide", "What do Live, Demo, Experimental, Beta, Seasonal, and Paused mean?", ("status", "current", "historical", "beta", "paused"), _render_states),
+    FAQItem("Site Guide", "What do the release status lines mean?", ("validated", "next", "pregame", "postgame", "last updated", "release status", "caption"), _render_release_status),
     FAQItem("Site Guide", "How often do pages update, and when do values lock?", ("freshness", "cadence", "kickoff", "release", "immutable"), _render_updates_and_locks),
-    FAQItem("Site Guide", "How do filters and shareable URLs work?", ("season", "week", "min edge", "query", "url"), _render_filters_and_urls),
-    FAQItem("Site Guide", "How does League History work?", ("sleeper", "espn", "yahoo", "cbs", "cookies", "credentials", "league id"), _render_league_history),
+    FAQItem("Site Guide", "How do filters and shareable URLs work?", ("season", "week", "min edge", "query", "url", "scoring format", "objective", "draft price", "adp", "provider"), _render_filters_and_urls),
+    FAQItem("Site Guide", "How does League History work?", ("sleeper", "espn", "yahoo", "cbs", "cookies", "credentials", "league id", "rivalries", "report cards", "hall of fame", "luck"), _render_league_history),
     FAQItem("Site Guide", "Where are the video guides?", ("video", "walkthrough", "breakdown", "Film Room"), _render_video_guides),
     FAQItem("Football", "How does an NFL game become a score and a margin?", ("scoring", "possessions", "touchdown", "field goal", "game script"), _render_scoring),
     FAQItem("Football", "What is EPA?", ("expected points added", "efficiency", "play"), _render_epa),
@@ -532,16 +651,19 @@ FAQS = (
     FAQItem("Betting", "What win rate is needed to break even?", ("profit", "rate", "benchmark", "wilson", "record"), _render_break_even),
     FAQItem("Betting", "What are model edge and HIGH?", ("edge", "threshold", "tuesday", "3.0", "confidence"), _render_edge_and_high),
     FAQItem("Betting", "What moves a betting line, and what does this site track?", ("sharp money", "public money", "line movement", "market", "provenance"), _render_line_movement),
+    FAQItem("Betting", "What does the QB blend card mean?", ("qb blend", "quarterback", "qb split", "starter", "blended pick", "pill"), _render_qb_blend),
+    FAQItem("Betting", "How do I read Season Totals?", ("season totals", "win total", "posted", "wins", "wilson", "high confidence"), _render_season_totals),
     FAQItem("Betting", "Why can a good projection still lose?", ("variance", "uncertainty", "sample size", "backtest", "chance"), _render_uncertainty),
+    FAQItem("Fantasy", "How do I read Weekly Fantasy?", ("weekly fantasy", "scoring format", "props", "yards", "health", "injury status", "scorecard", "actuals", "search"), _render_weekly_fantasy),
     FAQItem("Fantasy", "What is half-PPR scoring?", ("ppr", "points per reception", "standard", "full ppr"), _render_half_ppr),
     FAQItem("Fantasy", "What is the difference between a projection, ranking, and ADP?", ("draft", "market", "model proj", "positional rank"), _render_projection_vs_rank),
     FAQItem("Fantasy", "How do role, opportunity, efficiency, and matchup affect fantasy?", ("snaps", "routes", "targets", "carries", "red zone"), _render_role_and_matchup),
-    FAQItem("Fantasy", "How is DFS different from season-long fantasy?", ("draftkings", "classic", "salary", "lineup", "dk points"), _render_dfs),
+    FAQItem("Fantasy", "How is DFS different from season-long fantasy?", ("draftkings", "classic", "salary", "lineup", "dk points", "objective", "cash", "tournament", "history"), _render_dfs),
     FAQItem("Fantasy", "What do the Rookie Board and Talent Scores mean?", ("rookie", "hit probability", "nfl talent", "college talent"), _render_rookies_and_talent),
     FAQItem("Models & Data", "How does a published model become a page?", ("pipeline", "features", "training", "holdout", "walk-forward", "artifact", "grading"), _render_pipeline),
     FAQItem("Models & Data", "How should I read the evaluation metrics?", ("mae", "rank correlation", "auc", "ats", "confidence interval", "feature importance"), _render_metrics),
     FAQItem("Models & Data", "What data does the site use, and what are the limits?", ("sources", "nflreadpy", "data", "limitations", "missing"), _render_limits_and_data),
-    FAQItem("Models & Data", "How do the product-specific models work?", ("spread", "season totals", "draft board", "weekly fantasy", "dfs", "anytime td", "rookie", "charts", "shap", "xgboost", "lightgbm"), _render_model_rundowns, True),
+    FAQItem("Models & Data", "How do the product-specific models work?", ("spread", "season totals", "draft board", "weekly fantasy", "dfs", "rookie", "charts", "shap", "xgboost", "lightgbm"), _render_model_rundowns, True),
 )
 
 

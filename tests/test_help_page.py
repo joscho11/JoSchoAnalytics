@@ -107,7 +107,6 @@ def test_help_site_org_and_paused_copy(tmp_path):
     at = _render(tmp_path)
     md = " ".join(str(m.value) for m in at.markdown)
     assert "Season Totals" in md
-    assert "Season Totals (Beta)" not in md
     assert "Draft Board" in md
     assert "opens on **Home**" in md
     assert any("Which page should I use?" in str(e.label) for e in at.expander)
@@ -279,6 +278,35 @@ def test_invalid_guide_cannot_mount_arbitrary_player(tmp_path):
     assert not at.get("iframe")
     assert "guide" not in at.query_params
 
+
+def test_help_covers_current_site_and_omits_archived_products(tmp_path):
+    import help_content
+
+    at = _render(tmp_path, topic="Site Guide", open_question="Which page should I use?")
+    at = _render(tmp_path, topic="Site Guide", open_question="Beta, Seasonal, and Paused")
+    md = " ".join(str(m.value) for m in at.markdown)
+    assert "Paused" in md
+    assert "Touchdown Props" not in md
+    at = _render(tmp_path, topic="Site Guide", open_question="release status lines")
+    assert "Validated" in " ".join(str(m.value) for m in at.markdown)
+    at = _render(tmp_path, topic="Betting", open_question="QB blend card")
+    assert "QB blend" in " ".join(str(m.value) for m in at.markdown)
+    at = _render(tmp_path, topic="Betting", open_question="read Season Totals")
+    assert "Season Totals" in " ".join(str(m.value) for m in at.markdown)
+    for item in help_content.FAQS:
+        text = " ".join((item.question, *item.keywords)).lower()
+        assert "anytime" not in text and "basketball" not in text and "touchdown props" not in text
+    assert not help_content.search_items("anytime")
+    assert not help_content.search_items("basketball")
+    assert help_content.search_items("qb blend") and help_content.search_items("paused")
+    assert help_content.search_items("scoring format") and help_content.search_items("validated")
+    source = " ".join(
+        (_HERE / "site_pages" / name).read_text(encoding="utf-8")
+        for name in ("help_content.py", "help_models.py")
+    )
+    assert "Touchdown Props" not in source and "Anytime" not in source
+    walkthrough = (_HERE / "video_breakdowns" / "site_walkthrough.md").read_text(encoding="utf-8")
+    assert "Touchdown Props" not in walkthrough and "QB blend" in walkthrough
 
 
 if __name__ == "__main__":

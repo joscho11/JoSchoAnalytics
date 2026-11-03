@@ -25,7 +25,7 @@
   },
   "products": {
     "fantasy": {
-      "active_build": "fantasy-2026w08-399059b7cd21",
+      "active_build": "fantasy-2026w09-5d969895c402",
       "builds": {
         "fantasy-2025w10-33a7de4ef33f": {
           "artifact": "data/releases/builds/fantasy/2025/week10/fantasy-2025w10-33a7de4ef33f/artifact.csv",
@@ -1054,6 +1054,36 @@
             ]
           },
           "week": 8
+        },
+        "fantasy-2026w09-5d969895c402": {
+          "artifact": "data/releases/builds/fantasy/2026/week09/fantasy-2026w09-5d969895c402/artifact.csv",
+          "build_id": "fantasy-2026w09-5d969895c402",
+          "metadata": "data/releases/builds/fantasy/2026/week09/fantasy-2026w09-5d969895c402/metadata.json",
+          "model_version": "weekly-fantasy-v2-l1_wipe_prior_share_ranks-ad79f409f0b3",
+          "produced_at": "2026-11-03T21:08:42Z",
+          "product": "fantasy",
+          "published_at": "2026-11-03T21:14:11Z",
+          "row_count": 383,
+          "season": 2026,
+          "sha256": "5d969895c402fdfb432e6866a37972128280170f2aef9db1fb74538720db8c3f",
+          "status": "Published",
+          "validation": {
+            "checks": {
+              "artifact_sha256": "5d969895c402fdfb432e6866a37972128280170f2aef9db1fb74538720db8c3f",
+              "produced_at_utc": "2026-11-03T21:08:42Z",
+              "scheduled_teams": 30,
+              "team_position_cells": 120,
+              "team_position_gap_exceptions": 0
+            },
+            "errors": [],
+            "ok": true,
+            "product": "fantasy",
+            "row_count": 383,
+            "warnings": [
+              "13 projections are below zero; retained as a model diagnostic"
+            ]
+          },
+          "week": 9
         }
       },
       "next_release": {
@@ -1062,7 +1092,7 @@
         "status": "Awaiting projections",
         "week": 8
       },
-      "previous_build": "fantasy-2026w08-125d3dce2820"
+      "previous_build": "fantasy-2026w08-399059b7cd21"
     },
     "predictions": {
       "active_build": "predictions-2026w09-f8c29c2a9f22",
@@ -18896,5 +18926,5 @@
     }
   },
   "schema_version": 1,
-  "updated_at": "2026-11-03T17:19:36Z"
+  "updated_at": "2026-11-03T21:14:11Z"
 }

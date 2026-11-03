@@ -6,8 +6,6 @@ from pathlib import Path
 
 import streamlit as st
 
-import nav_registry
-
 _ROOT = Path(__file__).resolve().parents[1]
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
@@ -90,7 +88,6 @@ def render_rundowns():
     _draft_board()
     _weekly_fantasy()
     _dfs_optimizer()
-    _anytime_td()
     _totals_demo()
     _rookie_board()
 
@@ -249,8 +246,8 @@ position (QB14, RB30, WR36, TE14). It is a Draft price toggle: the draft-price c
 shows that overall rank (1.0 = first). Not a separate forecast.
 
 Points and positional ranks stay frozen until the dated early-September public-information
-snapshot. Sleeper ADP (the default), ESPN ADP, and Yahoo ADP still refresh daily, as does Sleeper Proj;
-those live values rewrite the market ranks and both gap columns, not Model Proj. The 5-of-6
+snapshot. Sleeper ADP (the default), ESPN ADP, and Yahoo ADP refreshed daily through the preseason and are
+paused once the season starts; those values rewrite the market ranks and both gap columns, not Model Proj. The 5-of-6
 ADP-ordering result is vs Sleeper ADP.
 
 **How it scored historically.** On 2021-2025 Model Proj pairwise **{ev['model_pairwise']:.4f}**
@@ -338,65 +335,6 @@ lineup still requires the DraftKings salary CSV for the contest.
         st.caption(
             "This page does not prove a Classic lineup will beat the field. It is a "
             "constrained optimizer on this model's DK-point estimates."
-        )
-
-
-def _anytime_td():
-    archived = nav_registry.is_archived("anytime-tds")
-    label = "How Touchdown Props worked (historical, paused)" if archived else "How Touchdown Props works"
-    with st.expander(label):
-        if archived:
-            st.info("Historical methodology. Touchdown Props is paused; no new predictions are published.")
-            st.caption("The description below documents the archived board and its limitations.")
-        st.markdown(("**Status: historical methodology; public predictions paused.**" if archived else
-                     "**Status: current live release plus historical demo. For fun. Do not bet this.**") + """
-
-The board was built from manually pasted US-book Yes prices. Published 2026
-releases and the historical demo were selectable for context. Started-game rows
-were frozen, and no odds API was used.
-
-The **Market** control switched between three touchdown-scorer markets.
-Only one rendered at a time.
-
-**Anytime TD.** The chance a skill player scores a **rushing or receiving**
-touchdown in that game. Passing touchdowns are out. The model is a Poisson
-rate on 34 locked usage features plus that week's Sleeper half-PPR
-projection. It does not use the anytime price as an input.
-
-On the full 2025 overlap (n=5,310) the book still wins: Brier **0.13985** vs our
-**0.13996**. Sleeper's dump has no freeze timestamp. The last regular week is skipped
-because those box scores are rest and backups.
-
-The page is a **priced comparison board**: every skill player the books quoted
-that week, with Model ATTD Odds beside Book ATTD Odds, sorted by ATTD Value Gap
-(our probability minus the book probability, highest first). This is not even money.
-About one in five hits. It is not a pick list. A cut of the biggest
-disagreements lost on 2025. Full 2025: the books were about 0.08% more accurate.
-Demo weeks 10-17: closer in 5 of 8 weeks. That is not a betting record.
-
-**2+ TD.** Not backtested: no historical 2+ model-quality or betting
-test results are published yet. Its probabilities and cards are forward-looking
-paper tracking only, not evidence of accuracy or profitability. Since
-2026-09-19 its candidate rule is model probability at least 1.25x DraftKings'
-price, with that price at least 2% (replaces a flat +0.5pp gap, which mostly
-flagged long shots where a small model error reads as a huge relative edge).
-
-**First TD.** A different kind of probability than the other two: exactly one
-player can score a game's first touchdown, so it is a competing-risk
-allocation across both rosters (each player's share of the game's
-Anytime-TD rate), not a per-player marginal chance. There is no historical
-First TD backtest of any kind, for any season, anywhere in this project --
-only a forward live-week board. Treat it as entertainment even more than 2+ TD.
-Its paper-bet rule is a wider +3.0pp gap than Anytime's +1.0pp, because the
-allocation method has a known bias toward underweighting bell-cow backs and
-starting QBs that a narrow gap rule would misread as value. Since 2026-09-19
-it also requires a positive expected return at DraftKings' actual, vigged
-price, since the de-vigged gap alone can still pass on a bet that loses
-money once the real price (which sums to about 121% per game) is paid.
-        """)
-        st.caption(
-            "The live board is a comparison, not a claim it beats the book. "
-            "Pregame outcomes remain blank until grading is attached."
         )
 
 

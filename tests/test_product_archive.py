@@ -128,18 +128,12 @@ def test_home_week_and_help_promotions_follow_archive_setting(today, monkeypatch
         assert ('### Touchdown Props' in copy(at)) == (not archived)
         switch(at, 'help')
         directory_links = ' '.join(link.label for link in at.get('page_link'))
-        assert ('Anytime, 2+, and First TD scorer probabilities' in directory_links) == (not archived)
+        assert 'First TD scorer probabilities' not in directory_links
 
 
-def test_td_methodology_is_explicitly_historical(tmp_path):
-    harness = tmp_path / 'historical_td_methodology.py'
-    harness.write_text('import help_models\nhelp_models._anytime_td()\n', encoding='utf-8')
-    at = clean(AppTest.from_file(str(harness)).run())
-    assert 'historical, paused' in at.expander[0].label
-    assert 'Historical methodology' in copy(at)
-    assert 'current live release' not in copy(at)
-    assert 'New live slates are appended' not in copy(at)
-
+def test_help_models_no_longer_carry_td_methodology():
+    import help_models
+    assert not hasattr(help_models, '_anytime_td')
 
 
 @pytest.mark.parametrize('width', [390, 768, 1440])
