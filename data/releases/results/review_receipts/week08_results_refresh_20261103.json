@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "receipt_id": "week08-results-refresh-2026-11-03",
+  "request_scope": [
+    "Show Week 8 postgame fantasy results on Weekly Fantasy.",
+    "Include completed Week 8 spread results in Weekly Predictions and Track Record.",
+    "Verify the Week 9 Tuesday spread snapshot and requested Tuesday board edition."
+  ],
+  "run_at_utc": "2026-11-03T15:53:56Z",
+  "updates": {
+    "weekly_fantasy": {
+      "season": 2026,
+      "week": 8,
+      "active_build": "fantasy-2026w08-399059b7cd21",
+      "model_version": "weekly-fantasy-v2-l1_wipe_prior_share_ranks-ad79f409f0b3",
+      "candidate_artifact": "data/releases/builds/fantasy/2026/week08/fantasy-2026w08-399059b7cd21/artifact.csv",
+      "candidate_sha256": "399059b7cd212126447bf3f9b7127907f529a4ed76f68892ffb5d80a44588949",
+      "metadata": "data/releases/builds/fantasy/2026/week08/fantasy-2026w08-399059b7cd21/metadata.json",
+      "grading": {
+        "complete": true,
+        "final_games": 14,
+        "graded_rows": 358,
+        "missing_actuals": 0,
+        "artifact": "data/releases/results/fantasy/2026/week08/fantasy-2026w08-399059b7cd21-graded.csv",
+        "artifact_sha256": "970cfa0dfd4cc016355db1d0f8c92a470e3b5f216b0c63d95967162f12efea70"
+      },
+      "new_projections_or_training": false,
+      "source_capture_evidence": "The immutable build metadata above records the original Sleeper, player directory, market, roster, and QB assumption inputs; this postgame pass did not refresh projections."
+    },
+    "weekly_predictions": {
+      "season": 2026,
+      "week": 8,
+      "active_build": "predictions-2026w08-8b05f2447a9f",
+      "model_version": "spread-v3-prod-sunday-tuesday-market-actual-starter-0c213b99e845",
+      "candidate_artifact": "data/releases/builds/predictions/2026/week08/predictions-2026w08-8b05f2447a9f/artifact.csv",
+      "candidate_sha256": "8b05f2447a9f10f6d106fc0dd616f774e7a18c74afe1eabf0609d51bcf4c55af",
+      "metadata": "data/releases/builds/predictions/2026/week08/predictions-2026w08-8b05f2447a9f/metadata.json",
+      "grading": {
+        "complete": true,
+        "final_games": 14,
+        "graded_rows": 14,
+        "record": "5-9-0",
+        "graded_artifact": "data/releases/results/predictions/2026/week08/predictions-2026w08-8b05f2447a9f-graded.csv",
+        "artifact_sha256": "b3c332a971a42b716c8474df46e62773e480de525876bf9cd02654f14478cc22",
+        "hash_contract": "publishing.contract.sha256_file canonical CRLF text hash"
+      },
+      "model_scoring_or_training_this_pass": false,
+      "week08_tuesday_market_source": {
+        "captured_at_utc": "2026-10-27T13:00:03Z",
+        "source_snapshot_sha256": "3520430ad9d1a333867d03d018f7e24c2badc968e2013f777f27f3da8dd125d8",
+        "source_evidence": "Active prediction build metadata"
+      }
+    },
+    "touchdown_results": {
+      "season": 2026,
+      "week": 8,
+      "prediction_mode": "live archived board",
+      "page_status": "paused and hidden by site navigation",
+      "active_board": "betting/anytime_td/releases/td_product_ngs_44_frozen_2025_v1/anytime_td_2026_week08_ngs_live_sunday_draftkings_week08_20261101T093000ET.csv",
+      "active_board_sha256": "7bc4d77fe59bcc18734c7b6d950e667ad4b3cce372787e9b9ab661b60a0fd1b6",
+      "grading": {
+        "final_games": 14,
+        "anytime_graded_rows": 333,
+        "two_plus_graded_rows": 333,
+        "first_td_graded_rows": 333,
+        "pending_stat_rows": 0,
+        "first_td_games_resolved": 14,
+        "first_td_identity_reclassifications": 8,
+        "graded_at_utc": "2026-11-03T15:53:56Z"
+      },
+      "identity_reclassification_policy": "Only the same scorer ID and team with unchanged play-by-play hash, changed player-identity hash, same offensive team, and no return touchdown may move from defense to offense_skill. Other conflicts remain rejected."
+    }
+  },
+  "week09_tuesday": {
+    "spread_snapshot": {
+      "path": "../workspace/nfl/raw/odds_api_tuesday/raw/2026_w09.json",
+      "snapshot_et": "2026-11-03T09:00:00-05:00",
+      "captured_at_et": "2026-11-03T09:00:03-05:00",
+      "captured_at_utc": "2026-11-03T14:00:03Z",
+      "sha256": "cf6aba83ef03c04f4b8b9b19c0a48daaf5ec679721123f43bcb7d7280aac0d0b",
+      "scheduled_game_coverage": "15/15",
+      "snapshot_validation": "passed"
+    },
+    "prediction_build": null,
+    "site_board_status": "not published",
+    "blocker": "The Tuesday selector uses the valid free_live snapshot, but the production source validator has no approved Week 9 exception for this source. The exact hash approval remains pending. No Week 9 prediction build exists in the public manifest."
+  },
+  "site_review": {
+    "local_preview": true,
+    "desktop_viewport": "1280x720",
+    "pages_checked": [
+      "/weekly-fantasy?season=2026&week=8",
+      "/weekly-predictions?season=2026&week=8",
+      "/track-record?season=2026"
+    ],
+    "visual_review": "Completed for desktop; Week 8 postgame fantasy scorecard, 5-9 spread summary, and 2026 season record were visible and legible.",
+    "phone_viewport_review": "not performed",
+    "screenshot_file": null,
+    "hosted_deployment": "unverified"
+  },
+  "validation": {
+    "targeted_td_grader_tests": "29 passed",
+    "diff_check": "passed",
+    "artifact_hash_and_row_checks": "passed using product-specific hash contracts",
+    "broader_public_tests": "115 passed; 15 publishing temp-directory cases failed with Windows access-denied errors while pytest created temporary directories; no assertion failure was observed in those cases"
+  },
+  "git": {
+    "fantasy_week08_results_commit": "7c26bec",
+    "postgame_results_commit": "14e5eef",
+    "deployment_stage": "local updates committed as 14e5eef; human push/deployment pending"
+  },
+  "rollback": {
+    "manifest": "data/releases/manifest.json",
+    "active_builds_before_and_after_result_grading": {
+      "fantasy": "fantasy-2026w08-399059b7cd21",
+      "predictions": "predictions-2026w08-8b05f2447a9f"
+    },
+    "rollback_method": "Revert the scoped Week 8 postgame refresh commit; immutable build artifacts remain in place."
+  }
+}
