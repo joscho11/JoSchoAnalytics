@@ -1045,6 +1045,50 @@ def _stable_frame_sha256(frame: pd.DataFrame, columns: list[str], sort_by: list[
     return hashlib.sha256(encoded).hexdigest()
 
 
+def _allows_identity_reclassification(prior: dict, current: dict, event: dict) -> bool:
+    """Allow a narrow defense-to-skill correction after scorer identity improves.
+
+    Keep the previously verified scorer identity, team, and board membership
+    fixed. This exception only handles a prior defensive classification that a
+    newer player-identity feed resolves to an offensive skill scorer, while the
+    play still identifies that same scorer on his offense and not on a return.
+    """
+    if prior.get("status") != "resolved" or current.get("status") != "resolved":
+        return False
+    if prior.get("outcome_kind") != "defense" or current.get("outcome_kind") != "offense_skill":
+        return False
+    identity_fields = ("scorer_player_id", "scorer_team", "scorer_on_board")
+    if any(prior.get(field) != current.get(field) for field in identity_fields):
+        return False
+    old_hashes = prior.get("source_hashes") or {}
+    new_hashes = current.get("source_hashes") or {}
+    identity_feed_changed = bool(
+        old_hashes.get("player_identity")
+        and new_hashes.get("player_identity")
+        and old_hashes["player_identity"] != new_hashes["player_identity"]
+    )
+    play_by_play_unchanged = bool(
+        old_hashes.get("play_by_play")
+        and new_hashes.get("play_by_play")
+        and old_hashes["play_by_play"] == new_hashes["play_by_play"]
+    )
+    if not identity_feed_changed or not play_by_play_unchanged:
+        return False
+    if prior.get("identity_source") != "play_by_play_player_id":
+        return False
+    if current.get("identity_source") != "nflverse_player_stats":
+        return False
+    scorer_id = _normal_identifier(current.get("scorer_player_id"))
+    scorer_team = _normal_team(current.get("scorer_team"))
+    if not scorer_id or not scorer_team or _normal_identifier(event.get("td_player_id")) != scorer_id:
+        return False
+    if _normal_team(event.get("td_team")) != scorer_team or _normal_team(event.get("posteam")) != scorer_team:
+        return False
+    if pd.to_numeric(pd.Series([event.get("return_touchdown")]), errors="coerce").iloc[0] == 1:
+        return False
+    return True
+
+
 def _first_td_result_sidecar(
     source: Path,
     original_board: pd.DataFrame,
@@ -1246,14 +1290,32 @@ def _first_td_result_sidecar(
                 settlements_changed = True
         game["player_settlements"] = merged_settlements
         if prior and prior.get("status") == "resolved":
-            if game["status"] == "resolved" and any(
+            changed_result_fields = game["status"] == "resolved" and any(
                 prior.get(field) != game.get(field)
                 for field in ("outcome_kind", "scorer_player_id", "scorer_team", "scorer_on_board")
-            ):
+            )
+            event = event_by_game.get(game["game_id"], {})
+            reclassified_identity = changed_result_fields and _allows_identity_reclassification(
+                prior, game, event
+            )
+            if changed_result_fields and not reclassified_identity:
                 raise PublicationError(
                     f"First TD game result conflicts with previously verified sidecar: {game['game_id']}"
                 )
-            # A verified result is immutable; keep its original evidence and timestamp.
+            if reclassified_identity:
+                prior["outcome_kind"] = game["outcome_kind"]
+                prior["scorer_name"] = game.get("scorer_name")
+                prior["identity_source"] = game.get("identity_source")
+                prior["graded_at"] = now
+                prior["source_hashes"] = dict(game["source_hashes"])
+                prior["classification_correction"] = {
+                    "from": "defense",
+                    "to": "offense_skill",
+                    "reason": "updated player identity resolves the same scorer as an offensive skill player",
+                    "source_hashes": dict(game["source_hashes"]),
+                }
+                changed = True
+            # Preserve verified scorer identity and settlement decisions.
             if settlements_changed:
                 prior["player_settlements"] = merged_settlements
                 prior["settlements_updated_at"] = now

@@ -52,6 +52,46 @@ def test_non_skill_offensive_scorer_is_defense_bucket():
     assert _classify_first_td_row(row, {"OL1": "OL"}) == "defense"
 
 
+def test_identity_enrichment_allows_only_same_offensive_scorer_reclassification():
+    from publishing.grader import _allows_identity_reclassification
+
+    prior = {
+        "status": "resolved", "outcome_kind": "defense",
+        "scorer_player_id": "00-0037282", "scorer_team": "DAL", "scorer_on_board": False,
+        "identity_source": "play_by_play_player_id",
+        "source_hashes": {"play_by_play": "same-pbp", "player_identity": "older-identity"},
+    }
+    current = {
+        "status": "resolved", "outcome_kind": "offense_skill",
+        "scorer_player_id": "00-0037282", "scorer_team": "DAL", "scorer_on_board": False,
+        "identity_source": "nflverse_player_stats",
+        "source_hashes": {"play_by_play": "same-pbp", "player_identity": "current-identity"},
+    }
+    event = {
+        "td_player_id": "00-0037282", "td_team": "DAL", "posteam": "DAL",
+        "defteam": "ARI", "return_touchdown": 0,
+    }
+    assert _allows_identity_reclassification(prior, current, event)
+
+    defensive_score = {**event, "posteam": "ARI"}
+    assert not _allows_identity_reclassification(prior, current, defensive_score)
+
+    different_scorer = {**current, "scorer_player_id": "OTHER"}
+    assert not _allows_identity_reclassification(prior, different_scorer, event)
+
+    unchanged_feed = {
+        **current,
+        "source_hashes": {"play_by_play": "same-pbp", "player_identity": "older-identity"},
+    }
+    assert not _allows_identity_reclassification(prior, unchanged_feed, event)
+
+    changed_play = {
+        **current,
+        "source_hashes": {"play_by_play": "new-pbp", "player_identity": "current-identity"},
+    }
+    assert not _allows_identity_reclassification(prior, changed_play, event)
+
+
 def _grade_fixture(tmp_path, pbp_rows, home_score, away_score):
     import pandas as pd
     from publishing.grader import grade_first_td_file
