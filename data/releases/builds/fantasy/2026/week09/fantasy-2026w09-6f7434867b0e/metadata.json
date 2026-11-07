@@ -1,0 +1,316 @@
+{
+  "artifact_name": "projections_2026_week09.csv",
+  "artifact_sha256": "6f7434867b0e75bf8634a7133e3e0bed032c8684d03b2ebc7805b5171c9b8b03",
+  "expected_gsis_id_sha256": "a240e3a2a81c6109940e822511a07ac5e2ab31a70655d6adf4985209afc72d41",
+  "expected_player_ids_sha256": "daf40c179b5fde12ca9466fbbab1ef2d39663cbad4f2c9b5c7233453368bae12",
+  "expected_rows": 366,
+  "expected_sleeper_id_sha256": "df1774a04993cdd6c19a2b21a5d7b0708d14f924f9bce1b3f148863aac54cb43",
+  "expected_teams": [
+    "ARI",
+    "ATL",
+    "BAL",
+    "BUF",
+    "CAR",
+    "CHI",
+    "CIN",
+    "CLE",
+    "DAL",
+    "DEN",
+    "DET",
+    "GB",
+    "HOU",
+    "IND",
+    "JAX",
+    "KC",
+    "LA",
+    "LAC",
+    "LV",
+    "MIA",
+    "MIN",
+    "NE",
+    "NO",
+    "NYG",
+    "NYJ",
+    "PHI",
+    "SEA",
+    "SF",
+    "TB",
+    "WAS"
+  ],
+  "identity_aliases": [
+    "gsis_id",
+    "sleeper_id"
+  ],
+  "legacy_bootstrap": false,
+  "manual_qb_assumptions": [
+    {
+      "as_of_utc": "2026-11-03T16:52:08Z",
+      "game_id": "2026_09_ARI_SEA",
+      "player_id": "00-0035289",
+      "player_name": "Gardner Minshew II",
+      "reason": "Joseph confirms Minshew is the Week 9 starter (Brissett 27 / Minshew 21 dropbacks in Week 8)",
+      "reported_injury_status": "none",
+      "source": "user_manual_override",
+      "team": "ARI"
+    },
+    {
+      "as_of_utc": "2026-11-03T16:52:08Z",
+      "game_id": "2026_09_JAX_BAL",
+      "player_id": "00-0040981",
+      "player_name": "Joe Fagnano",
+      "reason": "Joseph: Fagnano is the assumed starter; not Huntley or Lamar (matches Week 8 dropback leader)",
+      "reported_injury_status": "Out",
+      "source": "user_manual_override",
+      "team": "BAL"
+    }
+  ],
+  "model_version": "weekly-fantasy-v2-l1_wipe_prior_share_ranks-ad79f409f0b3",
+  "position_counts": {
+    "QB": 30,
+    "RB": 92,
+    "TE": 103,
+    "WR": 141
+  },
+  "produced_at": "2026-11-07T18:35:57Z",
+  "product": "fantasy",
+  "rolling_refresh": {
+    "as_of_utc": "2026-11-07T18:35:43.866528+00:00",
+    "baseline_artifact_sha256": "5d969895c402fdfb432e6866a37972128280170f2aef9db1fb74538720db8c3f",
+    "baseline_build_id": "fantasy-2026w09-5d969895c402",
+    "baseline_forward_sha256": "50007e5f2af253abb2d5161c0540ce0ddaa6e845b415c896e9897ba7a35b30ba",
+    "baseline_metadata_sha256": "6de9e164d6b7bf4998584daebafe851eb4225d520fd137df483ebffca6ccdf1f",
+    "locked_game_ids": [
+      "2026_09_JAX_BAL"
+    ],
+    "source_requested_utc": "2026-11-07T17:52:45Z"
+  },
+  "schema_version": 1,
+  "season": 2026,
+  "team_position_counts": {
+    "ARI": {
+      "QB": 1,
+      "RB": 2,
+      "TE": 3,
+      "WR": 4
+    },
+    "ATL": {
+      "QB": 1,
+      "RB": 2,
+      "TE": 3,
+      "WR": 3
+    },
+    "BAL": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 4,
+      "WR": 6
+    },
+    "BUF": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 6
+    },
+    "CAR": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 5,
+      "WR": 5
+    },
+    "CHI": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 2,
+      "WR": 5
+    },
+    "CIN": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 4,
+      "WR": 5
+    },
+    "CLE": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 2,
+      "WR": 6
+    },
+    "DAL": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 4
+    },
+    "DEN": {
+      "QB": 1,
+      "RB": 2,
+      "TE": 4,
+      "WR": 5
+    },
+    "DET": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 5
+    },
+    "GB": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 2,
+      "WR": 5
+    },
+    "HOU": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 5,
+      "WR": 5
+    },
+    "IND": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 5,
+      "WR": 6
+    },
+    "JAX": {
+      "QB": 1,
+      "RB": 4,
+      "TE": 4,
+      "WR": 5
+    },
+    "KC": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 6
+    },
+    "LA": {
+      "QB": 1,
+      "RB": 2,
+      "TE": 4,
+      "WR": 5
+    },
+    "LAC": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 5
+    },
+    "LV": {
+      "QB": 1,
+      "RB": 4,
+      "TE": 3,
+      "WR": 5
+    },
+    "MIA": {
+      "QB": 1,
+      "RB": 4,
+      "TE": 4,
+      "WR": 6
+    },
+    "MIN": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 5
+    },
+    "NE": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 3
+    },
+    "NO": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 4,
+      "WR": 4
+    },
+    "NYG": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 4
+    },
+    "NYJ": {
+      "QB": 1,
+      "RB": 5,
+      "TE": 4,
+      "WR": 4
+    },
+    "PHI": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 4,
+      "WR": 4
+    },
+    "SEA": {
+      "QB": 1,
+      "RB": 4,
+      "TE": 3,
+      "WR": 4
+    },
+    "SF": {
+      "QB": 1,
+      "RB": 4,
+      "TE": 2,
+      "WR": 3
+    },
+    "TB": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 4,
+      "WR": 5
+    },
+    "WAS": {
+      "QB": 1,
+      "RB": 2,
+      "TE": 4,
+      "WR": 3
+    }
+  },
+  "tuesday_sleeper_projection_signal": {
+    "players": [
+      {
+        "player_id": "00-0040981",
+        "player_name": "Joe Fagnano",
+        "position": "QB",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 10.74,
+        "sleeper_roster_status": "Active",
+        "team": "BAL"
+      },
+      {
+        "player_id": "00-0040876",
+        "player_name": "Elijah Sarratt",
+        "position": "WR",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 0.32,
+        "sleeper_roster_status": "Active",
+        "team": "BAL"
+      }
+    ],
+    "policy": "A numeric current-week Sleeper projection plus an exact Out/Doubtful Sleeper directory label is a provisional Tuesday signal, not confirmation of play.",
+    "row_count": 2,
+    "source": {}
+  },
+  "validation": {
+    "checks": {
+      "artifact_sha256": "6f7434867b0e75bf8634a7133e3e0bed032c8684d03b2ebc7805b5171c9b8b03",
+      "locked_fantasy_rows": 28,
+      "produced_at_utc": "2026-11-07T18:35:57Z",
+      "scheduled_teams": 30,
+      "team_position_cells": 120,
+      "team_position_gap_exceptions": 0
+    },
+    "errors": [],
+    "ok": true,
+    "product": "fantasy",
+    "row_count": 366,
+    "warnings": [
+      "20 projections are below zero; retained as a model diagnostic"
+    ]
+  },
+  "week": 9
+}
