@@ -324,6 +324,21 @@ def _ruled_out_by_injury(frame: pd.DataFrame) -> pd.Series:
     return mask.fillna(False)
 
 
+REVIEW_HIDDEN_STATUSES = frozenset({"flagged", "needs_review", "exclude"})
+
+
+def _review_hidden(frame: pd.DataFrame) -> pd.Series:
+    """Role-collapse review gate: unresolved or excluded players leave the default ranking.
+
+    Must match review_gate.default_excluded_mask in the weekly producer and the DFS
+    pool filter (tested in test_review_gate_consistency.py). Older releases have no column.
+    """
+    if "review_status" not in frame.columns:
+        return pd.Series(False, index=frame.index)
+    status = frame["review_status"].astype("string").str.strip().str.lower()
+    return status.isin(REVIEW_HIDDEN_STATUSES).fillna(False).astype(bool)
+
+
 def _manual_qb_default(frame: pd.DataFrame) -> pd.Series:
     """Only an audited producer default can exempt a QB from the Out filter."""
     flag = frame.get("qb_manual_assumption", pd.Series(False, index=frame.index))
@@ -381,6 +396,7 @@ def eligible_board_rows(
     *,
     played_ids: set[str] | frozenset[str] | None = None,
     unavailable_ids: set[str] | frozenset[str] | None = None,
+    include_review_hidden: bool = False,
 ) -> pd.DataFrame:
     """Rows allowed on the public board. Frozen CSVs stay byte-identical.
 
@@ -390,6 +406,8 @@ def eligible_board_rows(
     out = _apply_display_exclusions(frame, season, week)
     if out.empty or "player_id" not in out.columns:
         return out
+    if include_review_hidden is False:
+        out = out.loc[~_review_hidden(out)].copy()
     ruled_out = _ruled_out_by_injury(out)
     manual_qb = _manual_qb_default(out)
     pregame = _pregame_game_mask(out)
@@ -1135,6 +1153,33 @@ def render():
             played_ids=played_ids,
             unavailable_ids=unavailable_ids,
         )
+
+        _review_hidden_rows = eligible_board_rows(
+            _projection_source, season, week, played_ids=played_ids,
+            unavailable_ids=unavailable_ids, include_review_hidden=True,
+        )
+        _review_hidden_rows = _review_hidden_rows.loc[_review_hidden(_review_hidden_rows)]
+        if not _review_hidden_rows.empty:
+            with st.expander(
+                f"Held out for role review ({len(_review_hidden_rows)})", expanded=False,
+                icon=":material/rule:",
+            ):
+                st.caption(
+                    "These players were active in their team's last game with no offensive snaps "
+                    "or touches, or their availability data is missing. They are hidden from the "
+                    "rankings until reviewed. This is a role flag, not an injury. The original "
+                    "projection is shown for reference."
+                )
+                _held = _review_hidden_rows.rename(columns={
+                    "player_display_name": "Player", "position": "Pos", "team": "Team",
+                    "review_status": "Status", "review_reason": "Reason",
+                    "review_original_projected_pts": "Original proj",
+                })
+                _held_cols = [c for c in ("Player", "Pos", "Team", "Status", "Reason", "Original proj")
+                              if c in _held.columns]
+                st.dataframe(_held[_held_cols].sort_values("Original proj", ascending=False)
+                             if "Original proj" in _held_cols else _held[_held_cols],
+                             hide_index=True)
 
         # Postgame ranking accuracy needs a completely graded 2026+ release. A
         # partial grade or a 2025 demo week shows nothing new.

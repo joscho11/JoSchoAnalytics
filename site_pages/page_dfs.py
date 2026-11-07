@@ -48,6 +48,13 @@ def _render_pool_summary(pool: pd.DataFrame, summary: dict) -> None:
     dst_note = pool.attrs.get("dst_caption", "DST: DraftKings average (no game line)")
     st.caption(f"{summary.get('n_games', 0)} games · {games} · {dst_note}.")
 
+    n_review = int(pool.attrs.get("review_excluded_count", 0))
+    if n_review:
+        st.caption(
+            f"{n_review} player(s) are held out pending role review: active last game with no "
+            "offensive snaps or touches, or missing availability data. Their projections stay in "
+            "the audit table below. This is a role flag, not an injury."
+        )
     audit = pool[
         ["name", "position", "team", "salary", "status", "match", "match_name",
          "dfs_proj_pts", "optimization_eligible", "exclusion_reason"]
