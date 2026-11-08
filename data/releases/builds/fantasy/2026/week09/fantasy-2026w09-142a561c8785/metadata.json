@@ -1,0 +1,469 @@
+{
+  "artifact_name": "projections_2026_week09.csv",
+  "artifact_sha256": "142a561c8785b086868fe0853a84dd7e336a2979a2d3816026d896812e315268",
+  "expected_gsis_id_sha256": "a240e3a2a81c6109940e822511a07ac5e2ab31a70655d6adf4985209afc72d41",
+  "expected_player_ids_sha256": "daf40c179b5fde12ca9466fbbab1ef2d39663cbad4f2c9b5c7233453368bae12",
+  "expected_rows": 366,
+  "expected_sleeper_id_sha256": "df1774a04993cdd6c19a2b21a5d7b0708d14f924f9bce1b3f148863aac54cb43",
+  "expected_teams": [
+    "ARI",
+    "ATL",
+    "BAL",
+    "BUF",
+    "CAR",
+    "CHI",
+    "CIN",
+    "CLE",
+    "DAL",
+    "DEN",
+    "DET",
+    "GB",
+    "HOU",
+    "IND",
+    "JAX",
+    "KC",
+    "LA",
+    "LAC",
+    "LV",
+    "MIA",
+    "MIN",
+    "NE",
+    "NO",
+    "NYG",
+    "NYJ",
+    "PHI",
+    "SEA",
+    "SF",
+    "TB",
+    "WAS"
+  ],
+  "identity_aliases": [
+    "gsis_id",
+    "sleeper_id"
+  ],
+  "legacy_bootstrap": false,
+  "manual_qb_assumptions": [
+    {
+      "as_of_utc": "2026-11-03T16:52:08Z",
+      "game_id": "2026_09_ARI_SEA",
+      "player_id": "00-0035289",
+      "player_name": "Gardner Minshew II",
+      "reason": "Joseph confirms Minshew is the Week 9 starter (Brissett 27 / Minshew 21 dropbacks in Week 8)",
+      "reported_injury_status": "none",
+      "source": "user_manual_override",
+      "team": "ARI"
+    },
+    {
+      "as_of_utc": "2026-11-03T16:52:08Z",
+      "game_id": "2026_09_JAX_BAL",
+      "player_id": "00-0040981",
+      "player_name": "Joe Fagnano",
+      "reason": "Joseph: Fagnano is the assumed starter; not Huntley or Lamar (matches Week 8 dropback leader)",
+      "reported_injury_status": "Out",
+      "source": "user_manual_override",
+      "team": "BAL"
+    }
+  ],
+  "model_version": "weekly-fantasy-v2-workload_v1-ee1bef1cd9cc",
+  "position_counts": {
+    "QB": 30,
+    "RB": 92,
+    "TE": 103,
+    "WR": 141
+  },
+  "produced_at": "2026-11-08T02:55:22Z",
+  "product": "fantasy",
+  "review_gate": {
+    "counts": {
+      "clear": 349,
+      "flagged": 11,
+      "needs_review": 6
+    },
+    "excluded_by_default": [
+      {
+        "original_projected_pts": 12.533437825162432,
+        "player_id": "00-0032950",
+        "player_name": "Carson Wentz",
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "MIN"
+      },
+      {
+        "original_projected_pts": 10.422952718840852,
+        "player_id": "00-0039398",
+        "player_name": "Joe Milton",
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "PHI"
+      },
+      {
+        "original_projected_pts": 4.399274710023244,
+        "player_id": "00-0039373",
+        "player_name": "Audric Estime",
+        "review_reason": "availability_evidence_missing",
+        "review_status": "needs_review",
+        "team": "NO"
+      },
+      {
+        "original_projected_pts": 2.2863868754282253,
+        "player_id": "00-0038797",
+        "player_name": "Emanuel Wilson",
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "SEA"
+      },
+      {
+        "original_projected_pts": 1.3737667933171345,
+        "player_id": "00-0038705",
+        "player_name": "Emari Demercado",
+        "review_reason": "availability_evidence_missing",
+        "review_status": "needs_review",
+        "team": "HOU"
+      },
+      {
+        "original_projected_pts": 0.8278526421391513,
+        "player_id": "sleeper:13516",
+        "player_name": "Max Bredeson",
+        "review_reason": "availability_evidence_missing",
+        "review_status": "needs_review",
+        "team": "MIN"
+      },
+      {
+        "original_projected_pts": 0.5112650410065674,
+        "player_id": "00-0038951",
+        "player_name": "Sean Tucker",
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "TB"
+      },
+      {
+        "original_projected_pts": 0.4979725427148358,
+        "player_id": "sleeper:13603",
+        "player_name": "Gregory Desrosiers",
+        "review_reason": "availability_evidence_missing",
+        "review_status": "needs_review",
+        "team": "NYG"
+      },
+      {
+        "original_projected_pts": 0.1604011111992184,
+        "player_id": "00-0040208",
+        "player_name": "Tahj Brooks",
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "CIN"
+      },
+      {
+        "original_projected_pts": 0.0338680107891411,
+        "player_id": "00-0040959",
+        "player_name": "Jaydn Ott",
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "KC"
+      },
+      {
+        "original_projected_pts": 0.667414199508666,
+        "player_id": "00-0034439",
+        "player_name": "Tyler Conklin",
+        "review_reason": "availability_evidence_missing",
+        "review_status": "needs_review",
+        "team": "DET"
+      },
+      {
+        "original_projected_pts": 0.0056501207239602,
+        "player_id": "00-0037311",
+        "player_name": "Ko Kieft",
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "TB"
+      },
+      {
+        "original_projected_pts": 0.0052406505496757,
+        "player_id": "00-0036825",
+        "player_name": "Feleipe Franks",
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "CAR"
+      },
+      {
+        "original_projected_pts": 0.0745238113184137,
+        "player_id": "00-0031763",
+        "player_name": "DeAndre Carter",
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "DET"
+      },
+      {
+        "original_projected_pts": 0.0563941357002029,
+        "player_id": "00-0038519",
+        "player_name": "Nikko Remigio",
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "KC"
+      },
+      {
+        "original_projected_pts": 0.0489028715646033,
+        "player_id": "00-0037156",
+        "player_name": "Irvin Charles",
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "SEA"
+      },
+      {
+        "original_projected_pts": 0.2772006738825752,
+        "player_id": "sleeper:13324",
+        "player_name": "Matt Hibner",
+        "review_reason": "availability_evidence_missing",
+        "review_status": "needs_review",
+        "team": "BAL"
+      }
+    ],
+    "policy": "Players with projection > 0 who were active (ACT, not injured out) in their team's latest completed game with 0 offensive snaps and 0 opportunities, or whose availability evidence is missing, are hidden from the default ranking and the DFS pool until a reviewer decides. Original projections stay in review_original_projected_pts. This is a role flag, not an injury."
+  },
+  "rolling_refresh": {
+    "as_of_utc": "2026-11-08T02:55:09.040566+00:00",
+    "baseline_artifact_sha256": "6f7434867b0e75bf8634a7133e3e0bed032c8684d03b2ebc7805b5171c9b8b03",
+    "baseline_build_id": "fantasy-2026w09-6f7434867b0e",
+    "baseline_forward_sha256": "20af9810517d947c7e3d1f3b7f1111c2636361a92a3979c68d3ad9a565cb0d1f",
+    "baseline_metadata_sha256": "f49c8c6928060c6235e0fba85a32d2a98f69b3f5f07272670d1f3591fac60bff",
+    "locked_game_ids": [
+      "2026_09_JAX_BAL"
+    ],
+    "model_promotion": {
+      "approved_by": "Joseph",
+      "from_model_version": "weekly-fantasy-v2-l1_wipe_prior_share_ranks-ad79f409f0b3",
+      "policy": "started-game rows keep their published values; only future games use the promoted model",
+      "to_model_version": "weekly-fantasy-v2-workload_v1-ee1bef1cd9cc"
+    },
+    "source_requested_utc": "2026-11-07T17:52:45Z"
+  },
+  "schema_version": 1,
+  "season": 2026,
+  "team_position_counts": {
+    "ARI": {
+      "QB": 1,
+      "RB": 2,
+      "TE": 3,
+      "WR": 4
+    },
+    "ATL": {
+      "QB": 1,
+      "RB": 2,
+      "TE": 3,
+      "WR": 3
+    },
+    "BAL": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 4,
+      "WR": 6
+    },
+    "BUF": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 6
+    },
+    "CAR": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 5,
+      "WR": 5
+    },
+    "CHI": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 2,
+      "WR": 5
+    },
+    "CIN": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 4,
+      "WR": 5
+    },
+    "CLE": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 2,
+      "WR": 6
+    },
+    "DAL": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 4
+    },
+    "DEN": {
+      "QB": 1,
+      "RB": 2,
+      "TE": 4,
+      "WR": 5
+    },
+    "DET": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 5
+    },
+    "GB": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 2,
+      "WR": 5
+    },
+    "HOU": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 5,
+      "WR": 5
+    },
+    "IND": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 5,
+      "WR": 6
+    },
+    "JAX": {
+      "QB": 1,
+      "RB": 4,
+      "TE": 4,
+      "WR": 5
+    },
+    "KC": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 6
+    },
+    "LA": {
+      "QB": 1,
+      "RB": 2,
+      "TE": 4,
+      "WR": 5
+    },
+    "LAC": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 5
+    },
+    "LV": {
+      "QB": 1,
+      "RB": 4,
+      "TE": 3,
+      "WR": 5
+    },
+    "MIA": {
+      "QB": 1,
+      "RB": 4,
+      "TE": 4,
+      "WR": 6
+    },
+    "MIN": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 5
+    },
+    "NE": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 3
+    },
+    "NO": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 4,
+      "WR": 4
+    },
+    "NYG": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 4
+    },
+    "NYJ": {
+      "QB": 1,
+      "RB": 5,
+      "TE": 4,
+      "WR": 4
+    },
+    "PHI": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 4,
+      "WR": 4
+    },
+    "SEA": {
+      "QB": 1,
+      "RB": 4,
+      "TE": 3,
+      "WR": 4
+    },
+    "SF": {
+      "QB": 1,
+      "RB": 4,
+      "TE": 2,
+      "WR": 3
+    },
+    "TB": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 4,
+      "WR": 5
+    },
+    "WAS": {
+      "QB": 1,
+      "RB": 2,
+      "TE": 4,
+      "WR": 3
+    }
+  },
+  "tuesday_sleeper_projection_signal": {
+    "players": [
+      {
+        "player_id": "00-0040981",
+        "player_name": "Joe Fagnano",
+        "position": "QB",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 10.74,
+        "sleeper_roster_status": "Active",
+        "team": "BAL"
+      },
+      {
+        "player_id": "00-0040876",
+        "player_name": "Elijah Sarratt",
+        "position": "WR",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 0.32,
+        "sleeper_roster_status": "Active",
+        "team": "BAL"
+      }
+    ],
+    "policy": "A numeric current-week Sleeper projection plus an exact Out/Doubtful Sleeper directory label is a provisional Tuesday signal, not confirmation of play.",
+    "row_count": 2,
+    "source": {}
+  },
+  "validation": {
+    "checks": {
+      "artifact_sha256": "142a561c8785b086868fe0853a84dd7e336a2979a2d3816026d896812e315268",
+      "locked_fantasy_rows": 28,
+      "produced_at_utc": "2026-11-08T02:55:22Z",
+      "rolling_model_promotion": "weekly-fantasy-v2-l1_wipe_prior_share_ranks-ad79f409f0b3 -> weekly-fantasy-v2-workload_v1-ee1bef1cd9cc",
+      "scheduled_teams": 30,
+      "team_position_cells": 120,
+      "team_position_gap_exceptions": 0
+    },
+    "errors": [],
+    "ok": true,
+    "product": "fantasy",
+    "row_count": 366,
+    "warnings": [
+      "21 projections are below zero; retained as a model diagnostic"
+    ]
+  },
+  "week": 9
+}

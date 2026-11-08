@@ -669,7 +669,16 @@ def _validate_rolling_fantasy(report, artifact, metadata, schedule, root):
         if (int(baseline['season']), int(baseline['week'])) != (int(metadata['season']), int(metadata['week'])):
             raise ValueError('rolling baseline season/week mismatch')
         if baseline['model_version'] != metadata['model_version']:
-            raise ValueError('rolling refresh must retain the frozen model')
+            # An approved mid-week promotion may change the model for future games
+            # only; it must name the exact baseline model it replaces.
+            promotion = rolling.get('model_promotion') or {}
+            if (promotion.get('from_model_version') != baseline['model_version']
+                    or promotion.get('to_model_version') != metadata['model_version']
+                    or not promotion.get('approved_by')):
+                raise ValueError('rolling refresh must retain the frozen model')
+            report.checks['rolling_model_promotion'] = (
+                f"{promotion['from_model_version']} -> {promotion['to_model_version']}"
+            )
         baseline_path = resolve_site_path(baseline['artifact'], root)
         if sha256_file(baseline_path) != baseline['sha256'] or baseline['sha256'] != rolling['baseline_artifact_sha256']:
             raise ValueError('rolling baseline artifact hash mismatch')
@@ -696,7 +705,10 @@ def _validate_rolling_fantasy(report, artifact, metadata, schedule, root):
             raise ValueError('rolling locked games disagree with production time')
         old = pd.read_csv(baseline_path, dtype=str, keep_default_na=False)
         new = pd.read_csv(artifact, dtype=str, keep_default_na=False)
-        if set(old.columns) != set(new.columns):
+        removed = set(old.columns) - set(new.columns)
+        added = set(new.columns) - set(old.columns)
+        # Only additive review_* columns (role-collapse review gate) may appear.
+        if removed or any(not str(c).startswith('review_') for c in added):
             raise ValueError('rolling published columns changed')
         columns = sorted(old.columns)
         before = old.loc[old.game_id.isin(locked), columns].sort_values(['game_id','player_id']).reset_index(drop=True)
