@@ -3,9 +3,9 @@
     "products": {
       "fantasy": {
         "latest": {
-          "build_id": "fantasy-2026w09-6f7434867b0e",
+          "build_id": "fantasy-2026w09-142a561c8785",
           "final_games": 1,
-          "graded_at": "2026-11-07T18:53:30Z",
+          "graded_at": "2026-11-08T03:05:07Z",
           "graded_rows": 23,
           "season": 2026,
           "week": 9
@@ -1058,6 +1058,22 @@
         "fantasy-2026w09-142a561c8785": {
           "artifact": "data/releases/builds/fantasy/2026/week09/fantasy-2026w09-142a561c8785/artifact.csv",
           "build_id": "fantasy-2026w09-142a561c8785",
+          "grading": {
+            "artifact": "data/releases/results/fantasy/2026/week09/fantasy-2026w09-142a561c8785-graded.csv",
+            "artifact_sha256": "9947ef64abf319a2312123016574ebf3d1d716daf38088d7b05665b4079798ac",
+            "complete": false,
+            "final_games": 1,
+            "graded_at": "2026-11-08T03:05:07Z",
+            "graded_rows": 23,
+            "metadata": "data/releases/results/fantasy/2026/week09/fantasy-2026w09-142a561c8785-graded.json",
+            "missing_actuals": 343,
+            "product": "fantasy",
+            "schema_version": 1,
+            "season": 2026,
+            "source_build": "fantasy-2026w09-142a561c8785",
+            "week": 9,
+            "zero_filled_after_complete_feed": false
+          },
           "metadata": "data/releases/builds/fantasy/2026/week09/fantasy-2026w09-142a561c8785/metadata.json",
           "model_version": "weekly-fantasy-v2-workload_v1-ee1bef1cd9cc",
           "produced_at": "2026-11-08T02:55:22Z",
@@ -19036,5 +19052,5 @@
     }
   },
   "schema_version": 1,
-  "updated_at": "2026-11-08T02:55:24Z"
+  "updated_at": "2026-11-08T03:05:07Z"
 }
