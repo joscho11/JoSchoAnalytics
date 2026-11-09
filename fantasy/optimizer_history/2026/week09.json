@@ -1,0 +1,125 @@
+{
+  "season": 2026,
+  "week": 9,
+  "mode": "tournament_ceiling",
+  "engine_version": "0.2.4",
+  "projection_sha256": "3aaddbd9770d13876c4802e2fbee51afe7fad62e0f3cb883e4b51c670101bdaa",
+  "salary_sha256": "843d4f4ccfa96b75906a140d7faf77c90a35c3448bacdb83c7c60cbbb17107a4",
+  "field": {
+    "median": 120,
+    "top": 204
+  },
+  "lineups": [
+    {
+      "label": "Optimizer lineup",
+      "kind": "untouched",
+      "exclusions": [],
+      "total_actual": 117.6,
+      "total_ceiling": 177.73,
+      "total_mean": 133.88,
+      "salary": 49900,
+      "top_pct": 55,
+      "players": [
+        {
+          "slot": "QB",
+          "player": "Dak Prescott",
+          "pos": "QB",
+          "team": "DAL",
+          "salary": 6500,
+          "ceiling": 30.13,
+          "mean": 21.72,
+          "actual": 23.5,
+          "own": "9%"
+        },
+        {
+          "slot": "RB",
+          "player": "Christian McCaffrey",
+          "pos": "RB",
+          "team": "SF",
+          "salary": 8000,
+          "ceiling": 27.95,
+          "mean": 22.73,
+          "actual": 22.7,
+          "own": "33%"
+        },
+        {
+          "slot": "RB",
+          "player": "Chuba Hubbard",
+          "pos": "RB",
+          "team": "CAR",
+          "salary": 6500,
+          "ceiling": 22.21,
+          "mean": 16.99,
+          "actual": 13.6,
+          "own": "12%"
+        },
+        {
+          "slot": "FLEX",
+          "player": "Quinshon Judkins",
+          "pos": "RB",
+          "team": "CLE",
+          "salary": 5400,
+          "ceiling": 19.0,
+          "mean": 13.78,
+          "actual": 5.5,
+          "own": "10%"
+        },
+        {
+          "slot": "WR",
+          "player": "Amon-Ra St. Brown",
+          "pos": "WR",
+          "team": "DET",
+          "salary": 8100,
+          "ceiling": 23.56,
+          "mean": 18.25,
+          "actual": 16.6,
+          "own": "7%"
+        },
+        {
+          "slot": "WR",
+          "player": "Courtland Sutton",
+          "pos": "WR",
+          "team": "DEN",
+          "salary": 4400,
+          "ceiling": 15.45,
+          "mean": 10.14,
+          "actual": 15.5,
+          "own": "1%"
+        },
+        {
+          "slot": "WR",
+          "player": "Xavier Worthy",
+          "pos": "WR",
+          "team": "KC",
+          "salary": 4400,
+          "ceiling": 16.5,
+          "mean": 11.19,
+          "actual": 10.8,
+          "own": "2%"
+        },
+        {
+          "slot": "TE",
+          "player": "Tyler Warren",
+          "pos": "TE",
+          "team": "IND",
+          "salary": 4600,
+          "ceiling": 17.77,
+          "mean": 13.92,
+          "actual": 8.4,
+          "own": "10%"
+        },
+        {
+          "slot": "DST",
+          "player": "Cardinals",
+          "pos": "DST",
+          "team": "ARI",
+          "salary": 2000,
+          "ceiling": 5.17,
+          "mean": 5.17,
+          "actual": 1.0,
+          "own": "10%"
+        }
+      ]
+    }
+  ]
+}
