@@ -868,16 +868,17 @@ def render():
             edge      = row[_primary_edge]
             tier      = str(row['consensus_tier']) if _has_consensus_col and pd.notna(row.get('consensus_tier')) else ''
 
-            top_team      = home
-            bot_team      = away
-            top_spread    = fmt(-spread)
-            bot_spread    = fmt(spread)
+            # Convention (all weeks, live and historic): away team on top, home team on the bottom.
+            top_team      = away
+            bot_team      = home
+            top_spread    = fmt(spread)
+            bot_spread    = fmt(-spread)
             # Display predictions in sportsbook style (favorite shows negative, underdog positive)
             # to match how the SPREAD column is displayed. Internally `predicted` is the model's
             # home_margin estimate (positive = home wins), so we negate for the home team's display
             # and pass through for the away team.
-            top_predicted = fmt(-predicted, decimals=2)
-            bot_predicted = fmt(predicted, decimals=2)
+            top_predicted = fmt(predicted, decimals=2)
+            bot_predicted = fmt(-predicted, decimals=2)
 
             if pd.isna(edge) or edge == 0:
                 rec_team  = None
@@ -906,11 +907,11 @@ def render():
                 away_score = row.get('away_score', None)
                 has_scores = pd.notna(home_score) and pd.notna(away_score)
                 if has_scores:
-                    top_score = f"{int(home_score)}"
-                    bot_score = f"{int(away_score)}"
+                    top_score = f"{int(away_score)}"
+                    bot_score = f"{int(home_score)}"
                 else:
-                    top_score = fmt(actual)
-                    bot_score = fmt(-actual)
+                    top_score = fmt(-actual)
+                    bot_score = fmt(actual)
             else:
                 top_score = "—"
                 bot_score = "—"

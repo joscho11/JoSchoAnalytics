@@ -413,6 +413,19 @@ def test_weekly_predictions_unplayed_game_keeps_score_column(tmp_path):
         "unplayed cards must carry the scored-grid class so mobile aligns too"
     assert len(score_headers) == len(cards), \
         "every card in a partly-played week needs a SCORE column, played or not"
+    # Away team on the top row, home team on the bottom row, for every card.
+    import re as _re
+    order = [m for m in markdown if "jsa-gc-meta" in m or "jsa-gc-team-abbr" in m]
+    checked = 0
+    for i, m in enumerate(order):
+        hit = _re.search(r"<b style='color:#ccc'>(\w+) @ (\w+)</b>", m)
+        if not hit or i + 2 >= len(order):
+            continue
+        top = _re.search(r"jsa-gc-team-abbr[^>]*>(\w+)<", order[i + 1])
+        bot = _re.search(r"jsa-gc-team-abbr[^>]*>(\w+)<", order[i + 2])
+        assert top and bot and (top.group(1), bot.group(1)) == hit.groups(), (hit.groups(), order[i + 1:i + 3])
+        checked += 1
+    assert checked == len(cards)
 
 
 if __name__ == "__main__":
