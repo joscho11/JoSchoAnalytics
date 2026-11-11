@@ -1,0 +1,1504 @@
+{
+  "artifact_name": "projections_2026_week10.csv",
+  "artifact_sha256": "fe9df692cfedf8a5c80ca80410b0381a6a34c4a035710a47220b3d61221f1616",
+  "expected_gsis_id_sha256": "1b5dbb0dcc2fd2b92f97612a321063d431524be9efeb4ad89c705ed3b0c9380a",
+  "expected_player_ids_sha256": "d7e04dd4f628ea3d179a66871610208893450af4826707b81b3639614e80d1b1",
+  "expected_rows": 358,
+  "expected_sleeper_id_sha256": "213a8eb7b08418b0f47ddc971d12730fad53461f0341cb52c892d83110402d82",
+  "expected_teams": [
+    "ARI",
+    "ATL",
+    "BAL",
+    "BUF",
+    "CAR",
+    "CIN",
+    "CLE",
+    "DAL",
+    "DET",
+    "GB",
+    "HOU",
+    "IND",
+    "JAX",
+    "KC",
+    "LA",
+    "LAC",
+    "LV",
+    "MIA",
+    "MIN",
+    "NE",
+    "NO",
+    "NYG",
+    "NYJ",
+    "PIT",
+    "SEA",
+    "SF",
+    "TEN",
+    "WAS"
+  ],
+  "identity_aliases": [
+    "gsis_id",
+    "sleeper_id"
+  ],
+  "legacy_bootstrap": false,
+  "manual_qb_assumptions": [
+    {
+      "as_of_utc": "2026-11-11T01:14:27Z",
+      "game_id": "2026_10_MIN_GB",
+      "player_id": "00-0029604",
+      "player_name": "Kirk Cousins",
+      "reason": "Joseph: Cousins traded LV to MIN 2026-11-10, Week 10 starter (stated after the 09:00 ET line freeze)",
+      "reported_injury_status": "none",
+      "source": "user_manual_override",
+      "team": "MIN"
+    },
+    {
+      "as_of_utc": "2026-11-11T01:14:27Z",
+      "game_id": "2026_10_LAC_BAL",
+      "player_id": "00-0033119",
+      "player_name": "Jacoby Brissett",
+      "reason": "Joseph confirms Jacoby Brissett is the Week 10 starter (stated 2026-11-10 evening, after the 09:00 ET line freeze)",
+      "reported_injury_status": "none",
+      "source": "user_manual_override",
+      "team": "BAL"
+    },
+    {
+      "as_of_utc": "2026-11-11T01:14:27Z",
+      "game_id": "2026_10_SEA_LV",
+      "player_id": "00-0041562",
+      "player_name": "Fernando Mendoza",
+      "reason": "Joseph confirms Fernando Mendoza is the Week 10 starter (stated 2026-11-10 evening, after the 09:00 ET line freeze)",
+      "reported_injury_status": "none",
+      "source": "user_manual_override",
+      "team": "LV"
+    },
+    {
+      "as_of_utc": "2026-11-11T01:14:27Z",
+      "game_id": "2026_10_LA_ARI",
+      "player_id": "00-0041561",
+      "player_name": "Carson Beck",
+      "reason": "Joseph confirms Carson Beck is the Week 10 starter (stated 2026-11-10 evening, after the 09:00 ET line freeze)",
+      "reported_injury_status": "none",
+      "source": "user_manual_override",
+      "team": "ARI"
+    },
+    {
+      "as_of_utc": "2026-11-11T01:14:27Z",
+      "game_id": "2026_10_MIA_IND",
+      "player_id": "00-0040014",
+      "player_name": "Kyle McCord",
+      "reason": "Joseph confirms Kyle McCord is the Week 10 starter (stated 2026-11-10 evening, after the 09:00 ET line freeze)",
+      "reported_injury_status": "none",
+      "source": "user_manual_override",
+      "team": "MIA"
+    },
+    {
+      "as_of_utc": "2026-11-11T01:14:27Z",
+      "game_id": "2026_10_HOU_CLE",
+      "player_id": "00-0033537",
+      "player_name": "Deshaun Watson",
+      "reason": "Joseph confirms Deshaun Watson is the Week 10 starter (stated 2026-11-10 evening, after the 09:00 ET line freeze)",
+      "reported_injury_status": "Out",
+      "source": "user_manual_override",
+      "team": "CLE"
+    }
+  ],
+  "model_version": "weekly-fantasy-v2-workload_v1-ee1bef1cd9cc",
+  "position_counts": {
+    "QB": 28,
+    "RB": 95,
+    "TE": 94,
+    "WR": 141
+  },
+  "produced_at": "2026-11-11T03:30:31Z",
+  "product": "fantasy",
+  "release_review": {
+    "baseline_active_build": "fantasy-2026w09-142a561c8785",
+    "candidate_games": 14,
+    "candidate_rows": 358,
+    "candidate_scoring_performed": true,
+    "candidate_sha256": "fe9df692cfedf8a5c80ca80410b0381a6a34c4a035710a47220b3d61221f1616",
+    "edition": "Tuesday",
+    "lineup_overrides": null,
+    "model_bundle_sha256": "ee1bef1cd9cc8a59f5b585476b3da236ebb6f614e89b4371f481b38b1b4c86d1",
+    "model_training_performed": false,
+    "model_version": "weekly-fantasy-v2-workload_v1-ee1bef1cd9cc",
+    "qb_overrides": {
+      "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\news\\2026_w10_qb_input_overrides.csv",
+      "rows": [
+        {
+          "as_of_utc": "2026-11-11T01:14:27Z",
+          "game_id": "2026_10_LA_ARI",
+          "player_id": "00-0041561",
+          "player_name": "Carson Beck",
+          "reason": "Joseph confirms Carson Beck is the Week 10 starter (stated 2026-11-10 evening, after the 09:00 ET line freeze)",
+          "source": "user_manual_override",
+          "team": "ARI"
+        },
+        {
+          "as_of_utc": "2026-11-11T01:14:27Z",
+          "game_id": "2026_10_MIA_IND",
+          "player_id": "00-0040014",
+          "player_name": "Kyle McCord",
+          "reason": "Joseph confirms Kyle McCord is the Week 10 starter (stated 2026-11-10 evening, after the 09:00 ET line freeze)",
+          "source": "user_manual_override",
+          "team": "MIA"
+        },
+        {
+          "as_of_utc": "2026-11-11T01:14:27Z",
+          "game_id": "2026_10_LAC_BAL",
+          "player_id": "00-0033119",
+          "player_name": "Jacoby Brissett",
+          "reason": "Joseph confirms Jacoby Brissett is the Week 10 starter (stated 2026-11-10 evening, after the 09:00 ET line freeze)",
+          "source": "user_manual_override",
+          "team": "BAL"
+        },
+        {
+          "as_of_utc": "2026-11-11T01:14:27Z",
+          "game_id": "2026_10_HOU_CLE",
+          "player_id": "00-0033537",
+          "player_name": "Deshaun Watson",
+          "reason": "Joseph confirms Deshaun Watson is the Week 10 starter (stated 2026-11-10 evening, after the 09:00 ET line freeze)",
+          "source": "user_manual_override",
+          "team": "CLE"
+        },
+        {
+          "as_of_utc": "2026-11-11T01:14:27Z",
+          "game_id": "2026_10_SEA_LV",
+          "player_id": "00-0041562",
+          "player_name": "Fernando Mendoza",
+          "reason": "Joseph confirms Fernando Mendoza is the Week 10 starter (stated 2026-11-10 evening, after the 09:00 ET line freeze)",
+          "source": "user_manual_override",
+          "team": "LV"
+        },
+        {
+          "as_of_utc": "2026-11-11T01:14:27Z",
+          "game_id": "2026_10_MIN_GB",
+          "player_id": "00-0029604",
+          "player_name": "Kirk Cousins",
+          "reason": "Joseph: Cousins traded LV to MIN 2026-11-10, Week 10 starter (stated after the 09:00 ET line freeze)",
+          "source": "user_manual_override",
+          "team": "MIN"
+        }
+      ],
+      "sha256": "52fa7874f40115edee10d2013f8e98d1faad33a780fb85cb0ccba682fe842004"
+    },
+    "review_gate_counts": {
+      "clear": 333,
+      "flagged": 15,
+      "include": 5,
+      "needs_review": 5
+    },
+    "review_gate_flagged": [
+      {
+        "game_id": "2026_10_MIN_GB",
+        "player_display_name": "Kirk Cousins",
+        "position": "QB",
+        "projected_pts": 13.14362282991211,
+        "review_original_projected_pts": 13.14362282991211,
+        "review_reason": "availability_evidence_missing",
+        "review_status": "include",
+        "team": "MIN"
+      },
+      {
+        "game_id": "2026_10_LAC_BAL",
+        "player_display_name": "Jacoby Brissett",
+        "position": "QB",
+        "projected_pts": 11.616993628290189,
+        "review_original_projected_pts": 11.616993628290189,
+        "review_reason": "availability_evidence_missing",
+        "review_status": "include",
+        "team": "BAL"
+      },
+      {
+        "game_id": "2026_10_SEA_LV",
+        "player_display_name": "Fernando Mendoza",
+        "position": "QB",
+        "projected_pts": 11.309233229749474,
+        "review_original_projected_pts": 11.309233229749474,
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "include",
+        "team": "LV"
+      },
+      {
+        "game_id": "2026_10_LA_ARI",
+        "player_display_name": "Carson Beck",
+        "position": "QB",
+        "projected_pts": 11.266619018912124,
+        "review_original_projected_pts": 11.266619018912124,
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "include",
+        "team": "ARI"
+      },
+      {
+        "game_id": "2026_10_MIA_IND",
+        "player_display_name": "Kyle McCord",
+        "position": "QB",
+        "projected_pts": 11.093816303452185,
+        "review_original_projected_pts": 11.093816303452185,
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "include",
+        "team": "MIA"
+      },
+      {
+        "game_id": "2026_10_BUF_NYJ",
+        "player_display_name": "Isaiah Davis",
+        "position": "RB",
+        "projected_pts": 1.2244695706733333,
+        "review_original_projected_pts": 1.2244695706733333,
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "NYJ"
+      },
+      {
+        "game_id": "2026_10_SEA_LV",
+        "player_display_name": "Emanuel Wilson",
+        "position": "RB",
+        "projected_pts": 0.7745644370248682,
+        "review_original_projected_pts": 0.7745644370248682,
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "SEA"
+      },
+      {
+        "game_id": "2026_10_JAX_TEN",
+        "player_display_name": "Nicholas Singleton",
+        "position": "RB",
+        "projected_pts": 0.5179249812415937,
+        "review_original_projected_pts": 0.5179249812415937,
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "TEN"
+      },
+      {
+        "game_id": "2026_10_HOU_CLE",
+        "player_display_name": "Jaleel McLaughlin",
+        "position": "RB",
+        "projected_pts": 0.2678639396811442,
+        "review_original_projected_pts": 0.2678639396811442,
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "CLE"
+      },
+      {
+        "game_id": "2026_10_LAC_BAL",
+        "player_display_name": "Rasheen Ali",
+        "position": "RB",
+        "projected_pts": 0.2545293548253916,
+        "review_original_projected_pts": 0.2545293548253916,
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "BAL"
+      },
+      {
+        "game_id": "2026_10_MIA_IND",
+        "player_display_name": "DJ Giddens",
+        "position": "RB",
+        "projected_pts": 0.1732638314663077,
+        "review_original_projected_pts": 0.1732638314663077,
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "IND"
+      },
+      {
+        "game_id": "2026_10_BUF_NYJ",
+        "player_display_name": "Kene Nwangwu",
+        "position": "RB",
+        "projected_pts": 0.0733575556072904,
+        "review_original_projected_pts": 0.0733575556072904,
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "NYJ"
+      },
+      {
+        "game_id": "2026_10_LA_ARI",
+        "player_display_name": "Ronnie Rivers",
+        "position": "RB",
+        "projected_pts": 0.0183579087926824,
+        "review_original_projected_pts": 0.0183579087926824,
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "LA"
+      },
+      {
+        "game_id": "2026_10_NE_DET",
+        "player_display_name": "Tyler Conklin",
+        "position": "TE",
+        "projected_pts": 0.7239079940950796,
+        "review_original_projected_pts": 0.7239079940950796,
+        "review_reason": "availability_evidence_missing",
+        "review_status": "needs_review",
+        "team": "DET"
+      },
+      {
+        "game_id": "2026_10_LAC_BAL",
+        "player_display_name": "Matt Hibner",
+        "position": "TE",
+        "projected_pts": 0.0796404472308057,
+        "review_original_projected_pts": 0.0796404472308057,
+        "review_reason": "availability_evidence_missing",
+        "review_status": "needs_review",
+        "team": "BAL"
+      },
+      {
+        "game_id": "2026_10_NE_DET",
+        "player_display_name": "Cameron Latu",
+        "position": "TE",
+        "projected_pts": 0.0149550044812679,
+        "review_original_projected_pts": 0.0149550044812679,
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "NE"
+      },
+      {
+        "game_id": "2026_10_LA_ARI",
+        "player_display_name": "Max Klare",
+        "position": "TE",
+        "projected_pts": 0.0002920326840043,
+        "review_original_projected_pts": 0.0002920326840043,
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "LA"
+      },
+      {
+        "game_id": "2026_10_SF_DAL",
+        "player_display_name": "Keenan Allen",
+        "position": "WR",
+        "projected_pts": 8.278623448065986,
+        "review_original_projected_pts": 8.278623448065986,
+        "review_reason": "availability_evidence_missing",
+        "review_status": "needs_review",
+        "team": "SF"
+      },
+      {
+        "game_id": "2026_10_KC_ATL",
+        "player_display_name": "Josh Downs",
+        "position": "WR",
+        "projected_pts": 5.339587528737464,
+        "review_original_projected_pts": 5.339587528737464,
+        "review_reason": "availability_evidence_missing",
+        "review_status": "needs_review",
+        "team": "KC"
+      },
+      {
+        "game_id": "2026_10_LAC_BAL",
+        "player_display_name": "Ladd McConkey",
+        "position": "WR",
+        "projected_pts": 1.3666948306741329,
+        "review_original_projected_pts": 1.3666948306741329,
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "LAC"
+      },
+      {
+        "game_id": "2026_10_LA_ARI",
+        "player_display_name": "Xavier Smith",
+        "position": "WR",
+        "projected_pts": 0.8738088659363163,
+        "review_original_projected_pts": 0.8738088659363163,
+        "review_reason": "availability_evidence_missing",
+        "review_status": "needs_review",
+        "team": "LA"
+      },
+      {
+        "game_id": "2026_10_PIT_CIN",
+        "player_display_name": "Kaden Wetjen",
+        "position": "WR",
+        "projected_pts": 0.1402751033827527,
+        "review_original_projected_pts": 0.1402751033827527,
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "PIT"
+      },
+      {
+        "game_id": "2026_10_HOU_CLE",
+        "player_display_name": "Isaiah Bond",
+        "position": "WR",
+        "projected_pts": 0.1362959812986663,
+        "review_original_projected_pts": 0.1362959812986663,
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "CLE"
+      },
+      {
+        "game_id": "2026_10_KC_ATL",
+        "player_display_name": "Nikko Remigio",
+        "position": "WR",
+        "projected_pts": 0.0664946171691346,
+        "review_original_projected_pts": 0.0664946171691346,
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "KC"
+      },
+      {
+        "game_id": "2026_10_SEA_LV",
+        "player_display_name": "Irvin Charles",
+        "position": "WR",
+        "projected_pts": 0.0243729754228341,
+        "review_original_projected_pts": 0.0243729754228341,
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "SEA"
+      }
+    ],
+    "same_week_baseline": null,
+    "same_week_baseline_reason": "No Week 10 fantasy build existed before this Tuesday release.",
+    "scheduled_games": 14,
+    "season": 2026,
+    "sleeper_directory": {
+      "captured_utc": "2026-11-11T01:54:22Z",
+      "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\sleeper\\week10_tuesday_20261111T0154Z_v1\\tuesday\\2026_w10.json",
+      "requested_utc": "2026-11-11T01:54:21Z",
+      "sha256": "6b51f0670d3efcd6c4abe96bdbefd8b6310f597947fc31808f261e7e956b21ef"
+    },
+    "sleeper_projections": {
+      "captured_utc": "2026-11-11T01:54:22Z",
+      "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\sleeper\\week10_tuesday_20261111T0154Z_v1\\tuesday\\2026_w10_projections.json",
+      "requested_utc": "2026-11-11T01:54:22Z",
+      "sha256": "04c7cbf872993258fc99f76b1be5d4bd5b7a88584eb23c79f85f41388fa8d256"
+    },
+    "staleness_gate": {
+      "applicable": true,
+      "build_week": 10,
+      "checks": [
+        {
+          "limit": 0.02082018927444795,
+          "name": "prior_season_only_share",
+          "note": "passed via approved 2026 Week 10 Tuesday exception; see exception block",
+          "passed": true,
+          "value": 0.022099447513812154
+        },
+        {
+          "limit": 0.026498422712933754,
+          "name": "stale_gap_share",
+          "note": "passed via approved 2026 Week 10 Tuesday exception; see exception block",
+          "passed": true,
+          "value": 0.024861878453038673
+        },
+        {
+          "limit": 10.0,
+          "name": "median_days_since_last_game",
+          "passed": true,
+          "value": 7.0
+        },
+        {
+          "limit": 2,
+          "name": "days_rest_not_constant",
+          "passed": true,
+          "value": 7
+        },
+        {
+          "limit": 9,
+          "name": "player_stats_covers_week_9",
+          "passed": true,
+          "value": 9
+        },
+        {
+          "limit": 9,
+          "name": "ff_opportunity_covers_week_9",
+          "passed": true,
+          "value": 9
+        },
+        {
+          "limit": 9,
+          "name": "pbp_covers_week_9",
+          "passed": true,
+          "value": 9
+        },
+        {
+          "limit": 9,
+          "name": "snap_counts_covers_week_9",
+          "passed": true,
+          "value": 9
+        },
+        {
+          "limit": 9,
+          "name": "team_week_epa_covers_week_9",
+          "passed": true,
+          "value": 9
+        },
+        {
+          "limit": 10,
+          "name": "schedule_covers_build_week",
+          "passed": true,
+          "value": 18
+        },
+        {
+          "limit": 9,
+          "name": "ngs_receiving_covers_week_9_REPORT_ONLY",
+          "note": "informational; publication lag is expected, never blocks",
+          "passed": true,
+          "value": 9
+        },
+        {
+          "limit": 9,
+          "name": "ngs_rushing_covers_week_9_REPORT_ONLY",
+          "note": "informational; publication lag is expected, never blocks",
+          "passed": true,
+          "value": 9
+        },
+        {
+          "limit": 9,
+          "name": "qbr_covers_week_9_REPORT_ONLY",
+          "note": "informational; publication lag is expected, never blocks",
+          "passed": true,
+          "value": null
+        }
+      ],
+      "evaluated_rows": 362,
+      "exception": {
+        "approval_20261110": {
+          "approval": "Joseph approved the exact 9-player Week 10 Tuesday exception on 2026-11-10",
+          "approved_by": "Joseph",
+          "scope": "2026 Week 10 Tuesday only; exactly the approved 9-player set"
+        },
+        "edition": "Tuesday",
+        "limit_prior_season_only_share": 0.02082018927444795,
+        "limit_stale_gap_share": 0.026498422712933754,
+        "prior_season_only_share": 0.022099447513812154,
+        "reason": "Joseph-approved one-week exception; offender sets equal exactly the approved rows",
+        "rows": [
+          {
+            "days_since_last_game": 2169.0,
+            "player_display_name": "Tyler Conklin",
+            "player_id": "00-0034439",
+            "team": "DET"
+          },
+          {
+            "days_since_last_game": 322.0,
+            "player_display_name": "Josh Whyle",
+            "player_id": "00-0038589",
+            "team": "GB"
+          },
+          {
+            "days_since_last_game": 321.0,
+            "player_display_name": "Tyrell Shavers",
+            "player_id": "00-0038679",
+            "team": "BUF"
+          },
+          {
+            "days_since_last_game": 329.0,
+            "player_display_name": "Ja'Tavion Sanders",
+            "player_id": "00-0039356",
+            "team": "CAR"
+          },
+          {
+            "days_since_last_game": 329.0,
+            "player_display_name": "Cam Grandy",
+            "player_id": "00-0039631",
+            "team": "CIN"
+          },
+          {
+            "days_since_last_game": 335.0,
+            "player_display_name": "Nick Kallerup",
+            "player_id": "00-0040058",
+            "team": "SEA"
+          },
+          {
+            "days_since_last_game": 322.0,
+            "player_display_name": "Dont'e Thornton Jr.",
+            "player_id": "00-0040581",
+            "team": "LV"
+          },
+          {
+            "days_since_last_game": 392.0,
+            "player_display_name": "Travis Hunter",
+            "player_id": "00-0040718",
+            "team": "JAX"
+          },
+          {
+            "days_since_last_game": 63.0,
+            "player_display_name": "Marlin Klein",
+            "player_id": "00-0041472",
+            "team": "HOU"
+          }
+        ],
+        "season": 2026,
+        "stale_gap_share": 0.024861878453038673,
+        "week": 10
+      },
+      "failures": [],
+      "passed": true,
+      "reference": {
+        "max_prior_only_share": 0.0138801261829653,
+        "max_stale_share": 0.017665615141955835,
+        "n_reference_rows": 1585
+      },
+      "replacement_rows_excluded_from_staleness_rates": 0
+    },
+    "started_games_preserved": 0,
+    "tuesday_market": {
+      "captured_at_et": "2026-11-10T09:00:03-05:00",
+      "coverage": {
+        "attempt_count": 1,
+        "complete": true,
+        "expected_games": 14,
+        "games_by_market": {
+          "h2h": 14,
+          "spreads": 14,
+          "totals": 14
+        },
+        "matchups": {
+          "BUF@NYJ": {
+            "captured_markets": [
+              "spreads",
+              "totals",
+              "h2h"
+            ],
+            "missing_markets": []
+          },
+          "CAR@NO": {
+            "captured_markets": [
+              "spreads",
+              "totals",
+              "h2h"
+            ],
+            "missing_markets": []
+          },
+          "HOU@CLE": {
+            "captured_markets": [
+              "spreads",
+              "totals",
+              "h2h"
+            ],
+            "missing_markets": []
+          },
+          "JAX@TEN": {
+            "captured_markets": [
+              "spreads",
+              "totals",
+              "h2h"
+            ],
+            "missing_markets": []
+          },
+          "KC@ATL": {
+            "captured_markets": [
+              "spreads",
+              "totals",
+              "h2h"
+            ],
+            "missing_markets": []
+          },
+          "LA@ARI": {
+            "captured_markets": [
+              "spreads",
+              "totals",
+              "h2h"
+            ],
+            "missing_markets": []
+          },
+          "LAC@BAL": {
+            "captured_markets": [
+              "spreads",
+              "totals",
+              "h2h"
+            ],
+            "missing_markets": []
+          },
+          "MIA@IND": {
+            "captured_markets": [
+              "spreads",
+              "totals",
+              "h2h"
+            ],
+            "missing_markets": []
+          },
+          "MIN@GB": {
+            "captured_markets": [
+              "spreads",
+              "totals",
+              "h2h"
+            ],
+            "missing_markets": []
+          },
+          "NE@DET": {
+            "captured_markets": [
+              "spreads",
+              "totals",
+              "h2h"
+            ],
+            "missing_markets": []
+          },
+          "PIT@CIN": {
+            "captured_markets": [
+              "spreads",
+              "totals",
+              "h2h"
+            ],
+            "missing_markets": []
+          },
+          "SEA@LV": {
+            "captured_markets": [
+              "spreads",
+              "totals",
+              "h2h"
+            ],
+            "missing_markets": []
+          },
+          "SF@DAL": {
+            "captured_markets": [
+              "spreads",
+              "totals",
+              "h2h"
+            ],
+            "missing_markets": []
+          },
+          "WAS@NYG": {
+            "captured_markets": [
+              "spreads",
+              "totals",
+              "h2h"
+            ],
+            "missing_markets": []
+          }
+        },
+        "missing_game_markets": []
+      },
+      "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\odds_api_tuesday\\raw\\2026_w10.json",
+      "sha256": "e1eb6341b69e0b08ff426c578eeb080632b9b3c3196c3b9faacd86f16c89cfd3",
+      "snapshot_et": "2026-11-10T09:00:00-05:00",
+      "source": "live-first-available-per-game-market"
+    },
+    "week": 10
+  },
+  "review_gate": {
+    "counts": {
+      "clear": 333,
+      "flagged": 15,
+      "include": 5,
+      "needs_review": 5
+    },
+    "excluded_by_default": [
+      {
+        "original_projected_pts": 1.2244695706733333,
+        "player_id": "00-0039798",
+        "player_name": "Isaiah Davis",
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "NYJ"
+      },
+      {
+        "original_projected_pts": 0.7745644370248682,
+        "player_id": "00-0038797",
+        "player_name": "Emanuel Wilson",
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "SEA"
+      },
+      {
+        "original_projected_pts": 0.5179249812415937,
+        "player_id": "00-0040886",
+        "player_name": "Nicholas Singleton",
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "TEN"
+      },
+      {
+        "original_projected_pts": 0.2678639396811442,
+        "player_id": "00-0038794",
+        "player_name": "Jaleel McLaughlin",
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "CLE"
+      },
+      {
+        "original_projected_pts": 0.25452935482539163,
+        "player_id": "00-0039796",
+        "player_name": "Rasheen Ali",
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "BAL"
+      },
+      {
+        "original_projected_pts": 0.1732638314663077,
+        "player_id": "00-0040179",
+        "player_name": "DJ Giddens",
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "IND"
+      },
+      {
+        "original_projected_pts": 0.0733575556072904,
+        "player_id": "00-0036842",
+        "player_name": "Kene Nwangwu",
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "NYJ"
+      },
+      {
+        "original_projected_pts": 0.01835790879268243,
+        "player_id": "00-0037557",
+        "player_name": "Ronnie Rivers",
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "LA"
+      },
+      {
+        "original_projected_pts": 0.7239079940950796,
+        "player_id": "00-0034439",
+        "player_name": "Tyler Conklin",
+        "review_reason": "availability_evidence_missing",
+        "review_status": "needs_review",
+        "team": "DET"
+      },
+      {
+        "original_projected_pts": 0.07964044723080571,
+        "player_id": "sleeper:13324",
+        "player_name": "Matt Hibner",
+        "review_reason": "availability_evidence_missing",
+        "review_status": "needs_review",
+        "team": "BAL"
+      },
+      {
+        "original_projected_pts": 0.014955004481267967,
+        "player_id": "00-0038564",
+        "player_name": "Cameron Latu",
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "NE"
+      },
+      {
+        "original_projected_pts": 0.0002920326840043868,
+        "player_id": "00-0041510",
+        "player_name": "Max Klare",
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "LA"
+      },
+      {
+        "original_projected_pts": 8.278623448065986,
+        "player_id": "00-0030279",
+        "player_name": "Keenan Allen",
+        "review_reason": "availability_evidence_missing",
+        "review_status": "needs_review",
+        "team": "SF"
+      },
+      {
+        "original_projected_pts": 5.339587528737464,
+        "player_id": "00-0038997",
+        "player_name": "Josh Downs",
+        "review_reason": "availability_evidence_missing",
+        "review_status": "needs_review",
+        "team": "KC"
+      },
+      {
+        "original_projected_pts": 1.3666948306741329,
+        "player_id": "00-0039915",
+        "player_name": "Ladd McConkey",
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "LAC"
+      },
+      {
+        "original_projected_pts": 0.8738088659363163,
+        "player_id": "00-0038359",
+        "player_name": "Xavier Smith",
+        "review_reason": "availability_evidence_missing",
+        "review_status": "needs_review",
+        "team": "LA"
+      },
+      {
+        "original_projected_pts": 0.14027510338275273,
+        "player_id": "00-0041397",
+        "player_name": "Kaden Wetjen",
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "PIT"
+      },
+      {
+        "original_projected_pts": 0.13629598129866635,
+        "player_id": "00-0040782",
+        "player_name": "Isaiah Bond",
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "CLE"
+      },
+      {
+        "original_projected_pts": 0.06649461716913468,
+        "player_id": "00-0038519",
+        "player_name": "Nikko Remigio",
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "KC"
+      },
+      {
+        "original_projected_pts": 0.024372975422834123,
+        "player_id": "00-0037156",
+        "player_name": "Irvin Charles",
+        "review_reason": "role_collapse_zero_use_active_last_game",
+        "review_status": "flagged",
+        "team": "SEA"
+      }
+    ],
+    "policy": "Players with projection > 0 who were active (ACT, not injured out) in their team's latest completed game with 0 offensive snaps and 0 opportunities, or whose availability evidence is missing, are hidden from the default ranking and the DFS pool until a reviewer decides. Original projections stay in review_original_projected_pts. This is a role flag, not an injury."
+  },
+  "schema_version": 1,
+  "season": 2026,
+  "team_position_counts": {
+    "ARI": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 3
+    },
+    "ATL": {
+      "QB": 1,
+      "RB": 2,
+      "TE": 3,
+      "WR": 3
+    },
+    "BAL": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 6
+    },
+    "BUF": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 5
+    },
+    "CAR": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 5,
+      "WR": 4
+    },
+    "CIN": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 4,
+      "WR": 5
+    },
+    "CLE": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 2,
+      "WR": 6
+    },
+    "DAL": {
+      "QB": 1,
+      "RB": 2,
+      "TE": 2,
+      "WR": 5
+    },
+    "DET": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 5
+    },
+    "GB": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 4
+    },
+    "HOU": {
+      "QB": 1,
+      "RB": 4,
+      "TE": 5,
+      "WR": 5
+    },
+    "IND": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 5,
+      "WR": 5
+    },
+    "JAX": {
+      "QB": 1,
+      "RB": 4,
+      "TE": 4,
+      "WR": 5
+    },
+    "KC": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 6
+    },
+    "LA": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 4,
+      "WR": 4
+    },
+    "LAC": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 2,
+      "WR": 7
+    },
+    "LV": {
+      "QB": 1,
+      "RB": 4,
+      "TE": 3,
+      "WR": 6
+    },
+    "MIA": {
+      "QB": 1,
+      "RB": 4,
+      "TE": 4,
+      "WR": 6
+    },
+    "MIN": {
+      "QB": 1,
+      "RB": 4,
+      "TE": 3,
+      "WR": 5
+    },
+    "NE": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 5
+    },
+    "NO": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 3,
+      "WR": 5
+    },
+    "NYG": {
+      "QB": 1,
+      "RB": 3,
+      "TE": 4,
+      "WR": 4
+    },
+    "NYJ": {
+      "QB": 1,
+      "RB": 5,
+      "TE": 4,
+      "WR": 6
+    },
+    "PIT": {
+      "QB": 1,
+      "RB": 6,
+      "TE": 3,
+      "WR": 5
+    },
+    "SEA": {
+      "QB": 1,
+      "RB": 4,
+      "TE": 3,
+      "WR": 5
+    },
+    "SF": {
+      "QB": 1,
+      "RB": 4,
+      "TE": 2,
+      "WR": 6
+    },
+    "TEN": {
+      "QB": 1,
+      "RB": 5,
+      "TE": 4,
+      "WR": 5
+    },
+    "WAS": {
+      "QB": 1,
+      "RB": 2,
+      "TE": 4,
+      "WR": 5
+    }
+  },
+  "tuesday_sleeper_projection_signal": {
+    "players": [
+      {
+        "player_id": "00-0033537",
+        "player_name": "Deshaun Watson",
+        "position": "QB",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 14.08,
+        "sleeper_roster_status": "Active",
+        "team": "CLE"
+      },
+      {
+        "player_id": "00-0040715",
+        "player_name": "Cam Skattebo",
+        "position": "RB",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 10.99,
+        "sleeper_roster_status": "Active",
+        "team": "NYG"
+      },
+      {
+        "player_id": "00-0040734",
+        "player_name": "TreVeyon Henderson",
+        "position": "RB",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 5.34,
+        "sleeper_roster_status": "Active",
+        "team": "NE"
+      },
+      {
+        "player_id": "00-0035685",
+        "player_name": "David Montgomery",
+        "position": "RB",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 10.05,
+        "sleeper_roster_status": "Active",
+        "team": "HOU"
+      },
+      {
+        "player_id": "00-0037157",
+        "player_name": "Zonovan Knight",
+        "position": "RB",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 7.55,
+        "sleeper_roster_status": "Active",
+        "team": "ARI"
+      },
+      {
+        "player_id": "00-0039811",
+        "player_name": "MarShawn Lloyd",
+        "position": "RB",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 5.3,
+        "sleeper_roster_status": "Active",
+        "team": "GB"
+      },
+      {
+        "player_id": "00-0041326",
+        "player_name": "CJ Donaldson",
+        "position": "RB",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 2.02,
+        "sleeper_roster_status": "Active",
+        "team": "NO"
+      },
+      {
+        "player_id": "00-0039874",
+        "player_name": "Jaylen Wright",
+        "position": "RB",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 2.65,
+        "sleeper_roster_status": "Active",
+        "team": "MIA"
+      },
+      {
+        "player_id": "00-0039032",
+        "player_name": "Tyjae Spears",
+        "position": "RB",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 5.31,
+        "sleeper_roster_status": "Active",
+        "team": "TEN"
+      },
+      {
+        "player_id": "00-0038896",
+        "player_name": "Jacob Saylors",
+        "position": "RB",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 0.25,
+        "sleeper_roster_status": "Active",
+        "team": "DET"
+      },
+      {
+        "player_id": "00-0041490",
+        "player_name": "Eli Heidenreich",
+        "position": "RB",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 0.14,
+        "sleeper_roster_status": "Active",
+        "team": "PIT"
+      },
+      {
+        "player_id": "00-0038547",
+        "player_name": "Luke Schoonmaker",
+        "position": "TE",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 2.51,
+        "sleeper_roster_status": "Active",
+        "team": "DAL"
+      },
+      {
+        "player_id": "00-0038394",
+        "player_name": "Will Mallory",
+        "position": "TE",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 0.27,
+        "sleeper_roster_status": "Active",
+        "team": "IND"
+      },
+      {
+        "player_id": "00-0041077",
+        "player_name": "Justin Joly",
+        "position": "TE",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 0.36,
+        "sleeper_roster_status": "Active",
+        "team": "MIA"
+      },
+      {
+        "player_id": "00-0036876",
+        "player_name": "Kylen Granson",
+        "position": "TE",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 0.13,
+        "sleeper_roster_status": "Active",
+        "team": "TEN"
+      },
+      {
+        "player_id": "00-0033439",
+        "player_name": "Pharaoh Brown",
+        "position": "TE",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 0.57,
+        "sleeper_roster_status": "Active",
+        "team": "IND"
+      },
+      {
+        "player_id": "00-0038589",
+        "player_name": "Josh Whyle",
+        "position": "TE",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 0.08,
+        "sleeper_roster_status": "Active",
+        "team": "GB"
+      },
+      {
+        "player_id": "00-0040225",
+        "player_name": "Thomas Fidone II",
+        "position": "TE",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 0.18,
+        "sleeper_roster_status": "Active",
+        "team": "NYG"
+      },
+      {
+        "player_id": "00-0039359",
+        "player_name": "Cade Stover",
+        "position": "TE",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 0.67,
+        "sleeper_roster_status": "Active",
+        "team": "HOU"
+      },
+      {
+        "player_id": "00-0037247",
+        "player_name": "George Pickens",
+        "position": "WR",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 11.27,
+        "sleeper_roster_status": "Active",
+        "team": "DAL"
+      },
+      {
+        "player_id": "00-0037740",
+        "player_name": "Garrett Wilson",
+        "position": "WR",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 11.9,
+        "sleeper_roster_status": "Active",
+        "team": "NYJ"
+      },
+      {
+        "player_id": "00-0035676",
+        "player_name": "A.J. Brown",
+        "position": "WR",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 11.5,
+        "sleeper_roster_status": "Active",
+        "team": "NE"
+      },
+      {
+        "player_id": "00-0041438",
+        "player_name": "Carnell Tate",
+        "position": "WR",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 9.96,
+        "sleeper_roster_status": "Active",
+        "team": "TEN"
+      },
+      {
+        "player_id": "00-0035719",
+        "player_name": "Deebo Samuel Sr.",
+        "position": "WR",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 8.82,
+        "sleeper_roster_status": "Active",
+        "team": "SF"
+      },
+      {
+        "player_id": "00-0037742",
+        "player_name": "Treylon Burks",
+        "position": "WR",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 4.04,
+        "sleeper_roster_status": "Active",
+        "team": "WAS"
+      },
+      {
+        "player_id": "00-0037545",
+        "player_name": "Rashid Shaheed",
+        "position": "WR",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 4.81,
+        "sleeper_roster_status": "Active",
+        "team": "SEA"
+      },
+      {
+        "player_id": "00-0037801",
+        "player_name": "KaVontae Turpin",
+        "position": "WR",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 2.03,
+        "sleeper_roster_status": "Active",
+        "team": "DAL"
+      },
+      {
+        "player_id": "00-0041550",
+        "player_name": "Brenen Thompson",
+        "position": "WR",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 0.72,
+        "sleeper_roster_status": "Active",
+        "team": "LAC"
+      },
+      {
+        "player_id": "00-0040581",
+        "player_name": "Dont'e Thornton Jr.",
+        "position": "WR",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 0.66,
+        "sleeper_roster_status": "Active",
+        "team": "LV"
+      },
+      {
+        "player_id": "00-0040894",
+        "player_name": "Malik Benson",
+        "position": "WR",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 0.24,
+        "sleeper_roster_status": "Active",
+        "team": "LV"
+      },
+      {
+        "player_id": "00-0036259",
+        "player_name": "Jauan Jennings",
+        "position": "WR",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 2.61,
+        "sleeper_roster_status": "Active",
+        "team": "MIN"
+      },
+      {
+        "player_id": "00-0040311",
+        "player_name": "Theo Wease Jr.",
+        "position": "WR",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 0.23,
+        "sleeper_roster_status": "Active",
+        "team": "LAC"
+      },
+      {
+        "player_id": "00-0033375",
+        "player_name": "Tim Patrick",
+        "position": "WR",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 0.09,
+        "sleeper_roster_status": "Active",
+        "team": "NYJ"
+      },
+      {
+        "player_id": "00-0040876",
+        "player_name": "Elijah Sarratt",
+        "position": "WR",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 0.37,
+        "sleeper_roster_status": "Active",
+        "team": "BAL"
+      },
+      {
+        "player_id": "00-0041443",
+        "player_name": "Skyler Bell",
+        "position": "WR",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 0.21,
+        "sleeper_roster_status": "Active",
+        "team": "BUF"
+      },
+      {
+        "player_id": "00-0037666",
+        "player_name": "Jalen Tolbert",
+        "position": "WR",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 0.66,
+        "sleeper_roster_status": "Active",
+        "team": "MIA"
+      },
+      {
+        "player_id": "00-0036862",
+        "player_name": "Ben Skowronek",
+        "position": "WR",
+        "reported_injury_status": "Out",
+        "sleeper_is_active": true,
+        "sleeper_projection": 1.76,
+        "sleeper_roster_status": "Active",
+        "team": "PIT"
+      }
+    ],
+    "policy": "A numeric current-week Sleeper projection plus an exact Out/Doubtful Sleeper directory label is a provisional Tuesday signal, not confirmation of play.",
+    "row_count": 37,
+    "source": {
+      "path": "C:\\Users\\josep\\Desktop\\random_stuff\\cowork_OS\\workspace\\nfl\\raw\\sleeper\\week10_tuesday_20261111T0154Z_v1\\tuesday\\2026_w10_projections.json",
+      "requested_utc": "2026-11-11T01:54:22Z",
+      "sha256": "04c7cbf872993258fc99f76b1be5d4bd5b7a88584eb23c79f85f41388fa8d256"
+    }
+  },
+  "validation": {
+    "checks": {
+      "artifact_sha256": "fe9df692cfedf8a5c80ca80410b0381a6a34c4a035710a47220b3d61221f1616",
+      "produced_at_utc": "2026-11-11T03:30:31Z",
+      "scheduled_teams": 28,
+      "team_position_cells": 112,
+      "team_position_gap_exceptions": 0
+    },
+    "errors": [],
+    "ok": true,
+    "product": "fantasy",
+    "row_count": 358,
+    "warnings": [
+      "18 projections are below zero; retained as a model diagnostic"
+    ]
+  },
+  "week": 10
+}
