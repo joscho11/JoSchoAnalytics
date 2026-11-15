@@ -1,0 +1,92 @@
+{
+  "status": "passed",
+  "active_fantasy_build": "fantasy-2026w10-73bec564958c",
+  "dfs_salary_file": "DKSalaries (6).csv",
+  "environment": "local Streamlit preview with APP_OFFLINE=1; Playwright Chromium",
+  "results": [
+    {
+      "product": "fantasy",
+      "route": "/weekly-fantasy?wf_season=2026&wf_week=10",
+      "viewport": "desktop",
+      "viewport_px": [
+        1440,
+        900
+      ],
+      "screenshot_path": "artifacts/release_reviews/week10_sunday_v4_20261115/fantasy_desktop.png",
+      "screenshot_sha256": "2860101f818a5989363070acf7a8d3961e2acf96c4afeae0bf2f8c319cc638d7",
+      "full_page_screenshot_path": "artifacts/release_reviews/week10_sunday_v4_20261115/fantasy_desktop_full.png",
+      "full_page_screenshot_sha256": "2860101f818a5989363070acf7a8d3961e2acf96c4afeae0bf2f8c319cc638d7",
+      "visible_checks": [
+        "Published",
+        "Week 10",
+        "Held out for role review"
+      ],
+      "missing_checks": [],
+      "layout_issues": [],
+      "has_exception_text": false
+    },
+    {
+      "product": "fantasy",
+      "route": "/weekly-fantasy?wf_season=2026&wf_week=10",
+      "viewport": "phone",
+      "viewport_px": [
+        390,
+        844
+      ],
+      "screenshot_path": "artifacts/release_reviews/week10_sunday_v4_20261115/fantasy_phone.png",
+      "screenshot_sha256": "1d2407485b817fa46d7a40d951dc734f8b46679c53bec871830addc639b36321",
+      "full_page_screenshot_path": "artifacts/release_reviews/week10_sunday_v4_20261115/fantasy_phone_full.png",
+      "full_page_screenshot_sha256": "1d2407485b817fa46d7a40d951dc734f8b46679c53bec871830addc639b36321",
+      "visible_checks": [
+        "Published",
+        "Week 10",
+        "Held out for role review"
+      ],
+      "missing_checks": [],
+      "layout_issues": [],
+      "has_exception_text": false
+    },
+    {
+      "product": "dfs",
+      "route": "/dfs-optimizer",
+      "viewport": "desktop",
+      "viewport_px": [
+        1440,
+        900
+      ],
+      "screenshot_path": "artifacts/release_reviews/week10_sunday_v4_20261115/dfs_desktop.png",
+      "screenshot_sha256": "17fde41cf99c6c0d32def13ca6675a2d69841cf613199c1b237e7dd8a27bbca7",
+      "full_page_screenshot_path": "artifacts/release_reviews/week10_sunday_v4_20261115/dfs_desktop_full.png",
+      "full_page_screenshot_sha256": "17fde41cf99c6c0d32def13ca6675a2d69841cf613199c1b237e7dd8a27bbca7",
+      "visible_checks": [
+        "Salary slate accepted",
+        "Projection source",
+        "Optimized lineup"
+      ],
+      "missing_checks": [],
+      "layout_issues": [],
+      "has_exception_text": false
+    },
+    {
+      "product": "dfs",
+      "route": "/dfs-optimizer",
+      "viewport": "phone",
+      "viewport_px": [
+        390,
+        844
+      ],
+      "screenshot_path": "artifacts/release_reviews/week10_sunday_v4_20261115/dfs_phone.png",
+      "screenshot_sha256": "610a931079f02e2aae3518953b30c2bc094003d26970265583348bd0d2c7dee7",
+      "full_page_screenshot_path": "artifacts/release_reviews/week10_sunday_v4_20261115/dfs_phone_full.png",
+      "full_page_screenshot_sha256": "610a931079f02e2aae3518953b30c2bc094003d26970265583348bd0d2c7dee7",
+      "visible_checks": [
+        "Salary slate accepted",
+        "Projection source",
+        "Optimized lineup"
+      ],
+      "missing_checks": [],
+      "layout_issues": [],
+      "has_exception_text": false
+    }
+  ]
+}
