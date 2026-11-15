@@ -1,0 +1,93 @@
+{
+  "status": "passed",
+  "reviewed_at_utc": "2026-11-15T05:49:47.744839+00:00",
+  "environment": "local Streamlit preview with APP_OFFLINE=1; Playwright Chromium",
+  "active_fantasy_build": "fantasy-2026w10-35cffd00d054",
+  "dfs_salary_file": "DKSalaries (6).csv",
+  "dfs_salary_rows": 514,
+  "dfs_slate_games": 10,
+  "results": [
+    {
+      "product": "fantasy",
+      "viewport": "desktop",
+      "route": "/weekly-fantasy?wf_season=2026&wf_week=10",
+      "viewport_px": [
+        1440,
+        900
+      ],
+      "visible_checks": [
+        "Published",
+        "Week 10",
+        "Held out for role review (16)"
+      ],
+      "layout_issues": [],
+      "screenshot_path": "artifacts/release_reviews/week10_sunday_20261115/fantasy_desktop.png",
+      "screenshot_sha256": "d70c3d33133731e0cb3a99ebca7dc0ee3028a850a1e2e9a883a12e71fb1229f6",
+      "full_page_screenshot_path": "artifacts/release_reviews/week10_sunday_20261115/fantasy_desktop_full.png",
+      "full_page_screenshot_sha256": "d014d0c8ca6ad293a024314d6a9daf991277ed7ac8f23b3e015a6ea14f2298d2"
+    },
+    {
+      "product": "fantasy",
+      "viewport": "phone",
+      "route": "/weekly-fantasy?wf_season=2026&wf_week=10",
+      "viewport_px": [
+        390,
+        844
+      ],
+      "visible_checks": [
+        "Published",
+        "Week 10",
+        "Held out for role review (16)"
+      ],
+      "layout_issues": [],
+      "screenshot_path": "artifacts/release_reviews/week10_sunday_20261115/fantasy_phone.png",
+      "screenshot_sha256": "9c579b3c62d346cef020d5d9a7f15e148108c358281923634672e7b7c6818506",
+      "full_page_screenshot_path": "artifacts/release_reviews/week10_sunday_20261115/fantasy_phone_full.png",
+      "full_page_screenshot_sha256": "b7eaf48ea38b37037c1a8ea3fe0eebbf8650f94011df16b48cf232096e618f51"
+    },
+    {
+      "product": "dfs",
+      "viewport": "desktop",
+      "route": "/dfs-optimizer",
+      "viewport_px": [
+        1440,
+        900
+      ],
+      "visible_checks": [
+        "Salary slate accepted: 514 players, 10 games",
+        "Projection source: published weekly artifact, 2026 Week 10",
+        "Optimized lineup"
+      ],
+      "layout_issues": [],
+      "screenshot_path": "artifacts/release_reviews/week10_sunday_20261115/dfs_desktop.png",
+      "screenshot_sha256": "db8017ebc533e60dfc6b17983a31eb9442b9bde2bff23b74007ae97fcfc2bc4d",
+      "full_page_screenshot_path": "artifacts/release_reviews/week10_sunday_20261115/dfs_desktop_full.png",
+      "full_page_screenshot_sha256": "6d1caffed5cfd3bc66b4d52f9d95fdffa47654f2c1a1fcbbaecdc79f44a30913"
+    },
+    {
+      "product": "dfs",
+      "viewport": "phone",
+      "route": "/dfs-optimizer",
+      "viewport_px": [
+        390,
+        844
+      ],
+      "visible_checks": [
+        "Salary slate accepted: 514 players, 10 games",
+        "Projection source: published weekly artifact, 2026 Week 10",
+        "Optimized lineup"
+      ],
+      "layout_issues": [],
+      "screenshot_path": "artifacts/release_reviews/week10_sunday_20261115/dfs_phone.png",
+      "screenshot_sha256": "bc43b6fc2f926df9b955482591a108d66a2e8266e248094530f3f4d527701573",
+      "full_page_screenshot_path": "artifacts/release_reviews/week10_sunday_20261115/dfs_phone_full.png",
+      "full_page_screenshot_sha256": "2b476a0bf136061235e0ec3215bdf9df404d9d05d903e37b5e65866d8281bc3e"
+    }
+  ],
+  "visual_observations": [
+    "Weekly Fantasy displayed the Week 10 published badge and ranking table at desktop and phone sizes.",
+    "The renewed quarterback includes appear in default rankings; Kirk Cousins ranked 17th in the displayed half-PPR QB table.",
+    "DFS accepted the 514-player, 10-game salary file, used the published Week 10 direct-DK artifact, and rendered a legal optimized lineup.",
+    "No clipping, overlap, or horizontal overflow was observed at the reviewed sizes."
+  ]
+}
