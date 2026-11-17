@@ -286,7 +286,9 @@ def test_weekly_predictions_hides_paused_agent_chrome(tmp_path):
     )
     assert "jsa-tot-badge" not in md
     # Any real matchup card for the default week; a named game only exists in its own week.
-    assert md.count("jsa-gc-meta") >= 14
+    # Slate size changes with byes, so compare against the active release, not a fixed count.
+    from publishing.manifest import active_release
+    assert md.count("jsa-gc-meta") >= int(active_release("predictions")["row_count"])
     assert "Published" in md
     captions = " ".join(str(c.value) for c in at.caption)
     # The best-available quote renders as white markdown, not a muted caption.
@@ -297,7 +299,7 @@ def test_weekly_predictions_hides_paused_agent_chrome(tmp_path):
     metrics = {str(m.label): str(m.value) for m in at.metric}
     # HIGH count is a property of the week's slate, not a fixed number.
     assert int(metrics["HIGH picks"]) >= 0
-    assert int(metrics["Total games"]) >= 14
+    assert int(metrics["Total games"]) >= int(active_release("predictions")["row_count"])
 
 
 def test_weekly_predictions_live_2026_banner(tmp_path):

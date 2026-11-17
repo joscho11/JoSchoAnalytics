@@ -1,0 +1,279 @@
+{
+  "artifact_name": "predictions_2026_week11.csv",
+  "artifact_sha256": "fbc30ff14caa68b23d13b3d27c2f29d1a267843370d9a2499721e2fb10abf519",
+  "expected_game_ids_sha256": "74138e6242d83810864bfb24304f83a3a973ebccdc32ce5de40b62bd68790a04",
+  "expected_rows": 13,
+  "expected_teams": [
+    "ARI",
+    "BAL",
+    "BUF",
+    "CAR",
+    "CHI",
+    "CIN",
+    "DAL",
+    "DEN",
+    "DET",
+    "HOU",
+    "IND",
+    "JAX",
+    "KC",
+    "LAC",
+    "LV",
+    "MIA",
+    "MIN",
+    "NO",
+    "NYG",
+    "NYJ",
+    "PHI",
+    "PIT",
+    "SF",
+    "TB",
+    "TEN",
+    "WAS"
+  ],
+  "legacy_bootstrap": false,
+  "model_version": "spread-v3-prod-sunday-tuesday-market-actual-starter-0c213b99e845",
+  "produced_at": "2026-11-17T15:37:01Z",
+  "product": "predictions",
+  "qb_override_source_name": "2026_w11_qb_input_overrides.csv",
+  "qb_override_source_sha256": "da49008158e7627bccbf218030451709c3c39acd1573819a63d31615c4c01d2c",
+  "qb_selection_details": {
+    "ARI": {
+      "is_user_modeling_assumption": false,
+      "player_id": "00-0041561",
+      "player_name": "Carson Beck",
+      "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+      "tier": "previous_game_leader"
+    },
+    "BAL": {
+      "is_user_modeling_assumption": false,
+      "player_id": "00-0033119",
+      "player_name": "Jacoby Brissett",
+      "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+      "tier": "previous_game_leader"
+    },
+    "BUF": {
+      "is_user_modeling_assumption": false,
+      "player_id": "00-0034857",
+      "player_name": "Josh Allen",
+      "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+      "tier": "previous_game_leader"
+    },
+    "CAR": {
+      "is_user_modeling_assumption": false,
+      "player_id": "00-0039150",
+      "player_name": "Bryce Young",
+      "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+      "tier": "previous_game_leader"
+    },
+    "CHI": {
+      "is_user_modeling_assumption": false,
+      "player_id": "00-0039918",
+      "player_name": "Caleb Williams",
+      "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+      "tier": "previous_game_leader"
+    },
+    "CIN": {
+      "is_user_modeling_assumption": false,
+      "player_id": "00-0036442",
+      "player_name": "Joe Burrow",
+      "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+      "tier": "previous_game_leader"
+    },
+    "DAL": {
+      "is_user_modeling_assumption": false,
+      "player_id": "00-0033077",
+      "player_name": "Dak Prescott",
+      "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+      "tier": "previous_game_leader"
+    },
+    "DEN": {
+      "is_user_modeling_assumption": false,
+      "player_id": "00-0039732",
+      "player_name": "Bo Nix",
+      "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+      "tier": "previous_game_leader"
+    },
+    "DET": {
+      "is_user_modeling_assumption": false,
+      "player_id": "00-0033106",
+      "player_name": "Jared Goff",
+      "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+      "tier": "previous_game_leader"
+    },
+    "HOU": {
+      "is_user_modeling_assumption": false,
+      "player_id": "00-0039163",
+      "player_name": "C.J. Stroud",
+      "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+      "tier": "previous_game_leader"
+    },
+    "IND": {
+      "is_user_modeling_assumption": false,
+      "player_id": "00-0035710",
+      "player_name": "Daniel Jones",
+      "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+      "tier": "previous_game_leader"
+    },
+    "JAX": {
+      "is_user_modeling_assumption": false,
+      "player_id": "00-0036971",
+      "player_name": "Trevor Lawrence",
+      "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+      "tier": "previous_game_leader"
+    },
+    "KC": {
+      "is_user_modeling_assumption": false,
+      "player_id": "00-0033873",
+      "player_name": "Patrick Mahomes",
+      "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+      "tier": "previous_game_leader"
+    },
+    "LAC": {
+      "is_user_modeling_assumption": false,
+      "player_id": "00-0036355",
+      "player_name": "Justin Herbert",
+      "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+      "tier": "previous_game_leader"
+    },
+    "LV": {
+      "is_user_modeling_assumption": false,
+      "player_id": "00-0041562",
+      "player_name": "Fernando Mendoza",
+      "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+      "tier": "previous_game_leader"
+    },
+    "MIA": {
+      "is_user_modeling_assumption": false,
+      "player_id": "00-0040014",
+      "player_name": "Kyle McCord",
+      "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+      "tier": "previous_game_leader"
+    },
+    "MIN": {
+      "is_user_modeling_assumption": false,
+      "player_id": "00-0029604",
+      "player_name": "Kirk Cousins",
+      "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+      "tier": "previous_game_leader"
+    },
+    "NO": {
+      "is_user_modeling_assumption": false,
+      "player_id": "00-0040743",
+      "player_name": "Tyler Shough",
+      "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+      "tier": "previous_game_leader"
+    },
+    "NYG": {
+      "is_user_modeling_assumption": false,
+      "player_id": "00-0039923",
+      "player_name": "J.J. McCarthy",
+      "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+      "tier": "previous_game_leader"
+    },
+    "NYJ": {
+      "is_user_modeling_assumption": true,
+      "player_id": "00-0030565",
+      "player_name": "Geno Smith",
+      "reason": "explicit user QB-input override takes precedence over automated selection rules",
+      "tier": "manual_override"
+    },
+    "PHI": {
+      "is_user_modeling_assumption": false,
+      "player_id": "00-0039398",
+      "player_name": "Joe Milton III",
+      "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+      "tier": "previous_game_leader"
+    },
+    "PIT": {
+      "is_user_modeling_assumption": false,
+      "player_id": "00-0023459",
+      "player_name": "Aaron Rodgers",
+      "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+      "tier": "previous_game_leader"
+    },
+    "SF": {
+      "is_user_modeling_assumption": false,
+      "player_id": "00-0037834",
+      "player_name": "Brock Purdy",
+      "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+      "tier": "previous_game_leader"
+    },
+    "TB": {
+      "is_user_modeling_assumption": true,
+      "player_id": "00-0041251",
+      "player_name": "Jalon Daniels",
+      "reason": "explicit user QB-input override takes precedence over automated selection rules",
+      "tier": "manual_override"
+    },
+    "TEN": {
+      "is_user_modeling_assumption": false,
+      "player_id": "00-0040676",
+      "player_name": "Cam Ward",
+      "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+      "tier": "previous_game_leader"
+    },
+    "WAS": {
+      "is_user_modeling_assumption": false,
+      "player_id": "00-0039910",
+      "player_name": "Jayden Daniels",
+      "reason": "no explicit cutoff-eligible signal overrides it; used previous game's most-dropbacks passer",
+      "tier": "previous_game_leader"
+    }
+  },
+  "qb_selection_policy": "explicit_manual_override; else timestamped_confirmed_starter_asof; else out_or_doubtful_replacement_asof; else prior_game_dropback_leader",
+  "qb_selections": {
+    "ARI": "00-0041561",
+    "BAL": "00-0033119",
+    "BUF": "00-0034857",
+    "CAR": "00-0039150",
+    "CHI": "00-0039918",
+    "CIN": "00-0036442",
+    "DAL": "00-0033077",
+    "DEN": "00-0039732",
+    "DET": "00-0033106",
+    "HOU": "00-0039163",
+    "IND": "00-0035710",
+    "JAX": "00-0036971",
+    "KC": "00-0033873",
+    "LAC": "00-0036355",
+    "LV": "00-0041562",
+    "MIA": "00-0040014",
+    "MIN": "00-0029604",
+    "NO": "00-0040743",
+    "NYG": "00-0039923",
+    "NYJ": "00-0030565",
+    "PHI": "00-0039398",
+    "PIT": "00-0023459",
+    "SF": "00-0037834",
+    "TB": "00-0041251",
+    "TEN": "00-0040676",
+    "WAS": "00-0039910"
+  },
+  "schema_version": 1,
+  "season": 2026,
+  "st_definition": "net_two_sided_v1",
+  "tuesday_market_selection": {
+    "actual_provider_timestamp_utc": "2026-11-17T15:13:00Z",
+    "captured_at_et": "2026-11-17T10:13:00-05:00",
+    "fallback_reason": "Paid historical Tuesday snapshot unavailable or invalid: snapshot file is missing",
+    "policy": "paid-historical-tuesday-0900-preferred-else-free-live-v1",
+    "requested_snapshot_et": "2026-11-17T09:00:00-05:00",
+    "requested_snapshot_utc": "2026-11-17T15:13:00Z",
+    "selected_sha256": "d649fe1af11ce97471dbb6fc4cc69959bcb59fa71868ac88956a7084eb3e45f1",
+    "selected_source": "free_live"
+  },
+  "validation": {
+    "checks": {
+      "artifact_sha256": "fbc30ff14caa68b23d13b3d27c2f29d1a267843370d9a2499721e2fb10abf519",
+      "produced_at_utc": "2026-11-17T15:37:01Z",
+      "scheduled_games": 13
+    },
+    "errors": [],
+    "ok": true,
+    "product": "predictions",
+    "row_count": 13,
+    "warnings": []
+  },
+  "week": 11
+}
