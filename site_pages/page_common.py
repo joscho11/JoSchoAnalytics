@@ -16,7 +16,7 @@ from pathlib import Path
 
 import streamlit as st
 
-from dashboard_utils import sanitize_agent_analysis
+from dashboard_utils import BREAKEVEN_PCT, sanitize_agent_analysis
 from publishing.manifest import (
     default_selection as _manifest_default_selection,
     load_manifest as _load_manifest,
@@ -314,6 +314,53 @@ def plotly_phone_desktop(desktop_fig, phone_fig, *, slug: str) -> None:
         st.plotly_chart(desktop_fig, width="stretch", config=_PLOTLY_TOUCH)
     with st.container(key=f"jsa-scatter-phone-{slug}"):
         st.plotly_chart(phone_fig, width=phone_width, config=phone_cfg)
+
+
+# Shared look for the Track Record charts: one palette, one font stack, one
+# break-even treatment, so every figure on the page reads as one system.
+TRACK_COLORS = {
+    'win': '#35D08A',
+    'loss': '#F0616D',
+    'push': '#8A97A8',
+    'line': '#5AA9F0',
+    'other': '#6B7A8F',
+    'ink': '#E7ECF3',
+    'ink2': '#9AA7B8',
+    'grid': '#222C3A',
+    'breakeven': '#9AA7B8',
+}
+
+
+def style_track_chart(fig, *, height, phone=False, margin=None):
+    """Transparent surface, shared type, quiet grid. Returns the figure."""
+    c = TRACK_COLORS
+    fig.update_layout(
+        plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
+        font=dict(color=c['ink2'], size=11 if phone else 12),
+        height=height,
+        margin=margin or dict(t=28, b=16, l=8, r=8),
+        hoverlabel=dict(bgcolor='#121821', font_color=c['ink']),
+    )
+    fig.update_xaxes(gridcolor=c['grid'], zeroline=False, linecolor=c['grid'])
+    fig.update_yaxes(gridcolor=c['grid'], zeroline=False, linecolor=c['grid'])
+    return fig
+
+
+def add_breakeven(fig, *, axis='y', row=None, col=None, label=True, position='bottom right',
+                  color=None, width=1):
+    """Dashed break-even reference at BREAKEVEN_PCT on the win % axis."""
+    kw = {} if row is None else {'row': row, 'col': col}
+    note = dict(
+        annotation_text=f"Break even {BREAKEVEN_PCT}%" if label else None,
+        annotation_position=position,
+        annotation_font=dict(size=10, color=color or TRACK_COLORS['breakeven']),
+    ) if label else {}
+    line = dict(line_dash='dash', line_color=color or TRACK_COLORS['breakeven'], line_width=width, layer='above')
+    if axis == 'y':
+        fig.add_hline(y=BREAKEVEN_PCT, **line, **note, **kw)
+    else:
+        fig.add_vline(x=BREAKEVEN_PCT, **line, **note, **kw)
+    return fig
 
 
 def plotly_labeled_scatter(fig, *, slug: str) -> None:

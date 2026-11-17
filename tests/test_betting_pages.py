@@ -726,3 +726,14 @@ def test_blended_scenario_summary_hides_individual_paths(monkeypatch):
     seen.clear()
     page._render_blend_summary(items, "high_split")
     assert not seen
+
+
+def test_track_record_units_profit_formula_at_minus_110():
+    import pandas as pd
+    import page_track_record
+
+    sub = pd.DataFrame({"model_correct": [1] * 23 + [0] * 11 + [float("nan")] * 2})
+    profit, wins, losses = page_track_record.units_profit(sub, "model_correct")
+    assert (wins, losses) == (23, 11)
+    assert round(profit, 1) == 10.9  # win 1 unit, risk 1.1 units; not 1,090 dollars-at-$100
+    assert page_track_record.units_profit(sub.iloc[0:0], "model_correct")[0] == 0
