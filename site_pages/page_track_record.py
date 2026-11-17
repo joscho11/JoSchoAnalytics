@@ -26,20 +26,33 @@ def _high_weekly_table(season_df, high_df, correct_col):
     return out
 
 
-# Phone: stack the three hero tiles as compact full-width rows instead of 2 + 1.
+# Phone: stack the 2026 hero tiles and the 2025 edge-tier tiles as compact
+# full-width rows, so values line up instead of a ragged 2 x 2 or 2 + 1 grid.
 _HERO_CSS = """<style>
 @media (max-width: 640px){
-  .stApp [class*="st-key-jsa-metric-even-tr-hero"]:has(> [data-testid="stElementContainer"] [data-testid="stMetric"]){
+  .stApp [class*="st-key-jsa-metric-even-tr-hero"]:has(> [data-testid="stElementContainer"] [data-testid="stMetric"]),
+  .stApp [class*="st-key-jsa-metric-even-tr-ats"]:has(> [data-testid="stElementContainer"] [data-testid="stMetric"]),
+  .stApp [class*="st-key-jsa-metric-even-profit"]:has(> [data-testid="stElementContainer"] [data-testid="stMetric"]){
     grid-template-columns:minmax(0,1fr) !important;
     grid-auto-rows:auto !important;
     gap:.35rem !important;
   }
-  .stApp [class*="st-key-jsa-metric-even-tr-hero"] [data-testid="stMetric"]{
+  .stApp [class*="st-key-jsa-metric-even-tr-hero"] [data-testid="stMetric"],
+  .stApp [class*="st-key-jsa-metric-even-tr-ats"] [data-testid="stMetric"],
+  .stApp [class*="st-key-jsa-metric-even-profit"] [data-testid="stMetric"]{
     padding:.55rem .8rem !important;
     min-height:0 !important;
   }
 }
 </style>"""
+
+# Win % table columns stay numeric (sortable) but display with a % sign.
+_PCT_COLS = ("Win %", "Cumulative %")
+
+
+def _pct_config(df):
+    return {c: st.column_config.NumberColumn(c, format="%.1f%%")
+            for c in _PCT_COLS if c in df.columns}
 
 
 def units_profit(sub, correct_col):
@@ -387,6 +400,7 @@ def render():
                 slug="tr-high-weekly",
             )
         else:
+            st.markdown(_HERO_CSS, unsafe_allow_html=True)
             with st.container(horizontal=True, key="jsa-metric-even-tr-ats"):
                 _record_metric("Season ATS", total_correct, total_losses, total_pushes, total_pct)
                 _record_metric("High edge (3+ points)", he_correct, he_losses, he_pushes, he_pct)
@@ -448,12 +462,12 @@ def render():
                 st.markdown("**Best weeks**")
                 best = weekly.nlargest(3, 'pct')[['week_lbl', 'record', 'pct']]
                 best.columns = ['Week', 'Record', 'Win %']
-                st.dataframe(best, hide_index=True, width="stretch")
+                st.dataframe(best, hide_index=True, width="stretch", column_config=_pct_config(best))
             with col_worst:
                 st.markdown("**Worst weeks**")
                 worst = weekly.nsmallest(3, 'pct')[['week_lbl', 'record', 'pct']]
                 worst.columns = ['Week', 'Record', 'Win %']
-                st.dataframe(worst, hide_index=True, width="stretch")
+                st.dataframe(worst, hide_index=True, width="stretch", column_config=_pct_config(worst))
 
             st.subheader("Profit at -110")
             st.caption("Flat stakes at -110: risk 1.1 units to win 1. Day-of-week breakdown excludes pushes.")
@@ -484,7 +498,9 @@ def render():
                     dow_col, streak_col = st.columns(2)
                     with dow_col:
                         st.markdown("**By day of week**")
-                        st.dataframe(pd.DataFrame(_dow_rows), hide_index=True, width="stretch")
+                        _dow_tbl = pd.DataFrame(_dow_rows)
+                        st.dataframe(_dow_tbl, hide_index=True, width="stretch",
+                                     column_config=_pct_config(_dow_tbl))
                     with streak_col:
                         longest_w, longest_l, cur_streak_n, cur_streak_kind = _streaks(season_df, _s_correct)
                         st.markdown("**Streaks, all picks**")
@@ -499,7 +515,7 @@ def render():
             st.subheader("Full season week by week")
             table = weekly[['week_lbl', 'record', 'pct', 'cum_pct']].copy()
             table.columns = ['Week', 'Record', 'Win %', 'Cumulative %']
-            st.dataframe(table, hide_index=True, width="stretch")
+            st.dataframe(table, hide_index=True, width="stretch", column_config=_pct_config(table))
 
         # ── Totals model performance ──────────────────────────────────────────
         totals_season = (
@@ -557,4 +573,5 @@ def render():
                     st.dataframe(
                         _t_weekly[['week', 'record', 'pct']].rename(
                             columns={'week': 'Week', 'record': 'Record', 'pct': 'Win %'}),
-                        hide_index=True, width="stretch")
+                        hide_index=True, width="stretch",
+                        column_config={"Win %": st.column_config.NumberColumn("Win %", format="%.1f%%")})
