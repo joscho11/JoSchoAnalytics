@@ -28,6 +28,13 @@ def _refresh_cloud_synced_modules() -> None:
     ``render`` and crashed with a redacted TypeError at the call site.
     """
     page_common = importlib.import_module("page_common")
+    # page_common itself must refresh too: a warm Cloud process kept the old
+    # copy after the Track Record revamp, so TRACK_COLORS raised AttributeError.
+    # importlib.reload is in place, so pages holding `import page_common` see it.
+    page_common = page_common.reload_if_stale(
+        page_common, require=("TRACK_COLORS", "style_track_chart", "add_breakeven")
+    )
+    sys.modules["page_common"] = page_common
 
     # Root helpers first. Pages import names from them; a live Cloud copy
     # that reloads page_draft_board before seasonal_config raises ImportError
