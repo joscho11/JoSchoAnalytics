@@ -52,28 +52,7 @@ close control is never exempt.
 """
 from __future__ import annotations
 
-import os
-import socket
-import subprocess
-import sys
-import time
-from pathlib import Path
-
 import pytest
-
-# Optional import, NOT importorskip. A module-level importorskip skips the whole file
-# before collection, which took the browser-free logic test down with the nine browser
-# cases — so the assertion logic went untested in CI, which is the one place it is
-# guaranteed to run. Import failure is recorded and turned into a skip by the `browser`
-# fixture instead, so only the tests that actually need a browser are skipped.
-try:                                              # pragma: no cover - env dependent
-    from playwright.sync_api import sync_playwright
-    _PLAYWRIGHT_IMPORT_ERROR = None
-except ImportError as _exc:                       # pragma: no cover - env dependent
-    sync_playwright = None
-    _PLAYWRIGHT_IMPORT_ERROR = _exc
-
-_REPO = Path(__file__).resolve().parents[1]
 
 # Widths that matter, and why:
 #   320  smallest phone still in use              640  Streamlit's column-stack breakpoint
@@ -91,78 +70,9 @@ ST_BREAKPOINT_SM = 576       # upstream, the collapse control is hover-revealed 
 ST_BREAKPOINT_NAV = 768      # nav moves out of the drawer and into the header at this
 
 
-def _free_port() -> int:
-    with socket.socket() as s:
-        s.bind(("127.0.0.1", 0))
-        return s.getsockname()[1]
-
-
-def _chromium_kwargs() -> dict:
-    """Prefer a playwright-managed browser; fall back to any cached build."""
-    cache = Path(os.environ.get("LOCALAPPDATA", "")) / "ms-playwright"
-    for exe in sorted(cache.glob("chromium-*/chrome-win64/chrome.exe"), reverse=True):
-        return {"executable_path": str(exe)}
-    for exe in sorted(cache.glob("chromium-*/chrome-linux/chrome"), reverse=True):
-        return {"executable_path": str(exe)}
-    return {}
-
-
-@pytest.fixture(scope="module")
-def browser():
-    """The browser prerequisite. Skips — and ONLY this fixture skips — when playwright
-    or a Chromium build is unavailable. Everything that needs a browser depends on it,
-    directly or through `app_url`, so a missing browser never starts a server."""
-    if sync_playwright is None:
-        pytest.skip(f"playwright not installed ({_PLAYWRIGHT_IMPORT_ERROR})")
-    with sync_playwright() as p:
-        try:
-            b = p.chromium.launch(**_chromium_kwargs())
-        except Exception as exc:                       # no browser binary available
-            pytest.skip(f"no chromium available: {str(exc).splitlines()[0][:120]}")
-        try:
-            yield b
-        finally:
-            b.close()
-
-
-@pytest.fixture(scope="module")
-def app_url(browser):
-    """Depends on `browser` on purpose: launching a Streamlit server takes seconds and
-    is pure waste when the browser prerequisite is already missing. Requesting it here
-    means the skip happens first and this body never runs."""
-    port = _free_port()
-    env = {**os.environ, "APP_OFFLINE": "1", "PYTHONIOENCODING": "utf-8"}
-    proc = subprocess.Popen(
-        [sys.executable, "-m", "streamlit", "run", "app.py",
-         "--server.port", str(port), "--server.headless", "true",
-         "--browser.gatherUsageStats", "false", "--server.fileWatcherType", "none"],
-        cwd=str(_REPO), env=env,
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-    )
-    url = f"http://127.0.0.1:{port}"
-    try:
-        # A missing browser is an environment gap and may skip. A server that will not
-        # start is the APP being broken, and must never be reported as "skipped" —
-        # that is exactly how a real regression hides behind a green run.
-        for _ in range(120):
-            if proc.poll() is not None:
-                pytest.fail(f"streamlit exited during startup (rc={proc.returncode}) — "
-                            f"the app itself is broken, not the test environment")
-            try:
-                with socket.create_connection(("127.0.0.1", port), timeout=0.5):
-                    break
-            except OSError:
-                time.sleep(0.5)
-        else:
-            pytest.fail("streamlit did not accept connections within 60s — "
-                        "the app itself is broken, not the test environment")
-        yield url
-    finally:
-        proc.terminate()
-        try:
-            proc.wait(timeout=15)
-        except subprocess.TimeoutExpired:
-            proc.kill()
+# `browser` and `app_url` come from tests/conftest.py (session scope). They must be shared:
+# an open sync Playwright context keeps an asyncio loop on the thread, so a second
+# sync_playwright() in this module fails when another suite opened the browser first.
 
 
 # One evaluate() call returns everything: geometry, computed visibility, and the result

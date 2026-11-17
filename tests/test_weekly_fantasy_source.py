@@ -117,6 +117,13 @@ def test_week05_graded_release_restores_projection_team_column():
     assert frame["team"].notna().all()
 
 
+def _upcoming_kickoff() -> str:
+    """A kickoff that is always still in the future. The page gates the provisional Tuesday
+    signal and manual-QB messaging on `kickoff > now`, so a hardcoded date silently
+    expires the day it passes (these tests broke on 2026-10-25 for that reason)."""
+    return (pd.Timestamp.now(tz="UTC") + pd.Timedelta(days=3)).strftime("%Y-%m-%d %H:%M:%S%z")
+
+
 def _render_weekly(tmp_path):
     h = tmp_path / "h_weekly.py"
     h.write_text(
@@ -233,7 +240,7 @@ def test_manual_qb_default_renders_source_out_warning_and_player(tmp_path):
         "qb_assumption_source": ["user_manual_override", "user_manual_override"],
         "qb_assumption_reason": ["Approved main path", "Approved main path"],
         "qb_assumption_as_of_utc": ["2026-10-13T13:53:14Z"] * 2,
-        "kickoff": ["2026-10-25 13:00:00-04:00"] * 2,
+        "kickoff": [_upcoming_kickoff()] * 2,
     }).to_csv(path, index=False)
 
     at = _render_weekly_release(tmp_path, path, season=2026, week=7)
@@ -385,7 +392,7 @@ def test_tuesday_projection_signal_keeps_directory_out_but_not_terminal_or_manua
         "position": ["WR", "WR", "WR", "RB", "TE"],
         "team": ["CAR", "CLE", "DEN", "PIT", "CHI"],
         "season": [2026] * 5, "week": [7] * 5,
-        "kickoff": ["2026-10-25 13:00:00-04:00"] * 5,
+        "kickoff": [_upcoming_kickoff()] * 5,
         "injury_status": ["Out"] * 5,
         "reported_injury_status": ["Out", "IR", "Out", "Out", "Out"],
         "injury_status_source": [
@@ -757,20 +764,31 @@ def test_week06_graded_release_shows_ranking_scorecard_and_rank_columns(tmp_path
     # Season to date: one collapsed expander with a row for each graded week.
     assert [exp.label for exp in at.expander] == ["Season to date"]
     by_week = next(f for f in frames if {"Week", "Sleeper hits"} <= set(f.columns))
-    assert by_week["Week"].tolist() == [1, 2, 3, 4, 5, 6]
-    assert by_week["Top-tier hits"].tolist()[-1] == "39 of 72"
+    # The expander lists EVERY completely graded week of the season, not just the selected
+    # one, so the expected weeks come from the active manifest instead of a pinned 1-6.
+    graded_weeks = [w for w, _ in weekly._graded_week_paths(2026)]
+    assert 6 in graded_weeks
+    assert by_week["Week"].tolist() == graded_weeks
+    assert by_week["Top-tier hits"].tolist()[graded_weeks.index(6)] == "39 of 72"
     # Phone copy: two rows a week, newest first, since the site caps phone tables at 26rem.
     phone_weeks = next(f for f in frames if {"Week", "Who"} <= set(f.columns))
-    assert phone_weeks["Week"].tolist() == [w for w in (6, 5, 4, 3, 2, 1) for _ in (0, 1)]
+    assert phone_weeks["Week"].tolist() == [w for w in reversed(graded_weeks) for _ in (0, 1)]
     assert phone_weeks["Who"].tolist()[:2] == ["Ours", "Sleeper"]
     texts = [str(item.value) for item in at.markdown]
     assert (
         "We beat Sleeper on top-tier hits at 2 of 4 positions, "
         "on rank correlation at 3 of 4, and on average miss at 3 of 4."
     ) in texts
+    # Season sentence: win counts recomputed independently from the weekly rows on screen.
+    def _hits(col):
+        return [int(v.split(" of ")[0]) for v in by_week[col]]
+    n = len(graded_weeks)
+    hit_wins = sum(o > t for o, t in zip(_hits("Top-tier hits"), _hits("Sleeper hits")))
+    corr_wins = sum(o > t for o, t in zip(by_week["Rank corr"], by_week["Sleeper corr"]))
+    miss_wins = sum(o < t for o, t in zip(by_week["Avg miss"], by_week["Sleeper miss"]))
     assert (
-        "Over 6 graded weeks we beat Sleeper on top-tier hits in 3, "
-        "on rank correlation in 3, and on average miss in 4."
+        f"Over {n} graded weeks we beat Sleeper on top-tier hits in {hit_wins}, "
+        f"on rank correlation in {corr_wins}, and on average miss in {miss_wins}."
     ) in texts
 
     # Desktop grid: Our Rk, Finish and Rk Δ right after Actual Pts. Phone grid: Finish only.
@@ -1264,8 +1282,12 @@ def test_rank_columns_show_only_in_half_ppr_and_other_formats_get_a_caption(tmp_
 
 def test_pregame_and_demo_grids_keep_their_player_column_and_no_rank_caption(tmp_path):
     at = _render_weekly(tmp_path)
-    grid = next(d for d in at.dataframe if "Player" in d.value.columns)
-    assert "width" not in json.loads(grid.proto.columns)["Player"]
+    # The ranking grids carry a "#" column. A review-held table (Status/Reason/Original proj)
+    # may also have a Player column and precede them, so it must not be picked by "Player" alone.
+    grids = [d for d in at.dataframe if {"#", "Player"} <= set(d.value.columns)]
+    assert grids
+    # The first ranking grid is the desktop one; the phone copy that follows it pins its own widths.
+    assert "width" not in json.loads(grids[0].proto.columns)["Player"]
     assert not any("Rank columns follow half-PPR" in str(c.value) for c in at.caption)
 
 
