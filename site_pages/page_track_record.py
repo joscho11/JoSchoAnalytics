@@ -11,6 +11,72 @@ from dashboard_utils import ats_record_parts, format_ats_metric_delta, format_at
 from live_2026 import HIGH_GAP, is_live_season, row_display_high
 
 
+def _high_weekly_table(season_df, high_df, correct_col):
+    """Per-week HIGH wins/losses/pushes plus cumulative HIGH win %, over every graded week."""
+    weeks = sorted(int(w) for w in season_df['week'].dropna().unique())
+    rows = []
+    for w in weeks:
+        sub = high_df[high_df['week'] == w]
+        wins, losses, pushes, _ = ats_record_parts(sub, correct_col)
+        rows.append({'week': w, 'wins': wins, 'losses': losses, 'pushes': pushes})
+    out = pd.DataFrame(rows, columns=['week', 'wins', 'losses', 'pushes'])
+    cw, cl = out['wins'].cumsum(), out['losses'].cumsum()
+    out['cum_pct'] = (cw / (cw + cl).where((cw + cl) > 0) * 100).round(1)
+    out['picks'] = out['wins'] + out['losses'] + out['pushes']
+    return out
+
+
+def _high_weekly_figure(go, hw):
+    """Two stacked panels on one x axis: cumulative HIGH win % (top), weekly picks (bottom)."""
+    from plotly.subplots import make_subplots
+
+    win_c, loss_c, push_c, line_c = '#00c853', '#ff5252', '#9aa4b2', '#2979ff'
+    fig = make_subplots(
+        rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.08, row_heights=[0.5, 0.5],
+        subplot_titles=("Cumulative HIGH win %", "HIGH picks per week"),
+    )
+    x = hw['week']
+    hover_rec = [f"{w}-{l}-{p}" for w, l, p in zip(hw['wins'], hw['losses'], hw['pushes'])]
+    fig.add_trace(go.Scatter(
+        x=x, y=hw['cum_pct'], mode='lines+markers', connectgaps=True, showlegend=False,
+        line=dict(color=line_c, width=2), marker=dict(size=8, color=line_c),
+        customdata=hover_rec,
+        hovertemplate='Week %{x}<br>Cumulative HIGH win: %{y}%<br>This week: %{customdata}<extra></extra>',
+    ), row=1, col=1)
+    fig.add_hline(
+        y=52.4, line_dash="dash", line_color="#888", row=1, col=1,
+        annotation_text="Break even 52.4%", annotation_position="bottom right",
+        annotation_font=dict(size=11, color="#9aa4b2"),
+    )
+    for name, col, color in (('Wins', 'wins', win_c), ('Losses', 'losses', loss_c), ('Pushes', 'pushes', push_c)):
+        fig.add_trace(go.Bar(
+            x=x, y=hw[col], name=name, marker_color=color,
+            marker_line=dict(width=1, color='rgba(0,0,0,0)'),
+            hovertemplate='Week %{x}<br>' + name + ': %{y}<extra></extra>',
+        ), row=2, col=1)
+    # Record label above each week's stack; zero-pick weeks say so.
+    for w, n, rec in zip(hw['week'], hw['picks'], hover_rec):
+        fig.add_annotation(
+            x=w, y=n, yref='y2', xref='x2', yanchor='bottom', showarrow=False,
+            text=rec if n else "0 picks", font=dict(size=10, color='#cbd5e1'),
+        )
+    ymax = max(int(hw['picks'].max()) if len(hw) else 0, 1)
+    fig.update_layout(
+        barmode='stack', plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
+        font_color='white', height=520, margin=dict(t=40, b=20, l=10, r=10),
+        legend=dict(orientation='h', yanchor='top', y=-0.12, x=0),
+        hovermode='x unified',
+    )
+    fig.update_yaxes(range=[20, 100], dtick=20, ticksuffix='%', gridcolor='#2d3748', row=1, col=1)
+    fig.update_yaxes(range=[0, ymax + 1.2], dtick=1 if ymax <= 8 else None, gridcolor='#2d3748', row=2, col=1)
+    fig.update_xaxes(gridcolor='#2d3748', dtick=1, row=2, col=1, title_text='Week')
+    fig.update_xaxes(gridcolor='#2d3748', dtick=1, row=1, col=1)
+    for a in fig.layout.annotations:
+        if a.text in ("Cumulative HIGH win %", "HIGH picks per week"):
+            a.update(x=0, xanchor='left', font=dict(size=13, color='#cbd5e1'))
+    return fig
+
+
 def render():
     st.title("Track record")
     st.caption("Graded ATS results and flat-stake profit at -110.")
@@ -147,7 +213,23 @@ def render():
         weekly['cum_total']   = weekly['total'].cumsum()
         weekly['cum_pct']     = (weekly['cum_correct'] / weekly['cum_total'] * 100).round(1)
 
-        st.subheader("Week by Week ATS Record")
+        if live:
+            # HIGH-confidence picks are the model's main goal, so they lead the page.
+            st.subheader("HIGH picks week by week")
+            _hw = _high_weekly_table(season_df, high_edge_df, _s_correct)
+            _hs = _hw[['wins', 'losses', 'pushes']].sum()
+            _h_settled = int(_hs['wins'] + _hs['losses'])
+            _h_pct_txt = f"{_hs['wins'] / _h_settled * 100:.1f}%" if _h_settled else "n/a"
+            st.caption(
+                f"{season} HIGH picks: {int(_hs['wins'])}-{int(_hs['losses'])}-{int(_hs['pushes'])} "
+                f"(W-L-P), {_h_pct_txt} wins before pushes, versus 52.4% to break even at -110. "
+                "Weeks with no HIGH pick show as zero picks."
+            )
+            st.plotly_chart(_high_weekly_figure(go, _hw), width="stretch")
+            st.divider()
+            st.subheader("All picks week by week")
+        else:
+            st.subheader("Week by Week ATS Record")
 
         fig_bar = go.Figure()
         fig_bar.add_trace(go.Bar(

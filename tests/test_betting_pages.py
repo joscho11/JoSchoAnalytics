@@ -258,6 +258,15 @@ def test_track_record_2026_has_no_medium_edge_bucket(tmp_path):
     assert "no medium" in " ".join(str(s.value) for s in at.success).lower()
 
 
+def test_track_record_2026_leads_with_high_weekly_chart(tmp_path):
+    at = _render_page(tmp_path, "page_track_record")
+    assert not at.exception, at.exception
+    subs = [str(s.value) for s in at.subheader]
+    assert subs.index("HIGH picks week by week") < subs.index("All picks week by week")
+    caps = " ".join(str(c.value) for c in at.caption)
+    assert "HIGH picks:" in caps and "52.4%" in caps
+
+
 def test_track_record_2025_demo_keeps_edge_buckets(tmp_path):
     at = _render_page(tmp_path, "page_track_record")
     season = next(w for w in at.selectbox if getattr(w, "key", None) == "tr_season")
