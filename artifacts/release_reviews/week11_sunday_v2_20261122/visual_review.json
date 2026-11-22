@@ -1,0 +1,101 @@
+{
+  "status": "passed",
+  "active_fantasy_build": "fantasy-2026w11-ddd9a7f1a046",
+  "dfs_salary_file": "DKSalaries (7).csv",
+  "environment": "local Streamlit preview with APP_OFFLINE=1; Playwright Chromium",
+  "results": [
+    {
+      "product": "fantasy",
+      "route": "/weekly-fantasy?wf_season=2026&wf_week=11",
+      "viewport": "desktop",
+      "viewport_px": [
+        1440,
+        900
+      ],
+      "screenshot_path": "artifacts/release_reviews/week11_sunday_v2_20261122/fantasy_desktop.png",
+      "full_page_screenshot_path": "artifacts/release_reviews/week11_sunday_v2_20261122/fantasy_desktop_full.png",
+      "screenshot_sha256": "bfc472521dbb31d96162d6a16154caed425599539da3fe03dbe721ad8188575c",
+      "full_page_screenshot_sha256": "bfc472521dbb31d96162d6a16154caed425599539da3fe03dbe721ad8188575c",
+      "visible_checks": [
+        "Week 11"
+      ],
+      "missing_checks": [],
+      "horizontal_overflow_px": 0,
+      "has_exception_text": false,
+      "layout_issues": [],
+      "note": "table is canvas-rendered; Johnson include verified in artifact review_status, not page text"
+    },
+    {
+      "product": "dfs",
+      "route": "/dfs-optimizer",
+      "viewport": "desktop",
+      "viewport_px": [
+        1440,
+        900
+      ],
+      "screenshot_path": "artifacts/release_reviews/week11_sunday_v2_20261122/dfs_desktop.png",
+      "full_page_screenshot_path": "artifacts/release_reviews/week11_sunday_v2_20261122/dfs_desktop_full.png",
+      "screenshot_sha256": "ba1e7657893a966029b12cb0882c9492c3bd5fae853e7cbe4c384fbbdabf3ef7",
+      "full_page_screenshot_sha256": "ba1e7657893a966029b12cb0882c9492c3bd5fae853e7cbe4c384fbbdabf3ef7",
+      "visible_checks": [
+        "Week 11"
+      ],
+      "missing_checks": [],
+      "horizontal_overflow_px": 0,
+      "has_exception_text": false,
+      "layout_issues": []
+    },
+    {
+      "product": "fantasy",
+      "route": "/weekly-fantasy?wf_season=2026&wf_week=11",
+      "viewport": "phone",
+      "viewport_px": [
+        390,
+        844
+      ],
+      "screenshot_path": "artifacts/release_reviews/week11_sunday_v2_20261122/fantasy_phone.png",
+      "full_page_screenshot_path": "artifacts/release_reviews/week11_sunday_v2_20261122/fantasy_phone_full.png",
+      "screenshot_sha256": "b8514308e3b7bfff2cf69883560faa5af33064d14476af9f1f43afee425a59e8",
+      "full_page_screenshot_sha256": "b8514308e3b7bfff2cf69883560faa5af33064d14476af9f1f43afee425a59e8",
+      "visible_checks": [
+        "Week 11"
+      ],
+      "missing_checks": [],
+      "horizontal_overflow_px": 0,
+      "has_exception_text": false,
+      "layout_issues": [],
+      "note": "table is canvas-rendered; Johnson include verified in artifact review_status, not page text"
+    },
+    {
+      "product": "dfs",
+      "route": "/dfs-optimizer",
+      "viewport": "phone",
+      "viewport_px": [
+        390,
+        844
+      ],
+      "screenshot_path": "artifacts/release_reviews/week11_sunday_v2_20261122/dfs_phone.png",
+      "full_page_screenshot_path": "artifacts/release_reviews/week11_sunday_v2_20261122/dfs_phone_full.png",
+      "screenshot_sha256": "e3bec29b5d2f655d305dc3136bc6125ec4c96d04abc32483d3492df3a056fe25",
+      "full_page_screenshot_sha256": "e3bec29b5d2f655d305dc3136bc6125ec4c96d04abc32483d3492df3a056fe25",
+      "visible_checks": [
+        "Week 11"
+      ],
+      "missing_checks": [],
+      "horizontal_overflow_px": 0,
+      "has_exception_text": false,
+      "layout_issues": []
+    }
+  ],
+  "extra_screenshots": [
+    "dfs_desktop_scroll1.png",
+    "dfs_desktop_scroll2.png",
+    "dfs_phone_scroll1.png",
+    "dfs_phone_scroll2.png",
+    "fantasy_desktop_scroll1.png",
+    "fantasy_desktop_scroll2.png",
+    "fantasy_phone_scroll1.png",
+    "fantasy_phone_scroll2.png"
+  ],
+  "reviewer_observations": "Header, Week 11, Published, held-out count 16 (12 flagged + 4 needs_review), QB table, DFS slate accepted 519 players / 10 games, lineup controls; no overflow or clipped text at 1440x900 or 390x844. Optimize button not clicked."
+}

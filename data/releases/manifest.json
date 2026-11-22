@@ -25,7 +25,7 @@
   },
   "products": {
     "fantasy": {
-      "active_build": "fantasy-2026w11-7f789c132ce6",
+      "active_build": "fantasy-2026w11-ddd9a7f1a046",
       "builds": {
         "fantasy-2025w10-33a7de4ef33f": {
           "artifact": "data/releases/builds/fantasy/2025/week10/fantasy-2025w10-33a7de4ef33f/artifact.csv",
@@ -1489,6 +1489,68 @@
             ]
           },
           "week": 11
+        },
+        "fantasy-2026w11-ddd9a7f1a046": {
+          "artifact": "data/releases/builds/fantasy/2026/week11/fantasy-2026w11-ddd9a7f1a046/artifact.csv",
+          "build_id": "fantasy-2026w11-ddd9a7f1a046",
+          "metadata": "data/releases/builds/fantasy/2026/week11/fantasy-2026w11-ddd9a7f1a046/metadata.json",
+          "model_version": "weekly-fantasy-v2-workload_v2-d5cc44f7611a",
+          "produced_at": "2026-11-22T01:53:39Z",
+          "product": "fantasy",
+          "published_at": "2026-11-22T01:53:40Z",
+          "row_count": 352,
+          "season": 2026,
+          "sha256": "ddd9a7f1a0467626aad2fc8b49586379d18af75d9b08a36b133491a71962b728",
+          "status": "Published",
+          "validation": {
+            "checks": {
+              "artifact_sha256": "ddd9a7f1a0467626aad2fc8b49586379d18af75d9b08a36b133491a71962b728",
+              "locked_fantasy_rows": 28,
+              "produced_at_utc": "2026-11-22T01:53:39Z",
+              "scheduled_teams": 26,
+              "team_position_cells": 104,
+              "team_position_gap_exceptions": 0
+            },
+            "errors": [],
+            "ok": true,
+            "product": "fantasy",
+            "row_count": 352,
+            "warnings": [
+              "28 projections are below zero; retained as a model diagnostic"
+            ]
+          },
+          "week": 11
+        },
+        "fantasy-2026w11-f5a4f1663f55": {
+          "artifact": "data/releases/builds/fantasy/2026/week11/fantasy-2026w11-f5a4f1663f55/artifact.csv",
+          "build_id": "fantasy-2026w11-f5a4f1663f55",
+          "metadata": "data/releases/builds/fantasy/2026/week11/fantasy-2026w11-f5a4f1663f55/metadata.json",
+          "model_version": "weekly-fantasy-v2-workload_v2-d5cc44f7611a",
+          "produced_at": "2026-11-22T01:49:59Z",
+          "product": "fantasy",
+          "published_at": "2026-11-22T01:50:41Z",
+          "row_count": 352,
+          "season": 2026,
+          "sha256": "f5a4f1663f55ac8d7d9426513a365cde3249b0de53356dbc898721ad9d65cfb1",
+          "status": "Published",
+          "validation": {
+            "checks": {
+              "artifact_sha256": "f5a4f1663f55ac8d7d9426513a365cde3249b0de53356dbc898721ad9d65cfb1",
+              "locked_fantasy_rows": 28,
+              "produced_at_utc": "2026-11-22T01:49:59Z",
+              "scheduled_teams": 26,
+              "team_position_cells": 104,
+              "team_position_gap_exceptions": 0
+            },
+            "errors": [],
+            "ok": true,
+            "product": "fantasy",
+            "row_count": 352,
+            "warnings": [
+              "28 projections are below zero; retained as a model diagnostic"
+            ]
+          },
+          "week": 11
         }
       },
       "next_release": {
@@ -1497,7 +1559,7 @@
         "status": "Awaiting projections",
         "week": 8
       },
-      "previous_build": "fantasy-2026w11-a5c4ed25e75b"
+      "previous_build": "fantasy-2026w11-f5a4f1663f55"
     },
     "predictions": {
       "active_build": "predictions-2026w11-fbc30ff14caa",
@@ -19428,5 +19490,5 @@
     }
   },
   "schema_version": 1,
-  "updated_at": "2026-11-20T07:20:12Z"
+  "updated_at": "2026-11-22T01:53:40Z"
 }
