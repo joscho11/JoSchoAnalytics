@@ -1,0 +1,125 @@
+{
+  "season": 2026,
+  "week": 10,
+  "mode": "tournament_ceiling",
+  "engine_version": "0.2.4",
+  "projection_sha256": "3f238b044422c7dc44867a4caf467bb5232bea46d30d63a3a56cce4ffdd5f48a",
+  "salary_sha256": "9c282c5344db04c3c9a3ec9bf6e5243052f7f4aa65a558f157830635f7251016",
+  "field": {
+    "median": 155,
+    "top": 265
+  },
+  "lineups": [
+    {
+      "label": "Optimizer lineup",
+      "kind": "untouched",
+      "exclusions": [],
+      "total_actual": 196.02,
+      "total_ceiling": 179.47,
+      "total_mean": 135.62,
+      "salary": 50000,
+      "top_pct": 10,
+      "players": [
+        {
+          "slot": "QB",
+          "player": "Dak Prescott",
+          "pos": "QB",
+          "team": "DAL",
+          "salary": 6400,
+          "ceiling": 29.42,
+          "mean": 21.01,
+          "actual": 38.42,
+          "own": "9%"
+        },
+        {
+          "slot": "RB",
+          "player": "Christian McCaffrey",
+          "pos": "RB",
+          "team": "SF",
+          "salary": 8500,
+          "ceiling": 28.12,
+          "mean": 22.9,
+          "actual": 49.3,
+          "own": "31%"
+        },
+        {
+          "slot": "RB",
+          "player": "Chuba Hubbard",
+          "pos": "RB",
+          "team": "CAR",
+          "salary": 7200,
+          "ceiling": 24.85,
+          "mean": 19.63,
+          "actual": 34.2,
+          "own": "26%"
+        },
+        {
+          "slot": "FLEX",
+          "player": "Tyler Allgeier",
+          "pos": "RB",
+          "team": "ARI",
+          "salary": 5200,
+          "ceiling": 19.45,
+          "mean": 14.23,
+          "actual": 1.4,
+          "own": "<1%"
+        },
+        {
+          "slot": "WR",
+          "player": "George Pickens",
+          "pos": "WR",
+          "team": "DAL",
+          "salary": 6300,
+          "ceiling": 20.56,
+          "mean": 15.25,
+          "actual": 46.5,
+          "own": "11%"
+        },
+        {
+          "slot": "WR",
+          "player": "Rashee Rice",
+          "pos": "WR",
+          "team": "KC",
+          "salary": 6100,
+          "ceiling": 19.86,
+          "mean": 14.55,
+          "actual": 13.2,
+          "own": "11%"
+        },
+        {
+          "slot": "WR",
+          "player": "Tank Dell",
+          "pos": "WR",
+          "team": "HOU",
+          "salary": 3900,
+          "ceiling": 15.38,
+          "mean": 10.07,
+          "actual": 5.1,
+          "own": "17%"
+        },
+        {
+          "slot": "TE",
+          "player": "AJ Barner",
+          "pos": "TE",
+          "team": "SEA",
+          "salary": 3900,
+          "ceiling": 15.36,
+          "mean": 11.51,
+          "actual": 4.9,
+          "own": "2%"
+        },
+        {
+          "slot": "DST",
+          "player": "Browns",
+          "pos": "DST",
+          "team": "CLE",
+          "salary": 2500,
+          "ceiling": 6.47,
+          "mean": 6.47,
+          "actual": 3.0,
+          "own": "5%"
+        }
+      ]
+    }
+  ]
+}
