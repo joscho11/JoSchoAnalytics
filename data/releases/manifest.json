@@ -4,9 +4,9 @@
       "fantasy": {
         "latest": {
           "build_id": "fantasy-2026w11-ddd9a7f1a046",
-          "final_games": 1,
-          "graded_at": "2026-11-22T02:04:08Z",
-          "graded_rows": 21,
+          "final_games": 12,
+          "graded_at": "2026-11-23T07:43:02Z",
+          "graded_rows": 258,
           "season": 2026,
           "week": 11
         }
@@ -14,9 +14,9 @@
       "predictions": {
         "latest": {
           "build_id": "predictions-2026w11-fbc30ff14caa",
-          "final_games": 1,
-          "graded_at": "2026-11-20T07:20:12Z",
-          "graded_rows": 1,
+          "final_games": 12,
+          "graded_at": "2026-11-23T07:43:03Z",
+          "graded_rows": 12,
           "season": 2026,
           "week": 11
         }
@@ -1495,13 +1495,13 @@
           "build_id": "fantasy-2026w11-ddd9a7f1a046",
           "grading": {
             "artifact": "data/releases/results/fantasy/2026/week11/fantasy-2026w11-ddd9a7f1a046-graded.csv",
-            "artifact_sha256": "9652937b31849e808a081a9887d3eb0325d9b537859b0010ba0b34635d75337b",
+            "artifact_sha256": "4335b5cb6e028cb2712b5e5cd0b37131254ee9fed6dbdb0cb9f2b51485ab2935",
             "complete": false,
-            "final_games": 1,
-            "graded_at": "2026-11-22T02:04:08Z",
-            "graded_rows": 21,
+            "final_games": 12,
+            "graded_at": "2026-11-23T07:43:02Z",
+            "graded_rows": 258,
             "metadata": "data/releases/results/fantasy/2026/week11/fantasy-2026w11-ddd9a7f1a046-graded.json",
-            "missing_actuals": 331,
+            "missing_actuals": 94,
             "product": "fantasy",
             "schema_version": 1,
             "season": 2026,
@@ -19459,11 +19459,11 @@
           "build_id": "predictions-2026w11-fbc30ff14caa",
           "grading": {
             "artifact": "data/releases/results/predictions/2026/week11/predictions-2026w11-fbc30ff14caa-graded.csv",
-            "artifact_sha256": "b284aa76bb6952eadd803d950dc38b22ce6ad2814c43b339e889d797fcbff802",
+            "artifact_sha256": "c21940ebd2f558985fd4d8e0eecb5d6300c9ebe36c0a2a6a5777778acaef5a74",
             "complete": false,
-            "final_games": 1,
-            "graded_at": "2026-11-20T07:20:12Z",
-            "graded_rows": 1,
+            "final_games": 12,
+            "graded_at": "2026-11-23T07:43:03Z",
+            "graded_rows": 12,
             "metadata": "data/releases/results/predictions/2026/week11/predictions-2026w11-fbc30ff14caa-graded.json",
             "product": "predictions",
             "pushes": 0,
@@ -19506,5 +19506,5 @@
     }
   },
   "schema_version": 1,
-  "updated_at": "2026-11-22T02:04:08Z"
+  "updated_at": "2026-11-23T07:43:03Z"
 }
