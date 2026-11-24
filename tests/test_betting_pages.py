@@ -75,9 +75,20 @@ def test_weekly_predictions_renders_and_owns_controls(tmp_path):
     card_labels = " ".join(
         str(item.value) for item in at.markdown if "jsa-gc-team-abbr" in str(item.value)
     )
+    # A manual-override team that is also a probability-weighted QB scenario shows the blend
+    # label ("Darnold 80% / Lock 20%") instead of the single override name.
+    blended_teams = {
+        str(item.get("team"))
+        for items in ((meta.get("qb_scenarios") or {}).get("results") or {}).values()
+        for item in items or []
+        if item.get("probability") is not None
+    }
     for team, name in manual.items():
         assert f">{public_team_abbr(team)}</div><div class='jsa-gc-qb'" in card_labels
-        assert f"QB: {name}</div>" in card_labels
+        if team in blended_teams:
+            assert f"QB: {name.split()[-1]} " in card_labels
+        else:
+            assert f"QB: {name}</div>" in card_labels
     assert "font-size:10px" in card_labels
     scenario_caption = " ".join(str(c.value) for c in qb_expander.caption)
     scenario_games = (meta.get("qb_scenarios") or {}).get("results") or {}
